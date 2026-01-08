@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# Caché y datos generados
+cache/
+registros/
+
+# Entornos y secretos
+.env
+
+# Sistema
+.DS_Store
+Thumbs.db

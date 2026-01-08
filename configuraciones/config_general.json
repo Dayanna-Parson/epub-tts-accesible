@@ -1,0 +1,18 @@
+{
+    "ruta_grabaciones": "G:\\Mi unidad\\libros\\sagas y libros\\Dar\u00edo Ord\u00f3\u00f1ez Barba - Leyendas de los 9 reinos",
+    "segundos_salto": "10",
+    "buscar_actualizaciones": true,
+    "azure": {
+        "key": "",
+        "region": ""
+    },
+    "elevenlabs": {
+        "api_key": ""
+    },
+    "polly": {
+        "access_key": "",
+        "secret_key": "",
+        "region": ""
+    },
+    "idioma_libro_codigo": "es-ES"
+}
