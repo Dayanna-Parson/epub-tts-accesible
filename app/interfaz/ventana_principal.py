@@ -43,7 +43,7 @@ class VentanaPrincipal(wx.Frame):
         
         # MENÚ ARCHIVO
         self.menu_archivo = wx.Menu()
-        self.item_abrir = self.menu_archivo.Append(wx.ID_OPEN, "&Abrir Libro...\tCtrl+O")
+        self.item_abrir = self.menu_archivo.Append(wx.ID_OPEN, "&Abrir Libro...\tCtrl+A")
         
         # Submenú Recientes
         self.menu_recientes = wx.Menu()
@@ -83,7 +83,7 @@ class VentanaPrincipal(wx.Frame):
         self.barra_menu.EnableTop(1, es_lectura) 
         evento.Skip()
 
-    def al_abrir_archivo(self, evento):
+def al_abrir_archivo(self, evento):
     # Forzar cambio a pestaña de lectura
     self.notebook.SetSelection(0)
     self.pestana_lectura.al_cargar_libro(None)
