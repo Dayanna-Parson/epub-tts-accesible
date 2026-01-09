@@ -389,13 +389,6 @@ class PestanaLectura(wx.Panel):
                 dlg_lista.Destroy()
         dlg.Destroy()
 
-    def _ir_a_posicion(self, pos):
-        """Ayuda para mover el cursor y parar audio"""
-        if hasattr(self.reproductor, 'detener'): self.reproductor.detener()
-        self.txt_contenido.SetInsertionPoint(pos)
-        self.txt_contenido.ShowPosition(pos)
-        self.txt_contenido.SetFocus()
-        self.pos_inicio_fragmento = pos            
                 
     def iniciar_ir_a_porcentaje(self): 
         dlg = wx.TextEntryDialog(self, "Porcentaje (0-100):", "Ir a")
