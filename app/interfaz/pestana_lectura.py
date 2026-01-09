@@ -104,6 +104,14 @@ class PestanaLectura(wx.Panel):
 
         self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
         self.cargar_voces_usuario()
+# --- Navegación accesible hacia las pestañas (Notebook) ---
+        self.primer_control = self.arbol_indice
+        self.ultimo_control = self.deslizador_volumen
+        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab)
+
+
+
+
 
     def cargar_config_salto(self):
         try:
@@ -117,15 +125,12 @@ class PestanaLectura(wx.Panel):
     def al_cambiar_pestana_padre(self, event):
         if event.GetSelection() == 0:
             self.cargar_voces_usuario()
-                    # --- Navegación accesible hacia las pestañas (Notebook) ---
-        self.primer_control = self.arbol_indice
-        self.ultimo_control = self.deslizador_volumen
-        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab)
-
             self.cargar_config_salto()
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
-        event.Skip()
+    event.Skip()
+
+                    
 
     def cargar_voces_usuario(self):
         seleccion_previa = self.combo_voz.GetStringSelection()
