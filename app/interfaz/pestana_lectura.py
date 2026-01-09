@@ -129,10 +129,15 @@ class PestanaLectura(wx.Panel):
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
         event.Skip()
+    def al_navegacion_tab(self, event):
+        key = event.GetKeyCode()
 
-                    
+        if key == wx.WXK_TAB:
+            event.Skip()
+            return
 
-    def cargar_voces_usuario(self):
+        event.Skip()
+def cargar_voces_usuario(self):
         seleccion_previa = self.combo_voz.GetStringSelection()
         self.combo_voz.Clear()
         voces_para_combo = []
