@@ -128,7 +128,7 @@ class PestanaLectura(wx.Panel):
             self.cargar_config_salto()
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
-    event.Skip()
+        event.Skip()
 
                     
 
