@@ -137,7 +137,7 @@ class PestanaLectura(wx.Panel):
             return
 
         event.Skip()
-def cargar_voces_usuario(self):
+    def cargar_voces_usuario(self):
         seleccion_previa = self.combo_voz.GetStringSelection()
         self.combo_voz.Clear()
         voces_para_combo = []
