@@ -83,10 +83,10 @@ class VentanaPrincipal(wx.Frame):
         self.barra_menu.EnableTop(1, es_lectura) 
         evento.Skip()
 
-def al_abrir_archivo(self, evento):
-    # Forzar cambio a pestaña de lectura
-    self.notebook.SetSelection(0)
-    self.pestana_lectura.al_cargar_libro(None)
+    def al_abrir_archivo(self, evento):
+        # Forzar cambio a pestaña de lectura
+        self.notebook.SetSelection(0)
+        self.pestana_lectura.al_cargar_libro(None)
 
     def al_abrir_marcadores(self, evento):
         if self.notebook.GetSelection() == 0:
