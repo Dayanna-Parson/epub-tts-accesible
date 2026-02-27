@@ -118,11 +118,11 @@ class PestanaLectura(wx.Panel):
 
         self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
         self.cargar_voces_usuario()
-        
-        # Navegación accesible hacia las pestañas
+
+        # Puntos de anclaje para el bucle de tabulación gestionado desde la ventana principal.
+        # VentanaPrincipal usa estas referencias para saber dónde termina y empieza este panel.
         self.primer_control = self.arbol_indice
         self.ultimo_control = self.deslizador_volumen
-        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab)
     # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ
 
     # ANCLAJE_INICIO: GESTION_CONFIGURACION_Y_PESTANAS
@@ -144,32 +144,6 @@ class PestanaLectura(wx.Panel):
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
         event.Skip()
-
-    def al_navegacion_tab(self, evento):
-        """
-        Implementa el bucle de tabulación accesible.
-        Cuando el foco llega al último control y se pulsa Tab, pasa al Notebook.
-        Cuando está en el primer control y se pulsa Shift+Tab, pasa al Notebook.
-        Esto evita que el foco quede atrapado dentro de la pestaña.
-        """
-        tecla = evento.GetKeyCode()
-        if tecla != wx.WXK_TAB:
-            evento.Skip()
-            return
-
-        foco_actual = self.FindFocus()
-        shift_pulsado = evento.ShiftDown()
-
-        if not shift_pulsado and foco_actual == self.ultimo_control:
-            # Tab en el último control: devolver foco al Notebook
-            self.padre_notebook.SetFocus()
-            return
-        elif shift_pulsado and foco_actual == self.primer_control:
-            # Shift+Tab en el primer control: devolver foco al Notebook
-            self.padre_notebook.SetFocus()
-            return
-
-        evento.Skip()
     # ANCLAJE_FIN: GESTION_CONFIGURACION_Y_PESTANAS
 
     # ANCLAJE_INICIO: CARGA_Y_CAMBIO_VOCES
