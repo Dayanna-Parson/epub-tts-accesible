@@ -1,11 +1,21 @@
+# ANCLAJE_INICIO: DEPENDENCIAS_LECTURA
 import wx
 import os
 import json
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
+# ANCLAJE_FIN: DEPENDENCIAS_LECTURA
 
+# ANCLAJE_INICIO: DEFINICION_PESTANA_LECTURA
 class PestanaLectura(wx.Panel):
+    """
+    Panel principal de la interfaz para la lectura de libros EPUB.
+    Gestiona la navegación, el control de audio y la sincronización 
+    entre el texto y la síntesis de voz.
+    """
+    
+    # ANCLAJE_INICIO: CONSTRUCCION_INTERFAZ
     def __init__(self, padre):
         super().__init__(padre, style=wx.TAB_TRAVERSAL)
         self.padre_notebook = padre
@@ -59,7 +69,7 @@ class PestanaLectura(wx.Panel):
         self.lbl_voz = wx.StaticText(self, label="Voz:")
         self.combo_voz = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_voz.SetName("Selector de voz")
-        self.combo_voz.Bind(wx.EVT_COMBOBOX, self.al_cambiar_voz) # Evento clave
+        self.combo_voz.Bind(wx.EVT_COMBOBOX, self.al_cambiar_voz)
 
         self.btn_atras = wx.Button(self, label=f"Atrás {self.segundos_salto}s")
         self.btn_reproducir = wx.Button(self, label="Reproducir (Ctrl+P)")
@@ -104,15 +114,14 @@ class PestanaLectura(wx.Panel):
 
         self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
         self.cargar_voces_usuario()
-# --- Navegación accesible hacia las pestañas (Notebook) ---
+        
+        # Navegación accesible hacia las pestañas
         self.primer_control = self.arbol_indice
         self.ultimo_control = self.deslizador_volumen
         self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab)
+    # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ
 
-
-
-
-
+    # ANCLAJE_INICIO: GESTION_CONFIGURACION_Y_PESTANAS
     def cargar_config_salto(self):
         try:
             ruta = os.path.join("configuraciones", "config_general.json")
@@ -129,20 +138,22 @@ class PestanaLectura(wx.Panel):
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
         event.Skip()
+
     def al_navegacion_tab(self, event):
         key = event.GetKeyCode()
-
         if key == wx.WXK_TAB:
             event.Skip()
             return
-
         event.Skip()
+    # ANCLAJE_FIN: GESTION_CONFIGURACION_Y_PESTANAS
+
+    # ANCLAJE_INICIO: CARGA_Y_CAMBIO_VOCES
     def cargar_voces_usuario(self):
         seleccion_previa = self.combo_voz.GetStringSelection()
         self.combo_voz.Clear()
         voces_para_combo = []
         
-        # Locales
+        # Carga de voces locales
         try:
             if hasattr(self.reproductor, 'cliente_local'):
                 voces_locales = self.reproductor.cliente_local.obtener_voces()
@@ -151,7 +162,7 @@ class PestanaLectura(wx.Panel):
                     voces_para_combo.append((nombre_mostrar, v))
         except: pass
 
-        # Nube Favoritas
+        # Carga de voces neuronales favoritas
         ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
         ruta_todas = os.path.join("configuraciones", "voces_disponibles.json")
         
@@ -189,43 +200,45 @@ class PestanaLectura(wx.Panel):
             else:
                 self.combo_voz.SetSelection(0)
         
-        # Forzar actualización inicial
-        # Nota: Aquí llamamos a al_cambiar_voz para que guarde la selección internamente,
-        # pero como estamos en el init, no reproducirá nada.
+        # Forzar actualización inicial del reproductor
         self.al_cambiar_voz(None)
 
-    # --- FUNCIÓN CORREGIDA 1: CAMBIO DE VOZ ---
     def al_cambiar_voz(self, event):
+        """
+        Aplica la configuración de la voz seleccionada en la interfaz 
+        al motor de reproducción de audio.
+        """
         idx = self.combo_voz.GetSelection()
         if idx != wx.NOT_FOUND:
-            # 1. Cogemos los datos de la voz que has seleccionado
+            # 1. Obtiene los parámetros de la voz seleccionada
             self.voz_seleccionada = self.combo_voz.GetClientData(idx)
             
-            # 2. Le decimos al reproductor: "Prepara esta voz" 
-            # (Con el nuevo reproductor, esto es instantáneo y no bloquea)
+            # 2. Transfiere la configuración al motor de reproducción de forma asíncrona
             if hasattr(self.reproductor, 'fijar_voz'):
                 self.reproductor.fijar_voz(self.voz_seleccionada)
             
-            # 3. Forzamos que se calle lo anterior por si acaso
+            # 3. Detiene cualquier lectura en curso para aplicar el cambio limpiamente
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
+    # ANCLAJE_FIN: CARGA_Y_CAMBIO_VOCES
 
-    # --- FUNCIÓN 2: REPRODUCCIÓN ---
+    # ANCLAJE_INICIO: ACCIONES_REPRODUCCION_PAUSA
     def al_alternar_reproduccion(self, evento):
-        # 1. Estado
+        """Gestiona los estados de reproducción, pausa y reanudación del texto actual."""
+        # 1. Verificación de estado
         estado = 'detenido'
         if hasattr(self.reproductor, 'obtener_estado'):
             estado = self.reproductor.obtener_estado()
         elif hasattr(self.reproductor, 'estado'):
             estado = self.reproductor.estado
             
-        # 2. Play/Pausa
+        # 2. Transiciones de estado (Play/Pausa)
         if estado == 'reproduciendo':
             if hasattr(self.reproductor, 'pausar'): self.reproductor.pausar()
         elif estado == 'pausado':
             if hasattr(self.reproductor, 'reanudar'): self.reproductor.reanudar()
         else:
-            # 3. Estado DETENIDO: Hablar
+            # 3. Inicio de nueva lectura desde la posición del cursor
             pos_actual = self.txt_contenido.GetInsertionPoint()
             self.pos_inicio_fragmento = pos_actual
             
@@ -234,19 +247,19 @@ class PestanaLectura(wx.Panel):
             
             fragmento = texto_completo[pos_actual:]
             
-            # --- LÍMITE SOLO PARA NUBE ---
-            es_nube = False
+# Verificación del tipo de motor para gestionar el tamaño del texto
+            es_voz_neuronal = False
             if hasattr(self, 'voz_seleccionada') and self.voz_seleccionada:
                 prov = self.voz_seleccionada.get('proveedor_id', 'local').lower()
                 if 'azure' in prov or 'eleven' in prov or 'polly' in prov:
-                    es_nube = True
+                    es_voz_neuronal = True
             
-            # Cortamos a 500 solo si es nube (para rapidez)
-            if es_nube and len(fragmento) > 500:
-                fragmento = fragmento[:500]
-            
+            # Se limita el fragmento a 500 caracteres para las voces neuronales
+            # con el objetivo de reducir el tiempo de respuesta inicial.
+            if es_voz_neuronal and len(fragmento) > 500:
+                fragmento = fragmento[:500]            
+
             if fragmento.strip():
-                # Asegurar voz
                 idx = self.combo_voz.GetSelection()
                 if idx != wx.NOT_FOUND:
                     voz_data = self.combo_voz.GetClientData(idx)
@@ -255,8 +268,19 @@ class PestanaLectura(wx.Panel):
                 
                     self.reproductor.cargar_texto(fragmento)
     
+    def al_detener(self, evento): 
+        if hasattr(self.reproductor, 'detener'):
+            self.reproductor.detener()
+        self.guardar_datos_libro()
+    # ANCLAJE_FIN: ACCIONES_REPRODUCCION_PAUSA
+
+    # ANCLAJE_INICIO: ACTUALIZACION_INTERFAZ_USUARIO
     def al_actualizar_ui(self, evento):
-        # 1. Actualizar etiqueta del botón Play/Pausa
+        """
+        Sincroniza visualmente y para los lectores de pantalla 
+        el estado de los botones y la barra de progreso.
+        """
+        # 1. Actualización de etiquetas de control
         estado = "detenido"
         if hasattr(self.reproductor, 'obtener_estado'):
             estado = self.reproductor.obtener_estado()
@@ -271,21 +295,18 @@ class PestanaLectura(wx.Panel):
             if self.btn_reproducir.GetLabel() != "Reproducir (Ctrl+P)": 
                 self.btn_reproducir.SetLabel("Reproducir (Ctrl+P)")
 
-        # 2. SINCRONIZAR BARRA DE PROGRESO CON TEXTO
-        # Si hay texto cargado, actualizamos la barra según donde esté el cursor
+        # 2. Sincronización de barra de progreso
         if self.longitud_texto > 0:
             pos_actual = self.txt_contenido.GetInsertionPoint()
             porcentaje = int((pos_actual / self.longitud_texto) * 100)
             
-            # Solo actualizamos si ha cambiado para no saturar a NVDA
+            # Solo actualiza si hay cambios para evitar saturar a NVDA
             if self.deslizador_progreso.GetValue() != porcentaje:
                 self.deslizador_progreso.SetValue(porcentaje)
                 self.lbl_progreso.SetLabel(f"Progreso: {porcentaje}%")
-    def al_detener(self, evento): 
-        if hasattr(self.reproductor, 'detener'):
-            self.reproductor.detener()
-        self.guardar_datos_libro()
+    # ANCLAJE_FIN: ACTUALIZACION_INTERFAZ_USUARIO
 
+    # ANCLAJE_INICIO: NAVEGACION_TEXTO_Y_SALTOS
     def al_saltar_atras(self, evento):
         pos = self.txt_contenido.GetInsertionPoint()
         caracteres = self.segundos_salto * 15 
@@ -310,10 +331,6 @@ class PestanaLectura(wx.Panel):
     def al_cambiar_volumen(self, evento):
         if hasattr(self.reproductor, 'fijar_volumen'): self.reproductor.fijar_volumen(self.deslizador_volumen.GetValue())
     
-    def al_cargar_libro(self, evento):
-        with wx.FileDialog(self, "Seleccionar EPUB", wildcard="Archivos EPUB (*.epub)|*.epub", style=wx.FD_OPEN) as dlg:
-            if dlg.ShowModal() == wx.ID_OK: self.cargar_epub_desde_ruta(dlg.GetPath())
-    
     def al_activar_capitulo(self, evento):
         id_item = evento.GetItem()
         titulo = self.arbol_indice.GetItemText(id_item)
@@ -332,7 +349,6 @@ class PestanaLectura(wx.Panel):
         self.al_abrir_marcadores(None)
 
     def al_abrir_marcadores(self, evento):
-        # Importación local para evitar errores circulares
         from app.interfaz.dialogos import DialogoMarcadores
         pos_actual = self.txt_contenido.GetInsertionPoint()
         
@@ -341,19 +357,18 @@ class PestanaLectura(wx.Panel):
         dlg = DialogoMarcadores(self, self.marcadores, pos_actual)
         resultado = dlg.ShowModal()
         
-        # 1. Si elegimos ir a un marcador
         if resultado == wx.ID_OK:
             if dlg.debe_navegar and dlg.posicion_seleccionada is not None:
                 self._ir_a_posicion(dlg.posicion_seleccionada)
         
-        # 2. Guardamos SIEMPRE al cerrar la ventana (por si añadiste/borraste marcadores)
+        # Guardado de seguridad al cerrar el gestor de marcadores
         self.marcadores = dlg.marcadores
         self.guardar_datos_libro()
         
         dlg.Destroy()
 
     def _ir_a_posicion(self, pos):
-        """Ayuda para mover el cursor y parar audio"""
+        """Desplaza el cursor de lectura a la posición indicada y actualiza el foco."""
         if hasattr(self.reproductor, 'detener'): self.reproductor.detener()
         self.txt_contenido.SetInsertionPoint(pos)
         self.txt_contenido.ShowPosition(pos)
@@ -370,22 +385,18 @@ class PestanaLectura(wx.Panel):
             coincidencias = []
             inicio = 0
             
-            # Buscamos todas las apariciones
             while True:
                 idx = texto_completo.find(consulta, inicio)
                 if idx == -1: break
-                # Guardamos posición y un fragmento de contexto (50 caracteres)
                 contexto = self.txt_contenido.GetValue()[idx:idx+50].replace("\n", " ")
                 coincidencias.append((idx, f"...{contexto}..."))
                 inicio = idx + 1
             
             if not coincidencias:
-                wx.MessageBox("No se encontraron coincidencias.", "Buscar")
+                wx.MessageBox("No se ha encontrado el texto especificado en este libro.", "Búsqueda finalizada")
             elif len(coincidencias) == 1:
-                # Si solo hay una, vamos directo
                 self._ir_a_posicion(coincidencias[0][0])
             else:
-                # Si hay varias, mostramos lista para elegir
                 opciones = [c[1] for c in coincidencias]
                 dlg_lista = wx.SingleChoiceDialog(self, f"Se encontraron {len(coincidencias)} resultados:", "Seleccionar resultado", opciones)
                 if dlg_lista.ShowModal() == wx.ID_OK:
@@ -394,7 +405,6 @@ class PestanaLectura(wx.Panel):
                 dlg_lista.Destroy()
         dlg.Destroy()
 
-                
     def iniciar_ir_a_porcentaje(self): 
         dlg = wx.TextEntryDialog(self, "Porcentaje (0-100):", "Ir a")
         if dlg.ShowModal() == wx.ID_OK:
@@ -404,33 +414,6 @@ class PestanaLectura(wx.Panel):
                 self.al_buscar_usuario(None)
         dlg.Destroy()
 
-    def cargar_epub_desde_ruta(self, ruta):
-        self.guardar_datos_libro()
-        try:
-            texto, datos_arbol, self.posiciones_capitulos = extraer_datos_epub(ruta)
-            
-            if hasattr(self.reproductor, 'detener'):
-                self.reproductor.detener()
-            
-            self.marcadores = {}
-            self.pos_inicio_fragmento = 0
-            self.txt_contenido.SetValue(texto)
-            self.longitud_texto = len(texto)
-            self.arbol_indice.DeleteAllItems()
-            self.raiz_id = self.arbol_indice.AddRoot(os.path.basename(ruta))
-            self._construir_arbol_indice(self.raiz_id, datos_arbol)
-            self.ruta_libro_actual = ruta
-            self.cargar_datos_libro(os.path.basename(ruta))
-            self.arbol_indice.SetFocus()
-        except Exception as e: wx.MessageBox(f"Error: {e}")
-
-    def _construir_arbol_indice(self, padre, nodos):
-        for n in nodos:
-            item = self.arbol_indice.AppendItem(padre, n['title'])
-            if n['children']: self._construir_arbol_indice(item, n['children'])
-
-    def al_tecla_volumen(self, e): e.Skip()
-    
     def al_buscar_usuario(self, e):
         if self.longitud_texto > 0:
             objetivo = int((self.deslizador_progreso.GetValue()/100)*self.longitud_texto)
@@ -449,6 +432,42 @@ class PestanaLectura(wx.Panel):
             p = int((self.txt_contenido.GetInsertionPoint()/self.longitud_texto)*100)
             if self.deslizador_progreso.GetValue() != p: self.deslizador_progreso.SetValue(p)
         e.Skip()
+    # ANCLAJE_FIN: NAVEGACION_TEXTO_Y_SALTOS
+
+    def al_cargar_libro(self, evento):
+        """Abre el explorador de archivos para seleccionar un libro EPUB."""
+        with wx.FileDialog(self, "Seleccionar EPUB", wildcard="Archivos EPUB (*.epub)|*.epub", style=wx.FD_OPEN) as dlg:
+            if dlg.ShowModal() == wx.ID_OK: 
+                self.cargar_epub_desde_ruta(dlg.GetPath())
+
+    # ANCLAJE_INICIO: GESTION_DATOS_LIBRO
+    def cargar_epub_desde_ruta(self, ruta):
+        self.guardar_datos_libro()
+        try:
+            texto, datos_arbol, self.posiciones_capitulos = extraer_datos_epub(ruta)
+            
+            if hasattr(self.reproductor, 'detener'):
+                self.reproductor.detener()
+            
+            self.marcadores = {}
+            self.pos_inicio_fragmento = 0
+            self.txt_contenido.SetValue(texto)
+            self.longitud_texto = len(texto)
+            self.arbol_indice.DeleteAllItems()
+            self.raiz_id = self.arbol_indice.AddRoot(os.path.basename(ruta))
+            self._construir_arbol_indice(self.raiz_id, datos_arbol)
+            self.ruta_libro_actual = ruta
+            self.cargar_datos_libro(os.path.basename(ruta))
+            self.arbol_indice.SetFocus()
+        except Exception as e: 
+            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
+
+    def _construir_arbol_indice(self, padre, nodos):
+        for n in nodos:
+            item = self.arbol_indice.AppendItem(padre, n['title'])
+            if n['children']: self._construir_arbol_indice(item, n['children'])
+
+    def al_tecla_volumen(self, e): e.Skip()
         
     def guardar_datos_libro(self):
         if not self.ruta_libro_actual: return
@@ -471,7 +490,9 @@ class PestanaLectura(wx.Panel):
                         self.txt_contenido.ShowPosition(d.get("pos", 0))
                         self.marcadores = d.get("marcadores", {})
         except: pass
+    # ANCLAJE_FIN: GESTION_DATOS_LIBRO
         
+    # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
         ids = [wx.NewIdRef() for _ in range(6)]
         self.Bind(wx.EVT_MENU, self.al_cargar_libro, id=ids[0])
@@ -485,3 +506,4 @@ class PestanaLectura(wx.Panel):
             (wx.ACCEL_CTRL, ord('P'), ids[2]), (wx.ACCEL_CTRL, ord('D'), ids[3]),
             (wx.ACCEL_CTRL, ord('B'), ids[4]), (wx.ACCEL_CTRL, ord('G'), ids[5])
         ]))
+    # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO

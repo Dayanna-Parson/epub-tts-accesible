@@ -12,3 +12,10 @@ registros/
 # Sistema
 .DS_Store
 Thumbs.db
+# Configuraciones locales y claves API (¡NO SUBIR!)
+configuraciones/config_general.json
+configuraciones/uso_cuota.json
+configuraciones/voces_favoritas.json
+configuraciones/datos_lectura.json
+configuraciones/libros_recientes.json
+configuraciones/voces_disponibles.json

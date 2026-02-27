@@ -1,10 +1,16 @@
+# ANCLAJE_INICIO: DEPENDENCIAS_PRINCIPALES
 import wx
 import os
 import json
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
+# ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
+# ANCLAJE_INICIO: DEFINICION_VENTANA
 class VentanaPrincipal(wx.Frame):
+    """Ventana raíz de la aplicación que contiene las pestañas y el menú principal."""
+    
+    # ANCLAJE_INICIO: CONSTRUCCION_INTERFAZ_PRINCIPAL
     def __init__(self, padre, titulo):
         super().__init__(padre, title=titulo, size=(1000, 700))
         self.Maximize(True)
@@ -37,7 +43,9 @@ class VentanaPrincipal(wx.Frame):
         self.cargar_historial_recientes()
         
         self.Show()
+    # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
 
+    # ANCLAJE_INICIO: CONFIGURACION_MENUS
     def _configurar_menu(self):
         self.barra_menu = wx.MenuBar()
         
@@ -76,7 +84,9 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, self.item_marcadores)
         self.Bind(wx.EVT_MENU, self.al_buscar, self.item_buscar)
         self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, self.item_porcentaje)
+    # ANCLAJE_FIN: CONFIGURACION_MENUS
 
+    # ANCLAJE_INICIO: EVENTOS_GLOBALES
     def al_cambiar_pestana(self, evento):
         indice = evento.GetSelection()
         es_lectura = (indice == 0)
@@ -84,7 +94,6 @@ class VentanaPrincipal(wx.Frame):
         evento.Skip()
 
     def al_abrir_archivo(self, evento):
-        # Forzar cambio a pestaña de lectura
         self.notebook.SetSelection(0)
         self.pestana_lectura.al_cargar_libro(None)
 
@@ -106,11 +115,12 @@ class VentanaPrincipal(wx.Frame):
     def al_cerrar(self, evento):
         try:
             if hasattr(self.pestana_lectura, 'reproductor'):
-                self.pestana_lectura.detener_reproduccion_segura()
+                self.pestana_lectura.al_detener(None)
         except: pass
         self.Destroy()
+    # ANCLAJE_FIN: EVENTOS_GLOBALES
 
-    # --- GESTIÓN DE RECIENTES ---
+    # ANCLAJE_INICIO: HISTORIAL_RECIENTES
     def cargar_historial_recientes(self):
         self.archivos_recientes = []
         try:
@@ -170,3 +180,5 @@ class VentanaPrincipal(wx.Frame):
                 self.archivos_recientes.remove(ruta)
                 self._guardar_recientes()
                 self.actualizar_menu_recientes()
+    # ANCLAJE_FIN: HISTORIAL_RECIENTES
+# ANCLAJE_FIN: DEFINICION_VENTANA
