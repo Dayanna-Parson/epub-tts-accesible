@@ -37,6 +37,11 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.al_cerrar)
         self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana)
 
+        # Bucle de tabulación accesible a nivel de ventana.
+        # Vinculado aquí (Frame) en lugar de en cada Panel para no interferir
+        # con los eventos internos de los controles hijo (ej: EVT_TREE_ITEM_ACTIVATED).
+        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab_global)
+
         # Historial de recientes
         self.archivos_recientes = []
         self.ruta_recientes = os.path.join("configuraciones", "libros_recientes.json")
@@ -87,10 +92,49 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: CONFIGURACION_MENUS
 
     # ANCLAJE_INICIO: EVENTOS_GLOBALES
+    def al_navegacion_tab_global(self, evento):
+        """
+        Implementa el bucle de tabulación accesible para todas las pestañas.
+        Al detectar Tab/Shift+Tab en el primer o último control de un panel,
+        devuelve el foco al Notebook en lugar de dejarlo atrapado.
+        Vinculado al Frame en lugar de a cada Panel individual para evitar
+        interferencias con eventos internos de controles hijo como el TreeCtrl.
+        """
+        if evento.GetKeyCode() != wx.WXK_TAB:
+            evento.Skip()
+            return
+
+        foco = self.FindFocus()
+        if foco is None:
+            evento.Skip()
+            return
+
+        shift = evento.ShiftDown()
+        indice = self.notebook.GetSelection()
+
+        if indice == 0:
+            primer = self.pestana_lectura.primer_control
+            ultimo = self.pestana_lectura.ultimo_control
+        elif indice == 2:
+            primer = self.pestana_ajustes.primer_control
+            ultimo = self.pestana_ajustes.obtener_ultimo_control()
+        else:
+            evento.Skip()
+            return
+
+        if not shift and foco == ultimo:
+            self.notebook.SetFocus()
+            return
+        elif shift and foco == primer:
+            self.notebook.SetFocus()
+            return
+
+        evento.Skip()
+
     def al_cambiar_pestana(self, evento):
         indice = evento.GetSelection()
         es_lectura = (indice == 0)
-        self.barra_menu.EnableTop(1, es_lectura) 
+        self.barra_menu.EnableTop(1, es_lectura)
         evento.Skip()
 
     def al_abrir_archivo(self, evento):

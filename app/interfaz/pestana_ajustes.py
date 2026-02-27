@@ -95,10 +95,11 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer_nav.Add(hbox_salto, 0, wx.ALL, 5)
         sizer.Add(sizer_nav, 0, wx.EXPAND | wx.ALL, 10)
         
-        # GUARDAR
-        btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites")
-        btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
-        sizer.Add(btn_guardar, 0, wx.ALL, 10)
+        # GUARDAR — guardado como atributo para que VentanaPrincipal pueda usarlo
+        # como punto de anclaje del bucle de tabulación accesible
+        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites")
+        self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
+        sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
         
         self.SetSizer(sizer)
 
@@ -225,10 +226,10 @@ class PanelClaves(wx.ScrolledWindow):
         sz_el.Add(hb_el, 0, wx.ALL, 5)
         sizer.Add(sz_el, 0, wx.EXPAND|wx.ALL, 10)
 
-        # --- GUARDAR ---
-        btn_save = wx.Button(self, label="Guardar Todas las Claves")
-        btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
-        sizer.Add(btn_save, 0, wx.ALIGN_CENTER|wx.ALL, 15)
+        # --- GUARDAR — atributo de instancia para el bucle de tabulación accesible ---
+        self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
+        self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
+        sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER|wx.ALL, 15)
         
         self.SetSizer(sizer)
         self.cargar_datos_visuales()
@@ -367,10 +368,10 @@ class PanelVoces(wx.Panel):
         
         sizer.Add(self.lista_voces, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
         
-        # 4. BOTONERA
-        btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
-        btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
-        sizer.Add(btn_escuchar, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
+        # 4. BOTONERA — atributo de instancia para el bucle de tabulación accesible
+        self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
+        sizer.Add(self.btn_escuchar, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
         
         id_play = wx.NewIdRef()
         self.Bind(wx.EVT_MENU, self.al_escuchar, id=id_play)
@@ -641,21 +642,39 @@ class PestanaAjustes(wx.Panel):
         
         self.splitter.SetMinimumPaneSize(150)
         self.splitter.SplitVertically(self.lista_cat, self.panel_derecho, 200)
-        
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.splitter, 1, wx.EXPAND|wx.ALL, 5)
         self.SetSizer(sizer)
+
+        # Puntos de anclaje para el bucle de tabulación gestionado desde VentanaPrincipal
+        self.primer_control = self.lista_cat
+
+    def obtener_ultimo_control(self):
+        """
+        Devuelve el último control navegable del sub-panel activo en ese momento.
+        VentanaPrincipal lo consulta para saber cuándo Tab debe volver al Notebook.
+        """
+        idx = self.panel_derecho.GetSelection()
+        if idx == 0:
+            return self.pag_general.btn_guardar
+        elif idx == 1:
+            return self.pag_claves.btn_save
+        elif idx == 2:
+            return self.pag_voces.btn_escuchar
+        else:
+            # PanelAtajos no tiene controles interactivos: el bucle vuelve al inicio
+            return self.lista_cat
 
     def al_cambiar_cat(self, event):
         idx = self.lista_cat.GetSelection()
         if idx != wx.NOT_FOUND:
             self.panel_derecho.ChangeSelection(idx)
-            # Sin SetFocus() explícito: el foco ya está en la lista por el propio
-            # evento EVT_LISTBOX. Llamarlo de nuevo provoca que NVDA anuncie el
-            # elemento dos veces por la doble propagación del evento de foco.
+            # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter/parent y
+            # mueva el foco al panel derecho al navegar con flechas en la lista.
+            # Sin SetFocus(): evita la doble anunciación de NVDA.
             if idx == 2:
                 self.pag_voces.cargar_datos_y_llenar()
-        event.Skip()
 
     def cargar_config(self):
         try:
