@@ -26,9 +26,14 @@ class DialogoMarcadores(wx.Dialog):
         # Lista
         self.lista_marcadores = wx.ListBox(self, style=wx.LB_SINGLE)
         
-        # Eventos
+        # El doble clic activa la navegación directamente
         self.lista_marcadores.Bind(wx.EVT_LISTBOX_DCLICK, self.al_activar_item)
+
+        # EVT_KEY_DOWN sobre ListBox en diálogos modales puede ser interceptado
+        # por el botón por defecto del diálogo antes de llegar al control.
+        # EVT_CHAR_HOOK a nivel de diálogo garantiza la captura sin importar el foco.
         self.lista_marcadores.Bind(wx.EVT_KEY_DOWN, self.al_tecla_lista)
+        self.Bind(wx.EVT_CHAR_HOOK, self.al_char_hook_dialogo)
         
         sizer_principal.Add(self.lista_marcadores, 1, wx.EXPAND | wx.ALL, 5)
         
@@ -82,12 +87,23 @@ class DialogoMarcadores(wx.Dialog):
             else:
                 self.lista_marcadores.SetSelection(0)
 
+    def al_char_hook_dialogo(self, evento):
+        """
+        Intercepta teclas críticas a nivel de diálogo.
+        Garantiza que Enter sobre la lista navegue al marcador,
+        incluso cuando el sistema de diálogos de wx intercepta el evento antes.
+        """
+        tecla = evento.GetKeyCode()
+        if tecla == wx.WXK_RETURN and self.FindFocus() == self.lista_marcadores:
+            self.al_activar_item(None)
+            return
+        evento.Skip()
+
     def al_tecla_lista(self, evento):
+        """Gestiona teclas de acceso rápido directamente sobre la lista de marcadores."""
         tecla = evento.GetKeyCode()
         if tecla == wx.WXK_DELETE:
             self.al_eliminar_marcador(None)
-        elif tecla == wx.WXK_RETURN:
-            self.al_activar_item(None)
         else:
             evento.Skip()
 

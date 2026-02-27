@@ -25,20 +25,26 @@ class ReproductorVoz:
         self.cliente_eleven = ClienteEleven()
         self.cliente_polly = ClientePolly()
         
-        # Estado inicial del sistema        
+        # Estado inicial del sistema
         self.motor_activo = self.cliente_local
         self.tipo_motor_actual = "local"
         self.voz_actual = None
         self.estado = "detenido"
         self._hilo_reproduccion = None
+        # Contador de generación: cada nueva petición de síntesis incrementa este valor.
+        # Los hilos anteriores lo comparan antes de reproducir y se descartan si ya no
+        # coincide, evitando acumulación de hilos y colisión de audio.
+        self._generacion = 0
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
         try:
             ruta = os.path.join("configuraciones", "config_general.json")
             if os.path.exists(ruta):
-                with open(ruta, 'r', encoding='utf-8') as f: return json.load(f)
-        except: pass
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"[Error] No se pudo leer config_general.json en el reproductor: {e}")
         return {}
     def fijar_voz(self, datos_voz):
         self.detener() 
@@ -74,49 +80,61 @@ class ReproductorVoz:
         """
         Inicia la lectura del texto.
         Aplica el método adecuado según si se usa una voz local o una voz neuronal.
+        Incrementa el contador de generación para invalidar cualquier hilo anterior
+        que pudiera estar esperando respuesta de la API.
         """
         if not texto: return
-        
+
         # Detener cualquier lectura en curso antes de iniciar una nueva
         self.detener()
-        time.sleep(0.05) 
-        
+        time.sleep(0.05)
+
+        # Incrementar generación: los hilos de síntesis anteriores quedan invalidados
+        self._generacion += 1
+        generacion_actual = self._generacion
+
         self.estado = "reproduciendo"
-        
+
         if self.tipo_motor_actual == "local":
             # Ejecución directa para voces locales SAPI5
             try:
                 self.cliente_local.hablar(texto)
             except Exception as e:
-                print(f"Error en voz local: {e}")
+                print(f"[Error] Voz local SAPI5: {e}")
                 self.estado = "detenido"
         else:
-            # Voces neuronales: Se ejecutan en segundo plano para no bloquear el lector de pantalla ni la interfaz
+            # Voces neuronales: se ejecutan en segundo plano para no bloquear la interfaz
             self._hilo_reproduccion = threading.Thread(
-                target=self._procesar_voz_neuronal, 
-                args=(texto,), 
+                target=self._procesar_voz_neuronal,
+                args=(texto, generacion_actual),
                 daemon=True
             )
             self._hilo_reproduccion.start()
     # ANCLAJE_FIN: FLUJO_PRINCIPAL_SINTESIS
 
     # ANCLAJE_INICIO: PROCESAMIENTO_VOCES_NEURONALES
-    def _procesar_voz_neuronal(self, texto):
+    def _procesar_voz_neuronal(self, texto, generacion):
         """
         Gestiona la reproducción de las voces neuronales sin interrumpir el uso del programa.
+        Recibe la generación con la que fue creado el hilo. Si al recibir la respuesta
+        de la API la generación ya no coincide con la actual, el audio se descarta
+        sin reproducirlo para evitar colisiones entre peticiones rápidas.
         """
         try:
             if self.voz_actual:
-                # Envío del texto al proveedor y espera de la respuesta de audio
+                # Petición bloqueante a la API del proveedor
                 self.motor_activo.hablar(texto, self.voz_actual)
         except Exception as e:
             error_msg = str(e)
-            print(f"Error en el servicio de voz neuronal ({self.tipo_motor_actual}): {error_msg}")
-            
-            # Notificamos al usuario de forma segura
-            wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
-        
-        self.estado = "detenido"
+            print(f"[Error] Voz neuronal ({self.tipo_motor_actual}): {error_msg}")
+
+            # Solo notificar al usuario si este hilo sigue siendo el activo
+            if self._generacion == generacion:
+                wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+
+        # Solo actualizar el estado si este hilo sigue siendo el válido
+        if self._generacion == generacion:
+            self.estado = "detenido"
     # ANCLAJE_FIN: PROCESAMIENTO_VOCES_NEURONALES
 
     # ANCLAJE_INICIO: ACTIVACION_VOZ_LOCAL_AUTOMATICA
