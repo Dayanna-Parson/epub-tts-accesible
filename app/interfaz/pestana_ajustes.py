@@ -334,10 +334,14 @@ class PanelVoces(wx.Panel):
         self.combo_tipo.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
         hbox2.Add(self.combo_tipo, 0, wx.RIGHT, 15)
         
-        # Casilla Gestión
-        self.chk_solo_favs = wx.CheckBox(self, label="Gestionar Favoritas (Ver solo marcadas)")
+        # Casillas de gestión y filtros especiales
+        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
         self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
-        hbox2.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL)
+        hbox2.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 15)
+
+        self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
+        self.chk_solo_nuevas.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
+        hbox2.Add(self.chk_solo_nuevas, 0, wx.ALIGN_CENTER_VERTICAL)
         sz_filtros.Add(hbox2, 0, wx.EXPAND|wx.ALL, 5)
 
         # Fila C: Buscador
@@ -350,12 +354,13 @@ class PanelVoces(wx.Panel):
         
         sizer.Add(sz_filtros, 0, wx.EXPAND|wx.ALL, 10)
         
-        # 3. LISTA
+        # 3. LISTA — columnas con Carga Cognitiva Frontal para NVDA:
+        # el lector anuncia primero el nombre enriquecido con etiquetas
         self.lista_voces = ListaVocesCheck(self)
-        self.lista_voces.InsertColumn(0, "Nombre", width=250)
-        self.lista_voces.InsertColumn(1, "Idioma", width=80)
-        self.lista_voces.InsertColumn(2, "Género", width=70)
-        self.lista_voces.InsertColumn(3, "Proveedor", width=120)
+        self.lista_voces.InsertColumn(0, "Nombre", width=280)
+        self.lista_voces.InsertColumn(1, "Género", width=80)
+        self.lista_voces.InsertColumn(2, "Idioma", width=160)
+        self.lista_voces.InsertColumn(3, "Proveedor", width=110)
         
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self.al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self.al_desmarcar_favorito)
@@ -393,8 +398,10 @@ class PanelVoces(wx.Panel):
     def cargar_favoritos(self):
         try:
             if os.path.exists(self.ruta_favs):
-                with open(self.ruta_favs, 'r', encoding='utf-8') as f: return json.load(f)
-        except: pass
+                with open(self.ruta_favs, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"[Error] No se pudo leer voces_favoritas.json: {e}")
         return []
 
     def guardar_favoritos(self):
@@ -434,7 +441,9 @@ class PanelVoces(wx.Panel):
                             v["proveedor_id"] = prov
                             self.voces_todas.append(v)
                             if v.get("idioma"): idiomas.add(v.get("idioma"))
-            except: pass
+            except Exception as e:
+                print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
+                self.voces_todas = []
             
         lista_idiomas = sorted(list(idiomas))
         self.combo_idioma.Clear()
@@ -448,61 +457,135 @@ class PanelVoces(wx.Panel):
         
         self.filtrar_y_mostrar()
 
+    # Tabla de traducción de códigos de idioma a texto legible en español
+    _LOCALES_ES = {
+        "en-US": "Inglés (Estados Unidos)",
+        "en-GB": "Inglés (Reino Unido)",
+        "en-AU": "Inglés (Australia)",
+        "en-CA": "Inglés (Canadá)",
+        "es-ES": "Español (España)",
+        "es-MX": "Español (México)",
+        "es-AR": "Español (Argentina)",
+        "es-CO": "Español (Colombia)",
+        "fr-FR": "Francés (Francia)",
+        "fr-CA": "Francés (Canadá)",
+        "de-DE": "Alemán (Alemania)",
+        "it-IT": "Italiano (Italia)",
+        "pt-BR": "Portugués (Brasil)",
+        "pt-PT": "Portugués (Portugal)",
+        "ja-JP": "Japonés (Japón)",
+        "zh-CN": "Chino (Mandarín)",
+        "ko-KR": "Coreano (Corea del Sur)",
+        "ar-SA": "Árabe (Arabia Saudí)",
+        "ru-RU": "Ruso (Rusia)",
+        "nl-NL": "Neerlandés (Países Bajos)",
+        "pl-PL": "Polaco (Polonia)",
+        "sv-SE": "Sueco (Suecia)",
+        "Multilingüe (v2)": "Multilingüe",
+    }
+
+    # Tabla de traducción de género
+    _GENEROS_ES = {
+        "Female": "Femenino",
+        "Male": "Masculino",
+        "Neutral": "Neutro",
+    }
+
+    def _construir_nombre_enriquecido(self, voz):
+        """
+        Construye el nombre visible de la voz inyectando etiquetas semánticas
+        que adelantan información relevante al principio para NVDA.
+        Ejemplo: 'Aria [Dragon] [Multilingüe]'
+        """
+        nombre_base = voz.get("nombre", "")
+        id_voz = voz.get("id", "").lower()
+        etiquetas = []
+
+        if "dragonhd" in id_voz or "dragon" in id_voz:
+            etiquetas.append("[Dragon]")
+        if "multilingual" in id_voz:
+            etiquetas.append("[Multilingüe]")
+        if "hd" in id_voz and "dragonhd" not in id_voz:
+            etiquetas.append("[HD]")
+        if voz.get("es_nueva"):
+            etiquetas.append("[Nueva]")
+
+        if etiquetas:
+            return f"{nombre_base} {' '.join(etiquetas)}"
+        return nombre_base
+
     def al_filtrar(self, event):
         self.filtrar_y_mostrar()
 
     def filtrar_y_mostrar(self):
         self.lista_voces.DeleteAllItems()
-        
+
         f_idioma = self.combo_idioma.GetValue()
         f_tipo = self.combo_tipo.GetValue()
         f_prov = self.combo_proveedor.GetValue()
         f_texto = self.txt_buscar.GetValue().lower()
-        
-        solo_favs = False
-        if hasattr(self, 'chk_solo_favs'):
-            solo_favs = self.chk_solo_favs.IsChecked()
-        
+
+        solo_favs = self.chk_solo_favs.IsChecked() if hasattr(self, 'chk_solo_favs') else False
+        solo_nuevas = self.chk_solo_nuevas.IsChecked() if hasattr(self, 'chk_solo_nuevas') else False
+
         self.mapa_indices = {}
         idx = 0
-        
+
         for voz in self.voces_todas:
-            nombre = voz.get("nombre", "").lower()
-            nombre_orig = voz.get("nombre", "")
-            id_voz = voz.get("id")
+            nombre_lower = voz.get("nombre", "").lower()
+            id_voz = voz.get("id", "")
             prov_raw = voz.get("proveedor_id", "local").lower()
             es_favorita = id_voz in self.favoritos
-            
-            if solo_favs:
+            es_nueva = bool(voz.get("es_nueva"))
+
+            # Filtros especiales exclusivos (tienen prioridad sobre el resto)
+            if solo_nuevas:
+                if not es_nueva: continue
+            elif solo_favs:
                 if not es_favorita: continue
             else:
                 if f_idioma != "Todos" and voz.get("idioma") != f_idioma: continue
-                
+
                 if f_prov != "Todos":
                     if f_prov == "Amazon Polly" and "polly" not in prov_raw: continue
                     elif f_prov == "Azure" and "azure" not in prov_raw: continue
                     elif f_prov == "ElevenLabs" and "eleven" not in prov_raw: continue
 
                 if f_tipo != "Todos":
-                    genero = voz.get("genero", "")
-                    if f_tipo == "Femenino" and genero != "Female": continue
-                    if f_tipo == "Masculino" and genero != "Male": continue
-                    if f_tipo == "Multilingüe" and "multilingual" not in nombre: continue
-                    if f_tipo == "Dragon" and "dragon" not in nombre: continue
-                
-                if f_texto and f_texto not in nombre: continue
-            
+                    genero_raw = voz.get("genero", "")
+                    id_lower = id_voz.lower()
+                    if f_tipo == "Femenino" and genero_raw != "Female": continue
+                    if f_tipo == "Masculino" and genero_raw != "Male": continue
+                    if f_tipo == "Multilingüe" and "multilingual" not in id_lower: continue
+                    if f_tipo == "Dragon" and "dragon" not in id_lower: continue
+
+                if f_texto and f_texto not in nombre_lower: continue
+
+            # Construir nombre enriquecido con etiquetas
+            nombre_mostrar = self._construir_nombre_enriquecido(voz)
+
+            # Traducir género al español
+            genero_mostrar = self._GENEROS_ES.get(voz.get("genero", ""), voz.get("genero", ""))
+
+            # Traducir código de idioma a nombre legible
+            idioma_raw = voz.get("idioma", "")
+            idioma_mostrar = self._LOCALES_ES.get(idioma_raw, idioma_raw)
+
+            # Normalizar nombre del proveedor
             prov_mostrar = prov_raw.capitalize()
-            if prov_raw == "polly": prov_mostrar = "Amazon Polly"
-            
-            pos = self.lista_voces.InsertItem(idx, nombre_orig)
-            self.lista_voces.SetItem(pos, 1, voz.get("idioma", ""))
-            self.lista_voces.SetItem(pos, 2, voz.get("genero", ""))
+            if prov_raw == "polly":
+                prov_mostrar = "Amazon Polly"
+            elif prov_raw == "elevenlabs":
+                prov_mostrar = "ElevenLabs"
+
+            pos = self.lista_voces.InsertItem(idx, nombre_mostrar)
+            self.lista_voces.SetItem(pos, 1, genero_mostrar)
+            self.lista_voces.SetItem(pos, 2, idioma_mostrar)
             self.lista_voces.SetItem(pos, 3, prov_mostrar)
-            
+
             if es_favorita:
                 self.lista_voces.CheckItem(pos, True)
-                
+
             self.mapa_indices[pos] = voz
             idx += 1
 
@@ -567,16 +650,27 @@ class PestanaAjustes(wx.Panel):
         idx = self.lista_cat.GetSelection()
         if idx != wx.NOT_FOUND:
             self.panel_derecho.ChangeSelection(idx)
-            self.lista_cat.SetFocus()
-            if idx == 2: self.pag_voces.cargar_datos_y_llenar()
+            # Sin SetFocus() explícito: el foco ya está en la lista por el propio
+            # evento EVT_LISTBOX. Llamarlo de nuevo provoca que NVDA anuncie el
+            # elemento dos veces por la doble propagación del evento de foco.
+            if idx == 2:
+                self.pag_voces.cargar_datos_y_llenar()
+        event.Skip()
 
     def cargar_config(self):
         try:
-            with open(self.ruta_config, "r") as f: return json.load(f)
-        except: return {}
+            with open(self.ruta_config, "r", encoding='utf-8') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
+        except Exception as e:
+            print(f"[Error] No se pudo leer config_general.json: {e}")
+            return {}
 
     def guardar_config_en_archivo(self):
         try:
             os.makedirs(os.path.dirname(self.ruta_config), exist_ok=True)
-            with open(self.ruta_config, "w") as f: json.dump(self.config, f, indent=4)
-        except Exception as e: wx.MessageBox(str(e))
+            with open(self.ruta_config, "w", encoding='utf-8') as f:
+                json.dump(self.config, f, indent=4, ensure_ascii=False)
+        except Exception as e:
+            wx.MessageBox(str(e))

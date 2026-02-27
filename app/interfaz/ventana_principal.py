@@ -127,7 +127,9 @@ class VentanaPrincipal(wx.Frame):
             if os.path.exists(self.ruta_recientes):
                 with open(self.ruta_recientes, "r", encoding="utf-8") as archivo:
                     self.archivos_recientes = json.load(archivo)
-        except: pass
+        except Exception as e:
+            print(f"[Aviso] No se pudo leer el historial de recientes: {e}")
+            self.archivos_recientes = []
         self.actualizar_menu_recientes()
 
     def agregar_a_recientes(self, ruta):
