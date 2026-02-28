@@ -691,5 +691,16 @@ class PestanaAjustes(wx.Panel):
             os.makedirs(os.path.dirname(self.ruta_config), exist_ok=True)
             with open(self.ruta_config, "w", encoding='utf-8') as f:
                 json.dump(self.config, f, indent=4, ensure_ascii=False)
+            # Notificar a PestanaLectura para que actualice las etiquetas de los botones
+            # de salto con el nuevo valor de segundos guardado
+            try:
+                ventana = self.GetParent().GetParent()  # Notebook → VentanaPrincipal
+                if hasattr(ventana, 'pestana_lectura'):
+                    pl = ventana.pestana_lectura
+                    pl.cargar_config_salto()
+                    pl.btn_atras.SetLabel(f"Atrás {pl.segundos_salto}s")
+                    pl.btn_adelante.SetLabel(f"Adelante {pl.segundos_salto}s")
+            except Exception:
+                pass
         except Exception as e:
             wx.MessageBox(str(e))
