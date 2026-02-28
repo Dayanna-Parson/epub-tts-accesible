@@ -35,6 +35,9 @@ class ReproductorVoz:
         # Los hilos anteriores lo comparan antes de reproducir y se descartan si ya no
         # coincide, evitando acumulación de hilos y colisión de audio.
         self._generacion = 0
+        # Callback opcional que se ejecuta en el hilo principal cuando un fragmento
+        # termina de reproducirse. Lo usa PestanaLectura para encadenar la cola de audio.
+        self._callback_completado = None
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
@@ -76,12 +79,16 @@ class ReproductorVoz:
             # ANCLAJE_FIN: CONFIGURACION_VOZ_ACTIVA
 
 # ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
-    def cargar_texto(self, texto):
+    def cargar_texto(self, texto, callback_completado=None):
         """
         Inicia la lectura del texto.
         Aplica el método adecuado según si se usa una voz local o una voz neuronal.
         Incrementa el contador de generación para invalidar cualquier hilo anterior
         que pudiera estar esperando respuesta de la API.
+
+        callback_completado: función sin argumentos que se llamará en el hilo principal
+        cuando termine de reproducirse el fragmento. Usado por PestanaLectura para
+        encadenar la cola de audio de lectura continua.
         """
         if not texto: return
 
@@ -93,15 +100,19 @@ class ReproductorVoz:
         self._generacion += 1
         generacion_actual = self._generacion
 
+        # Registrar el callback para este fragmento
+        self._callback_completado = callback_completado
+
         self.estado = "reproduciendo"
 
         if self.tipo_motor_actual == "local":
-            # Ejecución directa para voces locales SAPI5
+            # Ejecución directa para voces locales SAPI5 (SPF_ASYNC, no bloquea)
             try:
                 self.cliente_local.hablar(texto)
             except Exception as e:
                 print(f"[Error] Voz local SAPI5: {e}")
                 self.estado = "detenido"
+            # Las voces locales gestionan su propia cola internamente; no se usa callback
         else:
             # Voces neuronales: se ejecutan en segundo plano para no bloquear la interfaz
             self._hilo_reproduccion = threading.Thread(
@@ -132,9 +143,11 @@ class ReproductorVoz:
             if self._generacion == generacion:
                 wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
 
-        # Solo actualizar el estado si este hilo sigue siendo el válido
+        # Solo actualizar el estado y disparar el callback si este hilo sigue siendo el válido
         if self._generacion == generacion:
             self.estado = "detenido"
+            if self._callback_completado:
+                wx.CallAfter(self._callback_completado)
     # ANCLAJE_FIN: PROCESAMIENTO_VOCES_NEURONALES
 
     # ANCLAJE_INICIO: ACTIVACION_VOZ_LOCAL_AUTOMATICA
@@ -156,11 +169,16 @@ class ReproductorVoz:
     # ANCLAJE_INICIO: COMANDOS_REPRODUCTOR
     def detener(self):
         """Finaliza cualquier proceso de audio activo en todos los motores."""
+        # Limpiar callback antes de detener para que el hilo en curso
+        # no lo dispare al recibir la excepción de cancelación de sesión
+        self._callback_completado = None
         try: self.cliente_local.detener()
         except: pass
         try: self.cliente_azure.detener()
         except: pass
         try: self.cliente_eleven.detener()
+        except: pass
+        try: self.cliente_polly.detener()
         except: pass
         self.estado = "detenido"
 

@@ -34,6 +34,9 @@ class PestanaLectura(wx.Panel):
         # Variables para la estimación temporal del progreso de voces neuronales
         self._tiempo_inicio_frag = 0.0
         self._longitud_frag_actual = 0
+        # Cola de fragmentos para lectura continua de voces neuronales
+        self._cola_lectura = []
+        self._idx_fragmento_actual = 0
         self.ruta_libro_actual = None
         self.ruta_datos_lectura = os.path.join("configuraciones", "datos_lectura.json")
         
@@ -235,48 +238,129 @@ class PestanaLectura(wx.Panel):
             estado = self.reproductor.obtener_estado()
         elif hasattr(self.reproductor, 'estado'):
             estado = self.reproductor.estado
-            
+
         # 2. Transiciones de estado (Play/Pausa)
         if estado == 'reproduciendo':
-            if hasattr(self.reproductor, 'pausar'): self.reproductor.pausar()
+            # Al pausar, cancelar la cola pendiente (las voces neuronales requieren
+            # reenviar el texto desde la nueva posición al reanudar)
+            self._cola_lectura = []
+            if hasattr(self.reproductor, 'pausar'):
+                self.reproductor.pausar()
         elif estado == 'pausado':
-            if hasattr(self.reproductor, 'reanudar'): self.reproductor.reanudar()
+            if hasattr(self.reproductor, 'reanudar'):
+                self.reproductor.reanudar()
         else:
             # 3. Inicio de nueva lectura desde la posición del cursor
             pos_actual = self.txt_contenido.GetInsertionPoint()
             self.pos_inicio_fragmento = pos_actual
-            
+
             texto_completo = self.txt_contenido.GetValue()
-            if not texto_completo: return 
-            
-            fragmento = texto_completo[pos_actual:]
-            
-# Verificación del tipo de motor para gestionar el tamaño del texto
+            if not texto_completo:
+                return
+
+            fragmento_total = texto_completo[pos_actual:]
+            if not fragmento_total.strip():
+                return
+
+            idx = self.combo_voz.GetSelection()
+            if idx == wx.NOT_FOUND:
+                return
+
+            voz_data = self.combo_voz.GetClientData(idx)
+            self.voz_seleccionada = voz_data
+            if hasattr(self.reproductor, 'fijar_voz'):
+                self.reproductor.fijar_voz(voz_data)
+
             es_voz_neuronal = False
-            if hasattr(self, 'voz_seleccionada') and self.voz_seleccionada:
-                prov = self.voz_seleccionada.get('proveedor_id', 'local').lower()
+            if voz_data:
+                prov = voz_data.get('proveedor_id', 'local').lower()
                 if 'azure' in prov or 'eleven' in prov or 'polly' in prov:
                     es_voz_neuronal = True
-            
-            # Se limita el fragmento a 500 caracteres para las voces neuronales
-            # con el objetivo de reducir el tiempo de respuesta inicial.
-            if es_voz_neuronal and len(fragmento) > 500:
-                fragmento = fragmento[:500]            
 
-            if fragmento.strip():
-                idx = self.combo_voz.GetSelection()
-                if idx != wx.NOT_FOUND:
-                    voz_data = self.combo_voz.GetClientData(idx)
-                    if hasattr(self.reproductor, 'fijar_voz'):
-                        self.reproductor.fijar_voz(voz_data)
+            if es_voz_neuronal:
+                # Voces neuronales: dividir en fragmentos y reproducir en cola continua
+                self._cola_lectura = self._dividir_en_fragmentos(fragmento_total, pos_actual)
+                self._idx_fragmento_actual = 0
+                self._reproducir_siguiente_fragmento()
+            else:
+                # Voz local SAPI5: gestiona su propia cola internamente, enviar todo el texto
+                self._cola_lectura = []
+                self._tiempo_inicio_frag = time.time()
+                self._longitud_frag_actual = len(fragmento_total)
+                self.reproductor.cargar_texto(fragmento_total)
 
-                    # Registrar punto de inicio y longitud para la estimación de progreso
-                    self._tiempo_inicio_frag = time.time()
-                    self._longitud_frag_actual = len(fragmento)
+    def _dividir_en_fragmentos(self, texto, pos_base):
+        """
+        Divide el texto en fragmentos de máximo MAX_CHARS caracteres,
+        respetando límites de párrafo o frase para no cortar palabras.
+        Retorna lista de (texto_fragmento, pos_inicio_global).
+        """
+        MAX_CHARS = 1500
+        resultado = []
+        restante = texto
+        pos_actual = pos_base
 
-                    self.reproductor.cargar_texto(fragmento)
-    
-    def al_detener(self, evento): 
+        while restante:
+            if len(restante) <= MAX_CHARS:
+                resultado.append((restante, pos_actual))
+                break
+
+            # Buscar punto de corte ideal: doble salto de línea antes de MAX_CHARS
+            corte = restante.rfind('\n\n', 0, MAX_CHARS)
+            if corte != -1:
+                corte += 2  # incluir el \n\n en el fragmento anterior
+            else:
+                # Sin párrafo, buscar final de frase
+                for sep in ['. ', '! ', '? ', '.\n', '!\n', '?\n']:
+                    corte = restante.rfind(sep, 0, MAX_CHARS)
+                    if corte != -1:
+                        corte += len(sep)
+                        break
+
+            if corte <= 0:
+                # Sin punto de corte natural: cortar en el límite estricto
+                corte = MAX_CHARS
+
+            fragmento = restante[:corte]
+            resultado.append((fragmento, pos_actual))
+            restante = restante[corte:]
+            pos_actual += corte
+
+        return resultado
+
+    def _reproducir_siguiente_fragmento(self):
+        """Inicia la reproducción del siguiente fragmento de la cola."""
+        if not self._cola_lectura or self._idx_fragmento_actual >= len(self._cola_lectura):
+            return
+
+        texto_frag, pos_inicio = self._cola_lectura[self._idx_fragmento_actual]
+
+        if not texto_frag.strip():
+            # Saltar fragmento vacío y continuar con el siguiente
+            self._idx_fragmento_actual += 1
+            self._reproducir_siguiente_fragmento()
+            return
+
+        self.pos_inicio_fragmento = pos_inicio
+        self._tiempo_inicio_frag = time.time()
+        self._longitud_frag_actual = len(texto_frag)
+
+        # Mover el cursor al inicio del fragmento para que NVDA sepa dónde empieza
+        self.txt_contenido.SetInsertionPoint(pos_inicio)
+        self.txt_contenido.ShowPosition(pos_inicio)
+
+        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado)
+
+    def _al_fragmento_completado(self):
+        """Callback invocado por ReproductorVoz cuando termina un fragmento neuronal."""
+        self._idx_fragmento_actual += 1
+        if self._cola_lectura and self._idx_fragmento_actual < len(self._cola_lectura):
+            self._reproducir_siguiente_fragmento()
+
+    def al_detener(self, evento):
+        # Cancelar la cola de lectura continua antes de detener el motor
+        self._cola_lectura = []
+        self._idx_fragmento_actual = 0
         if hasattr(self.reproductor, 'detener'):
             self.reproductor.detener()
         self.guardar_datos_libro()
@@ -304,13 +388,13 @@ class PestanaLectura(wx.Panel):
             if self.btn_reproducir.GetLabel() != "Reproducir (Ctrl+P)":
                 self.btn_reproducir.SetLabel("Reproducir (Ctrl+P)")
 
-        # 2. Barra de progreso: solo se actualiza mientras se reproduce activamente.
-        # Cuando está detenida, el usuario controla la posición con flechas o clic.
+        # 2. Barra de progreso y sincronización de cursor.
+        # Solo se actualiza durante la reproducción activa para no sobreescribir
+        # la posición que el usuario haya establecido manualmente.
         if estado == 'reproduciendo' and self.longitud_texto > 0:
             if self._longitud_frag_actual > 0:
-                # Para voces neuronales (y locales), el cursor del TextCtrl no avanza
-                # durante la síntesis. Se estima la posición usando tiempo transcurrido
-                # a una velocidad media de 14 caracteres por segundo.
+                # El cursor del TextCtrl no avanza solo durante la síntesis neuronal.
+                # Se estima la posición usando tiempo transcurrido a ~14 caracteres/segundo.
                 tiempo_transcurrido = time.time() - self._tiempo_inicio_frag
                 avance_estimado = min(
                     self._longitud_frag_actual,
@@ -319,6 +403,10 @@ class PestanaLectura(wx.Panel):
                 pos_estimada = self.pos_inicio_fragmento + avance_estimado
             else:
                 pos_estimada = self.txt_contenido.GetInsertionPoint()
+
+            # Sincronización de cursor: mover el punto de inserción para que NVDA
+            # pueda seguir la posición de lectura en tiempo real
+            self.txt_contenido.SetInsertionPoint(pos_estimada)
 
             porcentaje = max(0, min(100, int((pos_estimada / self.longitud_texto) * 100)))
 

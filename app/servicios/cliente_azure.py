@@ -10,6 +10,9 @@ import time
 class ClienteAzure:
     def __init__(self):
         self.config = {}
+        # Parámetros de reproducción (0-100)
+        self._velocidad = 50   # 50 = velocidad normal
+        self._volumen = 100    # 100 = volumen máximo
         # Una sesión reutilizable mejora el rendimiento (keep-alive HTTP) y permite
         # cancelar peticiones en curso llamando a self._sesion.close().
         self._sesion = requests.Session()
@@ -35,6 +38,35 @@ class ClienteAzure:
         t = t.replace('"', "")
         t = t.replace("'", "")
         return t
+
+    def _velocidad_a_tasa(self):
+        """
+        Convierte el valor de velocidad (0-100) a porcentaje de tasa SSML para Azure.
+          v=0  → -80%  (muy lento)
+          v=50 → +0%   (normal)
+          v=100 → +80% (rápido)
+        """
+        pct = int((self._velocidad - 50) * 1.6)
+        pct = max(-80, min(80, pct))
+        if pct >= 0:
+            return f"+{pct}%"
+        return f"{pct}%"
+
+    def _volumen_a_nivel(self):
+        """Convierte el valor de volumen (0-100) a nivel de volumen SSML para Azure."""
+        v = self._volumen
+        if v == 0:
+            return "silent"
+        elif v < 20:
+            return "x-soft"
+        elif v < 40:
+            return "soft"
+        elif v < 70:
+            return "medium"
+        elif v < 90:
+            return "loud"
+        else:
+            return "x-loud"
 
     def hablar(self, texto, datos_voz):
         inicio = time.time()
@@ -64,11 +96,16 @@ class ClienteAzure:
         texto_limpio = self._limpiar_texto_xml(texto)
         print(f"--> [Azure] Texto limpio ({len(texto_limpio)} caracteres). Enviando...")
 
+        tasa = self._velocidad_a_tasa()
+        nivel_vol = self._volumen_a_nivel()
+
         ssml = f"""
         <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{idioma_destino}'>
             <voice name='{id_voz}'>
                 <lang xml:lang='{idioma_destino}'>
-                    {texto_limpio}
+                    <prosody rate='{tasa}' volume='{nivel_vol}'>
+                        {texto_limpio}
+                    </prosody>
                 </lang>
             </voice>
         </speak>
@@ -113,3 +150,15 @@ class ClienteAzure:
             sd.stop()
         except Exception:
             pass
+
+    def pausar(self):
+        self.detener()
+
+    def reanudar(self):
+        pass
+
+    def fijar_velocidad(self, v):
+        self._velocidad = max(0, min(100, int(v)))
+
+    def fijar_volumen(self, v):
+        self._volumen = max(0, min(100, int(v)))

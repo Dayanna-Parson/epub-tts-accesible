@@ -9,6 +9,9 @@ import io
 class ClienteEleven:
     def __init__(self):
         self.config = {}
+        # Parámetros de reproducción (0-100)
+        self._velocidad = 50   # 50 = velocidad normal
+        self._volumen = 100    # 100 = volumen máximo
         # Sesión reutilizable con soporte para cancelación inmediata.
         self._sesion = requests.Session()
 
@@ -49,7 +52,18 @@ class ClienteEleven:
 
         if response.status_code == 200:
             data, fs = sf.read(io.BytesIO(response.content))
-            sd.play(data, fs)
+
+            # Aplicar volumen multiplicando la señal (100 = sin cambio)
+            if self._volumen != 100:
+                data = data * (self._volumen / 100.0)
+
+            # Ajustar velocidad cambiando la tasa de muestreo efectiva.
+            # factor=1.0 en v=50 (normal); factor=0.5 en v=0 (lento); factor=1.5 en v=100 (rápido).
+            # Nota: altera ligeramente el tono al cambiar la velocidad.
+            factor_velocidad = 0.5 + (self._velocidad / 100.0)
+            fs_efectiva = int(fs * factor_velocidad)
+
+            sd.play(data, fs_efectiva)
             sd.wait()
         else:
             raise Exception(f"Error ElevenLabs: {response.status_code}")
@@ -76,7 +90,7 @@ class ClienteEleven:
         pass
 
     def fijar_velocidad(self, v):
-        pass
+        self._velocidad = max(0, min(100, int(v)))
 
     def fijar_volumen(self, v):
-        pass
+        self._volumen = max(0, min(100, int(v)))

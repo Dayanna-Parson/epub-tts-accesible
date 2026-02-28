@@ -94,9 +94,12 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_INICIO: EVENTOS_GLOBALES
     def al_navegacion_tab_global(self, evento):
         """
-        Implementa el bucle de tabulación accesible para todas las pestañas.
-        Al detectar Tab/Shift+Tab en el primer o último control de un panel,
-        devuelve el foco al Notebook en lugar de dejarlo atrapado.
+        Implementa el bucle de tabulación accesible bidireccional para todas las pestañas.
+
+        Tab en el último control    → foco vuelve al Notebook (salir del panel)
+        Shift+Tab en el primer control → foco salta al último control del mismo panel
+                                         (bucle circular dentro del panel)
+
         Vinculado al Frame en lugar de a cada Panel individual para evitar
         interferencias con eventos internos de controles hijo como el TreeCtrl.
         """
@@ -123,10 +126,12 @@ class VentanaPrincipal(wx.Frame):
             return
 
         if not shift and foco == ultimo:
+            # Tab en el último control: salir del panel hacia el Notebook
             self.notebook.SetFocus()
             return
         elif shift and foco == primer:
-            self.notebook.SetFocus()
+            # Shift+Tab en el primer control: bucle circular → saltar al último control
+            ultimo.SetFocus()
             return
 
         evento.Skip()
