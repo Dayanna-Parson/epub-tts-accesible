@@ -53,7 +53,7 @@ class PestanaLectura(wx.Panel):
 
         self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
         self.txt_contenido.SetName("Contenido del libro") 
-        self.txt_contenido.SetValue("Bienvenida. Pulsa Ctrl+A para abrir un libro EPUB.")
+        self.txt_contenido.SetValue("Bienvenida a Epub TTS Accesible. Pulsa Ctrl+A para abrir un libro EPUB.")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
         
         self.divisor.SetMinimumPaneSize(200)
@@ -306,7 +306,7 @@ class PestanaLectura(wx.Panel):
         de la API sin perder calidad de entonación por frases incompletas.
         Retorna lista de (texto_fragmento, pos_inicio_global).
         """
-        MAX_CHARS = 300
+        MAX_CHARS = 200
         resultado = []
         restante = texto
         pos_actual = pos_base

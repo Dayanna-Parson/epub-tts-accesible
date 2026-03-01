@@ -17,6 +17,8 @@ class ClienteAzure:
         # Una sesión reutilizable mejora el rendimiento (keep-alive HTTP) y permite
         # cancelar peticiones en curso llamando a self._sesion.close().
         self._sesion = requests.Session()
+        # Flag para distinguir una detención intencional de un error de red
+        self._parado = False
 
     def _cargar_config(self):
         try:
@@ -70,6 +72,7 @@ class ClienteAzure:
             return "x-loud"
 
     def hablar(self, texto, datos_voz):
+        self._parado = False
         inicio = time.time()
         print(f"--> [Azure] Iniciando petición...")
 
@@ -115,14 +118,26 @@ class ClienteAzure:
         # La petición se realiza a través de la sesión gestionada.
         # Si detener() cierra la sesión antes de que esta línea termine,
         # requests lanzará una ConnectionError que el reproductor captura y descarta.
-        try:
-            response = self._sesion.post(
-                url, headers=headers,
-                data=ssml.encode('utf-8'),
-                timeout=30
-            )
-        except requests.exceptions.Timeout:
-            raise Exception("Azure tardó demasiado (Timeout > 30s).")
+        # Se realizan hasta 2 intentos ante errores de conexión transitoria.
+        response = None
+        for intento in range(2):
+            try:
+                response = self._sesion.post(
+                    url, headers=headers,
+                    data=ssml.encode('utf-8'),
+                    timeout=30
+                )
+                break  # Éxito: salir del bucle
+            except requests.exceptions.Timeout:
+                raise Exception("Azure tardó demasiado (Timeout > 30s).")
+            except requests.exceptions.ConnectionError as e:
+                # Solo reintentar si no fue una detención intencional del usuario
+                if intento == 0 and not self._parado:
+                    print(f"[Azure] Error de conexión, reintentando en 1s… ({e})")
+                    time.sleep(1)
+                    self._sesion = requests.Session()
+                    continue
+                raise  # Segundo intento fallido o detención intencional
 
         tiempo_total = time.time() - inicio
         print(f"--> [Azure] Respuesta recibida en {tiempo_total:.2f} segundos.")
@@ -141,6 +156,7 @@ class ClienteAzure:
         bloqueante a self._sesion.post() en el hilo de síntesis lance una excepción
         y se detenga sin necesidad de esperar la respuesta completa de la API.
         """
+        self._parado = True
         try:
             self._sesion.close()
             # Crear una sesión nueva para peticiones futuras

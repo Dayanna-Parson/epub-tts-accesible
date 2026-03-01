@@ -116,3 +116,40 @@ class ControlCuota:
         clave = proveedor.lower()
         self.datos["limites"][clave] = int(nuevo_limite)
         self.guardar_datos()
+
+    def tiene_cuota(self, texto, proveedor):
+        """
+        Consulta silenciosa: retorna True si hay cuota disponible para el texto dado,
+        sin mostrar diálogos ni registrar el gasto.
+        """
+        self.reiniciar_contadores_si_mes_nuevo()
+        prov_key = proveedor.lower()
+        if "azure" in prov_key:
+            clave = "azure"
+        elif "polly" in prov_key:
+            clave = "polly"
+        elif "eleven" in prov_key:
+            clave = "elevenlabs"
+        else:
+            return True  # Voz local: siempre disponible
+
+        gastado = self.datos["gastado"].get(clave, 0)
+        limite = self.datos["limites"].get(clave, 0)
+        return gastado + len(texto) <= limite
+
+    def registrar_gasto(self, texto, proveedor):
+        """
+        Registra el gasto del texto para el proveedor indicado, sin mostrar diálogos.
+        Se usa cuando ya se verificó que hay cuota (vía tiene_cuota).
+        """
+        prov_key = proveedor.lower()
+        if "azure" in prov_key:
+            clave = "azure"
+        elif "polly" in prov_key:
+            clave = "polly"
+        elif "eleven" in prov_key:
+            clave = "elevenlabs"
+        else:
+            return  # Voz local: no se registra
+        self.datos["gastado"][clave] = self.datos["gastado"].get(clave, 0) + len(texto)
+        self.guardar_datos()

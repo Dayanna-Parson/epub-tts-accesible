@@ -8,6 +8,7 @@ from app.servicios.cliente_sapi5 import ClienteSapi5
 from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
+from app.motor.control_cuota import ControlCuota
 from app.config_rutas import ruta_config
 # ANCLAJE_FIN: IMPORTACIONES
 
@@ -43,6 +44,8 @@ class ReproductorVoz:
         # Cuando True, el hilo de síntesis no mostrará el diálogo de error por ConnectionError
         # ni sobreescribirá el estado con 'detenido' al recibir la excepción de cancelación.
         self._detenido_intencionalmente = False
+        # Control de cuota: evita gastos inesperados y permite saltar al siguiente proveedor
+        self._control_cuota = ControlCuota()
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
@@ -84,12 +87,54 @@ class ReproductorVoz:
             # ANCLAJE_FIN: CONFIGURACION_VOZ_ACTIVA
 
 # ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
+    def _elegir_motor_con_cuota(self, texto):
+        """
+        Verifica la cuota del proveedor de IA actualmente seleccionado.
+        Si está agotada, intenta el siguiente proveedor disponible antes de
+        recurrir a la voz local (SAPI5).
+
+        Orden de prioridad: proveedor actual → otros proveedores de IA → local.
+        Registra el gasto del proveedor elegido antes de retornar.
+        Retorna el tipo de motor elegido ("azure", "polly", "eleven" o "local").
+        """
+        todos = [
+            ("azure", self.cliente_azure),
+            ("polly", self.cliente_polly),
+            ("eleven", self.cliente_eleven),
+        ]
+        # El proveedor actual va primero
+        prioridad = [(t, m) for t, m in todos if t == self.tipo_motor_actual] + \
+                    [(t, m) for t, m in todos if t != self.tipo_motor_actual]
+
+        for tipo, motor in prioridad:
+            if self._control_cuota.tiene_cuota(texto, tipo):
+                self._control_cuota.registrar_gasto(texto, tipo)
+                # Cambiar motor activo si difiere del actual
+                if tipo != self.tipo_motor_actual:
+                    print(f"[Cuota] '{self.tipo_motor_actual}' sin cuota → usando '{tipo}'")
+                    self.motor_activo = motor
+                    self.tipo_motor_actual = tipo
+                return tipo
+
+        # Ningún proveedor tiene cuota: caer a voz local
+        wx.MessageBox(
+            "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\n"
+            "Se usará la voz local para continuar sin generar costes adicionales.",
+            "Límite de cuota alcanzado"
+        )
+        self.motor_activo = self.cliente_local
+        self.tipo_motor_actual = "local"
+        return "local"
+
     def cargar_texto(self, texto, callback_completado=None):
         """
         Inicia la lectura del texto.
         Aplica el método adecuado según si se usa una voz local o una voz neuronal.
         Incrementa el contador de generación para invalidar cualquier hilo anterior
         que pudiera estar esperando respuesta de la API.
+
+        Para voces neuronales, verifica la cuota antes de iniciar y salta al siguiente
+        proveedor disponible si el actual ha agotado su límite mensual.
 
         callback_completado: función sin argumentos que se llamará en el hilo principal
         cuando termine de reproducirse el fragmento. Usado por PestanaLectura para
@@ -103,6 +148,10 @@ class ReproductorVoz:
 
         # Nueva síntesis: restablecer el flag de detención intencional
         self._detenido_intencionalmente = False
+
+        # Para voces neuronales, verificar cuota y seleccionar motor disponible
+        if self.tipo_motor_actual != "local":
+            self._elegir_motor_con_cuota(texto)
 
         # Incrementar generación: los hilos de síntesis anteriores quedan invalidados
         self._generacion += 1
