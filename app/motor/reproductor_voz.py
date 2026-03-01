@@ -39,6 +39,10 @@ class ReproductorVoz:
         # Callback opcional que se ejecuta en el hilo principal cuando un fragmento
         # termina de reproducirse. Lo usa PestanaLectura para encadenar la cola de audio.
         self._callback_completado = None
+        # Flag que indica que la detención fue intencional (pausa o stop del usuario).
+        # Cuando True, el hilo de síntesis no mostrará el diálogo de error por ConnectionError
+        # ni sobreescribirá el estado con 'detenido' al recibir la excepción de cancelación.
+        self._detenido_intencionalmente = False
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
@@ -97,6 +101,9 @@ class ReproductorVoz:
         self.detener()
         time.sleep(0.05)
 
+        # Nueva síntesis: restablecer el flag de detención intencional
+        self._detenido_intencionalmente = False
+
         # Incrementar generación: los hilos de síntesis anteriores quedan invalidados
         self._generacion += 1
         generacion_actual = self._generacion
@@ -140,12 +147,15 @@ class ReproductorVoz:
             error_msg = str(e)
             print(f"[Error] Voz neuronal ({self.tipo_motor_actual}): {error_msg}")
 
-            # Solo notificar al usuario si este hilo sigue siendo el activo
-            if self._generacion == generacion:
+            # Solo mostrar el error al usuario si fue un fallo real de la API,
+            # no una detención intencional (pausa o stop del usuario que cierra la sesión HTTP).
+            if self._generacion == generacion and not self._detenido_intencionalmente:
                 wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
 
-        # Solo actualizar el estado y disparar el callback si este hilo sigue siendo el válido
-        if self._generacion == generacion:
+        # Solo actualizar el estado y encadenar el callback si:
+        # 1. Esta generación sigue siendo la activa (no se inició otra síntesis)
+        # 2. La detención NO fue intencional (si fue pausa/stop, el estado ya fue asignado)
+        if self._generacion == generacion and not self._detenido_intencionalmente:
             self.estado = "detenido"
             if self._callback_completado:
                 wx.CallAfter(self._callback_completado)
@@ -170,8 +180,11 @@ class ReproductorVoz:
     # ANCLAJE_INICIO: COMANDOS_REPRODUCTOR
     def detener(self):
         """Finaliza cualquier proceso de audio activo en todos los motores."""
-        # Limpiar callback antes de detener para que el hilo en curso
-        # no lo dispare al recibir la excepción de cancelación de sesión
+        # Marcar como detención intencional ANTES de cerrar la sesión HTTP.
+        # El hilo de síntesis leerá este flag cuando capture la ConnectionError
+        # y no mostrará el diálogo de error ni sobreescribirá el estado.
+        self._detenido_intencionalmente = True
+        # Limpiar callback para que el hilo no encadene el siguiente fragmento
         self._callback_completado = None
         try: self.cliente_local.detener()
         except: pass

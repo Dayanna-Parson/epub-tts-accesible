@@ -302,9 +302,11 @@ class PestanaLectura(wx.Panel):
         """
         Divide el texto en fragmentos de máximo MAX_CHARS caracteres,
         respetando límites de párrafo o frase para no cortar palabras.
+        300 caracteres es el punto óptimo: respuesta casi instantánea
+        de la API sin perder calidad de entonación por frases incompletas.
         Retorna lista de (texto_fragmento, pos_inicio_global).
         """
-        MAX_CHARS = 1500
+        MAX_CHARS = 300
         resultado = []
         restante = texto
         pos_actual = pos_base
