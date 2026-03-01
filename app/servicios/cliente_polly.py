@@ -100,6 +100,18 @@ class ClientePolly:
     def obtener_voces(self):
         return []
 
+    def _elegir_motor(self, datos_voz):
+        """
+        Elige el motor óptimo para la voz según los motores que soporta.
+        Prioridad: generative > long-form > neural > standard.
+        Si no hay información de motores, intenta neural como mínimo seguro.
+        """
+        motores = datos_voz.get("motores", []) if isinstance(datos_voz, dict) else []
+        for motor in ("generative", "long-form", "neural", "standard"):
+            if motor in motores:
+                return motor
+        return "neural"
+
     def _llamar_api(self, texto, datos_voz):
         """
         Llama a la API de Amazon Polly y devuelve (data, fs).
@@ -120,15 +132,6 @@ class ClientePolly:
         region_raw = po_conf.get("region", "").strip()
         region = _normalizar_region(region_raw)
 
-        # --- DIAGNÓSTICO: mostrar estado de credenciales en consola ---
-        ruta_cfg = ruta_config("config_general.json")
-        print(f"[Polly] Ruta config: {ruta_cfg}")
-        print(f"[Polly] Access Key: {'OK (' + str(len(access_key)) + ' chars)' if access_key else '*** VACÍO ***'}")
-        print(f"[Polly] Secret Key: {'OK (' + str(len(secret_key)) + ' chars)' if secret_key else '*** VACÍO ***'}")
-        print(f"[Polly] Región raw='{region_raw}' → normalizada='{region}'")
-        print(f"[Polly] Sección polly del config: {po_conf}")
-        # ------------------------------------------------------------
-
         if not access_key or not secret_key:
             raise Exception("Faltan credenciales de Amazon Polly (Access Key ID / Secret Access Key)")
 
@@ -136,6 +139,8 @@ class ClientePolly:
             voice_id = datos_voz.get("id", "Lucia")
         else:
             voice_id = str(datos_voz)
+
+        motor = self._elegir_motor(datos_voz)
 
         pct_rate = int((self._velocidad - 50) * 1.6)
         pct_rate = max(-80, min(80, pct_rate))
@@ -159,28 +164,19 @@ class ClientePolly:
         respuesta = None
         for intento in range(2):
             try:
-                try:
-                    respuesta = cliente.synthesize_speech(
-                        Engine="neural",
-                        Text=ssml,
-                        TextType="ssml",
-                        OutputFormat="ogg_vorbis",
-                        VoiceId=voice_id,
-                    )
-                except Exception:
-                    respuesta = cliente.synthesize_speech(
-                        Engine="standard",
-                        Text=ssml,
-                        TextType="ssml",
-                        OutputFormat="ogg_vorbis",
-                        VoiceId=voice_id,
-                    )
+                respuesta = cliente.synthesize_speech(
+                    Engine=motor,
+                    Text=ssml,
+                    TextType="ssml",
+                    OutputFormat="ogg_vorbis",
+                    VoiceId=voice_id,
+                )
+                print("[Polly] Conexión establecida.")
                 break
             except Exception as e:
                 error_str = str(e).lower()
                 es_error_red = any(k in error_str for k in ("connect", "network", "timeout", "connection"))
                 if intento == 0 and es_error_red and not self._parado:
-                    print(f"[Polly] Error de conexión, reintentando en 1s… ({e})")
                     time.sleep(1)
                     continue
                 raise
@@ -205,7 +201,6 @@ class ClientePolly:
             data, fs = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
-            print(f"[Polly] Usando audio pre-descargado (sin latencia de API).")
         else:
             data, fs = self._llamar_api(texto, datos_voz)
 
@@ -223,9 +218,7 @@ class ClientePolly:
             if not self._parado:
                 self._audio_preparado = (data, fs)
                 self._texto_preparado = texto
-                print(f"[Polly] Precarga completada ({len(texto)} chars).")
-        except Exception as e:
-            print(f"[Polly] Error en precarga: {e}")
+        except Exception:
             self._audio_preparado = None
             self._texto_preparado = None
 
