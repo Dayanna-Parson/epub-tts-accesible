@@ -38,6 +38,9 @@ class PestanaLectura(wx.Panel):
         # Cola de fragmentos para lectura continua de voces neuronales
         self._cola_lectura = []
         self._idx_fragmento_actual = 0
+        # Buffer proactivo: evita silencios entre fragmentos disparando la descarga
+        # del siguiente cuando queda ~30% del actual
+        self._precarga_solicitada = False
         self.ruta_libro_actual = None
         self.ruta_datos_lectura = ruta_config("datos_lectura.json")
         
@@ -137,6 +140,14 @@ class PestanaLectura(wx.Panel):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     conf = json.load(f)
                     self.segundos_salto = int(conf.get("segundos_salto", 10))
+                    # Restaurar sliders solo si los widgets ya están inicializados
+                    if hasattr(self, 'deslizador_velocidad'):
+                        vel = int(conf.get("velocidad_lectura", 50))
+                        vol = int(conf.get("volumen_lectura", 100))
+                        self.deslizador_velocidad.SetValue(vel)
+                        self.deslizador_volumen.SetValue(vol)
+                        self.reproductor.fijar_velocidad(vel)
+                        self.reproductor.fijar_volumen(vol)
         except Exception as e:
             print(f"[Aviso] No se pudo leer la configuración de salto: {e}")
             self.segundos_salto = 10
@@ -355,6 +366,8 @@ class PestanaLectura(wx.Panel):
         self.pos_inicio_fragmento = pos_inicio
         self._tiempo_inicio_frag = time.time()
         self._longitud_frag_actual = len(texto_frag)
+        # Resetear flag de precarga para este nuevo fragmento
+        self._precarga_solicitada = False
 
         # Mover el cursor al inicio del fragmento para que NVDA sepa dónde empieza
         self.txt_contenido.SetInsertionPoint(pos_inicio)
@@ -372,6 +385,7 @@ class PestanaLectura(wx.Panel):
         # Cancelar la cola de lectura continua antes de detener el motor
         self._cola_lectura = []
         self._idx_fragmento_actual = 0
+        self._precarga_solicitada = False
         if hasattr(self.reproductor, 'detener'):
             self.reproductor.detener()
         self.guardar_datos_libro()
@@ -412,6 +426,23 @@ class PestanaLectura(wx.Panel):
                     int(tiempo_transcurrido * 14)
                 )
                 pos_estimada = self.pos_inicio_fragmento + avance_estimado
+
+                # Buffer proactivo: cuando queda ~30% del fragmento actual,
+                # iniciar la descarga del siguiente ANTES de que este termine.
+                # Esto elimina el silencio de 1-2s entre fragmentos.
+                tiempo_estimado_total = self._longitud_frag_actual / 14.0
+                if (not self._precarga_solicitada and
+                        tiempo_estimado_total > 0 and
+                        tiempo_transcurrido / tiempo_estimado_total >= 0.70):
+                    idx_siguiente = self._idx_fragmento_actual + 1
+                    if self._cola_lectura and idx_siguiente < len(self._cola_lectura):
+                        texto_sig, _ = self._cola_lectura[idx_siguiente]
+                        if texto_sig.strip():
+                            self._precarga_solicitada = True
+                            voz = self.combo_voz.GetClientData(
+                                self.combo_voz.GetSelection()
+                            )
+                            self.reproductor.precargar_fragmento(texto_sig, voz)
             else:
                 pos_estimada = self.txt_contenido.GetInsertionPoint()
 
@@ -447,10 +478,31 @@ class PestanaLectura(wx.Panel):
              self.al_alternar_reproduccion(None)
 
     def al_cambiar_velocidad(self, evento):
-        if hasattr(self.reproductor, 'fijar_velocidad'): self.reproductor.fijar_velocidad(self.deslizador_velocidad.GetValue())
-    
+        v = self.deslizador_velocidad.GetValue()
+        if hasattr(self.reproductor, 'fijar_velocidad'):
+            self.reproductor.fijar_velocidad(v)
+        self._guardar_ajuste_slider("velocidad_lectura", v)
+
     def al_cambiar_volumen(self, evento):
-        if hasattr(self.reproductor, 'fijar_volumen'): self.reproductor.fijar_volumen(self.deslizador_volumen.GetValue())
+        v = self.deslizador_volumen.GetValue()
+        if hasattr(self.reproductor, 'fijar_volumen'):
+            self.reproductor.fijar_volumen(v)
+        self._guardar_ajuste_slider("volumen_lectura", v)
+
+    def _guardar_ajuste_slider(self, clave, valor):
+        """Persiste el valor de un slider en config_general.json de forma inmediata."""
+        try:
+            ruta = ruta_config("config_general.json")
+            datos = {}
+            if os.path.exists(ruta):
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+            datos[clave] = valor
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            with open(ruta, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"[Aviso] No se pudo guardar ajuste de slider '{clave}': {e}")
     
     def al_activar_capitulo(self, evento):
         id_item = evento.GetItem()
@@ -608,7 +660,11 @@ class PestanaLectura(wx.Panel):
                     datos = json.load(f)
             datos[os.path.basename(self.ruta_libro_actual)] = {
                 "pos": self.txt_contenido.GetInsertionPoint(),
-                "marcadores": self.marcadores
+                "marcadores": self.marcadores,
+                # Memoria de libro: velocidad, volumen y voz usados en este libro
+                "velocidad": self.deslizador_velocidad.GetValue(),
+                "volumen": self.deslizador_volumen.GetValue(),
+                "voz": self.combo_voz.GetStringSelection(),
             }
             os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(self.ruta_datos_lectura, 'w', encoding='utf-8') as f:
@@ -622,9 +678,27 @@ class PestanaLectura(wx.Panel):
                 with open(self.ruta_datos_lectura, 'r', encoding='utf-8') as f:
                     d = json.load(f).get(nombre)
                     if d:
+                        # Posición y marcadores
                         self.txt_contenido.SetInsertionPoint(d.get("pos", 0))
                         self.txt_contenido.ShowPosition(d.get("pos", 0))
                         self.marcadores = d.get("marcadores", {})
+                        # Restaurar velocidad guardada para este libro
+                        vel = d.get("velocidad")
+                        if vel is not None:
+                            self.deslizador_velocidad.SetValue(int(vel))
+                            self.reproductor.fijar_velocidad(int(vel))
+                        # Restaurar volumen guardado para este libro
+                        vol = d.get("volumen")
+                        if vol is not None:
+                            self.deslizador_volumen.SetValue(int(vol))
+                            self.reproductor.fijar_volumen(int(vol))
+                        # Restaurar voz guardada para este libro
+                        voz_guardada = d.get("voz", "")
+                        if voz_guardada:
+                            idx = self.combo_voz.FindString(voz_guardada)
+                            if idx != wx.NOT_FOUND:
+                                self.combo_voz.SetSelection(idx)
+                                self.al_cambiar_voz(None)
         except Exception as e:
             print(f"[Error] No se pudieron cargar los datos del libro '{nombre}': {e}")
             self.marcadores = {}

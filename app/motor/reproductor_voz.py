@@ -226,6 +226,30 @@ class ReproductorVoz:
         except: pass
     # ANCLAJE_FIN: ACTIVACION_VOZ_LOCAL_AUTOMATICA
 
+    # ANCLAJE_INICIO: PRECARGA_SIGUIENTE_FRAGMENTO
+    def precargar_fragmento(self, texto, datos_voz):
+        """
+        Inicia en segundo plano la descarga del audio para el siguiente fragmento.
+        Cuando hablar() se llame después con el mismo texto, encontrará el audio
+        ya listo y lo reproducirá sin la latencia de la API (típicamente 1-2s).
+        Solo aplica a voces neuronales; SAPI5 no necesita precarga.
+        """
+        if self.tipo_motor_actual == "local":
+            return
+        if not hasattr(self.motor_activo, 'preparar'):
+            return
+
+        motor = self.motor_activo  # capturar referencia local para el hilo
+
+        def _preparar():
+            try:
+                motor.preparar(texto, datos_voz)
+            except Exception as e:
+                print(f"[Precarga] Error: {e}")
+
+        threading.Thread(target=_preparar, daemon=True).start()
+    # ANCLAJE_FIN: PRECARGA_SIGUIENTE_FRAGMENTO
+
     # ANCLAJE_INICIO: COMANDOS_REPRODUCTOR
     def detener(self):
         """Finaliza cualquier proceso de audio activo en todos los motores."""

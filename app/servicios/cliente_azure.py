@@ -19,6 +19,9 @@ class ClienteAzure:
         self._sesion = requests.Session()
         # Flag para distinguir una detención intencional de un error de red
         self._parado = False
+        # Buffer de precarga: almacena audio ya descargado para el siguiente fragmento
+        self._audio_preparado = None   # (data, fs) o None
+        self._texto_preparado = None   # texto al que pertenece _audio_preparado
 
     def _cargar_config(self):
         try:
@@ -71,11 +74,12 @@ class ClienteAzure:
         else:
             return "x-loud"
 
-    def hablar(self, texto, datos_voz):
-        self._parado = False
-        inicio = time.time()
-        print(f"--> [Azure] Iniciando petición...")
-
+    def _llamar_api(self, texto, datos_voz):
+        """
+        Realiza la llamada HTTP a la API de Azure TTS y devuelve (data, fs).
+        Implementa 1 reintento automático ante errores de conexión transitoria.
+        No reproduce el audio — solo lo descarga y decodifica.
+        """
         self.config = self._cargar_config()
         az_conf = self.config.get("azure", {})
         key = az_conf.get("key")
@@ -98,8 +102,6 @@ class ClienteAzure:
             id_voz = datos_voz
 
         texto_limpio = self._limpiar_texto_xml(texto)
-        print(f"--> [Azure] Texto limpio ({len(texto_limpio)} caracteres). Enviando...")
-
         tasa = self._velocidad_a_tasa()
         nivel_vol = self._volumen_a_nivel()
 
@@ -115,10 +117,6 @@ class ClienteAzure:
         </speak>
         """
 
-        # La petición se realiza a través de la sesión gestionada.
-        # Si detener() cierra la sesión antes de que esta línea termine,
-        # requests lanzará una ConnectionError que el reproductor captura y descarta.
-        # Se realizan hasta 2 intentos ante errores de conexión transitoria.
         response = None
         for intento in range(2):
             try:
@@ -127,27 +125,61 @@ class ClienteAzure:
                     data=ssml.encode('utf-8'),
                     timeout=30
                 )
-                break  # Éxito: salir del bucle
+                break
             except requests.exceptions.Timeout:
                 raise Exception("Azure tardó demasiado (Timeout > 30s).")
             except requests.exceptions.ConnectionError as e:
-                # Solo reintentar si no fue una detención intencional del usuario
                 if intento == 0 and not self._parado:
                     print(f"[Azure] Error de conexión, reintentando en 1s… ({e})")
                     time.sleep(1)
                     self._sesion = requests.Session()
                     continue
-                raise  # Segundo intento fallido o detención intencional
+                raise
 
-        tiempo_total = time.time() - inicio
-        print(f"--> [Azure] Respuesta recibida en {tiempo_total:.2f} segundos.")
+        if response is None or response.status_code != 200:
+            codigo = response.status_code if response else "sin respuesta"
+            raise Exception(f"Error Azure: {codigo}")
 
-        if response.status_code == 200:
-            data, fs = sf.read(io.BytesIO(response.content))
+        data, fs = sf.read(io.BytesIO(response.content))
+        return data, fs
+
+    def hablar(self, texto, datos_voz):
+        """Sintetiza y reproduce el texto. Usa audio pre-descargado si está disponible."""
+        self._parado = False
+        inicio = time.time()
+        print(f"--> [Azure] Iniciando petición...")
+
+        # Usar audio pre-descargado si fue preparado para exactamente este texto
+        if self._audio_preparado is not None and self._texto_preparado == texto:
+            data, fs = self._audio_preparado
+            self._audio_preparado = None
+            self._texto_preparado = None
+            print(f"--> [Azure] Usando audio pre-descargado (sin latencia de API).")
+        else:
+            data, fs = self._llamar_api(texto, datos_voz)
+            tiempo_total = time.time() - inicio
+            print(f"--> [Azure] Respuesta recibida en {tiempo_total:.2f} segundos.")
+
+        if not self._parado:
             sd.play(data, fs)
             sd.wait()
-        else:
-            raise Exception(f"Error Azure: {response.status_code} - {response.text}")
+
+    def preparar(self, texto, datos_voz):
+        """
+        Pre-descarga el audio del texto en segundo plano y lo cachea.
+        Si hablar() se llama después con el mismo texto, usa el caché y no hay latencia.
+        Llamado desde ReproductorVoz.precargar_fragmento() en un hilo aparte.
+        """
+        try:
+            data, fs = self._llamar_api(texto, datos_voz)
+            if not self._parado:
+                self._audio_preparado = (data, fs)
+                self._texto_preparado = texto
+                print(f"[Azure] Precarga completada ({len(texto)} chars).")
+        except Exception as e:
+            print(f"[Azure] Error en precarga: {e}")
+            self._audio_preparado = None
+            self._texto_preparado = None
 
     def detener(self):
         """
@@ -157,6 +189,9 @@ class ClienteAzure:
         y se detenga sin necesidad de esperar la respuesta completa de la API.
         """
         self._parado = True
+        # Invalidar buffer de precarga al detener
+        self._audio_preparado = None
+        self._texto_preparado = None
         try:
             self._sesion.close()
             # Crear una sesión nueva para peticiones futuras
