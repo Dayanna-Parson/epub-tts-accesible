@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import warnings
 import re
 import os
-from app.motor.procesador_etiquetas import limpiar_texto
+from app.motor.limpiador_lectura import limpiar_para_lectura
 
 # Filtramos advertencias de bs4 para mantener la salida limpia en la consola
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
@@ -97,7 +97,7 @@ def extraer_datos_epub(ruta_epub):
         if datos_nodo:
             datos_indice.append(datos_nodo)
 
-    # Limpieza final: eliminar artefactos de formato del EPUB
-    texto_completo = limpiar_texto(texto_completo)
+    # Limpieza final: eliminar artefactos de formato y líneas vacías para NVDA
+    texto_completo = limpiar_para_lectura(texto_completo)
 
     return texto_completo, datos_indice, posiciones_capitulos
