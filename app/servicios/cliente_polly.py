@@ -6,6 +6,29 @@ import sounddevice as sd
 import soundfile as sf
 from app.config_rutas import ruta_config
 
+# ── Comprobación inmediata de boto3 ──────────────────────────────────────────
+# Se comprueba al importar el módulo para que el fallo sea visible desde
+# el arranque, en consola Y en el log, no solo cuando el usuario habla.
+try:
+    import boto3 as _boto3_check
+    _BOTO3_DISPONIBLE = True
+except ImportError:
+    _BOTO3_DISPONIBLE = False
+    _MSG_BOTO3 = (
+        "boto3 NO está instalado. Amazon Polly no funcionará.\n"
+        "Solución: pip install boto3"
+    )
+    print("=" * 60)
+    print(f"[ADVERTENCIA] {_MSG_BOTO3}")
+    print("=" * 60)
+    # Escribir al log del sistema si ya está configurado (se configura en iniciar_tiflohistorias.py)
+    try:
+        import logging as _logging
+        _logging.getLogger(__name__).warning(_MSG_BOTO3)
+    except Exception:
+        pass
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Mapeo de nombres de región descriptivos a códigos AWS estándar.
 _REGIONES_AWS = {
     "us east (north virginia)": "us-east-1",
@@ -83,10 +106,12 @@ class ClientePolly:
         Implementa 1 reintento automático ante errores de conexión transitoria.
         No reproduce el audio — solo lo descarga y decodifica.
         """
-        try:
-            import boto3
-        except ImportError:
-            raise Exception("boto3 no está instalado. Ejecuta: pip install boto3")
+        if not _BOTO3_DISPONIBLE:
+            raise Exception(
+                "boto3 no está instalado. Amazon Polly no puede funcionar.\n"
+                "Solución: pip install boto3"
+            )
+        import boto3
 
         config = self._cargar_config()
         po_conf = config.get("polly", {})
