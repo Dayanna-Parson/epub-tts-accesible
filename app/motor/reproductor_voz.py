@@ -8,6 +8,7 @@ from app.servicios.cliente_sapi5 import ClienteSapi5
 from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
+from app.config_rutas import ruta_config
 # ANCLAJE_FIN: IMPORTACIONES
 
 # ANCLAJE_INICIO: CLASE_REPRODUCTOR
@@ -42,7 +43,7 @@ class ReproductorVoz:
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
         try:
-            ruta = os.path.join("configuraciones", "config_general.json")
+            ruta = ruta_config("config_general.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     return json.load(f)

@@ -5,6 +5,7 @@ import webbrowser
 import wx.lib.mixins.listctrl as listmix
 from app.motor.gestor_voces import GestorVoces
 from app.motor.reproductor_voz import ReproductorVoz
+from app.config_rutas import ruta_config, CONFIG_DIR
 
 # --- CLASE ESPECIAL PARA LA LISTA CON CASILLAS ---
 class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
@@ -286,7 +287,7 @@ class PanelVoces(wx.Panel):
         self.config = config
         self.voces_todas = [] 
         self.reproductor = ReproductorVoz()
-        self.ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
+        self.ruta_favs = ruta_config("voces_favoritas.json")
         self.favoritos = self.cargar_favoritos()
         
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -429,7 +430,7 @@ class PanelVoces(wx.Panel):
                 self.guardar_favoritos()
 
     def cargar_datos_y_llenar(self):
-        ruta = os.path.join("configuraciones", "voces_disponibles.json")
+        ruta = ruta_config("voces_disponibles.json")
         self.voces_todas = []
         idiomas = set()
         
@@ -616,7 +617,7 @@ class PanelAtajos(wx.Panel):
 class PestanaAjustes(wx.Panel):
     def __init__(self, padre):
         super().__init__(padre)
-        self.ruta_config = os.path.join("configuraciones", "config_general.json")
+        self.ruta_config = ruta_config("config_general.json")
         self.config = self.cargar_config()
 
         self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
@@ -670,9 +671,12 @@ class PestanaAjustes(wx.Panel):
         idx = self.lista_cat.GetSelection()
         if idx != wx.NOT_FOUND:
             self.panel_derecho.ChangeSelection(idx)
-            # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter/parent y
-            # mueva el foco al panel derecho al navegar con flechas en la lista.
-            # Sin SetFocus(): evita la doble anunciación de NVDA.
+            # wx.CallAfter garantiza que el foco vuelve a la lista DESPUÉS de que
+            # ChangeSelection termine, evitando que NVDA anuncie dos veces el mismo ítem.
+            # Sin este SetFocus, al cambiar de página el panel derecho roba el foco
+            # y NVDA deja de leer las flechas de navegación en la lista de categorías.
+            wx.CallAfter(self.lista_cat.SetFocus)
+            # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter y mueva el foco.
             if idx == 2:
                 self.pag_voces.cargar_datos_y_llenar()
 
@@ -688,7 +692,7 @@ class PestanaAjustes(wx.Panel):
 
     def guardar_config_en_archivo(self):
         try:
-            os.makedirs(os.path.dirname(self.ruta_config), exist_ok=True)
+            os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(self.ruta_config, "w", encoding='utf-8') as f:
                 json.dump(self.config, f, indent=4, ensure_ascii=False)
             # Notificar a PestanaLectura para que actualice las etiquetas de los botones

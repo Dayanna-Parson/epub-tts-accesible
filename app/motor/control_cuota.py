@@ -2,11 +2,12 @@ import os
 import json
 from datetime import datetime
 import wx
+from app.config_rutas import ruta_config
 
 
 class ControlCuota:
     def __init__(self):
-        self.ruta_uso = os.path.join("configuraciones", "uso_cuota.json")
+        self.ruta_uso = ruta_config("uso_cuota.json")
         # Límites mensuales por defecto (basados en las capas gratuitas de cada proveedor)
         self.limites_defecto = {
             "azure": 500000,      # 500 000 caracteres (Capa gratuita)

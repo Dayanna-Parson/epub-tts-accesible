@@ -4,6 +4,7 @@ import os
 import json
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
+from app.config_rutas import ruta_config
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # ANCLAJE_INICIO: DEFINICION_VENTANA
@@ -42,9 +43,9 @@ class VentanaPrincipal(wx.Frame):
         # con los eventos internos de los controles hijo (ej: EVT_TREE_ITEM_ACTIVATED).
         self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab_global)
 
-        # Historial de recientes
+        # Historial de recientes — ruta absoluta para evitar fallos de permisos según CWD
         self.archivos_recientes = []
-        self.ruta_recientes = os.path.join("configuraciones", "libros_recientes.json")
+        self.ruta_recientes = ruta_config("libros_recientes.json")
         self.cargar_historial_recientes()
         
         self.Show()
@@ -127,11 +128,13 @@ class VentanaPrincipal(wx.Frame):
 
         if not shift and foco == ultimo:
             # Tab en el último control: salir del panel hacia el Notebook
-            self.notebook.SetFocus()
+            wx.CallAfter(self.notebook.SetFocus)
             return
         elif shift and foco == primer:
-            # Shift+Tab en el primer control: bucle circular → saltar al último control
-            ultimo.SetFocus()
+            # Shift+Tab en el primer control: bucle circular → saltar al último control.
+            # wx.CallAfter garantiza que NVDA anuncia el nuevo foco correctamente
+            # al diferirlo hasta después de que el evento de teclado sea procesado.
+            wx.CallAfter(ultimo.SetFocus)
             return
 
         evento.Skip()

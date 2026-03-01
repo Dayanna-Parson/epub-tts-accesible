@@ -6,6 +6,7 @@ import time
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
+from app.config_rutas import ruta_config, CONFIG_DIR
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
 
 # ANCLAJE_INICIO: DEFINICION_PESTANA_LECTURA
@@ -38,7 +39,7 @@ class PestanaLectura(wx.Panel):
         self._cola_lectura = []
         self._idx_fragmento_actual = 0
         self.ruta_libro_actual = None
-        self.ruta_datos_lectura = os.path.join("configuraciones", "datos_lectura.json")
+        self.ruta_datos_lectura = ruta_config("datos_lectura.json")
         
         sizer_principal = wx.BoxSizer(wx.VERTICAL)
 
@@ -131,7 +132,7 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_INICIO: GESTION_CONFIGURACION_Y_PESTANAS
     def cargar_config_salto(self):
         try:
-            ruta = os.path.join("configuraciones", "config_general.json")
+            ruta = ruta_config("config_general.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     conf = json.load(f)
@@ -166,8 +167,8 @@ class PestanaLectura(wx.Panel):
             print(f"[Aviso] No se pudieron cargar las voces locales SAPI5: {e}")
 
         # Carga de voces neuronales favoritas
-        ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
-        ruta_todas = os.path.join("configuraciones", "voces_disponibles.json")
+        ruta_favs = ruta_config("voces_favoritas.json")
+        ruta_todas = ruta_config("voces_disponibles.json")
 
         ids_favoritos = []
         if os.path.exists(ruta_favs):
@@ -247,8 +248,16 @@ class PestanaLectura(wx.Panel):
             if hasattr(self.reproductor, 'pausar'):
                 self.reproductor.pausar()
         elif estado == 'pausado':
-            if hasattr(self.reproductor, 'reanudar'):
-                self.reproductor.reanudar()
+            tipo_motor = getattr(self.reproductor, 'tipo_motor_actual', 'local')
+            if tipo_motor == 'local':
+                # SAPI5 admite pausa/reanudación nativa
+                if hasattr(self.reproductor, 'reanudar'):
+                    self.reproductor.reanudar()
+            else:
+                # Las voces neuronales no pueden retomar desde mitad de fragmento.
+                # Forzar estado a 'detenido' y reiniciar desde la posición exacta del cursor.
+                self.reproductor.estado = 'detenido'
+                self.al_alternar_reproduccion(evento)
         else:
             # 3. Inicio de nueva lectura desde la posición del cursor
             pos_actual = self.txt_contenido.GetInsertionPoint()
@@ -555,10 +564,10 @@ class PestanaLectura(wx.Panel):
         self.guardar_datos_libro()
         try:
             texto, datos_arbol, self.posiciones_capitulos = extraer_datos_epub(ruta)
-            
+
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
-            
+
             self.marcadores = {}
             self.pos_inicio_fragmento = 0
             self.txt_contenido.SetValue(texto)
@@ -569,7 +578,16 @@ class PestanaLectura(wx.Panel):
             self.ruta_libro_actual = ruta
             self.cargar_datos_libro(os.path.basename(ruta))
             self.arbol_indice.SetFocus()
-        except Exception as e: 
+
+            # Registrar en el historial de libros recientes de VentanaPrincipal
+            try:
+                ventana = self.padre_notebook.GetParent()
+                if hasattr(ventana, 'agregar_a_recientes'):
+                    ventana.agregar_a_recientes(ruta)
+            except Exception:
+                pass
+
+        except Exception as e:
             wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
 
     def _construir_arbol_indice(self, padre, nodos):
@@ -590,7 +608,7 @@ class PestanaLectura(wx.Panel):
                 "pos": self.txt_contenido.GetInsertionPoint(),
                 "marcadores": self.marcadores
             }
-            os.makedirs(os.path.dirname(self.ruta_datos_lectura), exist_ok=True)
+            os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(self.ruta_datos_lectura, 'w', encoding='utf-8') as f:
                 json.dump(datos, f, ensure_ascii=False)
         except Exception as e:

@@ -3,6 +3,7 @@ import json
 import io
 import sounddevice as sd
 import soundfile as sf
+from app.config_rutas import ruta_config
 
 # Mapeo de nombres de región descriptivos a códigos AWS estándar.
 # Permite al usuario escribir "US East (North Virginia)" o "us-east-1": ambos son válidos.
@@ -47,7 +48,7 @@ class ClientePolly:
 
     def _cargar_config(self):
         try:
-            ruta = os.path.join("configuraciones", "config_general.json")
+            ruta = ruta_config("config_general.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     return json.load(f)
@@ -103,13 +104,23 @@ class ClientePolly:
             aws_secret_access_key=secret_key,
         )
 
-        respuesta = cliente.synthesize_speech(
-            Engine="neural",
-            Text=ssml,
-            TextType="ssml",
-            OutputFormat="ogg_vorbis",
-            VoiceId=voice_id,
-        )
+        # Intentar con motor "neural" (mayor calidad); si la voz no lo admite, usar "standard"
+        try:
+            respuesta = cliente.synthesize_speech(
+                Engine="neural",
+                Text=ssml,
+                TextType="ssml",
+                OutputFormat="ogg_vorbis",
+                VoiceId=voice_id,
+            )
+        except Exception:
+            respuesta = cliente.synthesize_speech(
+                Engine="standard",
+                Text=ssml,
+                TextType="ssml",
+                OutputFormat="ogg_vorbis",
+                VoiceId=voice_id,
+            )
 
         audio_bytes = respuesta["AudioStream"].read()
         data, fs = sf.read(io.BytesIO(audio_bytes))
