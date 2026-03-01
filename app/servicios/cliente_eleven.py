@@ -4,6 +4,7 @@ import requests
 import sounddevice as sd
 import soundfile as sf
 import io
+from app.config_rutas import ruta_config
 
 
 class ClienteEleven:
@@ -17,7 +18,7 @@ class ClienteEleven:
 
     def _cargar_config(self):
         try:
-            ruta = os.path.join("configuraciones", "config_general.json")
+            ruta = ruta_config("config_general.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     return json.load(f)
