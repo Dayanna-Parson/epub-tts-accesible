@@ -53,14 +53,14 @@ except ImportError as e:
     sys.exit(1)
 
 class TifloApp(wx.App):
-    """Aplicación principal de TifloHistorias."""
-    
+    """Aplicación principal de Epub TTS Accesible."""
+
     def OnInit(self):
         """Inicializa la aplicación."""
         try:
-            logger.info("Iniciando TifloHistorias")
+            logger.info("Iniciando Epub TTS Accesible")
             # CORRECCIÓN: Usamos 'titulo' en lugar de 'title'
-            self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+            self.frame = VentanaPrincipal(None, titulo="Epub TTS Accesible")
             self.frame.Show()
             return True
         except Exception as e:
