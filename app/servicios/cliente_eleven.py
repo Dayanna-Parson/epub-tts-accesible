@@ -15,6 +15,10 @@ class ClienteEleven:
         self._volumen = 100    # 100 = volumen máximo
         # Sesión reutilizable con soporte para cancelación inmediata.
         self._sesion = requests.Session()
+        self._parado = False
+        # Buffer de precarga
+        self._audio_preparado = None   # (data, fs_efectiva) o None
+        self._texto_preparado = None
 
     def _cargar_config(self):
         try:
@@ -29,7 +33,11 @@ class ClienteEleven:
     def obtener_voces(self):
         return []
 
-    def hablar(self, texto, datos_voz):
+    def _llamar_api(self, texto, datos_voz):
+        """
+        Llama a la API de ElevenLabs y devuelve (data, fs_efectiva).
+        No reproduce el audio — solo lo descarga y decodifica.
+        """
         self.config = self._cargar_config()
         el_conf = self.config.get("elevenlabs", {})
         key = el_conf.get("api_key")
@@ -46,34 +54,58 @@ class ClienteEleven:
         headers = {"xi-api-key": key, "Content-Type": "application/json"}
         payload = {"text": texto, "model_id": "eleven_multilingual_v2"}
 
-        # La petición se realiza a través de la sesión gestionada.
-        # Si detener() cierra la sesión, requests lanzará ConnectionError
-        # que el reproductor captura y descarta según el contador de generación.
         response = self._sesion.post(url, json=payload, headers=headers)
 
-        if response.status_code == 200:
-            data, fs = sf.read(io.BytesIO(response.content))
+        if response.status_code != 200:
+            raise Exception(f"Error ElevenLabs: {response.status_code}")
 
-            # Aplicar volumen multiplicando la señal (100 = sin cambio)
-            if self._volumen != 100:
-                data = data * (self._volumen / 100.0)
+        data, fs = sf.read(io.BytesIO(response.content))
 
-            # Ajustar velocidad cambiando la tasa de muestreo efectiva.
-            # factor=1.0 en v=50 (normal); factor=0.5 en v=0 (lento); factor=1.5 en v=100 (rápido).
-            # Nota: altera ligeramente el tono al cambiar la velocidad.
-            factor_velocidad = 0.5 + (self._velocidad / 100.0)
-            fs_efectiva = int(fs * factor_velocidad)
+        if self._volumen != 100:
+            data = data * (self._volumen / 100.0)
 
+        factor_velocidad = 0.5 + (self._velocidad / 100.0)
+        fs_efectiva = int(fs * factor_velocidad)
+
+        return data, fs_efectiva
+
+    def hablar(self, texto, datos_voz):
+        """Sintetiza y reproduce el texto. Usa audio pre-descargado si está disponible."""
+        self._parado = False
+
+        if self._audio_preparado is not None and self._texto_preparado == texto:
+            data, fs_efectiva = self._audio_preparado
+            self._audio_preparado = None
+            self._texto_preparado = None
+            print(f"[ElevenLabs] Usando audio pre-descargado (sin latencia de API).")
+        else:
+            data, fs_efectiva = self._llamar_api(texto, datos_voz)
+
+        if not self._parado:
             sd.play(data, fs_efectiva)
             sd.wait()
-        else:
-            raise Exception(f"Error ElevenLabs: {response.status_code}")
+
+    def preparar(self, texto, datos_voz):
+        """Pre-descarga el audio y lo cachea para reproducción sin latencia."""
+        try:
+            data, fs_efectiva = self._llamar_api(texto, datos_voz)
+            if not self._parado:
+                self._audio_preparado = (data, fs_efectiva)
+                self._texto_preparado = texto
+                print(f"[ElevenLabs] Precarga completada ({len(texto)} chars).")
+        except Exception as e:
+            print(f"[ElevenLabs] Error en precarga: {e}")
+            self._audio_preparado = None
+            self._texto_preparado = None
 
     def detener(self):
         """
         Detiene el audio y cancela cualquier petición HTTP activa cerrando la sesión.
         Una sesión nueva queda lista para la siguiente petición.
         """
+        self._parado = True
+        self._audio_preparado = None
+        self._texto_preparado = None
         try:
             self._sesion.close()
             self._sesion = requests.Session()

@@ -60,6 +60,9 @@ class ClientePolly:
         self._velocidad = 50   # 50 = velocidad normal
         self._volumen = 100    # 100 = volumen máximo
         self._parado = False   # Flag para distinguir stop intencional de error de red
+        # Buffer de precarga
+        self._audio_preparado = None   # (data, fs) o None
+        self._texto_preparado = None
 
     def _cargar_config(self):
         try:
@@ -74,13 +77,16 @@ class ClientePolly:
     def obtener_voces(self):
         return []
 
-    def hablar(self, texto, datos_voz):
+    def _llamar_api(self, texto, datos_voz):
+        """
+        Llama a la API de Amazon Polly y devuelve (data, fs).
+        Implementa 1 reintento automático ante errores de conexión transitoria.
+        No reproduce el audio — solo lo descarga y decodifica.
+        """
         try:
             import boto3
         except ImportError:
             raise Exception("boto3 no está instalado. Ejecuta: pip install boto3")
-
-        self._parado = False
 
         config = self._cargar_config()
         po_conf = config.get("polly", {})
@@ -88,6 +94,15 @@ class ClientePolly:
         secret_key = po_conf.get("secret_key", "").strip()
         region_raw = po_conf.get("region", "").strip()
         region = _normalizar_region(region_raw)
+
+        # --- DIAGNÓSTICO: mostrar estado de credenciales en consola ---
+        ruta_cfg = ruta_config("config_general.json")
+        print(f"[Polly] Ruta config: {ruta_cfg}")
+        print(f"[Polly] Access Key: {'OK (' + str(len(access_key)) + ' chars)' if access_key else '*** VACÍO ***'}")
+        print(f"[Polly] Secret Key: {'OK (' + str(len(secret_key)) + ' chars)' if secret_key else '*** VACÍO ***'}")
+        print(f"[Polly] Región raw='{region_raw}' → normalizada='{region}'")
+        print(f"[Polly] Sección polly del config: {po_conf}")
+        # ------------------------------------------------------------
 
         if not access_key or not secret_key:
             raise Exception("Faltan credenciales de Amazon Polly (Access Key ID / Secret Access Key)")
@@ -97,15 +112,10 @@ class ClientePolly:
         else:
             voice_id = str(datos_voz)
 
-        # Mapear velocidad 0-100 a porcentaje de tasa SSML:
-        #   v=0  → -80%  (muy lento)
-        #   v=50 → +0%   (normal)
-        #   v=100 → +80% (rápido)
         pct_rate = int((self._velocidad - 50) * 1.6)
         pct_rate = max(-80, min(80, pct_rate))
         tasa = f"+{pct_rate}%" if pct_rate >= 0 else f"{pct_rate}%"
 
-        # Encapsular texto con prosody SSML para aplicar velocidad
         ssml = (
             "<speak>"
             f"<prosody rate='{tasa}'>"
@@ -121,11 +131,9 @@ class ClientePolly:
             aws_secret_access_key=secret_key,
         )
 
-        # Intentar síntesis con 1 reintento automático ante fallo de conexión
         respuesta = None
         for intento in range(2):
             try:
-                # Intentar con motor "neural" (mayor calidad)
                 try:
                     respuesta = cliente.synthesize_speech(
                         Engine="neural",
@@ -142,16 +150,15 @@ class ClientePolly:
                         OutputFormat="ogg_vorbis",
                         VoiceId=voice_id,
                     )
-                break  # Éxito: salir del bucle de reintentos
+                break
             except Exception as e:
                 error_str = str(e).lower()
-                # Solo reintentar si es un error de conexión y no fue una detención intencional
                 es_error_red = any(k in error_str for k in ("connect", "network", "timeout", "connection"))
                 if intento == 0 and es_error_red and not self._parado:
                     print(f"[Polly] Error de conexión, reintentando en 1s… ({e})")
                     time.sleep(1)
                     continue
-                raise  # Segundo intento o error no recuperable
+                raise
 
         if respuesta is None:
             raise Exception("No se obtuvo respuesta de Amazon Polly")
@@ -159,16 +166,49 @@ class ClientePolly:
         audio_bytes = respuesta["AudioStream"].read()
         data, fs = sf.read(io.BytesIO(audio_bytes))
 
-        # Aplicar volumen multiplicando la señal (100 = sin cambio)
         if self._volumen != 100:
             data = data * (self._volumen / 100.0)
+
+        return data, fs
+
+    def hablar(self, texto, datos_voz):
+        """Sintetiza y reproduce el texto. Usa audio pre-descargado si está disponible."""
+        self._parado = False
+
+        # Usar audio pre-descargado si fue preparado para exactamente este texto
+        if self._audio_preparado is not None and self._texto_preparado == texto:
+            data, fs = self._audio_preparado
+            self._audio_preparado = None
+            self._texto_preparado = None
+            print(f"[Polly] Usando audio pre-descargado (sin latencia de API).")
+        else:
+            data, fs = self._llamar_api(texto, datos_voz)
 
         if not self._parado:
             sd.play(data, fs)
             sd.wait()
 
+    def preparar(self, texto, datos_voz):
+        """
+        Pre-descarga el audio del texto en segundo plano y lo cachea.
+        Si hablar() se llama después con el mismo texto, usa el caché y no hay latencia.
+        """
+        try:
+            data, fs = self._llamar_api(texto, datos_voz)
+            if not self._parado:
+                self._audio_preparado = (data, fs)
+                self._texto_preparado = texto
+                print(f"[Polly] Precarga completada ({len(texto)} chars).")
+        except Exception as e:
+            print(f"[Polly] Error en precarga: {e}")
+            self._audio_preparado = None
+            self._texto_preparado = None
+
     def detener(self):
         self._parado = True
+        # Invalidar buffer de precarga al detener
+        self._audio_preparado = None
+        self._texto_preparado = None
         try:
             sd.stop()
         except Exception:
