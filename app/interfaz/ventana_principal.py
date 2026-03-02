@@ -79,9 +79,10 @@ class VentanaPrincipal(wx.Frame):
 
         # MENÚ AYUDA
         self.menu_ayuda = wx.Menu()
-        self.item_atajos = self.menu_ayuda.Append(wx.ID_ANY, "&Atajos de teclado")
+        self.item_atajos = self.menu_ayuda.Append(wx.ID_ANY, "&Ver atajos de teclado")
+        self.item_readme = self.menu_ayuda.Append(wx.ID_ANY, "&README del proyecto")
         self.barra_menu.Append(self.menu_ayuda, "A&yuda")
-        
+
         self.SetMenuBar(self.barra_menu)
 
         # Vincular eventos
@@ -90,6 +91,8 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, self.item_marcadores)
         self.Bind(wx.EVT_MENU, self.al_buscar, self.item_buscar)
         self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, self.item_porcentaje)
+        self.Bind(wx.EVT_MENU, self.al_ver_atajos, self.item_atajos)
+        self.Bind(wx.EVT_MENU, self.al_abrir_readme, self.item_readme)
     # ANCLAJE_FIN: CONFIGURACION_MENUS
 
     # ANCLAJE_INICIO: EVENTOS_GLOBALES
@@ -235,4 +238,38 @@ class VentanaPrincipal(wx.Frame):
                 self._guardar_recientes()
                 self.actualizar_menu_recientes()
     # ANCLAJE_FIN: HISTORIAL_RECIENTES
+
+    # ANCLAJE_INICIO: AYUDA
+    def al_ver_atajos(self, evento):
+        """Muestra un diálogo con todos los atajos actuales (defaults + personalizados)."""
+        from app.motor.gestor_atajos import cargar_atajos, texto_atajo
+        atajos = cargar_atajos()
+        lineas = []
+        for clave, entrada in atajos.items():
+            desc = entrada.get("descripcion", clave)
+            tecla = texto_atajo(entrada)
+            lineas.append(f"• {desc}:  {tecla}")
+        wx.MessageBox(
+            "\n".join(lineas),
+            "Atajos de teclado actuales",
+            wx.OK | wx.ICON_INFORMATION
+        )
+
+    def al_abrir_readme(self, evento):
+        """Abre el README del proyecto con el visor de texto predeterminado del sistema."""
+        import subprocess
+        raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        for nombre in ("README.md", "README.txt", "README"):
+            ruta = os.path.join(raiz, nombre)
+            if os.path.exists(ruta):
+                try:
+                    os.startfile(ruta)
+                except Exception:
+                    try:
+                        subprocess.Popen(["xdg-open", ruta])
+                    except Exception:
+                        wx.MessageBox(f"README encontrado en:\n{ruta}", "README")
+                return
+        wx.MessageBox("No se encontró un archivo README en el directorio del proyecto.", "Info")
+    # ANCLAJE_FIN: AYUDA
 # ANCLAJE_FIN: DEFINICION_VENTANA

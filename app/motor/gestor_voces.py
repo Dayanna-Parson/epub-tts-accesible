@@ -189,8 +189,8 @@ class GestorVoces:
                     "genero": genero,
                     "proveedor": "Amazon Polly",
                     "motores": motores,
-                    # Marcar como nueva si soporta el motor neural
-                    "es_nueva": "neural" in motores,
+                    # Nueva = cualquier motor de mayor calidad que standard
+                    "es_nueva": any(m in motores for m in ("generative", "long-form", "neural")),
                 }
                 voces_procesadas.append(voz)
 

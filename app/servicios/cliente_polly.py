@@ -77,15 +77,19 @@ def _normalizar_region(valor):
     return "us-east-1"
 
 
+_MAX_CACHE = 5  # Máximo de fragmentos en caché por cliente
+
+
 class ClientePolly:
     def __init__(self):
-        # Parámetros de reproducción (0-100)
-        self._velocidad = 50   # 50 = velocidad normal
-        self._volumen = 100    # 100 = volumen máximo
-        self._parado = False   # Flag para distinguir stop intencional de error de red
-        # Buffer de precarga
-        self._audio_preparado = None   # (data, fs) o None
+        self._velocidad = 50
+        self._volumen = 100
+        self._parado = False
+        self._audio_preparado = None
         self._texto_preparado = None
+        # Caché de fragmentos ya descargados (reutiliza audio al saltar atrás)
+        self._cache_frags = {}
+        self._cache_lru = []
 
     def _cargar_config(self):
         try:
@@ -99,6 +103,14 @@ class ClientePolly:
 
     def obtener_voces(self):
         return []
+
+    def _guardar_en_cache(self, texto, data, fs):
+        if texto not in self._cache_frags:
+            if len(self._cache_lru) >= _MAX_CACHE:
+                clave_antigua = self._cache_lru.pop(0)
+                self._cache_frags.pop(clave_antigua, None)
+            self._cache_lru.append(texto)
+        self._cache_frags[texto] = (data, fs)
 
     def _elegir_motor(self, datos_voz):
         """
@@ -169,6 +181,7 @@ class ClientePolly:
                     Text=ssml,
                     TextType="ssml",
                     OutputFormat="ogg_vorbis",
+                    SampleRate="24000",
                     VoiceId=voice_id,
                 )
                 print("[Polly] Conexión establecida.")
@@ -193,29 +206,35 @@ class ClientePolly:
         return data, fs
 
     def hablar(self, texto, datos_voz):
-        """Sintetiza y reproduce el texto. Usa audio pre-descargado si está disponible."""
+        """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
 
-        # Usar audio pre-descargado si fue preparado para exactamente este texto
-        if self._audio_preparado is not None and self._texto_preparado == texto:
+        if texto in self._cache_frags:
+            data, fs = self._cache_frags[texto]
+        elif self._audio_preparado is not None and self._texto_preparado == texto:
             data, fs = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
+            self._guardar_en_cache(texto, data, fs)
         else:
             data, fs = self._llamar_api(texto, datos_voz)
+            self._guardar_en_cache(texto, data, fs)
 
         if not self._parado:
             sd.play(data, fs)
             sd.wait()
 
     def preparar(self, texto, datos_voz):
-        """
-        Pre-descarga el audio del texto en segundo plano y lo cachea.
-        Si hablar() se llama después con el mismo texto, usa el caché y no hay latencia.
-        """
+        """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe."""
+        if texto in self._cache_frags:
+            if not self._parado:
+                self._audio_preparado = self._cache_frags[texto]
+                self._texto_preparado = texto
+            return
         try:
             data, fs = self._llamar_api(texto, datos_voz)
             if not self._parado:
+                self._guardar_en_cache(texto, data, fs)
                 self._audio_preparado = (data, fs)
                 self._texto_preparado = texto
         except Exception:
@@ -224,7 +243,7 @@ class ClientePolly:
 
     def detener(self):
         self._parado = True
-        # Invalidar buffer de precarga al detener
+        # El caché de fragmentos NO se borra: el salto-atrás puede reutilizarlo
         self._audio_preparado = None
         self._texto_preparado = None
         try:
@@ -239,7 +258,15 @@ class ClientePolly:
         pass
 
     def fijar_velocidad(self, v):
-        self._velocidad = max(0, min(100, int(v)))
+        nuevo = max(0, min(100, int(v)))
+        if nuevo != self._velocidad:
+            self._cache_frags.clear()
+            self._cache_lru.clear()
+        self._velocidad = nuevo
 
     def fijar_volumen(self, v):
-        self._volumen = max(0, min(100, int(v)))
+        nuevo = max(0, min(100, int(v)))
+        if nuevo != self._volumen:
+            self._cache_frags.clear()
+            self._cache_lru.clear()
+        self._volumen = nuevo

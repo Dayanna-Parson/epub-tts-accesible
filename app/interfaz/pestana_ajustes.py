@@ -607,12 +607,184 @@ class PanelVoces(wx.Panel):
             self.reproductor.cargar_texto(texto)
         except Exception as e:
             wx.MessageBox(f"Error: {e}", "Error")    
+class _DialogoCapturaTecla(wx.Dialog):
+    """
+    Diálogo modal que espera una pulsación de tecla y la almacena.
+    Compatible con NVDA: anuncia el título y la instrucción al abrirse.
+    Escape cancela; cualquier otra tecla (con o sin modificador) confirma.
+    """
+    _ESPECIALES = {
+        wx.WXK_SPACE: "Espacio", wx.WXK_RETURN: "Intro",
+        wx.WXK_F1: "F1",  wx.WXK_F2: "F2",  wx.WXK_F3: "F3",
+        wx.WXK_F4: "F4",  wx.WXK_F5: "F5",  wx.WXK_F6: "F6",
+        wx.WXK_F7: "F7",  wx.WXK_F8: "F8",  wx.WXK_F9: "F9",
+        wx.WXK_F10: "F10", wx.WXK_F11: "F11", wx.WXK_F12: "F12",
+        wx.WXK_UP: "Arriba", wx.WXK_DOWN: "Abajo",
+        wx.WXK_LEFT: "Izquierda", wx.WXK_RIGHT: "Derecha",
+        wx.WXK_HOME: "Inicio", wx.WXK_END: "Fin",
+        wx.WXK_PAGEUP: "RePág", wx.WXK_PAGEDOWN: "AvPág",
+        wx.WXK_TAB: "Tab", wx.WXK_BACK: "Retroceso",
+        wx.WXK_DELETE: "Supr", wx.WXK_INSERT: "Insert",
+    }
+
+    def __init__(self, parent, descripcion_atajo):
+        super().__init__(parent, title="Asignar tecla",
+                         style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP)
+        self.resultado = None  # (modificador, tecla) o None tras Escape
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        lbl = wx.StaticText(self, label=(
+            f"Atajo: {descripcion_atajo}\n\n"
+            "Presiona la combinación de teclas que quieres asignar.\n"
+            "Escape para cancelar sin cambios."
+        ))
+        sizer.Add(lbl, 0, wx.ALL, 20)
+
+        self.lbl_capturada = wx.StaticText(self, label="Esperando tecla...")
+        sizer.Add(self.lbl_capturada, 0, wx.ALIGN_CENTER | wx.BOTTOM, 20)
+
+        self.SetSizer(sizer)
+        self.Fit()
+        self.CenterOnParent()
+
+        self.Bind(wx.EVT_CHAR_HOOK, self._al_capturar)
+
+    def _al_capturar(self, event):
+        key = event.GetKeyCode()
+        if key == wx.WXK_ESCAPE:
+            self.resultado = None
+            self.EndModal(wx.ID_CANCEL)
+            return
+
+        # Ignorar pulsaciones de solo modificador
+        if key in (wx.WXK_SHIFT, wx.WXK_CONTROL, wx.WXK_ALT, wx.WXK_WINDOWS_LEFT,
+                   wx.WXK_WINDOWS_RIGHT, wx.WXK_WINDOWS_MENU):
+            return
+
+        mods = []
+        if event.ControlDown(): mods.append("Ctrl")
+        if event.AltDown():     mods.append("Alt")
+        if event.ShiftDown():   mods.append("Shift")
+
+        if key in self._ESPECIALES:
+            nombre_tecla = self._ESPECIALES[key]
+        elif 32 <= key <= 127:
+            nombre_tecla = chr(key).upper()
+        else:
+            return  # Tecla no reconocida: ignorar
+
+        self.resultado = ("+".join(mods), nombre_tecla)
+        combo = f"{'+'.join(mods)}+{nombre_tecla}" if mods else nombre_tecla
+        self.lbl_capturada.SetLabel(f"Asignando: {combo}")
+        self.EndModal(wx.ID_OK)
+
+
 class PanelAtajos(wx.Panel):
-        def __init__(self, padre):
-            super().__init__(padre)
-            sizer = wx.BoxSizer(wx.VERTICAL)
-            sizer.Add(wx.StaticText(self, label="Atajos de teclado configurables"), 0, wx.ALL, 10)
-            self.SetSizer(sizer)
+    def __init__(self, padre):
+        super().__init__(padre)
+        from app.motor.gestor_atajos import cargar_atajos, cargar_defaults
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(wx.StaticText(self, label=(
+            "Lista de atajos de teclado. Selecciona uno y pulsa 'Asignar' o Intro para cambiarlo.\n"
+            "La tecla predeterminada aparece entre paréntesis junto al nombre."
+        )), 0, wx.ALL, 10)
+
+        self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.lista.InsertColumn(0, "Acción (predeterminado)", width=340)
+        self.lista.InsertColumn(1, "Tecla asignada", width=200)
+        self.lista.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista)
+        sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_asignar = wx.Button(self, label="Asignar tecla (Intro)")
+        self.btn_eliminar = wx.Button(self, label="Eliminar asignación")
+        self.btn_restablecer = wx.Button(self, label="Restablecer todo")
+        self.btn_asignar.Bind(wx.EVT_BUTTON, self._al_asignar)
+        self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
+        self.btn_restablecer.Bind(wx.EVT_BUTTON, self._al_restablecer)
+        hbox.Add(self.btn_asignar, 0, wx.RIGHT, 10)
+        hbox.Add(self.btn_eliminar, 0, wx.RIGHT, 10)
+        hbox.Add(self.btn_restablecer, 0)
+        sizer.Add(hbox, 0, wx.ALL, 10)
+
+        self.SetSizer(sizer)
+        self._rellenar_lista()
+
+    def _rellenar_lista(self):
+        from app.motor.gestor_atajos import cargar_atajos, cargar_defaults, texto_atajo
+        self._atajos = cargar_atajos()
+        self._defaults = cargar_defaults()
+        self._claves = list(self._atajos.keys())
+
+        self.lista.DeleteAllItems()
+        for i, clave in enumerate(self._claves):
+            entrada = self._atajos[clave]
+            entrada_def = self._defaults.get(clave, {})
+            desc = entrada.get("descripcion", clave)
+            tecla_def = texto_atajo(entrada_def)
+            tecla_actual = texto_atajo(entrada)
+
+            # Columna 1: descripción con el default entre paréntesis
+            col_accion = f"{desc} ({tecla_def})"
+            # Columna 2: tecla actual, marcada si es personalizada
+            if tecla_actual == tecla_def:
+                col_tecla = tecla_actual
+            else:
+                col_tecla = f"{tecla_actual}  [personalizada]"
+
+            self.lista.InsertItem(i, col_accion)
+            self.lista.SetItem(i, 1, col_tecla)
+
+        if self.lista.GetItemCount() > 0:
+            self.lista.Select(0)
+
+    def _al_tecla_lista(self, event):
+        if event.GetKeyCode() == wx.WXK_RETURN:
+            self._al_asignar(None)
+        else:
+            event.Skip()
+
+    def _al_asignar(self, event):
+        from app.motor.gestor_atajos import guardar_atajo_usuario
+        idx = self.lista.GetFirstSelected()
+        if idx == -1:
+            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+            return
+
+        clave = self._claves[idx]
+        desc = self._atajos[clave].get("descripcion", clave)
+        dlg = _DialogoCapturaTecla(self, desc)
+        if dlg.ShowModal() == wx.ID_OK and dlg.resultado:
+            mod, tecla = dlg.resultado
+            guardar_atajo_usuario(clave, mod, tecla)
+            self._rellenar_lista()
+            if idx < self.lista.GetItemCount():
+                self.lista.Select(idx)
+                self.lista.EnsureVisible(idx)
+        dlg.Destroy()
+
+    def _al_eliminar(self, event):
+        from app.motor.gestor_atajos import eliminar_atajo_usuario
+        idx = self.lista.GetFirstSelected()
+        if idx == -1:
+            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+            return
+        clave = self._claves[idx]
+        eliminar_atajo_usuario(clave)
+        self._rellenar_lista()
+        if idx < self.lista.GetItemCount():
+            self.lista.Select(idx)
+
+    def _al_restablecer(self, event):
+        from app.motor.gestor_atajos import restablecer_todos
+        if wx.MessageBox(
+            "¿Restablecer todos los atajos a los valores predeterminados?",
+            "Confirmar", wx.YES_NO | wx.ICON_QUESTION
+        ) == wx.YES:
+            restablecer_todos()
+            self._rellenar_lista()
+            wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
 
 class PestanaAjustes(wx.Panel):
     def __init__(self, padre):
@@ -664,8 +836,7 @@ class PestanaAjustes(wx.Panel):
         elif idx == 2:
             return self.pag_voces.btn_escuchar
         else:
-            # PanelAtajos no tiene controles interactivos: el bucle vuelve al inicio
-            return self.lista_cat
+            return self.pag_atajos.btn_restablecer
 
     def al_cambiar_cat(self, event):
         idx = self.lista_cat.GetSelection()

@@ -9,6 +9,51 @@ from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
 
+# ── Tablas de traducción para etiquetas del combo de voz ─────────────────────
+_LOCALES_ES = {
+    "es-ES": "Español (España)", "es-MX": "Español (México)",
+    "es-AR": "Español (Argentina)", "es-CO": "Español (Colombia)",
+    "en-US": "Inglés (EE.UU.)", "en-GB": "Inglés (R.U.)",
+    "en-AU": "Inglés (Australia)", "en-CA": "Inglés (Canadá)",
+    "fr-FR": "Francés (Francia)", "fr-CA": "Francés (Canadá)",
+    "de-DE": "Alemán", "it-IT": "Italiano",
+    "pt-BR": "Portugués (Brasil)", "pt-PT": "Portugués (Portugal)",
+    "ja-JP": "Japonés", "zh-CN": "Chino (Mandarín)",
+    "ko-KR": "Coreano", "ru-RU": "Ruso",
+    "nl-NL": "Neerlandés", "pl-PL": "Polaco",
+    "Multilingüe (v2)": "Multilingüe",
+}
+_GENEROS_ES = {"Female": "Femenino", "Male": "Masculino", "Neutral": "Neutro"}
+_PROVEEDORES = {"polly": "Amazon Polly", "elevenlabs": "ElevenLabs", "azure": "Azure"}
+
+
+def _nombre_combo_neuronal(voz, prov_id):
+    """
+    Construye la etiqueta del combo de voz en formato coherente con Ajustes:
+    Nombre; Género; Idioma; Proveedor
+    Las etiquetas especiales ([Nueva], [HD]…) se añaden al nombre.
+    """
+    nombre = voz.get("nombre", "")
+    id_voz = voz.get("id", "").lower()
+    etiquetas = []
+    if "dragonhd" in id_voz or "dragon" in id_voz:
+        etiquetas.append("[Dragon]")
+    if "multilingual" in id_voz:
+        etiquetas.append("[Multilingüe]")
+    if "hd" in id_voz and "dragonhd" not in id_voz:
+        etiquetas.append("[HD]")
+    if voz.get("es_nueva"):
+        etiquetas.append("[Nueva]")
+    nombre_completo = f"{nombre} {' '.join(etiquetas)}" if etiquetas else nombre
+
+    genero = _GENEROS_ES.get(voz.get("genero", ""), voz.get("genero", ""))
+    idioma_raw = voz.get("idioma", "")
+    idioma = _LOCALES_ES.get(idioma_raw, idioma_raw)
+    proveedor = _PROVEEDORES.get(prov_id.lower(), prov_id.capitalize())
+
+    return f"{nombre_completo}; {genero}; {idioma}; {proveedor}"
+# ─────────────────────────────────────────────────────────────────────────────
+
 # ANCLAJE_INICIO: DEFINICION_PESTANA_LECTURA
 class PestanaLectura(wx.Panel):
     """
@@ -198,7 +243,7 @@ class PestanaLectura(wx.Panel):
                         for v in lista:
                             if v.get("id") in ids_favoritos:
                                 v["proveedor_id"] = prov
-                                nombre_mostrar = f"[{prov.capitalize()}] {v['nombre']} ({v.get('idioma')})"
+                                nombre_mostrar = _nombre_combo_neuronal(v, prov)
                                 voces_para_combo.append((nombre_mostrar, v))
             except Exception as e:
                 print(f"[Aviso] No se pudo leer voces_disponibles.json: {e}")
