@@ -6,19 +6,20 @@ import soundfile as sf
 import io
 from app.config_rutas import ruta_config
 
+_MAX_CACHE = 5
+
 
 class ClienteEleven:
     def __init__(self):
         self.config = {}
-        # Parámetros de reproducción (0-100)
-        self._velocidad = 50   # 50 = velocidad normal
-        self._volumen = 100    # 100 = volumen máximo
-        # Sesión reutilizable con soporte para cancelación inmediata.
+        self._velocidad = 50
+        self._volumen = 100
         self._sesion = requests.Session()
         self._parado = False
-        # Buffer de precarga
-        self._audio_preparado = None   # (data, fs_efectiva) o None
+        self._audio_preparado = None
         self._texto_preparado = None
+        self._cache_frags = {}
+        self._cache_lru = []
 
     def _cargar_config(self):
         try:
@@ -33,11 +34,16 @@ class ClienteEleven:
     def obtener_voces(self):
         return []
 
+    def _guardar_en_cache(self, texto, data, fs):
+        if texto not in self._cache_frags:
+            if len(self._cache_lru) >= _MAX_CACHE:
+                clave_antigua = self._cache_lru.pop(0)
+                self._cache_frags.pop(clave_antigua, None)
+            self._cache_lru.append(texto)
+        self._cache_frags[texto] = (data, fs)
+
     def _llamar_api(self, texto, datos_voz):
-        """
-        Llama a la API de ElevenLabs y devuelve (data, fs_efectiva).
-        No reproduce el audio — solo lo descarga y decodifica.
-        """
+        """Llama a la API de ElevenLabs y devuelve (data, fs_efectiva)."""
         self.config = self._cargar_config()
         el_conf = self.config.get("elevenlabs", {})
         key = el_conf.get("api_key")
@@ -70,47 +76,50 @@ class ClienteEleven:
         return data, fs_efectiva
 
     def hablar(self, texto, datos_voz):
-        """Sintetiza y reproduce el texto. Usa audio pre-descargado si está disponible."""
+        """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
 
-        if self._audio_preparado is not None and self._texto_preparado == texto:
+        if texto in self._cache_frags:
+            data, fs_efectiva = self._cache_frags[texto]
+        elif self._audio_preparado is not None and self._texto_preparado == texto:
             data, fs_efectiva = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
-            print(f"[ElevenLabs] Usando audio pre-descargado (sin latencia de API).")
+            self._guardar_en_cache(texto, data, fs_efectiva)
         else:
             data, fs_efectiva = self._llamar_api(texto, datos_voz)
+            self._guardar_en_cache(texto, data, fs_efectiva)
 
         if not self._parado:
             sd.play(data, fs_efectiva)
             sd.wait()
 
     def preparar(self, texto, datos_voz):
-        """Pre-descarga el audio y lo cachea para reproducción sin latencia."""
+        """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe."""
+        if texto in self._cache_frags:
+            if not self._parado:
+                self._audio_preparado = self._cache_frags[texto]
+                self._texto_preparado = texto
+            return
         try:
             data, fs_efectiva = self._llamar_api(texto, datos_voz)
             if not self._parado:
+                self._guardar_en_cache(texto, data, fs_efectiva)
                 self._audio_preparado = (data, fs_efectiva)
                 self._texto_preparado = texto
-                print(f"[ElevenLabs] Precarga completada ({len(texto)} chars).")
-        except Exception as e:
-            print(f"[ElevenLabs] Error en precarga: {e}")
+        except Exception:
             self._audio_preparado = None
             self._texto_preparado = None
 
     def detener(self):
-        """
-        Detiene el audio y cancela cualquier petición HTTP activa cerrando la sesión.
-        Una sesión nueva queda lista para la siguiente petición.
-        """
         self._parado = True
         self._audio_preparado = None
         self._texto_preparado = None
         try:
             self._sesion.close()
             self._sesion = requests.Session()
-        except Exception as e:
-            print(f"[Aviso] Error al cerrar sesión ElevenLabs: {e}")
+        except Exception:
+            pass
         try:
             sd.stop()
         except Exception:
@@ -123,7 +132,15 @@ class ClienteEleven:
         pass
 
     def fijar_velocidad(self, v):
-        self._velocidad = max(0, min(100, int(v)))
+        nuevo = max(0, min(100, int(v)))
+        if nuevo != self._velocidad:
+            self._cache_frags.clear()
+            self._cache_lru.clear()
+        self._velocidad = nuevo
 
     def fijar_volumen(self, v):
-        self._volumen = max(0, min(100, int(v)))
+        nuevo = max(0, min(100, int(v)))
+        if nuevo != self._volumen:
+            self._cache_frags.clear()
+            self._cache_lru.clear()
+        self._volumen = nuevo
