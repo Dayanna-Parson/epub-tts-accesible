@@ -46,6 +46,9 @@ class ReproductorVoz:
         self._detenido_intencionalmente = False
         # Control de cuota: evita gastos inesperados y permite saltar al siguiente proveedor
         self._control_cuota = ControlCuota()
+        # Proveedores suspendidos esta sesión por error de cuota (402 / plan agotado).
+        # Se limpian cuando el usuario cambia de voz manualmente.
+        self._proveedores_suspendidos = set()
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
@@ -58,7 +61,9 @@ class ReproductorVoz:
             print(f"[Error] No se pudo leer config_general.json en el reproductor: {e}")
         return {}
     def fijar_voz(self, datos_voz):
-        self.detener() 
+        self.detener()
+        # El usuario elige voz manualmente: resetear suspensiones de cuota
+        self._proveedores_suspendidos.clear()
         self.voz_actual = datos_voz
         
         proveedor = datos_voz.get("proveedor_id", "local").lower()
@@ -107,6 +112,8 @@ class ReproductorVoz:
                     [(t, m) for t, m in todos if t != self.tipo_motor_actual]
 
         for tipo, motor in prioridad:
+            if tipo in self._proveedores_suspendidos:
+                continue  # Proveedor desactivado esta sesión por cuota agotada
             if self._control_cuota.tiene_cuota(texto, tipo):
                 self._control_cuota.registrar_gasto(texto, tipo)
                 # Cambiar motor activo si difiere del actual
@@ -196,10 +203,20 @@ class ReproductorVoz:
             error_msg = str(e)
             print(f"[Error] Voz neuronal ({self.tipo_motor_actual}): {error_msg}")
 
-            # Solo mostrar el error al usuario si fue un fallo real de la API,
-            # no una detención intencional (pausa o stop del usuario que cierra la sesión HTTP).
             if self._generacion == generacion and not self._detenido_intencionalmente:
-                wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+                if self._es_error_cuota(error_msg):
+                    proveedor = self.tipo_motor_actual
+                    if proveedor not in self._proveedores_suspendidos:
+                        # Primer aviso: mostrar diálogo y suspender proveedor
+                        self._proveedores_suspendidos.add(proveedor)
+                        wx.CallAfter(self._avisar_cuota_agotada, proveedor)
+                    # Leer este fragmento con voz local para no perder la lectura
+                    if not self._detenido_intencionalmente:
+                        try: self.cliente_local.hablar(texto)
+                        except Exception: pass
+                else:
+                    # Error de red/API real: activar voz local con mensaje de error
+                    wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
 
         # Solo actualizar el estado y encadenar el callback si:
         # 1. Esta generación sigue siendo la activa (no se inició otra síntesis)
@@ -209,6 +226,31 @@ class ReproductorVoz:
             if self._callback_completado:
                 wx.CallAfter(self._callback_completado)
     # ANCLAJE_FIN: PROCESAMIENTO_VOCES_NEURONALES
+
+    # ANCLAJE_INICIO: GESTION_ERRORES_CUOTA
+    def _es_error_cuota(self, error_msg):
+        """Detecta si el error corresponde a cuota agotada o plan de pago excedido."""
+        msg = error_msg.lower()
+        return any(k in msg for k in (
+            "402", "quota", "payment required", "insufficient_credits",
+            "characters_limit", "limit_reached", "plan limit",
+            "monthly usage", "billing", "credit", "subscription"
+        ))
+
+    def _avisar_cuota_agotada(self, proveedor):
+        """
+        Aviso único por proveedor. Se llama desde el hilo principal via wx.CallAfter.
+        Al ser único por proveedor por sesión, no se repite en cada fragmento.
+        """
+        wx.MessageBox(
+            f"El proveedor {proveedor.upper()} ha alcanzado el límite de su plan/cuota.\n\n"
+            "• Este proveedor queda desactivado automáticamente para esta sesión.\n"
+            "• La lectura continuará con tu voz local sin interrupciones.\n"
+            "• Para reactivarlo, cambia de voz manualmente en el selector.",
+            "Cuota agotada — aviso único",
+            wx.OK | wx.ICON_INFORMATION
+        )
+    # ANCLAJE_FIN: GESTION_ERRORES_CUOTA
 
     # ANCLAJE_INICIO: ACTIVACION_VOZ_LOCAL_AUTOMATICA
     def _activar_voz_local_automatica(self, error_msg, texto):

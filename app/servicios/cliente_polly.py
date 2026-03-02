@@ -176,6 +176,7 @@ class ClientePolly:
         respuesta = None
         for intento in range(2):
             try:
+                _t0 = time.time()
                 respuesta = cliente.synthesize_speech(
                     Engine=motor,
                     Text=ssml,
@@ -184,7 +185,8 @@ class ClientePolly:
                     SampleRate="24000",
                     VoiceId=voice_id,
                 )
-                print("[Polly] Conexión establecida.")
+                _dt = time.time() - _t0
+                print(f"[Polly] Conexión establecida | {_dt:.2f}s | Motor: {motor} | Voz: {voice_id} | {len(texto)} chars")
                 break
             except Exception as e:
                 error_str = str(e).lower()
