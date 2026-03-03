@@ -304,6 +304,7 @@ class VentanaPrincipal(wx.Frame):
         from app.motor.gestor_atajos import cargar_atajos
         atajos = cargar_atajos()
         entradas = []
+        self._atajos_sin_modificador = set()  # Claves de tecla simple sin modificador
 
         for clave, entrada in atajos.items():
             mod_str = entrada.get("modificador", "")
@@ -317,6 +318,9 @@ class VentanaPrincipal(wx.Frame):
                 self._ids_atajos_global[clave] = wx.NewIdRef()
             id_atajo = self._ids_atajos_global[clave]
             entradas.append((flag, keycode, id_atajo))
+            if flag == wx.ACCEL_NORMAL:
+                # Tecla sin modificador (ej. Espacio): hay que ceder a botones con foco
+                self._atajos_sin_modificador.add(clave)
             self.Bind(wx.EVT_MENU,
                       lambda e, c=clave: self._ejecutar_atajo_global(c),
                       id=id_atajo)
@@ -325,7 +329,19 @@ class VentanaPrincipal(wx.Frame):
             self.SetAcceleratorTable(wx.AcceleratorTable(entradas))
 
     def _ejecutar_atajo_global(self, clave):
-        """Despacha el atajo de teclado al método correspondiente de PestanaLectura."""
+        """Despacha el atajo de teclado al método correspondiente de PestanaLectura.
+
+        Si el atajo es de tecla simple sin modificador (ej. Espacio) y el foco está
+        en un botón, el espacio activa el botón en lugar de disparar nuestra acción.
+        """
+        ctrl_foco = self.FindFocus()
+        if (clave in getattr(self, '_atajos_sin_modificador', set())
+                and ctrl_foco and isinstance(ctrl_foco, wx.Button)):
+            ctrl_foco.GetEventHandler().ProcessEvent(
+                wx.CommandEvent(wx.EVT_BUTTON.typeId, ctrl_foco.GetId())
+            )
+            return
+
         _ACCIONES = {
             "abrir_libro":       lambda: (self.notebook.SetSelection(0),
                                           self.pestana_lectura.al_cargar_libro(None)),

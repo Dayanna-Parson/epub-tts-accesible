@@ -71,32 +71,11 @@ class PanelGeneral(wx.ScrolledWindow):
         super().__init__(padre, style=wx.VSCROLL)
         self.SetScrollRate(0, 20)
         self.config = config
-        self.ruta_defecto = os.path.join(os.getcwd(), "grabaciones")
         self.cuota = ControlCuota() # Instancia para leer datos
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        # 1. EXPORTACIÓN
-        sb_ruta = wx.StaticBox(self, label="Exportación de Audio")
-        sizer_ruta = wx.StaticBoxSizer(sb_ruta, wx.VERTICAL)
-        sizer_ruta.Add(wx.StaticText(self, label="Formato: MP3 a 320kbps."), 0, wx.ALL, 5)
-        
-        hbox_ruta = wx.BoxSizer(wx.HORIZONTAL)
-        self.txt_ruta = wx.TextCtrl(self, style=wx.TE_READONLY)
-        self.txt_ruta.SetValue(self.config.get("ruta_grabaciones", self.ruta_defecto))
-        
-        self.btn_examinar = wx.Button(self, label="Examinar...")
-        self.btn_examinar.Bind(wx.EVT_BUTTON, self.al_examinar)
-        self.btn_reset = wx.Button(self, label="Restablecer")
-        self.btn_reset.Bind(wx.EVT_BUTTON, self.al_resetear_ruta)
-        
-        hbox_ruta.Add(self.txt_ruta, 1, wx.EXPAND | wx.RIGHT, 5)
-        hbox_ruta.Add(self.btn_examinar, 0, wx.RIGHT, 5)
-        hbox_ruta.Add(self.btn_reset, 0)
-        sizer_ruta.Add(hbox_ruta, 0, wx.EXPAND | wx.ALL, 5)
-        sizer.Add(sizer_ruta, 0, wx.EXPAND | wx.ALL, 10)
 
-        # 2. CONTROL DE PRESUPUESTO
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # CONTROL DE PRESUPUESTO
         # La información de costes se integra en el AccessibleDescription (SetHelpText)
         # de cada campo — NVDA la verbalizará al tabular, sin texto suelto que sature.
         sb_cuota = wx.StaticBox(self, label="Control de Presupuesto y Límites")
@@ -153,20 +132,6 @@ class PanelGeneral(wx.ScrolledWindow):
         hbox.Add(lbl, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
         hbox.Add(txt, 1, wx.EXPAND)
         return hbox
-
-    def al_examinar(self, event):
-        dlg = wx.DirDialog(self, "Selecciona carpeta")
-        if self.txt_ruta.GetValue(): dlg.SetPath(self.txt_ruta.GetValue())
-        if dlg.ShowModal() == wx.ID_OK:
-            self.txt_ruta.SetValue(dlg.GetPath())
-            self.config["ruta_grabaciones"] = dlg.GetPath()
-            self.guardar_todo()
-        dlg.Destroy()
-        
-    def al_resetear_ruta(self, event):
-        self.txt_ruta.SetValue(self.ruta_defecto)
-        self.config["ruta_grabaciones"] = self.ruta_defecto
-        self.guardar_todo()
 
     def guardar_todo(self):
         # Guardar config general
@@ -782,6 +747,12 @@ class PanelAtajos(wx.Panel):
         else:
             event.Skip()
 
+    def _refrescar_aceleradores_frame(self):
+        """Pide al Frame principal que reconstruya el AcceleratorTable con los atajos actuales."""
+        ventana = wx.GetTopLevelParent(self)
+        if hasattr(ventana, '_configurar_aceleradores_globales'):
+            ventana._configurar_aceleradores_globales()
+
     def _al_asignar(self, event):
         from app.motor.gestor_atajos import guardar_atajo_usuario
         idx = self.lista.GetFirstSelected()
@@ -796,6 +767,7 @@ class PanelAtajos(wx.Panel):
             mod, tecla = dlg.resultado
             guardar_atajo_usuario(clave, mod, tecla)
             self._rellenar_lista()
+            self._refrescar_aceleradores_frame()
             if idx < self.lista.GetItemCount():
                 self.lista.Select(idx)
                 self.lista.EnsureVisible(idx)
@@ -810,6 +782,7 @@ class PanelAtajos(wx.Panel):
         clave = self._claves[idx]
         eliminar_atajo_usuario(clave)
         self._rellenar_lista()
+        self._refrescar_aceleradores_frame()
         if idx < self.lista.GetItemCount():
             self.lista.Select(idx)
 
@@ -821,6 +794,7 @@ class PanelAtajos(wx.Panel):
         ) == wx.YES:
             restablecer_todos()
             self._rellenar_lista()
+            self._refrescar_aceleradores_frame()
             wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
 
 class PestanaAjustes(wx.Panel):
