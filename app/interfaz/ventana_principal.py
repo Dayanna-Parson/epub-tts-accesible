@@ -12,10 +12,8 @@ _URL_GITHUB = "https://github.com/Dayanna-Parson/epub-tts-accesible"
 
 # ── Helpers para traducir atajos de gestor_atajos al formato de wx ───────────
 def _mod_a_flag(mod_str):
-    """Convierte 'Ctrl', 'Alt', 'Ctrl+Shift', ''… al flag wx.ACCEL_* correspondiente.
-    Acepta None o cadena vacía para atajos sin modificador (ej. tecla Espacio sola)."""
+    """Convierte 'Ctrl', 'Alt', 'Ctrl+Shift'… al flag wx.ACCEL_* correspondiente."""
     _MAP = {
-        None: wx.ACCEL_NORMAL,
         "": wx.ACCEL_NORMAL,
         "Ctrl": wx.ACCEL_CTRL,
         "Alt": wx.ACCEL_ALT,
@@ -312,7 +310,6 @@ class VentanaPrincipal(wx.Frame):
             tecla_str = entrada.get("tecla", "")
             flag = _mod_a_flag(mod_str)
             keycode = _nombre_a_keycode(tecla_str)
-            # flag puede ser 0 (wx.ACCEL_NORMAL) para atajos sin modificador — usar 'is None'
             if flag is None or keycode < 0:
                 continue
             # Reutilizar IDs para evitar acumulación (Bind sobreescribe el anterior)
