@@ -201,38 +201,58 @@ class GestorVoces:
         # Consulta explícita por motor para garantizar voces generative y long-form.
         # describe_voices() sin Engine devuelve todas las voces, pero en ciertas regiones
         # o versiones de la API las voces de estos motores solo aparecen al filtrar.
+        # Además se consulta us-east-1 explícitamente porque las voces Generative de Polly
+        # (Danielle, Jayden, etc.) solo existen en esa región — aunque el usuario haya
+        # configurado eu-west-1 u otra.
         voces_por_id = {v["id"]: v for v in voces_procesadas}
-        for engine_extra in ("generative", "long-form"):
+
+        # Clientes a consultar: el del usuario + us-east-1 si no coinciden
+        clientes_extra = [cliente]
+        if region.lower() != "us-east-1":
             try:
-                resp_extra = cliente.describe_voices(Engine=engine_extra)
-                for v in resp_extra.get("Voices", []):
-                    id_voz = v.get("Id")
-                    motores_extra = v.get("SupportedEngines", [engine_extra])
-                    if id_voz not in voces_por_id:
-                        genero_raw = v.get("Gender", "")
-                        genero = "Female" if genero_raw == "Female" else "Male"
-                        voz_nueva = {
-                            "nombre": v.get("Name"),
-                            "id": id_voz,
-                            "idioma": v.get("LanguageCode"),
-                            "genero": genero,
-                            "proveedor": "Amazon Polly",
-                            "motores": motores_extra,
-                            "es_nueva": True,
-                        }
-                        voces_procesadas.append(voz_nueva)
-                        voces_por_id[id_voz] = voz_nueva
-                    else:
-                        existente = voces_por_id[id_voz]
-                        for m in motores_extra:
-                            if m not in existente["motores"]:
-                                existente["motores"].append(m)
-                        existente["es_nueva"] = any(
-                            m in existente["motores"]
-                            for m in ("generative", "long-form", "neural")
-                        )
+                cliente_us = boto3.client(
+                    "polly",
+                    region_name="us-east-1",
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key,
+                )
+                clientes_extra.append(cliente_us)
             except Exception as e:
-                print(f"[Polly] Motor '{engine_extra}' no disponible en esta región: {e}")
+                print(f"[Polly] No se pudo crear cliente us-east-1: {e}")
+
+        for engine_extra in ("generative", "long-form"):
+            for cli in clientes_extra:
+                try:
+                    resp_extra = cli.describe_voices(Engine=engine_extra)
+                    for v in resp_extra.get("Voices", []):
+                        id_voz = v.get("Id")
+                        motores_extra = v.get("SupportedEngines", [engine_extra])
+                        if id_voz not in voces_por_id:
+                            genero_raw = v.get("Gender", "")
+                            genero = "Female" if genero_raw == "Female" else "Male"
+                            voz_nueva = {
+                                "nombre": v.get("Name"),
+                                "id": id_voz,
+                                "idioma": v.get("LanguageCode"),
+                                "genero": genero,
+                                "proveedor": "Amazon Polly",
+                                "motores": motores_extra,
+                                "es_nueva": True,
+                            }
+                            voces_procesadas.append(voz_nueva)
+                            voces_por_id[id_voz] = voz_nueva
+                        else:
+                            existente = voces_por_id[id_voz]
+                            for m in motores_extra:
+                                if m not in existente["motores"]:
+                                    existente["motores"].append(m)
+                            existente["es_nueva"] = any(
+                                m in existente["motores"]
+                                for m in ("generative", "long-form", "neural")
+                            )
+                except Exception as e:
+                    region_cli = cli.meta.region_name
+                    print(f"[Polly] Motor '{engine_extra}' no disponible en {region_cli}: {e}")
 
         return voces_procesadas
 
