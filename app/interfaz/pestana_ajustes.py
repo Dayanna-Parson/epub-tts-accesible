@@ -30,26 +30,24 @@ from app.motor.control_cuota import ControlCuota
 def _coste_estimado(proveedor, limite_chars):
     """
     Devuelve texto con estimación de coste mensual para el límite indicado.
-    Precios de referencia 2026 (USD):
-      Azure Neural $16/1M | HD $30/1M | Free: 5M chars/mes
-      Polly Neural $16/1M | Generative $30/1M | Long-form $100/1M | Free 1er año: 1M Neural
-      ElevenLabs: suscripción mensual (Free 10k, Starter $5 30k, Creator $22 100k, Pro $99 500k)
+    Cálculo en plan de pago por uso (pay-as-you-go) 2026 (USD):
+      Azure Neural $16/1M | Azure HD $30/1M
+      Polly Neural $16/1M | Generative $30/1M | Long-form $100/1M
+      ElevenLabs: suscripción mensual (Starter $5 30k, Creator $22 100k, Pro $99 500k)
     """
     try:
         n = int(limite_chars)
     except (ValueError, TypeError):
         return ""
+    if n <= 0:
+        return ""
     if proveedor == "azure":
-        if n <= 5_000_000:
-            return "Dentro del tier gratuito (5M chars/mes)"
-        return f"≈ ${(n - 5_000_000) * 16 / 1_000_000:.2f}/mes (Neural, excedente del tier gratuito)"
+        return f"≈ ${n * 16 / 1_000_000:.2f}/mes (Neural $16/1M) · HD: ${n * 30 / 1_000_000:.2f}/mes"
     elif proveedor == "polly":
-        if n <= 1_000_000:
-            return "Dentro del tier gratuito del 1er año (1M Neural/mes)"
-        return f"≈ ${(n - 1_000_000) * 16 / 1_000_000:.2f}/mes (Neural @ $16/1M; Generative: $30/1M)"
+        return (f"≈ ${n * 16 / 1_000_000:.2f}/mes (Neural $16/1M)"
+                f" · Generative: ${n * 30 / 1_000_000:.2f}/mes")
     elif proveedor == "elevenlabs":
-        if n <= 10_000:   return "Plan Free: 10.000 chars/mes incluidos"
-        elif n <= 30_000:  return "≈ $5/mes (Plan Starter: 30.000 chars)"
+        if n <= 30_000:   return "≈ $5/mes (Plan Starter: 30.000 chars)"
         elif n <= 100_000: return "≈ $22/mes (Plan Creator: 100.000 chars)"
         elif n <= 500_000: return "≈ $99/mes (Plan Pro: 500.000 chars)"
         else:              return "≈ $330/mes (Plan Scale: 2M chars)"
@@ -90,15 +88,14 @@ class PanelGeneral(wx.ScrolledWindow):
         sb_cuota = wx.StaticBox(self, label="Control de Presupuesto y Límites (Anti-Sustos)")
         sizer_cuota = wx.StaticBoxSizer(sb_cuota, wx.VERTICAL)
         
-        # Explicación con precios 2026 actualizados
+        # Explicación con precios 2026 pay-as-you-go
         lbl_info = wx.StaticText(self, label=(
             "Cada API cobra por caracteres sintetizados. Establece aquí un límite mensual de seguridad.\n"
             "Si se supera, la app desactivará ese proveedor y continuará con la voz local.\n\n"
-            "Precios de referencia 2026 (USD):\n"
-            "• Azure Neural: $16/1M chars  |  Azure HD: $30/1M  |  Gratis: 5M chars/mes\n"
+            "Precios de referencia 2026 — plan de pago por uso (USD):\n"
+            "• Azure Neural: $16/1M chars  |  Azure HD (Premium): $30/1M\n"
             "• Polly Neural: $16/1M  |  Generative: $30/1M  |  Long-form: $100/1M\n"
-            "  Gratis 1er año: 1M Neural, 500k Long-form, 100k Generative\n"
-            "• ElevenLabs: por suscripción — Free: 10k/mes  |  Creator ($22): 100k  |  Pro ($99): 500k"
+            "• ElevenLabs: Starter ($5, 30k)  |  Creator ($22, 100k)  |  Pro ($99, 500k)"
         ))
         sizer_cuota.Add(lbl_info, 0, wx.ALL, 5)
         sizer_cuota.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
@@ -137,32 +134,26 @@ class PanelGeneral(wx.ScrolledWindow):
 
     def _crear_fila_limite(self, nombre, gastado, limite, clave):
         if not hasattr(self, "txt_limites"): self.txt_limites = {}
-        if not hasattr(self, "_lbl_costes"): self._lbl_costes = {}
-
-        vbox = wx.BoxSizer(wx.VERTICAL)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         lbl = wx.StaticText(self, label=f"{nombre} (Gastado: {gastado}):", size=(180, -1))
         txt = wx.TextCtrl(self, value=str(limite))
         txt.SetName(f"limite_{clave}")
-        self.txt_limites[clave] = txt
-        hbox.Add(lbl, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        hbox.Add(txt, 1, wx.EXPAND)
-        vbox.Add(hbox, 0, wx.EXPAND)
-
+        # La descripción accesible (leída por NVDA al recibir foco) muestra el coste estimado
         texto_coste = _coste_estimado(clave, limite)
-        lbl_coste = wx.StaticText(self, label=f"  → {texto_coste}" if texto_coste else "")
-        lbl_coste.SetForegroundColour(wx.Colour(0, 100, 0))
-        self._lbl_costes[clave] = lbl_coste
-        vbox.Add(lbl_coste, 0, wx.LEFT, 185)
+        if texto_coste:
+            txt.SetHelpText(f"Coste estimado: {texto_coste}")
+        self.txt_limites[clave] = txt
 
-        def _on_texto(event, _clave=clave, _lbl=lbl_coste):
+        def _on_texto(event, _clave=clave, _txt=txt):
             estimado = _coste_estimado(_clave, event.GetString())
-            _lbl.SetLabel(f"  → {estimado}" if estimado else "")
+            _txt.SetHelpText(f"Coste estimado: {estimado}" if estimado else "")
             event.Skip()
 
         txt.Bind(wx.EVT_TEXT, _on_texto)
-        return vbox
+        hbox.Add(lbl, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        hbox.Add(txt, 1, wx.EXPAND)
+        return hbox
 
     def al_examinar(self, event):
         dlg = wx.DirDialog(self, "Selecciona carpeta")
