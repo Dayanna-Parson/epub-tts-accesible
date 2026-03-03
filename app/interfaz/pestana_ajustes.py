@@ -27,30 +27,42 @@ class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlA
 from app.motor.control_cuota import ControlCuota
 
 
-def _coste_estimado(proveedor, limite_chars):
+_CHARS_POR_LIBRO = 300_000  # aprox. 300 paginas de 1000 caracteres
+
+
+def _texto_ayuda_limite(proveedor, gastado, limite_chars):
     """
-    Devuelve texto con estimación de coste mensual para el límite indicado.
-    Cálculo en plan de pago por uso (pay-as-you-go) 2026 (USD):
-      Azure Neural $16/1M | Azure HD $30/1M
-      Polly Neural $16/1M | Generative $30/1M | Long-form $100/1M
-      ElevenLabs: suscripción mensual (Starter $5 30k, Creator $22 100k, Pro $99 500k)
+    Genera el texto de SetHelpText que NVDA verbalizara al tabular al campo de limite.
+    Conciso y sin simbolos especiales para que el lector de pantalla lo lea limpio.
+    Precios 2026 pay-as-you-go (USD): Azure/Polly Neural 16 dolares por millon.
     """
     try:
-        n = int(limite_chars)
+        lim = int(limite_chars)
+        gas = int(gastado)
     except (ValueError, TypeError):
         return ""
-    if n <= 0:
+    if lim <= 0:
         return ""
-    if proveedor == "azure":
-        return f"≈ ${n * 16 / 1_000_000:.2f}/mes (Neural $16/1M) · HD: ${n * 30 / 1_000_000:.2f}/mes"
-    elif proveedor == "polly":
-        return (f"≈ ${n * 16 / 1_000_000:.2f}/mes (Neural $16/1M)"
-                f" · Generative: ${n * 30 / 1_000_000:.2f}/mes")
+    restante = max(0, lim - gas)
+    libros = restante // _CHARS_POR_LIBRO
+    if proveedor in ("azure", "polly"):
+        coste_gas = round(gas * 16 / 1_000_000, 2)
+        coste_lim = round(lim * 16 / 1_000_000, 2)
+        return (
+            f"Gasto: {gas} caracteres, unos {coste_gas} dolares. "
+            f"Restante: {restante} caracteres, aprox {libros} libros. "
+            f"Coste total al limite: {coste_lim} dolares al mes."
+        )
     elif proveedor == "elevenlabs":
-        if n <= 30_000:   return "≈ $5/mes (Plan Starter: 30.000 chars)"
-        elif n <= 100_000: return "≈ $22/mes (Plan Creator: 100.000 chars)"
-        elif n <= 500_000: return "≈ $99/mes (Plan Pro: 500.000 chars)"
-        else:              return "≈ $330/mes (Plan Scale: 2M chars)"
+        if lim <= 30_000:    plan = "Plan Starter, 5 dolares al mes"
+        elif lim <= 100_000: plan = "Plan Creator, 22 dolares al mes"
+        elif lim <= 500_000: plan = "Plan Pro, 99 dolares al mes"
+        else:                plan = "Plan Scale, 330 dolares al mes"
+        return (
+            f"Gasto: {gas} caracteres. "
+            f"Restante: {restante} caracteres, aprox {libros} libros. "
+            f"Suscripcion sugerida: {plan}."
+        )
     return ""
 
 
@@ -84,21 +96,11 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer_ruta.Add(hbox_ruta, 0, wx.EXPAND | wx.ALL, 5)
         sizer.Add(sizer_ruta, 0, wx.EXPAND | wx.ALL, 10)
 
-        # 2. CONTROL DE PRESUPUESTO (¡NUEVO!)
-        sb_cuota = wx.StaticBox(self, label="Control de Presupuesto y Límites (Anti-Sustos)")
+        # 2. CONTROL DE PRESUPUESTO
+        # La información de costes se integra en el AccessibleDescription (SetHelpText)
+        # de cada campo — NVDA la verbalizará al tabular, sin texto suelto que sature.
+        sb_cuota = wx.StaticBox(self, label="Control de Presupuesto y Límites")
         sizer_cuota = wx.StaticBoxSizer(sb_cuota, wx.VERTICAL)
-        
-        # Explicación con precios 2026 pay-as-you-go
-        lbl_info = wx.StaticText(self, label=(
-            "Cada API cobra por caracteres sintetizados. Establece aquí un límite mensual de seguridad.\n"
-            "Si se supera, la app desactivará ese proveedor y continuará con la voz local.\n\n"
-            "Precios de referencia 2026 — plan de pago por uso (USD):\n"
-            "• Azure Neural: $16/1M chars  |  Azure HD (Premium): $30/1M\n"
-            "• Polly Neural: $16/1M  |  Generative: $30/1M  |  Long-form: $100/1M\n"
-            "• ElevenLabs: Starter ($5, 30k)  |  Creator ($22, 100k)  |  Pro ($99, 500k)"
-        ))
-        sizer_cuota.Add(lbl_info, 0, wx.ALL, 5)
-        sizer_cuota.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
 
         # Controles Azure
         g_az, l_az = self.cuota.get_info_uso("azure")
@@ -139,15 +141,12 @@ class PanelGeneral(wx.ScrolledWindow):
         lbl = wx.StaticText(self, label=f"{nombre} (Gastado: {gastado}):", size=(180, -1))
         txt = wx.TextCtrl(self, value=str(limite))
         txt.SetName(f"limite_{clave}")
-        # La descripción accesible (leída por NVDA al recibir foco) muestra el coste estimado
-        texto_coste = _coste_estimado(clave, limite)
-        if texto_coste:
-            txt.SetHelpText(f"Coste estimado: {texto_coste}")
+        # SetHelpText: NVDA lo verbalizará al recibir foco — gasto, restante y libros equiv.
+        txt.SetHelpText(_texto_ayuda_limite(clave, gastado, limite))
         self.txt_limites[clave] = txt
 
-        def _on_texto(event, _clave=clave, _txt=txt):
-            estimado = _coste_estimado(_clave, event.GetString())
-            _txt.SetHelpText(f"Coste estimado: {estimado}" if estimado else "")
+        def _on_texto(event, _clave=clave, _gas=gastado, _txt=txt):
+            _txt.SetHelpText(_texto_ayuda_limite(_clave, _gas, event.GetString()))
             event.Skip()
 
         txt.Bind(wx.EVT_TEXT, _on_texto)
