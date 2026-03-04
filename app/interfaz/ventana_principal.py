@@ -4,6 +4,7 @@ import os
 import json
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
+from app.interfaz.pestana_grabacion import PestanaGrabacion
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # ANCLAJE_INICIO: DEFINICION_VENTANA
@@ -22,8 +23,8 @@ class VentanaPrincipal(wx.Frame):
         self.pestana_lectura = PestanaLectura(self.notebook)
         self.notebook.AddPage(self.pestana_lectura, "Modo Lectura")
 
-        # Pestaña 2: Grabación (Aún vacía)
-        self.pestana_grabacion = wx.Panel(self.notebook)
+        # Pestaña 2: Grabación multivoz
+        self.pestana_grabacion = PestanaGrabacion(self.notebook)
         self.notebook.AddPage(self.pestana_grabacion, "Modo Grabación")
         
         # Pestaña 3: Ajustes
