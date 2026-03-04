@@ -2,10 +2,57 @@
 import wx
 import os
 import json
+import time
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
+from app.config_rutas import ruta_config, CONFIG_DIR
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
+
+# ── Tablas de traducción para etiquetas del combo de voz ─────────────────────
+_LOCALES_ES = {
+    "es-ES": "Español (España)", "es-MX": "Español (México)",
+    "es-AR": "Español (Argentina)", "es-CO": "Español (Colombia)",
+    "en-US": "Inglés (EE.UU.)", "en-GB": "Inglés (R.U.)",
+    "en-AU": "Inglés (Australia)", "en-CA": "Inglés (Canadá)",
+    "fr-FR": "Francés (Francia)", "fr-CA": "Francés (Canadá)",
+    "de-DE": "Alemán", "it-IT": "Italiano",
+    "pt-BR": "Portugués (Brasil)", "pt-PT": "Portugués (Portugal)",
+    "ja-JP": "Japonés", "zh-CN": "Chino (Mandarín)",
+    "ko-KR": "Coreano", "ru-RU": "Ruso",
+    "nl-NL": "Neerlandés", "pl-PL": "Polaco",
+    "Multilingüe (v2)": "Multilingüe",
+}
+_GENEROS_ES = {"Female": "Femenino", "Male": "Masculino", "Neutral": "Neutro"}
+_PROVEEDORES = {"polly": "Amazon Polly", "elevenlabs": "ElevenLabs", "azure": "Azure"}
+
+
+def _nombre_combo_neuronal(voz, prov_id):
+    """
+    Construye la etiqueta del combo de voz en formato coherente con Ajustes:
+    Nombre; Género; Idioma; Proveedor
+    Las etiquetas especiales ([Nueva], [HD]…) se añaden al nombre.
+    """
+    nombre = voz.get("nombre", "")
+    id_voz = voz.get("id", "").lower()
+    etiquetas = []
+    if "dragonhd" in id_voz or "dragon" in id_voz:
+        etiquetas.append("[Dragon]")
+    if "multilingual" in id_voz:
+        etiquetas.append("[Multilingüe]")
+    if "hd" in id_voz and "dragonhd" not in id_voz:
+        etiquetas.append("[HD]")
+    if voz.get("es_nueva"):
+        etiquetas.append("[Nueva]")
+    nombre_completo = f"{nombre} {' '.join(etiquetas)}" if etiquetas else nombre
+
+    genero = _GENEROS_ES.get(voz.get("genero", ""), voz.get("genero", ""))
+    idioma_raw = voz.get("idioma", "")
+    idioma = _LOCALES_ES.get(idioma_raw, idioma_raw)
+    proveedor = _PROVEEDORES.get(prov_id.lower(), prov_id.capitalize())
+
+    return f"{nombre_completo}; {genero}; {idioma}; {proveedor}"
+# ─────────────────────────────────────────────────────────────────────────────
 
 # ANCLAJE_INICIO: DEFINICION_PESTANA_LECTURA
 class PestanaLectura(wx.Panel):
@@ -30,8 +77,17 @@ class PestanaLectura(wx.Panel):
         self.cargar_config_salto()
         
         self.pos_inicio_fragmento = 0
+        # Variables para la estimación temporal del progreso de voces neuronales
+        self._tiempo_inicio_frag = 0.0
+        self._longitud_frag_actual = 0
+        # Cola de fragmentos para lectura continua de voces neuronales
+        self._cola_lectura = []
+        self._idx_fragmento_actual = 0
+        # Buffer proactivo: evita silencios entre fragmentos disparando la descarga
+        # del siguiente cuando queda ~30% del actual
+        self._precarga_solicitada = False
         self.ruta_libro_actual = None
-        self.ruta_datos_lectura = os.path.join("configuraciones", "datos_lectura.json")
+        self.ruta_datos_lectura = ruta_config("datos_lectura.json")
         
         sizer_principal = wx.BoxSizer(wx.VERTICAL)
 
@@ -45,7 +101,7 @@ class PestanaLectura(wx.Panel):
 
         self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
         self.txt_contenido.SetName("Contenido del libro") 
-        self.txt_contenido.SetValue("Bienvenida. Pulsa Ctrl+A para abrir un libro EPUB.")
+        self.txt_contenido.SetValue("Bienvenida a Epub TTS Accesible. Pulsa Ctrl+A para abrir un libro EPUB.")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
         
         self.divisor.SetMinimumPaneSize(200)
@@ -114,22 +170,32 @@ class PestanaLectura(wx.Panel):
 
         self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
         self.cargar_voces_usuario()
-        
-        # Navegación accesible hacia las pestañas
+
+        # Puntos de anclaje para el bucle de tabulación gestionado desde la ventana principal.
+        # VentanaPrincipal usa estas referencias para saber dónde termina y empieza este panel.
         self.primer_control = self.arbol_indice
         self.ultimo_control = self.deslizador_volumen
-        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab)
     # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ
 
     # ANCLAJE_INICIO: GESTION_CONFIGURACION_Y_PESTANAS
     def cargar_config_salto(self):
         try:
-            ruta = os.path.join("configuraciones", "config_general.json")
+            ruta = ruta_config("config_general.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     conf = json.load(f)
                     self.segundos_salto = int(conf.get("segundos_salto", 10))
-        except: pass
+                    # Restaurar sliders solo si los widgets ya están inicializados
+                    if hasattr(self, 'deslizador_velocidad'):
+                        vel = int(conf.get("velocidad_lectura", 50))
+                        vol = int(conf.get("volumen_lectura", 100))
+                        self.deslizador_velocidad.SetValue(vel)
+                        self.deslizador_volumen.SetValue(vol)
+                        self.reproductor.fijar_velocidad(vel)
+                        self.reproductor.fijar_volumen(vol)
+        except Exception as e:
+            print(f"[Aviso] No se pudo leer la configuración de salto: {e}")
+            self.segundos_salto = 10
 
     def al_cambiar_pestana_padre(self, event):
         if event.GetSelection() == 0:
@@ -138,13 +204,6 @@ class PestanaLectura(wx.Panel):
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
         event.Skip()
-
-    def al_navegacion_tab(self, event):
-        key = event.GetKeyCode()
-        if key == wx.WXK_TAB:
-            event.Skip()
-            return
-        event.Skip()
     # ANCLAJE_FIN: GESTION_CONFIGURACION_Y_PESTANAS
 
     # ANCLAJE_INICIO: CARGA_Y_CAMBIO_VOCES
@@ -152,26 +211,30 @@ class PestanaLectura(wx.Panel):
         seleccion_previa = self.combo_voz.GetStringSelection()
         self.combo_voz.Clear()
         voces_para_combo = []
-        
-        # Carga de voces locales
+
+        # Carga de voces locales SAPI5
         try:
             if hasattr(self.reproductor, 'cliente_local'):
                 voces_locales = self.reproductor.cliente_local.obtener_voces()
                 for v in voces_locales:
                     nombre_mostrar = f"[Local] {v['nombre']}"
                     voces_para_combo.append((nombre_mostrar, v))
-        except: pass
+        except Exception as e:
+            print(f"[Aviso] No se pudieron cargar las voces locales SAPI5: {e}")
 
         # Carga de voces neuronales favoritas
-        ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
-        ruta_todas = os.path.join("configuraciones", "voces_disponibles.json")
-        
+        ruta_favs = ruta_config("voces_favoritas.json")
+        ruta_todas = ruta_config("voces_disponibles.json")
+
         ids_favoritos = []
         if os.path.exists(ruta_favs):
             try:
-                with open(ruta_favs, 'r', encoding='utf-8') as f: ids_favoritos = json.load(f)
-            except: pass
-            
+                with open(ruta_favs, 'r', encoding='utf-8') as f:
+                    ids_favoritos = json.load(f)
+            except Exception as e:
+                print(f"[Aviso] No se pudo leer voces_favoritas.json: {e}")
+                ids_favoritos = []
+
         if ids_favoritos and os.path.exists(ruta_todas):
             try:
                 with open(ruta_todas, 'r', encoding='utf-8') as f:
@@ -179,10 +242,11 @@ class PestanaLectura(wx.Panel):
                     for prov, lista in todas.items():
                         for v in lista:
                             if v.get("id") in ids_favoritos:
-                                v["proveedor_id"] = prov 
-                                nombre_mostrar = f"[{prov.capitalize()}] {v['nombre']} ({v.get('idioma')})"
+                                v["proveedor_id"] = prov
+                                nombre_mostrar = _nombre_combo_neuronal(v, prov)
                                 voces_para_combo.append((nombre_mostrar, v))
-            except: pass
+            except Exception as e:
+                print(f"[Aviso] No se pudo leer voces_disponibles.json: {e}")
 
         if not voces_para_combo:
             self.combo_voz.Append("No hay voces disponibles")
@@ -231,44 +295,142 @@ class PestanaLectura(wx.Panel):
             estado = self.reproductor.obtener_estado()
         elif hasattr(self.reproductor, 'estado'):
             estado = self.reproductor.estado
-            
+
         # 2. Transiciones de estado (Play/Pausa)
         if estado == 'reproduciendo':
-            if hasattr(self.reproductor, 'pausar'): self.reproductor.pausar()
+            # Al pausar, cancelar la cola pendiente (las voces neuronales requieren
+            # reenviar el texto desde la nueva posición al reanudar)
+            self._cola_lectura = []
+            if hasattr(self.reproductor, 'pausar'):
+                self.reproductor.pausar()
         elif estado == 'pausado':
-            if hasattr(self.reproductor, 'reanudar'): self.reproductor.reanudar()
+            tipo_motor = getattr(self.reproductor, 'tipo_motor_actual', 'local')
+            if tipo_motor == 'local':
+                # SAPI5 admite pausa/reanudación nativa
+                if hasattr(self.reproductor, 'reanudar'):
+                    self.reproductor.reanudar()
+            else:
+                # Las voces neuronales no pueden retomar desde mitad de fragmento.
+                # Forzar estado a 'detenido' y reiniciar desde la posición exacta del cursor.
+                self.reproductor.estado = 'detenido'
+                self.al_alternar_reproduccion(evento)
         else:
             # 3. Inicio de nueva lectura desde la posición del cursor
             pos_actual = self.txt_contenido.GetInsertionPoint()
             self.pos_inicio_fragmento = pos_actual
-            
+
             texto_completo = self.txt_contenido.GetValue()
-            if not texto_completo: return 
-            
-            fragmento = texto_completo[pos_actual:]
-            
-# Verificación del tipo de motor para gestionar el tamaño del texto
+            if not texto_completo:
+                return
+
+            fragmento_total = texto_completo[pos_actual:]
+            if not fragmento_total.strip():
+                return
+
+            idx = self.combo_voz.GetSelection()
+            if idx == wx.NOT_FOUND:
+                return
+
+            voz_data = self.combo_voz.GetClientData(idx)
+            self.voz_seleccionada = voz_data
+            if hasattr(self.reproductor, 'fijar_voz'):
+                self.reproductor.fijar_voz(voz_data)
+
             es_voz_neuronal = False
-            if hasattr(self, 'voz_seleccionada') and self.voz_seleccionada:
-                prov = self.voz_seleccionada.get('proveedor_id', 'local').lower()
+            if voz_data:
+                prov = voz_data.get('proveedor_id', 'local').lower()
                 if 'azure' in prov or 'eleven' in prov or 'polly' in prov:
                     es_voz_neuronal = True
-            
-            # Se limita el fragmento a 500 caracteres para las voces neuronales
-            # con el objetivo de reducir el tiempo de respuesta inicial.
-            if es_voz_neuronal and len(fragmento) > 500:
-                fragmento = fragmento[:500]            
 
-            if fragmento.strip():
-                idx = self.combo_voz.GetSelection()
-                if idx != wx.NOT_FOUND:
-                    voz_data = self.combo_voz.GetClientData(idx)
-                    if hasattr(self.reproductor, 'fijar_voz'):
-                        self.reproductor.fijar_voz(voz_data)
-                
-                    self.reproductor.cargar_texto(fragmento)
-    
-    def al_detener(self, evento): 
+            if es_voz_neuronal:
+                # Voces neuronales: dividir en fragmentos y reproducir en cola continua
+                self._cola_lectura = self._dividir_en_fragmentos(fragmento_total, pos_actual)
+                self._idx_fragmento_actual = 0
+                self._reproducir_siguiente_fragmento()
+            else:
+                # Voz local SAPI5: gestiona su propia cola internamente, enviar todo el texto
+                self._cola_lectura = []
+                self._tiempo_inicio_frag = time.time()
+                self._longitud_frag_actual = len(fragmento_total)
+                self.reproductor.cargar_texto(fragmento_total)
+
+    def _dividir_en_fragmentos(self, texto, pos_base):
+        """
+        Divide el texto en fragmentos de máximo MAX_CHARS caracteres,
+        respetando límites de párrafo o frase para no cortar palabras.
+        300 caracteres es el punto óptimo: respuesta casi instantánea
+        de la API sin perder calidad de entonación por frases incompletas.
+        Retorna lista de (texto_fragmento, pos_inicio_global).
+        """
+        MAX_CHARS = 200
+        resultado = []
+        restante = texto
+        pos_actual = pos_base
+
+        while restante:
+            if len(restante) <= MAX_CHARS:
+                resultado.append((restante, pos_actual))
+                break
+
+            # Buscar punto de corte ideal: doble salto de línea antes de MAX_CHARS
+            corte = restante.rfind('\n\n', 0, MAX_CHARS)
+            if corte != -1:
+                corte += 2  # incluir el \n\n en el fragmento anterior
+            else:
+                # Sin párrafo, buscar final de frase
+                for sep in ['. ', '! ', '? ', '.\n', '!\n', '?\n']:
+                    corte = restante.rfind(sep, 0, MAX_CHARS)
+                    if corte != -1:
+                        corte += len(sep)
+                        break
+
+            if corte <= 0:
+                # Sin punto de corte natural: cortar en el límite estricto
+                corte = MAX_CHARS
+
+            fragmento = restante[:corte]
+            resultado.append((fragmento, pos_actual))
+            restante = restante[corte:]
+            pos_actual += corte
+
+        return resultado
+
+    def _reproducir_siguiente_fragmento(self):
+        """Inicia la reproducción del siguiente fragmento de la cola."""
+        if not self._cola_lectura or self._idx_fragmento_actual >= len(self._cola_lectura):
+            return
+
+        texto_frag, pos_inicio = self._cola_lectura[self._idx_fragmento_actual]
+
+        if not texto_frag.strip():
+            # Saltar fragmento vacío y continuar con el siguiente
+            self._idx_fragmento_actual += 1
+            self._reproducir_siguiente_fragmento()
+            return
+
+        self.pos_inicio_fragmento = pos_inicio
+        self._tiempo_inicio_frag = time.time()
+        self._longitud_frag_actual = len(texto_frag)
+        # Resetear flag de precarga para este nuevo fragmento
+        self._precarga_solicitada = False
+
+        # Mover el cursor al inicio del fragmento para que NVDA sepa dónde empieza
+        self.txt_contenido.SetInsertionPoint(pos_inicio)
+        self.txt_contenido.ShowPosition(pos_inicio)
+
+        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado)
+
+    def _al_fragmento_completado(self):
+        """Callback invocado por ReproductorVoz cuando termina un fragmento neuronal."""
+        self._idx_fragmento_actual += 1
+        if self._cola_lectura and self._idx_fragmento_actual < len(self._cola_lectura):
+            self._reproducir_siguiente_fragmento()
+
+    def al_detener(self, evento):
+        # Cancelar la cola de lectura continua antes de detener el motor
+        self._cola_lectura = []
+        self._idx_fragmento_actual = 0
+        self._precarga_solicitada = False
         if hasattr(self.reproductor, 'detener'):
             self.reproductor.detener()
         self.guardar_datos_libro()
@@ -277,30 +439,65 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_INICIO: ACTUALIZACION_INTERFAZ_USUARIO
     def al_actualizar_ui(self, evento):
         """
-        Sincroniza visualmente y para los lectores de pantalla 
-        el estado de los botones y la barra de progreso.
+        Sincroniza el estado de los botones y la barra de progreso.
+        La barra solo se actualiza durante la reproducción activa para evitar
+        sobreescribir la posición que el usuario haya establecido manualmente.
         """
         # 1. Actualización de etiquetas de control
         estado = "detenido"
         if hasattr(self.reproductor, 'obtener_estado'):
             estado = self.reproductor.obtener_estado()
-        
+
         if estado == 'reproduciendo':
-            if self.btn_reproducir.GetLabel() != "Pausar (Ctrl+P)": 
+            if self.btn_reproducir.GetLabel() != "Pausar (Ctrl+P)":
                 self.btn_reproducir.SetLabel("Pausar (Ctrl+P)")
         elif estado == 'pausado':
-            if self.btn_reproducir.GetLabel() != "Reanudar (Ctrl+P)": 
+            if self.btn_reproducir.GetLabel() != "Reanudar (Ctrl+P)":
                 self.btn_reproducir.SetLabel("Reanudar (Ctrl+P)")
         else:
-            if self.btn_reproducir.GetLabel() != "Reproducir (Ctrl+P)": 
+            if self.btn_reproducir.GetLabel() != "Reproducir (Ctrl+P)":
                 self.btn_reproducir.SetLabel("Reproducir (Ctrl+P)")
 
-        # 2. Sincronización de barra de progreso
-        if self.longitud_texto > 0:
-            pos_actual = self.txt_contenido.GetInsertionPoint()
-            porcentaje = int((pos_actual / self.longitud_texto) * 100)
-            
-            # Solo actualiza si hay cambios para evitar saturar a NVDA
+        # 2. Barra de progreso y sincronización de cursor.
+        # Solo se actualiza durante la reproducción activa para no sobreescribir
+        # la posición que el usuario haya establecido manualmente.
+        if estado == 'reproduciendo' and self.longitud_texto > 0:
+            if self._longitud_frag_actual > 0:
+                # El cursor del TextCtrl no avanza solo durante la síntesis neuronal.
+                # Se estima la posición usando tiempo transcurrido a ~14 caracteres/segundo.
+                tiempo_transcurrido = time.time() - self._tiempo_inicio_frag
+                avance_estimado = min(
+                    self._longitud_frag_actual,
+                    int(tiempo_transcurrido * 14)
+                )
+                pos_estimada = self.pos_inicio_fragmento + avance_estimado
+
+                # Buffer proactivo: cuando queda ~30% del fragmento actual,
+                # iniciar la descarga del siguiente ANTES de que este termine.
+                # Esto elimina el silencio de 1-2s entre fragmentos.
+                tiempo_estimado_total = self._longitud_frag_actual / 14.0
+                if (not self._precarga_solicitada and
+                        tiempo_estimado_total > 0 and
+                        tiempo_transcurrido / tiempo_estimado_total >= 0.70):
+                    idx_siguiente = self._idx_fragmento_actual + 1
+                    if self._cola_lectura and idx_siguiente < len(self._cola_lectura):
+                        texto_sig, _ = self._cola_lectura[idx_siguiente]
+                        if texto_sig.strip():
+                            self._precarga_solicitada = True
+                            voz = self.combo_voz.GetClientData(
+                                self.combo_voz.GetSelection()
+                            )
+                            self.reproductor.precargar_fragmento(texto_sig, voz)
+            else:
+                pos_estimada = self.txt_contenido.GetInsertionPoint()
+
+            # Sincronización de cursor: mover el punto de inserción para que NVDA
+            # pueda seguir la posición de lectura en tiempo real
+            self.txt_contenido.SetInsertionPoint(pos_estimada)
+
+            porcentaje = max(0, min(100, int((pos_estimada / self.longitud_texto) * 100)))
+
+            # Solo actualiza si hay cambio real para no saturar a NVDA
             if self.deslizador_progreso.GetValue() != porcentaje:
                 self.deslizador_progreso.SetValue(porcentaje)
                 self.lbl_progreso.SetLabel(f"Progreso: {porcentaje}%")
@@ -326,10 +523,31 @@ class PestanaLectura(wx.Panel):
              self.al_alternar_reproduccion(None)
 
     def al_cambiar_velocidad(self, evento):
-        if hasattr(self.reproductor, 'fijar_velocidad'): self.reproductor.fijar_velocidad(self.deslizador_velocidad.GetValue())
-    
+        v = self.deslizador_velocidad.GetValue()
+        if hasattr(self.reproductor, 'fijar_velocidad'):
+            self.reproductor.fijar_velocidad(v)
+        self._guardar_ajuste_slider("velocidad_lectura", v)
+
     def al_cambiar_volumen(self, evento):
-        if hasattr(self.reproductor, 'fijar_volumen'): self.reproductor.fijar_volumen(self.deslizador_volumen.GetValue())
+        v = self.deslizador_volumen.GetValue()
+        if hasattr(self.reproductor, 'fijar_volumen'):
+            self.reproductor.fijar_volumen(v)
+        self._guardar_ajuste_slider("volumen_lectura", v)
+
+    def _guardar_ajuste_slider(self, clave, valor):
+        """Persiste el valor de un slider en config_general.json de forma inmediata."""
+        try:
+            ruta = ruta_config("config_general.json")
+            datos = {}
+            if os.path.exists(ruta):
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+            datos[clave] = valor
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            with open(ruta, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"[Aviso] No se pudo guardar ajuste de slider '{clave}': {e}")
     
     def al_activar_capitulo(self, evento):
         id_item = evento.GetItem()
@@ -445,10 +663,10 @@ class PestanaLectura(wx.Panel):
         self.guardar_datos_libro()
         try:
             texto, datos_arbol, self.posiciones_capitulos = extraer_datos_epub(ruta)
-            
+
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
-            
+
             self.marcadores = {}
             self.pos_inicio_fragmento = 0
             self.txt_contenido.SetValue(texto)
@@ -459,7 +677,16 @@ class PestanaLectura(wx.Panel):
             self.ruta_libro_actual = ruta
             self.cargar_datos_libro(os.path.basename(ruta))
             self.arbol_indice.SetFocus()
-        except Exception as e: 
+
+            # Registrar en el historial de libros recientes de VentanaPrincipal
+            try:
+                ventana = self.padre_notebook.GetParent()
+                if hasattr(ventana, 'agregar_a_recientes'):
+                    ventana.agregar_a_recientes(ruta)
+            except Exception:
+                pass
+
+        except Exception as e:
             wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
 
     def _construir_arbol_indice(self, padre, nodos):
@@ -474,22 +701,52 @@ class PestanaLectura(wx.Panel):
         try:
             datos = {}
             if os.path.exists(self.ruta_datos_lectura):
-                with open(self.ruta_datos_lectura, 'r') as f: datos = json.load(f)
-            datos[os.path.basename(self.ruta_libro_actual)] = {"pos": self.txt_contenido.GetInsertionPoint(), "marcadores": self.marcadores}
-            os.makedirs(os.path.dirname(self.ruta_datos_lectura), exist_ok=True)
-            with open(self.ruta_datos_lectura, 'w') as f: json.dump(datos, f)
-        except: pass
-        
+                with open(self.ruta_datos_lectura, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+            datos[os.path.basename(self.ruta_libro_actual)] = {
+                "pos": self.txt_contenido.GetInsertionPoint(),
+                "marcadores": self.marcadores,
+                # Memoria de libro: velocidad, volumen y voz usados en este libro
+                "velocidad": self.deslizador_velocidad.GetValue(),
+                "volumen": self.deslizador_volumen.GetValue(),
+                "voz": self.combo_voz.GetStringSelection(),
+            }
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            with open(self.ruta_datos_lectura, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, ensure_ascii=False)
+        except Exception as e:
+            print(f"[Error] No se pudieron guardar los datos del libro: {e}")
+
     def cargar_datos_libro(self, nombre):
         try:
             if os.path.exists(self.ruta_datos_lectura):
-                with open(self.ruta_datos_lectura, 'r') as f:
+                with open(self.ruta_datos_lectura, 'r', encoding='utf-8') as f:
                     d = json.load(f).get(nombre)
                     if d:
+                        # Posición y marcadores
                         self.txt_contenido.SetInsertionPoint(d.get("pos", 0))
                         self.txt_contenido.ShowPosition(d.get("pos", 0))
                         self.marcadores = d.get("marcadores", {})
-        except: pass
+                        # Restaurar velocidad guardada para este libro
+                        vel = d.get("velocidad")
+                        if vel is not None:
+                            self.deslizador_velocidad.SetValue(int(vel))
+                            self.reproductor.fijar_velocidad(int(vel))
+                        # Restaurar volumen guardado para este libro
+                        vol = d.get("volumen")
+                        if vol is not None:
+                            self.deslizador_volumen.SetValue(int(vol))
+                            self.reproductor.fijar_volumen(int(vol))
+                        # Restaurar voz guardada para este libro
+                        voz_guardada = d.get("voz", "")
+                        if voz_guardada:
+                            idx = self.combo_voz.FindString(voz_guardada)
+                            if idx != wx.NOT_FOUND:
+                                self.combo_voz.SetSelection(idx)
+                                self.al_cambiar_voz(None)
+        except Exception as e:
+            print(f"[Error] No se pudieron cargar los datos del libro '{nombre}': {e}")
+            self.marcadores = {}
     # ANCLAJE_FIN: GESTION_DATOS_LIBRO
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO

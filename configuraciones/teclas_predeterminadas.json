@@ -1,0 +1,32 @@
+{
+    "abrir_libro": {
+        "descripcion": "Abrir libro EPUB",
+        "modificador": "Ctrl",
+        "tecla": "A"
+    },
+    "reproducir_pausar": {
+        "descripcion": "Reproducir / Pausar / Reanudar",
+        "modificador": "Ctrl",
+        "tecla": "P"
+    },
+    "detener": {
+        "descripcion": "Detener lectura",
+        "modificador": "Ctrl",
+        "tecla": "D"
+    },
+    "marcadores": {
+        "descripcion": "Gestor de marcadores",
+        "modificador": "Ctrl",
+        "tecla": "M"
+    },
+    "buscar": {
+        "descripcion": "Buscar en el libro",
+        "modificador": "Ctrl",
+        "tecla": "B"
+    },
+    "ir_porcentaje": {
+        "descripcion": "Ir a porcentaje del libro",
+        "modificador": "Ctrl",
+        "tecla": "G"
+    }
+}
