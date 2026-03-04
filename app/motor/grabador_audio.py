@@ -7,10 +7,13 @@ Genera archivos MP3 a partir de fragmentos de texto etiquetados,
 sin reproducción por altavoces (volcado directo a archivo).
 
 Calidad de audio:
-  - Azure:       audio-24khz-160kbitrate-mono-mp3  (24 kHz nativo)
-  - ElevenLabs:  mp3_44100_192                     (44.1 kHz nativo, 192 kbps)
-  - Polly:       MP3 / 22050 Hz (máx. soportado por la API para MP3)
+  - Azure:       audio-48khz-192kbitrate-mono-mp3  (48 kHz nativo) → MP3 320k
+  - ElevenLabs:  mp3_44100_192                     (44.1 kHz nativo, 192 kbps) → MP3 320k
+  - Polly:       OGG Vorbis / 24000 Hz → MP3 320k  (evita el «efecto teléfono»)
   - SAPI5 local: WAV 22 kHz → MP3 320 kbps vía pydub
+
+  Todos los archivos de salida se re-codifican a MP3 320 kbps respetando
+  la frecuencia de muestreo nativa del proveedor (sin re-muestreos).
 
 Chunking inteligente para textos largos:
   Cuando un fragmento supera el límite del proveedor, se divide
@@ -41,7 +44,7 @@ _MAX_CHARS = {
 }
 
 # ── Formatos de salida de alta calidad ───────────────────────────────────────
-_AZURE_OUTPUT_FORMAT  = "audio-24khz-160kbitrate-mono-mp3"
+_AZURE_OUTPUT_FORMAT  = "audio-48khz-192kbitrate-mono-mp3"
 _ELEVEN_OUTPUT_FORMAT = "mp3_44100_192"
 
 
@@ -330,6 +333,33 @@ class GrabadorAudio:
             self._grabar_sapi5(texto, datos_voz, ruta_salida)
 
     # ------------------------------------------------------------------ #
+    # Re-codificación a MP3 320 kbps (preserva frecuencia de origen)
+    # ------------------------------------------------------------------ #
+
+    def _recodificar_mp3_320k(self, ruta_origen: str, ruta_destino: str):
+        """
+        Convierte cualquier archivo de audio a MP3 320 kbps.
+        pydub preserva la frecuencia de muestreo original sin re-muestrear.
+        Si pydub no está disponible, copia el archivo tal cual (fallback).
+        """
+        try:
+            from pydub import AudioSegment
+            audio = AudioSegment.from_file(ruta_origen)
+            audio.export(ruta_destino, format='mp3', bitrate='320k')
+        except ImportError:
+            import shutil
+            shutil.copy2(ruta_origen, ruta_destino)
+            logger.warning(
+                "[GrabadorAudio] pydub no disponible; "
+                "archivo guardado sin re-codificar a 320k."
+            )
+        except Exception as e:
+            logger.warning(f"[GrabadorAudio] No se pudo re-codificar a 320k: {e}")
+            if ruta_origen != ruta_destino:
+                import shutil
+                shutil.copy2(ruta_origen, ruta_destino)
+
+    # ------------------------------------------------------------------ #
     # Concatenación sin re-muestreo
     # ------------------------------------------------------------------ #
 
@@ -371,7 +401,7 @@ class GrabadorAudio:
         return t
 
     def _grabar_azure(self, texto: str, datos_voz, ruta_salida: str):
-        """MP3 24 kHz / 160 kbps — frecuencia nativa de voces neuronales Azure."""
+        """MP3 48 kHz / 192 kbps desde Azure, re-codificado a MP3 320 kbps."""
         az_conf = self.config.get('azure', {})
         key     = az_conf.get('key')
         region  = az_conf.get('region')
@@ -399,19 +429,27 @@ class GrabadorAudio:
         )
 
         response = requests.post(url, headers=headers, data=ssml.encode('utf-8'), timeout=60)
-        if response.status_code == 200:
-            with open(ruta_salida, 'wb') as f:
-                f.write(response.content)
-            logger.info(f"[Azure] {os.path.basename(ruta_salida)}")
-        else:
+        if response.status_code != 200:
             raise Exception(f"Azure {response.status_code}: {response.text[:300]}")
+
+        fd, ruta_tmp = tempfile.mkstemp(suffix='.mp3', prefix='tfh_az_')
+        os.close(fd)
+        try:
+            with open(ruta_tmp, 'wb') as f:
+                f.write(response.content)
+            self._recodificar_mp3_320k(ruta_tmp, ruta_salida)
+        finally:
+            if os.path.exists(ruta_tmp):
+                os.remove(ruta_tmp)
+
+        logger.info(f"[Azure] {os.path.basename(ruta_salida)} (48kHz→320k)")
 
     # ------------------------------------------------------------------ #
     # Motor: ElevenLabs
     # ------------------------------------------------------------------ #
 
     def _grabar_elevenlabs(self, texto: str, datos_voz, ruta_salida: str):
-        """MP3 44.1 kHz / 192 kbps — frecuencia nativa ElevenLabs."""
+        """MP3 44.1 kHz / 192 kbps desde ElevenLabs, re-codificado a MP3 320 kbps."""
         el_conf = self.config.get('elevenlabs', {})
         key = el_conf.get('api_key')
         if not key:
@@ -427,12 +465,20 @@ class GrabadorAudio:
         }
 
         response = requests.post(url, json=payload, headers=headers, timeout=60)
-        if response.status_code == 200:
-            with open(ruta_salida, 'wb') as f:
-                f.write(response.content)
-            logger.info(f"[ElevenLabs] {os.path.basename(ruta_salida)}")
-        else:
+        if response.status_code != 200:
             raise Exception(f"ElevenLabs {response.status_code}: {response.text[:300]}")
+
+        fd, ruta_tmp = tempfile.mkstemp(suffix='.mp3', prefix='tfh_el_')
+        os.close(fd)
+        try:
+            with open(ruta_tmp, 'wb') as f:
+                f.write(response.content)
+            self._recodificar_mp3_320k(ruta_tmp, ruta_salida)
+        finally:
+            if os.path.exists(ruta_tmp):
+                os.remove(ruta_tmp)
+
+        logger.info(f"[ElevenLabs] {os.path.basename(ruta_salida)} (44.1kHz→320k)")
 
     # ------------------------------------------------------------------ #
     # Motor: Amazon Polly (MP3 nativo via boto3)
@@ -440,16 +486,17 @@ class GrabadorAudio:
 
     def _grabar_polly(self, texto: str, datos_voz, ruta_salida: str):
         """
-        MP3 / 22050 Hz desde Polly — máxima calidad MP3 que soporta la API.
-        Usa boto3 directamente; reutiliza la lógica de normalización de región
-        y selección de motor del cliente de reproducción.
+        OGG Vorbis / 24000 Hz desde Polly → MP3 320 kbps.
+
+        La API de Polly solo soporta 22050 Hz en formato MP3 (efecto teléfono).
+        Usando OGG Vorbis se obtiene 24 kHz con todos los motores (standard,
+        neural, long-form, generative), y pydub convierte a MP3 320 kbps
+        preservando esa frecuencia de muestreo.
         """
         try:
             import boto3
         except ImportError:
-            raise Exception(
-                "boto3 no está instalado. Ejecuta: pip install boto3"
-            )
+            raise Exception("boto3 no está instalado. Ejecuta: pip install boto3")
 
         from app.servicios.cliente_polly import _normalizar_region
 
@@ -475,9 +522,6 @@ class GrabadorAudio:
                 motor = m
                 break
 
-        # Polly MP3 soporta hasta 22050 Hz para todos los motores
-        sample_rate = '22050'
-
         cliente = boto3.client(
             'polly',
             region_name=region,
@@ -485,21 +529,29 @@ class GrabadorAudio:
             aws_secret_access_key=secret_key,
         )
 
+        # OGG Vorbis / 24000 Hz → sin «efecto teléfono»
         respuesta = cliente.synthesize_speech(
             Engine=motor,
             Text=texto,
             TextType='text',
-            OutputFormat='mp3',
-            SampleRate=sample_rate,
+            OutputFormat='ogg_vorbis',
+            SampleRate='24000',
             VoiceId=voice_id,
         )
 
-        with open(ruta_salida, 'wb') as f:
-            f.write(respuesta['AudioStream'].read())
+        fd, ruta_ogg = tempfile.mkstemp(suffix='.ogg', prefix='tfh_polly_')
+        os.close(fd)
+        try:
+            with open(ruta_ogg, 'wb') as f:
+                f.write(respuesta['AudioStream'].read())
+            self._recodificar_mp3_320k(ruta_ogg, ruta_salida)
+        finally:
+            if os.path.exists(ruta_ogg):
+                os.remove(ruta_ogg)
 
         logger.info(
             f"[Polly] {os.path.basename(ruta_salida)} "
-            f"(motor={motor}, voice={voice_id})"
+            f"(motor={motor}, voice={voice_id}, 24kHz→320k)"
         )
 
     # ------------------------------------------------------------------ #
