@@ -4,12 +4,19 @@ grabador_audio.py
 Motor de grabación silenciosa multivoz.
 
 Genera archivos MP3 a partir de fragmentos de texto etiquetados,
-sin reproducción por altavoces (volcado a archivo).
+sin reproducción por altavoces (volcado directo a archivo).
+
+Calidad de audio:
+  - Azure:       audio-24khz-160kbitrate-mono-mp3  (24 kHz nativo, ~160 kbps)
+  - ElevenLabs:  mp3_44100_192  (44.1 kHz nativo, 192 kbps)
+  - SAPI5 local: WAV 22 kHz → MP3 exportado con pydub a 320 kbps
+  En todos los casos se respeta la frecuencia nativa de la API.
+  No se aplican re-muestreos en el modo de archivos divididos.
 
 Proveedores soportados:
   - Azure Cognitive Services TTS  → MP3 directo desde la API
   - ElevenLabs TTS                → MP3 directo desde la API
-  - Windows SAPI5 (local)         → WAV via SpFileStream + conversión a MP3
+  - Windows SAPI5 (local)         → WAV via SpFileStream + pydub → MP3
 
 Reintentos: 3 intentos por fragmento antes de registrar el error en el log.
 """
@@ -20,11 +27,21 @@ import logging
 import tempfile
 import requests
 
+from app.config_rutas import ruta_config
 from app.motor.procesador_etiquetas import limpiar_nombre_archivo
 
 logger = logging.getLogger(__name__)
 
 CARPETA_RAIZ_GRABACIONES = "Grabaciones_TifloHistorias"
+
+# ── Formatos de audio de alta calidad por proveedor ───────────────────────────
+# Azure: 24 kHz es la frecuencia nativa de las voces neuronales.
+#        audio-24khz-160kbitrate-mono-mp3 es el máximo estándar sin upsampling.
+_AZURE_OUTPUT_FORMAT = "audio-24khz-160kbitrate-mono-mp3"
+
+# ElevenLabs: 44.1 kHz nativo, máximo MP3 disponible en la API pública.
+_ELEVEN_OUTPUT_FORMAT = "mp3_44100_192"
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 class GrabadorAudio:
@@ -49,7 +66,7 @@ class GrabadorAudio:
 
     def _cargar_config(self):
         try:
-            ruta = os.path.join("configuraciones", "config_general.json")
+            ruta = ruta_config("config_general.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     self.config = json.load(f)
@@ -132,6 +149,7 @@ class GrabadorAudio:
     # ------------------------------------------------------------------ #
 
     def _grabar_modo_dividido(self, fragmentos, asignaciones_voz, subcarpeta, total):
+        """Un archivo MP3 por fragmento, numerados 001_, 002_…"""
         archivos_generados = []
         errores = []
 
@@ -141,7 +159,9 @@ class GrabadorAudio:
                 break
 
             datos_voz = asignaciones_voz.get(etiqueta)
-            nombre_voz = datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz asignada'
+            nombre_voz = (
+                datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz asignada'
+            )
 
             if self.callback_progreso:
                 self.callback_progreso(i + 1, total, etiqueta, nombre_voz)
@@ -149,11 +169,9 @@ class GrabadorAudio:
             nombre_arch = f"{i + 1:03d}_{limpiar_nombre_archivo(etiqueta)}.mp3"
             ruta_arch = os.path.join(subcarpeta, nombre_arch)
 
-            exito = False
             for intento in range(3):
                 try:
                     self._grabar_fragmento(texto, datos_voz, ruta_arch)
-                    exito = True
                     archivos_generados.append(ruta_arch)
                     break
                 except Exception as e:
@@ -169,6 +187,7 @@ class GrabadorAudio:
     def _grabar_modo_unico(
         self, fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total
     ):
+        """Genera todos los fragmentos como archivos temporales y los concatena."""
         archivos_generados = []
         errores = []
         archivos_temp = []
@@ -180,14 +199,14 @@ class GrabadorAudio:
                     break
 
                 datos_voz = asignaciones_voz.get(etiqueta)
-                nombre_voz = datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz asignada'
+                nombre_voz = (
+                    datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz asignada'
+                )
 
                 if self.callback_progreso:
                     self.callback_progreso(i + 1, total, etiqueta, nombre_voz)
 
-                fd, ruta_temp = tempfile.mkstemp(
-                    suffix='.mp3', prefix=f'tfh_{i:03d}_'
-                )
+                fd, ruta_temp = tempfile.mkstemp(suffix='.mp3', prefix=f'tfh_{i:03d}_')
                 os.close(fd)
                 archivos_temp.append(ruta_temp)
 
@@ -219,11 +238,15 @@ class GrabadorAudio:
         return archivos_generados, errores
 
     # ------------------------------------------------------------------ #
-    # Concatenación
+    # Concatenación sin re-muestreo
     # ------------------------------------------------------------------ #
 
     def _concatenar_audios(self, archivos: list, ruta_salida: str):
-        """Une varios archivos de audio en uno solo usando pydub."""
+        """
+        Une varios MP3 en uno solo preservando la calidad original.
+        No aplica re-muestreo: pydub conserva la tasa nativa del primer fragmento.
+        Si pydub no está disponible, concatena bytes crudos (válido para MP3 de la misma fuente).
+        """
         try:
             from pydub import AudioSegment
 
@@ -231,15 +254,19 @@ class GrabadorAudio:
             for arch in archivos:
                 if os.path.exists(arch) and os.path.getsize(arch) > 0:
                     try:
-                        combined += AudioSegment.from_file(arch)
+                        combined += AudioSegment.from_file(arch, format='mp3')
                     except Exception as e:
                         logger.warning(f"[GrabadorAudio] No se pudo añadir {arch}: {e}")
 
-            combined.export(ruta_salida, format='mp3')
+            # Exportar al bitrate más alto posible, sin alterar la frecuencia de muestreo
+            combined.export(
+                ruta_salida,
+                format='mp3',
+                bitrate='320k',
+            )
             logger.info(f"[GrabadorAudio] Archivo único generado: {ruta_salida}")
 
         except ImportError:
-            # pydub no disponible: concatenar bytes crudos como fallback
             logger.warning("[GrabadorAudio] pydub no disponible. Concatenando bytes crudos.")
             with open(ruta_salida, 'wb') as f_out:
                 for arch in archivos:
@@ -272,7 +299,7 @@ class GrabadorAudio:
             self._grabar_sapi5(texto, datos_voz, ruta_salida)
 
     # ------------------------------------------------------------------ #
-    # Motor: Azure
+    # Motor: Azure (24 kHz nativo, sin upsampling)
     # ------------------------------------------------------------------ #
 
     def _limpiar_xml(self, texto: str) -> str:
@@ -283,7 +310,10 @@ class GrabadorAudio:
         return t
 
     def _grabar_azure(self, texto: str, datos_voz, ruta_salida: str):
-        """Solicita audio MP3 a Azure y lo guarda directamente a disco."""
+        """
+        Solicita MP3 a Azure en formato 24 kHz / 160 kbps (frecuencia nativa
+        de las voces neuronales, sin upsampling) y lo guarda a disco.
+        """
         az_conf = self.config.get('azure', {})
         key = az_conf.get('key')
         region = az_conf.get('region')
@@ -299,8 +329,7 @@ class GrabadorAudio:
         headers = {
             "Ocp-Apim-Subscription-Key": key,
             "Content-Type": "application/ssml+xml",
-            # MP3 directo: evita conversión posterior
-            "X-Microsoft-OutputFormat": "audio-16khz-128kbitrate-mono-mp3",
+            "X-Microsoft-OutputFormat": _AZURE_OUTPUT_FORMAT,
         }
         ssml = (
             f"<speak version='1.0' "
@@ -320,16 +349,17 @@ class GrabadorAudio:
                 f.write(response.content)
             logger.info(f"[Azure] Fragmento guardado: {os.path.basename(ruta_salida)}")
         else:
-            raise Exception(
-                f"Azure {response.status_code}: {response.text[:300]}"
-            )
+            raise Exception(f"Azure {response.status_code}: {response.text[:300]}")
 
     # ------------------------------------------------------------------ #
-    # Motor: ElevenLabs
+    # Motor: ElevenLabs (44.1 kHz nativo, 192 kbps)
     # ------------------------------------------------------------------ #
 
     def _grabar_elevenlabs(self, texto: str, datos_voz, ruta_salida: str):
-        """Solicita audio MP3 a ElevenLabs y lo guarda directamente a disco."""
+        """
+        Solicita MP3 a ElevenLabs en formato 44.1 kHz / 192 kbps
+        (frecuencia nativa, máxima calidad disponible en la API pública).
+        """
         el_conf = self.config.get('elevenlabs', {})
         key = el_conf.get('api_key')
 
@@ -339,7 +369,11 @@ class GrabadorAudio:
         voice_id = datos_voz.get('id') if isinstance(datos_voz, dict) else str(datos_voz)
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
         headers = {"xi-api-key": key, "Content-Type": "application/json"}
-        payload = {"text": texto, "model_id": "eleven_multilingual_v2"}
+        payload = {
+            "text": texto,
+            "model_id": "eleven_multilingual_v2",
+            "output_format": _ELEVEN_OUTPUT_FORMAT,
+        }
 
         response = requests.post(url, json=payload, headers=headers, timeout=60)
 
@@ -348,9 +382,7 @@ class GrabadorAudio:
                 f.write(response.content)
             logger.info(f"[ElevenLabs] Fragmento guardado: {os.path.basename(ruta_salida)}")
         else:
-            raise Exception(
-                f"ElevenLabs {response.status_code}: {response.text[:300]}"
-            )
+            raise Exception(f"ElevenLabs {response.status_code}: {response.text[:300]}")
 
     # ------------------------------------------------------------------ #
     # Motor: Amazon Polly (stub)
@@ -363,14 +395,14 @@ class GrabadorAudio:
         )
 
     # ------------------------------------------------------------------ #
-    # Motor: SAPI5 local (Windows)
+    # Motor: SAPI5 local (Windows) → WAV → MP3 320 kbps
     # ------------------------------------------------------------------ #
 
     def _grabar_sapi5(self, texto: str, datos_voz, ruta_salida: str):
         """
-        Genera audio con SAPI5 redirigiendo la salida a un SpFileStream (WAV),
-        luego convierte a MP3 con pydub. Si pydub/ffmpeg no está disponible,
-        guarda el archivo con extensión .mp3 pero contenido WAV como fallback.
+        Genera audio con SAPI5 redirigiendo la salida a SpFileStream (WAV nativo).
+        Convierte a MP3 320 kbps con pydub preservando la frecuencia nativa.
+        Fallback: renombra el WAV a .mp3 si pydub/ffmpeg no están disponibles.
         """
         try:
             import comtypes.client
@@ -383,9 +415,7 @@ class GrabadorAudio:
 
         # Seleccionar la voz correcta
         nombre_voz = (
-            datos_voz.get('nombre', '')
-            if isinstance(datos_voz, dict)
-            else str(datos_voz)
+            datos_voz.get('nombre', '') if isinstance(datos_voz, dict) else str(datos_voz)
         )
         if nombre_voz:
             try:
@@ -398,7 +428,7 @@ class GrabadorAudio:
             except Exception as e:
                 logger.warning(f"[SAPI5] No se pudo seleccionar voz '{nombre_voz}': {e}")
 
-        # Ruta WAV temporal
+        # Archivo WAV temporal junto al destino
         base = ruta_salida.rsplit('.', 1)[0]
         ruta_wav = base + '_tmp.wav'
 
@@ -406,26 +436,24 @@ class GrabadorAudio:
             stream = comtypes.client.CreateObject("SAPI.SpFileStream")
             SSFMCreateForWrite = 3
             stream.Open(ruta_wav, SSFMCreateForWrite)
-
-            # Redirigir salida de audio al archivo
             sapi.AudioOutputStream = stream
-            SPF_SYNC = 0  # Síncrono: espera hasta que termine antes de cerrar el stream
+            SPF_SYNC = 0   # Bloquea hasta que SAPI termina de escribir
             sapi.Speak(texto, SPF_SYNC)
             stream.Close()
         except Exception as e:
             raise Exception(f"Error SAPI5 al escribir audio: {e}")
 
-        # Convertir WAV → MP3
         if not os.path.exists(ruta_wav) or os.path.getsize(ruta_wav) == 0:
             raise Exception("SAPI5 no generó datos de audio.")
 
+        # Convertir WAV → MP3 a 320 kbps sin alterar la frecuencia de muestreo
         convertido = False
         try:
             from pydub import AudioSegment
             audio = AudioSegment.from_wav(ruta_wav)
-            audio.export(ruta_salida, format='mp3')
+            audio.export(ruta_salida, format='mp3', bitrate='320k')
             convertido = True
-            logger.info(f"[SAPI5] Fragmento guardado como MP3: {os.path.basename(ruta_salida)}")
+            logger.info(f"[SAPI5] Fragmento MP3 320k guardado: {os.path.basename(ruta_salida)}")
         except Exception as e:
             logger.warning(f"[SAPI5] Conversión WAV→MP3 no disponible (ffmpeg?): {e}")
 
@@ -434,7 +462,7 @@ class GrabadorAudio:
         else:
             # Fallback: renombrar WAV a .mp3 (contenido PCM, válido en la mayoría de reproductores)
             os.rename(ruta_wav, ruta_salida)
-            logger.info(f"[SAPI5] Fragmento guardado como WAV(.mp3): {os.path.basename(ruta_salida)}")
+            logger.info(f"[SAPI5] Guardado como WAV(.mp3): {os.path.basename(ruta_salida)}")
 
     # ------------------------------------------------------------------ #
     # Previsualización de voz (con altavoces)

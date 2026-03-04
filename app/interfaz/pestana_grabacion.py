@@ -10,6 +10,7 @@ Características:
   - Modos de salida: archivos divididos por etiqueta o un único MP3 concatenado.
   - Jerarquía de carpetas: Grabaciones_TifloHistorias/[Libro]/[Subcarpeta].
   - Anuncios accesibles para NVDA en cada cambio de estado relevante.
+  - Título y capítulo opcionales: si se omiten se usa el nombre del archivo TXT.
   - Proceso de grabación en hilo de fondo (UI nunca se congela).
   - Botón Abortar: detiene la grabación sin cerrar la aplicación.
   - 3 reintentos por fragmento antes de registrar error.
@@ -22,6 +23,7 @@ import threading
 import subprocess
 import logging
 
+from app.config_rutas import ruta_config
 from app.motor.procesador_etiquetas import (
     escanear_etiquetas,
     fragmentar_texto,
@@ -41,6 +43,7 @@ class PestanaGrabacion(wx.Panel):
 
         # Estado interno
         self.ruta_txt_actual = None
+        self.nombre_base_txt = ""       # Nombre del TXT sin extensión (fallback de título/capítulo)
         self.texto_cargado = ""
         self.fragmentos = []            # [(etiqueta, contenido), ...]
         self.etiquetas_detectadas = []  # [etiqueta_normalizada, ...]
@@ -51,10 +54,10 @@ class PestanaGrabacion(wx.Panel):
         self._hilo_grabacion = None
         self._ultima_carpeta = None
 
-        # Rutas de configuración
-        self.ruta_mapeo = os.path.join("configuraciones", "mapeo_etiquetas.json")
-        self.ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
-        self.ruta_todas = os.path.join("configuraciones", "voces_disponibles.json")
+        # Rutas de configuración (absolutas, usando config_rutas de Fase 1)
+        self.ruta_mapeo = ruta_config("mapeo_etiquetas.json")
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+        self.ruta_todas = ruta_config("voces_disponibles.json")
 
         self._construir_interfaz()
         self._cargar_voces_disponibles()
@@ -66,8 +69,8 @@ class PestanaGrabacion(wx.Panel):
     def _construir_interfaz(self):
         sizer_raiz = wx.BoxSizer(wx.VERTICAL)
 
-        # ---- SECCIÓN 1: Carga de archivo ---- #
-        box_carga = wx.StaticBox(self, label="1. Cargar texto con etiquetas")
+        # ---- Carga de archivo ---- #
+        box_carga = wx.StaticBox(self, label="Cargar texto con etiquetas")
         sizer_carga = wx.StaticBoxSizer(box_carga, wx.VERTICAL)
 
         # Fila: ruta del archivo
@@ -81,22 +84,22 @@ class PestanaGrabacion(wx.Panel):
         sizer_ruta.Add(self.txt_ruta, 1, wx.EXPAND)
         sizer_ruta.Add(self.btn_examinar, 0, wx.LEFT, 5)
 
-        # Fila: título del libro
+        # Fila: título del libro (opcional)
         sizer_titulo = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_titulo = wx.StaticText(self, label="Título del libro:")
+        lbl_titulo = wx.StaticText(self, label="Título del libro (opcional):")
         self.txt_titulo = wx.TextCtrl(self)
         self.txt_titulo.SetName(
-            "Título del libro. Se usará como nombre de la carpeta madre."
+            "Título del libro. Opcional. Si se deja vacío se usa el nombre del archivo."
         )
         sizer_titulo.Add(lbl_titulo, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         sizer_titulo.Add(self.txt_titulo, 1, wx.EXPAND)
 
-        # Fila: nombre del capítulo
+        # Fila: nombre del capítulo (opcional)
         sizer_capitulo = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_cap = wx.StaticText(self, label="Nombre del capítulo:")
+        lbl_cap = wx.StaticText(self, label="Nombre del capítulo (opcional):")
         self.txt_capitulo = wx.TextCtrl(self)
         self.txt_capitulo.SetName(
-            "Nombre del capítulo. Se usará como nombre de la subcarpeta de audio."
+            "Nombre del capítulo. Opcional. Si se deja vacío se usa el nombre del archivo."
         )
         sizer_capitulo.Add(lbl_cap, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         sizer_capitulo.Add(self.txt_capitulo, 1, wx.EXPAND)
@@ -111,8 +114,8 @@ class PestanaGrabacion(wx.Panel):
         sizer_carga.Add(sizer_capitulo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         sizer_carga.Add(self.btn_cargar, 0, wx.LEFT | wx.BOTTOM, 5)
 
-        # ---- SECCIÓN 2: Casting de voces ---- #
-        box_casting = wx.StaticBox(self, label="2. Casting de voces")
+        # ---- Casting de voces ---- #
+        box_casting = wx.StaticBox(self, label="Casting de voces")
         sizer_casting = wx.StaticBoxSizer(box_casting, wx.VERTICAL)
 
         sizer_cols = wx.BoxSizer(wx.HORIZONTAL)
@@ -134,8 +137,8 @@ class PestanaGrabacion(wx.Panel):
         self.check_voces = wx.CheckListBox(self)
         self.check_voces.SetName(
             "Lista de voces favoritas. Marca una voz y pulsa Asignar para "
-            "vincularla a la etiqueta seleccionada. Puedes asignar la misma "
-            "voz a varias etiquetas."
+            "vincularla a la etiqueta seleccionada. La misma voz puede asignarse "
+            "a varias etiquetas."
         )
         sizer_voces.Add(lbl_voces, 0, wx.BOTTOM, 3)
         sizer_voces.Add(self.check_voces, 1, wx.EXPAND)
@@ -172,8 +175,8 @@ class PestanaGrabacion(wx.Panel):
         sizer_casting.Add(lbl_asign, 0, wx.LEFT | wx.TOP, 5)
         sizer_casting.Add(self.txt_asignaciones, 0, wx.EXPAND | wx.ALL, 5)
 
-        # ---- SECCIÓN 3: Opciones de salida ---- #
-        box_opciones = wx.StaticBox(self, label="3. Opciones de salida")
+        # ---- Opciones de salida ---- #
+        box_opciones = wx.StaticBox(self, label="Opciones de salida")
         sizer_opciones = wx.StaticBoxSizer(box_opciones, wx.VERTICAL)
 
         self.chk_dividir = wx.CheckBox(
@@ -186,7 +189,7 @@ class PestanaGrabacion(wx.Panel):
         )
         self.chk_dividir.SetValue(True)
 
-        # StaticText que NVDA anuncia al tabular sobre él
+        # StaticText de estado — NVDA lo lee al navegar sobre él o al actualizarse
         self.lbl_estado_division = wx.StaticText(
             self,
             label="Estado: Generando múltiples archivos numerados por etiqueta",
@@ -198,8 +201,8 @@ class PestanaGrabacion(wx.Panel):
         sizer_opciones.Add(self.chk_dividir, 0, wx.ALL, 5)
         sizer_opciones.Add(self.lbl_estado_division, 0, wx.LEFT | wx.BOTTOM, 10)
 
-        # ---- SECCIÓN 4: Progreso ---- #
-        box_progreso = wx.StaticBox(self, label="4. Progreso de la grabación")
+        # ---- Progreso de la grabación ---- #
+        box_progreso = wx.StaticBox(self, label="Progreso de la grabación")
         sizer_progreso_box = wx.StaticBoxSizer(box_progreso, wx.VERTICAL)
 
         self.lbl_progreso = wx.StaticText(
@@ -217,7 +220,7 @@ class PestanaGrabacion(wx.Panel):
         sizer_progreso_box.Add(self.lbl_progreso, 0, wx.EXPAND | wx.ALL, 5)
         sizer_progreso_box.Add(self.gauge, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
-        # ---- SECCIÓN 5: Botones principales ---- #
+        # ---- Botones principales ---- #
         sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
 
         self.btn_iniciar = wx.Button(self, label="&Iniciar Grabación")
@@ -262,6 +265,20 @@ class PestanaGrabacion(wx.Panel):
         self.btn_abortar.Bind(wx.EVT_BUTTON, self.al_abortar)
         self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON, self.al_abrir_carpeta)
         self.check_voces.Bind(wx.EVT_CHECKLISTBOX, self.al_marcar_voz)
+
+    # ================================================================== #
+    # Helpers de nombre (título/capítulo opcionales)
+    # ================================================================== #
+
+    def _resolver_titulo(self) -> str:
+        """Devuelve el título introducido o, si está vacío, el nombre del archivo TXT."""
+        t = self.txt_titulo.GetValue().strip()
+        return t if t else (self.nombre_base_txt or "Sin_Titulo")
+
+    def _resolver_capitulo(self) -> str:
+        """Devuelve el capítulo introducido o, si está vacío, el nombre del archivo TXT."""
+        c = self.txt_capitulo.GetValue().strip()
+        return c if c else (self.nombre_base_txt or "Sin_Capitulo")
 
     # ================================================================== #
     # Carga de voces disponibles
@@ -340,15 +357,15 @@ class PestanaGrabacion(wx.Panel):
             if dlg.ShowModal() == wx.ID_OK:
                 self.ruta_txt_actual = dlg.GetPath()
                 self.txt_ruta.SetValue(self.ruta_txt_actual)
-
-                # Auto-rellenar título y capítulo si están vacíos
-                nombre_base = os.path.splitext(
+                self.nombre_base_txt = os.path.splitext(
                     os.path.basename(self.ruta_txt_actual)
                 )[0]
+
+                # Sugerir título/capítulo solo si están completamente vacíos
                 if not self.txt_titulo.GetValue().strip():
-                    self.txt_titulo.SetValue(nombre_base)
+                    self.txt_titulo.SetValue(self.nombre_base_txt)
                 if not self.txt_capitulo.GetValue().strip():
-                    self.txt_capitulo.SetValue(nombre_base)
+                    self.txt_capitulo.SetValue(self.nombre_base_txt)
 
     def al_cargar_y_escanear(self, evento):
         """Lee el archivo TXT, detecta etiquetas y prepara el panel de casting."""
@@ -372,11 +389,7 @@ class PestanaGrabacion(wx.Panel):
             return
 
         if not self.texto_cargado.strip():
-            wx.MessageBox(
-                "El archivo está vacío.",
-                "Sin contenido",
-                wx.OK | wx.ICON_WARNING,
-            )
+            wx.MessageBox("El archivo está vacío.", "Sin contenido", wx.OK | wx.ICON_WARNING)
             return
 
         # Fragmentar y obtener etiquetas únicas en orden de aparición
@@ -389,7 +402,6 @@ class PestanaGrabacion(wx.Panel):
             )
             return
 
-        # Etiquetas únicas preservando el orden de aparición
         vistas = set()
         self.etiquetas_detectadas = []
         for etiq, _ in self.fragmentos:
@@ -405,7 +417,7 @@ class PestanaGrabacion(wx.Panel):
             self.combo_etiquetas.SetSelection(0)
 
         # Recuperar asignaciones previas si existen para este título
-        titulo = self.txt_titulo.GetValue().strip() or "Sin título"
+        titulo = self._resolver_titulo()
         self.titulo_libro = titulo
         self.asignaciones = {}
         self._cargar_mapeo(titulo)
@@ -524,7 +536,7 @@ class PestanaGrabacion(wx.Panel):
     # ================================================================== #
 
     def al_cambiar_division(self, evento):
-        """Actualiza el StaticText de estado para que NVDA lo anuncie."""
+        """Actualiza el StaticText de estado para que NVDA lo anuncie al navegar."""
         if self.chk_dividir.IsChecked():
             self.lbl_estado_division.SetLabel(
                 "Estado: Generando múltiples archivos numerados por etiqueta"
@@ -546,7 +558,7 @@ class PestanaGrabacion(wx.Panel):
                 with open(self.ruta_mapeo, 'r', encoding='utf-8') as f:
                     mapeo = json.load(f)
 
-            titulo = self.txt_titulo.GetValue().strip() or "Sin título"
+            titulo = self._resolver_titulo()
             mapeo[titulo] = self.asignaciones
 
             os.makedirs(os.path.dirname(self.ruta_mapeo), exist_ok=True)
@@ -563,7 +575,6 @@ class PestanaGrabacion(wx.Panel):
                     mapeo = json.load(f)
 
                 datos_guardados = mapeo.get(titulo, {})
-                # Solo recuperar etiquetas que existen en el texto actual
                 self.asignaciones = {
                     k: v
                     for k, v in datos_guardados.items()
@@ -592,24 +603,8 @@ class PestanaGrabacion(wx.Panel):
             )
             return
 
-        titulo = self.txt_titulo.GetValue().strip()
-        capitulo = self.txt_capitulo.GetValue().strip()
-
-        if not titulo:
-            wx.MessageBox(
-                "Introduce un título para el libro antes de grabar.",
-                "Falta el título",
-                wx.OK | wx.ICON_WARNING,
-            )
-            return
-
-        if not capitulo:
-            wx.MessageBox(
-                "Introduce el nombre del capítulo antes de grabar.",
-                "Falta el nombre del capítulo",
-                wx.OK | wx.ICON_WARNING,
-            )
-            return
+        titulo = self._resolver_titulo()
+        capitulo = self._resolver_capitulo()
 
         # Advertir si hay etiquetas sin voz asignada
         sin_voz = [e for e in self.etiquetas_detectadas if e not in self.asignaciones]
@@ -683,13 +678,12 @@ class PestanaGrabacion(wx.Panel):
         n = len(archivos)
         nombre_carpeta = os.path.basename(carpeta)
 
-        # Mensaje de éxito para NVDA (se leerá al enfocar el label)
+        # Mensaje de éxito — NVDA lo lee al enfocar el label o al aparecer el diálogo
         self.lbl_progreso.SetLabel(
             f"Proceso finalizado con éxito. "
             f"{n} archivos generados en la carpeta {nombre_carpeta}."
         )
 
-        # Construir cuerpo del diálogo
         cuerpo = (
             f"Proceso finalizado con éxito.\n"
             f"{n} archivo(s) generado(s) en la carpeta:\n{carpeta}"
@@ -729,9 +723,7 @@ class PestanaGrabacion(wx.Panel):
         """Señala al grabador para que detenga el proceso en curso."""
         if self.grabador:
             self.grabador.abortar()
-        self.lbl_progreso.SetLabel(
-            "Estado: Grabación abortada por el usuario."
-        )
+        self.lbl_progreso.SetLabel("Estado: Grabación abortada por el usuario.")
         self.btn_abortar.Enable(False)
         self.btn_iniciar.Enable(True)
 
@@ -744,8 +736,7 @@ class PestanaGrabacion(wx.Panel):
         carpeta = self._ultima_carpeta
 
         if not carpeta or not os.path.exists(carpeta):
-            # Fallback: carpeta madre del libro
-            titulo = self.txt_titulo.GetValue().strip()
+            titulo = self._resolver_titulo()
             if titulo:
                 carpeta = os.path.join(
                     CARPETA_RAIZ_GRABACIONES,
