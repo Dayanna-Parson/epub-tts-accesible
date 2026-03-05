@@ -95,8 +95,8 @@ class PestanaGrabacion(wx.Panel):
 
         self.btn_examinar = wx.Button(self, label="&Examinar…")
         self.btn_examinar.SetToolTip(
-            "Abre el Explorador para seleccionar un archivo TXT. "
-            "Las etiquetas se detectan automáticamente al seleccionar."
+            "Carga un archivo TXT con etiquetas {{@personaje}} "
+            "para asignar una voz a cada personaje y grabar el audio."
         )
 
         self.btn_limpiar = wx.Button(self, label="&Limpiar")
@@ -325,15 +325,11 @@ class PestanaGrabacion(wx.Panel):
         return c if c else (self.nombre_base_txt or "Sin_Capitulo")
 
     # ================================================================== #
-    # Carga de voces disponibles (deduplicadas por ID)
+    # Carga de voces disponibles
     # ================================================================== #
 
     def _cargar_voces_disponibles(self):
-        """
-        Puebla check_voces con voces favoritas.
-        Deduplicación por voice ID para evitar entradas repetidas cuando
-        la misma voz aparece en múltiples entradas de voces_disponibles.json.
-        """
+        """Puebla check_voces con voces favoritas y voces SAPI5 locales."""
         self.voces_disponibles = []
         self.check_voces.Clear()
 
@@ -343,15 +339,11 @@ class PestanaGrabacion(wx.Panel):
 
         if ids_favs and os.path.exists(self.ruta_todas):
             todas = self._cargar_json(self.ruta_todas)
-            ids_ya_anadidos = set()   # ← deduplicación por ID
-
             for prov, lista in todas.items():
                 if not isinstance(lista, list):
                     continue
                 for v in lista:
-                    vid = v.get('id')
-                    if vid in ids_favs and vid not in ids_ya_anadidos:
-                        ids_ya_anadidos.add(vid)
+                    if v.get('id') in ids_favs:
                         v_copy = dict(v)
                         v_copy['proveedor_id'] = prov
                         nombre_disp = (
@@ -366,15 +358,10 @@ class PestanaGrabacion(wx.Panel):
             import comtypes.client
             sapi  = comtypes.client.CreateObject("SAPI.SpVoice")
             voces = sapi.GetVoices()
-            ids_locales_vistos = set()
             for i in range(voces.Count):
                 v    = voces.Item(i)
-                vid  = v.Id
-                if vid in ids_locales_vistos:
-                    continue
-                ids_locales_vistos.add(vid)
                 desc  = v.GetDescription()
-                datos = {"id": vid, "nombre": desc, "proveedor_id": "local"}
+                datos = {"id": v.Id, "nombre": desc, "proveedor_id": "local"}
                 self.voces_disponibles.append((f"{desc}  [Local]", datos))
         except Exception:
             pass
@@ -521,11 +508,15 @@ class PestanaGrabacion(wx.Panel):
     def al_marcar_voz(self, evento):
         """
         Al marcar una voz en el CheckListBox:
-          1. Comportamiento radio (desmarca las demás).
-          2. Auto-asigna la voz a la etiqueta activa en el combo.
-          3. Avanza el combo a la siguiente etiqueta sin asignar.
+          1. Si se desmarca: no hace nada.
+          2. Si se marca: comportamiento radio (desmarca las demás),
+             auto-asigna a la etiqueta activa y avanza el combo.
         """
         idx_marcado = evento.GetInt()
+
+        # Solo actuar cuando el usuario MARCA (no cuando desmarca)
+        if not self.check_voces.IsChecked(idx_marcado):
+            return
 
         # Comportamiento radio: solo una voz marcada a la vez
         for i in range(self.check_voces.GetCount()):
