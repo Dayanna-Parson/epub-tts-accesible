@@ -203,9 +203,9 @@ class PestanaGrabacion(wx.Panel):
         lbl_etiq = wx.StaticText(self, label="Etiquetas detectadas:")
         self.combo_etiquetas = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_etiquetas.SetHelpText(
-            "Etiqueta activa a la que se asignará la voz. "
-            "Al marcar una voz en la lista de la derecha la asignación es "
-            "automática y el combo avanza a la siguiente etiqueta sin asignar."
+            "Etiquetas detectadas en el archivo. Selecciona la etiqueta a la que "
+            "quieres asignar una voz. Al marcar una voz en la lista de la derecha "
+            "la asignación es automática y el combo avanza a la siguiente etiqueta sin asignar."
         )
         sz_etiq.Add(lbl_etiq,             0, wx.BOTTOM, 3)
         sz_etiq.Add(self.combo_etiquetas, 0, wx.EXPAND)
