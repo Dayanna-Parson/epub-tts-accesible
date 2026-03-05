@@ -444,6 +444,10 @@ class PestanaGrabacion(wx.Panel):
         if self.combo_etiquetas.GetCount() > 0:
             self.combo_etiquetas.SetSelection(0)
 
+        # Desmarcar todas las voces al cargar un nuevo texto
+        for i in range(self.check_voces.GetCount()):
+            self.check_voces.Check(i, False)
+
         # Recuperar asignaciones previas vinculadas al título del libro
         titulo = self._resolver_titulo()
         self.titulo_libro = titulo
