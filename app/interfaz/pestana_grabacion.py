@@ -193,14 +193,14 @@ class PestanaGrabacion(wx.Panel):
         sz_carga.Add(sz_cap,    0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         # ── Casting de voces ─────────────────────────────────────────────
-        box_cast = wx.StaticBox(self, label="Casting de voces")
+        box_cast = wx.StaticBox(self, label="Asignación de voces")
         sz_cast  = wx.StaticBoxSizer(box_cast, wx.VERTICAL)
 
         sz_cols = wx.BoxSizer(wx.HORIZONTAL)
 
         # Columna izq: etiqueta activa
         sz_etiq = wx.BoxSizer(wx.VERTICAL)
-        lbl_etiq = wx.StaticText(self, label="Etiqueta activa:")
+        lbl_etiq = wx.StaticText(self, label="Etiquetas detectadas:")
         self.combo_etiquetas = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_etiquetas.SetHelpText(
             "Etiqueta activa a la que se asignará la voz. "
@@ -212,7 +212,7 @@ class PestanaGrabacion(wx.Panel):
 
         # Columna der: voces favoritas con ListaVocesCheck + columnas
         sz_voces = wx.BoxSizer(wx.VERTICAL)
-        lbl_voces = wx.StaticText(self, label="Voces disponibles (favoritas):")
+        lbl_voces = wx.StaticText(self, label="Asigna voces a la etiqueta seleccionada:")
         self.check_voces = ListaVocesCheck(self)
         self.check_voces.InsertColumn(0, "Nombre de la voz", width=210)
         self.check_voces.InsertColumn(1, "Género",           width=70)
