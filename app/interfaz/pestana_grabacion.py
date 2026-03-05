@@ -498,12 +498,7 @@ class PestanaGrabacion(wx.Panel):
                 self.etiquetas_detectadas.append(etiq)
                 vistas.add(etiq)
 
-        # Actualizar combo
-        self.combo_etiquetas.Clear()
-        for etiq in self.etiquetas_detectadas:
-            self.combo_etiquetas.Append(f"@{etiq}")
-        if self.combo_etiquetas.GetCount() > 0:
-            self.combo_etiquetas.SetSelection(0)
+        # El combo se reconstruirá con estado tras cargar el mapeo
 
         # Desmarcar todas las voces al cargar un nuevo texto
         for i in range(self.check_voces.GetItemCount()):
@@ -515,6 +510,8 @@ class PestanaGrabacion(wx.Panel):
         self.asignaciones = {}
         self._cargar_mapeo(titulo)
         self._actualizar_resumen_asignaciones()
+        # Construir combo con estado (incluye asignaciones recuperadas del mapeo)
+        self._actualizar_combo_etiquetas(preservar_etiqueta=self.etiquetas_detectadas[0] if self.etiquetas_detectadas else None)
 
         total    = len(self.fragmentos)
         etiq_str = ', '.join('@' + e for e in self.etiquetas_detectadas)
@@ -595,9 +592,8 @@ class PestanaGrabacion(wx.Panel):
         if idx_etiq == wx.NOT_FOUND:
             return
 
-        etiqueta = normalizar_etiqueta(
-            self.combo_etiquetas.GetString(idx_etiq).lstrip('@')
-        )
+        # Parsear etiqueta del combo (formato: "@etiq → nombre" o "@etiq → (sin asignar)")
+        etiqueta = self._etiqueta_de_combo(idx_etiq)
 
         self.asignaciones[etiqueta] = datos_voz
         self._guardar_mapeo()
@@ -607,16 +603,19 @@ class PestanaGrabacion(wx.Panel):
             f"Asignado: @{etiqueta}  →  {nombre_voz_disp}"
         )
 
-        # Avanzar al combo a la siguiente etiqueta sin asignar (circular)
-        total_etiq = self.combo_etiquetas.GetCount()
+        # Determinar la siguiente etiqueta sin asignar ANTES de reconstruir el combo
+        total_etiq = len(self.etiquetas_detectadas)
+        etiq_siguiente = None
         for delta in range(1, total_etiq):
-            siguiente_idx  = (idx_etiq + delta) % total_etiq
-            siguiente_etiq = normalizar_etiqueta(
-                self.combo_etiquetas.GetString(siguiente_idx).lstrip('@')
-            )
-            if siguiente_etiq not in self.asignaciones:
-                self.combo_etiquetas.SetSelection(siguiente_idx)
+            sig_etiq = self.etiquetas_detectadas[(idx_etiq + delta) % total_etiq]
+            if sig_etiq not in self.asignaciones:
+                etiq_siguiente = sig_etiq
                 break
+
+        # Reconstruir combo con nuevo estado y posicionar en la siguiente sin asignar
+        self._actualizar_combo_etiquetas(
+            preservar_etiqueta=etiq_siguiente if etiq_siguiente else etiqueta
+        )
 
     def al_desmarcar_voz(self, evento):
         """Al desmarcar una voz manualmente no se borra la asignación."""
@@ -701,6 +700,51 @@ class PestanaGrabacion(wx.Panel):
             )
 
         threading.Thread(target=_preescucha, daemon=True).start()
+
+    # ================================================================== #
+    # Helpers de combo y resumen
+    # ================================================================== #
+
+    def _etiqueta_de_combo(self, idx: int) -> str:
+        """
+        Extrae la etiqueta normalizada del item del combo.
+        Formato del item: '@etiq → nombre_voz'  o  '@etiq → (sin asignar)'
+        Siempre devuelve solo la parte de etiqueta.
+        """
+        texto = self.combo_etiquetas.GetString(idx)
+        return normalizar_etiqueta(texto.split(' →')[0].lstrip('@').strip())
+
+    def _actualizar_combo_etiquetas(self, preservar_etiqueta: str = None):
+        """
+        Reconstruye los items del combo con el estado de asignación actual.
+          @nar → Raul          (cuando tiene voz)
+          @pj1 → (sin asignar)
+        preservar_etiqueta: nombre de la etiqueta que debe quedar seleccionada
+        tras la reconstrucción; si es None, se mantiene la posición actual.
+        """
+        if not self.etiquetas_detectadas:
+            return
+
+        # Guardar la etiqueta seleccionada antes de limpiar
+        if preservar_etiqueta is None:
+            sel = self.combo_etiquetas.GetSelection()
+            if sel != wx.NOT_FOUND and sel < len(self.etiquetas_detectadas):
+                preservar_etiqueta = self.etiquetas_detectadas[sel]
+
+        self.combo_etiquetas.Clear()
+        nueva_sel = 0
+        for i, etiq in enumerate(self.etiquetas_detectadas):
+            voz = self.asignaciones.get(etiq)
+            if voz:
+                item_texto = f"@{etiq} → {voz.get('nombre', '?')}"
+            else:
+                item_texto = f"@{etiq} → (sin asignar)"
+            self.combo_etiquetas.Append(item_texto)
+            if etiq == preservar_etiqueta:
+                nueva_sel = i
+
+        if self.combo_etiquetas.GetCount() > 0:
+            self.combo_etiquetas.SetSelection(nueva_sel)
 
     def _actualizar_resumen_asignaciones(self):
         if not self.etiquetas_detectadas:
