@@ -365,30 +365,75 @@ class GrabadorAudio:
 
     def _concatenar_audios(self, archivos: list, ruta_salida: str):
         """
-        Une varios MP3 en uno solo preservando la calidad original.
-        No aplica re-muestreo: cada segmento se concatena a su tasa nativa.
+        Une varios MP3 en uno solo.
+        Intenta pydub+ffmpeg (320k, preserva sample rate).
+        Si ffmpeg no está disponible, concatena bytes crudos como fallback.
+        Los archivos MP3 son secuencias de frames: la concatenación directa
+        de bytes produce un archivo válido y reproducible.
         """
+        archivos_validos = [
+            a for a in archivos
+            if os.path.exists(a) and os.path.getsize(a) > 0
+        ]
+        if not archivos_validos:
+            logger.warning("[GrabadorAudio] _concatenar_audios: ningún archivo válido.")
+            return
+
+        # ── Intentar pydub + ffmpeg ──────────────────────────────────────
         try:
             from pydub import AudioSegment
 
             combined = AudioSegment.empty()
-            for arch in archivos:
-                if os.path.exists(arch) and os.path.getsize(arch) > 0:
-                    try:
-                        combined += AudioSegment.from_file(arch, format='mp3')
-                    except Exception as e:
-                        logger.warning(f"[GrabadorAudio] No se pudo añadir {arch}: {e}")
+            fallos   = 0
+            for arch in archivos_validos:
+                try:
+                    combined += AudioSegment.from_file(arch, format='mp3')
+                except Exception as e:
+                    fallos += 1
+                    logger.debug(
+                        f"[GrabadorAudio] pydub no leyó {os.path.basename(arch)}: {e}"
+                    )
 
-            combined.export(ruta_salida, format='mp3', bitrate='320k')
-            logger.info(f"[GrabadorAudio] Concatenado: {os.path.basename(ruta_salida)}")
+            if fallos < len(archivos_validos):
+                # Al menos un archivo se decodificó correctamente
+                combined.export(ruta_salida, format='mp3', bitrate='320k')
+                logger.info(
+                    f"[GrabadorAudio] Concatenado 320k: {os.path.basename(ruta_salida)}"
+                )
+                return
+            # Todos fallaron (ffmpeg ausente) → caer al fallback
+            logger.info(
+                "[GrabadorAudio] pydub/ffmpeg no disponible para MP3. "
+                "Concatenando bytes crudos."
+            )
 
         except ImportError:
-            logger.warning("[GrabadorAudio] pydub no disponible. Concatenando bytes crudos.")
-            with open(ruta_salida, 'wb') as f_out:
-                for arch in archivos:
-                    if os.path.exists(arch) and os.path.getsize(arch) > 0:
-                        with open(arch, 'rb') as f_in:
-                            f_out.write(f_in.read())
+            logger.info(
+                "[GrabadorAudio] pydub no instalado. Concatenando bytes crudos."
+            )
+        except Exception as e:
+            logger.warning(
+                f"[GrabadorAudio] Error pydub al concatenar: {e}. "
+                "Usando bytes crudos."
+            )
+
+        # ── Fallback: concatenación de bytes MP3 crudos ──────────────────
+        # Los frames MP3 son auto-sincronizables; la concatenación directa
+        # produce un archivo válido para todos los reproductores.
+        with open(ruta_salida, 'wb') as f_out:
+            for arch in archivos_validos:
+                try:
+                    with open(arch, 'rb') as f_in:
+                        f_out.write(f_in.read())
+                except Exception as e:
+                    logger.warning(
+                        f"[GrabadorAudio] No se pudo leer "
+                        f"{os.path.basename(arch)}: {e}"
+                    )
+        logger.info(
+            f"[GrabadorAudio] Concatenado (bytes crudos): "
+            f"{os.path.basename(ruta_salida)}"
+        )
 
     # ------------------------------------------------------------------ #
     # Motor: Azure

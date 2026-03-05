@@ -9,14 +9,13 @@ Flujo de uso (diseñado para NVDA + teclado):
   3. Marca una voz en la lista de favoritos → se auto-asigna y el combo avanza.
   4. Repite hasta cubrir todas las etiquetas.
   5. Pulsa "Iniciar Grabación".
+  6. "Limpiar" restablece la pestaña para cargar otro fragmento sin reiniciar.
 
-Cambios respecto al diseño anterior:
-  - Sin botón "Escanear" ni "Asignar": ambas acciones son automáticas.
-  - La casilla "Dividir por etiquetas" actualiza en tiempo real su StaticText
-    de estado para que NVDA lo anuncie sin necesidad de enfocar el control.
-  - Título y capítulo son opcionales (usa el nombre del TXT como fallback).
-  - JSON helpers robustos: soportan archivo vacío, corrupto o inexistente.
-  - Tab cíclico: primer_control / ultimo_control para ventana_principal.py.
+Accesibilidad NVDA:
+  - SetToolTip() en todos los controles interactivos (Ins+T los anuncia).
+  - txt_estado_division es un TextCtrl readonly: NVDA lo anuncia en Tab.
+  - Sin atajos de teclado en la casilla de verificación (conflicto evitado).
+  - Voces deduplicadas por ID para evitar entradas repetidas.
 """
 
 import wx
@@ -45,17 +44,17 @@ class PestanaGrabacion(wx.Panel):
         super().__init__(padre, style=wx.TAB_TRAVERSAL)
 
         # ── Estado interno ────────────────────────────────────────────────
-        self.ruta_txt_actual    = None
-        self.nombre_base_txt    = ""     # fallback cuando título/capítulo vacíos
-        self.texto_cargado      = ""
-        self.fragmentos         = []     # [(etiqueta, contenido), ...]
-        self.etiquetas_detectadas = []   # [etiqueta_normalizada, ...]
-        self.asignaciones       = {}     # {etiqueta: datos_voz}
-        self.voces_disponibles  = []     # [(texto_display, datos_voz), ...]
-        self.titulo_libro       = ""
-        self.grabador           = None
-        self._hilo_grabacion    = None
-        self._ultima_carpeta    = None
+        self.ruta_txt_actual      = None
+        self.nombre_base_txt      = ""     # fallback cuando título/capítulo vacíos
+        self.texto_cargado        = ""
+        self.fragmentos           = []     # [(etiqueta, contenido), ...]
+        self.etiquetas_detectadas = []     # [etiqueta_normalizada, ...]
+        self.asignaciones         = {}     # {etiqueta: datos_voz}
+        self.voces_disponibles    = []     # [(texto_display, datos_voz), ...]
+        self.titulo_libro         = ""
+        self.grabador             = None
+        self._hilo_grabacion      = None
+        self._ultima_carpeta      = None
 
         # ── Rutas de configuración (absolutas) ────────────────────────────
         self.ruta_mapeo = ruta_config("mapeo_etiquetas.json")
@@ -85,38 +84,54 @@ class PestanaGrabacion(wx.Panel):
         sizer_raiz = wx.BoxSizer(wx.VERTICAL)
 
         # ── Carga de archivo ─────────────────────────────────────────────
-        box_carga  = wx.StaticBox(self, label="Archivo de texto")
-        sz_carga   = wx.StaticBoxSizer(box_carga, wx.VERTICAL)
+        box_carga = wx.StaticBox(self, label="Archivo de texto")
+        sz_carga  = wx.StaticBoxSizer(box_carga, wx.VERTICAL)
 
+        # Fila: [ruta (readonly)] [Examinar] [Limpiar]
         sz_ruta = wx.BoxSizer(wx.HORIZONTAL)
         lbl_ruta = wx.StaticText(self, label="Archivo TXT:")
         self.txt_ruta = wx.TextCtrl(self, style=wx.TE_READONLY)
-        self.txt_ruta.SetName("Ruta del archivo de texto seleccionado")
-        self.btn_examinar = wx.Button(self, label="&Examinar…")
-        self.btn_examinar.SetName(
-            "Abrir explorador. Al seleccionar un archivo, las etiquetas se detectan automáticamente."
-        )
-        sz_ruta.Add(lbl_ruta, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        sz_ruta.Add(self.txt_ruta, 1, wx.EXPAND)
-        sz_ruta.Add(self.btn_examinar, 0, wx.LEFT, 5)
+        self.txt_ruta.SetToolTip("Ruta del archivo de texto actualmente cargado.")
 
+        self.btn_examinar = wx.Button(self, label="&Examinar…")
+        self.btn_examinar.SetToolTip(
+            "Abre el Explorador para seleccionar un archivo TXT. "
+            "Las etiquetas se detectan automáticamente al seleccionar."
+        )
+
+        self.btn_limpiar = wx.Button(self, label="&Limpiar")
+        self.btn_limpiar.SetToolTip(
+            "Restablece la pestaña al estado inicial: borra el archivo cargado, "
+            "las etiquetas detectadas y las voces asignadas. Útil para cargar "
+            "otro fragmento o capítulo sin reiniciar la aplicación."
+        )
+
+        sz_ruta.Add(lbl_ruta,         0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_ruta.Add(self.txt_ruta,    1, wx.EXPAND)
+        sz_ruta.Add(self.btn_examinar, 0, wx.LEFT, 5)
+        sz_ruta.Add(self.btn_limpiar,  0, wx.LEFT, 5)
+
+        # Fila: Título
         sz_titulo = wx.BoxSizer(wx.HORIZONTAL)
         lbl_titulo = wx.StaticText(self, label="Título (opcional):")
         self.txt_titulo = wx.TextCtrl(self)
-        self.txt_titulo.SetName(
-            "Título del libro o proyecto. Opcional. Si se deja vacío se usa el nombre del archivo."
+        self.txt_titulo.SetToolTip(
+            "Título del libro o proyecto. Opcional: si se deja vacío se usa "
+            "el nombre del archivo TXT. Define la subcarpeta de grabaciones."
         )
-        sz_titulo.Add(lbl_titulo, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_titulo.Add(lbl_titulo,      0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         sz_titulo.Add(self.txt_titulo, 1, wx.EXPAND)
 
+        # Fila: Capítulo
         sz_cap = wx.BoxSizer(wx.HORIZONTAL)
         lbl_cap = wx.StaticText(self, label="Capítulo (opcional):")
         self.txt_capitulo = wx.TextCtrl(self)
-        self.txt_capitulo.SetName(
-            "Nombre del capítulo o sección. Opcional. Si se deja vacío se usa el nombre del archivo."
+        self.txt_capitulo.SetToolTip(
+            "Nombre del capítulo o sección. Opcional: si se deja vacío se usa "
+            "el nombre del archivo TXT. Define el nombre de la subcarpeta interna."
         )
-        sz_cap.Add(lbl_cap, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        sz_cap.Add(self.txt_capitulo, 1, wx.EXPAND)
+        sz_cap.Add(lbl_cap,            0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_cap.Add(self.txt_capitulo,  1, wx.EXPAND)
 
         sz_carga.Add(sz_ruta,   0, wx.EXPAND | wx.ALL, 5)
         sz_carga.Add(sz_titulo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
@@ -128,81 +143,80 @@ class PestanaGrabacion(wx.Panel):
 
         sz_cols = wx.BoxSizer(wx.HORIZONTAL)
 
-        # Columna izquierda: etiqueta activa
+        # Columna izq: etiqueta activa
         sz_etiq = wx.BoxSizer(wx.VERTICAL)
         lbl_etiq = wx.StaticText(self, label="Etiqueta activa:")
         self.combo_etiquetas = wx.ComboBox(self, style=wx.CB_READONLY)
-        self.combo_etiquetas.SetName(
-            "Etiqueta activa. Selecciona la etiqueta a la que quieres asignar una voz. "
-            "Al marcar una voz en la lista de la derecha, la asignación es automática "
-            "y el combo avanza a la siguiente etiqueta sin asignar."
+        self.combo_etiquetas.SetToolTip(
+            "Etiqueta activa a la que se asignará la voz. "
+            "Al marcar una voz en la lista de la derecha, la asignación es "
+            "automática y el combo avanza a la siguiente etiqueta sin asignar."
         )
-        sz_etiq.Add(lbl_etiq, 0, wx.BOTTOM, 3)
-        sz_etiq.Add(self.combo_etiquetas, 0, wx.EXPAND)
+        sz_etiq.Add(lbl_etiq,              0, wx.BOTTOM, 3)
+        sz_etiq.Add(self.combo_etiquetas,  0, wx.EXPAND)
 
-        # Columna derecha: voces favoritas
+        # Columna der: voces favoritas
         sz_voces = wx.BoxSizer(wx.VERTICAL)
         lbl_voces = wx.StaticText(self, label="Voces disponibles (favoritas):")
         self.check_voces = wx.CheckListBox(self)
-        self.check_voces.SetName(
-            "Lista de voces favoritas. "
-            "Marca una voz para asignarla a la etiqueta activa. "
-            "La misma voz puede asignarse a varias etiquetas. "
-            "Formato: Nombre — Idioma — Proveedor."
+        self.check_voces.SetToolTip(
+            "Lista de voces favoritas. Marca una voz para asignarla a la "
+            "etiqueta activa. La misma voz puede asignarse a varias etiquetas."
         )
-        sz_voces.Add(lbl_voces, 0, wx.BOTTOM, 3)
+        sz_voces.Add(lbl_voces,        0, wx.BOTTOM, 3)
         sz_voces.Add(self.check_voces, 1, wx.EXPAND)
 
         sz_cols.Add(sz_etiq,  1, wx.EXPAND | wx.RIGHT, 10)
         sz_cols.Add(sz_voces, 2, wx.EXPAND)
 
-        # Botón de previsualización de voz
+        # Botón de previsualización
         sz_btn_cast = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_probar = wx.Button(self, label="&Probar Voz seleccionada")
-        self.btn_probar.SetName(
-            "Reproducir una muestra de la voz actualmente marcada en la lista de favoritos."
+        self.btn_probar.SetToolTip(
+            "Reproduce una muestra de la voz marcada en la lista por los altavoces."
         )
         sz_btn_cast.Add(self.btn_probar, 0)
 
-        # Resumen de asignaciones (texto de solo lectura, navegable con Tab)
+        # Resumen de asignaciones
         lbl_asign = wx.StaticText(self, label="Asignaciones actuales:")
         self.txt_asignaciones = wx.TextCtrl(
-            self,
-            style=wx.TE_MULTILINE | wx.TE_READONLY,
-            size=(-1, 90),
+            self, style=wx.TE_MULTILINE | wx.TE_READONLY, size=(-1, 90),
         )
-        self.txt_asignaciones.SetName(
+        self.txt_asignaciones.SetToolTip(
             "Resumen de asignaciones etiqueta → voz. "
             "Muestra '(sin asignar)' para las etiquetas que aún no tienen voz."
         )
 
-        sz_cast.Add(sz_cols,          1, wx.EXPAND | wx.ALL, 5)
-        sz_cast.Add(sz_btn_cast,      0, wx.LEFT | wx.BOTTOM, 5)
-        sz_cast.Add(lbl_asign,        0, wx.LEFT | wx.TOP, 5)
+        sz_cast.Add(sz_cols,               1, wx.EXPAND | wx.ALL, 5)
+        sz_cast.Add(sz_btn_cast,           0, wx.LEFT | wx.BOTTOM, 5)
+        sz_cast.Add(lbl_asign,             0, wx.LEFT | wx.TOP, 5)
         sz_cast.Add(self.txt_asignaciones, 0, wx.EXPAND | wx.ALL, 5)
 
         # ── Opciones de salida ────────────────────────────────────────────
         box_opc = wx.StaticBox(self, label="Opciones de salida")
         sz_opc  = wx.StaticBoxSizer(box_opc, wx.VERTICAL)
 
-        self.chk_dividir = wx.CheckBox(self, label="Dividir &por etiquetas")
-        self.chk_dividir.SetName(
-            "Casilla Dividir por etiquetas. "
-            "Marcada: genera un archivo MP3 numerado por cada fragmento de etiqueta. "
-            "Desmarcada: genera un único archivo MP3 con todo el audio unificado."
+        # Sin & en el label: evita conflicto con "Probar" (Alt+P)
+        self.chk_dividir = wx.CheckBox(self, label="Dividir por etiquetas")
+        self.chk_dividir.SetToolTip(
+            "Marcado: genera un archivo MP3 numerado por cada fragmento de "
+            "etiqueta (001_nar.mp3, 002_pj1.mp3…). "
+            "Desmarcado: genera un único archivo MP3 con todo el audio unificado."
         )
         self.chk_dividir.SetValue(True)
 
-        self.lbl_estado_division = wx.StaticText(
+        # TextCtrl readonly en lugar de StaticText: NVDA lo anuncia al tabular
+        self.txt_estado_division = wx.TextCtrl(
             self,
-            label="Estado: Generando múltiples archivos numerados por etiqueta",
+            value="Modo activo: archivos numerados por etiqueta",
+            style=wx.TE_READONLY,
         )
-        self.lbl_estado_division.SetName(
+        self.txt_estado_division.SetToolTip(
             "Descripción del modo de salida actualmente seleccionado."
         )
 
-        sz_opc.Add(self.chk_dividir,          0, wx.ALL, 5)
-        sz_opc.Add(self.lbl_estado_division,  0, wx.LEFT | wx.BOTTOM, 10)
+        sz_opc.Add(self.chk_dividir,         0, wx.ALL, 5)
+        sz_opc.Add(self.txt_estado_division,  0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         # ── Progreso ──────────────────────────────────────────────────────
         box_prog = wx.StaticBox(self, label="Progreso")
@@ -212,13 +226,13 @@ class PestanaGrabacion(wx.Panel):
             self,
             label="Estado: En espera. Selecciona un archivo TXT para comenzar.",
         )
-        self.lbl_progreso.SetName(
+        self.lbl_progreso.SetToolTip(
             "Estado actual. Durante la grabación informa del fragmento, "
             "etiqueta y voz en curso."
         )
 
         self.gauge = wx.Gauge(self, range=100)
-        self.gauge.SetName("Barra de progreso de la grabación")
+        self.gauge.SetToolTip("Barra de progreso de la grabación.")
 
         sz_prog.Add(self.lbl_progreso, 0, wx.EXPAND | wx.ALL, 5)
         sz_prog.Add(self.gauge,        0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
@@ -227,38 +241,41 @@ class PestanaGrabacion(wx.Panel):
         sz_botones = wx.BoxSizer(wx.HORIZONTAL)
 
         self.btn_iniciar = wx.Button(self, label="&Iniciar Grabación")
-        self.btn_iniciar.SetName(
-            "Iniciar el proceso de grabación multivoz en segundo plano."
+        self.btn_iniciar.SetToolTip(
+            "Inicia el proceso de grabación multivoz en segundo plano. "
+            "Requiere tener cargado un TXT y al menos una voz asignada."
         )
         self.btn_iniciar.Enable(False)
 
         self.btn_abortar = wx.Button(self, label="A&bortar")
-        self.btn_abortar.SetName(
-            "Detener la grabación en curso inmediatamente sin cerrar la aplicación."
+        self.btn_abortar.SetToolTip(
+            "Detiene la grabación en curso inmediatamente. "
+            "Los archivos ya generados se conservan."
         )
         self.btn_abortar.Enable(False)
 
         self.btn_abrir_carpeta = wx.Button(self, label="A&brir Carpeta")
-        self.btn_abrir_carpeta.SetName(
-            "Abrir en el Explorador la carpeta de grabaciones del proyecto actual."
+        self.btn_abrir_carpeta.SetToolTip(
+            "Abre en el Explorador la carpeta de grabaciones del proyecto. "
+            "Si aún no hay grabaciones, abre la carpeta raíz Grabaciones_TifloHistorias."
         )
-        # Siempre habilitado: si no hay grabación aún, abre la raíz de Grabaciones
 
         sz_botones.Add(self.btn_iniciar,       0, wx.RIGHT, 5)
         sz_botones.Add(self.btn_abortar,       0, wx.RIGHT, 5)
         sz_botones.Add(self.btn_abrir_carpeta, 0)
 
         # ── Ensamblado ────────────────────────────────────────────────────
-        sizer_raiz.Add(sz_carga,    0, wx.EXPAND | wx.ALL, 6)
-        sizer_raiz.Add(sz_cast,     1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
-        sizer_raiz.Add(sz_opc,      0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
-        sizer_raiz.Add(sz_prog,     0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
-        sizer_raiz.Add(sz_botones,  0, wx.ALL, 10)
+        sizer_raiz.Add(sz_carga,   0, wx.EXPAND | wx.ALL, 6)
+        sizer_raiz.Add(sz_cast,    1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
+        sizer_raiz.Add(sz_opc,     0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
+        sizer_raiz.Add(sz_prog,    0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
+        sizer_raiz.Add(sz_botones, 0, wx.ALL, 10)
 
         self.SetSizer(sizer_raiz)
 
         # ── Eventos ───────────────────────────────────────────────────────
         self.btn_examinar.Bind(wx.EVT_BUTTON,      self.al_examinar)
+        self.btn_limpiar.Bind(wx.EVT_BUTTON,       self.al_limpiar)
         self.btn_probar.Bind(wx.EVT_BUTTON,        self.al_probar_voz)
         self.chk_dividir.Bind(wx.EVT_CHECKBOX,     self.al_cambiar_division)
         self.btn_iniciar.Bind(wx.EVT_BUTTON,       self.al_iniciar_grabacion)
@@ -271,7 +288,7 @@ class PestanaGrabacion(wx.Panel):
     # ================================================================== #
 
     def _cargar_json(self, ruta: str) -> dict:
-        """Devuelve el JSON como dict, o {} si el archivo no existe/está vacío/es inválido."""
+        """Devuelve el JSON como dict/list, o {} si vacío/inválido/inexistente."""
         try:
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
@@ -284,7 +301,7 @@ class PestanaGrabacion(wx.Panel):
             )
         return {}
 
-    def _guardar_json(self, ruta: str, datos: dict):
+    def _guardar_json(self, ruta: str, datos):
         """Guarda datos como JSON de forma segura."""
         try:
             os.makedirs(os.path.dirname(ruta), exist_ok=True)
@@ -308,27 +325,33 @@ class PestanaGrabacion(wx.Panel):
         return c if c else (self.nombre_base_txt or "Sin_Capitulo")
 
     # ================================================================== #
-    # Carga de voces disponibles
+    # Carga de voces disponibles (deduplicadas por ID)
     # ================================================================== #
 
     def _cargar_voces_disponibles(self):
-        """Puebla check_voces con favoritas (neuronales + SAPI5 local)."""
+        """
+        Puebla check_voces con voces favoritas.
+        Deduplicación por voice ID para evitar entradas repetidas cuando
+        la misma voz aparece en múltiples entradas de voces_disponibles.json.
+        """
         self.voces_disponibles = []
         self.check_voces.Clear()
 
-        # Voces neuronales favoritas
-        ids_favs = []
-        datos_favs = self._cargar_json(self.ruta_favs)
-        if isinstance(datos_favs, list):
-            ids_favs = datos_favs
+        # ── Voces neuronales favoritas ────────────────────────────────────
+        ids_favs_raw = self._cargar_json(self.ruta_favs)
+        ids_favs = set(ids_favs_raw) if isinstance(ids_favs_raw, list) else set()
 
         if ids_favs and os.path.exists(self.ruta_todas):
             todas = self._cargar_json(self.ruta_todas)
+            ids_ya_anadidos = set()   # ← deduplicación por ID
+
             for prov, lista in todas.items():
                 if not isinstance(lista, list):
                     continue
                 for v in lista:
-                    if v.get('id') in ids_favs:
+                    vid = v.get('id')
+                    if vid in ids_favs and vid not in ids_ya_anadidos:
+                        ids_ya_anadidos.add(vid)
                         v_copy = dict(v)
                         v_copy['proveedor_id'] = prov
                         nombre_disp = (
@@ -338,15 +361,20 @@ class PestanaGrabacion(wx.Panel):
                         )
                         self.voces_disponibles.append((nombre_disp, v_copy))
 
-        # Voces SAPI5 locales
+        # ── Voces SAPI5 locales ───────────────────────────────────────────
         try:
             import comtypes.client
             sapi  = comtypes.client.CreateObject("SAPI.SpVoice")
             voces = sapi.GetVoices()
+            ids_locales_vistos = set()
             for i in range(voces.Count):
                 v    = voces.Item(i)
-                desc = v.GetDescription()
-                datos = {"id": v.Id, "nombre": desc, "proveedor_id": "local"}
+                vid  = v.Id
+                if vid in ids_locales_vistos:
+                    continue
+                ids_locales_vistos.add(vid)
+                desc  = v.GetDescription()
+                datos = {"id": vid, "nombre": desc, "proveedor_id": "local"}
                 self.voces_disponibles.append((f"{desc}  [Local]", datos))
         except Exception:
             pass
@@ -374,8 +402,8 @@ class PestanaGrabacion(wx.Panel):
             if dlg.ShowModal() != wx.ID_OK:
                 return
 
-            self.ruta_txt_actual  = dlg.GetPath()
-            self.nombre_base_txt  = os.path.splitext(
+            self.ruta_txt_actual = dlg.GetPath()
+            self.nombre_base_txt = os.path.splitext(
                 os.path.basename(self.ruta_txt_actual)
             )[0]
             self.txt_ruta.SetValue(self.ruta_txt_actual)
@@ -386,7 +414,6 @@ class PestanaGrabacion(wx.Panel):
             if not self.txt_capitulo.GetValue().strip():
                 self.txt_capitulo.SetValue(self.nombre_base_txt)
 
-        # Escanear automáticamente
         self._cargar_y_escanear()
 
     def _cargar_y_escanear(self):
@@ -430,14 +457,14 @@ class PestanaGrabacion(wx.Panel):
         if self.combo_etiquetas.GetCount() > 0:
             self.combo_etiquetas.SetSelection(0)
 
-        # Recuperar asignaciones previas
+        # Recuperar asignaciones previas vinculadas al título del libro
         titulo = self._resolver_titulo()
-        self.titulo_libro  = titulo
-        self.asignaciones  = {}
+        self.titulo_libro = titulo
+        self.asignaciones = {}
         self._cargar_mapeo(titulo)
         self._actualizar_resumen_asignaciones()
 
-        total = len(self.fragmentos)
+        total    = len(self.fragmentos)
         etiq_str = ', '.join('@' + e for e in self.etiquetas_detectadas)
         self.lbl_progreso.SetLabel(
             f"Archivo cargado: {total} fragmentos, etiquetas: {etiq_str}. "
@@ -449,6 +476,43 @@ class PestanaGrabacion(wx.Panel):
             f"Texto cargado.\nFragmentos: {total}\nEtiquetas: {etiq_str}",
             "Escaneo completado", wx.OK | wx.ICON_INFORMATION,
         )
+
+    # ================================================================== #
+    # Limpiar — restablece la pestaña al estado inicial
+    # ================================================================== #
+
+    def al_limpiar(self, evento):
+        """
+        Restablece la pestaña como si acabara de abrirse.
+        Útil para cargar un nuevo fragmento o capítulo sin reiniciar la app.
+        """
+        self.ruta_txt_actual      = None
+        self.nombre_base_txt      = ""
+        self.texto_cargado        = ""
+        self.fragmentos           = []
+        self.etiquetas_detectadas = []
+        self.asignaciones         = {}
+        self.titulo_libro         = ""
+        self._ultima_carpeta      = None
+
+        self.txt_ruta.SetValue("")
+        self.txt_titulo.SetValue("")
+        self.txt_capitulo.SetValue("")
+
+        self.combo_etiquetas.Clear()
+        for i in range(self.check_voces.GetCount()):
+            self.check_voces.Check(i, False)
+
+        self.txt_asignaciones.SetValue("Carga un archivo para ver las etiquetas.")
+
+        self.lbl_progreso.SetLabel(
+            "Estado: En espera. Selecciona un archivo TXT para comenzar."
+        )
+        self.gauge.SetValue(0)
+        self.btn_iniciar.Enable(False)
+        self.btn_abortar.Enable(False)
+
+        self.btn_examinar.SetFocus()
 
     # ================================================================== #
     # Casting: auto-asignación al marcar una voz
@@ -463,7 +527,7 @@ class PestanaGrabacion(wx.Panel):
         """
         idx_marcado = evento.GetInt()
 
-        # Radio behavior
+        # Comportamiento radio: solo una voz marcada a la vez
         for i in range(self.check_voces.GetCount()):
             if i != idx_marcado:
                 self.check_voces.Check(i, False)
@@ -489,7 +553,7 @@ class PestanaGrabacion(wx.Panel):
             f"Asignado: @{etiqueta}  →  {nombre_voz_disp}"
         )
 
-        # Avanzar el combo a la siguiente etiqueta sin asignar
+        # Avanzar el combo a la siguiente etiqueta sin asignar (circular)
         total_etiq = self.combo_etiquetas.GetCount()
         for delta in range(1, total_etiq):
             siguiente_idx  = (idx_etiq + delta) % total_etiq
@@ -548,14 +612,18 @@ class PestanaGrabacion(wx.Panel):
     # ================================================================== #
 
     def al_cambiar_division(self, evento):
-        """Actualiza el StaticText de estado para que NVDA lo anuncie."""
+        """
+        Actualiza txt_estado_division (TextCtrl readonly) con el modo activo.
+        NVDA anuncia el contenido del TextCtrl cuando el usuario lo tabula.
+        """
         if self.chk_dividir.IsChecked():
-            self.lbl_estado_division.SetLabel(
-                "Estado: Generando múltiples archivos numerados por etiqueta"
+            self.txt_estado_division.SetValue(
+                "Modo activo: archivos numerados por etiqueta "
+                "(001_nar.mp3, 002_pj1.mp3…)"
             )
         else:
-            self.lbl_estado_division.SetLabel(
-                "Estado: Generando un único archivo MP3 integrado"
+            self.txt_estado_division.SetValue(
+                "Modo activo: único archivo MP3 unificado"
             )
 
     # ================================================================== #
@@ -564,12 +632,16 @@ class PestanaGrabacion(wx.Panel):
 
     def _guardar_mapeo(self):
         mapeo = self._cargar_json(self.ruta_mapeo)
-        titulo = self._resolver_titulo()
+        if not isinstance(mapeo, dict):
+            mapeo = {}
+        titulo        = self._resolver_titulo()
         mapeo[titulo] = self.asignaciones
         self._guardar_json(self.ruta_mapeo, mapeo)
 
     def _cargar_mapeo(self, titulo: str):
         mapeo = self._cargar_json(self.ruta_mapeo)
+        if not isinstance(mapeo, dict):
+            return
         datos = mapeo.get(titulo, {})
         self.asignaciones = {
             k: v for k, v in datos.items()
@@ -577,7 +649,8 @@ class PestanaGrabacion(wx.Panel):
         }
         if self.asignaciones:
             self.lbl_progreso.SetLabel(
-                f"Recuperadas {len(self.asignaciones)} asignaciones previas para «{titulo}»."
+                f"Recuperadas {len(self.asignaciones)} asignaciones previas "
+                f"para «{titulo}»."
             )
 
     # ================================================================== #
@@ -655,7 +728,7 @@ class PestanaGrabacion(wx.Panel):
         self._ultima_carpeta = carpeta
         self.gauge.SetValue(100)
 
-        n             = len(archivos)
+        n              = len(archivos)
         nombre_carpeta = os.path.basename(carpeta)
 
         self.lbl_progreso.SetLabel(
@@ -674,7 +747,7 @@ class PestanaGrabacion(wx.Panel):
 
         cuerpo += "\n\n¿Deseas abrir la carpeta de destino?"
 
-        dlg = wx.MessageDialog(
+        dlg     = wx.MessageDialog(
             self, cuerpo, "Grabación completada", wx.YES_NO | wx.ICON_INFORMATION
         )
         resultado = dlg.ShowModal()
@@ -707,15 +780,13 @@ class PestanaGrabacion(wx.Panel):
         carpeta = self._ultima_carpeta
 
         if not carpeta or not os.path.exists(carpeta):
-            # Intentar abrir la carpeta madre del proyecto
-            titulo = self._resolver_titulo()
+            titulo  = self._resolver_titulo()
             carpeta = os.path.join(
                 CARPETA_RAIZ_GRABACIONES,
                 limpiar_nombre_archivo(titulo),
             )
 
         if not os.path.exists(carpeta):
-            # Abrir la raíz de grabaciones
             carpeta = CARPETA_RAIZ_GRABACIONES
             os.makedirs(carpeta, exist_ok=True)
 
