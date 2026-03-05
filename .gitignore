@@ -19,3 +19,7 @@ configuraciones/voces_favoritas.json
 configuraciones/datos_lectura.json
 configuraciones/libros_recientes.json
 configuraciones/voces_disponibles.json
+
+# Binarios externos portables (no se incluyen en el repo)
+bin/*.exe
+bin/*.dll

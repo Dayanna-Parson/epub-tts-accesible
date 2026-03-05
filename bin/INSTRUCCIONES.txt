@@ -1,0 +1,21 @@
+INSTRUCCIONES — Carpeta bin/
+============================
+
+Coloca aquí los siguientes archivos de ffmpeg para Windows (build estático, 64 bits):
+
+  ffmpeg.exe
+  ffprobe.exe   (opcional, pero recomendado)
+
+Dónde descargarlos (sin instalación, solo extraer):
+  https://www.gyan.dev/ffmpeg/builds/
+  → Descarga "ffmpeg-release-essentials.zip"
+  → Extrae y copia ffmpeg.exe (y ffprobe.exe) a esta carpeta.
+
+Para qué sirve:
+  La aplicación detecta automáticamente estos archivos al arrancar.
+  Con ellos activos, la grabación de audio con Polly y SAPI5 funciona
+  a máxima calidad (MP3 320 kbps). Sin ellos, Azure y ElevenLabs
+  siguen funcionando (calidad nativa de la API), pero Polly y SAPI5
+  no podrán convertir correctamente a MP3.
+
+Nota: estos archivos (.exe) están excluidos de git (.gitignore).
