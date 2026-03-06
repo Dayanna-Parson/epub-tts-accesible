@@ -99,15 +99,23 @@ class PanelGeneral(wx.ScrolledWindow):
         sb_nav = wx.StaticBox(self, label="Navegación")
         sizer_nav = wx.StaticBoxSizer(sb_nav, wx.VERTICAL)
         hbox_salto = wx.BoxSizer(wx.HORIZONTAL)
-        hbox_salto.Add(wx.StaticText(self, label="Segundos de salto:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
+        hbox_salto.Add(wx.StaticText(self, label="Segundos de salto (botones Atrás y Adelante en Lectura):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
         self.txt_salto = wx.TextCtrl(self, value=str(self.config.get("segundos_salto", "10")), size=(50, -1))
+        self.txt_salto.SetHelpText(
+            "Número de segundos que avanza o retrocede el audio al pulsar los botones "
+            "Atrás y Adelante en la pestaña Lectura. Introduce un número entero. Valor recomendado: 10."
+        )
         hbox_salto.Add(self.txt_salto, 0)
         sizer_nav.Add(hbox_salto, 0, wx.ALL, 5)
         sizer.Add(sizer_nav, 0, wx.EXPAND | wx.ALL, 10)
         
         # GUARDAR — guardado como atributo para que VentanaPrincipal pueda usarlo
         # como punto de anclaje del bucle de tabulación accesible
-        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites")
+        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
+        self.btn_guardar.SetHelpText(
+            "Guarda los segundos de salto y los límites de presupuesto de cada proveedor "
+            "en el archivo de configuración."
+        )
         self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
         sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
         
@@ -161,20 +169,33 @@ class PanelClaves(wx.ScrolledWindow):
         sb_az = wx.StaticBox(self, label="Microsoft Azure TTS")
         sz_az = wx.StaticBoxSizer(sb_az, wx.VERTICAL)
         
-        sz_az.Add(wx.StaticText(self, label="Clave (Key):"), 0, wx.ALL, 2)
+        sz_az.Add(wx.StaticText(self, label="Clave de suscripción (Key). Formato: 32 caracteres hexadecimales:"), 0, wx.ALL, 2)
         self.txt_az_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+        self.txt_az_key.SetHelpText(
+            "Clave de suscripción de Azure Text to Speech. "
+            "Puedes encontrarla en el Portal de Azure, en tu recurso de Servicios Cognitivos, "
+            "sección Claves y Punto de conexión."
+        )
         sz_az.Add(self.txt_az_key, 0, wx.EXPAND|wx.ALL, 5)
-        
-        sz_az.Add(wx.StaticText(self, label="Región (ej: eastus):"), 0, wx.ALL, 2)
+
+        sz_az.Add(wx.StaticText(self, label="Región del recurso (ej: eastus, westeurope):"), 0, wx.ALL, 2)
         self.txt_az_region = wx.TextCtrl(self)
+        self.txt_az_region.SetHelpText(
+            "Región de Azure donde está creado tu recurso. "
+            "Ejemplos: eastus, westus2, westeurope. "
+            "La encontrarás junto a la clave en el Portal de Azure."
+        )
         sz_az.Add(self.txt_az_region, 0, wx.EXPAND|wx.ALL, 5)
         
         hb_az = wx.BoxSizer(wx.HORIZONTAL)
-        btn_az_web = wx.Button(self, label="Conseguir clave")
+        btn_az_web = wx.Button(self, label="Conseguir clave Azure")
+        btn_az_web.SetHelpText("Abre el navegador en la página de Azure Text to Speech para crear o consultar tu clave.")
         btn_az_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://azure.microsoft.com/es-es/services/cognitive-services/text-to-speech/"))
-        btn_az_check = wx.Button(self, label="Comprobar y descargar")
+        btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")
+        btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")
         btn_az_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
-        btn_az_del = wx.Button(self, label="Borrar")
+        btn_az_del = wx.Button(self, label="Borrar clave Azure")
+        btn_az_del.SetHelpText("Borra los datos de acceso de Azure guardados en la aplicación.")
         btn_az_del.Bind(wx.EVT_BUTTON, self.al_borrar_azure)
         
         hb_az.Add(btn_az_web, 0, wx.RIGHT, 5)
@@ -187,22 +208,36 @@ class PanelClaves(wx.ScrolledWindow):
         sb_po = wx.StaticBox(self, label="Amazon Polly")
         sz_po = wx.StaticBoxSizer(sb_po, wx.VERTICAL)
         
-        sz_po.Add(wx.StaticText(self, label="Access Key ID:"), 0, wx.ALL, 2)
+        sz_po.Add(wx.StaticText(self, label="Access Key ID (identificador de la clave AWS):"), 0, wx.ALL, 2)
         self.txt_po_key = wx.TextCtrl(self)
+        self.txt_po_key.SetHelpText(
+            "Identificador de clave de acceso de AWS. "
+            "Lo encontrarás en la consola de AWS, sección IAM, Mis credenciales de seguridad."
+        )
         sz_po.Add(self.txt_po_key, 0, wx.EXPAND|wx.ALL, 5)
-        
-        sz_po.Add(wx.StaticText(self, label="Secret Access Key:"), 0, wx.ALL, 2)
+
+        sz_po.Add(wx.StaticText(self, label="Secret Access Key (clave secreta, se muestra solo al crearla):"), 0, wx.ALL, 2)
         self.txt_po_secret = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+        self.txt_po_secret.SetHelpText(
+            "Clave de acceso secreta de AWS. Solo se muestra una vez al crearla. "
+            "Si la perdiste, debes generar una nueva en la consola de AWS."
+        )
         sz_po.Add(self.txt_po_secret, 0, wx.EXPAND|wx.ALL, 5)
-        
-        sz_po.Add(wx.StaticText(self, label="Región (ej: us-east-1):"), 0, wx.ALL, 2)
+
+        sz_po.Add(wx.StaticText(self, label="Región AWS (ej: us-east-1, eu-west-1):"), 0, wx.ALL, 2)
         self.txt_po_region = wx.TextCtrl(self)
+        self.txt_po_region.SetHelpText(
+            "Región de AWS donde usarás Amazon Polly. "
+            "Ejemplos: us-east-1, us-west-2, eu-west-1."
+        )
         sz_po.Add(self.txt_po_region, 0, wx.EXPAND|wx.ALL, 5)
         
         hb_po = wx.BoxSizer(wx.HORIZONTAL)
-        btn_po_web = wx.Button(self, label="Conseguir clave")
+        btn_po_web = wx.Button(self, label="Conseguir clave Amazon Polly")
+        btn_po_web.SetHelpText("Abre el navegador en la página de Amazon Polly para crear o gestionar tus credenciales AWS.")
         btn_po_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aws.amazon.com/polly/"))
-        btn_po_check = wx.Button(self, label="Comprobar")
+        btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
+        btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
         btn_po_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
         
         hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
@@ -214,14 +249,20 @@ class PanelClaves(wx.ScrolledWindow):
         sb_el = wx.StaticBox(self, label="ElevenLabs")
         sz_el = wx.StaticBoxSizer(sb_el, wx.VERTICAL)
         
-        sz_el.Add(wx.StaticText(self, label="API Key:"), 0, wx.ALL, 2)
+        sz_el.Add(wx.StaticText(self, label="API Key (clave de acceso de ElevenLabs):"), 0, wx.ALL, 2)
         self.txt_el_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+        self.txt_el_key.SetHelpText(
+            "Clave API de ElevenLabs. La encontrarás en tu perfil de ElevenLabs, "
+            "sección Profile Settings, apartado API Key."
+        )
         sz_el.Add(self.txt_el_key, 0, wx.EXPAND|wx.ALL, 5)
         
         hb_el = wx.BoxSizer(wx.HORIZONTAL)
-        btn_el_web = wx.Button(self, label="Conseguir clave")
+        btn_el_web = wx.Button(self, label="Conseguir clave ElevenLabs")
+        btn_el_web.SetHelpText("Abre el navegador en la página de ElevenLabs para crear una cuenta o consultar tu clave API.")
         btn_el_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://elevenlabs.io/"))
-        btn_el_check = wx.Button(self, label="Comprobar")
+        btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
+        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")
         btn_el_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
         
         hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
@@ -297,8 +338,13 @@ class PanelVoces(wx.Panel):
         # 1. CONFIGURACIÓN LIBRO
         sb_libro = wx.StaticBox(self, label="Configuración del Libro")
         sz_libro = wx.StaticBoxSizer(sb_libro, wx.VERTICAL)
-        sz_libro.Add(wx.StaticText(self, label="Idioma del libro (Para acento):"), 0, wx.BOTTOM, 5)
+        sz_libro.Add(wx.StaticText(self, label="Idioma del libro, usado para seleccionar el acento de la voz por defecto:"), 0, wx.BOTTOM, 5)
         self.combo_idioma_libro = wx.ComboBox(self, choices=["Detectar auto", "Español (ES)", "Español (LAT)", "Inglés"], style=wx.CB_READONLY)
+        self.combo_idioma_libro.SetHelpText(
+            "Define el idioma principal del libro para preseleccionar el acento correcto "
+            "en el combo de voz de la pestaña Lectura. "
+            "Elige Español (ES) para España, Español (LAT) para Latinoamérica, o Inglés."
+        )
         
         # Cargar selección guardada
         conf_idioma = self.config.get("idioma_libro_codigo", "es-ES")
@@ -320,12 +366,14 @@ class PanelVoces(wx.Panel):
         hbox1.Add(wx.StaticText(self, label="Idioma:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
         self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
         self.combo_idioma.SetSelection(0)
+        self.combo_idioma.SetHelpText("Filtra la lista de voces por idioma. Selecciona Todos para ver todas las voces.")
         self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
         hbox1.Add(self.combo_idioma, 1, wx.RIGHT, 15)
 
         hbox1.Add(wx.StaticText(self, label="Proveedor:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
         self.combo_proveedor = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
         self.combo_proveedor.SetSelection(0)
+        self.combo_proveedor.SetHelpText("Filtra la lista de voces por proveedor: Azure, Amazon Polly, ElevenLabs, o Todos.")
         self.combo_proveedor.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
         hbox1.Add(self.combo_proveedor, 0)
         sz_filtros.Add(hbox1, 0, wx.EXPAND|wx.ALL, 5)
@@ -335,23 +383,36 @@ class PanelVoces(wx.Panel):
         hbox2.Add(wx.StaticText(self, label="Tipo:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
         self.combo_tipo = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos", "Femenino", "Masculino", "Multilingüe", "Dragon"])
         self.combo_tipo.SetSelection(0)
+        self.combo_tipo.SetHelpText("Filtra por tipo de voz: Femenino, Masculino, voces Multilingüe, voces Dragon HD, o Todos.")
         self.combo_tipo.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
         hbox2.Add(self.combo_tipo, 0, wx.RIGHT, 15)
-        
+
         # Casillas de gestión y filtros especiales
         self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+        self.chk_solo_favs.SetHelpText(
+            "Marcada: muestra solo las voces que ya tienes marcadas como favoritas. "
+            "Desmarcada: muestra todas las voces según los demás filtros activos."
+        )
         self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
         hbox2.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 15)
 
         self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
+        self.chk_solo_nuevas.SetHelpText(
+            "Marcada: muestra solo las voces marcadas como nuevas desde la última actualización. "
+            "Desmarcada: muestra todas las voces según los demás filtros activos."
+        )
         self.chk_solo_nuevas.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
         hbox2.Add(self.chk_solo_nuevas, 0, wx.ALIGN_CENTER_VERTICAL)
         sz_filtros.Add(hbox2, 0, wx.EXPAND|wx.ALL, 5)
 
         # Fila C: Buscador
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox3.Add(wx.StaticText(self, label="Buscar nombre:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        hbox3.Add(wx.StaticText(self, label="Buscar nombre de voz (filtro en tiempo real):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
         self.txt_buscar = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
+        self.txt_buscar.SetHelpText(
+            "Escribe parte del nombre de una voz para filtrar la lista en tiempo real. "
+            "Borra el campo para volver a ver todas las voces del filtro activo."
+        )
         self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar)
         hbox3.Add(self.txt_buscar, 1, wx.EXPAND)
         sz_filtros.Add(hbox3, 0, wx.EXPAND|wx.ALL, 5)
@@ -365,6 +426,11 @@ class PanelVoces(wx.Panel):
         self.lista_voces.InsertColumn(1, "Género", width=80)
         self.lista_voces.InsertColumn(2, "Idioma", width=160)
         self.lista_voces.InsertColumn(3, "Proveedor", width=110)
+        self.lista_voces.SetHelpText(
+            "Lista de voces disponibles. Usa las flechas Arriba y Abajo para navegar. "
+            "Pulsa Espacio para marcar o desmarcar una voz como favorita. "
+            "Las voces marcadas aparecerán en la pestaña Grabación para asignarlas a personajes."
+        )
         
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self.al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self.al_desmarcar_favorito)
@@ -372,7 +438,11 @@ class PanelVoces(wx.Panel):
         sizer.Add(self.lista_voces, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
         
         # 4. BOTONERA — atributo de instancia para el bucle de tabulación accesible
-        self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar = wx.Button(self, label="Escuchar muestra de la voz seleccionada (Alt+P)")
+        self.btn_escuchar.SetHelpText(
+            "Reproduce una muestra de texto con la voz seleccionada en la lista "
+            "para que puedas evaluar su sonido antes de usarla."
+        )
         self.btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
         sizer.Add(self.btn_escuchar, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
         
@@ -688,20 +758,37 @@ class PanelAtajos(wx.Panel):
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(self, label=(
-            "Lista de atajos de teclado. Selecciona uno y pulsa 'Asignar' o Intro para cambiarlo.\n"
+            "Lista de atajos de teclado. Selecciona uno y pulsa Intro o el botón Asignar para cambiarlo. "
             "La tecla predeterminada aparece entre paréntesis junto al nombre."
         )), 0, wx.ALL, 10)
 
         self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
-        self.lista.InsertColumn(0, "Acción (predeterminado)", width=340)
-        self.lista.InsertColumn(1, "Tecla asignada", width=200)
+        self.lista.InsertColumn(0, "Acción (tecla predeterminada entre paréntesis)", width=340)
+        self.lista.InsertColumn(1, "Tecla asignada actualmente", width=200)
+        self.lista.SetHelpText(
+            "Lista de acciones con sus atajos de teclado. "
+            "Usa las flechas Arriba y Abajo para navegar. "
+            "Pulsa Intro para abrir el diálogo de asignación de la acción seleccionada. "
+            "Las teclas personalizadas se marcan con la etiqueta personalizada."
+        )
         self.lista.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista)
         sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_asignar = wx.Button(self, label="Asignar tecla (Intro)")
-        self.btn_eliminar = wx.Button(self, label="Eliminar asignación")
-        self.btn_restablecer = wx.Button(self, label="Restablecer todo")
+        self.btn_asignar = wx.Button(self, label="Asignar nueva tecla al atajo seleccionado")
+        self.btn_asignar.SetHelpText(
+            "Abre un diálogo donde puedes pulsar la combinación de teclas que quieres "
+            "asignar a la acción seleccionada en la lista."
+        )
+        self.btn_eliminar = wx.Button(self, label="Eliminar asignación personalizada")
+        self.btn_eliminar.SetHelpText(
+            "Elimina la asignación personalizada de la acción seleccionada y vuelve a la tecla predeterminada."
+        )
+        self.btn_restablecer = wx.Button(self, label="Restablecer todos los atajos a valores predeterminados")
+        self.btn_restablecer.SetHelpText(
+            "Borra todas las personalizaciones y devuelve todos los atajos de teclado "
+            "a sus valores predeterminados de fábrica. Se pedirá confirmación."
+        )
         self.btn_asignar.Bind(wx.EVT_BUTTON, self._al_asignar)
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
         self.btn_restablecer.Bind(wx.EVT_BUTTON, self._al_restablecer)
@@ -811,6 +898,10 @@ class PestanaAjustes(wx.Panel):
         self.lista_cat.Append("Voces e Idiomas")
         self.lista_cat.Append("Atajos de teclado")
         self.lista_cat.SetSelection(0)
+        self.lista_cat.SetHelpText(
+            "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "
+            "Pulsa Intro o Espacio para abrir la categoría seleccionada en el panel de la derecha."
+        )
         self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
 
         self.panel_derecho = wx.Simplebook(self.splitter)

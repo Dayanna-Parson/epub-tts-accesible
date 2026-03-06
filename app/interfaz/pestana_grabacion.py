@@ -105,9 +105,9 @@ class PestanaGrabacion(wx.Panel):
         super().__init__(padre, style=wx.TAB_TRAVERSAL)
 
         # ── Estado interno ────────────────────────────────────────────────
-        # FASE_3_PROYECTOS: añadir aquí self.proyecto_actual = None
-        # y self.gestor_proyectos = GestorProyectos() para vincular el TXT
-        # cargado a su proyecto y heredar voces automáticamente.
+        from app.motor.gestor_config import GestorProyectos
+        self.proyecto_actual  = None          # dict del proyecto activo o None
+        self.gestor_proyectos = GestorProyectos()
         self.ruta_txt_actual      = None
         self.nombre_base_txt      = ""
         self.texto_cargado        = ""
@@ -466,9 +466,27 @@ class PestanaGrabacion(wx.Panel):
             if not self.txt_capitulo.GetValue().strip():
                 self.txt_capitulo.SetValue(self.nombre_base_txt)
 
-        # FASE_3_PROYECTOS: aquí consultar gestor_proyectos.proyecto_de_archivo(ruta)
-        # Si devuelve un proyecto, preguntar al usuario si quiere usarlo o elegir otro.
-        # Si no hay proyecto asociado, ofrecer asignarlo o continuar sin proyecto.
+        # Consultar si el TXT ya pertenece a un proyecto
+        self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(
+            self.ruta_txt_actual
+        )
+        self._cargar_y_escanear()
+
+    def cargar_txt_desde_ruta(self, ruta: str):
+        """
+        Carga un archivo TXT directamente (sin diálogo de apertura).
+        Usado por VentanaPrincipal al restaurar la sesión anterior.
+        """
+        if not os.path.exists(ruta):
+            return
+        self.ruta_txt_actual = ruta
+        self.nombre_base_txt = os.path.splitext(os.path.basename(ruta))[0]
+        self.txt_ruta.SetValue(ruta)
+        if not self.txt_titulo.GetValue().strip():
+            self.txt_titulo.SetValue(self.nombre_base_txt)
+        if not self.txt_capitulo.GetValue().strip():
+            self.txt_capitulo.SetValue(self.nombre_base_txt)
+        self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(ruta)
         self._cargar_y_escanear()
 
     def _cargar_y_escanear(self):
@@ -514,10 +532,16 @@ class PestanaGrabacion(wx.Panel):
         titulo = self._resolver_titulo()
         self.titulo_libro = titulo
         self.asignaciones = {}
-        # FASE_3_PROYECTOS: si self.proyecto_actual está establecido, llamar a
-        # gestor_proyectos.obtener_voces_heredadas(self.proyecto_actual["id"])
-        # y fusionarlas con el mapeo local. Las voces del proyecto tienen prioridad.
+        # Cargar mapeo local primero y después sobrescribir con voces del proyecto
         self._cargar_mapeo(titulo)
+        if self.proyecto_actual:
+            voces_heredadas = self.gestor_proyectos.obtener_voces_heredadas(
+                self.proyecto_actual["id"]
+            )
+            # Las voces del proyecto tienen prioridad sobre el mapeo local
+            for etiqueta, datos_voz in voces_heredadas.items():
+                if etiqueta in self.etiquetas_detectadas:
+                    self.asignaciones[etiqueta] = datos_voz
         self._actualizar_resumen_asignaciones()
         # Construir combo con estado (incluye asignaciones recuperadas del mapeo)
         self._actualizar_combo_etiquetas(preservar_etiqueta=self.etiquetas_detectadas[0] if self.etiquetas_detectadas else None)
@@ -605,9 +629,12 @@ class PestanaGrabacion(wx.Panel):
         etiqueta = self._etiqueta_de_combo(idx_etiq)
 
         self.asignaciones[etiqueta] = datos_voz
-        # FASE_3_PROYECTOS: si self.proyecto_actual está establecido, propagar
-        # la asignación al nivel de proyecto con:
-        # gestor_proyectos.actualizar_voz_proyecto(self.proyecto_actual["id"], etiqueta, datos_voz)
+        # Propagar la asignación al proyecto si hay uno activo
+        if self.proyecto_actual:
+            self.gestor_proyectos.guardar_voces_proyecto(
+                self.proyecto_actual["id"],
+                self.asignaciones
+            )
         self._guardar_mapeo()
         self._actualizar_resumen_asignaciones()
 

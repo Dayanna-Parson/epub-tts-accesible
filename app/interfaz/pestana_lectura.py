@@ -96,11 +96,19 @@ class PestanaLectura(wx.Panel):
         
         self.arbol_indice = wx.TreeCtrl(self.divisor, style=wx.TR_DEFAULT_STYLE | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_HIDE_ROOT)
         self.arbol_indice.SetName("Índice")
+        self.arbol_indice.SetHelpText(
+            "Índice del libro cargado. Usa las flechas Arriba y Abajo para navegar por los capítulos. "
+            "Pulsa Intro o Enter sobre un capítulo para saltar a él en el área de texto."
+        )
         self.raiz_id = self.arbol_indice.AddRoot("Libro")
-        self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo) 
+        self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
 
         self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
-        self.txt_contenido.SetName("Contenido del libro") 
+        self.txt_contenido.SetName("Contenido del libro")
+        self.txt_contenido.SetHelpText(
+            "Área de texto de solo lectura con el contenido del capítulo activo. "
+            "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
+        )
         self.txt_contenido.SetValue("Bienvenida a Epub TTS Accesible. Pulsa Ctrl+A para abrir un libro EPUB.")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
         
@@ -112,7 +120,12 @@ class PestanaLectura(wx.Panel):
         sizer_progreso = wx.BoxSizer(wx.HORIZONTAL)
         self.lbl_progreso = wx.StaticText(self, label="Progreso: 0%")
         self.deslizador_progreso = wx.Slider(self, value=0, minValue=0, maxValue=100)
-        self.deslizador_progreso.SetName("Barra de progreso")
+        self.deslizador_progreso.SetName("Barra de progreso de lectura")
+        self.deslizador_progreso.SetHelpText(
+            "Posición de lectura expresada en porcentaje del libro. "
+            "Usa las flechas Izquierda y Derecha para navegar. "
+            "Al soltar la tecla, la voz saltará a esa posición."
+        )
         self.deslizador_progreso.Bind(wx.EVT_SLIDER, self.al_buscar_usuario)
         
         sizer_progreso.Add(self.lbl_progreso, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
@@ -122,9 +135,13 @@ class PestanaLectura(wx.Panel):
         # 3. CONTROLES
         sizer_inferior = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.lbl_voz = wx.StaticText(self, label="Voz:")
+        self.lbl_voz = wx.StaticText(self, label="Voz para lectura:")
         self.combo_voz = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_voz.SetName("Selector de voz")
+        self.combo_voz.SetHelpText(
+            "Voz con la que se leerá el libro. Contiene las voces favoritas marcadas en Ajustes "
+            "y las voces SAPI5 locales instaladas en el sistema."
+        )
         self.combo_voz.Bind(wx.EVT_COMBOBOX, self.al_cambiar_voz)
 
         self.btn_atras = wx.Button(self, label=f"Atrás {self.segundos_salto}s")
@@ -137,14 +154,22 @@ class PestanaLectura(wx.Panel):
         self.btn_atras.Bind(wx.EVT_BUTTON, self.al_saltar_atras)
         self.btn_adelante.Bind(wx.EVT_BUTTON, self.al_saltar_adelante)
 
-        self.lbl_velocidad = wx.StaticText(self, label="Velocidad:")
+        self.lbl_velocidad = wx.StaticText(self, label="Velocidad de lectura:")
         self.deslizador_velocidad = wx.Slider(self, value=50, minValue=0, maxValue=100)
-        self.deslizador_velocidad.SetName("Velocidad")
+        self.deslizador_velocidad.SetName("Velocidad de lectura")
+        self.deslizador_velocidad.SetHelpText(
+            "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
+            "Usa las flechas Izquierda y Derecha para ajustar."
+        )
         self.deslizador_velocidad.Bind(wx.EVT_SLIDER, self.al_cambiar_velocidad)
 
         self.lbl_volumen = wx.StaticText(self, label="Volumen:")
         self.deslizador_volumen = wx.Slider(self, value=100, minValue=0, maxValue=100)
-        self.deslizador_volumen.SetName("Volumen")
+        self.deslizador_volumen.SetName("Volumen de lectura")
+        self.deslizador_volumen.SetHelpText(
+            "Volumen del audio de lectura. 0 es silencio, 100 es volumen máximo. "
+            "Usa las flechas Izquierda y Derecha para ajustar."
+        )
         self.deslizador_volumen.Bind(wx.EVT_SLIDER, self.al_cambiar_volumen)
         self.deslizador_volumen.Bind(wx.EVT_KEY_DOWN, self.al_tecla_volumen)
 

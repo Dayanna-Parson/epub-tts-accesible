@@ -5,6 +5,7 @@ import json
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
+from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
@@ -85,6 +86,9 @@ class VentanaPrincipal(wx.Frame):
         # con los eventos internos de los controles hijo (ej: EVT_TREE_ITEM_ACTIVATED).
         self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab_global)
 
+        # Referencia a la ventana de proyectos (prevención de doble instancia)
+        self._ventana_proyectos = None
+
         # Historial de recientes — ruta absoluta para evitar fallos de permisos según CWD
         self.archivos_recientes = []
         self.ruta_recientes = ruta_config("libros_recientes.json")
@@ -94,6 +98,10 @@ class VentanaPrincipal(wx.Frame):
         # incluso cuando el foco está dentro del RichTextCtrl de lectura
         self._ids_atajos_global = {}
         self._configurar_aceleradores_globales()
+
+        # Restaurar sesión anterior antes de mostrar la ventana
+        self._ruta_config_general = ruta_config("config_general.json")
+        self._restaurar_sesion()
 
         self.Show()
     # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
@@ -105,22 +113,26 @@ class VentanaPrincipal(wx.Frame):
         # MENÚ ARCHIVO
         self.menu_archivo = wx.Menu()
         self.item_abrir = self.menu_archivo.Append(wx.ID_OPEN, "&Abrir Libro...\tCtrl+A")
-        
+        self.item_abrir_txt = self.menu_archivo.Append(
+            wx.ID_ANY, "Abrir &TXT para grabar...\tCtrl+T"
+        )
+
         # Submenú Recientes
         self.menu_recientes = wx.Menu()
         self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
         self.menu_archivo.AppendSubMenu(self.menu_recientes, "Libros &Recientes")
-        
+
         self.menu_archivo.AppendSeparator()
         self.item_salir = self.menu_archivo.Append(wx.ID_EXIT, "&Salir\tAlt+F4")
-        
+
         self.barra_menu.Append(self.menu_archivo, "&Archivo")
-        
-        # FASE_3_PROYECTOS: añadir aquí el menú Proyectos entre Archivo e Ir a...
-        # self.menu_proyectos = wx.Menu()
-        # self.item_gestionar_proyectos = self.menu_proyectos.Append(wx.ID_ANY, "&Gestionar proyectos...\tCtrl+P")
-        # self.barra_menu.Append(self.menu_proyectos, "&Proyectos")
-        # Vincular: self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, self.item_gestionar_proyectos)
+
+        # Menú Proyectos (transversal a todas las pestañas)
+        self.menu_proyectos = wx.Menu()
+        self.item_gestionar_proyectos = self.menu_proyectos.Append(
+            wx.ID_ANY, "&Gestionar proyectos...\tCtrl+P"
+        )
+        self.barra_menu.Append(self.menu_proyectos, "&Proyectos")
 
         # MENÚ IR A
         self.menu_ir = wx.Menu()
@@ -143,14 +155,20 @@ class VentanaPrincipal(wx.Frame):
         self.SetMenuBar(self.barra_menu)
 
         # Vincular eventos
-        self.Bind(wx.EVT_MENU, self.al_abrir_archivo, self.item_abrir)
-        self.Bind(wx.EVT_MENU, self.al_salir, self.item_salir)
-        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, self.item_marcadores)
-        self.Bind(wx.EVT_MENU, self.al_buscar, self.item_buscar)
-        self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, self.item_porcentaje)
-        self.Bind(wx.EVT_MENU, self.al_ver_atajos, self.item_atajos)
-        self.Bind(wx.EVT_MENU, self.al_abrir_readme, self.item_readme)
-        self.Bind(wx.EVT_MENU, self.al_abrir_github, self.item_github)
+        self.Bind(wx.EVT_MENU, self.al_abrir_archivo,          self.item_abrir)
+        self.Bind(wx.EVT_MENU, self.al_abrir_txt_grabacion,    self.item_abrir_txt)
+        self.Bind(wx.EVT_MENU, self.al_salir,                  self.item_salir)
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,       self.item_marcadores)
+        self.Bind(wx.EVT_MENU, self.al_buscar,                 self.item_buscar)
+        self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje,        self.item_porcentaje)
+        self.Bind(wx.EVT_MENU, self.al_ver_atajos,             self.item_atajos)
+        self.Bind(wx.EVT_MENU, self.al_abrir_readme,           self.item_readme)
+        self.Bind(wx.EVT_MENU, self.al_abrir_github,           self.item_github)
+        self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, self.item_gestionar_proyectos)
+
+        # Estado inicial: arranca en pestaña Lectura
+        self.item_abrir.Enable(True)
+        self.item_abrir_txt.Enable(False)
     # ANCLAJE_FIN: CONFIGURACION_MENUS
 
     # ANCLAJE_INICIO: EVENTOS_GLOBALES
@@ -205,12 +223,49 @@ class VentanaPrincipal(wx.Frame):
 
     def al_cambiar_pestana(self, evento):
         indice = evento.GetSelection()
-        es_lectura = (indice == 0)
-        self.barra_menu.EnableTop(1, es_lectura)
+        es_lectura   = (indice == 0)
+        es_grabacion = (indice == 1)
+
+        # El menú "Ir a..." solo está activo en pestaña Lectura
+        # Índice de menú: 0=Archivo, 1=Proyectos, 2=Ir a..., 3=Ayuda
+        self.barra_menu.EnableTop(2, es_lectura)
+
+        # Menú Archivo: ítems contextuales según pestaña activa
+        self.item_abrir.Enable(es_lectura)
+        self.item_abrir_txt.Enable(es_grabacion)
+
         if indice == 0:
             # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
             self._configurar_aceleradores_globales()
+            # Foco en el primer control lógico de Lectura (árbol de índice)
+            wx.CallAfter(self.pestana_lectura.primer_control.SetFocus)
+        elif indice == 1:
+            # Foco en el botón Examinar de Grabación
+            wx.CallAfter(self.pestana_grabacion.primer_control.SetFocus)
+        elif indice == 2:
+            # Foco en el primer control de Ajustes
+            wx.CallAfter(self.pestana_ajustes.primer_control.SetFocus)
+
+        # Guardar la pestaña activa inmediatamente
+        self._guardar_sesion()
+
         evento.Skip()
+
+    def al_abrir_gestor_proyectos(self, evento):
+        """Abre la ventana de gestión de proyectos. Evita doble instancia."""
+        if self._ventana_proyectos and not self._ventana_proyectos.IsBeingDeleted():
+            try:
+                self._ventana_proyectos.Raise()
+                return
+            except Exception:
+                pass
+        self._ventana_proyectos = VentanaProyectos(parent=self)
+        self._ventana_proyectos.Show()
+
+    def al_abrir_txt_grabacion(self, evento):
+        """Activa la pestaña Grabación y llama al método Examinar del panel."""
+        self.notebook.SetSelection(1)
+        self.pestana_grabacion.al_examinar(None)
 
     def al_abrir_archivo(self, evento):
         self.notebook.SetSelection(0)
@@ -236,8 +291,60 @@ class VentanaPrincipal(wx.Frame):
             if hasattr(self.pestana_lectura, 'reproductor'):
                 self.pestana_lectura.al_detener(None)
         except: pass
+        self._guardar_sesion()
         self.Destroy()
     # ANCLAJE_FIN: EVENTOS_GLOBALES
+
+    # ANCLAJE_INICIO: MEMORIA_SESION
+    def _cargar_config_general(self) -> dict:
+        """Lee config_general.json sin borrar claves existentes."""
+        try:
+            if os.path.exists(self._ruta_config_general):
+                with open(self._ruta_config_general, "r", encoding="utf-8") as f:
+                    contenido = f.read().strip()
+                if contenido:
+                    return json.loads(contenido)
+        except Exception:
+            pass
+        return {}
+
+    def _guardar_sesion(self):
+        """Persiste el estado de sesión en config_general.json."""
+        try:
+            config = self._cargar_config_general()
+            config["ultima_pestana"]       = self.notebook.GetSelection()
+            config["ultimo_txt_grabacion"] = (
+                self.pestana_grabacion.ruta_txt_actual or ""
+            )
+            config["dividir_por_etiqueta"] = (
+                self.pestana_grabacion.chk_dividir.IsChecked()
+            )
+            os.makedirs(os.path.dirname(self._ruta_config_general), exist_ok=True)
+            with open(self._ruta_config_general, "w", encoding="utf-8") as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            pass  # No es crítico si falla el guardado de sesión
+
+    def _restaurar_sesion(self):
+        """Restaura el estado de sesión desde config_general.json."""
+        config = self._cargar_config_general()
+
+        # Restaurar pestaña activa
+        ultima_pestana = config.get("ultima_pestana", 0)
+        if isinstance(ultima_pestana, int) and 0 <= ultima_pestana <= 2:
+            self.notebook.SetSelection(ultima_pestana)
+
+        # Restaurar estado del checkbox "Dividir por etiquetas"
+        dividir = config.get("dividir_por_etiqueta", True)
+        self.pestana_grabacion.chk_dividir.SetValue(bool(dividir))
+        # Sincronizar el label del checkbox con su estado restaurado
+        self.pestana_grabacion.al_cambiar_division(None)
+
+        # Restaurar último TXT de grabación si existe en disco
+        ultimo_txt = config.get("ultimo_txt_grabacion", "")
+        if ultimo_txt and os.path.exists(ultimo_txt):
+            self.pestana_grabacion.cargar_txt_desde_ruta(ultimo_txt)
+    # ANCLAJE_FIN: MEMORIA_SESION
 
     # ANCLAJE_INICIO: HISTORIAL_RECIENTES
     def cargar_historial_recientes(self):
