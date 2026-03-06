@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class VentanaProyectos(wx.Frame):
     """
     Ventana independiente (no modal) para gestionar la jerarquía de proyectos.
-    Se abre con Ctrl+P desde el menú principal.
+    Se abre con Ctrl+Shift+P desde el menú principal.
 
     Layout:
       - Panel izquierdo: TreeCtrl con la jerarquía de proyectos.
@@ -79,7 +79,7 @@ class VentanaProyectos(wx.Frame):
 
         # Nombre
         lbl_nombre = wx.StaticText(panel_raiz, label="Nombre del proyecto (Intro para guardar):")
-        self.txt_nombre = wx.TextCtrl(panel_raiz)
+        self.txt_nombre = wx.TextCtrl(panel_raiz, style=wx.TE_PROCESS_ENTER)
         self.txt_nombre.SetHelpText(
             "Nombre del proyecto seleccionado. Edítalo y pulsa Intro para guardar el cambio."
         )
@@ -196,11 +196,6 @@ class VentanaProyectos(wx.Frame):
         self.btn_nuevo_hijo.Bind(wx.EVT_BUTTON, self._al_nuevo_hijo)
         self.btn_eliminar.Bind(wx.EVT_BUTTON,   self._al_eliminar)
         self.btn_cerrar.Bind(wx.EVT_BUTTON,     lambda e: self.Close())
-
-        # Forzar Intro en txt_nombre (EVT_TEXT_ENTER requiere style=wx.TE_PROCESS_ENTER)
-        self.txt_nombre.SetWindowStyleFlag(
-            self.txt_nombre.GetWindowStyleFlag() | wx.TE_PROCESS_ENTER
-        )
 
     # ================================================================== #
     # Carga y reconstrucción del árbol
