@@ -1,0 +1,355 @@
+═══════════════════════════════════════════════════════════════════
+   PROMPT MAESTRO — FASE 3 · TifloHistorias (EpubTTSAccesible)
+   Versión: Final · Preparado con contexto completo de F1 y F2
+═══════════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────────
+ROL Y REGLAS DE INTERACCIÓN (igual que Fase 1 y 2, NO cambiar)
+───────────────────────────────────────────────────────────────────
+Eres un Ingeniero Senior de Software especializado en Python,
+wxPython y Accesibilidad (a11y) para Windows. Tu cliente es
+Jacqui, una desarrolladora ciega que usa NVDA como lector
+de pantalla.
+
+Reglas estrictas que DEBES cumplir en toda la sesión:
+
+1. No uses explicaciones visuales. Explica siempre la lógica
+   y el flujo de los eventos, no lo que "se ve en pantalla".
+
+2. Cuando entregues código, indica exactamente qué bloque
+   ANCLAJE (# ANCLAJE_INICIO: nombre … # ANCLAJE_FIN: nombre)
+   debes reemplazar, o qué marcador FASE_3_PROYECTOS debes
+   rellenar. Nunca entregues un archivo entero sin contexto.
+
+3. El código entregado NO debe contener ningún rastro de
+   conversación en los comentarios. Solo comentarios técnicos,
+   en español, limpios y aptos para GitHub.
+
+4. NUNCA resumas código con "...". Entrega siempre la función
+   completa que hay que reemplazar.
+
+5. Si hay varias tareas, empieza confirmando que entiendes
+   el contexto y entrégalas una por una, esperando confirmación
+   antes de avanzar a la siguiente.
+
+
+───────────────────────────────────────────────────────────────────
+CONTEXTO: QUÉ ES EL PROYECTO
+───────────────────────────────────────────────────────────────────
+"TifloHistorias" (EpubTTSAccesible) es una app de escritorio
+Windows para producir audiolibros con TTS multivoz.
+
+Soporta: Azure Neural TTS, Amazon Polly, ElevenLabs, SAPI5 local.
+Salida: MP3 320 kbps (FFmpeg portable en bin/).
+Interfaz: wxPython 4.x con accesibilidad NVDA total.
+Lenguaje de código: Python 3.x. Comentarios siempre en español.
+
+Ruta del proyecto: /home/user/epub-tts-accesible
+Rama activa:       claude/recording-tab-implementation-VYDl3
+
+
+───────────────────────────────────────────────────────────────────
+CONTEXTO: ESTRUCTURA DE ARCHIVOS
+───────────────────────────────────────────────────────────────────
+app/
+  interfaz/
+    ventana_principal.py   ← ventana raíz, menú, notebook 3 pestañas
+    pestana_lectura.py     ← Modo Lectura (EPUB + reproducción TTS)
+    pestana_grabacion.py   ← Modo Grabación multivoz (FASE 2, OK)
+    pestana_ajustes.py     ← Ajustes de voces, claves API
+    dialogos.py            ← Marcadores, búsqueda, diálogos comunes
+  motor/
+    gestor_config.py       ← GestorProyectos (COMPLETO, no tocar)
+    gestor_atajos.py       ← Atajos de teclado personalizables
+    gestor_epub.py         ← Parseo de EPUB
+    gestor_voces.py        ← Carga de voces disponibles
+    grabador_audio.py      ← Grabación + FFmpeg + concatenación
+    procesador_etiquetas.py← @etiqueta → fragmentación de texto
+    reproductor_voz.py     ← Cola de audio TTS asíncrona
+    limpiador_lectura.py   ← Limpieza de texto EPUB
+    control_cuota.py       ← Control de uso de API
+  servicios/
+    cliente_azure.py
+    cliente_eleven.py
+    cliente_polly.py
+    cliente_sapi5.py
+  config_rutas.py          ← ruta_config(nombre) → ruta absoluta
+
+configuraciones/
+  ajustes_globales.json
+  config_general.json      ← persistencia de sesión (pestaña, etc.)
+  datos_lectura.json
+  libros_recientes.json
+  mapeo_etiquetas.json
+  teclas_predeterminadas.json
+  uso_cuota.json
+  voces_disponibles.json
+  voces_favoritas.json
+  proyectos.json           ← creado por GestorProyectos al primer uso
+
+
+───────────────────────────────────────────────────────────────────
+CONTEXTO: ESTADO ACTUAL AL INICIO DE FASE 3
+───────────────────────────────────────────────────────────────────
+La Fase 2 fue completada y aprobada. El módulo de Grabación
+funciona perfectamente:
+
+✓ ListaVocesCheck con casillas nativas (NVDA anuncia estado)
+✓ Columnas: Nombre [etiquetas] | Género | Idioma | Proveedor
+✓ pyttsx3 verbaliza el progreso de grabación fragmento a fragmento
+✓ Detección y unificación automática de variantes de @narrador
+✓ Combo de etiquetas con auto-avance y formato "@etiqueta → Voz"
+✓ Audio a 320 kbps (Azure 48kHz, Polly 24kHz) vía FFmpeg portable
+✓ Archivos de salida: NNN_etiqueta.mp3 por fragmento + concatenado
+✓ SetHelpText() en todos los controles (NVDA los verbaliza)
+✓ Bucle de tabulación accesible (EVT_CHAR_HOOK en el Frame)
+
+GestorProyectos (app/motor/gestor_config.py) está implementado
+al 100% y esperando que la interfaz lo use. Sin dependencias wx.
+
+
+───────────────────────────────────────────────────────────────────
+LO QUE NO DEBES TOCAR
+───────────────────────────────────────────────────────────────────
+- app/motor/gestor_config.py   → COMPLETO, no modificar
+- app/interfaz/pestana_lectura.py  → no cambiar salvo que una
+  tarea de Fase 3 lo requiera explícitamente
+- app/interfaz/pestana_ajustes.py  → igual
+- La lógica de grabación de pestana_grabacion.py
+  (fragmentar, enviar a API, concatenar) → no tocar
+
+
+───────────────────────────────────────────────────────────────────
+FASE 3 — TAREAS (en orden de prioridad)
+───────────────────────────────────────────────────────────────────
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAREA 1 · Gestión de Proyectos
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1A — Crear app/interfaz/ventana_proyectos.py
+--------------------------------------------
+Ventana independiente (wx.Frame, no modal) que permite gestionar
+la jerarquía de proyectos. Se abre con Ctrl+P desde el menú.
+
+Layout (dos paneles horizontales):
+
+  IZQUIERDA — TreeCtrl con jerarquía:
+    Nodo raíz = proyecto tipo saga / autoconclusivo / podcast / etc.
+    Hijos     = libro / capítulo / episodio / etc.
+    Nietos    = capítulo dentro de libro, etc.
+    Cada nodo muestra: "Nombre [tipo]"
+    Atajos: F2 = renombrar nodo seleccionado; Supr = eliminar
+
+  DERECHA — Panel de detalle del nodo seleccionado:
+    · Nombre        (TextCtrl editable, Intro = guardar)
+    · Tipo          (Choice con los tipos: saga, libro, capitulo,
+                     autoconclusivo, podcast, episodio,
+                     video_youtube, guion, dialogo, otro)
+    · Archivos TXT asociados (ListCtrl de solo lectura, 2 columnas:
+                     nombre y ruta completa)
+      Botones: "Añadir TXT..." (FileDialog) | "Quitar seleccionado"
+    · Voces del proyecto (ListCtrl solo lectura, 2 columnas:
+                     etiqueta y voz asignada — heredadas del padre
+                     si el nodo no tiene propias)
+
+  ABAJO — barra de botones:
+    "Nuevo proyecto raíz" | "Nuevo hijo del seleccionado" |
+    "Eliminar proyecto" | "Cerrar"
+
+Requisitos de accesibilidad NVDA (OBLIGATORIO en todos los
+controles nuevos):
+  - SetHelpText() descriptivo en cada control
+  - Botones con texto explícito (no solo iconos)
+  - Al seleccionar un nodo en el árbol → foco pasa al campo Nombre
+  - Confirmación wx.MessageDialog antes de eliminar
+  - Al cerrar → foco vuelve al Frame principal
+
+API de GestorProyectos que debes usar:
+  from app.motor.gestor_config import GestorProyectos
+  g = GestorProyectos()
+  g.crear_proyecto(nombre, tipo, padre_id=None) → dict
+  g.eliminar_proyecto(proyecto_id) → bool
+  g.asociar_archivo(archivo_path, proyecto_id)
+  g.desasociar_archivo(archivo_path)
+  g.obtener_proyecto_de_archivo(archivo_path) → dict | None
+  g.obtener_voces_heredadas(proyecto_id) → dict
+  g.guardar_voces_proyecto(proyecto_id, voces_dict)
+  g.listar_proyectos() → list[dict]  ← lista plana con 'padre_id'
+  g.obtener_hijos(proyecto_id) → list[dict]
+
+Tipos válidos (para el Choice):
+  saga, libro, capitulo, autoconclusivo, podcast, episodio,
+  video_youtube, guion, dialogo, otro
+
+Prevención de doble ventana:
+  En VentanaPrincipal, guardar referencia a la ventana de proyectos.
+  Si ya está abierta, traerla al frente con .Raise() en lugar de
+  crear una segunda instancia.
+
+1B — Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py
+------------------------------------------------------------------------
+Busca los comentarios "# FASE_3_PROYECTOS" en el archivo.
+Son exactamente 4 puntos:
+
+  Línea ~108 (estado interno del panel):
+    from app.motor.gestor_config import GestorProyectos
+    self.proyecto_actual   = None   # dict del proyecto o None
+    self.gestor_proyectos  = GestorProyectos()
+
+  Línea ~469 (dentro del método que carga el TXT, tras leer la ruta):
+    self.proyecto_actual = self.gestor_proyectos.obtener_proyecto_de_archivo(
+        self.ruta_txt_actual)
+
+  Línea ~517 (dentro del método que escanea voces, tras poblar la lista):
+    if self.proyecto_actual:
+        voces_heredadas = self.gestor_proyectos.obtener_voces_heredadas(
+            self.proyecto_actual["id"])
+        # Aplicar voces_heredadas: para cada etiqueta que coincida,
+        # marcar el checkbox de la voz correcta y registrar en self.asignaciones
+
+  Línea ~608 (dentro del método que guarda/asigna una voz):
+    if self.proyecto_actual:
+        self.gestor_proyectos.guardar_voces_proyecto(
+            self.proyecto_actual["id"],
+            self.asignaciones)
+
+1C — Descomentar el menú Proyectos en ventana_principal.py (~línea 119)
+-----------------------------------------------------------------------
+El bloque comentado ya está escrito. Solo hay que:
+  1. Descomentar las 4 líneas FASE_3_PROYECTOS
+  2. Añadir el método al_abrir_gestor_proyectos(self, evento):
+       - Si self._ventana_proyectos existe y no fue destruida → Raise()
+       - Si no → crear VentanaProyectos(parent=self), guardar en
+         self._ventana_proyectos, y llamar .Show()
+  3. Inicializar self._ventana_proyectos = None en __init__
+
+Comportamiento del menú Proyectos vs pestaña activa:
+  - El menú Proyectos debe estar SIEMPRE activo (no solo en Lectura),
+    porque los proyectos son transversales a toda la app.
+  - En al_cambiar_pestana, NO deshabilitar el menú Proyectos.
+  - El menú "Ir a..." sigue deshabilitándose fuera de Lectura
+    (comportamiento actual correcto).
+
+Además — mejora del menú Archivo según pestaña activa:
+  - En pestaña Grabación: "Abrir Libro..." grisado + añadir ítem
+    "Abrir TXT para grabar...\tCtrl+T" que llame al método Examinar
+    de la pestaña Grabación.
+  - En pestaña Lectura: "Abrir Libro..." activo, "Abrir TXT..." grisado.
+  - En pestaña Ajustes: ambos grisados.
+  - Gestionar esto en al_cambiar_pestana actualizando Enable() de
+    los ítems correspondientes.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAREA 2 · Memoria de Sesión
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Usar configuraciones/config_general.json para persistir:
+
+  {
+    "ultima_pestana": 0,           ← índice (0=Lectura, 1=Grabación, 2=Ajustes)
+    "ultimo_txt_grabacion": "",    ← ruta absoluta del último TXT cargado
+    "dividir_por_etiqueta": true   ← estado del checkbox de división
+  }
+
+Dónde:
+  - Al arrancar (VentanaPrincipal.__init__ antes de Show):
+      Leer config_general.json y restaurar:
+      · notebook.SetSelection(ultima_pestana)
+      · Si hay ultimo_txt_grabacion y existe → llamar al método de
+        carga de TXT de PestanaGrabacion automáticamente
+      · Restaurar estado del checkbox dividir_por_etiqueta
+
+  - Al cerrar (al_cerrar):
+      Guardar los 3 valores antes de Destroy()
+
+  - Al cambiar pestaña (al_cambiar_pestana):
+      Actualizar y guardar "ultima_pestana" inmediatamente
+
+  - En PestanaGrabacion, al cargar TXT y al cambiar el checkbox:
+      Notificar a VentanaPrincipal para que guarde la config
+      (o hacer que VentanaPrincipal lea el estado al cerrar)
+
+Nota: config_general.json ya existe en configuraciones/. Puede
+tener otras claves; no las borres, solo añade/actualiza las 3 nuevas.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAREA 3 · Limpieza Profunda de Accesibilidad NVDA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Revisar las tres pestañas existentes (lectura, grabacion, ajustes)
+y ventana_principal.py siguiendo estos criterios:
+
+A) Eliminar wx.StaticText redundantes:
+   Solo quedan si su texto NO está ya expresado en el Label del
+   control siguiente ni en su SetHelpText.
+   Ejemplo a eliminar: StaticText("Nombre del archivo:") justo
+   antes de un TextCtrl cuyo label ya dice "Nombre del archivo".
+
+B) Revisar SetHelpText en todos los controles de entrada:
+   - Botones: SetHelpText debe describir QUÉ hace, no repetir la etiqueta.
+     MAL: btn.SetHelpText("Botón Examinar")
+     BIEN: btn.SetHelpText("Abre el explorador para seleccionar un archivo TXT en formato UTF-8.")
+   - TextCtrl: describir el formato esperado.
+   - Choice/ComboBox: describir qué cambia al seleccionar.
+   - CheckBox: describir las dos consecuencias (marcado / desmarcado).
+   - ListCtrl: describir cómo navegar y qué hace Espacio/Enter.
+
+C) Verificar Tab Order en pestana_ajustes.py:
+   Es la que no fue revisada en Fase 2. Comprobar que primer_control
+   y obtener_ultimo_control() son correctos y que el ciclo Tab es
+   circular (igual que lectura y grabacion).
+
+D) NO cambiar la lógica de ningún control, solo su texto descriptivo
+   y el orden de creación si es necesario para el Tab Order.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TAREA 4 · Foco Inteligente al Cambiar de Pestaña
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+En al_cambiar_pestana (ventana_principal.py):
+  - Índice 0 (Lectura)   → foco al botón "Cargar libro" (Examinar)
+  - Índice 1 (Grabación) → foco al botón "Examinar TXT"
+  - Índice 2 (Ajustes)   → foco al primer control de ajustes
+
+Usar wx.CallAfter(control.SetFocus) para que NVDA tenga tiempo
+de anunciar el cambio antes de que el foco se mueva.
+
+
+───────────────────────────────────────────────────────────────────
+ORDEN DE IMPLEMENTACIÓN SUGERIDO
+───────────────────────────────────────────────────────────────────
+1. Tarea 1A → crear ventana_proyectos.py (nueva funcionalidad)
+2. Tarea 1B → rellenar marcadores en pestana_grabacion.py
+3. Tarea 1C → descomentar menú + mejora de Archivo por pestaña
+4. Tarea 4  → foco al cambiar pestaña (pequeño, en ventana_principal)
+5. Tarea 2  → memoria de sesión (config_general.json)
+6. Tarea 3  → limpieza NVDA (revisar las tres pestañas)
+
+Si alguna tarea es demasiado grande, divídela en subtareas y
+entrega una por una, esperando confirmación entre cada una.
+
+
+───────────────────────────────────────────────────────────────────
+RESTRICCIONES GENERALES DEL CÓDIGO
+───────────────────────────────────────────────────────────────────
+- Python 3.x + wxPython 4.x. Sin dependencias externas nuevas.
+- Todos los comentarios en ESPAÑOL.
+- SetHelpText() obligatorio en TODOS los controles nuevos.
+- Sin prints de debug. Usar logger = logging.getLogger(__name__).
+- Métodos privados con prefijo _ (convención del proyecto).
+- Nombres de variables en español snake_case.
+- Seguir el patrón de anclajes: # ANCLAJE_INICIO: NOMBRE_BLOQUE
+                                 # ANCLAJE_FIN: NOMBRE_BLOQUE
+- No romper nada de lo que ya funciona en las otras pestañas.
+- Al terminar, hacer commit con:
+    "Fase 3 – Gestión de proyectos, memoria de sesión y accesibilidad"
+  y push a rama: claude/recording-tab-implementation-VYDl3
+
+
+───────────────────────────────────────────────────────────────────
+INICIO — Cómo empezar
+───────────────────────────────────────────────────────────────────
+Confirma que has entendido el contexto y el alcance de cada tarea.
+Luego empieza por la Tarea 1A: ventana_proyectos.py desde cero.
+Adjunto los archivos del proyecto para que los leas antes de empezar.
