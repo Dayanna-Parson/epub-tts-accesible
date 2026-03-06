@@ -272,6 +272,14 @@ Dónde:
 
 Nota: config_general.json ya existe en configuraciones/. Puede
 tener otras claves; no las borres, solo añade/actualiza las 3 nuevas.
+Foco Inicial: Implementar la lógica para que, al iniciar la app o cambiar entre las tres pestañas, el foco se sitúe automáticamente en el primer control lógico (ej: botón "Examinar" o "Lista de archivos"), evitando que el usuario tenga que tabular a ciegas para encontrar el inicio de la pestaña.
+Adición a Tarea 2 (Memoria y Foco):
+• 
+Persistencia de Interfaz: Guardar en config_general.json el último archivo cargado, la última pestaña activa y el estado de la casilla "Dividir por etiquetas".
+• 
+Foco Inteligente: Al iniciar la app (preferiblemente en Pestaña de Lectura por defecto) o al cambiar de pestaña, forzar el foco en el primer control útil (botón "Examinar" o "Lista").
+• 
+Anuncio de Cambio: Asegurar que al cambiar de pestaña, NVDA anuncie el nombre de la nueva pestaña activa.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -302,7 +310,16 @@ C) Verificar Tab Order en pestana_ajustes.py:
 
 D) NO cambiar la lógica de ningún control, solo su texto descriptivo
    y el orden de creación si es necesario para el Tab Order.
+E) "Revisar todos los ListCtrl: asegurar que SetHelpText describa cómo navegar por la lista y qué acciones ejecutan las teclas Espacio y Enter."
 
+⚠️ NOTA CRÍTICA DE ACCESIBILIDAD (Regla de Jacqui):
+Claude, ten en cuenta que NVDA no siempre anuncia el SetHelpText de forma automática. Por lo tanto:
+1. 
+Prioridad al Label: Toda instrucción de formato (ej: "Solo archivos TXT") o advertencia crítica DEBE ir dentro de la propiedad label del control.
+2. 
+No toques lo que ayuda: Si un control ya tiene un label que describe bien su función y me resulta útil, NO LO MODIFIQUES.
+3. 
+Migración de StaticText: Si eliminas un StaticText (punto A), asegúrate de que su contenido no se pierda; muévelo al label del control siguiente para que yo lo escuche al tabular.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TAREA 4 · Foco Inteligente al Cambiar de Pestaña
