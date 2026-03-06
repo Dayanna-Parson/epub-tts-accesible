@@ -1,0 +1,35 @@
+pront 2 claude (fase dos, modo grabación)
+
+Claude, he abortado el merge manual porque había conflictos. No quiero resolverlos yo; necesito que tú realices todo el trabajo de integración para que la rama de grabación herede la perfección de main.
+Instrucciones de Integración:
+1. 
+Fusión Manual: Toma el código de main (Fase 1 finalizada) y fusiónalo con tu lógica de la Fase 2.
+2. 
+Prioridad Absoluta: No pierdas ni un solo ajuste de los que hicimos en la Fase 1: los euros audibles en pestana_ajustes.py, la estabilidad de los atajos en ventana_principal.py y la limpieza de Polly en gestor_voces.py.
+3. 
+Actualización de la Rama: Una vez que tengas el código fusionado, actualiza tu rama de trabajo claude/recording-tab-implementation-VYDl3.
+Correcciones de Producto (Módulo de Grabación):
+• 
+Adiós a la rigidez: Permite grabar sin Título ni Capítulo (usa el nombre del TXT por defecto). La app debe servir para libros y para fragmentos cortos de YouTube/Podcast.
+• 
+Limpieza para NVDA: Elimina los números ("1.", "2.") de los StaticBox.
+• 
+Descripciones Dinámicas: Programa el cambio de texto automático en la casilla "Dividir por etiquetas" para que NVDA informe del estado ("Estado: Generando múltiples archivos..." / "Estado: Un solo MP3").
+• 
+Audio Atómico: Graba a MP3 320kbps respetando la frecuencia nativa de la API. Nada de re-muestreos.
+Claude, no quiero que me entregues bloques de código para que yo los sustituya a mano. Usa tus herramientas de edición de archivos para aplicar los cambios directamente en mi proyecto.
+Misión:
+1. 
+Fusión Total: Realiza tú mismo el merge manual de main hacia esta rama. Toma toda la lógica de accesibilidad y atajos de la Fase 1 y aplícala en ventana_principal.py y procesador_etiquetas.py.
+2. 
+Re-escritura de archivos: Sobrescribe los archivos ventana_principal.py, procesador_etiquetas.py y pestana_grabacion.py con la versión corregida que incluya:
+• 
+Flexibilidad: Sin obligar a poner Título/Capítulo (usa nombre del TXT).
+• 
+Limpieza: Quita los números de los StaticBox para NVDA.
+• 
+Accesibilidad: Implementa el texto dinámico en la casilla "Dividir".
+• 
+Audio: MP3 320kbps directo y modo narrador inteligente (troceado por puntos/párrafos).
+Repito: No me des el código en el chat. Aplica los cambios en los archivos de la sesión. Cuando termines, confírmame que los archivos ya están actualizados en el sistema para que yo solo tenga que probar la app.
+Te pido esto porque quiero que trabajes con la versión que funciona bien, y es la que está tanto en la rama principal (main) como la que hiciste para la fase 1.

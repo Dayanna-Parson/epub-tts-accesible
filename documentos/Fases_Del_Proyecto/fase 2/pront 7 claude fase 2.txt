@@ -1,0 +1,3 @@
+pront 7 claude fse 2
+
+un último cambio. Asegúrate de que al cargar un texto, el listado de voces salga por defecto todas las voces desmarcadas. Así solo me preocupo de marcar solo las que necesite.

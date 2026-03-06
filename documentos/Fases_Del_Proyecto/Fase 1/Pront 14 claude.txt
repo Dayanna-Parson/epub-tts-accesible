@@ -1,0 +1,26 @@
+Pront claude 14.
+
+INSTRUCCIONES DE ACCESIBILIDAD Y REPARACIÓN FINAL (FASE 1)
+Claude, la estructura de costes actual no es accesible para NVDA porque la información no está vinculada al foco. Necesitamos estos ajustes finales:
+1. 
+Accesibilidad de Costes (Uso de Descripciones):
+• 
+No pongas el coste estimado en etiquetas de texto sueltas.
+• 
+Corrección: Vincula la información de coste directamente a la propiedad AccessibleDescription (o SetHelpText) de cada cuadro de edición de límites.
+• 
+Objetivo: Que cuando el usuario con NVDA tabule al campo de "Azure", el lector verbalice: "Azure, edición, [valor], Coste estimado: [X] euros".
+2. 
+Plan de Pago por Uso (Pay-as-you-go):
+• 
+Elimina la lógica de "Primer año gratuito" o "Tier gratuito" para los cálculos de Azure y Polly.
+• 
+Corrección: El usuario ya está en plan de pago. Calcula la estimación basándote directamente en el precio por millón de caracteres de 2026 para planes de pago.
+3. 
+Prioridad de Atajos (AcceleratorTable):
+• 
+Asegúrate de que los atajos de teclas_usuario.json (como la tecla Espacio) usen una wx.AcceleratorTable vinculada al Frame principal para que funcionen siempre, incluso con el foco en el control de lectura.
+4. 
+Amazon Polly Generative:
+• 
+Si tras la revisión de Boto3 las voces generative siguen sin aparecer, intenta forzar la petición omitiendo filtros de motor en la llamada inicial para ver el catálogo completo de us-east-1.

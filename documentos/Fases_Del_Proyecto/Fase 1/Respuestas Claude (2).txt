@@ -1,0 +1,380 @@
+Entendido. Voy a leer el estado actual de todos los archivos afectados antes de tocar nada.
+Read settings tab file to review button handlers and voice list configuration
+Read settings tab file to review button handlers and voice list configuration
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 120 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 70 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 186 líneas
+Mostrar 7 más
+Copiar mensaje
+Ahora tengo el diagnóstico exacto de cada regresión:
+1. Árbol roto: el EVT_CHAR_HOOK en PestanaLectura intercepta la tecla Enter antes de que EVT_TREE_ITEM_ACTIVATED pueda procesarla, incluso con Skip(). Se mueve al Frame.
+2. Foco en Ajustes: el event.Skip() que añadimos a al_cambiar_cat propaga el EVT_LISTBOX hacia arriba y la ventana padre mueve el foco al panel_derecho. Hay que eliminarlo.
+3. Bucle solo en Lectura: el hook está vinculado solo al panel de lectura. Hay que subirlo al Frame.
+4. Cierres Azure: la petición HTTP sigue viva aunque se detenga el audio. Se añade una requests.Session cancelable.
+Updated todo list tracking EVT_CHAR_HOOK refactoring and focus fixes
+Updated todo list tracking EVT_CHAR_HOOK refactoring and focus fixes
+Update Todos
+☐ Moviendo EVT_CHAR_HOOK al Frame☐ Quitar event.Skip() de al_cambiar_cat (fix foco Ajustes)☐ Exponer primer/ultimo control en todos los paneles☐ Cancelar petición HTTP con requests.Session en Azure y ElevenLabs
+Copiar mensaje
+Paso 1 — Quitar EVT_CHAR_HOOK del panel de Lectura y exponer los controles límite
+Updated pestana_lectura.py file with accessibility navigation changes
+Updated pestana_lectura.py file with accessibility navigation changes
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+8-8
+11
+        self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
+22
+        self.cargar_voces_usuario()
+3-
+4-
+        # Navegación accesible hacia las pestañas
+5-
+        self.primer_control = self.arbol_indice
+6-
+        self.ultimo_control = self.deslizador_volumen
+7-
+        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab)
+3+
+4+
+        # Puntos de anclaje para el bucle de tabulación gestionado desde la ventana principal.
+5+
+        # VentanaPrincipal usa estas referencias para saber dónde termina y empieza este panel.
+6+
+        self.primer_control = self.arbol_indice
+7+
+        self.ultimo_control = self.deslizador_volumen
+88
+    # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ
+Copiar mensaje
+Elimino el método al_navegacion_tab (ya no existe el hook que lo invocaba):
+Updated configuration loading function in reading tab interface
+Updated configuration loading function in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+20-46
+1717
+            self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
+1818
+            self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+1919
+        event.Skip()
+20-
+21-
+    def al_navegacion_tab(self, evento):
+22-
+        """
+23-
+        Implementa el bucle de tabulación accesible.
+24-
+        Cuando el foco llega al último control y se pulsa Tab, pasa al Notebook.
+25-
+        Cuando está en el primer control y se pulsa Shift+Tab, pasa al Notebook.
+26-
+        Esto evita que el foco quede atrapado dentro de la pestaña.
+27-
+        """
+28-
+        tecla = evento.GetKeyCode()
+29-
+        if tecla != wx.WXK_TAB:
+30-
+            evento.Skip()
+31-
+            return
+32-
+33-
+        foco_actual = self.FindFocus()
+34-
+        shift_pulsado = evento.ShiftDown()
+35-
+36-
+        if not shift_pulsado and foco_actual == self.ultimo_control:
+Show full diff (10 more lines)
+Copiar mensaje
+Paso 2 — Exponer controles límite en PestanaAjustes + corregir foco
+Guardo btn_guardar, btn_save y btn_escuchar como atributos de instancia:
+Updated settings panel button layout in pestana_ajustes.py
+Updated settings panel button layout in pestana_ajustes.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+5-4
+1-
+        # GUARDAR
+2-
+        btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites")
+3-
+        btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
+4-
+        sizer.Add(btn_guardar, 0, wx.ALL, 10)
+1+
+        # GUARDAR — guardado como atributo para que VentanaPrincipal pueda usarlo
+2+
+        # como punto de anclaje del bucle de tabulación accesible
+3+
+        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites")
+4+
+        self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
+5+
+        sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+4-4
+1-
+        # --- GUARDAR ---
+2-
+        btn_save = wx.Button(self, label="Guardar Todas las Claves")
+3-
+        btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
+4-
+        sizer.Add(btn_save, 0, wx.ALIGN_CENTER|wx.ALL, 15)
+1+
+        # --- GUARDAR — atributo de instancia para el bucle de tabulación accesible ---
+2+
+        self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
+3+
+        self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
+4+
+        sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER|wx.ALL, 15)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+4-4
+370-
+        # 4. BOTONERA
+371-
+        btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+372-
+        btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
+373-
+        sizer.Add(btn_escuchar, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
+370+
+        # 4. BOTONERA — atributo de instancia para el bucle de tabulación accesible
+371+
+        self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+372+
+        self.btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
+373+
+        sizer.Add(self.btn_escuchar, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
+Copiar mensaje
+Ahora añado primer_control, obtener_ultimo_control() a PestanaAjustes y elimino el event.Skip() de al_cambiar_cat:
+Fixed UI layout in settings tab interface file
+Fixed UI layout in settings tab interface file
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+35-17
+11
+        self.splitter.SetMinimumPaneSize(150)
+22
+        self.splitter.SplitVertically(self.lista_cat, self.panel_derecho, 200)
+3-
+4-
+        sizer = wx.BoxSizer(wx.VERTICAL)
+5-
+        sizer.Add(self.splitter, 1, wx.EXPAND|wx.ALL, 5)
+6-
+        self.SetSizer(sizer)
+7-
+8-
+    def al_cambiar_cat(self, event):
+9-
+        idx = self.lista_cat.GetSelection()
+10-
+        if idx != wx.NOT_FOUND:
+11-
+            self.panel_derecho.ChangeSelection(idx)
+12-
+            # Sin SetFocus() explícito: el foco ya está en la lista por el propio
+13-
+            # evento EVT_LISTBOX. Llamarlo de nuevo provoca que NVDA anuncie el
+14-
+            # elemento dos veces por la doble propagación del evento de foco.
+15-
+            if idx == 2:
+16-
+                self.pag_voces.cargar_datos_y_llenar()
+17-
+        event.Skip()
+3+
+4+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+5+
+        sizer.Add(self.splitter, 1, wx.EXPAND|wx.ALL, 5)
+Show full diff (30 more lines)
+Copiar mensaje
+Paso 3 — EVT_CHAR_HOOK global en VentanaPrincipal (fix árbol + todos los paneles)
+Completed EVT_CHAR_HOOK refactoring and fixed focus issues in settings panel
+Completed EVT_CHAR_HOOK refactoring and fixed focus issues in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+8-3
+3636
+        # Eventos
+3737
+        self.Bind(wx.EVT_CLOSE, self.al_cerrar)
+3838
+        self.notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana)
+39+
+40+
+        # Bucle de tabulación accesible a nivel de ventana.
+41+
+        # Vinculado aquí (Frame) en lugar de en cada Panel para no interferir
+42+
+        # con los eventos internos de los controles hijo (ej: EVT_TREE_ITEM_ACTIVATED).
+43+
+        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab_global)
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+45-6
+8989
+    # ANCLAJE_INICIO: EVENTOS_GLOBALES
+90-
+    def al_cambiar_pestana(self, evento):
+91-
+        indice = evento.GetSelection()
+92-
+        es_lectura = (indice == 0)
+93-
+        self.barra_menu.EnableTop(1, es_lectura) 
+90+
+    def al_navegacion_tab_global(self, evento):
+91+
+        """
+92+
+        Implementa el bucle de tabulación accesible para todas las pestañas.
+93+
+        Al detectar Tab/Shift+Tab en el primer o último control de un panel,
+94+
+        devuelve el foco al Notebook en lugar de dejarlo atrapado.
+95+
+        Vinculado al Frame en lugar de a cada Panel individual para evitar
+96+
+        interferencias con eventos internos de controles hijo como el TreeCtrl.
+97+
+        """
+98+
+        if evento.GetKeyCode() != wx.WXK_TAB:
+99+
+            evento.Skip()
+100+
+            return
+101+
+102+
+        foco = self.FindFocus()
+103+
+        if foco is None:
+104+
+            evento.Skip()
+Show full diff (29 more lines)
+Update Todos
+☐ Mover EVT_CHAR_HOOK al Frame (fix árbol + todos los paneles)☐ Quitar event.Skip() de al_cambiar_cat (fix foco Ajustes)☐ Exponer primer/ultimo control en todos los paneles☐ Implementando Session cancelable en clientes HTTP
+Copiar mensaje
+Paso 4 — requests.Session cancelable en ClienteAzure y ClienteEleven
+El método requests.Session.close() interrumpe cualquier petición HTTP activa en la sesión. Al llamarlo desde detener(), el hilo de síntesis recibe una ConnectionError, que queda silenciada por el cheque de generación en el reproductor.
+Created ElevenLabs client service module with audio integration
+Created ElevenLabs client service module with audio integration
+Write/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+import time
+8+
+9+
+10+
+class ClienteAzure:
+11+
+    def __init__(self):
+12+
+        self.config = {}
+13+
+        # Una sesión reutilizable mejora el rendimiento (keep-alive HTTP) y permite
+14+
+        # cancelar peticiones en curso llamando a self._sesion.close().
+15+
+        self._sesion = requests.Session()
+16+
+17+
+    def _cargar_config(self):
+18+
+        try:
+19+
+            ruta = os.path.join("configuraciones", "config_general.json")
+20+
+            if os.path.exists(ruta):
+Show full diff (96 more lines)
+Write/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+8+
+9+
+class ClienteEleven:
+10+
+    def __init__(self):
+11+
+        self.config = {}
+12+
+        # Sesión reutilizable con soporte para cancelación inmediata.
+13+
+        self._sesion = requests.Session()
+14+
+15+
+    def _cargar_config(self):
+16+
+        try:
+17+
+            ruta = os.path.join("configuraciones", "config_general.json")
+18+
+            if os.path.exists(ruta):
+19+
+                with open(ruta, 'r', encoding='utf-8') as f:
+20+
+                    return json.load(f)
+Show full diff (63 more lines)
+Copiar mensaje
+También hay que asegurar que ReproductorVoz.detener() propague la llamada a cliente_polly (que aunque es un stub, mantiene consistencia):
+Read voice reproduction module for local voice activation logic
+Read voice reproduction module for local voice activation logic
+Read/home/user/epub-tts-accesible/app/motor/reproductor_voz.py
+Leer 30 líneas
+Copiar mensaje
+El flujo de cancelación es correcto: ReproductorVoz.detener() ya llama a cliente_azure.detener() y cliente_eleven.detener(), y ahora esos métodos cierran la sesión HTTP además de detener el audio.
+Verifico la sintaxis de todos los archivos modificados:
+Pushed development branch to remote repository successfully
+Pushed development branch to remote repository successfully
+Bash
+python -c " import ast, sys archivos = [ 'app/interfaz/dialogos.py', 'app/interfaz/pestana_lectura.py', 'app/interfaz/pestana_ajustes.py', 'app/interfaz/ventana_principal.py', 'app/motor/reproductor_voz.py', 'app/servicios/cliente_azure.py', 'app/servicios/cliente_eleven.py', ] ok = True for ruta in archivos: try: with open(ruta, encoding='utf-8') as f: ast.parse(f.read()) print(f' OK {ruta}') except SyntaxError as e: print(f' ERR {ruta}: línea {e.lineno}: {e.msg}') ok = False sys.exit(0 if ok else 1) "
+OK  app/interfaz/dialogos.py  OK  app/interfaz/pestana_lectura.py  OK  app/interfaz/pestana_ajustes.py
+Mostrar más
+  OK  app/interfaz/ventana_principal.py  OK  app/motor/reproductor_voz.py  OK  app/servicios/cliente_azure.py  OK  app/servicios/cliente_eleven.py
+Bashgit diff --stat
+app/interfaz/pestana_ajustes.py   | 53 ++++++++++++++++++++---------- app/interfaz/pestana_lectura.py   | 32 ++---------------- app/interfaz/ventana_principal.py | 46 +++++++++++++++++++++++++-
+Mostrar más
+ app/servicios/cliente_azure.py    | 68 ++++++++++++++++++++++++++------------- app/servicios/cliente_eleven.py   | 55 +++++++++++++++++++++++-------- 5 files changed, 170 insertions(+), 84 deletions(-)
+Bash
+git add app/interfaz/pestana_ajustes.py app/interfaz/pestana_lectura.py app/interfaz/ventana_principal.py app/servicios/cliente_azure.py app/servicios/cliente_eleven.py && git commit -m "$(cat <<'EOF' Fix: 4 regresiones — árbol, foco Ajustes, Tab global, cierres Azure Regresión 1 — Árbol de contenido roto (pestana_lectura.py): El EVT_CHAR_HOOK vinculado al Panel interceptaba la tecla Enter antes de que EVT_TREE_ITEM_ACTIVATED pudiera procesarla en el TreeCtrl, incluso con Skip(). Se elimina el binding del panel y se mueve al Frame (VentanaPrincipal) donde opera a nivel superior sin interferir con los eventos internos del árbol. Regresión 2 — Foco en Ajustes salta fuera de la lista (pestana_ajustes.py): El event.Skip() añadido a al_cambiar_cat propagaba EVT_LISTBOX hacia el SplitterWindow padre, que procesaba el evento de flecha y movía el foco al panel_derecho. Se elimina Skip() manteniendo la corrección del Bug 6 (sin SetFocus() redundante que causa doble lectura NVDA). Regresión 3 — Navegación circular solo en Lectura (ventana_principal.py): Se implementa al_navegacion_tab_global en VentanaPrincipal. El Frame-level EVT_CHAR_HOOK cubre todas las pestañas: consulta primer_control y ultimo_control de la pestaña activa (Lectura y Ajustes). Para Ajustes, obtener_ultimo_control() devuelve el botón correcto según el sub-panel activo. Se exponen self.btn_guardar (PanelGeneral), self.btn_save (PanelClaves) y self.btn_escuchar (PanelVoces) como atributos de instancia. Regresión 4 — Cierres por saturación de hilos Azure/ElevenLabs: Se sustituye requests.post() directo por requests.Session() en ClienteAzure y ClienteEleven. El método detener() ahora cierra la sesión activa, lo que interrumpe inmediatamente la conexión TCP de cualquier petición HTTP en curso. El hilo de síntesis recibe ConnectionError, el cheque de generación lo descarta silenciosamente y se crea una sesión nueva lista para la siguiente petición. https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL 2fbf3a3] Fix: 4 regresiones — árbol, foco Ajustes, Tab global, cierres Azure 5 files changed, 170 insertions(+), 84 deletions(-)
+Mostrar 1 más
+Copiar mensaje
+Subido. Aquí el análisis técnico de cada regresión y su causa raíz:
+ 
+Diagnóstico de las 4 regresiones
+Regresión 1 — Árbol de contenido roto
+Causa raíz exacta: EVT_CHAR_HOOK vinculado a un wx.Panel opera a nivel de ventana nativa de Win32. Cuando el TreeCtrl (que es un control hijo del Panel) procesa Enter, la cadena de eventos es: EVT_CHAR_HOOK → EVT_KEY_DOWN → EVT_TREE_ITEM_ACTIVATED. Aunque Skip() se llamaba correctamente, en wxPython 4.x el hook en el panel padre interfiere con la generación de EVT_TREE_ITEM_ACTIVATED en determinados ciclos de eventos. Solución: El hook se mueve al Frame (VentanaPrincipal), que opera en la capa Win32 más alta sin interferir con controles hijo. primer_control y ultimo_control quedan como atributos del panel para que el Frame los consulte.
+Regresión 2 — Foco salta fuera de la lista en Ajustes
+Causa raíz exacta: event.Skip() en al_cambiar_cat propagaba el evento EVT_LISTBOX hacia el wx.SplitterWindow padre. wxPython trata EVT_LISTBOX propagado como señal de que algo cambió en la ventana y mueve el foco al nuevo widget visible (panel_derecho), que acababa de cambiar de página con ChangeSelection(). Solución: Sin Skip() (comportamiento original), el evento se consume en al_cambiar_cat y el SplitterWindow no lo ve. Sin SetFocus() (eliminado en el commit anterior), NVDA no anuncia dos veces.
+Regresión 3 — Tab circular solo en Lectura
+Causa raíz: El hook solo existía en PestanaLectura. La solución unificada en VentanaPrincipal.al_navegacion_tab_global detecta la pestaña activa (notebook.GetSelection()) y consulta primer_control/obtener_ultimo_control() del panel correspondiente. PanelGeneral.btn_guardar, PanelClaves.btn_save y PanelVoces.btn_escuchar pasan a ser atributos de instancia. PestanaAjustes.obtener_ultimo_control() devuelve el botón correcto según la página activa del Simplebook.
+Regresión 4 — Cierres por saturación de conexiones Azure/ElevenLabs
+Causa raíz: requests.post() es una llamada bloqueante. Aunque el counter de generación descartaba el audio al final, la petición HTTP seguía consumiendo un socket durante los 30 segundos de timeout. Con previzualizaciones rápidas, se acumulaban N conexiones abiertas simultáneas. Solución: requests.Session es la unidad de conexión gestionable. ClienteAzure.detener() y ClienteEleven.detener() llaman a self._sesion.close(), que interrumpe inmediatamente la conexión TCP subyacente. El hilo de síntesis recibe ConnectionError, que el except en _procesar_voz_neuronal captura. El cheque if self._generacion == generacion silencia el error porque la generación ya no coincide. Inmediatamente se crea una Session() nueva limpia para la siguiente petición.
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++431-159
+Crear PR

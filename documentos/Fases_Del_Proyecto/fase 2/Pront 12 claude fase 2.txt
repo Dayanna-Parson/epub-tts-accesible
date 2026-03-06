@@ -1,0 +1,53 @@
+Pront 12 claude fase 2
+
+A ver. E probado la pestaña modo grabación, y aunque se han corregido la gran mayoría de errores, pues falta esto por arreglar:
+
+Descripciones y Textos de Ayuda: NVDA sigue sin verbalizar las descripciones de estado y los textos de ayuda en elementos clave como el botón "Examinar". Necesito que los textos de ayuda (tooltips) y las descripciones de estado sean claros y concisos.
+• 
+Casilla "Dividir por etiquetas": El texto dinámico no se actualiza correctamente al marcar o desmarcar la casilla.
+2. Problemas en el Panel de Casting (Favoritos)
+• 
+Formato de Lista: La lista de voces favoritas para asignar etiquetas no sigue el patrón del resto de la app. Debe mostrar: Nombre de la voz; Género; Idioma; Proveedor.
+• 
+Casillas de Verificación: La lista debe tener casillas de verificación funcionales. Actualmente no se percibe correctamente si una voz está seleccionada o no al pulsar Espacio. Además, una vez terminado el casting, me gustaría un botón de "Pre-escucha general" para oír cómo suena el conjunto del fragmento antes de grabarlo definitivamente.
+Vamos con lo que si funciona bien.
+Las carpetas si se crean y se abren bien. 
+Actualización, la etiqueta si funciona, cuando está marcada, divide correctamente todas las etiquetas detectadas. Y cuando está desmarcada, pues si sale un único archivo con las etiquetas correctamente puestas.
+En definitiva, creo que toda la app funciona bien y no e encontrado más hallá de estos errores. Bueno sí, solo uno cuando está grabando, no me va diciendo pues como va o que está haciendo. Se qe está haciendo cosas porque lo guay de NVDA es que me pita las barras de progreso.
+Amí se me ocurre una solución para esto. Y es usar pixx 3. Para que valla verbalizando si no se puede con NVDA pues que lo diga con la voz del sistema... Que es lo que está haciendo... Y creo que también eso dependerá de en que estado esté dicha etiqueta a la hora de grabar. Y ahora porque lo e probado con un texto corto y solo con 3 etiquetas. Pero, esto obviamente será para fragmentos cortos, medios o tan extensos como un libro o un capítulo.
+Se me ocurren dos ideas y posibles soluciones. Ya le e dicho a Claude que no me muestra las voces como lo hace en favoritos y en voces disponibles. E incluso, le e puesto un ejemplo como muestra las voces en favoritas, con las casillas, y el patrón de etiquetas, y como se muestra en la lista para poner una voz a la etiqueta seleccionada, y no me entiende... Y e estado mirando en el código de la pestaña ajustes, Y no se si esta es la solución... Pero, es solo eso. Pero lo que si funciona bien, es cuando pulso espacio o enter sobre una voz. Si se asigna correctamente a la etiqueta seleccionada.
+Vale. te voy a poner de ejemplo la misma pestaña ajustes. Como hemos hecho para que en esta pestaña si lea los textos de ayuda, o mas bien los textos asignados a los botones, como los de azure, las claves api o los del apartado de los filtros e idiomas etc. Puede ser porque están directamente en la etiqueta label después del nombre? Porque Ni poniéndole tooltips ni descripciones de accesibilidad ni help no se que... funciona...
+Uso de la clase ListaVocesCheck: Implementar el panel de voces favoritas utilizando la clase ListaVocesCheck (con CheckListCtrlMixin) tal como está en la pestaña de Ajustes. Esto garantizará que las casillas de verificación sean funcionales y que NVDA anuncie el estado de selección al pulsar Espacio o la tecla enter.
+• 
+Patrón de Etiquetas en la Lista: La lista de voces para asignación debe seguir el patrón de columnas de la app: Nombre de la voz; Género; Idioma; Proveedor.
+• 
+Información de Ayuda en Labels: Ante el fallo de los tooltips, integrar las descripciones de ayuda directamente en las etiquetas (label) de los botones y controles, para asegurar que NVDA las verbalice al poner el foco.
+• 
+Verbalización con pyttsx3: Implementar el uso de la librería pyttsx3 durante el proceso de grabación. Esto servirá para que la voz del sistema verbalice el estado de cada etiqueta mientras se procesa, complementando los pitidos de las barras de progreso de NVDA.
+• 
+Actualización de Casilla "Dividir": Corregir la actualización del texto dinámico de la casilla "Dividir por etiquetas" para que el cambio de estado se refleje inmediatamente en el lector de pantalla al marcar/desmarcar.
+• 
+Botón de Pre-escucha General: Añadir un botón que permita realizar una pre-escucha de todo el conjunto de fragmentos asignados antes de proceder a la grabación definitiva.
+
+
+
+
+Log:
+
+---------------------------------------------------
+   INICIANDO TIFLO HISTORIAS...
+---------------------------------------------------
+2026-03-05 15:03:42,949 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-05 15:03:42,956 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-05 15:03:42,956 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-05 15:03:42,963 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-05 15:03:44,481 - __main__ - INFO - Iniciando Epub TTS Accesible
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+2026-03-05 15:08:12,490 - app.motor.grabador_audio - INFO - [Azure] tfh_000_6rv1xvnh.mp3 (48kHz→320k)
+2026-03-05 15:08:13,851 - app.motor.grabador_audio - INFO - [Azure] tfh_001_dm33wxqv.mp3 (48kHz→320k)
+2026-03-05 15:08:15,281 - app.motor.grabador_audio - INFO - [Azure] tfh_002_tu70aatj.mp3 (48kHz→320k)
+2026-03-05 15:08:15,975 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: {{@nar}}Hola, esto es una pruebaa para probar como suena el modo por etiquetas.mp3
+2026-03-05 15:09:26,710 - app.motor.grabador_audio - INFO - [Azure] 001_nar.mp3 (48kHz→320k)
+2026-03-05 15:09:28,425 - app.motor.grabador_audio - INFO - [Azure] 002_pj1.mp3 (48kHz→320k)
+2026-03-05 15:09:30,179 - app.motor.grabador_audio - INFO - [Azure] 003_pj3.mp3 (48kHz→320k)

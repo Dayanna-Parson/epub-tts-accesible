@@ -1,0 +1,34 @@
+Claude, vamos a cerrar la Fase 1 arreglando estas regresiones de accesibilidad y lógica. Es vital para un usuario de NVDA:
+1. 
+Foco en Ajustes: En pestana_ajustes.py, recupera el SetFocus() en la lista de categorías, pero envuélvelo en un wx.CallAfter(self.lista_cat.SetFocus) para que NVDA lo anuncie correctamente sin duplicar la lectura[cite: 13, 17].
+2. 
+Amazon Polly (Urgente): En cliente_polly.py, si la región no está en tu lista _REGIONES_AWS, no bloquees la ejecución. Usa 'us-east-1' por defecto o usa el texto que el usuario escribió directamente. Asegúrate de que las llaves se lean bien del JSON[cite: 28].
+3. 
+Sincronización de Pausa: Al reanudar el audio, recalcula el fragmento de texto empezando exactamente desde self.txt_contenido.GetInsertionPoint(). No permitas que la voz salte hacia adelante
+4. 
+Navegación Circular: En al_navegacion_tab_global, cuando se haga Shift+Tab desde el primer control, usa SetFocus() en el último control del panel para que NVDA anuncie el cambio de posición
+5. 
+Sistema de Log de Errores: Crea una función que capture cualquier 'Crash' de la app y lo escriba en un archivo error_tiflo.log en la carpeta raíz, para que podamos ver qué librería falla cuando la app se cierra sola
+6. 
+Persistencia de Recientes: Revisa por qué libros_recientes.json no se guarda. Asegúrate de que la carpeta configuraciones se cree con permisos de escritura.
+
+Claude, un último esfuerzo para cerrar la Fase 1. No estamos dando vueltas, estamos puliendo la base:
+1. 
+Permisos y JSON: La carpeta configuraciones YA existe, pero el programa no está guardando los cambios (Recientes, Cuotas). Usa rutas absolutas (os.path.dirname(os.path.abspath(__file__))) para asegurar que la app siempre escriba en la carpeta del proyecto, sin importar los permisos del sistema.
+2. 
+Amazon Polly: El archivo cliente_polly.py tiene un error de lógica. Si la región no está en tu lista de 'normalización', NO bloquees la app. Usa directamente lo que el usuario escribió o us-east-1. Asegúrate de que las credenciales lleguen al motor de síntesis.
+3. 
+Accesibilidad Real (NVDA): Para el foco en Ajustes y el Shift+Tab, usa obligatoriamente wx.CallAfter(control.SetFocus). Es la única forma de que NVDA anuncie el cambio de posición de forma fiable en Windows.
+4. 
+Pausa Inteligente: Al reanudar, el audio debe empezar desde GetInsertionPoint(). Si el usuario pausó, no queremos que la voz "adivine" dónde ir; queremos que lea desde donde está el cursor.
+5. 
+Archivo de Pánico: Implementa ya el error_tiflo.log. Si la app se cierra, queremos saber el error exacto y la línea del código que falló.
+
+Claude, antes de programar, busca en la documentación de wxPython y en blogs técnicos (como Mouse Vs Python) sobre 'wxPython accessibility best practices for NVDA'.
+Necesito que apliques lo aprendido para:
+1. 
+Usar wx.CallAfter en todos los cambios de foco para que NVDA no se pierda.
+2. 
+Asegurar que el Shift+Tab en la VentanaPrincipal anuncie correctamente el destino al lector de pantalla.
+3. 
+Corregir la lógica de Amazon Polly para que no bloquee la app si la región no coincide exactamente con tu lista interna.

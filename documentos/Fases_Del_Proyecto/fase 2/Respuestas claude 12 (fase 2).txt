@@ -1,0 +1,102 @@
+Respuestas claude 12 (fase 2)
+
+Updated todo list with UI component replacement and accessibility tasks
+Updated todo list with UI component replacement and accessibility tasks
+Bash
+wc -l /home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py /home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+801 /home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py  891 /home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py 1692 total
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Leer 802 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 892 líneas
+Mostrar 1 más
+Copiar mensaje
+Tengo el diagnóstico completo. Ahora escribo el archivo reescrito con todas las correcciones.
+Found pyttsx3 dependency in requisitos.txt file
+Found pyttsx3 dependency in requisitos.txt file
+Write/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+1+
+"""
+2+
+pestana_grabacion.py
+3+
+---------------------
+4+
+Pestaña de grabación multivoz para producción de audiolibros accesibles.
+5+
+6+
+Flujo de uso (diseñado para NVDA + teclado):
+7+
+  1. Pulsa "Examinar…" → selecciona un TXT → el escaneo es automático.
+8+
+  2. En el combo "Etiqueta activa" selecciona la primera etiqueta.
+9+
+  3. Marca una voz en la lista de favoritos → se auto-asigna y el combo avanza.
+10+
+  4. Repite hasta cubrir todas las etiquetas.
+11+
+  5. Pulsa "Iniciar Grabación".
+12+
+  6. "Limpiar" restablece la pestaña para cargar otro fragmento sin reiniciar.
+13+
+14+
+Accesibilidad NVDA:
+15+
+  - SetHelpText() en controles de entrada: NVDA lo verbaliza al recibir foco.
+16+
+  - Etiquetas descriptivas en botones: NVDA las lee directamente.
+17+
+  - ListaVocesCheck (CheckListCtrlMixin + EnableCheckBoxes) en lugar de
+18+
+    CheckListBox: casillas nativas, Space/Enter para marcar, NVDA anuncia estado.
+19+
+  - Columnas: Nombre de la voz | Género | Idioma | Proveedor.
+20+
+  - Casilla "Dividir": label dinámico → NVDA anuncia el nuevo texto al cambiar.
+Show full diff (929 more lines)
+Update Todos
+☐ Reemplazar CheckListBox por ListaVocesCheck con columnas Nombre/Género/Idioma/Proveedor☐ Corregir etiquetas de botones y SetHelpText para NVDA☐ Corregir casilla Dividir (label dinámico en lugar de TextCtrl separado)☐ Añadir botón Pre-escucha General☐ Añadir verbalización pyttsx3 durante la grabación☐ Verificando requisitos.txt☐ Commit y push de todos los cambios
+Greppyttsx3
+11:pyttsx3>=2.90
+Copiar mensaje
+Bien, pyttsx3 ya estaba en requisitos.txt. Ahora commit y push.
+Committed and pushed all changes successfully
+Committed and pushed all changes successfully
+Update Todos
+☐ Reemplazar CheckListBox por ListaVocesCheck con columnas Nombre/Género/Idioma/Proveedor☐ Corregir etiquetas de botones y SetHelpText para NVDA☐ Corregir casilla Dividir (label dinámico en lugar de TextCtrl separado)☐ Añadir botón Pre-escucha General☐ Añadir verbalización pyttsx3 durante la grabación☐ Verificar que pyttsx3 está en requisitos.txt☐ Commiteando y pusheando cambios
+Bashgit diff --stat HEAD
+app/interfaz/pestana_grabacion.py | 453 +++++++++++++++++++++++++------------- 1 file changed, 300 insertions(+), 153 deletions(-)
+Bash
+git add app/interfaz/pestana_grabacion.py && git commit -m "$(cat <<'EOF' Fase 2 – Accesibilidad NVDA, ListaVocesCheck y pyttsx3 en pestaña Grabación - Reemplaza wx.CheckListBox por ListaVocesCheck (CheckListCtrlMixin + EnableCheckBoxes) con columnas Nombre / Género / Idioma / Proveedor, igual que en la pestaña Ajustes. Espacio ahora marca/desmarca y NVDA anuncia el estado correctamente. - Traduce géneros (Female→Femenino) e idiomas (es-ES→Español España) en la lista de voces del casting. - Sustituye SetToolTip() por SetHelpText() en controles de entrada y pone descripciones directamente en los labels de los botones para que NVDA las verbalice al recibir foco sin necesidad de Ins+T. - Corrige casilla "Dividir por etiquetas": actualiza su propio label de forma dinámica al marcar/desmarcar para que NVDA anuncie el modo activo. Elimina el TextCtrl readonly separado que no era verbalized. - Añade botón "Pre-escucha General" que reproduce una muestra de cada voz asignada en orden de aparición de etiquetas. - Añade _hablar() con pyttsx3 para verbalizar el progreso durante la grabación (fragmento N de M, etiqueta X) con la voz del sistema. - Añade guardia _radio_activo para evitar recursión en el comportamiento radio (desmarcar las demás voces al marcar una). https://claude.ai/code/session_01GLvZgMweWqbNRA28YXYjom EOF )"
+[claude/recording-tab-implementation-VYDl3 0c4e2a0] Fase 2 – Accesibilidad NVDA, ListaVocesCheck y pyttsx3 en pestaña Grabación 1 file changed, 300 insertions(+), 153 deletions(-)
+Mostrar 2 más
+Copiar mensaje
+Push completado. Aquí el resumen exacto de todo lo que se ha cambiado:
+ 
+Cambios en pestana_grabacion.py
+1. Lista de voces — ListaVocesCheck con columnas
+• Sustituye wx.CheckListBox por ListaVocesCheck (misma clase que en Ajustes: CheckListCtrlMixin + EnableCheckBoxes(True))
+• Columnas: Nombre de la voz | Género | Idioma | Proveedor
+• Géneros traducidos: Female → Femenino, Male → Masculino
+• Idiomas traducidos: es-ES → Español (España), etc.
+• Espacio sobre una voz la marca/desmarca y NVDA anuncia el estado
+• Guardia _radio_activo evita recursión al desmarcar el resto
+2. NVDA — etiquetas y textos de ayuda
+• Botones con descripciones en el label (ej: Examinar… — Selecciona un TXT con etiquetas de personaje) — NVDA las lee directamente al recibir foco
+• SetToolTip() → SetHelpText() en campos TextCtrl
+3. Casilla "Dividir por etiquetas"
+• Actualiza su propio label al marcar/desmarcar → NVDA anuncia el nuevo texto automáticamente
+• Se elimina el txt_estado_division (TextCtrl readonly) que NVDA no verbalizaba
+4. Botón "Pre-escucha General" (nuevo)
+• Reproduce una muestra de cada voz asignada en orden de aparición de etiquetas
+• Actualiza lbl_progreso con la etiqueta/voz en curso
+5. pyttsx3 durante la grabación
+• Nuevo método _hablar() que usa pyttsx3 en hilo de fondo
+• _callback_progreso() verbaliza: "Fragmento 2 de 10. Etiqueta nar." en cada fragmento
+• Al terminar dice: "Grabación completada. N archivos generados."
+• Silencioso si pyttsx3 no está instalado
+ 
+beta
+claude/recording-tab-implementation-VYDl3
++4019-385
+Crear PR

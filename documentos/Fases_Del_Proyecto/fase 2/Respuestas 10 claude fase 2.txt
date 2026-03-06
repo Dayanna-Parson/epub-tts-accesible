@@ -1,0 +1,21 @@
+Respuestas 10 claude fase 2.
+
+Voy a descargar el binario de Windows directamente y meterlo en bin/. Tarda un poco porque pesa ~80MB.
+Extracted ffmpeg and ffprobe executables to project bin directory
+Extracted ffmpeg and ffprobe executables to project bin directory
+Copiar mensaje
+Extraído. Los .exe están en bin/ (son 191MB cada uno, por eso están en .gitignore — no van al repo). Para desarrollo ya funcionan en su sitio.
+Cleaned up temporary files and verified ffmpeg binaries installed
+Cleaned up temporary files and verified ffmpeg binaries installed
+Copiar mensaje
+Listo. Carpeta bin/ del proyecto:
+bin/
+├── INSTRUCCIONES.txt
+├── ffmpeg.exe    (191 MB — Windows x64, GPL static)
+└── ffprobe.exe   (191 MB — ídem)
+Copy code
+¿Cómo funciona ahora?
+• Al arrancar la app, grabador_audio.py detecta bin/ffmpeg.exe automáticamente y configura pydub para usarlo
+• El usuario no necesita instalar ni tocar el PATH
+• Puedes desinstalar el ffmpeg de winget si quieres — la app usa el suyo propio
+Nota sobre git: los .exe no van al repositorio (son 380MB, .gitignore los excluye). El portable/distribución lo vemos después como dijiste.

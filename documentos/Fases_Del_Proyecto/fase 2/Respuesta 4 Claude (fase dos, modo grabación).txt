@@ -1,0 +1,62 @@
+Respuesta 4 Claude (fase dos, modo grabación)
+
+Primero te contesto y luego hago los cambios.
+ 
+¿Qué hice en el mensaje anterior vs. el anterior a ese?
+El trabajo del contexto anterior (sesiones previas) fue voluminoso: implementé los 3 archivos desde cero, hice el merge manual con main, corregí los crasheos del log (JSON vacío, Polly NotImplementedError), rediseñé la UX (auto-scan, auto-asignación, formato CheckListBox). Todo eso ya estaba escrito en disco pero sin commitear.
+En el último mensaje hice solo dos cosas concretas:
+1. Añadí el elif indice == 1: en al_navegacion_tab_global() — el único pendiente de código.
+2. Commitié y pusheé todo junto (7e8c7a5).
+¿Por qué este estado es mejor que el anterior? El estado anterior tenía la pestaña de grabación con Tab roto (caía al else: evento.Skip()), lo que significa que Tab en el último control no volvía al Notebook ni Shift+Tab en el primero hacía el bucle circular. Ahora las tres pestañas tienen navegación cíclica consistente.
+¿Qué aportó el archivo de errores + log vs. solo el prompt?
+El prompt de correcciones solo describía qué cambiar en la UX. El log me dio por qué fallaba en producción: sin él, no sabría que mapeo_etiquetas.json estaba vacío (el crash era silencioso para el usuario), ni que el 100% de las voces en tu entorno eran Polly (lo que convertía el NotImplementedError en un bloqueante total). El log también reveló el orden exacto de los eventos — que el crash de JSON ocurría antes de que siquiera se intentara grabar. Con solo el prompt habría corregido la UX pero el proyecto seguiría sin poder grabar nada.
+ 
+Ahora los cambios de audio. Primero leo los archivos relevantes:
+Examined audio recording engine implementation in grabador_audio.py
+Examined audio recording engine implementation in grabador_audio.py
+Copiar mensaje
+Ahora leo cliente_polly.py para entender la situación de la tasa de muestreo:
+Read Polly TTS client configuration file
+Read Polly TTS client configuration file
+Copiar mensaje
+Ahora tengo todo claro. Los cambios son:
+• Azure: audio-24khz-160kbitrate-mono-mp3 → audio-48khz-192kbitrate-mono-mp3
+• ElevenLabs: ya está en mp3_44100_192, correcto
+• Polly: cambiar de OutputFormat='mp3'/22050 Hz a OutputFormat='ogg_vorbis'/24000 Hz (el MP3 de Polly solo soporta 8k/16k/22k Hz; para 24 kHz hay que usar OGG y convertir)
+• Salida final 320k: añadir helper _recodificar_mp3_320k() llamado desde Azure, ElevenLabs y Polly tras recibir el audio nativo
+Updated Azure output format to 48kHz/192k, started adding 320k re-encode helper
+Updated Azure output format to 48kHz/192k, started adding 320k re-encode helper
+Copiar mensaje
+Ahora añado el helper _recodificar_mp3_320k justo antes de _concatenar_audios:
+Updated audio recorder file with concatenation improvements
+Updated audio recorder file with concatenation improvements
+Copiar mensaje
+Ahora actualizo _grabar_azure para usar temp + 320k:
+Updated Azure audio recording configuration in grabador_audio.py
+Updated Azure audio recording configuration in grabador_audio.py
+Copiar mensaje
+Ahora _grabar_elevenlabs:
+Updated Azure audio format to 48kHz/192k and added MP3 reencoding helper
+Updated Azure audio format to 48kHz/192k and added MP3 reencoding helper
+Copiar mensaje
+Ahora _grabar_polly — cambio de MP3/22050 a OGG_VORBIS/24000 + conversión a 320k:
+Updated Azure output format, added MP3 re-encoding helper, configured Polly settings
+Updated Azure output format, added MP3 re-encoding helper, configured Polly settings
+Copiar mensaje
+Commit 2d63a9c pusheado. Resumen de lo hecho:
+Proveedor
+Antes
+Ahora
+Azure
+audio-24khz-160kbitrate-mono-mp3
+audio-48khz-192kbitrate-mono-mp3 → MP3 320k
+ElevenLabs
+mp3_44100_192 (ya correcto)
+sin cambio → MP3 320k
+Polly
+mp3 / 22050 Hz
+ogg_vorbis / 24000 Hz → MP3 320k
+SAPI5
+WAV → 320k
+sin cambio
+Por qué Polly necesita OGG para 24 kHz: el endpoint MP3 de Polly tiene como tasa máxima 22050 Hz en su API (documentación AWS). Para obtener 24 kHz hay que pedir ogg_vorbis, que sí lo soporta en todos los motores. El helper _recodificar_mp3_320k usa pydub, que al exportar respeta el frame_rate del audio cargado sin re-muestrear.

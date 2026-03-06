@@ -1,0 +1,13 @@
+Pront 4 Claude (fase 2, modo grabación)
+
+
+vale dos últimas cosas antes de ponerme a probar. Dime, que has hecho en el mensaje anterior y cuales son las diferencias con este último. Y porqué este es mejor que el anterior? y te sirve y de que te a servido además de averte dado el pront, a verte dado el archivo de errores que escribí, junto al log de la consola? A, y necesito que hagas este cambio. Integración de Audio de Alta Fidelidad:
+Quiero que cada motor entregue su máxima calidad nativa sin unificar frecuencias por debajo. Configura los clientes en app/servicios/ (o donde corresponda la llamada) con estos parámetros:
+•
+Azure: Configurar a audio-48khz-192kbitrate-mono-mp3 (48 kHz).
+•
+ElevenLabs: Configurar a mp3_44100_192 o superior (44.1 kHz).
+•
+Polly: Asegurar el uso del motor (de todos los motores, estandar, neural y generative) a 24000Hz (24 kHz) para evitar el "efecto teléfono".
+•
+Salida Final: Al procesar cada etiqueta, el archivo resultante debe convertirse a MP3 320 kbps respetando la frecuencia de muestreo de origen (sin re-muestreos que degraden el brillo).

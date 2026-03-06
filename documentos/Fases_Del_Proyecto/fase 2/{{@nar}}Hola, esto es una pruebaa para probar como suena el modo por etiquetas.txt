@@ -1,0 +1,3 @@
+{{@nar}}Hola, esto es una pruebaa para probar como suena el modo por etiquetas.
+{{@pj1}}Hola, y bueno, esta es mi voz.
+{{@pj3}}Hola, esta es otra voz. ¿como se escucha?

@@ -1,0 +1,12 @@
+pront para claude 10
+
+
+Claude, ¡Polly ya funciona! Pero tenemos un problema de motores. Las voces Long-form (Alba, Raúl) y las Generative dan error porque la app intenta usar 'standard' o 'neural'.
+1. 
+Seguridad: Elimina INMEDIATAMENTE todos los print que muestran las claves access_key y secret_key en la consola. Solo deja un mensaje que diga: '[Polly] Conexión establecida'.
+2. 
+Soporte Multimotor: Modifica cliente_polly.py para que detecte el motor correcto. Si una voz soporta generative, úsalo; si soporta long-form, úsalo. No fuerces 'neural' o 'standard' si la voz no lo admite.
+3. 
+Refuerzo de Descarga: Asegúrate de que gestor_voces.py guarde los motores soportados por cada voz de Polly en el JSON de voces disponibles.
+4. 
+Cierre de Fase 1: Una vez hecho esto, borra el script test_polly_debug.py para limpiar el proyecto. ¡Estamos listos para la Fase 2!

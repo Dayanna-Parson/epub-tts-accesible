@@ -1,0 +1,455 @@
+respuestas cloude (6)
+
+Created task list for MAX_CHARS update and app rename
+Created task list for MAX_CHARS update and app rename
+Update Todos
+☐ Change MAX_CHARS to 200 in pestana_lectura.py☐ Rename TifloHistorias → Epub TTS Accesible throughout the app☐ Rewrite cliente_polly.py with .strip(), ruta_config, us-east-1 hard default☐ Add 1-retry logic in cliente_azure.py and cliente_polly.py☐ Fix punctuation separation in limpiador_lectura.py☐ Implement smart quota overflow fallback chain in reproductor_voz.py☐ Commit and push all changes
+Copiar mensaje
+Let me read the current state of the files I need to modify:
+Read Azure client and voice player modules for integration review
+Read Azure client and voice player modules for integration review
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 647 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 238 líneas
+Read/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+Leer 166 líneas
+Mostrar 1 más
+Copiar mensaje
+Now let me read the control_cuota.py and iniciar_tiflohistorias.py files:
+Read quota control module and searched codebase for Python files
+Read quota control module and searched codebase for Python files
+Read/home/user/epub-tts-accesible/app/motor/control_cuota.py
+Leer 119 líneas
+Glob**/*.py
+/home/user/epub-tts-accesible/app/__init__.py/home/user/epub-tts-accesible/app/interfaz/__init__.py/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Mostrar más
+/home/user/epub-tts-accesible/app/motor/__init__.py/home/user/epub-tts-accesible/app/motor/gestor_config.py/home/user/epub-tts-accesible/app/motor/gestor_voces.py/home/user/epub-tts-accesible/app/motor/grabador_audio.py/home/user/epub-tts-accesible/app/servicios/__init__.py/home/user/epub-tts-accesible/app/servicios/cliente_sapi5.py/home/user/epub-tts-accesible/construir_app.py/home/user/epub-tts-accesible/app/interfaz/dialogos.py/home/user/epub-tts-accesible/app/config_rutas.py/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py/home/user/epub-tts-accesible/iniciar_tiflohistorias.py/home/user/epub-tts-accesible/app/motor/control_cuota.py/home/user/epub-tts-accesible/app/servicios/cliente_azure.py/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py/home/user/epub-tts-accesible/app/servicios/cliente_polly.py/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py/home/user/epub-tts-accesible/app/motor/limpiador_lectura.py/home/user/epub-tts-accesible/app/motor/procesador_etiquetas.py/home/user/epub-tts-accesible/app/motor/gestor_epub.py/home/user/epub-tts-accesible/app/motor/reproductor_voz.py
+Copiar mensaje
+Let me search for all mentions of "TifloHistorias":
+Searched codebase for TifloHistorias references and examined startup script
+Searched codebase for TifloHistorias references and examined startup script
+GrepTifloHistorias|tiflohistorias
+iniciar_tiflohistorias.py:56:    """Aplicación principal de TifloHistorias."""
+iniciar_tiflohistorias.py:61:            logger.info("Iniciando TifloHistorias")
+INICIAR_APP.bat:6:python iniciar_tiflohistorias.py
+Read/home/user/epub-tts-accesible/iniciar_tiflohistorias.py
+Leer 84 líneas
+Copiar mensaje
+Let me check how ControlCuota is integrated:
+Searched for ControlCuota references and reviewed settings panel configuration
+Searched for ControlCuota references and reviewed settings panel configuration
+GrepControlCuota|control_cuota|verificar_y_registrar
+app/interfaz/pestana_ajustes.py:27:from app.motor.control_cuota import ControlCuota # Importar al principio del archivo
+app/interfaz/pestana_ajustes.py:35:        self.cuota = ControlCuota() # Instancia para leer datos
+app/motor/control_cuota.py:8:class ControlCuota:
+Mostrar más
+app/motor/control_cuota.py:71:    def verificar_y_registrar(self, texto, proveedor):
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 710 líneas
+Copiar mensaje
+Now I have a complete picture. Let me start implementing all 6 tasks systematically:
+Updated todo list with tasks for code refactoring
+Updated todo list with tasks for code refactoring
+Update Todos
+☐ Changing MAX_CHARS to 200☐ Rename TifloHistorias → Epub TTS Accesible throughout the app☐ Rewrite cliente_polly.py with .strip(), ruta_config, us-east-1 hard default☐ Add 1-retry logic in cliente_azure.py and cliente_polly.py☐ Fix punctuation separation in limpiador_lectura.py☐ Implement smart quota overflow fallback chain in reproductor_voz.py☐ Commit and push all changes
+Copiar mensaje
+Task 1: MAX_CHARS = 200
+Updated MAX_CHARS constant and started app rename refactor
+Updated MAX_CHARS constant and started app rename refactor
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+1-1
+309-
+        MAX_CHARS = 300
+309+
+        MAX_CHARS = 200
+Update Todos
+☐ Change MAX_CHARS to 200 in pestana_lectura.py☐ Renaming app to Epub TTS Accesible☐ Rewrite cliente_polly.py with .strip(), ruta_config, us-east-1 hard default☐ Add 1-retry logic in cliente_azure.py and cliente_polly.py☐ Fix punctuation separation in limpiador_lectura.py☐ Implement smart quota overflow fallback chain in reproductor_voz.py☐ Commit and push all changes
+Copiar mensaje
+Task 2: Rename TifloHistorias → Epub TTS Accesible
+Updated TifloHistorias main application initialization in Python file
+Updated TifloHistorias main application initialization in Python file
+Edit/home/user/epub-tts-accesible/iniciar_tiflohistorias.py+9-9
+5555
+class TifloApp(wx.App):
+56-
+    """Aplicación principal de TifloHistorias."""
+57-
+58-
+    def OnInit(self):
+59-
+        """Inicializa la aplicación."""
+60-
+        try:
+61-
+            logger.info("Iniciando TifloHistorias")
+62-
+            # CORRECCIÓN: Usamos 'titulo' en lugar de 'title'
+63-
+            self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+56+
+    """Aplicación principal de Epub TTS Accesible."""
+57+
+58+
+    def OnInit(self):
+59+
+        """Inicializa la aplicación."""
+60+
+        try:
+61+
+            logger.info("Iniciando Epub TTS Accesible")
+62+
+            # CORRECCIÓN: Usamos 'titulo' en lugar de 'title'
+63+
+            self.frame = VentanaPrincipal(None, titulo="Epub TTS Accesible")
+Copiar mensaje
+Also update the welcome message in pestana_lectura.py to say the new name:
+Updated MAX_CHARS limit and renamed app branding
+Updated MAX_CHARS limit and renamed app branding
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+1-1
+56-
+        self.txt_contenido.SetValue("Bienvenida. Pulsa Ctrl+A para abrir un libro EPUB.")
+56+
+        self.txt_contenido.SetValue("Bienvenida a Epub TTS Accesible. Pulsa Ctrl+A para abrir un libro EPUB.")
+Update Todos
+☐ Change MAX_CHARS to 200 in pestana_lectura.py☐ Rename TifloHistorias → Epub TTS Accesible throughout the app☐ Rewriting cliente_polly.py☐ Add 1-retry logic in cliente_azure.py and cliente_polly.py☐ Fix punctuation separation in limpiador_lectura.py☐ Implement smart quota overflow fallback chain in reproductor_voz.py☐ Commit and push all changes
+Copiar mensaje
+Task 3: Rewrite cliente_polly.py — .strip(), ruta_config, us-east-1 hard default
+Updated MAX_CHARS limit and renamed app branding
+Updated MAX_CHARS limit and renamed app branding
+Write/home/user/epub-tts-accesible/app/servicios/cliente_polly.py
+1+
+import os
+2+
+import json
+3+
+import io
+4+
+import time
+5+
+import sounddevice as sd
+6+
+import soundfile as sf
+7+
+from app.config_rutas import ruta_config
+8+
+9+
+# Mapeo de nombres de región descriptivos a códigos AWS estándar.
+10+
+_REGIONES_AWS = {
+11+
+    "us east (north virginia)": "us-east-1",
+12+
+    "us east (ohio)": "us-east-2",
+13+
+    "us west (n. california)": "us-west-1",
+14+
+    "us west (oregon)": "us-west-2",
+15+
+    "eu (ireland)": "eu-west-1",
+16+
+    "eu (london)": "eu-west-2",
+17+
+    "eu (paris)": "eu-west-3",
+18+
+    "eu (frankfurt)": "eu-central-1",
+19+
+    "eu (stockholm)": "eu-north-1",
+20+
+    "ap (tokyo)": "ap-northeast-1",
+Show full diff (168 more lines)
+Update Todos
+☐ Change MAX_CHARS to 200 in pestana_lectura.py☐ Rename TifloHistorias → Epub TTS Accesible throughout the app☐ Rewrite cliente_polly.py with .strip(), ruta_config, us-east-1 hard default☐ Adding retry logic to Azure and Polly clients☐ Fix punctuation separation in limpiador_lectura.py☐ Implement smart quota overflow fallback chain in reproductor_voz.py☐ Commit and push all changes
+Copiar mensaje
+Task 4: Add 1-retry logic in cliente_azure.py
+Modified Azure text-to-speech client method implementation
+Modified Azure text-to-speech client method implementation
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+11-9
+1717
+        # Una sesión reutilizable mejora el rendimiento (keep-alive HTTP) y permite
+1818
+        # cancelar peticiones en curso llamando a self._sesion.close().
+1919
+        self._sesion = requests.Session()
+20+
+        # Flag para distinguir una detención intencional de un error de red
+21+
+        self._parado = False
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+4-3
+7272
+    def hablar(self, texto, datos_voz):
+73+
+        self._parado = False
+7374
+        inicio = time.time()
+7475
+        print(f"--> [Azure] Iniciando petición...")
+Copiar mensaje
+Now replace the try/except block for the POST request with retry logic:
+Fixed race condition in Azure client connection handling
+Fixed race condition in Azure client connection handling
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+26-14
+115115
+        # La petición se realiza a través de la sesión gestionada.
+116116
+        # Si detener() cierra la sesión antes de que esta línea termine,
+117117
+        # requests lanzará una ConnectionError que el reproductor captura y descarta.
+118-
+        try:
+119-
+            response = self._sesion.post(
+120-
+                url, headers=headers,
+121-
+                data=ssml.encode('utf-8'),
+122-
+                timeout=30
+123-
+            )
+124-
+        except requests.exceptions.Timeout:
+125-
+            raise Exception("Azure tardó demasiado (Timeout > 30s).")
+118+
+        # Se realizan hasta 2 intentos ante errores de conexión transitoria.
+119+
+        response = None
+120+
+        for intento in range(2):
+121+
+            try:
+122+
+                response = self._sesion.post(
+123+
+                    url, headers=headers,
+124+
+                    data=ssml.encode('utf-8'),
+125+
+                    timeout=30
+126+
+                )
+Show full diff (14 more lines)
+Copiar mensaje
+Also set _parado = True in detener():
+Updated MAX_CHARS limit and renamed app branding throughout codebase
+Updated MAX_CHARS limit and renamed app branding throughout codebase
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+14-13
+141141
+        bloqueante a self._sesion.post() en el hilo de síntesis lance una excepción
+142142
+        y se detenga sin necesidad de esperar la respuesta completa de la API.
+143143
+        """
+144+
+        self._parado = True
+144145
+            self._sesion = requests.Session()
+145146
+        except Exception as e:
+146147
+            print(f"[Aviso] Error al cerrar sesión Azure: {e}")
+Update Todos
+☐ Change MAX_CHARS to 200 in pestana_lectura.py☐ Rename TifloHistorias → Epub TTS Accesible throughout the app☐ Rewrite cliente_polly.py with .strip(), ruta_config, us-east-1 hard default☐ Add 1-retry logic in cliente_azure.py and cliente_polly.py☐ Fixing punctuation cleanup in limpiador_lectura.py☐ Implement smart quota overflow fallback chain in reproductor_voz.py☐ Commit and push all changes
+Copiar mensaje
+Task 5: Fix punctuation separation in limpiador_lectura.py
+Updated MAX_CHARS limit and renamed app to Epub TTS Accesible
+Updated MAX_CHARS limit and renamed app to Epub TTS Accesible
+Write/home/user/epub-tts-accesible/app/motor/limpiador_lectura.py
+1+
+import re
+2+
+3+
+4+
+def limpiar_para_lectura(texto):
+5+
+    """
+6+
+    Limpia el texto extraído de un EPUB para lectura accesible con NVDA.
+7+
+8+
+    Transformaciones aplicadas:
+9+
+    1. Une palabras cortadas con guion al final de línea (e.g., "cami-\\nando" → "caminando")
+10+
+    2. Elimina espacios o tabuladores múltiples internos
+11+
+    3. Reune signos de puntuación separados de la palabra anterior
+12+
+       (e.g., "frase ." → "frase.", "palabra ," → "palabra,")
+13+
+    4. Reduce TODAS las secuencias de saltos de línea a uno solo (sin líneas en blanco)
+14+
+       → NVDA no anunciará "blank" al navegar entre párrafos
+15+
+16+
+    El resultado es un texto de flujo continuo con párrafos separados por un único
+17+
+    salto de línea, lo que permite que NVDA lo lea sin interrupciones vacías.
+18+
+    """
+19+
+    if not texto:
+20+
+        return texto
+Show full diff (19 more lines)
+Update Todos
+☐ Change MAX_CHARS to 200 in pestana_lectura.py☐ Rename TifloHistorias → Epub TTS Accesible throughout the app☐ Rewrite cliente_polly.py with .strip(), ruta_config, us-east-1 hard default☐ Add 1-retry logic in cliente_azure.py and cliente_polly.py☐ Fix punctuation separation in limpiador_lectura.py☐ Implementing smart quota overflow fallback☐ Commit and push all changes
+Copiar mensaje
+Task 6: Smart quota overflow fallback chain
+First, add tiene_cuota() and registrar_gasto() to control_cuota.py:
+Updated quota control logic in control_cuota.py
+Updated quota control logic in control_cuota.py
+Edit/home/user/epub-tts-accesible/app/motor/control_cuota.py+47-10
+116116
+        clave = proveedor.lower()
+117117
+        self.datos["limites"][clave] = int(nuevo_limite)
+118118
+        self.guardar_datos()
+119+
+120+
+    def tiene_cuota(self, texto, proveedor):
+121+
+        """
+122+
+        Consulta silenciosa: retorna True si hay cuota disponible para el texto dado,
+123+
+        sin mostrar diálogos ni registrar el gasto.
+124+
+        """
+125+
+        self.reiniciar_contadores_si_mes_nuevo()
+126+
+        prov_key = proveedor.lower()
+127+
+        if "azure" in prov_key:
+128+
+            clave = "azure"
+129+
+        elif "polly" in prov_key:
+130+
+            clave = "polly"
+131+
+        elif "eleven" in prov_key:
+132+
+            clave = "elevenlabs"
+133+
+        else:
+134+
+            return True  # Voz local: siempre disponible
+135+
+Show full diff (20 more lines)
+Copiar mensaje
+Now update reproductor_voz.py to import ControlCuota and implement the smart fallback in cargar_texto:
+Updated voice player callback handling in reproductor_voz.py
+Updated voice player callback handling in reproductor_voz.py
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+13-12
+88
+from app.servicios.cliente_azure import ClienteAzure
+99
+from app.servicios.cliente_eleven import ClienteEleven
+1010
+from app.servicios.cliente_polly import ClientePolly
+11+
+from app.motor.control_cuota import ControlCuota
+1112
+from app.config_rutas import ruta_config
+1213
+# ANCLAJE_FIN: IMPORTACIONES
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+10-8
+4343
+        # Cuando True, el hilo de síntesis no mostrará el diálogo de error por ConnectionError
+4444
+        # ni sobreescribirá el estado con 'detenido' al recibir la excepción de cancelación.
+4545
+        self._detenido_intencionalmente = False
+46+
+        # Control de cuota: evita gastos inesperados y permite saltar al siguiente proveedor
+47+
+        self._control_cuota = ControlCuota()
+Copiar mensaje
+Now add the _elegir_motor_con_cuota method and integrate it into cargar_texto:
+Updated MAX_CHARS limit and renamed app to Epub TTS Accesible
+Updated MAX_CHARS limit and renamed app to Epub TTS Accesible
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+93-47
+8686
+# ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
+87-
+    def cargar_texto(self, texto, callback_completado=None):
+88-
+        """
+89-
+        Inicia la lectura del texto.
+90-
+        Aplica el método adecuado según si se usa una voz local o una voz neuronal.
+91-
+        Incrementa el contador de generación para invalidar cualquier hilo anterior
+92-
+        que pudiera estar esperando respuesta de la API.
+93-
+94-
+        callback_completado: función sin argumentos que se llamará en el hilo principal
+95-
+        cuando termine de reproducirse el fragmento. Usado por PestanaLectura para
+96-
+        encadenar la cola de audio de lectura continua.
+97-
+        """
+98-
+        if not texto: return
+99-
+100-
+        # Detener cualquier lectura en curso antes de iniciar una nueva
+101-
+        self.detener()
+102-
+        time.sleep(0.05)
+103-
+104-
+        # Nueva síntesis: restablecer el flag de detención intencional
+105-
+        self._detenido_intencionalmente = False
+Show full diff (68 more lines)
+Update Todos
+☐ Change MAX_CHARS to 200 in pestana_lectura.py☐ Rename TifloHistorias → Epub TTS Accesible throughout the app☐ Rewrite cliente_polly.py with .strip(), ruta_config, us-east-1 hard default☐ Add 1-retry logic in cliente_azure.py and cliente_polly.py☐ Fix punctuation separation in limpiador_lectura.py☐ Implement smart quota overflow fallback chain in reproductor_voz.py☐ Committing and pushing changes
+Copiar mensaje
+Now let's commit and push everything:
+Updated MAX_CHARS limit and renamed app branding
+Updated MAX_CHARS limit and renamed app branding
+Bashgit status && git diff --stat
+On branch claude/python-wxpython-accessibility-ZPVzLYour branch is up to date with 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Mostrar más
+Changes not staged for commit:  (use "git add <file>..." to update what will be committed)  (use "git restore <file>..." to discard changes in working directory)	modified:   app/interfaz/pestana_lectura.py	modified:   app/motor/control_cuota.py	modified:   app/motor/limpiador_lectura.py	modified:   app/motor/reproductor_voz.py	modified:   app/servicios/cliente_azure.py	modified:   app/servicios/cliente_polly.py	modified:   iniciar_tiflohistorias.pyno changes added to commit (use "git add" and/or "git commit -a") app/interfaz/pestana_lectura.py |  4 +- app/motor/control_cuota.py      | 37 ++++++++++++++++ app/motor/limpiador_lectura.py  | 13 ++++-- app/motor/reproductor_voz.py    | 49 +++++++++++++++++++++ app/servicios/cliente_azure.py  | 32 ++++++++++---- app/servicios/cliente_polly.py  | 96 ++++++++++++++++++++++++++++------------- iniciar_tiflohistorias.py       |  8 ++-- 7 files changed, 192 insertions(+), 47 deletions(-)
+Bash
+git add app/interfaz/pestana_lectura.py app/motor/control_cuota.py app/motor/limpiador_lectura.py app/motor/reproductor_voz.py app/servicios/cliente_azure.py app/servicios/cliente_polly.py iniciar_tiflohistorias.py && git commit -m "$(cat <<'EOF' Fase 1 final: nombre, cuota, reintentos, puntuación y fragmentos - Renombra la app de 'TifloHistorias' a 'Epub TTS Accesible' (título, logs y mensaje de bienvenida) - Reduce MAX_CHARS a 200 para respuesta API más ágil - Reescribe cliente_polly.py: .strip() en credenciales, us-east-1 como defecto estricto para regiones no reconocidas - Añade 1 reintento automático ante errores de conexión transitoria en Azure (con flag _parado para no reintentar en paradas intencionales) y en Polly - limpiador_lectura.py: nueva regla que re-une signos de puntuación separados de la palabra anterior (evita "frase ." → correcto "frase.") - Salto de cuota inteligente: cuando un proveedor de IA agota su límite mensual, reproductor_voz.py prueba el siguiente disponible antes de caer a SAPI5; control_cuota.py añade tiene_cuota() y registrar_gasto() https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL ea71dab] Fase 1 final: nombre, cuota, reintentos, puntuación y fragmentos 7 files changed, 192 insertions(+), 47 deletions(-)
+Bashgit push -u origin claude/python-wxpython-accessibility-ZPVzL
+To http://127.0.0.1:46418/git/Dayanna-Parson/epub-tts-accesible   d88b6ed..ea71dab  claude/python-wxpython-accessibility-ZPVzL -> claude/python-wxpython-accessibility-ZPVzLbranch 'claude/python-wxpython-accessibility-ZPVzL' set up to track 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Mostrar 1 más
+Copiar mensaje
+All 6 tasks are done and pushed. Here's a summary of what was implemented:
+ 
+1. MAX_CHARS = 200 (pestana_lectura.py)
+Fragmentos de 200 caracteres para máxima velocidad de respuesta de las APIs.
+2. Renombrado: "Epub TTS Accesible" (iniciar_tiflohistorias.py, pestana_lectura.py)
+• Título de la ventana: "Epub TTS Accesible"
+• Log de arranque: "Iniciando Epub TTS Accesible"
+• Mensaje de bienvenida actualizado
+3. Reescritura de cliente_polly.py
+• .strip() aplicado a todas las credenciales al leerlas del JSON
+• ruta_config() para la ruta del archivo de configuración
+• _normalizar_region() ahora tiene 3 niveles: nombre descriptivo → código directo reconocido → "us-east-1" como defecto estricto para valores no reconocidos
+4. Reintento automático (cliente_azure.py, cliente_polly.py)
+• Hasta 1 reintento en errores de red transitoria (espera 1s entre intentos)
+• Flag _parado en cada cliente: si la detención fue intencional, no se reintenta
+5. Puntuación en limpiador_lectura.py
+• Nueva regla: re.sub(r'(\w) +([.,;:])', r'\1\2', texto) — reune los signos de puntuación que quedaron separados de la palabra anterior
+6. Salto de cuota inteligente (reproductor_voz.py + control_cuota.py)
+• ControlCuota tiene dos métodos nuevos: tiene_cuota(texto, proveedor) (consulta silenciosa) y registrar_gasto(texto, proveedor)
+• ReproductorVoz._elegir_motor_con_cuota(): cuando el proveedor activo tiene la cuota agotada, prueba los demás proveedores de IA en orden antes de caer a SAPI5
+• Se muestra un único diálogo solo cuando todos los proveedores están agotados
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++1148-255
+Crear PR

@@ -1,0 +1,363 @@
+Pront 5 claude (fase dos, modo grabación)
+
+Enorabuena, has arreglado y corregido la gran mayoría de errores y cosas que antes no funcionaban bien, o no terminaban de funcionar.
+Pero, ahora, te voy a decir y enseñar con NVDA las cosas que siguen sin funcionar.
+¿Te sirve que te ponga exactamente como lee NVDA toda la interfaz?
+Archivo de texto  agrupación
+Examinar…  botón  Alt+  e
+Título (opcional):  edición  seleccionado {{@nar}}Hola, esto es una pruebaa para probar como suena el modo por etiquetas
+en blanco
+selección eliminada
+Capítulo (opcional):  edición  seleccionado {{@nar}}Hola, esto es una pruebaa para probar como suena el modo por etiquetas
+en blanco
+selección eliminada
+Casting de voces  agrupación
+Etiqueta activa:  cuadro combinado  @pj3  contraído
+Archivo de texto  agrupación
+Capítulo (opcional):  edición  en blanco
+Título (opcional):  edición  en blanco
+Examinar…  botón  Alt+  e
+Título (opcional):  edición  en blanco
+Capítulo (opcional):  edición  en blanco
+Casting de voces  agrupación
+Etiqueta activa:  cuadro combinado  @pj3  contraído
+@pj1
+@nar
+Voces disponibles (favoritas):  lista
+Raul  (es-ES)  [Polly]
+Raul  (es-ES)  [Polly]
+Probar Voz seleccionada  botón  Alt+  p
+Asignaciones actuales:  edición  sólo lectura  @pj3  →  Raul  [Polly]
+Opciones de salida  agrupación
+Dividir por etiquetas  casilla de verificación  sin marcar  Alt+  p
+Iniciar Grabación  botón  Alt+  i
+Abrir Carpeta  botón  Alt+  b
+Son solo estos. 
+Como has podido observar, NVDA no vervaliza las descripciones de los elementos importantes como el del botón examinar (ojo que no es lo mismo que lea o no los botones. Si no que me refiero, a los textos de ayuda, o de estado, que obviamente ayuden al usuario a entender lo que está pasando y para que es un botón elemento etc)
+Me acabo de dar cuenta que aquí faltaría un botón para eliminar y limpiar el archivo que e cargado, (esto serviría, por ej: Si queremos cargar otro fagmento o capítulo, pues que empiece con la interfaz limpia, sin rastro ni de etiquetas de otros fragmentos o capítulos o voces asignadas) Pues eso, un botón para limpiar etiquetas, y voces asignadas... Que quede como si la cerrásemos y la volviésemos a abrir para cargar otra cosa... Ya sabes, esto es mejor así, porque agiliza un montón para trabajar más rápido, ahorra pasos. En vez de tener que cerrar la aplicación, y volverla a abrir, pues es mejor que se borre el archivo anterior, el archivo ya subido, para cargar otro nuevo... Perdón si me enrredo demasiado jaja. Bueno, espero que me entiendas.
+A, y antes de que se me olvide, dos cosas. Asegúrate de que el libro o fragmento en el que esté trabajando se guarda junto con el capítulo y o libro, Y que se crean las carpetas pertinentes.
+A, y la casilla de la etiqueta no se actualiza. Por mucho que la marque o la desmarque, pues no dice nada más. solo esto. Opciones de salida  agrupación
+Dividir por etiquetas  casilla de verificación  sin marcar  Alt+  p
+marcado
+sin marcar
+Casting de voces  agrupación
+Asignaciones actuales:  edición  sólo lectura  @pj3  →  Raul  [Polly]
+Opciones de salida  agrupación
+Dividir por etiquetas  casilla de verificación  sin marcar  Alt+  p. Deverías quitarle los atajos, si es que los tiene, como este de dividir etiquetas, aunque no se si realmente lo tiene asignado o no... A los elementos como este, que no es necesario que tengan atajos de teclado, Ya que en este caso, es una casilla de verificación. Nada mas sirve para marcar y desmarcar.
+Vamos con otra cosa, los favoritos. A ver... Como sabes, tanto en los apartados voces favoritas, voces disponibles y en el cuadro combinado para elegir las voces, pues en todos los lados sale igual, y lo bueno es que si en un sitio se actualiza, por ej, en las voces favoritas, se añade o quita una, pues se actualiza en el resto, porque dependen de ese json. Bien. Ahora, porqué si esta lista para asignar las voces a las fetiquetas, aunque dependa de las demás, especialmente de las voces favoritas, porqué no aparece igual que las otras? tendría que aparecer igual que las favoritas y las voces disponibles. Con las mismas etiquetas, y las casillas de verificación... Aquí va como lo vervalizaa todo NVDA:
+lista
+Seraphina Mehrsprachig [Multilingüe]; Género: Femenino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  marcado
+Florian Mehrsprachig [Multilingüe]; Género: Masculino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  marcado
+William Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Australia); Proveedor: Azure  casilla de verificación  marcado
+Cora Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Brandon Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Davis Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Derek Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Dustin Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Evelyn Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Jenny Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Lewis Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Lola Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Nancy Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Ryan Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Samuel Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Serena Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Steffan Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Multitalker Set1 Dragon HD Latest [Dragon]; Género: Neutro; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Xiaochen&Yunhan Multitalker Dragon HD Latest [Dragon]; Género: Neutro; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+Ximena Dragon HD Latest [Dragon]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Xiaochen&Yunhan Multitalker Dragon HD Latest [Dragon]; Género: Neutro; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  marcado
+sin marcar
+Ximena Dragon HD Latest [Dragon]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Tristan Dragon HD Latest [Dragon]; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Elvira; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Álvaro; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Arabella Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Isidora Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Tristan Multilingual [Multilingüe]; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Ximena Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Abril; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Arnau; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Dario; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Elias; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Irene; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Laia; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Lia; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Nil; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Saul; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Teo; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Triana; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Vera; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Ximena; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Dalia Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (México); Proveedor: Azure  casilla de verificación  marcado
+Jorge Multilingual [Multilingüe]; Género: Masculino; Idioma: Español (México); Proveedor: Azure  casilla de verificación  marcado
+Alessio Multilingual [Multilingüe]; Género: Masculino; Idioma: Italiano (Italia); Proveedor: Azure  casilla de verificación  marcado
+Giuseppe Multilingual [Multilingüe]; Género: Masculino; Idioma: Italiano (Italia); Proveedor: Azure  casilla de verificación  marcado
+Marcello Multilingual [Multilingüe]; Género: Masculino; Idioma: Italiano (Italia); Proveedor: Azure  casilla de verificación  marcado
+Macerio Multilingual [Multilingüe]; Género: Masculino; Idioma: Portugués (Brasil); Proveedor: Azure  casilla de verificación  marcado
+Thalita multilíngue [Multilingüe]; Género: Femenino; Idioma: Portugués (Brasil); Proveedor: Azure  casilla de verificación  marcado
+Macerio Multilingual [Multilingüe]; Género: Masculino; Idioma: Portugués (Brasil); Proveedor: Azure  casilla de verificación  marcado
+Marcello Multilingual [Multilingüe]; Género: Masculino; Idioma: Italiano (Italia); Proveedor: Azure  casilla de verificación  marcado
+Giuseppe Multilingual [Multilingüe]; Género: Masculino; Idioma: Italiano (Italia); Proveedor: Azure  casilla de verificación  marcado
+Alessio Multilingual [Multilingüe]; Género: Masculino; Idioma: Italiano (Italia); Proveedor: Azure  casilla de verificación  marcado
+Jorge Multilingual [Multilingüe]; Género: Masculino; Idioma: Español (México); Proveedor: Azure  casilla de verificación  marcado
+Dalia Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (México); Proveedor: Azure  casilla de verificación  marcado
+Ximena; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Vera; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Triana; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Teo; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Saul; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Nil; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Lia; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Laia; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Irene; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Elias; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Dario; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Arnau; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Abril; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Ximena Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Tristan Multilingual [Multilingüe]; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Isidora Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Arabella Multilingual [Multilingüe]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Álvaro; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Elvira; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Tristan Dragon HD Latest [Dragon]; Género: Masculino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Ximena Dragon HD Latest [Dragon]; Género: Femenino; Idioma: Español (España); Proveedor: Azure  casilla de verificación  marcado
+Xiaochen&Yunhan Multitalker Dragon HD Latest [Dragon]; Género: Neutro; Idioma: Inglés (Estados Unidos); Proveedor: Azure  casilla de verificación  sin marcar
+marcado
+Filtros de Voces  agrupación
+Buscar nombre:  edición  en blanco
+Solo nuevas voces  casilla de verificación  sin marcar
+Solo favoritas  casilla de verificación  marcado
+Tipo:  cuadro combinado  Todos  contraído
+Proveedor:  cuadro combinado  Todos  contraído
+Idioma:  cuadro combinado  Todos  contraído
+Proveedor:  cuadro combinado  Todos  contraído
+Tipo:  cuadro combinado  Todos  contraído
+Solo favoritas  casilla de verificación  marcado
+Tipo:  cuadro combinado  Todos  contraído
+Solo favoritas  casilla de verificación  sin marcar
+Solo nuevas voces  casilla de verificación  sin marcar
+Buscar nombre:  edición  en blanco
+lista
+Adri; Género: Femenino; Idioma: af-ZA; Proveedor: Azure  casilla de verificación  sin marcar
+Willem; Género: Masculino; Idioma: af-ZA; Proveedor: Azure  casilla de verificación  sin marcar
+መቅደስ; Género: Femenino; Idioma: am-ET; Proveedor: Azure  casilla de verificación  sin marcar
+አምሀ; Género: Masculino; Idioma: am-ET; Proveedor: Azure  casilla de verificación  sin marcar
+فاطمة; Género: Femenino; Idioma: ar-AE; Proveedor: Azure  casilla de verificación  sin marcar
+حمدان; Género: Masculino; Idioma: ar-AE; Proveedor: Azure  casilla de verificación  sin marcar
+ليلى; Género: Femenino; Idioma: ar-BH; Proveedor: Azure  casilla de verificación  sin marcar
+علي; Género: Masculino; Idioma: ar-BH; Proveedor: Azure  casilla de verificación  sin marcar
+أمينة; Género: Femenino; Idioma: ar-DZ; Proveedor: Azure  casilla de verificación  sin marcar
+إسماعيل; Género: Masculino; Idioma: ar-DZ; Proveedor: Azure  casilla de verificación  sin marcar
+سلمى; Género: Femenino; Idioma: ar-EG; Proveedor: Azure  casilla de verificación  sin marcar
+شاكر; Género: Masculino; Idioma: ar-EG; Proveedor: Azure  casilla de verificación  sin marcar
+رنا; Género: Femenino; Idioma: ar-IQ; Proveedor: Azure  casilla de verificación  sin marcar
+باسل; Género: Masculino; Idioma: ar-IQ; Proveedor: Azure  casilla de verificación  sin marcar
+سناء; Género: Femenino; Idioma: ar-JO; Proveedor: Azure  casilla de verificación  sin marcar
+تيم; Género: Masculino; Idioma: ar-JO; Proveedor: Azure  casilla de verificación  sin marcar
+نورا; Género: Femenino; Idioma: ar-KW; Proveedor: Azure  casilla de verificación  sin marcar
+إيمان; Género: Femenino; Idioma: ar-LY; Proveedor: Azure  casilla de verificación  sin marcar
+أحمد; Género: Masculino; Idioma: ar-LY; Proveedor: Azure  casilla de verificación  sin marcar
+منى; Género: Femenino; Idioma: ar-MA; Proveedor: Azure  casilla de verificación  sin marcar
+أماني; Género: Femenino; Idioma: ar-SY; Proveedor: Azure  casilla de verificación  sin marcar
+أماني; Género: Femenino; Idioma: ar-SY; Proveedor: Azure  casilla de verificación  sin seleccionar  sin marcar
+ليث; Género: Masculino; Idioma: ar-SY; Proveedor: Azure  casilla de verificación  sin marcar
+ريم; Género: Femenino; Idioma: ar-TN; Proveedor: Azure  casilla de verificación  sin marcar
+Babək; Género: Masculino; Idioma: az-AZ; Proveedor: Azure  casilla de verificación  sin marcar
+Babək; Género: Masculino; Idioma: az-AZ; Proveedor: Azure  casilla de verificación  sin marcar
+Babək; Género: Masculino; Idioma: az-AZ; Proveedor: Azure  casilla de verificación  sin marcar
+Babək; Género: Masculino; Idioma: az-AZ; Proveedor: Azure  casilla de verificación  sin marcar
+Калина; Género: Femenino; Idioma: bg-BG; Proveedor: Azure  casilla de verificación  sin marcar
+Борислав; Género: Masculino; Idioma: bg-BG; Proveedor: Azure  casilla de verificación  sin marcar
+Vesna; Género: Femenino; Idioma: bs-BA; Proveedor: Azure  casilla de verificación  sin seleccionar  sin marcar
+Vlasta; Género: Femenino; Idioma: cs-CZ; Proveedor: Azure  casilla de verificación  sin marcar
+Vlasta; Género: Femenino; Idioma: cs-CZ; Proveedor: Azure  casilla de verificación  sin marcar
+Antonín; Género: Masculino; Idioma: cs-CZ; Proveedor: Azure  casilla de verificación  sin marcar
+Nia; Género: Femenino; Idioma: cy-GB; Proveedor: Azure  casilla de verificación  sin marcar
+Florian Dragon HD Latest [Dragon]; Género: Masculino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  sin seleccionar  sin marcar
+Seraphina Mehrsprachig [Multilingüe]; Género: Femenino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  marcado
+Seraphina Mehrsprachig [Multilingüe]; Género: Femenino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  marcado
+Seraphina Mehrsprachig [Multilingüe]; Género: Femenino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  marcado
+Louisa; Género: Femenino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  sin seleccionar  sin marcar
+Maja; Género: Femenino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  sin marcar
+Maja; Género: Femenino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  sin marcar
+Ralf; Género: Masculino; Idioma: Alemán (Alemania); Proveedor: Azure  casilla de verificación  sin marcar
+William Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Australia); Proveedor: Azure  casilla de verificación  marcado
+William Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Australia); Proveedor: Azure  casilla de verificación  marcado
+William Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Australia); Proveedor: Azure  casilla de verificación  marcado
+William Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Australia); Proveedor: Azure  casilla de verificación  marcado
+Natasha; Género: Femenino; Idioma: Inglés (Australia); Proveedor: Azure  casilla de verificación  sin marcar
+Filtros de Voces  agrupación
+Buscar nombre:  edición  en blanco
+Solo nuevas voces  casilla de verificación  sin marcar
+Solo favoritas  casilla de verificación  sin marcar
+Tipo:  cuadro combinado  Todos  contraído
+Proveedor:  cuadro combinado  Todos  contraído
+Idioma:  cuadro combinado  Todos  contraído
+Configuración del Libro  agrupación
+Idioma del libro (Para acento):  cuadro combinado  Español (ES)  contraído
+lista
+Voces e Idiomas
+Escuchar muestra (Alt+P)  botón
+Ajustes  pestaña  seleccionado
+lista
+Voces e Idiomas
+Escuchar muestra (Alt+P)  botón
+Ajustes  pestaña  seleccionado
+Modo Grabación  pestaña  seleccionado
+árbol
+12. La talla
+edición  sólo lectura  —La humanidad siempre ha estado esclavizada, te dirán. La libertad nos esclaviza a la lujuria y la avaricia. Me quitaron la libertad, pero a cambio me dieron una vida de ensueño. A ti te dieron una vida de sacrificio, de familia, de comunidad. Y la sociedad permanece estable. Sin hambruna. Sin 
+Progreso: 22%  deslizador  22
+Voz:  cuadro combinado  晓悠 多语言 [Multilingüe]; Femenino; Chino (Mandarín); Azure  contraído
+[Local] Microsoft Helena Desktop - Spanish (Spain)
+[Local] Microsoft Zira Desktop - English (United States)
+Seraphina Mehrsprachig [Multilingüe]; Femenino; Alemán; Azure
+Florian Mehrsprachig [Multilingüe]; Masculino; Alemán; Azure
+William Multilingual [Multilingüe]; Masculino; Inglés (Australia); Azure
+Cora Multilingual [Multilingüe]; Femenino; Inglés (EE.UU.); Azure
+Brandon Multilingual [Multilingüe]; Masculino; Inglés (EE.UU.); Azure
+Davis Multilingual [Multilingüe]; Masculino; Inglés (EE.UU.); Azure
+Derek Multilingual [Multilingüe]; Masculino; Inglés (EE.UU.); Azure
+Dustin Multilingual [Multilingüe]; Masculino; Inglés (EE.UU.); Azure
+Lewis Multilingual [Multilingüe]; Masculino; Inglés (EE.UU.); Azure
+Nancy Multilingual [Multilingüe]; Femenino; Inglés (EE.UU.); Azure
+Ryan Multilingual [Multilingüe]; Masculino; Inglés (EE.UU.); Azure
+Progreso: 22%  deslizador  22
+edición  sólo lectura  —La humanidad siempre ha estado esclavizada, te dirán. La libertad nos esclaviza a la lujuria y la avaricia. Me quitaron la libertad, pero a cambio me dieron una vida de ensueño. A ti te dieron una vida de sacrificio, de familia, de comunidad. Y la sociedad permanece estable. Sin hambruna. Sin 
+árbol
+12. La talla
+Volumen:  deslizador  100
+Velocidad:  deslizador  80
+Detener (Ctrl+D)  botón
+Adelante 20s  botón
+Reproducir (Ctrl+P)  botón
+Atrás 20s  botón
+Voz:  cuadro combinado  Ryan Multilingual [Multilingüe]; Masculino; Inglés (EE.UU.); Azure  contraído
+Progreso: 22%  deslizador  22
+edición  sólo lectura  —La humanidad siempre ha estado esclavizada, te dirán. La libertad nos esclaviza a la lujuria y la avaricia. Me quitaron la libertad, pero a cambio me dieron una vida de ensueño. A ti te dieron una vida de sacrificio, de familia, de comunidad. Y la sociedad permanece estable. Sin hambruna. Sin 
+árbol
+12. La talla
+Volumen:  deslizador  100
+Velocidad:  deslizador  80
+Volumen:  deslizador  100
+Modo Lectura  pestaña  seleccionado
+Modo Grabación  pestaña  seleccionado
+Ajustes  pestaña  seleccionado
+lista
+Voces e Idiomas
+Escuchar muestra (Alt+P)  botón
+Ajustes  pestaña  seleccionado
+lista
+Voces e Idiomas
+Escuchar muestra (Alt+P)  botón
+Ajustes  pestaña  seleccionado
+Modo Grabación  pestaña  seleccionado
+Archivo de texto  agrupación
+Examinar…  botón  Alt+  e
+Título (opcional):  edición  en blanco
+Capítulo (opcional):  edición  en blanco
+Casting de voces  agrupación
+Etiqueta activa:  cuadro combinado  @nar  contraído
+Voces disponibles (favoritas):  lista
+Raul  (es-ES)  [Polly]
+Raul  (es-ES)  [Polly]
+Alba  (es-ES)  [Polly]
+Raul  (es-ES)  [Polly]
+Lupe  (es-US)  [Polly]
+Penélope  (es-US)  [Polly]
+Seraphina Mehrsprachig  (de-DE)  [Azure]
+Florian Mehrsprachig  (de-DE)  [Azure]
+William Multilingual  (en-AU)  [Azure]
+Microsoft Zira Desktop - English (United States)  [Local]
+
+A, y quiero que la etiqueta nuevas (esa que habíamos puesto para cuando se actualizaban uno o todos los proobedores, para cuando salieran nuevas voces, para no tener que estar adivinando cual es o cuales son las nuevas agregadas, ni estar navegando por listas infinitas...) Pues se me ocurrió que esa etiqueta pues se elimine después de haver preescuchado las voces, o si la marcamos como favorita... Después de eso, creo que no tendría sentido seguir con esa etuqueta de nueva, ya que para nosotros ya no es nueva, si la marcamos como favorita.
+Y ahora si, lo último: Quería probar el botón grabar, a ver como salía la grabación, pero, me sigue dando el mismo error que antes.
+Iniciar Grabación  botón  Alt+  i
+pulsado
+no disponible
+Abrir Carpeta  botón  Alt+  b
+Error de grabación  diálogo  Error durante la grabación:
+[WinError 2] El sistema no puede encontrar el archivo especificado
+OK  botón
+Y el log:
+---------------------------------------------------
+   INICIANDO TIFLO HISTORIAS...
+---------------------------------------------------
+2026-03-05 00:23:45,217 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-05 00:23:45,218 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-05 00:23:45,220 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-05 00:23:45,226 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-05 00:23:47,300 - __main__ - INFO - Iniciando Epub TTS Accesible
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+[Polly] Conexión establecida | 1.30s | Motor: long-form | Voz: Raul | 52 chars
+[Polly] Conexión establecida | 1.19s | Motor: generative | Voz: Lupe | 52 chars
+[Polly] Conexión establecida | 1.19s | Motor: standard | Voz: Penelope | 52 chars
+[Polly] Conexión establecida | 1.00s | Motor: standard | Voz: Miguel | 52 chars
+[Polly] Conexión establecida | 1.25s | Motor: generative | Voz: Mia | 52 chars
+[Polly] Conexión establecida | 1.21s | Motor: generative | Voz: Lucia | 52 chars
+[Polly] Conexión establecida | 1.13s | Motor: standard | Voz: Enrique | 52 chars
+[Polly] Conexión establecida | 1.09s | Motor: standard | Voz: Conchita | 52 chars
+[Polly] Conexión establecida | 1.29s | Motor: generative | Voz: Pedro | 52 chars
+[Polly] Conexión establecida | 1.17s | Motor: generative | Voz: Pedro | 52 chars
+[Polly] Conexión establecida | 1.09s | Motor: generative | Voz: Andres | 52 chars
+[Polly] Conexión establecida | 1.28s | Motor: generative | Voz: Andres | 52 chars
+[Polly] Conexión establecida | 1.44s | Motor: generative | Voz: Sergio | 52 chars
+[Polly] Conexión establecida | 1.29s | Motor: generative | Voz: Sergio | 52 chars
+2026-03-05 00:30:04,955 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:04,958 - app.motor.grabador_audio - INFO - [Azure] tfh_000_z5y8jc98.mp3 (48kHz→320k)
+2026-03-05 00:30:06,215 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:06,218 - app.motor.grabador_audio - INFO - [Azure] tfh_001_2djwuyyb.mp3 (48kHz→320k)
+2026-03-05 00:30:09,103 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:09,106 - app.motor.grabador_audio - INFO - [Polly] tfh_002_a79vf907.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 00:30:09,134 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_000_z5y8jc98.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:09,156 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_001_2djwuyyb.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:09,177 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_002_a79vf907.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Buscando voz: Microsoft Zira Desktop - English (United States)
+--> [Local] Voz cambiada a: Microsoft Zira Desktop - English (United States)
+[Polly] Conexión establecida | 1.16s | Motor: generative | Voz: Lucia | 116 chars
+[Polly] Conexión establecida | 1.04s | Motor: generative | Voz: Lucia | 165 chars
+[Polly] Conexión establecida | 1.13s | Motor: generative | Voz: Lucia | 135 chars
+[Polly] Conexión establecida | 0.97s | Motor: generative | Voz: Lucia | 135 chars
+[Polly] Conexión establecida | 1.08s | Motor: generative | Voz: Lucia | 179 chars
+[Polly] Conexión establecida | 1.17s | Motor: generative | Voz: Lucia | 157 chars
+[Polly] Conexión establecida | 1.41s | Motor: generative | Voz: Lucia | 157 chars
+[Polly] Conexión establecida | 0.95s | Motor: generative | Voz: Lucia | 90 chars
+[Polly] Conexión establecida | 1.00s | Motor: generative | Voz: Lucia | 166 chars
+[Polly] Conexión establecida | 1.01s | Motor: generative | Voz: Lucia | 166 chars
+[Polly] Conexión establecida | 1.07s | Motor: generative | Voz: Lucia | 72 chars
+[Polly] Conexión establecida | 1.11s | Motor: generative | Voz: Lucia | 104 chars
+[Polly] Conexión establecida | 1.02s | Motor: generative | Voz: Lucia | 104 chars
+[Polly] Conexión establecida | 1.27s | Motor: generative | Voz: Lucia | 177 chars
+[Polly] Conexión establecida | 1.02s | Motor: generative | Voz: Lucia | 177 chars
+[Polly] Conexión establecida | 1.17s | Motor: generative | Voz: Lucia | 155 chars
+[Polly] Conexión establecida | 0.98s | Motor: generative | Voz: Lucia | 84 chars
+[Polly] Conexión establecida | 1.06s | Motor: generative | Voz: Lucia | 84 chars
+[Polly] Conexión establecida | 1.22s | Motor: generative | Voz: Lucia | 185 chars
+[Polly] Conexión establecida | 1.24s | Motor: generative | Voz: Lucia | 194 chars
+[Polly] Conexión establecida | 1.04s | Motor: generative | Voz: Lucia | 194 chars
+[Polly] Conexión establecida | 1.25s | Motor: generative | Voz: Sergio | 194 chars
+[Polly] Conexión establecida | 1.07s | Motor: generative | Voz: Sergio | 167 chars
+[Polly] Conexión establecida | 1.19s | Motor: generative | Voz: Sergio | 163 chars
+[Polly] Conexión establecida | 1.01s | Motor: generative | Voz: Sergio | 163 chars
+[Polly] Conexión establecida | 1.17s | Motor: generative | Voz: Sergio | 152 chars
+[Polly] Conexión establecida | 1.26s | Motor: generative | Voz: Sergio | 184 chars
+[Polly] Conexión establecida | 0.97s | Motor: generative | Voz: Sergio | 184 chars
+[Polly] Conexión establecida | 1.16s | Motor: generative | Voz: Sergio | 146 chars
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Buscando voz: Microsoft Zira Desktop - English (United States)
+--> [Local] Voz cambiada a: Microsoft Zira Desktop - English (United States)
+2026-03-05 01:33:53,162 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:53,166 - app.motor.grabador_audio - INFO - [Azure] tfh_000_qwxwdvvg.mp3 (48kHz→320k)
+2026-03-05 01:33:54,384 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:54,388 - app.motor.grabador_audio - INFO - [Azure] tfh_001_hlp2lxbe.mp3 (48kHz→320k)
+2026-03-05 01:33:57,133 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:57,136 - app.motor.grabador_audio - INFO - [Polly] tfh_002_pqewk2l2.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 01:33:57,161 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_000_qwxwdvvg.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:57,185 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_001_hlp2lxbe.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:57,207 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_002_pqewk2l2.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado

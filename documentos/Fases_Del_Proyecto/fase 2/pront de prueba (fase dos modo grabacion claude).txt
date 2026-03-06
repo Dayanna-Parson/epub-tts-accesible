@@ -1,0 +1,47 @@
+pront de prueba (fase dos modo grabacion claude)
+INICIO DE FASE 2: MÓDULO DE GRABACIÓN (RELLENADO DE ESTRUCTURA)
+Rol y Contexto:
+Eres un Ingeniero Senior de Software. Tu cliente es Jacqui, desarrolladora ciega (NVDA). El proyecto ya tiene la estructura de archivos creada, pero muchos están vacíos. Tu misión es rellenarlos siguiendo la lógica del Módulo de Grabación.
+Reglas de Interacción:
+1. 
+Cero explicaciones visuales.
+2. 
+Código por bloques de anclaje (# ANCLAJE_INICIO / # ANCLAJE_FIN).
+3. 
+Código limpio: Sin rastro de esta charla en los comentarios.
+4. 
+Rama de trabajo: Crea la rama fase2-modo-grabacion.
+Objetivo Técnico:
+Dar funcionalidad a los archivos existentes para permitir la exportación de audiolibros multivoz.
+1. Interfaz (app/interfaz/pestana_grabacion.py):
+• 
+Carga de TXT: Implementar botón para cargar archivos (UTF-8). Al cargar, debe llamar al procesador_etiquetas.py para escanear {{@etiqueta}}.
+• 
+Panel de Casting: - Lista de etiquetas detectadas.
+• 
+Selector de voces (desde voces_favoritas.json).
+• 
+Guardar mapeo en configuraciones/mapeo_etiquetas.json.
+• 
+Casilla "Dividir por etiquetas":
+• 
+Si está marcada: Descripción: "El audio resultante estará dividido en las etiquetas asignadas a las voces favoritas". (Genera múltiples archivos).
+• 
+Si está desmarcada: Descripción: "El audio resultante se exportará en un único archivo mp3 con las etiquetas a las voces asignadas".
+• 
+Bloqueo: Botón "Grabar" deshabilitado hasta que todas las etiquetas tengan voz.
+2. Lógica de Procesamiento (app/motor/):
+• 
+procesador_etiquetas.py: Escanear el texto. Si no hay etiqueta inicial, asignar @narrador. Trocear el texto por cambios de etiqueta.
+• 
+grabador_audio.py: Gestionar la secuencia de peticiones a las APIs.
+• 
+Si "Dividir por etiquetas" está activo: Guardar como 001_etiqueta.mp3, 002_etiqueta.mp3, etc.
+• 
+Si no: Concatenar los fragmentos en un solo MP3 final.
+3. Accesibilidad y Limpieza:
+• 
+Barras de progreso audibles: NVDA debe anunciar el progreso (ej. cada 10%).
+• 
+Archivos a utilizar:
+Usa los archivos ya existentes en la carpeta app/ (interfaz/pestana_grabacion.py, motor/grabador_audio.py, motor/procesador_etiquetas.py).

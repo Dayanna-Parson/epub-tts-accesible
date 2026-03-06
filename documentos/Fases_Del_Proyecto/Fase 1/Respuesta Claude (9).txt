@@ -1,0 +1,319 @@
+Respuesta Claude (9)
+
+Let me read the key files to understand where the "Falta configuración" error originates:
+Analyzed voice manager and settings tab configuration code
+Analyzed voice manager and settings tab configuration code
+Read/home/user/epub-tts-accesible/app/motor/gestor_voces.py
+Leer 163 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 30 líneas
+Copiar mensaje
+Found it — two root causes:
+1. gestor_voces.py uses relative paths → the config file is never found when CWD differs from project root
+2. Polly voice download is not implemented ("Polly: (Pendiente de configuración)") → no Polly voices appear in the UI, so hablar() is never called, explaining why no debug prints appear
+Let me fix everything:
+Updated todo list with Polly implementation tasks
+Updated todo list with Polly implementation tasks
+Update Todos
+☐ Fixing gestor_voces.py paths and implementing Polly download☐ Create test_polly_debug.py standalone diagnosis script☐ Add boto3 module-level check in cliente_polly.py☐ Verify .strip() on Polly keys in pestana_ajustes.py save☐ Commit and push all changes
+Copiar mensaje
+Fix 1: gestor_voces.py — absolute paths + implement Polly voice list download
+Updated todo list tracking Polly voice implementation and debugging tasks
+Updated todo list tracking Polly voice implementation and debugging tasks
+Write/home/user/epub-tts-accesible/app/motor/gestor_voces.py
+1+
+import json
+2+
+import os
+3+
+import requests
+4+
+import warnings
+5+
+6+
+from app.config_rutas import ruta_config
+7+
+8+
+# Suprimimos advertencias técnicas de conexión segura
+9+
+warnings.filterwarnings("ignore")
+10+
+11+
+12+
+class GestorVoces:
+13+
+    """
+14+
+    Clase encargada de conectar con las APIs (Azure, Polly, ElevenLabs) vía HTTP/SDK,
+15+
+    descargar la lista de voces disponibles y guardarlas en un archivo local
+16+
+    para que la interfaz pueda mostrarlas sin conectarse a internet cada vez.
+17+
+    """
+18+
+    def __init__(self):
+19+
+        # Rutas absolutas — evita fallos cuando el CWD no es la raíz del proyecto
+20+
+        self.ruta_config = ruta_config("config_general.json")
+Show full diff (201 more lines)
+Update Todos
+☐ Fix gestor_voces.py: absolute paths + implement Polly voice list download☐ Creating test_polly_debug.py☐ Add boto3 module-level check in cliente_polly.py☐ Verify .strip() on Polly keys in pestana_ajustes.py save☐ Commit and push all changes
+Copiar mensaje
+Fix 2: Create test_polly_debug.py — standalone diagnosis script
+Updated todo list tracking Polly voice integration tasks
+Updated todo list tracking Polly voice integration tasks
+Write/home/user/epub-tts-accesible/test_polly_debug.py
+1+
+#!/usr/bin/env python
+2+
+# -*- coding: utf-8 -*-
+3+
+"""
+4+
+test_polly_debug.py — Diagnóstico completo de Amazon Polly
+5+
+===========================================================
+6+
+Ejecutar desde la raíz del proyecto:
+7+
+    python test_polly_debug.py
+8+
+9+
+No abre la interfaz gráfica. Solo necesita Python y la consola.
+10+
+Imprime el error exacto de cada paso para que sepas exactamente qué falla.
+11+
+"""
+12+
+13+
+import os
+14+
+import sys
+15+
+import json
+16+
+17+
+# ── Añadir raíz del proyecto al path para importar los módulos de la app ──
+18+
+RAIZ = os.path.dirname(os.path.abspath(__file__))
+19+
+sys.path.insert(0, RAIZ)
+20+
+Show full diff (164 more lines)
+Update Todos
+☐ Fix gestor_voces.py: absolute paths + implement Polly voice list download☐ Create test_polly_debug.py standalone diagnosis script☐ Adding boto3 module-level check in cliente_polly.py☐ Verify .strip() on Polly keys in pestana_ajustes.py save☐ Commit and push all changes
+Copiar mensaje
+Fix 3: Add boto3 module-level check in cliente_polly.py + capture in error log
+Fixed import statement in cliente_polly.py file
+Fixed import statement in cliente_polly.py file
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.py
+Leer 12 líneas
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+24-9
+66
+import soundfile as sf
+77
+from app.config_rutas import ruta_config
+88
+9+
+# ── Comprobación inmediata de boto3 ──────────────────────────────────────────
+10+
+# Se comprueba al importar el módulo para que el fallo aparezca en consola
+11+
+# desde el arranque, no solo cuando el usuario intenta sintetizar audio.
+12+
+try:
+13+
+    import boto3 as _boto3_check
+14+
+    _BOTO3_DISPONIBLE = True
+15+
+except ImportError:
+16+
+    _BOTO3_DISPONIBLE = False
+17+
+    print("=" * 60)
+18+
+    print("[ADVERTENCIA] boto3 NO está instalado.")
+19+
+    print("  Amazon Polly no funcionará hasta que lo instales.")
+20+
+    print("  Solución: pip install boto3")
+21+
+    print("=" * 60)
+22+
+# ─────────────────────────────────────────────────────────────────────────────
+23+
+924
+Copiar mensaje
+Now update _llamar_api to use _BOTO3_DISPONIBLE and skip the redundant try/except on import:
+Updated Amazon Polly API client with retry logic
+Updated Amazon Polly API client with retry logic
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+12-10
+44
+        Implementa 1 reintento automático ante errores de conexión transitoria.
+55
+        No reproduce el audio — solo lo descarga y decodifica.
+66
+        """
+7-
+        try:
+8-
+            import boto3
+9-
+        except ImportError:
+10-
+            raise Exception("boto3 no está instalado. Ejecuta: pip install boto3")
+7+
+        if not _BOTO3_DISPONIBLE:
+8+
+            raise Exception(
+9+
+                "boto3 no está instalado. Amazon Polly no puede funcionar.\n"
+10+
+                "Solución: pip install boto3"
+11+
+            )
+12+
+        import boto3
+Copiar mensaje
+Fix 4: Improve error_tiflo.log to also capture errors from the neural voice thread
+Read iniciar_tiflohistorias.py startup script
+Read iniciar_tiflohistorias.py startup script
+Read/home/user/epub-tts-accesible/iniciar_tiflohistorias.py
+Leer 84 líneas
+Copiar mensaje
+Now update iniciar_tiflohistorias.py to also catch thread exceptions in the error log:
+Added global exception handler for thread exceptions
+Added global exception handler for thread exceptions
+Edit/home/user/epub-tts-accesible/iniciar_tiflohistorias.py+7-6
+22
+import sys
+33
+import os
+44
+import traceback
+5+
+import threading
+56
+import wx
+67
+from datetime import datetime
+Edit/home/user/epub-tts-accesible/iniciar_tiflohistorias.py+29-1
+4343
+sys.excepthook = _manejador_excepcion_global
+44+
+45+
+46+
+def _manejador_excepcion_hilo(args):
+47+
+    """
+48+
+    Captura excepciones no manejadas en hilos de segundo plano (daemon threads).
+49+
+    Sin este hook, un crash en un hilo muere silenciosamente sin dejar rastro.
+50+
+    Relevante para errores de importación (boto3) o fallos de red en síntesis.
+51+
+    """
+52+
+    if args.exc_type is SystemExit:
+53+
+        return
+54+
+    mensaje = "".join(traceback.format_exception(
+55+
+        args.exc_type, args.exc_value, args.exc_traceback
+56+
+    ))
+57+
+    nombre_hilo = getattr(args.thread, 'name', 'desconocido')
+58+
+    logger.error(f"EXCEPCIÓN EN HILO '{nombre_hilo}':\n{mensaje}")
+59+
+    try:
+60+
+        with open(_RUTA_PANIC_LOG, 'a', encoding='utf-8') as f:
+61+
+            f.write(
+62+
+                f"\n{'='*60}\n"
+Show full diff (9 more lines)
+Copiar mensaje
+Also update the boto3 module-level check in cliente_polly.py to write to the logging system:
+Pushed Python wxPython accessibility branch to remote repository
+Pushed Python wxPython accessibility branch to remote repository
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+22-14
+11
+# ── Comprobación inmediata de boto3 ──────────────────────────────────────────
+2-
+# Se comprueba al importar el módulo para que el fallo aparezca en consola
+3-
+# desde el arranque, no solo cuando el usuario intenta sintetizar audio.
+4-
+try:
+5-
+    import boto3 as _boto3_check
+6-
+    _BOTO3_DISPONIBLE = True
+7-
+except ImportError:
+8-
+    _BOTO3_DISPONIBLE = False
+9-
+    print("=" * 60)
+10-
+    print("[ADVERTENCIA] boto3 NO está instalado.")
+11-
+    print("  Amazon Polly no funcionará hasta que lo instales.")
+12-
+    print("  Solución: pip install boto3")
+13-
+    print("=" * 60)
+2+
+# Se comprueba al importar el módulo para que el fallo sea visible desde
+3+
+# el arranque, en consola Y en el log, no solo cuando el usuario habla.
+4+
+try:
+5+
+    import boto3 as _boto3_check
+6+
+    _BOTO3_DISPONIBLE = True
+7+
+except ImportError:
+8+
+    _BOTO3_DISPONIBLE = False
+Show full diff (14 more lines)
+Bashgit status
+On branch claude/python-wxpython-accessibility-ZPVzLYour branch is up to date with 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Mostrar más
+Changes not staged for commit:  (use "git add <file>..." to update what will be committed)  (use "git restore <file>..." to discard changes in working directory)	modified:   app/motor/gestor_voces.py	modified:   app/servicios/cliente_polly.py	modified:   iniciar_tiflohistorias.pyUntracked files:  (use "git add <file>..." to include in what will be committed)	test_polly_debug.pyno changes added to commit (use "git add" and/or "git commit -a")
+Bash
+git add app/motor/gestor_voces.py test_polly_debug.py app/servicios/cliente_polly.py iniciar_tiflohistorias.py && git commit -m "$(cat <<'EOF' Fix Polly: rutas absolutas, descarga voces, diagnóstico boto3, threading.excepthook - gestor_voces.py: usa ruta_config() para rutas absolutas; implementa _descargar_polly() con paginación NextToken (antes era stub vacío que causaba que voces_disponibles.json no tuviera voces de Polly) - test_polly_debug.py: script de diagnóstico de 7 pasos para verificar boto3, credenciales, conexión y reproducción sin abrir la interfaz gráfica - cliente_polly.py: comprobación de boto3 al importar el módulo con _BOTO3_DISPONIBLE flag y advertencia en consola + log del sistema - iniciar_tiflohistorias.py: threading.excepthook para capturar crashes en hilos de segundo plano (síntesis) en error_tiflo.log https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL 550d281] Fix Polly: rutas absolutas, descarga voces, diagnóstico boto3, threading.excepthook 4 files changed, 342 insertions(+), 48 deletions(-) create mode 100644 test_polly_debug.py
+Mostrar 1 más
+Copiar mensaje
+Commit y push completados. Aquí está el resumen de lo que quedó guardado en este commit:
+"Fix Polly: rutas absolutas, descarga voces, diagnóstico boto3, threading.excepthook"
+4 archivos, 342 inserciones:
+1. 
+app/motor/gestor_voces.py — Causa raíz corregida:
+• Rutas absolutas vía ruta_config() (antes usaba rutas relativas que fallaban)
+• _descargar_polly() implementado con paginación NextToken (antes era un stub vacío — esto era la razón por la que voces_disponibles.json no tenía voces de Polly)
+2. 
+test_polly_debug.py (nuevo) — Script de diagnóstico de 7 pasos sin interfaz gráfica:
+python test_polly_debug.py
+Copy code
+Verifica boto3 → sounddevice/soundfile → config_general.json → credenciales → conexión Polly → síntesis → reproducción
+3. 
+app/servicios/cliente_polly.py — Comprobación de boto3 al arrancar el módulo con _BOTO3_DISPONIBLE flag, advertencia en consola y en registros/app.log
+4. 
+iniciar_tiflohistorias.py — threading.excepthook para que los crashes en hilos de síntesis queden en error_tiflo.log
+Próximo paso recomendado: Ejecuta python test_polly_debug.py para confirmar si boto3 está instalado y las credenciales son legibles. Luego usa Ajustes > Claves y Proveedores > "Comprobar y descargar" para poblar voces_disponibles.json con las voces de Polly.
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++1724-317
+Crear PR

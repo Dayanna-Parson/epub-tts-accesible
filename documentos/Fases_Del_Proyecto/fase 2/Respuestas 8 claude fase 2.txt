@@ -1,0 +1,17 @@
+Respuestas 8 claude fase 2
+
+Respuesta directa según proveedor:
+Azure y ElevenLabs → sin instalación extra. La API ya devuelve MP3 nativo. Si ffmpeg no está, los archivos se guardan a la calidad nativa de la API (no a 320k, pero son MP3 válidos y reproducibles).
+Polly → aquí hay un problema real. Para evitar el "efecto teléfono" pedimos OGG Vorbis a 24kHz, y luego necesitamos convertirlo a MP3. Esa conversión la hace pydub+ffmpeg. Sin ffmpeg, el fallback copia los bytes OGG dentro de un archivo .mp3 → el archivo tiene extensión .mp3 pero contiene audio OGG → no se reproducirá en reproductores de MP3.
+SAPI5 → misma situación: genera WAV internamente y necesita pydub+ffmpeg para convertirlo a MP3.
+ 
+Resumen de dependencias reales:
+Componente
+¿Necesita instalación?
+pydub
+Sí, pip (pip install pydub) — ya debería estar en requirements.txt
+ffmpeg
+Sí, pero no como librería Python — es un ejecutable externo
+ 
+Para que sea portable sin pedir al usuario que instale ffmpeg, la solución estándar es incluir ffmpeg.exe dentro del proyecto (en una carpeta bin/ por ejemplo) y apuntar pydub a él. ffmpeg tiene binarios standalone para Windows que no requieren instalación — se descargan, se copian al proyecto, y listo.
+¿Quieres que lo integre así para la fase 3, o prefieres dejarlo para cuando hagamos el empaquetado final?
