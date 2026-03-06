@@ -1,0 +1,13 @@
+pront_Claude_7
+
+Claude, estamos al 95%. Vamos a rematar la Fase 1 con estos ajustes quirúrgicos:
+1. 
+Limpiador Agresivo: En limpiador_lectura.py, haz que la limpieza elimine CUALQUIER salto de línea que esté en mitad de un párrafo. El texto debe fluir como una sola línea hasta que encuentre un punto y aparte real. (Evita que palabras como 'demokracia' queden solas).
+2. 
+Memoria por Libro: Modifica pestana_lectura.py para que al cerrar un libro o la app, se guarde en datos_lectura.json: la posición, la velocidad, el volumen y el nombre de la voz USADA en ese libro. Al reabrirlo, debe restaurar todo automáticamente.
+3. 
+Depuración de Polly: En cliente_polly.py, añade un print que muestre en la consola si las claves se están cargando o si llegan vacías. Necesitamos saber por qué dice 'Falta configuración' aunque los datos estén en el JSON.
+4. 
+Buffer de Audio Proactivo: Haz que el sistema de cola empiece a descargar el siguiente fragmento cuando falte el 30% del actual para que no haya silencios de 2 segundos entre bloques.
+5. 
+Persistencia de Ajustes: Asegura que los cambios en los deslizadores de volumen y velocidad se guarden en el JSON global en cuanto el usuario los mueva.

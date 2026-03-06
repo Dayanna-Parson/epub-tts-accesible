@@ -1,0 +1,61 @@
+Rol: Ingeniero Senior Python/wxPython/A11y.
+Cliente: Jacqui (Desarrolladora ciega, NVDA).
+Misión: Implementar la lógica completa de la pestaña "Grabación" para producción multivoz.
+ 
+1. Gestión de Texto y Etiquetas (Grabación Atómica):
+• 
+Escaneo: Detectar patrones {{@nombre}}. Si no hay marca inicial, asignar @narrador.
+• 
+Unidad de Proceso: El motor de grabación debe trabajar estrictamente por etiquetas. No se permiten divisiones por bloques de caracteres o palabras para evitar cortes de frases o palabras incompletas. Cada fragmento de audio debe corresponder exactamente al texto contenido bajo una etiqueta.
+• 
+Limpieza: Aplicar .strip() a cada fragmento para eliminar silencios innecesarios.
+2. Panel de Casting y Reutilización de Voces:
+• 
+Control 1: wx.ComboBox con etiquetas únicas detectadas.
+• 
+Control 2: wx.CheckListBox con voces de voces_favoritas.json.
+• 
+Lógica de Asignación Flexible:
+• 
+El usuario puede asignar la misma voz a múltiples etiquetas (ej: la voz de "Dario" para @rey y para @soldado).
+• 
+El programa debe recordar estas asignaciones mediante un archivo mapeo_etiquetas.json vinculado al título del libro. Al cargar un nuevo capítulo, si se detectan etiquetas ya conocidas, se pre-seleccionan las voces automáticamente.
+3. Organización de Archivos y Carpetas (Jerarquía Inteligente):
+• 
+Carpeta Madre: Si el TXT tiene un título definido (o se usa el nombre del archivo), se crea una carpeta con ese nombre en Grabaciones_TifloHistorias.
+• 
+Subcarpetas de Sesión: Dentro de la carpeta del libro, crear subcarpetas automáticas:
+• 
+/Fragmentos_[Nombre_Capitulo]/ (si la casilla "Dividir" está activa).
+• 
+/Audio_Completo_[Nombre_Capitulo]/ (si está desactivada).
+• 
+Numeración: En modo dividido, usar 001_etiqueta.mp3, 002_etiqueta.mp3 para mantener el orden secuencial exacto del texto.
+4. Interfaz y Accesibilidad (Anuncios Dinámicos):
+• 
+Casilla "Dividir": Actualizar un wx.StaticText que NVDA anuncie:
+• 
+Marcada: "Estado: Generando múltiples archivos numerados por etiqueta".
+• 
+Desmarcada: "Estado: Generando un único archivo MP3 integrado".
+• 
+Progreso en Tiempo Real: Campo de estado actualizable: "Grabando fragmento X de Y (Etiqueta: @nombre - Voz: Z)".
+• 
+Botón "Abrir Carpeta": Acceso directo a la carpeta específica del libro/capítulo actual.
+5. Seguridad y Resiliencia:
+• 
+Botón Probar Voz: Reproduce muestra de la voz seleccionada en el CheckListBox.
+• 
+Abortar: Botón para detener el proceso de inmediato sin cerrar la app.
+• 
+Reintentos: 3 intentos por fragmento antes de registrar error en el log final.
+NOTAS IMPORTANTES DE INFRAESTRUCTURA:
+• 
+No crees archivos nuevos: El proyecto ya cuenta con app/interfaz/pestana_grabacion.py, app/motor/grabador_audio.py y app/motor/procesador_etiquetas.py preparados y vacíos. Rellena estos archivos específicamente.
+• 
+Grabación Silenciosa: El proceso debe ser estrictamente de volcado a archivo (renderizado), sin salida por los altavoces.
+• 
+Nombres Seguros: Implementa una función que limpie caracteres prohibidos en Windows (, /, :, *, ?, ", <, >, |) de los nombres de etiquetas antes de generar los archivos MP3.
+• 
+Confirmación de Éxito: Al terminar, NVDA debe anunciar: "Proceso finalizado con éxito. X archivos generados en la carpeta [Nombre]". (que sea el típico diálogo de windows para abrir la carpeta de destino)
+A, y que en el nombre de las etiquetas, que de igual si están en mayúsculas o minúsculas)

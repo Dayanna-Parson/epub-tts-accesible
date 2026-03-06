@@ -1,0 +1,30 @@
+Respuestas 5 claude (fase 2)
+
+Muchas cosas que resolver. Primero leo los archivos para tener el estado actual exacto:
+Read recording tab Python module for audiobook production
+Read recording tab Python module for audiobook production
+Copiar mensaje
+Analizo todos los problemas del log y el NVDA antes de tocar nada:
+Updated task list with critical bugs and fixes in progress
+Updated task list with critical bugs and fixes in progress
+Copiar mensaje
+Diagnóstico del [WinError 2]: pydub está instalado pero ffmpeg no está en el PATH del sistema. Cuando AudioSegment.from_file() falla en todos los archivos, combined queda vacío y luego combined.export() también llama ffmpeg → lanza la excepción que llega al usuario. Hay que detectar ese caso y caer al fallback de bytes crudos.
+Updated todo list tracking ffmpeg crash fix and duplicate voices bug
+Updated todo list tracking ffmpeg crash fix and duplicate voices bug
+Copiar mensaje
+Ahora reescribo pestana_grabacion.py completo con todos los arreglos de UI/NVDA juntos:
+Ahora el rewrite completo de pestana_grabacion.py con todas las correcciones de UX/accesibilidad:
+Fixed ffmpeg crash and duplicate voices issues
+Fixed ffmpeg crash and duplicate voices issues
+Copiar mensaje
+Commit a4f4bf6 pusheado. Resumen de todo lo corregido:
+ 
+Bug crítico — grabación fallaba con [WinError 2]
+El problema era que pydub está instalado pero ffmpeg no está en el PATH de Windows. AudioSegment.from_file() intentaba llamar al ejecutable ffmpeg (no encontrado → WinError 2). Como todos los archivos fallaban, combined quedaba vacío, y luego combined.export() también llamaba a ffmpeg → excepción que llegaba al usuario como "Error de grabación".
+Solución: detectar cuando todos los from_file() fallan y caer al fallback de concatenación de bytes MP3 crudos. Los frames MP3 son autosincronizables: concatenar bytes directamente produce un archivo válido en todos los reproductores.
+ 
+Voces duplicadas (Raul × 4): añadido un set ids_ya_anadidos que previene agregar el mismo voice ID más de una vez aunque aparezca en múltiples entradas del JSON.
+Conflicto Alt+P: quitado el & del checkbox "Dividir por etiquetas" — ambos el checkbox y "Probar Voz" reclamaban Alt+P.
+Checkbox sin descripción en NVDA: lbl_estado_division (StaticText) cambiado a txt_estado_division (TextCtrl readonly). NVDA lee el contenido de TextCtrl cuando se tabula; los cambios en StaticText los ignora en modo formularios.
+SetName() → SetToolTip(): SetName() en wx mapea al nombre interno del framework, no a la API de accesibilidad de Windows. SetToolTip() es lo que NVDA lee con Ins+T cuando el control tiene el foco.
+Botón Limpiar: al lado de "Examinar…", restablece toda la pestaña al estado inicial (archivo, etiquetas, asignaciones, progreso, gauge) para poder grabar otro capítulo/fragmento sin reiniciar la aplicación.

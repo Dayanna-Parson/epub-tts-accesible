@@ -1,0 +1,57 @@
+Respuestas 13 claude (fase 2)
+
+Read procesador_etiquetas.py file for tag processing analysis
+Read procesador_etiquetas.py file for tag processing analysis
+Copiar mensaje
+Dos cambios claros. Primero veo la lógica de narrador automático, luego escribo los edits.
+Updated todo list with narrator tag processing improvements
+Updated todo list with narrator tag processing improvements
+Copiar mensaje
+Ahora los cambios en el combo. Necesito añadir dos helpers y actualizar los métodos que tocan el combo:
+Updated assignment summary display in recording panel
+Updated assignment summary display in recording panel
+Copiar mensaje
+Ahora actualizar _cargar_y_escanear para que use _actualizar_combo_etiquetas() en lugar del bucle manual:
+Failed to edit recording tab file due to mismatched string
+Failed to edit recording tab file due to mismatched string
+Copiar mensaje
+Ahora también hay que actualizar al_iniciar_grabacion donde lee las etiquetas del combo para detectar las sin asignar (ahora el formato del item incluye → ...):
+Searched for unvoiced tags and string processing in recording tab
+Searched for unvoiced tags and string processing in recording tab
+Copiar mensaje
+La lógica de al_iniciar_grabacion usa self.etiquetas_detectadas directamente, sin leer el texto del combo — correcto. Verificación final del archivo:
+Searched for lstrip usage in recording tab file
+Searched for lstrip usage in recording tab file
+Copiar mensaje
+Solo el helper, perfecto. Comprobación rápida del resultado final de los dos archivos:
+Searched for combo label methods in recording tab interface file
+Searched for combo label methods in recording tab interface file
+Copiar mensaje
+Todo consistente. Commit y push:
+Updated todo list tracking narrator tagging and recording tab fixes
+Updated todo list tracking narrator tagging and recording tab fixes
+Copiar mensaje
+Push completado. Resumen de los dos cambios:
+ 
+Cambio 1 — Narrador unificado (procesador_etiquetas.py)
+Antes: el texto antes de la primera etiqueta siempre se asignaba a 'narrador', creando una etiqueta extra aunque el texto ya usara @nar.
+Ahora: antes de fragmentar, se escanea el texto buscando variantes de narrador reconocidas:
+nar, narrador, narradora, narrator, narr, narracion
+Copy code
+Si encuentra una, el pre-texto usa esa misma variante. Si el texto empieza directamente con {{@nar}} y no hay pre-texto, no se añade nada. Resultado: desaparece el 001_narrador.mp3 + 002_nar.mp3 — ahora todo va a 001_nar.mp3, 002_nar.mp3…
+ 
+Cambio 2 — Combo con estado de asignación (pestana_grabacion.py)
+El combo de etiquetas ahora muestra en tiempo real:
+@nar → Raul              ← ya asignado
+@pj1 → Lucía            ← ya asignado
+@pj2 → (sin asignar)    ← pendiente
+Copy code
+• Se actualiza automáticamente al marcar cada voz
+• Al cargar un archivo recupera el mapeo previo y el combo ya aparece con el estado guardado
+• La selección avanza siempre a la siguiente sin asignar
+• Internamente se parsea "@etiq → nombre".split(' →')[0] — transparente para toda la lógica existente
+ 
+beta
+claude/recording-tab-implementation-VYDl3
++4085-385
+Crear PR

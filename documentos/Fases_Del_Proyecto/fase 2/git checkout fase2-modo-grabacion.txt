@@ -1,0 +1,3 @@
+git checkout fase2-modo-grabacion
+git merge main
+git push origin fase2-modo-grabacion

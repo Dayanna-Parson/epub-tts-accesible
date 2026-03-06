@@ -1,0 +1,548 @@
+Respuesta claude 4
+
+Created shared path utility module and fixed NVDA focus management
+Created shared path utility module and fixed NVDA focus management
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.pyLeer 235 líneas
+Glob/home/user/epub-tts-accesible/*.py
+/home/user/epub-tts-accesible/app/__init__.py/home/user/epub-tts-accesible/app/interfaz/__init__.py/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Mostrar más
+/home/user/epub-tts-accesible/app/motor/__init__.py/home/user/epub-tts-accesible/app/motor/gestor_config.py/home/user/epub-tts-accesible/app/motor/gestor_voces.py/home/user/epub-tts-accesible/app/motor/grabador_audio.py/home/user/epub-tts-accesible/app/servicios/__init__.py/home/user/epub-tts-accesible/app/servicios/cliente_sapi5.py/home/user/epub-tts-accesible/construir_app.py/home/user/epub-tts-accesible/iniciar_tiflohistorias.py/home/user/epub-tts-accesible/app/interfaz/dialogos.py/home/user/epub-tts-accesible/app/motor/procesador_etiquetas.py/home/user/epub-tts-accesible/app/motor/gestor_epub.py/home/user/epub-tts-accesible/app/motor/control_cuota.py/home/user/epub-tts-accesible/app/servicios/cliente_polly.py/home/user/epub-tts-accesible/app/servicios/cliente_azure.py/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py/home/user/epub-tts-accesible/app/motor/reproductor_voz.py/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Read/home/user/epub-tts-accesible/iniciar_tiflohistorias.pyLeer 59 líneas
+Mostrar 3 más
+Copiar mensaje
+Now fix Tasks 1 + 4 — wx.CallAfter for focus. First pestana_ajustes.py:
+Fixed settings tab category switching logic in pestana_ajustes.py
+Fixed settings tab category switching logic in pestana_ajustes.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+12-9
+22
+        idx = self.lista_cat.GetSelection()
+33
+        if idx != wx.NOT_FOUND:
+44
+            self.panel_derecho.ChangeSelection(idx)
+5-
+            # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter/parent y
+6-
+            # mueva el foco al panel derecho al navegar con flechas en la lista.
+7-
+            # Sin SetFocus(): evita la doble anunciación de NVDA.
+5+
+            # wx.CallAfter garantiza que el foco vuelve a la lista DESPUÉS de que
+6+
+            # ChangeSelection termine, evitando que NVDA anuncie dos veces el mismo ítem.
+7+
+            # Sin este SetFocus, al cambiar de página el panel derecho roba el foco
+8+
+            # y NVDA deja de leer las flechas de navegación en la lista de categorías.
+9+
+            wx.CallAfter(self.lista_cat.SetFocus)
+10+
+            # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter y mueva el foco.
+811
+            if idx == 2:
+912
+                self.pag_voces.cargar_datos_y_llenar()
+Copiar mensaje
+Now ventana_principal.py — Task 4 (wx.CallAfter for Shift+Tab circular) + Task 6 (absolute path for recientes):
+Updated recent files history loading in ventana_principal.py
+Updated recent files history loading in ventana_principal.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+8-7
+44
+import json
+55
+from app.interfaz.pestana_lectura import PestanaLectura
+66
+from app.interfaz.pestana_ajustes import PestanaAjustes
+7+
+from app.config_rutas import ruta_config
+78
+# ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+8-7
+44
+import json
+55
+from app.interfaz.pestana_lectura import PestanaLectura
+66
+from app.interfaz.pestana_ajustes import PestanaAjustes
+7+
+from app.config_rutas import ruta_config
+78
+# ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
+Mostrar 1 más
+Copiar mensaje
+Now apply wx.CallAfter to the Shift+Tab circular focus (Task 4):
+Created shared path utility module and fixed NVDA focus management
+Created shared path utility module and fixed NVDA focus management
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+10-8
+11
+        if not shift and foco == ultimo:
+22
+            # Tab en el último control: salir del panel hacia el Notebook
+3-
+            self.notebook.SetFocus()
+4-
+            return
+5-
+        elif shift and foco == primer:
+6-
+            # Shift+Tab en el primer control: bucle circular → saltar al último control
+7-
+            ultimo.SetFocus()
+3+
+            wx.CallAfter(self.notebook.SetFocus)
+4+
+            return
+5+
+        elif shift and foco == primer:
+6+
+            # Shift+Tab en el primer control: bucle circular → saltar al último control.
+7+
+            # wx.CallAfter garantiza que NVDA anuncia el nuevo foco correctamente
+8+
+            # al diferirlo hasta después de que el evento de teclado sea procesado.
+9+
+            wx.CallAfter(ultimo.SetFocus)
+810
+            return
+Update Todos☐ Create app/config_rutas.py for absolute path resolution☐ Task 1+4: wx.CallAfter for all focus changes (pestana_ajustes, ventana_principal)☐ Fixing smart resume from cursor position☐ Task 5: error_tiflo.log via sys.excepthook in entry point☐ Task 6: Absolute paths for JSON files + recientes never saved bug☐ Commit and push regression fixes
+Copiar mensaje
+Now fix Task 3 (smart resume) and the recientes bug in pestana_lectura.py:
+Fixed playback state transitions in reading tab interface
+Fixed playback state transitions in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+18-10
+66
+            if hasattr(self.reproductor, 'pausar'):
+77
+                self.reproductor.pausar()
+88
+        elif estado == 'pausado':
+9-
+            if hasattr(self.reproductor, 'reanudar'):
+10-
+                self.reproductor.reanudar()
+9+
+            tipo_motor = getattr(self.reproductor, 'tipo_motor_actual', 'local')
+10+
+            if tipo_motor == 'local':
+11+
+                # SAPI5 admite pausa/reanudación nativa
+12+
+                if hasattr(self.reproductor, 'reanudar'):
+13+
+                    self.reproductor.reanudar()
+14+
+            else:
+15+
+                # Las voces neuronales no pueden retomar desde mitad de fragmento.
+16+
+                # Forzar estado a 'detenido' y reiniciar desde la posición exacta del cursor.
+17+
+                self.reproductor.estado = 'detenido'
+18+
+                self.al_alternar_reproduccion(evento)
+Copiar mensaje
+Now fix the recientes persistence bug — cargar_epub_desde_ruta never calls agregar_a_recientes:
+Created shared path utility module and fixed focus management for accessibility
+Created shared path utility module and fixed focus management for accessibility
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+30-21
+33
+        self.guardar_datos_libro()
+44
+        try:
+55
+            texto, datos_arbol, self.posiciones_capitulos = extraer_datos_epub(ruta)
+6-
+7-
+            if hasattr(self.reproductor, 'detener'):
+8-
+                self.reproductor.detener()
+9-
+10-
+            self.marcadores = {}
+11-
+            self.pos_inicio_fragmento = 0
+12-
+            self.txt_contenido.SetValue(texto)
+13-
+            self.longitud_texto = len(texto)
+14-
+            self.arbol_indice.DeleteAllItems()
+15-
+            self.raiz_id = self.arbol_indice.AddRoot(os.path.basename(ruta))
+16-
+            self._construir_arbol_indice(self.raiz_id, datos_arbol)
+17-
+            self.ruta_libro_actual = ruta
+18-
+            self.cargar_datos_libro(os.path.basename(ruta))
+19-
+            self.arbol_indice.SetFocus()
+20-
+        except Exception as e: 
+6+
+7+
+            if hasattr(self.reproductor, 'detener'):
+Show full diff (23 more lines)
+Update Todos☐ Create app/config_rutas.py for absolute path resolution☐ Task 1+4: wx.CallAfter for all focus changes (pestana_ajustes, ventana_principal)☐ Task 3: Smart pause resume from GetInsertionPoint + call agregar_a_recientes☐ Adding error panic log file☐ Task 6: Absolute paths for JSON files + recientes never saved bug☐ Commit and push regression fixes
+Copiar mensaje
+Now add error_tiflo.log (Task 5) to the entry point:
+Created shared path utility module and fixed NVDA focus management
+Created shared path utility module and fixed NVDA focus management
+Edit/home/user/epub-tts-accesible/iniciar_tiflohistorias.py+43-18
+11
+import logging
+22
+import sys
+33
+import os
+4-
+import wx
+5-
+6-
+# Asegurar que la carpeta de registros existe
+7-
+os.makedirs('registros', exist_ok=True)
+8-
+9-
+# Configurar logging
+10-
+logging.basicConfig(
+11-
+    level=logging.INFO,
+12-
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+13-
+    handlers=[
+14-
+        logging.FileHandler(os.path.join('registros', 'app.log'), encoding='utf-8'),
+15-
+        logging.StreamHandler()
+16-
+    ]
+17-
+)
+18-
+logger = logging.getLogger(__name__)
+4+
+import traceback
+5+
+import wx
+Show full diff (38 more lines)
+Update Todos☐ Create app/config_rutas.py for absolute path resolution☐ Task 1+4: wx.CallAfter for all focus changes (pestana_ajustes, ventana_principal)☐ Task 3: Smart pause resume from GetInsertionPoint + call agregar_a_recientes☐ Task 5: error_tiflo.log via sys.excepthook in entry point☐ Fixing absolute paths and recientes persistence☐ Commit and push regression fixes
+Copiar mensaje
+Now fix absolute paths (Task 6) — control_cuota.py and service files:
+Updated control_cuota.py with quota management improvements
+Updated control_cuota.py with quota management improvements
+Edit/home/user/epub-tts-accesible/app/motor/control_cuota.py+10-9
+22
+import json
+33
+from datetime import datetime
+44
+import wx
+5-
+6-
+7-
+class ControlCuota:
+8-
+    def __init__(self):
+9-
+        self.ruta_uso = os.path.join("configuraciones", "uso_cuota.json")
+5+
+from app.config_rutas import ruta_config
+6+
+7+
+8+
+class ControlCuota:
+9+
+    def __init__(self):
+10+
+        self.ruta_uso = ruta_config("uso_cuota.json")
+Copiar mensaje
+Now update the service files to use absolute paths for config_general.json:
+Fixed configuration loading in Polly client service
+Fixed configuration loading in Polly client service
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+8-7
+55
+import soundfile as sf
+66
+import io
+77
+import time
+8+
+from app.config_rutas import ruta_config
+Read/home/user/epub-tts-accesible/app/servicios/cliente_azure.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+11-10
+55
+import soundfile as sf
+66
+import io
+77
+import time
+8+
+from app.config_rutas import ruta_config
+89
+910
+1011
+class ClienteAzure:
+Mostrar 7 más
+Copiar mensaje
+Also add engine fallback (standard → neural) and clarify the no-block behavior for unknown regions in hablar():
+Updated AWS Polly client speech synthesis configuration
+Updated AWS Polly client speech synthesis configuration
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.pyLeer 50 líneas
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.pyLeer 30 líneas
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+17-7
+107-
+        respuesta = cliente.synthesize_speech(
+108-
+            Engine="neural",
+109-
+            Text=ssml,
+110-
+            TextType="ssml",
+111-
+            OutputFormat="ogg_vorbis",
+112-
+            VoiceId=voice_id,
+113-
+        )
+107+
+        # Intentar con motor "neural" (mayor calidad); si la voz no lo admite, usar "standard"
+108+
+        try:
+109+
+            respuesta = cliente.synthesize_speech(
+110+
+                Engine="neural",
+111+
+                Text=ssml,
+112+
+                TextType="ssml",
+113+
+                OutputFormat="ogg_vorbis",
+114+
+                VoiceId=voice_id,
+115+
+            )
+116+
+        except Exception:
+117+
+            respuesta = cliente.synthesize_speech(
+118+
+                Engine="standard",
+119+
+                Text=ssml,
+Show full diff (4 more lines)
+Copiar mensaje
+Now update the remaining files — reproductor_voz.py and pestana_lectura.py to use ruta_config:
+Updated voice configuration loading in reproductor_voz.py
+Updated voice configuration loading in reproductor_voz.py
+Read/home/user/epub-tts-accesible/app/motor/reproductor_voz.pyLeer 12 líneas
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+12-11
+88
+from app.servicios.cliente_azure import ClienteAzure
+99
+from app.servicios.cliente_eleven import ClienteEleven
+1010
+from app.servicios.cliente_polly import ClientePolly
+11+
+from app.config_rutas import ruta_config
+1112
+# ANCLAJE_FIN: IMPORTACIONES
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+10-10
+11
+    def _cargar_config(self):
+22
+        """Carga la configuración de voces desde el archivo JSON global."""
+33
+        try:
+4-
+            ruta = os.path.join("configuraciones", "config_general.json")
+4+
+            ruta = ruta_config("config_general.json")
+55
+        except Exception as e:
+66
+            print(f"[Error] No se pudo leer config_general.json en el reproductor: {e}")
+77
+        return {}
+Copiar mensaje
+Now update pestana_lectura.py and pestana_ajustes.py to use ruta_config:
+Updated reading tab interface file with import dependencies
+Updated reading tab interface file with import dependencies
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+10-9
+66
+from app.motor.gestor_epub import extraer_datos_epub
+77
+from app.motor.reproductor_voz import ReproductorVoz
+88
+from app.interfaz.dialogos import DialogoMarcadores
+9+
+from app.config_rutas import ruta_config, CONFIG_DIR
+910
+# ANCLAJE_FIN: DEPENDENCIAS_LECTURA
+Copiar mensaje
+Now update the path usage in pestana_lectura.py:
+Updated reading tab configuration file path handling
+Updated reading tab configuration file path handling
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 5 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+2-2
+4141
+        self.ruta_libro_actual = None
+42-
+        self.ruta_datos_lectura = os.path.join("configuraciones", "datos_lectura.json")
+42+
+        self.ruta_datos_lectura = ruta_config("datos_lectura.json")
+Copiar mensaje
+Now update cargar_config_salto, guardar_datos_libro, cargar_datos_libro, and cargar_voces_usuario to use ruta_config:
+Updated local voice loading logic in pestana_lectura.py
+Updated local voice loading logic in pestana_lectura.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+10-10
+11
+    def cargar_config_salto(self):
+22
+        try:
+3-
+            ruta = os.path.join("configuraciones", "config_general.json")
+3+
+            ruta = ruta_config("config_general.json")
+44
+        except Exception as e:
+55
+            print(f"[Aviso] No se pudo leer la configuración de salto: {e}")
+66
+            self.segundos_salto = 10
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+13-13
+99
+            print(f"[Aviso] No se pudieron cargar las voces locales SAPI5: {e}")
+1010
+1111
+        # Carga de voces neuronales favoritas
+12-
+        ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
+13-
+        ruta_todas = os.path.join("configuraciones", "voces_disponibles.json")
+12+
+        ruta_favs = ruta_config("voces_favoritas.json")
+13+
+        ruta_todas = ruta_config("voces_disponibles.json")
+Copiar mensaje
+Now update guardar_datos_libro in pestana_lectura to use absolute path and makedirs with CONFIG_DIR:
+Fixed bookmark storage logic in reading tab interface
+Fixed bookmark storage logic in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+5-5
+22
+                "pos": self.txt_contenido.GetInsertionPoint(),
+33
+                "marcadores": self.marcadores
+44
+            }
+5-
+            os.makedirs(os.path.dirname(self.ruta_datos_lectura), exist_ok=True)
+5+
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+Copiar mensaje
+Now update pestana_ajustes.py to use ruta_config:
+Replaced config path initialization with ruta_config function call
+Replaced config path initialization with ruta_config function call
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+8-7
+55
+import wx.lib.mixins.listctrl as listmix
+66
+from app.motor.gestor_voces import GestorVoces
+77
+from app.motor.reproductor_voz import ReproductorVoz
+8+
+from app.config_rutas import ruta_config, CONFIG_DIR
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py<tool_use_error>InputValidationError: Read failed due to the following issue:The parameter `offset` type is expected as `number` but provided as `string`</tool_use_error>
+Mostrar 2 más
+Copiar mensaje
+Also fix guardar_config_en_archivo to use CONFIG_DIR for makedirs:
+Fixed configuration file saving in settings panel
+Fixed configuration file saving in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+3-3
+11
+    def guardar_config_en_archivo(self):
+22
+        try:
+3-
+            os.makedirs(os.path.dirname(self.ruta_config), exist_ok=True)
+3+
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+Copiar mensaje
+Also update PanelVoces.cargar_favoritos and guardar_favoritos to use absolute path:
+Updated favorites path to use centralized config function
+Updated favorites path to use centralized config function
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 8 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+1-1
+290-
+        self.ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
+290+
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+Copiar mensaje
+Also fix cargar_datos_y_llenar path:
+Fixed configuration file path in settings tab module
+Fixed configuration file path in settings tab module
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py<tool_use_error>InputValidationError: Read failed due to the following issue:The parameter `offset` type is expected as `number` but provided as `string`</tool_use_error>
+Grepvoces_disponibles
+431-
+432-    def cargar_datos_y_llenar(self):
+433:        ruta = os.path.join("configuraciones", "voces_disponibles.json")
+Mostrar más
+434-        self.voces_todas = []
+435-        idiomas = set()
+--445-                            if v.get("idioma"): idiomas.add(v.get("idioma"))
+446-            except Exception as e:
+447:                print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
+448-                self.voces_todas = []
+449-
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-2
+11
+    def cargar_datos_y_llenar(self):
+2-
+        ruta = os.path.join("configuraciones", "voces_disponibles.json")
+2+
+        ruta = ruta_config("voces_disponibles.json")
+Copiar mensaje
+Now run a final syntax check on all modified files:
+Validated Python syntax across 12 project files
+Validated Python syntax across 12 project files
+Bash
+python -c " import ast, sys files = [ 'app/config_rutas.py', 'app/motor/control_cuota.py', 'app/servicios/cliente_polly.py', 'app/servicios/cliente_azure.py', 'app/servicios/cliente_eleven.py', 'app/motor/reproductor_voz.py', 'app/interfaz/pestana_lectura.py', 'app/interfaz/ventana_principal.py', 'app/interfaz/pestana_ajustes.py', 'iniciar_tiflohistorias.py', ] ok = True for f in files: try: with open(f) as fh: ast.parse(fh.read()) print(f'OK: {f}') except SyntaxError as e: print(f'ERROR: {f}: {e}') ok = False sys.exit(0 if ok else 1) "
+OK: app/config_rutas.pyOK: app/motor/control_cuota.pyOK: app/servicios/cliente_polly.py
+Mostrar más
+OK: app/servicios/cliente_azure.pyOK: app/servicios/cliente_eleven.pyOK: app/motor/reproductor_voz.pyOK: app/interfaz/pestana_lectura.pyOK: app/interfaz/ventana_principal.pyOK: app/interfaz/pestana_ajustes.pyOK: iniciar_tiflohistorias.py
+Copiar mensaje
+All clean. Now commit and push:
+Pushed Python wxPython accessibility branch to remote
+Pushed Python wxPython accessibility branch to remote
+Bash
+git add app/config_rutas.py app/motor/control_cuota.py app/servicios/cliente_polly.py app/servicios/cliente_azure.py app/servicios/cliente_eleven.py app/motor/reproductor_voz.py app/interfaz/pestana_lectura.py app/interfaz/ventana_principal.py app/interfaz/pestana_ajustes.py iniciar_tiflohistorias.py && git commit -m "$(cat <<'EOF' Fase 1 cierre: 6 correcciones de accesibilidad, rutas y robustez - Task 1: wx.CallAfter(lista_cat.SetFocus) en al_cambiar_cat — NVDA anuncia la categoría al navegar con flechas sin doble lectura - Task 2: Polly — fallback Engine "standard" si la voz no admite "neural"; región ya aceptaba cualquier código directo sin bloquear - Task 3: Reanudación inteligente — voces neuronales en estado 'pausado' reinician desde GetInsertionPoint() en lugar de saltar hacia adelante - Task 4: wx.CallAfter en Shift+Tab circular y Tab→Notebook para que NVDA anuncie el nuevo foco después de que el evento de teclado sea procesado - Task 5: error_tiflo.log — sys.excepthook de pánico en iniciar_tiflohistorias.py; escribe traza completa al cerrar la app por crash inesperado - Task 6: app/config_rutas.py — módulo central de rutas absolutas basadas en __file__; aplicado a todos los archivos que acceden a configuraciones/; cargar_epub_desde_ruta ahora llama agregar_a_recientes (bug: nunca se guardaban) https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL d44b9e0] Fase 1 cierre: 6 correcciones de accesibilidad, rutas y robustez 10 files changed, 115 insertions(+), 36 deletions(-) create mode 100644 app/config_rutas.py
+Bashgit push -u origin claude/python-wxpython-accessibility-ZPVzLTo http://127.0.0.1:39706/git/Dayanna-Parson/epub-tts-accesible   d1e5e0a..d44b9e0  claude/python-wxpython-accessibility-ZPVzL -> claude/python-wxpython-accessibility-ZPVzLbranch 'claude/python-wxpython-accessibility-ZPVzL' set up to track 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Copiar mensaje
+Pushed. Aquí tienes el resumen de todo lo aplicado:
+ 
+Correcciones aplicadas — Cierre de Fase 1
+1 — Foco en Ajustes (pestana_ajustes.py)
+al_cambiar_cat ahora llama wx.CallAfter(self.lista_cat.SetFocus) después de ChangeSelection. Al diferirlo, el foco vuelve a la lista de categorías una vez que el cambio de página ha terminado, y NVDA lo anuncia una sola vez.
+2 — Amazon Polly (cliente_polly.py)
+• La función _normalizar_region ya devolvía el texto original tal cual si no estaba en el diccionario (nunca bloqueaba). Ahora queda documentado con comentario explícito.
+• hablar() intenta Engine "neural" y, si la voz no lo admite, cae automáticamente a "standard" sin interrumpir la app.
+3 — Reanudación inteligente (pestana_lectura.py)
+Cuando el estado es 'pausado' y la voz es neuronal: se establece estado='detenido' y se llama de nuevo a al_alternar_reproduccion(), que toma el cursor exactamente de GetInsertionPoint() y construye una nueva cola desde ahí. No hay salto hacia adelante.
+4 — Navegación circular con NVDA (ventana_principal.py)
+Tanto el Tab→Notebook como el Shift+Tab→último control usan wx.CallAfter(control.SetFocus), garantizando que el evento de teclado se procesa antes de que NVDA reciba el cambio de foco.
+5 — Archivo de pánico error_tiflo.log (iniciar_tiflohistorias.py)
+Se instala sys.excepthook = _manejador_excepcion_global. Cualquier crash no controlado escribe fecha, tipo de excepción y traza completa en error_tiflo.log en la raíz del proyecto.
+6 — Rutas absolutas + recientes nunca guardados
+• Nuevo módulo app/config_rutas.py con RAIZ, CONFIG_DIR y ruta_config(nombre). Todos los archivos que acceden a configuraciones/ lo usan ahora, funcionando desde cualquier directorio de trabajo.
+• Bug encontrado: cargar_epub_desde_ruta nunca llamaba agregar_a_recientes(). Corregido: ahora notifica a VentanaPrincipal tras cargar un libro, que lo guarda en libros_recientes.json.
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++967-247

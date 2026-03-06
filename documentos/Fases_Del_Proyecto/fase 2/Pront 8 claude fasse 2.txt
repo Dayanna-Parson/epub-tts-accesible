@@ -1,0 +1,3 @@
+Pront 8 claude fasse 2
+
+genial, ahora, solo respóndeme a esta pregunta: ¿necesito instalar librerías, o instalar ffmpeg para que grabe correctamente? o ya me has incluido todo lo necesario dentro de la misma? A, y recuerda también, que cuando terminemos esta fase, en la fase 3 revisaremos que todo esté funcionando bien, y si es así, la haremos funcional. La idea es que la app sea portable de momento.

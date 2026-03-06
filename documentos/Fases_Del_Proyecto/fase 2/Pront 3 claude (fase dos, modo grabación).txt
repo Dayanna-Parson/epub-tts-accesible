@@ -1,0 +1,113 @@
+Pront 3 claude (fase dos, modo grabación)
+
+gracias. Necesito que me confirmes 3 cosas. Primero, Ahora si tienes todo el panorama completo y actualizado de la fase uno? Dime que a cambiado para ti, con respecto a cuando ayer empezaste a escribir desde cero la fase dos, pero utilizando de base viejo código? Ahora, otra pregunta: prefieres que te pase todos los errores pero de forma un poco desordenada, o como pronts, como lo hice en la primera fase? Por cierto, los pronts me los hace gemini, según el archivo de correciones que le adjunte. Te lo paso por si las dudas, para que lo veas, e implementes en la fase 2. Y por si no puedes ver el archivo, te pego el contenido del mismo aquí. Ya me dices que te viene mejor. Si solo el pront, o el archivo de correcciones, o ambos.
+
+Cosas que hay que corregir en fase uno grabacion (respuesta claude 1)
+
+Perfecto, sale muy bien, y creo que me gusta más que se muestre así, el capítulo título del libro y del capítulo, pero a esto le veo un problema. Y si tan solo lo que queremos hacer es nada mas un fragmento de texto con unas cuantas etiquetas, pero no es ni un libro o un capítulo? imagina que es para un guón de video de youtube, pocdast o cos así... la idea es usarla para todo. No solo para capítulos de libros.
+Vale. otra cosa. No me gusta que se muestre´así con números. 
+1. Cargar texto con etiquetas  agrupación
+Examinar…  botón  Alt+  e
+Título del libro:  edición  en blanco
+Nombre del capítulo:  edición  en blanco
+Cargar y Escanear Etiquetas  botón  Alt+  c
+2. Casting de voces  agrupación
+Etiquetas detectadas:  cuadro combinado  contraído
+Voces favoritas disponibles:  lista
+[Polly] Raul (es-ES)
+[Polly] Raul (es-ES)
+[Polly] Alba (es-ES)
+[Polly] Raul (es-ES)
+[Polly] Lupe (es-US)
+[Polly] Penélope (es-US)
+[Polly] Miguel (es-US)
+[Polly] Mia (es-MX)
+[Polly] Lucia (es-ES)
+[Polly] Enrique (es-ES)
+[Polly] Conchita (es-ES)
+Asignar voz a etiqueta  botón  Alt+  a
+Probar Voz  botón  Alt+  p
+Asignaciones actuales:  edición  sólo lectura  en blanco
+3. Opciones de salida  agrupación
+Dividir en múltiples archivos numerados (uno por etiqueta)  casilla de verificación  marcado  Alt+  d
+sin marcar
+2. Casting de voces  agrupación
+Asignaciones actuales:  edición  sólo lectura  en blanco
+3. Opciones de salida  agrupación
+Dividir en múltiples archivos numerados (uno por etiqueta)  casilla de verificación  sin marcar  Alt+  d
+a ver. la idea aquí es que no hace falta poner un botón para escanear las etiquetas después de cargar un txt. La idea es que lo haga solo automático
+Bien solo te digo lo que he visto así de primeras en la interfaz. tambpoco me gurta qque se muestre así. uno, cargar archivo... dos casting asignación de etiquetas...
+A, está muy bien el cuadro combinado, pero lo de favoritos, pues no se muestra bien... Tres cosas a cambiar aquí. primero, porqué no sigue el mismo patrón que está en favoritos? Nombre de la voz, idioma y proobedor? y no son casillas como ves. sale como si fuese una lista mas. Y no se si estoy seleccionado o no, cada vez que pulso espacio. A, el botón de asignar etiqueta también hay que quitarlo, porque la gracia es que al marcar las voces de los favoritos, pues que se asignen automaticamente.
+Tampoco sale lo del botón examinar o mejor dicho para abrir la carpeta predeterminada.
+
+Dos tres cosas mas que hay que cambiar:
+Primero, la casilla. de auquí no me gusta como se llama, no te había dicho como se tenía que llamar, y los textos de ayuda cuando está marcada y conado está desactivada? pues eso no se está cumpliendo. cuando la desmarco al rato se marca de nuevo, y no se actualiza. ni el estado ni el nombre. Espera, creo que si se queda bien marcado... Eso hay que coomoprobarlo. (3. Opciones de salida  agrupación
+Dividir en múltiples archivos numerados (uno por etiqueta)  casilla de verificación  sin marcar  Alt+  d
+marcado
+2. Casting de voces  agrupación
+Asignaciones actuales:  edición  sólo lectura  en blanco
+3. Opciones de salida  agrupación
+Dividir en múltiples archivos numerados (uno por etiqueta)  casilla de verificación  marcado  Alt+  d
+sin marcar)
+Luego, no es cíclica con el tab como el resto de elementos de las otras dos pestañas...
+Y lo último, pues no me gustan tanto como los textos de los botones, y no aparece ningúno de todos los textos de ayuda que te sugerí. Y además de poner esto, pues quiero que no le pidas que combieta nada, ni frcuencias ni archivos. que de el audio tal cual venga. Que ya viene con la máxima calidad. Aunque como vas a ver, en los clientes me refiero en los archivos que están dentro de la sub carpeta servicios, ya están preefijados pues la conversión y esas cosas. solo quiero que conviertas a mp3 a 320 respetando las fecuencias de muestreo tanto de las 3 proobedores api. Pero, solo que las convierta después, cuando halla procesado cada etiqueta por separado, y que lo valla conviertiendo a la vez que va grabando... Creo que es lo mejor para obtener la máxima calidad de entrada, a pesar de que luego haga esa conversión.
+A, y otra cosa que no hemos planteado, que pasa si queremos grabar un solo fragmento o un capítulo entero y no tiene ninguna etiqueta, mas hallá que la del narrador que se asignará por defecto? Se me ocurre que haga la grabación pues entera, pero para no abusar de las peticiones, no se. que grabe por bloques cortos de caracteres... Total, coomo no tiene que reproducir nada, pues que eso sea inteligente y eficiente
+Y se me acaba d ocurrir algo ahora. cuando esté todas las etiquetas y voces asignadas, pues puner una pree escucha para a ver si todo el resultado en su conjunto pues suena bien, o me gusta como suena.
+Y acabo de probar las etiquetas y su asignación, y si, eso lo hace muy bien. Detecta las etiquetas, y además me gusta mucho que halla puesto esto. Asignaciones actuales:  edición  sólo lectura  @nar  →  Conchita  [Polly]
+
+@nar  →  Conchita  [Polly]
+
+@pj1  →  Sergio  [Polly]
+
+@pj3  →  Sergio  [Polly] Y supongo que me da este error por no estar conectada al resto de la app (Iniciar Grabación  botón  Alt+  i
+pulsado
+no disponible
+Error de grabación  diálogo  Se produjo un error durante la grabación:
+[WinError 2] El sistema no puede encontrar el archivo especificado
+OK  botón
+pulsado
+Tiflo Historias
+lista de pestañas
+Modo Grabación  pestaña  seleccionado) Pero bueno. Espero que cuando lo conecte a la otra rama o mejor pues tragia lo que tengo a la rama principal a esta, pues ya lo conectarás tu mejor no es así?
+A y otra cosa que falla, no se reproducen las muestras de voz cuando pulso en probar voz.
+
+Bueno, Y por último el log:
+
+---------------------------------------------------
+   INICIANDO TIFLO HISTORIAS...
+---------------------------------------------------
+2026-03-04 12:56:10,055 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-04 12:56:10,056 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-04 12:56:10,056 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-04 12:56:10,058 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-04 12:56:10,922 - __main__ - INFO - Iniciando TifloHistorias
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Buscando voz: Raul
+--> [Local] No se encontró coincidencia exacta.
+2026-03-04 13:38:51,194 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo cargar mapeo: Expecting value: line 1 column 1 (char 0)
+2026-03-04 13:39:08,155 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo guardar mapeo: Expecting value: line 1 column 1 (char 0)
+2026-03-04 13:39:23,507 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo guardar mapeo: Expecting value: line 1 column 1 (char 0)
+2026-03-04 13:39:42,957 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo guardar mapeo: Expecting value: line 1 column 1 (char 0)
+--> [Local] Buscando voz: Sergio
+--> [Local] No se encontró coincidencia exacta.
+--> [Local] Buscando voz: Sergio
+--> [Local] No se encontró coincidencia exacta.
+2026-03-04 13:40:18,241 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,242 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,243 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,243 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,244 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,244 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,244 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,245 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,245 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,482 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,484 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,485 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,487 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,487 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,487 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,488 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,488 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,488 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.

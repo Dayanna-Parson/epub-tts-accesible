@@ -1,0 +1,57 @@
+Respuestas claude 14
+
+Reviewed settings tab component and searched for keyboard shortcut implementation in main window
+Reviewed settings tab component and searched for keyboard shortcut implementation in main window
+Copiar mensaje
+Let me also read gestor_atajos.py and ventana_principal.py around the accelerator logic:
+Read keyboard shortcut manager and main window accelerator configuration code
+Read keyboard shortcut manager and main window accelerator configuration code
+Copiar mensaje
+Now I have a complete picture. Let me implement all 4 tasks:
+Updated todo list for accessibility and pricing implementation tasks
+Updated todo list for accessibility and pricing implementation tasks
+Copiar mensaje
+Now update lbl_info and _crear_fila_limite() for accessibility:
+Updated character limit explanation text in settings panel
+Updated character limit explanation text in settings panel
+Copiar mensaje
+Now replace _crear_fila_limite() to use SetHelpText instead of a floating label:
+Updated accessibility implementation and pay-as-you-go cost logic tasks
+Updated accessibility implementation and pay-as-you-go cost logic tasks
+Copiar mensaje
+Now task 3: add None modifier support and strengthen the AcceleratorTable guard in ventana_principal.py:
+Updated keyboard modifier conversion function in ventana_principal.py
+Updated keyboard modifier conversion function in ventana_principal.py
+Copiar mensaje
+Now fix the guard in _configurar_aceleradores_globales — flag is None will now never be True for valid inputs, but we need to check for flag is None differently since wx.ACCEL_NORMAL == 0 is falsy:
+Updated accessibility and pricing logic task tracking
+Updated accessibility and pricing logic task tracking
+Copiar mensaje
+Now task 4 — add us-east-1 fallback for generative voices in gestor_voces.py:
+Updated todo list for accessibility improvements and pay-as-you-go implementation
+Updated todo list for accessibility improvements and pay-as-you-go implementation
+Copiar mensaje
+Listo. Commit b4ef6fe subido. Resumen de los 4 cambios del Prompt 14:
+ 
+1. Accesibilidad NVDA (pestana_ajustes.py)
+_crear_fila_limite() ya no crea un wx.StaticText suelto. En su lugar:
+txt.SetHelpText(f"Coste estimado: {texto_coste}")
+Copy code
+NVDA verbalizará automáticamente la descripción al tabular al campo. El EVT_TEXT actualiza el SetHelpText en tiempo real mientras el usuario escribe el número.
+ 
+2. Pay-as-you-go (pestana_ajustes.py)
+Eliminada toda lógica de "tier gratuito" y "primer año". Los cálculos son directos:
+• Azure: n × $16 / 1M + variante HD n × $30 / 1M
+• Polly: n × $16 / 1M (Neural) + referencia Generative n × $30 / 1M
+• ElevenLabs: sin cambio (es suscripción fija)
+ 
+3. AcceleratorTable robusta (ventana_principal.py)
+_mod_a_flag() ahora acepta None y "" → wx.ACCEL_NORMAL. Esto permite que un usuario asigne "modificador": "" en teclas_usuario.json para usar teclas sin modificador (como Espacio sola para reproducir/pausar), con plena prioridad en el Frame sobre el RichTextCtrl.
+ 
+4. Polly Generative — fallback us-east-1 (gestor_voces.py)
+Cuando la región configurada no es us-east-1, se crea un segundo cliente boto3 apuntando explícitamente a esa región. Las consultas describe_voices(Engine='generative') y describe_voices(Engine='long-form') se ejecutan en ambos clientes, garantizando que voces como Danielle o Jayden (exclusivas de us-east-1) aparezcan en el catálogo aunque el usuario use eu-west-1 u otra región.
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++2232-339
+Crear PR

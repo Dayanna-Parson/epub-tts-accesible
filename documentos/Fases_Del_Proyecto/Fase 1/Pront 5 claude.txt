@@ -1,0 +1,16 @@
+Pront_Claude5
+
+¡grandes noticias! Los libros recientes y la navegación ya funcionan perfectamente.Ahora, vamos a pulir la estabilidad y el orden del proyecto:
+1. 
+Fragmentos Inteligentes: Reduce el tamaño de los fragmentos a 300 caracteres. Es el punto dulce para que la respuesta sea casi instantánea sin perder calidad de entonación.
+2. 
+Orden de Archivos: Saca la lógica de limpieza de texto de procesador_etiquetas.py. Deja ese archivo vacío para la Fase 2 (grabación). Crea un nuevo archivo app/motor/limpiador_lectura.py para gestionar los saltos de línea y la unión de palabras cortadas del EPUB.
+3. 
+Limpieza Exhaustiva: Asegúrate de que el nuevo limpiador elimine todos los saltos de línea duplicados. NVDA no debe encontrar líneas vacías entre párrafos.
+4. 
+Amazon Polly (Dato Clave): Jacqui ya confirmó que sus claves funcionan en us-east-1. Asegúrate de que cliente_polly.py use la ruta absoluta para leer el JSON de configuración [cite: 546] y que no se bloquee por la normalización de regiones.
+5. 
+Sincronización de Pausa: Al reanudar, ignora cualquier fragmento guardado y genera uno nuevo desde el InsertionPoint actual.
+6. 
+Log de Errores: Guarda el archivo error_tiflo.log usando la ruta absoluta de la carpeta del proyecto para evitar errores de permisos
+

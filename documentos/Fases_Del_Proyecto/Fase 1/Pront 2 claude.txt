@@ -1,0 +1,18 @@
+Pront 3 para claude.
+"Claude, estamos en la recta final de la Fase 1. Necesito que apliques estas correcciones definitivas en la misma rama de trabajo:
+1. 
+Amazon Polly y Región: Asegúrate de que el cliente_polly.py acepte y limpie correctamente el formato de región. Si el usuario escribe 'US East (North Virginia)' o 'us-east-1', el sistema debe usar siempre el código técnico us-east-1. [cite: 169]
+2. 
+Gestión de JSON y Cuotas: Realiza una auditoría completa de todos los archivos JSON (libros_recientes.json, config_general.json, etc.). Asegúrate de que ventana_principal.py cargue el historial de recientes al arrancar[cite: 196, 197]. Revisa control_cuota.py para que los caracteres gastados se resten y guarden correctamente tras cada petición de IA. [cite: 248, 249, 250]
+3. 
+Bucle de Tabulador Bidireccional: Corrige la navegación con Shift + Tab. Al llegar al primer control de un panel, el foco debe saltar al último control del panel anterior (o al Notebook), creando un bucle infinito en ambos sentidos. [cite: 164, 165, 166]
+4. 
+Parámetros de Voz IA: Los deslizadores de Velocidad y Volumen deben aplicarse a las voces de Azure, Polly y ElevenLabs. [cite: 171, 172] Traduce los valores del slider (0-100) a los formatos que aceptan sus APIs (ej: prosody rate para Azure/Polly).
+5. 
+Lectura Continua (Cola de Audio): Elimina el límite de parada de los 500 caracteres. [cite: 174, 175] Implementa un sistema que encadene los fragmentos automáticamente para que la lectura no se detenga hasta que el usuario pulse 'Pausar' o se acabe el capítulo. [cite: 177]
+6. 
+Sincronización de Cursor: Mientras el audio suena, el insertion point del cuadro de texto debe ir avanzando para que el cursor visual y el foco de NVDA sigan el ritmo de la lectura. [cite: 188, 190]
+7. 
+Botones de Salto: Los botones 'Atrás' y 'Adelante' deben leer y respetar el valor numérico (segundos) definido en el cuadro de edición de 'Navegación' en la pestaña Ajustes. [cite: 252] Asegúrate de que la etiqueta del botón se actualice automáticamente (ej: 'Adelante 30s').
+8. 
+Limpieza EPUB: Mejora el procesador_etiquetas.py para eliminar saltos de línea innecesarios y evitar que se corten palabras a mitad de frase al importar el texto al cuadro de lectura. [cite:

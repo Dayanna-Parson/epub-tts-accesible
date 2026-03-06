@@ -1,0 +1,27 @@
+Respuestas 9 claude fase 2
+
+Checked bin folder existence and reviewed project gitignore file
+Checked bin folder existence and reviewed project gitignore file
+Copiar mensaje
+pydub ya está en requisitos.txt. Lo que falta: crear la carpeta bin/ para ffmpeg, configurar pydub para que lo use automáticamente, y añadir boto3 que uso en grabador_audio.py pero no estaba listado.
+Updated .gitignore to exclude portable binary files
+Updated .gitignore to exclude portable binary files
+Copiar mensaje
+Ahora configuro pydub en grabador_audio.py para que detecte el ffmpeg local automáticamente al arrancar:
+Updated audio recorder module with dependency imports
+Updated audio recorder module with dependency imports
+Copiar mensaje
+Ahora añado boto3 a requisitos.txt (lo uso en grabador_audio.py y no estaba listado):
+Committed audio recorder with portable ffmpeg integration and updated dependencies
+Committed audio recorder with portable ffmpeg integration and updated dependencies
+Copiar mensaje
+Commit c3b0598. Resumen de lo que hay ahora:
+Para usar ffmpeg de forma portable (sin instalación):
+1. Descarga el build estático de gyan.dev/ffmpeg/builds → ffmpeg-release-essentials.zip
+2. Extrae y copia ffmpeg.exe (y opcionalmente ffprobe.exe) a la carpeta bin/ del proyecto
+3. La app los detecta sola al arrancar — no hace falta tocar el PATH del sistema
+requisitos.txt actualizado:
+• boto3>=1.34.0 añadido — faltaba y es necesario para Polly
+El resto de dependencias ya estaban:
+• pydub — ya estaba
+• No hay ninguna librería Python nueva más allá de boto3

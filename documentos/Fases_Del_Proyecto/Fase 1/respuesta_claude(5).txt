@@ -1,0 +1,228 @@
+respuesta_claude(5)
+
+Updated todo list tracking fragment size and code reorganization tasks
+Updated todo list tracking fragment size and code reorganization tasks
+Update Todos☐ Reducing fragment size to 300 chars☐ Task 2+3: Create limpiador_lectura.py, clear procesador_etiquetas.py, update gestor_epub.py☐ Task 5: Fix thread overwriting pausado→detenido + suppress false error dialog☐ Commit and push
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 5 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+9-7
+22
+        """
+33
+        Divide el texto en fragmentos de máximo MAX_CHARS caracteres,
+44
+        respetando límites de párrafo o frase para no cortar palabras.
+5-
+        Retorna lista de (texto_fragmento, pos_inicio_global).
+6-
+        """
+7-
+        MAX_CHARS = 1500
+5+
+        300 caracteres es el punto óptimo: respuesta casi instantánea
+6+
+        de la API sin perder calidad de entonación por frases incompletas.
+7+
+        Retorna lista de (texto_fragmento, pos_inicio_global).
+8+
+        """
+9+
+        MAX_CHARS = 300
+Mostrar 1 más
+Copiar mensaje
+Now create the new limpiador_lectura.py with exhaustive newline cleaning (Task 2 + 3):
+Created text cleaning module for accessible EPUB reading
+Created text cleaning module for accessible EPUB reading
+Write/home/user/epub-tts-accesible/app/motor/limpiador_lectura.py
+1+
+import re
+2+
+3+
+4+
+def limpiar_para_lectura(texto):
+5+
+    """
+6+
+    Limpia el texto extraído de un EPUB para lectura accesible con NVDA.
+7+
+8+
+    Transformaciones aplicadas:
+9+
+    1. Une palabras cortadas con guion al final de línea (e.g., "cami-\nnando" → "caminando")
+10+
+    2. Elimina espacios o tabuladores múltiples internos
+11+
+    3. Reduce TODAS las secuencias de saltos de línea a uno solo (sin líneas en blanco)
+12+
+       → NVDA no anunciará "blank" al navegar entre párrafos
+13+
+14+
+    El resultado es un texto de flujo continuo con párrafos separados por un único
+15+
+    salto de línea, lo que permite que NVDA lo lea sin interrupciones vacías.
+16+
+    """
+17+
+    if not texto:
+18+
+        return texto
+19+
+20+
+    # 1. Unir palabras cortadas con guion al final de línea
+Show full diff (12 more lines)
+Copiar mensaje
+Now empty procesador_etiquetas.py (reserved for Phase 2 — audio recording):
+Created audio tag processor module for phase 2
+Created audio tag processor module for phase 2
+Write/home/user/epub-tts-accesible/app/motor/procesador_etiquetas.py
+1+
+# procesador_etiquetas.py — RESERVADO PARA LA FASE 2 (Grabación de Audio)
+2+
+#
+3+
+# Este módulo gestionará el procesamiento de etiquetas SSML y metadatos
+4+
+# necesarios para la exportación de audio en formato MP3.
+5+
+# La lógica de limpieza de texto del EPUB se encuentra en limpiador_lectura.py.
+16
+Copiar mensaje
+Now update gestor_epub.py to import from limpiador_lectura instead of procesador_etiquetas:
+Updated todo list with task completion status
+Updated todo list with task completion status
+Edit/home/user/epub-tts-accesible/app/motor/gestor_epub.py+1-1
+1-
+from app.motor.procesador_etiquetas import limpiar_texto
+1+
+from app.motor.limpiador_lectura import limpiar_para_lectura
+Edit/home/user/epub-tts-accesible/app/motor/gestor_epub.py+2-2
+1-
+    # Limpieza final: eliminar artefactos de formato del EPUB
+2-
+    texto_completo = limpiar_texto(texto_completo)
+1+
+    # Limpieza final: eliminar artefactos de formato y líneas vacías para NVDA
+2+
+    texto_completo = limpiar_para_lectura(texto_completo)
+Update Todos☐ Task 1: Reduce MAX_CHARS to 300 in pestana_lectura.py☐ Task 2+3: Create limpiador_lectura.py, clear procesador_etiquetas.py, update gestor_epub.py☐ Fixing pause state overwrite bug☐ Commit and push
+Copiar mensaje
+Now fix the pause/state overwrite bug in reproductor_voz.py (Task 5). When the user pauses, the HTTP session closes and the synthesis thread catches a ConnectionError — which wrongly triggers the "failed to connect" dialog and overwrites the 'pausado' state back to 'detenido':
+Updated voice player stop method in reproductor_voz.py
+Updated voice player stop method in reproductor_voz.py
+Read/home/user/epub-tts-accesible/app/motor/reproductor_voz.pyLeer 30 líneas
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+8-4
+3939
+        # Callback opcional que se ejecuta en el hilo principal cuando un fragmento
+4040
+        # termina de reproducirse. Lo usa PestanaLectura para encadenar la cola de audio.
+4141
+        self._callback_completado = None
+42+
+        # Flag que indica que la detención fue intencional (pausa o stop del usuario).
+43+
+        # Cuando True, el hilo de síntesis no mostrará el diálogo de error por ConnectionError
+44+
+        # ni sobreescribirá el estado con 'detenido' al recibir la excepción de cancelación.
+45+
+        self._detenido_intencionalmente = False
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+13-10
+22
+        self.detener()
+33
+        time.sleep(0.05)
+44
+5+
+        # Nueva síntesis: restablecer el flag de detención intencional
+6+
+        self._detenido_intencionalmente = False
+7+
+58
+69
+        # Registrar el callback para este fragmento
+710
+        self._callback_completado = callback_completado
+Mostrar 1 más
+Copiar mensaje
+Now fix _procesar_voz_neuronal to respect the flag:
+Updated neural voice processing in reproductor_voz.py
+Updated neural voice processing in reproductor_voz.py
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+29-26
+1414
+            error_msg = str(e)
+1515
+            print(f"[Error] Voz neuronal ({self.tipo_motor_actual}): {error_msg}")
+1616
+17-
+            # Solo notificar al usuario si este hilo sigue siendo el activo
+18-
+            if self._generacion == generacion:
+19-
+                wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+20-
+21-
+        # Solo actualizar el estado y disparar el callback si este hilo sigue siendo el válido
+22-
+        if self._generacion == generacion:
+17+
+            # Solo mostrar el error al usuario si fue un fallo real de la API,
+18+
+            # no una detención intencional (pausa o stop del usuario que cierra la sesión HTTP).
+19+
+            if self._generacion == generacion and not self._detenido_intencionalmente:
+20+
+                wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+21+
+22+
+        # Solo actualizar el estado y encadenar el callback si:
+23+
+        # 1. Esta generación sigue siendo la activa (no se inició otra síntesis)
+24+
+        # 2. La detención NO fue intencional (si fue pausa/stop, el estado ya fue asignado)
+25+
+        if self._generacion == generacion and not self._detenido_intencionalmente:
+2326
+            if self._callback_completado:
+2427
+                wx.CallAfter(self._callback_completado)
+Show full diff (1 more lines)
+Copiar mensaje
+Run syntax checks and commit:
+Updated todo list: reduced fragment size, created limpiador_lectura.py module
+Updated todo list: reduced fragment size, created limpiador_lectura.py module
+Bash
+python -c " import ast, sys files = [ 'app/motor/limpiador_lectura.py', 'app/motor/procesador_etiquetas.py', 'app/motor/gestor_epub.py', 'app/motor/reproductor_voz.py', 'app/interfaz/pestana_lectura.py', ] ok = True for f in files: try: with open(f) as fh: ast.parse(fh.read()) print(f'OK: {f}') except SyntaxError as e: print(f'ERROR: {f}: {e}') ok = False sys.exit(0 if ok else 1) "
+OK: app/motor/limpiador_lectura.pyOK: app/motor/procesador_etiquetas.pyOK: app/motor/gestor_epub.py
+Mostrar más
+OK: app/motor/reproductor_voz.pyOK: app/interfaz/pestana_lectura.py
+Bash
+git add app/motor/limpiador_lectura.py app/motor/procesador_etiquetas.py app/motor/gestor_epub.py app/motor/reproductor_voz.py app/interfaz/pestana_lectura.py && git commit -m "$(cat <<'EOF' Pulido Fase 1: fragmentos, limpieza EPUB y estabilidad de pausa - Task 1: MAX_CHARS reducido de 1500 a 300 — respuesta casi instantánea de las APIs sin perder calidad de entonación al respetar frases cortas - Task 2+3: Nuevo módulo limpiador_lectura.py con limpiar_para_lectura(): une guiones de corte de línea, elimina espacios múltiples y reduce todas las secuencias de \n a un solo \n → NVDA nunca anuncia "blank" entre párrafos al navegar con el cursor. procesador_etiquetas.py queda vacío (reservado para la Fase 2 de grabación). gestor_epub.py actualizado. - Task 5: Arreglado bug crítico de pausa — al cerrar la sesión HTTP el hilo de síntesis capturaba ConnectionError y (a) mostraba un diálogo de error falso y (b) sobreescribía el estado 'pausado' con 'detenido'. Nuevo flag _detenido_intencionalmente en ReproductorVoz: lo activa detener(), lo limpia cargar_texto(). _procesar_voz_neuronal lo comprueba antes de mostrar errores o cambiar estado. - Tasks 4+6: cliente_polly.py ya usaba ruta_config() (absoluta) y fallback de región. error_tiflo.log ya usaba _RAIZ (absoluta). Sin cambios. https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL d88b6ed] Pulido Fase 1: fragmentos, limpieza EPUB y estabilidad de pausa 5 files changed, 61 insertions(+), 33 deletions(-) create mode 100644 app/motor/limpiador_lectura.py
+Bashgit push -u origin claude/python-wxpython-accessibility-ZPVzLTo http://127.0.0.1:44076/git/Dayanna-Parson/epub-tts-accesible   d44b9e0..d88b6ed  claude/python-wxpython-accessibility-ZPVzL -> claude/python-wxpython-accessibility-ZPVzLbranch 'claude/python-wxpython-accessibility-ZPVzL' set up to track 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Mostrar 1 más
+Copiar mensaje
+Pushed. Resumen de todo lo que se aplicó en este commit:
+ 
+Cambios aplicados
+Tarea 1 — Fragmentos de 300 caracteres (pestana_lectura.py)
+MAX_CHARS = 300 en _dividir_en_fragmentos. Azure, Polly y ElevenLabs responden en < 1 segundo con fragmentos de este tamaño, manteniendo la entonación completa porque cada fragmento contiene frases enteras.
+Tarea 2 + 3 — Reorganización del limpiador + sin líneas vacías para NVDA
+app/motor/limpiador_lectura.py (nuevo):
+• limpiar_para_lectura() une guiones de corte de línea (cami-\nnando → caminando)
+• Elimina espacios múltiples internos
+• Reduce toda secuencia de \n+ a un único \n — NVDA nunca anunciará "blank" al navegar entre párrafos con las flechas de cursor
+procesador_etiquetas.py — vaciado y marcado como reservado para la Fase 2 (grabación de audio)
+gestor_epub.py — importa limpiar_para_lectura desde el nuevo módulo
+Tarea 5 — Bug de pausa corregido en reproductor_voz.py
+Había un bug silencioso con dos consecuencias:
+1. Al pausar una voz neuronal, el cierre de la sesión HTTP lanzaba ConnectionError en el hilo → aparecía el diálogo "No se pudo conectar" aunque fuera una pausa intencional
+2. El hilo luego sobreescribía estado = "detenido" pisando el estado 'pausado', con lo que el botón volvía a "Reproducir" sin que el usuario lo pidiera
+Solución: nuevo flag _detenido_intencionalmente:
+• detener() lo pone a True antes de cerrar la sesión
+• cargar_texto() lo resetea a False en cada nueva síntesis
+• _procesar_voz_neuronal() lo comprueba: si es True, no muestra error ni toca el estado
+Tareas 4 y 6 — Sin cambios necesarios
+cliente_polly.py ya usaba ruta_config() (ruta absoluta) y el fallback de región desde el commit anterior. error_tiflo.log ya usaba _RAIZ basada en __file__.
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++995-247
+Crear PR

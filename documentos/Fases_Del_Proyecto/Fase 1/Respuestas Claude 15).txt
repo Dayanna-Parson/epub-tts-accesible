@@ -1,0 +1,59 @@
+Respuestas Claude 15)
+
+Entendido. Voy a leer el estado actual de los tres ficheros antes de aplicar los cambios:
+Updated todo list with infrastructure revert and accessibility tasks
+Updated todo list with infrastructure revert and accessibility tasks
+Copiar mensaje
+Empiezo con los dos reverts y los nuevos cambios de accesibilidad:
+Fixed keyboard shortcut flag validation in ventana_principal.py
+Fixed keyboard shortcut flag validation in ventana_principal.py
+Copiar mensaje
+Now revert the Polly us-east-1 fallback in gestor_voces.py:
+Updated todo list with completed reversion tasks
+Updated todo list with completed reversion tasks
+Copiar mensaje
+Ahora la parte principal: reemplazar _coste_estimado con la función NVDA-nativa y limpiar el bloque lbl_info:
+Fixed cost estimation function in settings panel file
+Fixed cost estimation function in settings panel file
+Copiar mensaje
+Ahora el bloque lbl_info + StaticLine (eliminarlos) y actualizar _crear_fila_limite:
+Updated budget control UI section in settings tab
+Updated budget control UI section in settings tab
+Copiar mensaje
+Ahora _crear_fila_limite — pasar gastado a la nueva función y actualizar el callback EVT_TEXT:
+Updated todo list with completed infrastructure tasks
+Updated todo list with completed infrastructure tasks
+Copiar mensaje
+Verificar el diff antes de commitear:
+Pushed feature branch to remote repository
+Pushed feature branch to remote repository
+Copiar mensaje
+Ahora el merge a beta:
+Switched to beta branch and pulled latest updates
+Switched to beta branch and pulled latest updates
+Copiar mensaje
+Estoy en la rama beta. Antes del merge, compruebo la base común con la rama de feature:
+Updated todo list with completed accessibility and configuration tasks
+Updated todo list with completed accessibility and configuration tasks
+Copiar mensaje
+Todo listo. Resumen del Prompt 15:
+ 
+1. Revert AcceleratorTable — ventana_principal.py
+Eliminada la entrada None: wx.ACCEL_NORMAL de _mod_a_flag() y el comentario extra. La AcceleratorTable queda en el estado estable anterior que ya funcionaba.
+2. Revert Polly us-east-1 — gestor_voces.py
+Eliminado el cliente secundario a us-east-1. La descarga de voces Polly queda simple: solo la región configurada por el usuario. Dejamos las voces Generative para la Fase 3.
+3. Accesibilidad NVDA nativa — pestana_ajustes.py
+• Reemplazada _coste_estimado() por _texto_ayuda_limite(proveedor, gastado, limite_chars) que genera texto sin símbolos especiales para que NVDA lo lea limpio:
+"Gasto: 50000 caracteres, unos 0.8 dolares. Restante: 450000 caracteres, aprox 1 libros. Coste total al limite: 8.0 dolares al mes."
+• Se vincula al SetHelpText() del TextCtrl — NVDA lo verbaliza al tabular al campo.
+• EVT_TEXT actualiza el SetHelpText en tiempo real mientras se escribe el número.
+4. Limpieza — Eliminado el bloque lbl_info con los 6 líneas de precios de referencia. Toda la información está ahora integrada en la descripción accesible de cada campo.
+5. Merge a beta
+El merge f1a490c está hecho localmente en la rama beta (los 13 commits de la Fase 1 integrados sin conflictos, 17 ficheros, +2215 líneas). El sistema de la sesión no permite hacer push a ramas que no empiecen por claude/. Necesitas ejecutar tú misma:
+git push origin beta
+Copy code
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++2215-346
+Crear PR

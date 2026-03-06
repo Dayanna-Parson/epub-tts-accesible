@@ -1,0 +1,595 @@
+respuestas claude (8)
+
+Let me read the relevant files before making any changes:
+Read EPUB text cleaning module and AWS Polly client service file
+Read EPUB text cleaning module and AWS Polly client service file
+Read/home/user/epub-tts-accesible/app/motor/limpiador_lectura.pyLeer 39 líneas
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.pyLeer 188 líneas
+Copiar mensaje
+Now let me read the full pestana_lectura.py carefully, especially save/restore and the queue timer:
+Read pestana_lectura.py file dialog and text fragment division methods
+Read pestana_lectura.py file dialog and text fragment division methods
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 90 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 80 líneas
+Copiar mensaje
+Let me read the remaining relevant files before making changes:
+Updated task list with aggressive cleaner and book memory implementations
+Updated task list with aggressive cleaner and book memory implementations
+Read/home/user/epub-tts-accesible/app/servicios/cliente_eleven.pyLeer 98 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 50 líneas
+Update Todos☐ Task 1: Aggressive cleaner in limpiador_lectura.py☐ Task 2: Book memory (speed+volume+voice) in pestana_lectura.py☐ Task 3: Add debug prints to cliente_polly.py☐ Task 4: Proactive audio buffer at 70% threshold☐ Task 5: Persist volume/speed sliders to config JSON☐ Commit and push all changes
+Mostrar 2 más
+Copiar mensaje
+Task 1: Aggressive cleaner — join ALL mid-paragraph line breaks
+Updated task tracker with aggressive cleaner completion status
+Updated task tracker with aggressive cleaner completion status
+Write/home/user/epub-tts-accesible/app/motor/limpiador_lectura.py
+1+
+import re
+2+
+3+
+4+
+def limpiar_para_lectura(texto):
+5+
+    """
+6+
+    Limpia el texto extraído de un EPUB para lectura accesible con NVDA.
+7+
+8+
+    Transformaciones aplicadas:
+9+
+    1. Une palabras cortadas con guion al final de línea ("cami-\\nando" → "caminando")
+10+
+    2. Elimina espacios o tabuladores múltiples internos
+11+
+    3. Re-une signos de puntuación separados de la palabra anterior
+12+
+       ("frase ." → "frase.", "palabra ," → "palabra,")
+13+
+    4. Protege los saltos de párrafo reales (2+ newlines) con un marcador temporal
+14+
+    5. Une TODAS las líneas dentro de un mismo párrafo en una sola:
+15+
+       cualquier \\n aislado (no precedido por .!?:;») se reemplaza por espacio.
+16+
+       Esto evita que palabras como "demokracia" queden solas en una línea.
+17+
+    6. Restaura los saltos de párrafo reales como \\n simple
+18+
+    7. Limpia espacios múltiples y espacios pegados a los saltos de línea
+19+
+20+
+    El resultado: párrafos de texto continuo separados por un único \\n.
+Show full diff (34 more lines)
+Update Todos☐ Task 1: Aggressive cleaner in limpiador_lectura.py☐ Implementing book memory☐ Task 3: Add debug prints to cliente_polly.py☐ Task 4: Proactive audio buffer at 70% threshold☐ Task 5: Persist volume/speed sliders to config JSON☐ Commit and push all changes
+Copiar mensaje
+Tasks 2 + 5: Book memory AND slider persistence — both touch pestana_lectura.py
+Fixed configuration loading in reading tab module
+Fixed configuration loading in reading tab module
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+19-11
+66
+                with open(ruta, 'r', encoding='utf-8') as f:
+77
+                    conf = json.load(f)
+88
+                    self.segundos_salto = int(conf.get("segundos_salto", 10))
+9+
+                    # Restaurar sliders solo si los widgets ya están inicializados
+10+
+                    if hasattr(self, 'deslizador_velocidad'):
+11+
+                        vel = int(conf.get("velocidad_lectura", 50))
+12+
+                        vol = int(conf.get("volumen_lectura", 100))
+13+
+                        self.deslizador_velocidad.SetValue(vel)
+14+
+                        self.deslizador_volumen.SetValue(vol)
+15+
+                        self.reproductor.fijar_velocidad(vel)
+16+
+                        self.reproductor.fijar_volumen(vol)
+917
+        except Exception as e:
+1018
+            print(f"[Aviso] No se pudo leer la configuración de salto: {e}")
+1119
+            self.segundos_salto = 10
+Copiar mensaje
+Now update al_cambiar_velocidad and al_cambiar_volumen to persist immediately, and add the helper:
+Updated reading tab speed control and playback functionality
+Updated reading tab speed control and playback functionality
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+26-5
+11
+    def al_cambiar_velocidad(self, evento):
+2-
+        if hasattr(self.reproductor, 'fijar_velocidad'): self.reproductor.fijar_velocidad(self.deslizador_velocidad.GetValue())
+3-
+4-
+    def al_cambiar_volumen(self, evento):
+5-
+        if hasattr(self.reproductor, 'fijar_volumen'): self.reproductor.fijar_volumen(self.deslizador_volumen.GetValue())
+2+
+        v = self.deslizador_velocidad.GetValue()
+3+
+        if hasattr(self.reproductor, 'fijar_velocidad'):
+4+
+            self.reproductor.fijar_velocidad(v)
+5+
+        self._guardar_ajuste_slider("velocidad_lectura", v)
+6+
+7+
+    def al_cambiar_volumen(self, evento):
+8+
+        v = self.deslizador_volumen.GetValue()
+9+
+        if hasattr(self.reproductor, 'fijar_volumen'):
+10+
+            self.reproductor.fijar_volumen(v)
+11+
+        self._guardar_ajuste_slider("volumen_lectura", v)
+12+
+13+
+    def _guardar_ajuste_slider(self, clave, valor):
+14+
+        """Persiste el valor de un slider en config_general.json de forma inmediata."""
+15+
+        try:
+16+
+            ruta = ruta_config("config_general.json")
+Show full diff (10 more lines)
+Copiar mensaje
+Now update guardar_datos_libro to save speed, volume, and voice name:
+Fixed data saving functionality in reading tab interface
+Fixed data saving functionality in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+20-16
+77
+                    datos = json.load(f)
+88
+            datos[os.path.basename(self.ruta_libro_actual)] = {
+99
+                "pos": self.txt_contenido.GetInsertionPoint(),
+10-
+                "marcadores": self.marcadores
+10+
+                "marcadores": self.marcadores,
+11+
+                # Memoria de libro: velocidad, volumen y voz usados en este libro
+12+
+                "velocidad": self.deslizador_velocidad.GetValue(),
+13+
+                "volumen": self.deslizador_volumen.GetValue(),
+14+
+                "voz": self.combo_voz.GetStringSelection(),
+1115
+                json.dump(datos, f, ensure_ascii=False)
+1216
+        except Exception as e:
+1317
+            print(f"[Error] No se pudieron guardar los datos del libro: {e}")
+Copiar mensaje
+Now update cargar_datos_libro to restore speed, volume, and voice:
+Completed aggressive cleaner and book memory features
+Completed aggressive cleaner and book memory features
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+30-12
+44
+                with open(self.ruta_datos_lectura, 'r', encoding='utf-8') as f:
+55
+                    d = json.load(f).get(nombre)
+66
+                    if d:
+7-
+                        self.txt_contenido.SetInsertionPoint(d.get("pos", 0))
+8-
+                        self.txt_contenido.ShowPosition(d.get("pos", 0))
+9-
+                        self.marcadores = d.get("marcadores", {})
+7+
+                        # Posición y marcadores
+8+
+                        self.txt_contenido.SetInsertionPoint(d.get("pos", 0))
+9+
+                        self.txt_contenido.ShowPosition(d.get("pos", 0))
+10+
+                        self.marcadores = d.get("marcadores", {})
+11+
+                        # Restaurar velocidad guardada para este libro
+12+
+                        vel = d.get("velocidad")
+13+
+                        if vel is not None:
+14+
+                            self.deslizador_velocidad.SetValue(int(vel))
+15+
+                            self.reproductor.fijar_velocidad(int(vel))
+16+
+                        # Restaurar volumen guardado para este libro
+17+
+                        vol = d.get("volumen")
+18+
+                        if vol is not None:
+19+
+                            self.deslizador_volumen.SetValue(int(vol))
+20+
+                            self.reproductor.fijar_volumen(int(vol))
+Show full diff (10 more lines)
+Update Todos☐ Task 1: Aggressive cleaner in limpiador_lectura.py☐ Task 2: Book memory (speed+volume+voice) in pestana_lectura.py☐ Adding Polly debug prints☐ Task 4: Proactive audio buffer at 70% threshold☐ Task 5: Persist volume/speed sliders to config JSON☐ Commit and push all changes
+Copiar mensaje
+Task 3: Add Polly debug prints
+Completed aggressive cleaner and book memory features
+Completed aggressive cleaner and book memory features
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+20-11
+8989
+        region_raw = po_conf.get("region", "").strip()
+9090
+        region = _normalizar_region(region_raw)
+9191
+92+
+        # --- DIAGNÓSTICO: mostrar estado de credenciales en consola ---
+93+
+        ruta_cfg = ruta_config("config_general.json")
+94+
+        print(f"[Polly] Ruta config: {ruta_cfg}")
+95+
+        print(f"[Polly] Access Key: {'OK (' + str(len(access_key)) + ' chars)' if access_key else '*** VACÍO ***'}")
+96+
+        print(f"[Polly] Secret Key: {'OK (' + str(len(secret_key)) + ' chars)' if secret_key else '*** VACÍO ***'}")
+97+
+        print(f"[Polly] Región raw='{region_raw}' → normalizada='{region}'")
+98+
+        print(f"[Polly] Voice ID: {po_conf}")
+99+
+        # ------------------------------------------------------------
+100+
+92101
+        if not access_key or not secret_key:
+93102
+            raise Exception("Faltan credenciales de Amazon Polly (Access Key ID / Secret Access Key)")
+Update Todos☐ Task 1: Aggressive cleaner in limpiador_lectura.py☐ Task 2: Book memory (speed+volume+voice) in pestana_lectura.py☐ Task 3: Add debug prints to cliente_polly.py☐ Implementing proactive audio buffer☐ Task 5: Persist volume/speed sliders to config JSON☐ Commit and push all changes
+Copiar mensaje
+Task 4: Proactive audio buffer — split API call from playback in all 3 clients
+First, refactor ClienteAzure to separate _llamar_api() from playback, and add preparar():
+Created Azure client service module for text-to-speech functionality
+Created Azure client service module for text-to-speech functionality
+Write/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+import time
+8+
+from app.config_rutas import ruta_config
+9+
+10+
+11+
+class ClienteAzure:
+12+
+    def __init__(self):
+13+
+        self.config = {}
+14+
+        # Parámetros de reproducción (0-100)
+15+
+        self._velocidad = 50   # 50 = velocidad normal
+16+
+        self._volumen = 100    # 100 = volumen máximo
+17+
+        # Una sesión reutilizable mejora el rendimiento (keep-alive HTTP) y permite
+18+
+        # cancelar peticiones en curso llamando a self._sesion.close().
+19+
+        self._sesion = requests.Session()
+20+
+        # Flag para distinguir una detención intencional de un error de red
+Show full diff (197 more lines)
+Copiar mensaje
+Now add _llamar_api() and preparar() to ClientePolly:
+Updated ClientePolly class initialization parameters in cliente_polly.py
+Updated ClientePolly class initialization parameters in cliente_polly.py
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+9-6
+6060
+        self._velocidad = 50   # 50 = velocidad normal
+6161
+        self._volumen = 100    # 100 = volumen máximo
+6262
+        self._parado = False   # Flag para distinguir stop intencional de error de red
+63+
+        # Buffer de precarga
+64+
+        self._audio_preparado = None   # (data, fs) o None
+65+
+        self._texto_preparado = None
+Copiar mensaje
+Now refactor hablar() in Polly into _llamar_api() + hablar() + preparar():
+Fixed boto3 import error in cliente_polly.py
+Fixed boto3 import error in cliente_polly.py
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+126-101
+1-
+    def hablar(self, texto, datos_voz):
+2-
+        try:
+3-
+            import boto3
+4-
+        except ImportError:
+5-
+            raise Exception("boto3 no está instalado. Ejecuta: pip install boto3")
+6-
+7-
+        self._parado = False
+8-
+9-
+        config = self._cargar_config()
+10-
+        po_conf = config.get("polly", {})
+11-
+        access_key = po_conf.get("access_key", "").strip()
+12-
+        secret_key = po_conf.get("secret_key", "").strip()
+13-
+        region_raw = po_conf.get("region", "").strip()
+14-
+        region = _normalizar_region(region_raw)
+15-
+16-
+        # --- DIAGNÓSTICO: mostrar estado de credenciales en consola ---
+17-
+        ruta_cfg = ruta_config("config_general.json")
+18-
+        print(f"[Polly] Ruta config: {ruta_cfg}")
+19-
+        print(f"[Polly] Access Key: {'OK (' + str(len(access_key)) + ' chars)' if access_key else '*** VACÍO ***'}")
+20-
+        print(f"[Polly] Secret Key: {'OK (' + str(len(secret_key)) + ' chars)' if secret_key else '*** VACÍO ***'}")
+Show full diff (207 more lines)
+Copiar mensaje
+Also update detener() in Polly to clear the buffer:
+Fixed audio stop method in Polly client service
+Fixed audio stop method in Polly client service
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+9-6
+170170
+    def detener(self):
+171171
+        self._parado = True
+172+
+        # Invalidar buffer de precarga al detener
+173+
+        self._audio_preparado = None
+174+
+        self._texto_preparado = None
+172175
+            sd.stop()
+173176
+        except Exception:
+174177
+            pass
+Copiar mensaje
+Now add preparar() to ClienteEleven:
+Created ElevenLabs text-to-speech client module
+Created ElevenLabs text-to-speech client module
+Write/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+from app.config_rutas import ruta_config
+8+
+9+
+10+
+class ClienteEleven:
+11+
+    def __init__(self):
+12+
+        self.config = {}
+13+
+        # Parámetros de reproducción (0-100)
+14+
+        self._velocidad = 50   # 50 = velocidad normal
+15+
+        self._volumen = 100    # 100 = volumen máximo
+16+
+        # Sesión reutilizable con soporte para cancelación inmediata.
+17+
+        self._sesion = requests.Session()
+18+
+        self._parado = False
+19+
+        # Buffer de precarga
+20+
+        self._audio_preparado = None   # (data, fs_efectiva) o None
+Show full diff (110 more lines)
+Copiar mensaje
+Now add precargar_fragmento() to ReproductorVoz:
+Added precargar_fragmento method to reproductor_voz.py
+Added precargar_fragmento method to reproductor_voz.py
+Read/home/user/epub-tts-accesible/app/motor/reproductor_voz.pyLeer 20 líneas
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+25-1
+229+
+    # ANCLAJE_INICIO: PRECARGA_SIGUIENTE_FRAGMENTO
+230+
+    def precargar_fragmento(self, texto, datos_voz):
+231+
+        """
+232+
+        Inicia en segundo plano la descarga del audio para el siguiente fragmento.
+233+
+        Cuando hablar() se llame después con el mismo texto, encontrará el audio
+234+
+        ya listo y lo reproducirá sin la latencia de la API (típicamente 1-2s).
+235+
+        Solo aplica a voces neuronales; SAPI5 no necesita precarga.
+236+
+        """
+237+
+        if self.tipo_motor_actual == "local":
+238+
+            return
+239+
+        if not hasattr(self.motor_activo, 'preparar'):
+240+
+            return
+241+
+242+
+        motor = self.motor_activo  # capturar referencia local para el hilo
+243+
+244+
+        def _preparar():
+245+
+            try:
+246+
+                motor.preparar(texto, datos_voz)
+247+
+            except Exception as e:
+248+
+                print(f"[Precarga] Error: {e}")
+Show full diff (5 more lines)
+Copiar mensaje
+Now update PestanaLectura to trigger precarga at 70% in al_actualizar_ui and reset the flag in _reproducir_siguiente_fragmento:
+Updated progress estimation variables in reading tab interface
+Updated progress estimation variables in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+10-7
+3838
+        # Cola de fragmentos para lectura continua de voces neuronales
+3939
+        self._cola_lectura = []
+4040
+        self._idx_fragmento_actual = 0
+41+
+        # Buffer proactivo: evita silencios entre fragmentos disparando la descarga
+42+
+        # del siguiente cuando queda ~30% del actual
+43+
+        self._precarga_solicitada = False
+Copiar mensaje
+Reset the flag at the start of each new fragment:
+Fixed cursor positioning in reading tab interface component
+Fixed cursor positioning in reading tab interface component
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+11-9
+11
+        self.pos_inicio_fragmento = pos_inicio
+22
+        self._tiempo_inicio_frag = time.time()
+33
+        self._longitud_frag_actual = len(texto_frag)
+4+
+        # Resetear flag de precarga para este nuevo fragmento
+5+
+        self._precarga_solicitada = False
+46
+        self.txt_contenido.ShowPosition(pos_inicio)
+57
+68
+        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado)
+Copiar mensaje
+Now add the 70% trigger in al_actualizar_ui:
+Updated progress bar synchronization logic in reading tab interface
+Updated progress bar synchronization logic in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+43-26
+1111
+                    int(tiempo_transcurrido * 14)
+1212
+                )
+1313
+                pos_estimada = self.pos_inicio_fragmento + avance_estimado
+14+
+15+
+                # Buffer proactivo: cuando queda ~30% del fragmento actual,
+16+
+                # iniciar la descarga del siguiente ANTES de que este termine.
+17+
+                # Esto elimina el silencio de 1-2s entre fragmentos.
+18+
+                tiempo_estimado_total = self._longitud_frag_actual / 14.0
+19+
+                if (not self._precarga_solicitada and
+20+
+                        tiempo_estimado_total > 0 and
+21+
+                        tiempo_transcurrido / tiempo_estimado_total >= 0.70):
+22+
+                    idx_siguiente = self._idx_fragmento_actual + 1
+23+
+                    if self._cola_lectura and idx_siguiente < len(self._cola_lectura):
+24+
+                        texto_sig, _ = self._cola_lectura[idx_siguiente]
+25+
+                        if texto_sig.strip():
+26+
+                            self._precarga_solicitada = True
+27+
+                            voz = self.combo_voz.GetClientData(
+28+
+                                self.combo_voz.GetSelection()
+29+
+                            )
+30+
+                            self.reproductor.precargar_fragmento(texto_sig, voz)
+Show full diff (3 more lines)
+Copiar mensaje
+Also reset _precarga_solicitada when stopping:
+Marked aggressive cleaner and book memory tasks completed
+Marked aggressive cleaner and book memory tasks completed
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+8-7
+22
+        # Cancelar la cola de lectura continua antes de detener el motor
+33
+        self._cola_lectura = []
+44
+        self._idx_fragmento_actual = 0
+5+
+        self._precarga_solicitada = False
+56
+        if hasattr(self.reproductor, 'detener'):
+67
+            self.reproductor.detener()
+78
+        self.guardar_datos_libro()
+Update Todos☐ Task 1: Aggressive cleaner in limpiador_lectura.py☐ Task 2: Book memory (speed+volume+voice) in pestana_lectura.py☐ Task 3: Add debug prints to cliente_polly.py☐ Task 4: Proactive audio buffer at 70% threshold☐ Task 5: Persist volume/speed sliders to config JSON☐ Committing and pushing
+Bashgit diff --stat
+app/interfaz/pestana_lectura.py | 82 +++++++++++++++++++++++++++++++++++++++-- app/motor/limpiador_lectura.py  | 45 ++++++++++++++-------- app/motor/reproductor_voz.py    | 24 ++++++++++++
+Mostrar más
+ app/servicios/cliente_azure.py  | 75 +++++++++++++++++++++++++++---------- app/servicios/cliente_eleven.py | 64 ++++++++++++++++++++++++-------- app/servicios/cliente_polly.py  | 68 +++++++++++++++++++++++++++------- 6 files changed, 289 insertions(+), 69 deletions(-)
+Mostrar 3 más
+Copiar mensaje
+Todo listo y subido. Aquí el resumen completo:
+ 
+1. Limpiador Agresivo (limpiador_lectura.py)
+• Primero protege los saltos de párrafo reales (\n\n+) con un marcador \x01
+• Luego reemplaza todos los \n restantes por espacio (uniendo líneas mid-párrafo)
+• Restaura los marcadores como \n simple
+• Resultado: párrafos en una sola línea continua. "demokracia" nunca queda sola
+2. Memoria por libro (pestana_lectura.py)
+• guardar_datos_libro() ahora guarda también velocidad, volumen y voz
+• cargar_datos_libro() los restaura automáticamente al abrir el libro: ajusta los sliders, aplica los valores al motor, y selecciona la voz guardada en el combo
+3. Debug Polly (cliente_polly.py)
+• Al intentar hablar, imprime en consola: ruta del JSON, estado de cada credencial (OK con longitud / VACÍO), la región raw vs normalizada, y el dict completo de la sección polly. Esto permitirá diagnosticar exactamente por qué dice "Falta configuración"
+4. Buffer proactivo (cliente_azure.py, cliente_polly.py, cliente_eleven.py, reproductor_voz.py, pestana_lectura.py)
+• Cada cliente tiene ahora _llamar_api() (solo HTTP, sin reproducir) y preparar() (llama la API y cachea el resultado)
+• hablar() detecta si existe audio pre-cacheado para el mismo texto y lo usa directamente → latencia cero
+• En al_actualizar_ui, cuando el fragmento actual llega al 70% de su duración estimada, se lanza precargar_fragmento() en background para el siguiente → el siguiente ya está descargado cuando llega su turno
+5. Persistencia de sliders (pestana_lectura.py)
+• al_cambiar_velocidad/volumen llama a _guardar_ajuste_slider() que escribe inmediatamente en config_general.json
+• cargar_config_salto() restaura los sliders al entrar a la pestaña de Lectura (con guard hasattr para el arranque)
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++1386-273
+Crear PR

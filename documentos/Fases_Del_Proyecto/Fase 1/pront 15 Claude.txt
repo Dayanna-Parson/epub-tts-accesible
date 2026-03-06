@@ -1,0 +1,49 @@
+pront 15.
+
+Claude, necesitamos pulir estos puntos para dar por finalizada la Fase 1 y pasar los cambios a la rama beta:
+1. 
+Revertir cambio de Atajos: El usuario confirma que la tecla Espacio ya funcionaba correctamente antes del último cambio. Por favor, elimina la última modificación sobre la AcceleratorTable y los modificadores None para evitar conflictos innecesarios, ya que la prioridad del Frame sobre el RichTextCtrl ya estaba operando bien.
+2. 
+Accesibilidad Dinámica y Real (Anti-Sustos):
+• 
+Actualmente, la información de costes son etiquetas sueltas que NVDA solo lee con el navegador de objetos. Esto no es aceptable.
+• 
+Corrección: Debes usar SetHelpText o, preferiblemente, actualizar el AccessibleName del control de edición (wx.TextCtrl) cada vez que el texto cambie (EVT_TEXT).
+• 
+Lógica de verbalización: Queremos que al tabular al campo, o al cambiar el número, NVDA diga algo como: "Azure, edición, 500000. Te quedan X caracteres para el límite, aproximadamente X libros estándar".
+• 
+La info debe ser concisa: Gasto actual, caracteres restantes y coste estimado en euros.
+3. 
+Amazon Polly - Error de búsqueda Generative:
+• 
+Las voces generative siguen sin aparecer. Es posible que el filtrado por región o el cliente secundario en us-east-1 no esté recuperando la lista completa.
+• 
+Tarea: Revisa si en la llamada describe_voices, además del motor, es necesario especificar el LanguageCode="es-ES" o similares para que devuelva las voces nuevas. Asegúrate de que no estamos filtrando por error solo las "Neural".
+4. 
+Limpieza de Interfaz:
+• 
+Elimina el bloque de texto gigante con todos los precios de referencia. Esa información debe estar integrada de forma inteligente en la descripción de cada campo para no saturar al usuario con NVDA.
+5. 
+Merge a Rama Beta: Una vez aplicados estos cambios, realiza el merge a la rama beta.
+ 
+📝 Resumen de lo que estamos haciendo:
+1. 
+Menos es más: Quitamos el texto largo y hacemos que la app te hable directamente al grano: "Te quedan tantos caracteres, eso son tantos euros".
+2. 
+Foco en el usuario: Al usar el nombre accesible, NVDA te lo dirá todo de corrido sin que tengas que usar el navegador de objetos.
+3. 
+Polly: Vamos a obligar a Claude a que "encuentre" esas voces sí o sí.
+
+Claude, vamos a simplificar para cerrar esta fase. El experimento de las voces generativas de Polly no ha funcionado y está ensuciando el log. Por favor, aplica estos cambios:
+1. 
+Eliminar Fallback de Polly: Revierte los cambios en gestor_voces.py que intentaban conectar a us-east-1. Deja la conexión de Polly simple y estable en la región por defecto del usuario. Ya investigaremos las voces generativas más adelante en la Fase 3.
+2. 
+Eliminar cambio de AcceleratorTable: Como te comenté, la tecla Espacio ya funcionaba bien. Revierte los cambios de la AcceleratorTable y los modificadores None para volver al estado anterior que era estable.
+3. 
+Accesibilidad de Costes "En el Foco": Esto es lo único que falta por arreglar de verdad.
+• 
+Usa SetHelpText en los wx.TextCtrl de los límites.
+• 
+Importante: Añade un evento EVT_TEXT para que, cada vez que el usuario cambie el número, se actualice el texto de ayuda.
+• 
+Verbalización: Queremos que NVDA diga: "Gasto: [X]€, Restante: [Y] caracteres, aprox. [Z] libros". ¡Directo al grano y sin textos largos!

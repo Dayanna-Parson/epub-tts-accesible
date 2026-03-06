@@ -1,0 +1,206 @@
+respuesta-claude(10)
+
+Updated todo list with debugging and motor selection tasks
+Updated todo list with debugging and motor selection tasks
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.py
+Leer 253 líneas
+Read/home/user/epub-tts-accesible/app/motor/gestor_voces.py
+Leer 221 líneas
+Update Todos
+☐ Eliminando prints con credenciales☐ Añadir _elegir_motor() con prioridad generative > long-form > neural > standard☐ Verificar que gestor_voces.py ya guarda 'motores' en el JSON☐ Borrar test_polly_debug.py☐ Commit y push de cierre de Fase 1
+Copiar mensaje
+Ahora edito cliente_polly.py de una sola vez: elimino todos los prints de credenciales, añado _elegir_motor() y reemplazo el try/except de motor por la selección inteligente.
+Updated Polly client to fix AWS credentials handling
+Updated Polly client to fix AWS credentials handling
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+9-7
+136136
+            voice_id = datos_voz.get("id", "Lucia")
+137137
+        else:
+138138
+            voice_id = str(datos_voz)
+139+
+140+
+        motor = self._elegir_motor(datos_voz)
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+1-10
+123-
+        # --- DIAGNÓSTICO: mostrar estado de credenciales en consola ---
+124-
+        ruta_cfg = ruta_config("config_general.json")
+125-
+        print(f"[Polly] Ruta config: {ruta_cfg}")
+126-
+        print(f"[Polly] Access Key: {'OK (' + str(len(access_key)) + ' chars)' if access_key else '*** VACÍO ***'}")
+127-
+        print(f"[Polly] Secret Key: {'OK (' + str(len(secret_key)) + ' chars)' if secret_key else '*** VACÍO ***'}")
+128-
+        print(f"[Polly] Región raw='{region_raw}' → normalizada='{region}'")
+129-
+        print(f"[Polly] Sección polly del config: {po_conf}")
+130-
+        # ------------------------------------------------------------
+131-
+132123
+        if not access_key or not secret_key:
+Copiar mensaje
+Ahora reemplazo el bloque de try/except doble (neural → standard) por una sola llamada con el motor ya elegido:
+Fixed error handling in Polly speech synthesis service
+Fixed error handling in Polly speech synthesis service
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+19-28
+159159
+        respuesta = None
+160160
+        for intento in range(2):
+161161
+            try:
+162-
+                try:
+163-
+                    respuesta = cliente.synthesize_speech(
+164-
+                        Engine="neural",
+165-
+                        Text=ssml,
+166-
+                        TextType="ssml",
+167-
+                        OutputFormat="ogg_vorbis",
+168-
+                        VoiceId=voice_id,
+169-
+                    )
+170-
+                except Exception:
+171-
+                    respuesta = cliente.synthesize_speech(
+172-
+                        Engine="standard",
+173-
+                        Text=ssml,
+174-
+                        TextType="ssml",
+175-
+                        OutputFormat="ogg_vorbis",
+176-
+                        VoiceId=voice_id,
+177-
+                    )
+178-
+                break
+Show full diff (21 more lines)
+Copiar mensaje
+Ahora añado el método _elegir_motor() y limpio los prints restantes que no son de seguridad pero ensucian la salida:
+Added motor selection method to Polly client service
+Added motor selection method to Polly client service
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+16-4
+100100
+    def obtener_voces(self):
+101101
+        return []
+102102
+103+
+    def _elegir_motor(self, datos_voz):
+104+
+        """
+105+
+        Elige el motor óptimo para la voz según los motores que soporta.
+106+
+        Prioridad: generative > long-form > neural > standard.
+107+
+        Si no hay información de motores, intenta neural como mínimo seguro.
+108+
+        """
+109+
+        motores = datos_voz.get("motores", []) if isinstance(datos_voz, dict) else []
+110+
+        for motor in ("generative", "long-form", "neural", "standard"):
+111+
+            if motor in motores:
+112+
+                return motor
+113+
+        return "neural"
+114+
+103115
+    def _llamar_api(self, texto, datos_voz):
+Copiar mensaje
+Ahora limpio los prints restantes de precarga (no son de seguridad pero el usuario pide que solo quede [Polly] Conexión establecida):
+Removed credential prints from client_polly.py, added smart engine selection
+Removed credential prints from client_polly.py, added smart engine selection
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+6-7
+205205
+            data, fs = self._audio_preparado
+206206
+            self._audio_preparado = None
+207207
+            self._texto_preparado = None
+208-
+            print(f"[Polly] Usando audio pre-descargado (sin latencia de API).")
+209208
+        else:
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+8-10
+223223
+            if not self._parado:
+224224
+                self._audio_preparado = (data, fs)
+225225
+                self._texto_preparado = texto
+226-
+                print(f"[Polly] Precarga completada ({len(texto)} chars).")
+227-
+        except Exception as e:
+228-
+            print(f"[Polly] Error en precarga: {e}")
+226+
+        except Exception:
+229227
+            self._audio_preparado = None
+230228
+            self._texto_preparado = None
+Update Todos
+☐ Eliminar prints con credenciales de cliente_polly.py☐ Añadir _elegir_motor() con prioridad generative > long-form > neural > standard☐ Verificar que gestor_voces.py ya guarda 'motores' en el JSON☐ Borrando script de diagnóstico☐ Commit y push de cierre de Fase 1
+Copiar mensaje
+gestor_voces.py ya guarda "motores": motores en cada voz — confirmado en la lectura anterior (línea 191). Ahora borro el script de diagnóstico:
+Deleted test_polly_debug.py diagnostic script
+Deleted test_polly_debug.py diagnostic script
+Bashrm /home/user/epub-tts-accesible/test_polly_debug.py
+Copiar mensaje
+Verifico el estado final de cliente_polly.py antes del commit:
+Read Polly client service file, reviewed voice selection logic
+Read Polly client service file, reviewed voice selection logic
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.py
+Leer 120 líneas
+Copiar mensaje
+Todo limpio. Ahora el commit de cierre de Fase 1:
+Removed credential prints from client_polly.py, added intelligent motor selection logic
+Removed credential prints from client_polly.py, added intelligent motor selection logic
+Bash
+git add app/servicios/cliente_polly.py && git rm test_polly_debug.py && git commit -m "$(cat <<'EOF' Cierre Fase 1: soporte multimotor Polly, seguridad y limpieza - cliente_polly.py: añade _elegir_motor() con prioridad generativa > long-form > neural > standard; lee el campo 'motores' de datos_voz guardado en voces_disponibles.json; elimina el try/except doble que forzaba neural→standard sin respetar lo que soporta cada voz - Seguridad: eliminados todos los prints que exponían access_key, secret_key y la sección completa de config; solo se muestra '[Polly] Conexión establecida.' tras síntesis exitosa - gestor_voces.py ya guardaba 'motores' por voz desde el commit anterior, por lo que el campo está disponible sin cambios adicionales - Borra test_polly_debug.py: proyecto limpio para iniciar Fase 2 https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+rm 'test_polly_debug.py'[claude/python-wxpython-accessibility-ZPVzL 25fd40c] Cierre Fase 1: soporte multimotor Polly, seguridad y limpieza 2 files changed, 23 insertions(+), 213 deletions(-)
+Mostrar más
+ delete mode 100644 test_polly_debug.py
+Bashgit push -u origin claude/python-wxpython-accessibility-ZPVzL
+To http://127.0.0.1:49854/git/Dayanna-Parson/epub-tts-accesible   550d281..25fd40c  claude/python-wxpython-accessibility-ZPVzL -> claude/python-wxpython-accessibility-ZPVzLbranch 'claude/python-wxpython-accessibility-ZPVzL' set up to track 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Update Todos
+☐ Eliminar prints con credenciales de cliente_polly.py☐ Añadir _elegir_motor() con prioridad generative > long-form > neural > standard☐ Verificar que gestor_voces.py ya guarda 'motores' en el JSON☐ Borrar test_polly_debug.py☐ Commit y push de cierre de Fase 1
+Copiar mensaje
+Fase 1 cerrada. Resumen de lo que se hizo en este commit:
+ 
+1. Seguridad
+Eliminados los 5 prints que exponían credenciales (access_key, secret_key, sección completa del config). Ahora solo aparece en consola:
+[Polly] Conexión establecida.
+Copy code
+2. Soporte multimotor inteligente
+Nuevo método _elegir_motor(datos_voz) con prioridad:
+generative  →  long-form  →  neural  →  standard
+Copy code
+Lee el campo "motores" que gestor_voces.py ya guardaba por cada voz en voces_disponibles.json. Si una voz como Alba o Raúl solo soporta long-form, usará long-form directamente — sin forzar neural ni standard.
+3. Refuerzo de descarga
+Confirmado que gestor_voces.py ya guarda "motores": ["neural", "long-form"] (o lo que la API devuelva) por voz desde el commit anterior. Sin cambios adicionales necesarios.
+4. Proyecto limpio
+test_polly_debug.py eliminado. El árbol queda listo para Fase 2.
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++1534-317
+Crear PR

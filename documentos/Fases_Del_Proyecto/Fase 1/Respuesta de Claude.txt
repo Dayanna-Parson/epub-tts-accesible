@@ -1,0 +1,775 @@
+Respuesta de Claude.
+Copiar mensaje
+Read voice manager module and verified clean git status with recent commits
+Read voice manager module and verified clean git status with recent commits
+Bashfind /home/user/epub-tts-accesible -type f -name "*.py" | sort
+/home/user/epub-tts-accesible/app/__init__.py/home/user/epub-tts-accesible/app/interfaz/__init__.py/home/user/epub-tts-accesible/app/interfaz/dialogos.py
+Mostrar más
+/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py/home/user/epub-tts-accesible/app/motor/__init__.py/home/user/epub-tts-accesible/app/motor/control_cuota.py/home/user/epub-tts-accesible/app/motor/gestor_config.py/home/user/epub-tts-accesible/app/motor/gestor_epub.py/home/user/epub-tts-accesible/app/motor/gestor_voces.py/home/user/epub-tts-accesible/app/motor/grabador_audio.py/home/user/epub-tts-accesible/app/motor/procesador_etiquetas.py/home/user/epub-tts-accesible/app/motor/reproductor_voz.py/home/user/epub-tts-accesible/app/servicios/__init__.py/home/user/epub-tts-accesible/app/servicios/cliente_azure.py/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py/home/user/epub-tts-accesible/app/servicios/cliente_polly.py/home/user/epub-tts-accesible/app/servicios/cliente_sapi5.py/home/user/epub-tts-accesible/construir_app.py/home/user/epub-tts-accesible/iniciar_tiflohistorias.py
+Bashls /home/user/epub-tts-accesible/
+INICIAR_APP.batLICENSEapp
+Mostrar más
+configuracionesconstruir_app.pydocumentosiniciar_tiflohistorias.pyleeme.mdrequisitos.txt
+Read/home/user/epub-tts-accesible/app/interfaz/dialogos.py
+Leer 193 líneas
+Mostrar 9 más
+Copiar mensaje
+Entendido perfectamente, Jacqui. Tengo una visión completa del proyecto. Voy a implementar todas las correcciones de la Fase 1 y la Fase 1.5 en orden, con commits limpios. Empiezo ahora.
+Updated bug tracking list with progress status
+Updated bug tracking list with progress status
+Update Todos
+☐ Corrigiendo Bug 1: Marcadores Enter☐ Bug 2: Barra de progreso no avanza (pestana_lectura.py)☐ Bug 3: Tab atrapado - sin bucle de foco☐ Bug 4: Amazon Polly - claves no persisten (pestana_ajustes.py)☐ Bug 5: Crash por saturación de hilos (reproductor_voz.py)☐ Bug 6: Doble lectura NVDA en ajustes (pestana_ajustes.py)☐ Bug 7: JSON silencioso - reemplazar except:pass en todos los archivos☐ Fase 1.5: Reorganizar lista de voces con Carga Cognitiva Frontal (pestana_ajustes.py)
+Copiar mensaje
+Bug 1 — Marcadores: Enter no navega (dialogos.py)
+El problema raíz: EVT_KEY_DOWN sobre un wx.ListBox dentro de un diálogo modal a veces es interceptado por el manejador de botón por defecto del diálogo en Windows antes de llegar al control. La solución fiable es capturar el evento a nivel de diálogo con EVT_CHAR_HOOK.
+Updated todo list tracking bug fixes for navigation and progress bar issues
+Updated todo list tracking bug fixes for navigation and progress bar issues
+Edit/home/user/epub-tts-accesible/app/interfaz/dialogos.py+8-3
+29-
+        # Eventos
+30-
+        self.lista_marcadores.Bind(wx.EVT_LISTBOX_DCLICK, self.al_activar_item)
+31-
+        self.lista_marcadores.Bind(wx.EVT_KEY_DOWN, self.al_tecla_lista)
+29+
+        # El doble clic activa la navegación directamente
+30+
+        self.lista_marcadores.Bind(wx.EVT_LISTBOX_DCLICK, self.al_activar_item)
+31+
+32+
+        # EVT_KEY_DOWN sobre ListBox en diálogos modales puede ser interceptado
+33+
+        # por el botón por defecto del diálogo antes de llegar al control.
+34+
+        # EVT_CHAR_HOOK a nivel de diálogo garantiza la captura sin importar el foco.
+35+
+        self.lista_marcadores.Bind(wx.EVT_KEY_DOWN, self.al_tecla_lista)
+36+
+        self.Bind(wx.EVT_CHAR_HOOK, self.al_char_hook_dialogo)
+Edit/home/user/epub-tts-accesible/app/interfaz/dialogos.py+19-8
+85-
+    def al_tecla_lista(self, evento):
+86-
+        tecla = evento.GetKeyCode()
+87-
+        if tecla == wx.WXK_DELETE:
+88-
+            self.al_eliminar_marcador(None)
+89-
+        elif tecla == wx.WXK_RETURN:
+90-
+            self.al_activar_item(None)
+85+
+    def al_char_hook_dialogo(self, evento):
+86+
+        """
+87+
+        Intercepta teclas críticas a nivel de diálogo.
+88+
+        Garantiza que Enter sobre la lista navegue al marcador,
+89+
+        incluso cuando el sistema de diálogos de wx intercepta el evento antes.
+90+
+        """
+91+
+        tecla = evento.GetKeyCode()
+92+
+        if tecla == wx.WXK_RETURN and self.FindFocus() == self.lista_marcadores:
+93+
+            self.al_activar_item(None)
+94+
+            return
+95+
+        evento.Skip()
+96+
+97+
+    def al_tecla_lista(self, evento):
+98+
+        """Gestiona teclas de acceso rápido directamente sobre la lista de marcadores."""
+Show full diff (5 more lines)
+Update Todos
+☐ Bug 1: Marcadores - Enter no navega (dialogos.py)☐ Corrigiendo Bug 2: Barra de progreso☐ Bug 3: Tab atrapado - sin bucle de foco☐ Bug 4: Amazon Polly - claves no persisten (pestana_ajustes.py)☐ Bug 5: Crash por saturación de hilos (reproductor_voz.py)☐ Bug 6: Doble lectura NVDA en ajustes (pestana_ajustes.py)☐ Bug 7: JSON silencioso - reemplazar except:pass en todos los archivos☐ Fase 1.5: Reorganizar lista de voces con Carga Cognitiva Frontal (pestana_ajustes.py)
+Copiar mensaje
+Bug 2 — Barra de progreso (pestana_lectura.py)
+Tres causas simultáneas:
+1. El timer al_actualizar_ui sobreescribía el slider incluso cuando el reproductor estaba detenido (reset a 0 al navegar)
+2. No hay feedback de posición desde voces neuronales → se añade estimación temporal lineal
+3. Se introduce import time y dos variables de control en __init__
+Fixed import statement in pestana_lectura.py file
+Fixed import statement in pestana_lectura.py file
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+9-8
+22
+import wx
+33
+import os
+44
+import json
+5+
+import time
+56
+from app.motor.reproductor_voz import ReproductorVoz
+67
+from app.interfaz.dialogos import DialogoMarcadores
+78
+# ANCLAJE_FIN: DEPENDENCIAS_LECTURA
+Copiar mensaje
+Ahora añado las variables de control de tiempo en __init__:
+Added time estimation variables to reading tab initialization
+Added time estimation variables to reading tab initialization
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+5-2
+3232
+        self.pos_inicio_fragmento = 0
+33+
+        # Variables para la estimación temporal del progreso de voces neuronales
+34+
+        self._tiempo_inicio_frag = 0.0
+35+
+        self._longitud_frag_actual = 0
+3336
+        self.ruta_libro_actual = None
+Copiar mensaje
+Actualizo al_alternar_reproduccion para registrar el inicio del fragmento y su longitud:
+Fixed voice selection logic in reading tab interface
+Fixed voice selection logic in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+12-8
+265265
+                    voz_data = self.combo_voz.GetClientData(idx)
+266266
+                    if hasattr(self.reproductor, 'fijar_voz'):
+267267
+                        self.reproductor.fijar_voz(voz_data)
+268-
+268+
+269+
+                    # Registrar punto de inicio y longitud para la estimación de progreso
+270+
+                    self._tiempo_inicio_frag = time.time()
+271+
+                    self._longitud_frag_actual = len(fragmento)
+272+
+269273
+                    self.reproductor.cargar_texto(fragmento)
+Copiar mensaje
+Ahora reescribo al_actualizar_ui con la lógica corregida:
+Updated UI synchronization method in reading tab interface
+Updated UI synchronization method in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+45-31
+277277
+    # ANCLAJE_INICIO: ACTUALIZACION_INTERFAZ_USUARIO
+278278
+    def al_actualizar_ui(self, evento):
+279279
+        """
+280-
+        Sincroniza visualmente y para los lectores de pantalla 
+281-
+        el estado de los botones y la barra de progreso.
+282-
+        """
+283-
+        # 1. Actualización de etiquetas de control
+284-
+        estado = "detenido"
+285-
+        if hasattr(self.reproductor, 'obtener_estado'):
+286-
+            estado = self.reproductor.obtener_estado()
+287-
+288-
+        if estado == 'reproduciendo':
+289-
+            if self.btn_reproducir.GetLabel() != "Pausar (Ctrl+P)": 
+290-
+                self.btn_reproducir.SetLabel("Pausar (Ctrl+P)")
+291-
+        elif estado == 'pausado':
+292-
+            if self.btn_reproducir.GetLabel() != "Reanudar (Ctrl+P)": 
+293-
+                self.btn_reproducir.SetLabel("Reanudar (Ctrl+P)")
+294-
+        else:
+295-
+            if self.btn_reproducir.GetLabel() != "Reproducir (Ctrl+P)": 
+296-
+                self.btn_reproducir.SetLabel("Reproducir (Ctrl+P)")
+Show full diff (48 more lines)
+Copiar mensaje
+Bug 3 — Tab atrapado (pestana_lectura.py)
+El manejador actual de al_navegacion_tab no implementa ningún bucle. Se reescribe para detectar el primer y último control de la pestaña y devolver el foco al Notebook al cruzar el límite.
+Fixed two bugs in Python dialog and reading components
+Fixed two bugs in Python dialog and reading components
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+46-25
+129129
+                with open(ruta, 'r', encoding='utf-8') as f:
+130130
+                    conf = json.load(f)
+131131
+                    self.segundos_salto = int(conf.get("segundos_salto", 10))
+132-
+        except: pass
+133-
+134-
+    def al_cambiar_pestana_padre(self, event):
+135-
+        if event.GetSelection() == 0:
+136-
+            self.cargar_voces_usuario()
+137-
+            self.cargar_config_salto()
+138-
+            self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
+139-
+            self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+140-
+        event.Skip()
+141-
+142-
+    def al_navegacion_tab(self, event):
+143-
+        key = event.GetKeyCode()
+144-
+        if key == wx.WXK_TAB:
+145-
+            event.Skip()
+146-
+            return
+147-
+        event.Skip()
+132+
+        except Exception as e:
+Show full diff (37 more lines)
+Update Todos
+☐ Bug 1: Marcadores - Enter no navega (dialogos.py)☐ Bug 2: Barra de progreso no avanza (pestana_lectura.py)☐ Bug 3: Tab atrapado - sin bucle de foco☐ Corrigiendo Bug 4: Claves Polly☐ Bug 5: Crash por saturación de hilos (reproductor_voz.py)☐ Bug 6: Doble lectura NVDA en ajustes (pestana_ajustes.py)☐ Bug 7: JSON silencioso - reemplazar except:pass en todos los archivos☐ Fase 1.5: Reorganizar lista de voces con Carga Cognitiva Frontal (pestana_ajustes.py)
+Copiar mensaje
+Bug 4 — Polly: claves no persisten + Bug 6 — Doble lectura NVDA (pestana_ajustes.py)
+Bug 4: cargar_config y guardar_config_en_archivo no especifican encoding='utf-8'. En Windows, el encoding por defecto puede ser cp1252, causando que el archivo se escriba correctamente pero ClienteAzure._cargar_config (que sí usa UTF-8) no pueda leerlo.
+Bug 6: al_cambiar_cat llama a SetFocus() explícitamente después de que el evento EVT_LISTBOX ya ha movido el foco, lo que provoca que NVDA anuncie el elemento dos veces.
+Fixed Enter navigation bug in dialogs and progress bar bug
+Fixed Enter navigation bug in dialogs and progress bar bug
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+10-6
+567567
+        idx = self.lista_cat.GetSelection()
+568568
+        if idx != wx.NOT_FOUND:
+569569
+            self.panel_derecho.ChangeSelection(idx)
+570-
+            self.lista_cat.SetFocus()
+571-
+            if idx == 2: self.pag_voces.cargar_datos_y_llenar()
+570+
+            # Sin SetFocus() explícito: el foco ya está en la lista por el propio
+571+
+            # evento EVT_LISTBOX. Llamarlo de nuevo provoca que NVDA anuncie el
+572+
+            # elemento dos veces por la doble propagación del evento de foco.
+573+
+            if idx == 2:
+574+
+                self.pag_voces.cargar_datos_y_llenar()
+575+
+        event.Skip()
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+17-10
+573573
+    def cargar_config(self):
+574574
+        try:
+575-
+            with open(self.ruta_config, "r") as f: return json.load(f)
+576-
+        except: return {}
+577-
+578-
+    def guardar_config_en_archivo(self):
+579-
+        try:
+580-
+            os.makedirs(os.path.dirname(self.ruta_config), exist_ok=True)
+581-
+            with open(self.ruta_config, "w") as f: json.dump(self.config, f, indent=4)
+582-
+        except Exception as e: wx.MessageBox(str(e))
+575+
+            with open(self.ruta_config, "r", encoding='utf-8') as f:
+576+
+                return json.load(f)
+577+
+        except FileNotFoundError:
+578+
+            return {}
+579+
+        except Exception as e:
+580+
+            print(f"[Error] No se pudo leer config_general.json: {e}")
+581+
+            return {}
+582+
+583+
+    def guardar_config_en_archivo(self):
+584+
+        try:
+Show full diff (5 more lines)
+Update Todos
+☐ Bug 1: Marcadores - Enter no navega (dialogos.py)☐ Bug 2: Barra de progreso no avanza (pestana_lectura.py)☐ Bug 3: Tab atrapado - sin bucle de foco☐ Bug 4: Amazon Polly - claves no persisten (pestana_ajustes.py)☐ Corrigiendo Bug 5: Saturación de hilos☐ Bug 6: Doble lectura NVDA en ajustes (pestana_ajustes.py)☐ Bug 7: JSON silencioso - reemplazar except:pass en todos los archivos☐ Fase 1.5: Reorganizar lista de voces con Carga Cognitiva Frontal (pestana_ajustes.py)
+Copiar mensaje
+Bug 5 — Crash por saturación de hilos (reproductor_voz.py)
+Se introduce un contador de generación (_generacion). Cada vez que se inicia una nueva síntesis, el contador sube. El hilo antiguo compara su generación con la actual antes de reproducir el audio. Si ya no coincide, descarta el resultado silenciosamente sin lanzar excepción ni matar el proceso.
+Fixed two bugs: markers navigation and progress bar advancement
+Fixed two bugs: markers navigation and progress bar advancement
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+10-6
+28-
+        # Estado inicial del sistema        
+29-
+        self.motor_activo = self.cliente_local
+30-
+        self.tipo_motor_actual = "local"
+31-
+        self.voz_actual = None
+32-
+        self.estado = "detenido"
+33-
+        self._hilo_reproduccion = None
+28+
+        # Estado inicial del sistema
+29+
+        self.motor_activo = self.cliente_local
+30+
+        self.tipo_motor_actual = "local"
+31+
+        self.voz_actual = None
+32+
+        self.estado = "detenido"
+33+
+        self._hilo_reproduccion = None
+34+
+        # Contador de generación: cada nueva petición de síntesis incrementa este valor.
+35+
+        # Los hilos anteriores lo comparan antes de reproducir y se descartan si ya no
+36+
+        # coincide, evitando acumulación de hilos y colisión de audio.
+37+
+        self._generacion = 0
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+36-30
+7474
+        """
+7575
+        Inicia la lectura del texto.
+7676
+        Aplica el método adecuado según si se usa una voz local o una voz neuronal.
+77-
+        """
+78-
+        if not texto: return
+79-
+80-
+        # Detener cualquier lectura en curso antes de iniciar una nueva
+81-
+        self.detener()
+82-
+        time.sleep(0.05) 
+83-
+84-
+        self.estado = "reproduciendo"
+85-
+86-
+        if self.tipo_motor_actual == "local":
+87-
+            # Ejecución directa para voces locales SAPI5
+88-
+            try:
+89-
+                self.cliente_local.hablar(texto)
+90-
+            except Exception as e:
+91-
+                print(f"Error en voz local: {e}")
+92-
+                self.estado = "detenido"
+93-
+        else:
+Show full diff (34 more lines)
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+24-18
+103103
+    # ANCLAJE_INICIO: PROCESAMIENTO_VOCES_NEURONALES
+104-
+    def _procesar_voz_neuronal(self, texto):
+105-
+        """
+106-
+        Gestiona la reproducción de las voces neuronales sin interrumpir el uso del programa.
+107-
+        """
+108-
+        try:
+109-
+            if self.voz_actual:
+110-
+                # Envío del texto al proveedor y espera de la respuesta de audio
+111-
+                self.motor_activo.hablar(texto, self.voz_actual)
+112-
+        except Exception as e:
+113-
+            error_msg = str(e)
+114-
+            print(f"Error en el servicio de voz neuronal ({self.tipo_motor_actual}): {error_msg}")
+115-
+116-
+            # Notificamos al usuario de forma segura
+117-
+            wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+118-
+119-
+        self.estado = "detenido"
+104+
+    def _procesar_voz_neuronal(self, texto, generacion):
+105+
+        """
+106+
+        Gestiona la reproducción de las voces neuronales sin interrumpir el uso del programa.
+Show full diff (20 more lines)
+Mostrar 1 más
+Copiar mensaje
+Bug 7 — JSON silencioso: reemplazar todos los except: pass
+Voy a corregir todos los archivos afectados en paralelo:
+reproductor_voz.py — _cargar_config:
+Updated voice configuration loading in reproductor_voz.py
+Updated voice configuration loading in reproductor_voz.py
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+10-8
+3737
+        try:
+3838
+            ruta = os.path.join("configuraciones", "config_general.json")
+3939
+            if os.path.exists(ruta):
+40-
+                with open(ruta, 'r', encoding='utf-8') as f: return json.load(f)
+41-
+        except: pass
+40+
+                with open(ruta, 'r', encoding='utf-8') as f:
+41+
+                    return json.load(f)
+42+
+        except Exception as e:
+43+
+            print(f"[Error] No se pudo leer config_general.json en el reproductor: {e}")
+4244
+        return {}
+Copiar mensaje
+pestana_lectura.py — CARGA_Y_CAMBIO_VOCES y GESTION_DATOS_LIBRO:
+Fixed book data saving functionality in pestana_lectura.py
+Fixed book data saving functionality in pestana_lectura.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+41-36
+152152
+        seleccion_previa = self.combo_voz.GetStringSelection()
+153153
+        self.combo_voz.Clear()
+154154
+        voces_para_combo = []
+155-
+156-
+        # Carga de voces locales
+157-
+        try:
+158-
+            if hasattr(self.reproductor, 'cliente_local'):
+159-
+                voces_locales = self.reproductor.cliente_local.obtener_voces()
+160-
+                for v in voces_locales:
+161-
+                    nombre_mostrar = f"[Local] {v['nombre']}"
+162-
+                    voces_para_combo.append((nombre_mostrar, v))
+163-
+        except: pass
+164-
+165-
+        # Carga de voces neuronales favoritas
+166-
+        ruta_favs = os.path.join("configuraciones", "voces_favoritas.json")
+167-
+        ruta_todas = os.path.join("configuraciones", "voces_disponibles.json")
+168-
+169-
+        ids_favoritos = []
+170-
+        if os.path.exists(ruta_favs):
+171-
+            try:
+Show full diff (50 more lines)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+30-22
+474474
+        try:
+475475
+            datos = {}
+476476
+            if os.path.exists(self.ruta_datos_lectura):
+477-
+                with open(self.ruta_datos_lectura, 'r') as f: datos = json.load(f)
+478-
+            datos[os.path.basename(self.ruta_libro_actual)] = {"pos": self.txt_contenido.GetInsertionPoint(), "marcadores": self.marcadores}
+479-
+            os.makedirs(os.path.dirname(self.ruta_datos_lectura), exist_ok=True)
+480-
+            with open(self.ruta_datos_lectura, 'w') as f: json.dump(datos, f)
+481-
+        except: pass
+482-
+483-
+    def cargar_datos_libro(self, nombre):
+484-
+        try:
+485-
+            if os.path.exists(self.ruta_datos_lectura):
+486-
+                with open(self.ruta_datos_lectura, 'r') as f:
+487-
+                    d = json.load(f).get(nombre)
+488-
+                    if d:
+489-
+                        self.txt_contenido.SetInsertionPoint(d.get("pos", 0))
+490-
+                        self.txt_contenido.ShowPosition(d.get("pos", 0))
+491-
+                        self.marcadores = d.get("marcadores", {})
+492-
+        except: pass
+477+
+                with open(self.ruta_datos_lectura, 'r', encoding='utf-8') as f:
+Show full diff (24 more lines)
+Copiar mensaje
+pestana_ajustes.py — cargar_favoritos y cargar_datos_y_llenar:
+Updated JSON configuration loading in settings panel file
+Updated JSON configuration loading in settings panel file
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+8-6
+393393
+    def cargar_favoritos(self):
+394394
+        try:
+395395
+            if os.path.exists(self.ruta_favs):
+396-
+                with open(self.ruta_favs, 'r', encoding='utf-8') as f: return json.load(f)
+397-
+        except: pass
+396+
+                with open(self.ruta_favs, 'r', encoding='utf-8') as f:
+397+
+                    return json.load(f)
+398+
+        except Exception as e:
+399+
+            print(f"[Error] No se pudo leer voces_favoritas.json: {e}")
+398400
+        return []
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+12-10
+434434
+                            v["proveedor_id"] = prov
+435435
+                            self.voces_todas.append(v)
+436436
+                            if v.get("idioma"): idiomas.add(v.get("idioma"))
+437-
+            except: pass
+437+
+            except Exception as e:
+438+
+                print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
+439+
+                self.voces_todas = []
+Copiar mensaje
+ventana_principal.py — historial de recientes:
+Fixed bugs in Marcadores Enter navigation and progress bar advancement
+Fixed bugs in Marcadores Enter navigation and progress bar advancement
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+11-9
+127127
+            if os.path.exists(self.ruta_recientes):
+128128
+                with open(self.ruta_recientes, "r", encoding="utf-8") as archivo:
+129129
+                    self.archivos_recientes = json.load(archivo)
+130-
+        except: pass
+130+
+        except Exception as e:
+131+
+            print(f"[Aviso] No se pudo leer el historial de recientes: {e}")
+132+
+            self.archivos_recientes = []
+131133
+        self.actualizar_menu_recientes()
+Update Todos
+☐ Bug 1: Marcadores - Enter no navega (dialogos.py)☐ Bug 2: Barra de progreso no avanza (pestana_lectura.py)☐ Bug 3: Tab atrapado - sin bucle de foco☐ Bug 4: Amazon Polly - claves no persisten (pestana_ajustes.py)☐ Bug 5: Crash por saturación de hilos (reproductor_voz.py)☐ Bug 6: Doble lectura NVDA en ajustes (pestana_ajustes.py)☐ Bug 7: JSON silencioso - reemplazar except:pass en todos los archivos☐ Implementando Fase 1.5: Lista de voces
+Copiar mensaje
+Fase 1.5 — Carga Cognitiva Frontal en lista de voces (pestana_ajustes.py)
+Cambios:
+1. Columnas reordenadas: Nombre → Género → Idioma → Proveedor
+2. Nombre enriquecido con etiquetas semánticas: Aria [Dragon] [Multilingüe]
+3. Traducción de género (Female→Femenino) e idioma (en-US→Inglés (Estados Unidos))
+4. Filtro extra: casilla Solo Nuevas Voces (voces con campo "es_nueva": true)
+Updated voice list column configuration in settings panel
+Updated voice list column configuration in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+7-6
+353-
+        # 3. LISTA
+354-
+        self.lista_voces = ListaVocesCheck(self)
+355-
+        self.lista_voces.InsertColumn(0, "Nombre", width=250)
+356-
+        self.lista_voces.InsertColumn(1, "Idioma", width=80)
+357-
+        self.lista_voces.InsertColumn(2, "Género", width=70)
+358-
+        self.lista_voces.InsertColumn(3, "Proveedor", width=120)
+353+
+        # 3. LISTA — columnas con Carga Cognitiva Frontal para NVDA:
+354+
+        # el lector anuncia primero el nombre enriquecido con etiquetas
+355+
+        self.lista_voces = ListaVocesCheck(self)
+356+
+        self.lista_voces.InsertColumn(0, "Nombre", width=280)
+357+
+        self.lista_voces.InsertColumn(1, "Género", width=80)
+358+
+        self.lista_voces.InsertColumn(2, "Idioma", width=160)
+359+
+        self.lista_voces.InsertColumn(3, "Proveedor", width=110)
+Copiar mensaje
+Ahora añado el filtro "Solo Nuevas Voces" en la fila B de filtros, junto a la casilla de favoritas:
+Updated settings tab checkbox behavior in pestana_ajustes.py
+Updated settings tab checkbox behavior in pestana_ajustes.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+9-5
+337-
+        # Casilla Gestión
+338-
+        self.chk_solo_favs = wx.CheckBox(self, label="Gestionar Favoritas (Ver solo marcadas)")
+339-
+        self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
+340-
+        hbox2.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL)
+337+
+        # Casillas de gestión y filtros especiales
+338+
+        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+339+
+        self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
+340+
+        hbox2.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 15)
+341+
+342+
+        self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
+343+
+        self.chk_solo_nuevas.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
+344+
+        hbox2.Add(self.chk_solo_nuevas, 0, wx.ALIGN_CENTER_VERTICAL)
+341345
+        sz_filtros.Add(hbox2, 0, wx.EXPAND|wx.ALL, 5)
+Copiar mensaje
+Ahora reescribo filtrar_y_mostrar con todas las transformaciones semánticas:
+Fixed two bugs: Enter navigation and progress bar advancement
+Fixed two bugs: Enter navigation and progress bar advancement
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+131-57
+451-
+    def al_filtrar(self, event):
+452-
+        self.filtrar_y_mostrar()
+453-
+454-
+    def filtrar_y_mostrar(self):
+455-
+        self.lista_voces.DeleteAllItems()
+456-
+457-
+        f_idioma = self.combo_idioma.GetValue()
+458-
+        f_tipo = self.combo_tipo.GetValue()
+459-
+        f_prov = self.combo_proveedor.GetValue()
+460-
+        f_texto = self.txt_buscar.GetValue().lower()
+461-
+462-
+        solo_favs = False
+463-
+        if hasattr(self, 'chk_solo_favs'):
+464-
+            solo_favs = self.chk_solo_favs.IsChecked()
+465-
+466-
+        self.mapa_indices = {}
+467-
+        idx = 0
+468-
+469-
+        for voz in self.voces_todas:
+470-
+            nombre = voz.get("nombre", "").lower()
+Show full diff (166 more lines)
+Update Todos
+☐ Bug 1: Marcadores - Enter no navega (dialogos.py)☐ Bug 2: Barra de progreso no avanza (pestana_lectura.py)☐ Bug 3: Tab atrapado - sin bucle de foco☐ Bug 4: Amazon Polly - claves no persisten (pestana_ajustes.py)☐ Bug 5: Crash por saturación de hilos (reproductor_voz.py)☐ Bug 6: Doble lectura NVDA en ajustes (pestana_ajustes.py)☐ Bug 7: JSON silencioso - reemplazar except:pass en todos los archivos☐ Fase 1.5: Reorganizar lista de voces con Carga Cognitiva Frontal (pestana_ajustes.py)☐ Verificando y haciendo commit
+Copiar mensaje
+Verifico el estado de todos los archivos antes del commit:
+Verified Python syntax in five application files
+Verified Python syntax in five application files
+Bash
+python -c " import ast, sys archivos = [ 'app/interfaz/dialogos.py', 'app/interfaz/pestana_lectura.py', 'app/interfaz/pestana_ajustes.py', 'app/interfaz/ventana_principal.py', 'app/motor/reproductor_voz.py', ] ok = True for ruta in archivos: try: with open(ruta, encoding='utf-8') as f: ast.parse(f.read()) print(f' OK {ruta}') except SyntaxError as e: print(f' ERR {ruta}: {e}') ok = False sys.exit(0 if ok else 1) "
+OK  app/interfaz/dialogos.py  OK  app/interfaz/pestana_lectura.py  OK  app/interfaz/pestana_ajustes.py
+Mostrar más
+  OK  app/interfaz/ventana_principal.py  OK  app/motor/reproductor_voz.py
+Copiar mensaje
+Sin errores de sintaxis. Commit y push:
+Fixed two bugs in Python modules: Enter navigation and progress bar functionality
+Fixed two bugs in Python modules: Enter navigation and progress bar functionality
+Bashgit diff --stat
+app/interfaz/dialogos.py          |  22 ++++- app/interfaz/pestana_ajustes.py   | 184 ++++++++++++++++++++++++++++---------- app/interfaz/pestana_lectura.py   | 126 ++++++++++++++++++--------
+Mostrar más
+ app/interfaz/ventana_principal.py |   4 +- app/motor/reproductor_voz.py      |  56 ++++++++---- 5 files changed, 289 insertions(+), 103 deletions(-)
+Bash
+git add app/interfaz/dialogos.py app/interfaz/pestana_ajustes.py app/interfaz/pestana_lectura.py app/interfaz/ventana_principal.py app/motor/reproductor_voz.py && git commit -m "$(cat <<'EOF' Fix: Fase 1 (7 bugs) + Fase 1.5 (lista de voces accesible) Bug 1 - dialogos.py: Añade EVT_CHAR_HOOK al diálogo de marcadores para capturar la tecla Enter con fiabilidad sobre ListBox en modo modal, donde EVT_KEY_DOWN puede ser interceptado por el sistema de diálogos de wx. Bug 2 - pestana_lectura.py: La barra de progreso solo se actualiza durante la reproducción activa (no sobreescribe la posición manual del usuario). Se añade estimación temporal lineal (~14 chars/s) para voces neuronales y locales, cuyos motores no avanzan el cursor del TextCtrl durante la síntesis. Bug 3 - pestana_lectura.py: Implementa bucle de tabulación accesible. Al llegar al primer o último control con Tab/Shift+Tab, el foco retorna al Notebook en lugar de quedar atrapado dentro de la pestaña. Bug 4 - pestana_ajustes.py: Añade encoding='utf-8' y ensure_ascii=False a cargar_config y guardar_config_en_archivo. Evita que el archivo se escriba en cp1252 en Windows y ClienteAzure no pueda leerlo después. Bug 5 - reproductor_voz.py: Introduce contador de generación para invalidar hilos de síntesis anteriores. Cada nueva petición incrementa la generación; el hilo antiguo descarta el audio recibido si ya no es el activo, eliminando la acumulación de hilos y colisiones de audio al previsualizar rápido. Bug 6 - pestana_ajustes.py: Elimina la llamada redundante a SetFocus() en al_cambiar_cat. El evento EVT_LISTBOX ya mueve el foco; forzarlo de nuevo provoca que NVDA anuncie el elemento seleccionado dos veces. Bug 7 - múltiples archivos: Reemplaza todos los bloques except: pass por except Exception as e: print(...) con mensajes descriptivos. Los archivos JSON ausentes o corruptos generan estructuras vacías válidas en memoria para que la interfaz no falle silenciosamente. Fase 1.5 - pestana_ajustes.py: Reorganiza ListCtrl de voces con Carga Cognitiva Frontal para NVDA. Columnas: Nombre, Género, Idioma, Proveedor. El nombre se enriquece con etiquetas semánticas (ej: Aria [Dragon] [Multilingüe]). Género e idioma se muestran en español legible. Se añade filtro 'Solo nuevas voces' que muestra únicamente voces con el campo es_nueva: true. https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL 9e3ec29] Fix: Fase 1 (7 bugs) + Fase 1.5 (lista de voces accesible) 5 files changed, 289 insertions(+), 103 deletions(-)
+Bashgit push -u origin claude/python-wxpython-accessibility-ZPVzL
+remote: remote: Create a pull request for 'claude/python-wxpython-accessibility-ZPVzL' on GitHub by visiting:        remote:      https://github.com/Dayanna-Parson/epub-tts-accesible/pull/new/claude/python-wxpython-accessibility-ZPVzL        
+Mostrar más
+remote: To http://127.0.0.1:38294/git/Dayanna-Parson/epub-tts-accesible * [new branch]      claude/python-wxpython-accessibility-ZPVzL -> claude/python-wxpython-accessibility-ZPVzLbranch 'claude/python-wxpython-accessibility-ZPVzL' set up to track 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Mostrar 1 más
+Copiar mensaje
+Todo confirmado y subido. Aquí el resumen técnico completo de lo entregado:
+ 
+Resumen de cambios — Fase 1 + 1.5
+Bug 1 — dialogos.py (DialogoMarcadores)
+Causa raíz: En wxPython/Windows, los diálogos modales interceptan WXK_RETURN a nivel de sistema antes de que EVT_KEY_DOWN llegue al ListBox.
+Solución: Se añade EVT_CHAR_HOOK vinculado al propio diálogo. Este evento se dispara antes que cualquier otro manejador, detecta si el foco está en la lista y llama a al_activar_item. El EVT_KEY_DOWN queda solo para Delete.
+Bug 2 — pestana_lectura.py (barra de progreso)
+Causa raíz (1): al_actualizar_ui sobreescribía el slider cada 200ms incluso con el reproductor detenido, haciendo imposible la navegación manual con flechas.
+Causa raíz (2): Las voces neuronales no avanzan el cursor del TextCtrl, por lo que GetInsertionPoint() nunca cambia.
+Solución: La barra solo se actualiza cuando estado == 'reproduciendo'. Se añade estimación temporal lineal (~14 chars/s) usando time.time() desde el inicio del fragmento, almacenado en _tiempo_inicio_frag y _longitud_frag_actual.
+Bug 3 — pestana_lectura.py (al_navegacion_tab)
+Causa raíz: El manejador hacía Skip() incondicionalmente sin implementar ningún bucle.
+Solución: Se detecta si el foco está en self.ultimo_control (Tab) o self.primer_control (Shift+Tab) y se transfiere el foco al padre_notebook, completando el ciclo.
+Bug 4 — pestana_ajustes.py (Polly/Azure claves)
+Causa raíz: cargar_config y guardar_config_en_archivo no especificaban encoding. En Windows con cp1252 por defecto, el archivo se escribía en una codificación que ClienteAzure (que sí usa UTF-8 para leer) no podía parsear correctamente.
+Solución: encoding='utf-8' y ensure_ascii=False en ambas funciones.
+Bug 5 — reproductor_voz.py (saturación de hilos)
+Causa raíz: Cada llamada a cargar_texto creaba un nuevo hilo. Los hilos anteriores continuaban ejecutándose (esperando respuesta HTTP), y al recibir el audio intentaban reproducirlo colisionando con el hilo nuevo.
+Solución: Contador _generacion atómico. Cada cargar_texto lo incrementa. El hilo recibe la generación con la que nació y la compara al finalizar. Si ya no coincide, descarta el audio sin reproducirlo.
+Bug 6 — pestana_ajustes.py (doble lectura NVDA)
+Causa raíz: al_cambiar_cat llamaba explícitamente a self.lista_cat.SetFocus() después de que EVT_LISTBOX ya había movido el foco. Esto generaba dos eventos de foco consecutivos, y NVDA anunciaba el elemento dos veces.
+Solución: Se elimina SetFocus() y se añade event.Skip() para una propagación limpia.
+Bug 7 — múltiples archivos (JSON silencioso)
+Todos los except: pass reemplazados por except Exception as e: print(...) con mensajes descriptivos. Los archivos ausentes o corruptos generan estructuras vacías válidas ({} o []) para que la interfaz no falle.
+Fase 1.5 — pestana_ajustes.py (lista de voces)
+• Columnas reorganizadas: Nombre → Género → Idioma → Proveedor
+• Nombre enriquecido: _construir_nombre_enriquecido() parsea el id de la voz e inyecta [Dragon], [Multilingüe], [HD], [Nueva]
+• Traducciones: Tabla _LOCALES_ES (28 entradas) y _GENEROS_ES para mostrar texto en español
+• Filtro nuevo: Casilla "Solo nuevas voces" que filtra por voz.get("es_nueva") == True; compatible con el campo que GestorVoces puede añadir al descargar voces nuevas
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++289-103
+botón    Crear PR

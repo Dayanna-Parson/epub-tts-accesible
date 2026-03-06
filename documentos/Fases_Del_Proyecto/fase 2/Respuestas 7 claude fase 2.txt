@@ -1,0 +1,7 @@
+Respuestas 7 claude fase 2
+
+Cambio mínimo: al final de _cargar_y_escanear, desmarcar todas las voces.
+Modified voice selection to reset when loading new text file
+Modified voice selection to reset when loading new text file
+Copiar mensaje
+Listo, commit 2e264dc. Tres líneas añadidas en _cargar_y_escanear() justo antes de recuperar el mapeo: un bucle que desmarca todas las entradas del CheckListBox. Cada vez que cargues un TXT nuevo, la lista empieza limpia.

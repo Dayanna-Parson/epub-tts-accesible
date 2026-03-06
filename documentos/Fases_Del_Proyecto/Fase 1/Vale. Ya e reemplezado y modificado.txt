@@ -1,0 +1,50 @@
+Vale. Ya e reemplezado y modificado la primera función.
+Y como sabes, amí me gusta leer antes todo el código que me das para ver si falta algo o que  podemos ir mejorando a medida que vamos probando. Y aunque gracias a  los comentarios y a la lógica, y aunque no entiendo absolutamente cada línea, si puedo entender mas o menos que hace...
+Y bueno. leyendo la segunda función que tengo que modificar, (me refiero a esta: def cargar_datos_y_llenar(self):) pues hay varios detalles que quiero que veas antes de pegarla, nada mas por asegurarme de que no falta nada.
+Veamos este fragmento primero. # 2. Cargar Locales (SAPI5) - Opcional, si quieres verlas en Ajustes
+        try:
+            if hasattr(self.reproductor, 'cliente_local'):
+                voces_locales = self.reproductor.cliente_local.obtener_voces()
+                if voces_locales:
+                    proveedores.add("Local") # Añadimos "Local" al filtro
+                    for v in voces_locales:
+                        v["proveedor_id"] = "local" 
+                        self.voces_todas.append(v)
+        except: pass
+
+        # 3. Llenar Combos
+        lista_idiomas = sorted(list(idiomas))
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(lista_idiomas)
+        self.combo_idioma.SetSelection(0)
+        
+        lista_provs = sorted(list(proveedores))
+        self.combo_proveedor.Clear()
+        self.combo_proveedor.Append("Todos")
+        self.combo_proveedor.AppendItems(lista_provs)
+        self.combo_proveedor.SetSelection(0)
+        
+        # 4. Mostrar
+        self.filtrar_y_mostrar()
+A ver. Porqué me haces sugerencias y pones cosas que no quiero, o las das por echo de que si las quiero? Yo en ningú momento te dije que quería en  el filtro de proovedores las voces locales. Solo quiero en este extricto orden. Azure, polly y eleven nada mas. No es necesario poner las voces locales aquí ya que solo tienen sentido y se muestran en la pestaña lectura. Y ahora, Prefiero y me gustaría que antes de dar por echo o darme alguna sugerencia dentro del código, prefiero que me la digas amí primero. Y si te doy el visto bueno, pues ya la pondremos pero siguiendo siempre mis condiciones y requisitos.
+Y ahora necesito que también mires esta parte del código para ver si solo están los proovedores que te pedí: recuerda, azure, polly y eleven.
+def cargar_datos_y_llenar(self):
+        ruta = os.path.join("configuraciones", "voces_disponibles.json")
+        self.voces_todas = []
+        idiomas = set()
+        proveedores = set()
+        
+        # 1. Cargar desde JSON (Nube)
+        if os.path.exists(ruta):
+            try:
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                    for prov, lista in datos.items():
+                        # Añadimos el proveedor al conjunto de filtros (ej: "Azure")
+                        proveedores.add(prov.capitalize())
+                        for v in lista:
+                            v["proveedor_id"] = prov
+                            self.voces_todas.append(v)
+                            if v.get("idioma"): idiomas.add(v.get("idioma"))
+            except: pass

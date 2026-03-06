@@ -1,0 +1,21 @@
+textos que no me gustan.
+Punto de entrada principal para la síntesis de voz.
+        Gestiona la asincronía dependiendo de si el motor es local o en la nube.
+
+Asegurar parada limpia
+(es lo más seguro para COM)
+# NUBE: OBLIGATORIO usar hilo para no congelar la UI
+# ANCLAJE_INICIO: PROCESAMIENTO_INTERNO_AUDIO
+    def _procesar_hilo_nube(self, texto):
+        """Ejecución en segundo plano para servicios de red.""" (esto está mal, porque no es audio interno,  si no la voz que se está reproduciendo en ese momento. Además, aunque si es de la red, creo que lo correcto es decir voces neuronales o neurales... No se que término se usa aquí)
+# Aquí es donde ocurre la magia (y la espera de internet)
+Fallo en nube
+# ANCLAJE_FIN: PROCESAMIENTO_INTERNO_AUDIO
+
+    # ANCLAJE_INICIO: GESTION_CAMBIO_MOTOR_LOCAL
+Transfiere la carga de lectura al motor local SAPI5 
+        si el servicio remoto no responde.
+f"Error de conexión con el motor {self.tipo_motor_actual.upper()}:\n{error_msg}\n\nLa lectura continuará con la configuración de voz local.", 
+            "Aviso de Cambio de Motor" (ten encuenta que los diálogos se les va a mostrar a los usuarios además de obviamente a los desarrolladores)
+# ANCLAJE_FIN: GESTION_CAMBIO_MOTOR_LOCAL
+Nube requiere volver a enviar texto desde la posición (gestionado en pestana_lectura)

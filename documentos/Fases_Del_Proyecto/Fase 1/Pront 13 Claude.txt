@@ -1,0 +1,38 @@
+Pront 13 (Claude)
+
+Claude, necesitamos aplicar estas correcciones críticas para estabilizar la aplicación antes de pasar al modo grabación. Por favor, lee con atención:
+1. 
+Gestión de Errores No Bloqueante (Error 402):
+• 
+Actualmente, si ElevenLabs devuelve un error 402 (cuota agotada), la app entra en un bucle de diálogos que bloquea la interfaz.
+• 
+Corrección: Implementa un sistema de "Estado de Proveedor". Si una API devuelve un error de cuota, marca ese proveedor como "No disponible" para la sesión actual. Muestra un aviso único (notificación de barra de estado o diálogo que no se repita) y no vuelvas a intentar peticiones a ese motor hasta que el usuario cambie de voz manualmente.
+2. 
+Prioridad Global de Atajos (AcceleratorTable):
+• 
+Los atajos asignados (como la tecla 'Espacio') no funcionan si el foco está en el RichTextCtrl de lectura porque el control se "traga" la pulsación.
+• 
+Corrección: Utiliza wx.AcceleratorTable vinculando los atajos de teclas_usuario.json directamente al marco principal (MainFrame). Los atajos de la app deben tener prioridad sobre la inserción de texto en el cuadro de lectura.
+3. 
+Amazon Polly: Investigación de Documentación 2026:
+• 
+Las voces generative no aparecen en la lista. Por favor, revisa la documentación actualizada de Boto3/AWS.
+• 
+Asegúrate de que en gestor_voces.py, la llamada a describe_voices incluya explícitamente el motor generative y comprueba si en la región us-east-1 estas voces requieren algún parámetro adicional o un filtrado específico por Engine.
+4. 
+Estimación de Costes Realista:
+• 
+En la pestaña de Ajustes, añade etiquetas informativas junto a los límites de caracteres de cada proveedor.
+• 
+Busca los precios actuales de 2026 y muestra una estimación: "Límite: X caracteres (Aprox. Y €)". Esto es vital para el control financiero del usuario.
+5. 
+Mejoras de Historial y Menú Ayuda:
+• 
+Aumenta el límite de Libros Recientes a 10.
+• 
+En el Menú Ayuda, añade dos opciones:
+1. 
+"Repositorio del Proyecto (GitHub)" -> Abre la URL del repo.
+2. 
+"https://www.google.com/search?q=TifloHistorias.com (Próximamente)" -> Opción deshabilitada o que informe que la web está en construcción.
+A, por último, que en la consola muestre además de la conexión exitosa de polly, que haga como las otras dos, que muestre los segundos y demás en el cmd...

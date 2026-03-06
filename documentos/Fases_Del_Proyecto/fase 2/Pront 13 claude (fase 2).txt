@@ -1,0 +1,49 @@
+Pront 13 claude (fase 2)
+Todo funciona de perlas!
+Ahora si que me lee bien las voces, y todo lo demás, incluidas las descripciones y las ayudas. A sido una gran y buena idea incluir las ayudas textuales en las etiquetas label. Y ahora si que lee correctamente el estado de la casilla de verificación, por su puesto, con sus labels correspondientes.
+Enserio, ¡Estoy tan contenta del resultado! No me puedo creer que la app que hace muchos meses se me ocurrió así de la nada, por fin tenga forma!
+Funciona todo tan bien, que es la primera vez que nada da errores, y todo funciona como la seda!!!.
+A ver si estás de acuerdo conmigo. Yo haría estos dos cambios nada más:
+El primero: Si el texto ya tiene la etiqueta nar, narrador, o alguna variante, que pues no hace falta que aparezca la etiqueta narrador, Porque ya está asignada en el txt de entrada. Solo se devería poner si no encuentra ninguna etiqueta de narrador en el mismo.
+Te voy a dar un ejemplo de un texto previamente cargado, que ya tiene la etiqueta puesta.
+
+El primero es el que se asigna automáticamente, y el segundo es el que está puesto en el texto. @narrador
+@nar
+
+Y el otro cambio que quiero hacer es el siguiente: Que el cuadro combinado de etiquetas pues se actualicen las mismas, a medida de que vamos asignando, quitando o si asignando mas de una... Aunque  ya se que también aparecen en el cuadro de solo lectura, pero me gustaría que también apareciese ahí, en el cuadro combinado, de etiquetas, (por comodidad y velociad)
+Claude, por favor aplica estos cambios manteniendo intacta la lógica de accesibilidad de las labels y la lista CheckList que tan bien están funcionando ahora.
+
+Y como siempre, el log, para que veas como funciona todo, y si hay algún error que se me halla podido pasar.
+
+---------------------------------------------------
+   INICIANDO TIFLO HISTORIAS...
+---------------------------------------------------
+2026-03-05 20:28:19,470 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-05 20:28:19,471 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-05 20:28:19,473 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-05 20:28:19,476 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-05 20:28:20,788 - __main__ - INFO - Iniciando Epub TTS Accesible
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+[Polly] Conexión establecida | 0.93s | Motor: long-form | Voz: Raul | 52 chars
+2026-03-05 20:40:45,636 - app.motor.grabador_audio - INFO - [Azure] tfh_000_zykaxrre.mp3 (48kHz→320k)
+2026-03-05 20:40:47,240 - app.motor.grabador_audio - INFO - [Azure] tfh_001_0hmgobql.mp3 (48kHz→320k)
+2026-03-05 20:40:49,344 - app.motor.grabador_audio - INFO - [Azure] tfh_002_vlz1tg59.mp3 (48kHz→320k)
+2026-03-05 20:40:52,883 - app.motor.grabador_audio - INFO - [Polly] tfh_003_spx81yux.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:40:54,652 - app.motor.grabador_audio - INFO - [Azure] tfh_004_pgzpydg1.mp3 (48kHz→320k)
+2026-03-05 20:40:56,402 - app.motor.grabador_audio - INFO - [Azure] tfh_005_o6h16mta.mp3 (48kHz→320k)
+2026-03-05 20:40:57,891 - app.motor.grabador_audio - INFO - [Azure] tfh_006_387ba6ft.mp3 (48kHz→320k)
+2026-03-05 20:40:59,530 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: prueba_grabacion.mp3
+2026-03-05 20:48:23,627 - app.motor.grabador_audio - INFO - [Polly] tfh_000_c7tz6y43.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:27,312 - app.motor.grabador_audio - INFO - [Polly] tfh_001_qb3pl5tf.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:30,585 - app.motor.grabador_audio - INFO - [Polly] tfh_002_9eiy1pn1.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-05 20:48:39,299 - app.motor.grabador_audio - INFO - [Polly] tfh_003_hgvtftee.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:40,754 - app.motor.grabador_audio - INFO - [Polly] tfh_004_cvhpmvbe.mp3 (motor=standard, voice=Conchita, 24kHz→320k)
+2026-03-05 20:48:45,524 - app.motor.grabador_audio - INFO - [Polly] tfh_005_kn23h0yq.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:47,009 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: Prueba de testo mas larga.mp3
+2026-03-05 20:50:39,666 - app.motor.grabador_audio - INFO - [Polly] 001_narrador.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:50:43,229 - app.motor.grabador_audio - INFO - [Polly] 002_nar.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:50:46,508 - app.motor.grabador_audio - INFO - [Polly] 003_pj1.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-05 20:50:55,289 - app.motor.grabador_audio - INFO - [Polly] 004_nar.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:50:56,644 - app.motor.grabador_audio - INFO - [Polly] 005_pj2.mp3 (motor=standard, voice=Conchita, 24kHz→320k)
+2026-03-05 20:51:01,435 - app.motor.grabador_audio - INFO - [Polly] 006_nar.mp3 (motor=long-form, voice=Raul, 24kHz→320k)

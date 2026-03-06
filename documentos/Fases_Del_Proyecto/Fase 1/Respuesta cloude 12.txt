@@ -1,0 +1,632 @@
+Respuesta cloude 12
+
+Searched for README files and configuration files in project directory
+Searched for README files and configuration files in project directory
+Update Todos
+☐ Leyendo archivos clave☐ Caché universal de fragmento actual (Azure, Polly, Eleven)☐ Etiquetas de voz coherentes en combo de Lectura☐ Polly: SampleRate 24kHz y generative en descarga☐ Crear teclas_predeterminadas.json y gestor_atajos.py☐ Panel de atajos en Ajustes con captura de tecla y reset☐ Menú Ayuda: README GitHub y ver atajos actuales☐ Commit y push cierre Fase 1
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 721 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 710 líneas
+Mostrar 8 más
+Copiar mensaje
+Bien. Tengo todo lo que necesito. Ahora ejecuto todas las implementaciones. Son bastantes cambios, así que voy por capas:
+Arquitectura de atajos: 2 archivos (como VS Code) — teclas_predeterminadas.json (solo lectura, nunca se toca) + teclas_usuario.json (solo overrides del usuario, se borra para restaurar defaults).
+Created keyboard shortcut manager with dual JSON configuration system
+Created keyboard shortcut manager with dual JSON configuration system
+Write/home/user/epub-tts-accesible/configuraciones/teclas_predeterminadas.json
+1+
+{
+2+
+    "abrir_libro": {
+3+
+        "descripcion": "Abrir libro EPUB",
+4+
+        "modificador": "Ctrl",
+5+
+        "tecla": "A"
+6+
+    },
+7+
+    "reproducir_pausar": {
+8+
+        "descripcion": "Reproducir / Pausar / Reanudar",
+9+
+        "modificador": "Ctrl",
+10+
+        "tecla": "P"
+11+
+    },
+12+
+    "detener": {
+13+
+        "descripcion": "Detener lectura",
+14+
+        "modificador": "Ctrl",
+15+
+        "tecla": "D"
+16+
+    },
+17+
+    "marcadores": {
+18+
+        "descripcion": "Gestor de marcadores",
+19+
+        "modificador": "Ctrl",
+20+
+        "tecla": "M"
+Show full diff (13 more lines)
+Write/home/user/epub-tts-accesible/app/motor/gestor_atajos.py
+1+
+"""
+2+
+Gestor de atajos de teclado.
+3+
+4+
+Usa dos archivos JSON separados (patrón VS Code):
+5+
+  - teclas_predeterminadas.json  → Defaults de fábrica. NUNCA se modifica.
+6+
+  - teclas_usuario.json          → Solo almacena los overrides del usuario.
+7+
+8+
+Al cargar se fusionan ambos: el usuario puede sobrescribir cualquier default,
+9+
+y restaurar todo borrando/vaciando teclas_usuario.json (restablecer_todos).
+10+
+"""
+11+
+import json
+12+
+import os
+13+
+from app.config_rutas import ruta_config
+14+
+15+
+_RUTA_DEFAULTS = ruta_config("teclas_predeterminadas.json")
+16+
+_RUTA_USUARIO = ruta_config("teclas_usuario.json")
+17+
+18+
+19+
+def cargar_atajos():
+20+
+    """
+Show full diff (82 more lines)
+Copiar mensaje
+Ahora el caché universal en los tres clientes TTS + limpieza de prints de diagnóstico:
+Created ElevenLabs TTS client module with caching
+Created ElevenLabs TTS client module with caching
+Write/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+import time
+8+
+from app.config_rutas import ruta_config
+9+
+10+
+_MAX_CACHE = 5  # Máximo de fragmentos de audio en caché por cliente
+11+
+12+
+13+
+class ClienteAzure:
+14+
+    def __init__(self):
+15+
+        self.config = {}
+16+
+        self._velocidad = 50
+17+
+        self._volumen = 100
+18+
+        self._sesion = requests.Session()
+19+
+        self._parado = False
+20+
+        # Buffer proactivo para el siguiente fragmento
+Show full diff (194 more lines)
+Write/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+from app.config_rutas import ruta_config
+8+
+9+
+_MAX_CACHE = 5
+10+
+11+
+12+
+class ClienteEleven:
+13+
+    def __init__(self):
+14+
+        self.config = {}
+15+
+        self._velocidad = 50
+16+
+        self._volumen = 100
+17+
+        self._sesion = requests.Session()
+18+
+        self._parado = False
+19+
+        self._audio_preparado = None
+20+
+        self._texto_preparado = None
+Show full diff (127 more lines)
+Copiar mensaje
+Ahora Polly: caché universal + SampleRate 24kHz:
+Added cache storage method to Polly client service
+Added cache storage method to Polly client service
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+13-9
+1-
+class ClientePolly:
+2-
+    def __init__(self):
+3-
+        # Parámetros de reproducción (0-100)
+4-
+        self._velocidad = 50   # 50 = velocidad normal
+5-
+        self._volumen = 100    # 100 = volumen máximo
+6-
+        self._parado = False   # Flag para distinguir stop intencional de error de red
+7-
+        # Buffer de precarga
+8-
+        self._audio_preparado = None   # (data, fs) o None
+9-
+        self._texto_preparado = None
+1+
+_MAX_CACHE = 5  # Máximo de fragmentos en caché por cliente
+2+
+3+
+4+
+class ClientePolly:
+5+
+    def __init__(self):
+6+
+        self._velocidad = 50
+7+
+        self._volumen = 100
+8+
+        self._parado = False
+9+
+        self._audio_preparado = None
+10+
+        self._texto_preparado = None
+11+
+        # Caché de fragmentos ya descargados (reutiliza audio al saltar atrás)
+Show full diff (2 more lines)
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+12-4
+11
+    def obtener_voces(self):
+22
+        return []
+33
+4+
+    def _guardar_en_cache(self, texto, data, fs):
+5+
+        if texto not in self._cache_frags:
+6+
+            if len(self._cache_lru) >= _MAX_CACHE:
+7+
+                clave_antigua = self._cache_lru.pop(0)
+8+
+                self._cache_frags.pop(clave_antigua, None)
+9+
+            self._cache_lru.append(texto)
+10+
+        self._cache_frags[texto] = (data, fs)
+11+
+412
+    def _elegir_motor(self, datos_voz):
+Copiar mensaje
+Ahora añado SampleRate="24000" a la llamada synthesize_speech:
+Updated AWS Polly client speech synthesis configuration
+Updated AWS Polly client speech synthesis configuration
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+8-7
+33
+                    Text=ssml,
+44
+                    TextType="ssml",
+55
+                    OutputFormat="ogg_vorbis",
+6+
+                    SampleRate="24000",
+67
+                    VoiceId=voice_id,
+78
+                )
+Copiar mensaje
+Ahora reescribo hablar() y preparar() en Polly para usar el caché:
+Updated text-to-speech synthesis method in cliente_polly.py
+Updated text-to-speech synthesis method in cliente_polly.py
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+45-39
+11
+    def hablar(self, texto, datos_voz):
+2-
+        """Sintetiza y reproduce el texto. Usa audio pre-descargado si está disponible."""
+3-
+        self._parado = False
+4-
+5-
+        # Usar audio pre-descargado si fue preparado para exactamente este texto
+6-
+        if self._audio_preparado is not None and self._texto_preparado == texto:
+7-
+            data, fs = self._audio_preparado
+8-
+            self._audio_preparado = None
+9-
+            self._texto_preparado = None
+10-
+        else:
+11-
+            data, fs = self._llamar_api(texto, datos_voz)
+12-
+13-
+        if not self._parado:
+14-
+            sd.play(data, fs)
+15-
+            sd.wait()
+16-
+17-
+    def preparar(self, texto, datos_voz):
+18-
+        """
+19-
+        Pre-descarga el audio del texto en segundo plano y lo cachea.
+20-
+        Si hablar() se llama después con el mismo texto, usa el caché y no hay latencia.
+Show full diff (54 more lines)
+Copiar mensaje
+Ahora añado invalidación de caché en fijar_velocidad/volumen de Polly:
+Updated project todo list tracking progress on caching and voice features
+Updated project todo list tracking progress on caching and voice features
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+13-5
+11
+    def fijar_velocidad(self, v):
+2-
+        self._velocidad = max(0, min(100, int(v)))
+3-
+4-
+    def fijar_volumen(self, v):
+5-
+        self._volumen = max(0, min(100, int(v)))
+2+
+        nuevo = max(0, min(100, int(v)))
+3+
+        if nuevo != self._velocidad:
+4+
+            self._cache_frags.clear()
+5+
+            self._cache_lru.clear()
+6+
+        self._velocidad = nuevo
+7+
+8+
+    def fijar_volumen(self, v):
+9+
+        nuevo = max(0, min(100, int(v)))
+10+
+        if nuevo != self._volumen:
+11+
+            self._cache_frags.clear()
+12+
+            self._cache_lru.clear()
+13+
+        self._volumen = nuevo
+Update Todos
+☐ Leer archivos clave del proyecto☐ Caché universal de fragmento actual (Azure, Polly, Eleven)☐ Uniformizando etiquetas de voz☐ Configurando Polly 24kHz y generative☐ Crear teclas_predeterminadas.json y gestor_atajos.py☐ Panel de atajos en Ajustes con captura de tecla y reset☐ Menú Ayuda: README GitHub y ver atajos actuales☐ Commit y push cierre Fase 1
+Copiar mensaje
+Ahora corrijo es_nueva en gestor_voces.py para que incluya generative y long-form:
+Updated voice configuration parsing in gestor_voces.py
+Updated voice configuration parsing in gestor_voces.py
+Edit/home/user/epub-tts-accesible/app/motor/gestor_voces.py+10-10
+55
+                    "genero": genero,
+66
+                    "proveedor": "Amazon Polly",
+77
+                    "motores": motores,
+8-
+                    # Marcar como nueva si soporta el motor neural
+9-
+                    "es_nueva": "neural" in motores,
+8+
+                    # Nueva = cualquier motor de mayor calidad que standard
+9+
+                    "es_nueva": any(m in motores for m in ("generative", "long-form", "neural")),
+1010
+                }
+Copiar mensaje
+Ahora las etiquetas del combo de voz en pestana_lectura.py:
+Fixed JSON loading logic in reading tab module
+Fixed JSON loading logic in reading tab module
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+12-12
+198198
+                        for v in lista:
+199199
+                            if v.get("id") in ids_favoritos:
+200200
+                                v["proveedor_id"] = prov
+201-
+                                nombre_mostrar = f"[{prov.capitalize()}] {v['nombre']} ({v.get('idioma')})"
+201+
+                                nombre_mostrar = _nombre_combo_neuronal(v, prov)
+202202
+                                voces_para_combo.append((nombre_mostrar, v))
+203203
+            except Exception as e:
+204204
+                print(f"[Aviso] No se pudo leer voces_disponibles.json: {e}")
+Copiar mensaje
+Ahora añado la función helper _nombre_combo_neuronal al inicio del módulo, después de los imports:
+Updated project task list with completed caching implementation
+Updated project task list with completed caching implementation
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+48-3
+1010
+# ANCLAJE_FIN: DEPENDENCIAS_LECTURA
+1111
+12+
+# ── Tablas de traducción para etiquetas del combo de voz ─────────────────────
+13+
+_LOCALES_ES = {
+14+
+    "es-ES": "Español (España)", "es-MX": "Español (México)",
+15+
+    "es-AR": "Español (Argentina)", "es-CO": "Español (Colombia)",
+16+
+    "en-US": "Inglés (EE.UU.)", "en-GB": "Inglés (R.U.)",
+17+
+    "en-AU": "Inglés (Australia)", "en-CA": "Inglés (Canadá)",
+18+
+    "fr-FR": "Francés (Francia)", "fr-CA": "Francés (Canadá)",
+19+
+    "de-DE": "Alemán", "it-IT": "Italiano",
+20+
+    "pt-BR": "Portugués (Brasil)", "pt-PT": "Portugués (Portugal)",
+21+
+    "ja-JP": "Japonés", "zh-CN": "Chino (Mandarín)",
+22+
+    "ko-KR": "Coreano", "ru-RU": "Ruso",
+23+
+    "nl-NL": "Neerlandés", "pl-PL": "Polaco",
+24+
+    "Multilingüe (v2)": "Multilingüe",
+25+
+}
+26+
+_GENEROS_ES = {"Female": "Femenino", "Male": "Masculino", "Neutral": "Neutro"}
+27+
+_PROVEEDORES = {"polly": "Amazon Polly", "elevenlabs": "ElevenLabs", "azure": "Azure"}
+28+
+29+
+Show full diff (28 more lines)
+Update Todos
+☐ Leer archivos clave del proyecto☐ Caché universal de fragmento actual (Azure, Polly, Eleven)☐ Etiquetas de voz coherentes en combo de Lectura☐ Polly: SampleRate 24kHz y generative en descarga☐ Crear teclas_predeterminadas.json y gestor_atajos.py☐ Implementando panel de atajos☐ Menú Ayuda: README GitHub y ver atajos actuales☐ Commit y push cierre Fase 1
+Copiar mensaje
+Ahora reescribo PanelAtajos en pestana_ajustes.py. Incluye el diálogo de captura de tecla y los 3 botones:
+Updated shortcuts panel UI in settings tab
+Updated shortcuts panel UI in settings tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+178-6
+610-
+class PanelAtajos(wx.Panel):
+611-
+        def __init__(self, padre):
+612-
+            super().__init__(padre)
+613-
+            sizer = wx.BoxSizer(wx.VERTICAL)
+614-
+            sizer.Add(wx.StaticText(self, label="Atajos de teclado configurables"), 0, wx.ALL, 10)
+615-
+            self.SetSizer(sizer)
+610+
+class _DialogoCapturaTecla(wx.Dialog):
+611+
+    """
+612+
+    Diálogo modal que espera una pulsación de tecla y la almacena.
+613+
+    Compatible con NVDA: anuncia el título y la instrucción al abrirse.
+614+
+    Escape cancela; cualquier otra tecla (con o sin modificador) confirma.
+615+
+    """
+616+
+    _ESPECIALES = {
+617+
+        wx.WXK_SPACE: "Espacio", wx.WXK_RETURN: "Intro",
+618+
+        wx.WXK_F1: "F1",  wx.WXK_F2: "F2",  wx.WXK_F3: "F3",
+619+
+        wx.WXK_F4: "F4",  wx.WXK_F5: "F5",  wx.WXK_F6: "F6",
+620+
+        wx.WXK_F7: "F7",  wx.WXK_F8: "F8",  wx.WXK_F9: "F9",
+621+
+        wx.WXK_F10: "F10", wx.WXK_F11: "F11", wx.WXK_F12: "F12",
+622+
+        wx.WXK_UP: "Arriba", wx.WXK_DOWN: "Abajo",
+623+
+        wx.WXK_LEFT: "Izquierda", wx.WXK_RIGHT: "Derecha",
+Show full diff (164 more lines)
+Copiar mensaje
+Actualizo obtener_ultimo_control() para que el bucle de Tab llegue al botón "Restablecer" del panel de atajos:
+Updated project progress tracking with completed tasks
+Updated project progress tracking with completed tasks
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+4-5
+664664
+        elif idx == 2:
+665665
+            return self.pag_voces.btn_escuchar
+666666
+        else:
+667-
+            # PanelAtajos no tiene controles interactivos: el bucle vuelve al inicio
+668-
+            return self.lista_cat
+667+
+            return self.pag_atajos.btn_restablecer
+Update Todos
+☐ Leer archivos clave del proyecto☐ Caché universal de fragmento actual (Azure, Polly, Eleven)☐ Etiquetas de voz coherentes en combo de Lectura☐ Polly: SampleRate 24kHz y generative en descarga☐ Crear teclas_predeterminadas.json y gestor_atajos.py☐ Panel de atajos en Ajustes con captura de tecla y reset☐ Actualizando menú Ayuda☐ Commit y push cierre Fase 1
+Copiar mensaje
+Ahora el menú Ayuda en ventana_principal.py: añado "Ver atajos" (muestra diálogo con los atajos actuales) y "README" (abre el archivo README local si existe):
+Updated main window menu interface with keyboard shortcuts
+Updated main window menu interface with keyboard shortcuts
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+16-13
+8080
+        # MENÚ AYUDA
+8181
+        self.menu_ayuda = wx.Menu()
+82-
+        self.item_atajos = self.menu_ayuda.Append(wx.ID_ANY, "&Atajos de teclado")
+83-
+        self.barra_menu.Append(self.menu_ayuda, "A&yuda")
+84-
+85-
+        self.SetMenuBar(self.barra_menu)
+86-
+87-
+        # Vincular eventos
+88-
+        self.Bind(wx.EVT_MENU, self.al_abrir_archivo, self.item_abrir)
+89-
+        self.Bind(wx.EVT_MENU, self.al_salir, self.item_salir)
+90-
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, self.item_marcadores)
+91-
+        self.Bind(wx.EVT_MENU, self.al_buscar, self.item_buscar)
+92-
+        self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, self.item_porcentaje)
+82+
+        self.item_atajos = self.menu_ayuda.Append(wx.ID_ANY, "&Ver atajos de teclado")
+83+
+        self.item_readme = self.menu_ayuda.Append(wx.ID_ANY, "&README del proyecto")
+84+
+        self.barra_menu.Append(self.menu_ayuda, "A&yuda")
+85+
+86+
+        self.SetMenuBar(self.barra_menu)
+87+
+88+
+        # Vincular eventos
+Show full diff (7 more lines)
+Copiar mensaje
+Añado los dos métodos al final de la clase, antes del cierre del anclaje:
+Fixed recent book opening functionality in main window
+Fixed recent book opening functionality in main window
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+46-12
+235235
+                self._guardar_recientes()
+236236
+                self.actualizar_menu_recientes()
+237237
+    # ANCLAJE_FIN: HISTORIAL_RECIENTES
+238+
+239+
+    # ANCLAJE_INICIO: AYUDA
+240+
+    def al_ver_atajos(self, evento):
+241+
+        """Muestra un diálogo con todos los atajos actuales (defaults + personalizados)."""
+242+
+        from app.motor.gestor_atajos import cargar_atajos, texto_atajo
+243+
+        atajos = cargar_atajos()
+244+
+        lineas = []
+245+
+        for clave, entrada in atajos.items():
+246+
+            desc = entrada.get("descripcion", clave)
+247+
+            tecla = texto_atajo(entrada)
+248+
+            lineas.append(f"• {desc}:  {tecla}")
+249+
+        wx.MessageBox(
+250+
+            "\n".join(lineas),
+251+
+            "Atajos de teclado actuales",
+252+
+            wx.OK | wx.ICON_INFORMATION
+253+
+        )
+254+
+Show full diff (18 more lines)
+Copiar mensaje
+También necesito importar webbrowser en ventana_principal.py — pero en realidad no lo usamos (usamos os.startfile), así que no es necesario. Ahora hago el commit:
+Completed and tracked Phase 1 commit and push
+Completed and tracked Phase 1 commit and push
+Update Todos
+☐ Leer archivos clave del proyecto☐ Caché universal de fragmento actual (Azure, Polly, Eleven)☐ Etiquetas de voz coherentes en combo de Lectura☐ Polly: SampleRate 24kHz y generative en descarga☐ Crear teclas_predeterminadas.json y gestor_atajos.py☐ Panel de atajos en Ajustes con captura de tecla y reset☐ Menú Ayuda: README GitHub y ver atajos actuales☐ Commiteando y pusheando
+Bashgit status
+On branch claude/python-wxpython-accessibility-ZPVzLYour branch is up to date with 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Mostrar más
+Changes not staged for commit:  (use "git add <file>..." to update what will be committed)  (use "git restore <file>..." to discard changes in working directory)	modified:   app/interfaz/pestana_ajustes.py	modified:   app/interfaz/pestana_lectura.py	modified:   app/interfaz/ventana_principal.py	modified:   app/motor/gestor_voces.py	modified:   app/servicios/cliente_azure.py	modified:   app/servicios/cliente_eleven.py	modified:   app/servicios/cliente_polly.pyUntracked files:  (use "git add <file>..." to include in what will be committed)	app/motor/gestor_atajos.py	configuraciones/teclas_predeterminadas.jsonno changes added to commit (use "git add" and/or "git commit -a")
+Bash
+git add app/interfaz/pestana_ajustes.py app/interfaz/pestana_lectura.py app/interfaz/ventana_principal.py app/motor/gestor_voces.py app/servicios/cliente_azure.py app/servicios/cliente_eleven.py app/servicios/cliente_polly.py app/motor/gestor_atajos.py configuraciones/teclas_predeterminadas.json && git commit -m "$(cat <<'EOF' Cierre Fase 1: caché universal, atajos, Polly 24kHz, etiquetas coherentes CACHÉ UNIVERSAL DE FRAGMENTOS (Azure, Polly, ElevenLabs) - _cache_frags (dict texto→audio) + _cache_lru (LRU, máx 5 entradas) - hablar(): prioridad caché > buffer proactivo > API - preparar(): reutiliza caché si ya existe - detener(): NO borra caché (salto-atrás puede reutilizar el audio) - fijar_velocidad/volumen: invalida caché si cambia el valor POLLY 24kHz Y GENERATIVE - SampleRate="24000" en synthesize_speech() - es_nueva incluye ahora motores generative y long-form (no solo neural) ETIQUETAS DE VOZ COHERENTES EN LECTURA - Combo de Lectura usa formato: Nombre; Género; Idioma; Proveedor - Mismo criterio de etiquetas enriquecidas que el panel de Ajustes - Tablas _LOCALES_ES/_GENEROS_ES/_PROVEEDORES en pestana_lectura.py SISTEMA DE ATAJOS (2 archivos, patrón VS Code) - teclas_predeterminadas.json: defaults de fábrica, nunca se modifica - teclas_usuario.json: solo overrides del usuario (creado al asignar) - gestor_atajos.py: cargar/guardar/eliminar/restablecer + texto_atajo() - PanelAtajos: ListCtrl con columna "Acción (predeterminado)" + "Tecla" - _DialogoCapturaTecla: captura tecla/combinación con EVT_CHAR_HOOK - Botones: Asignar (Intro), Eliminar asignación, Restablecer todo - Tab loop alcanza btn_restablecer como último control MENÚ AYUDA - "Ver atajos de teclado": diálogo con todos los atajos actuales - "README del proyecto": abre README local con visor del sistema https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL 939cfdf] Cierre Fase 1: caché universal, atajos, Polly 24kHz, etiquetas coherentes 9 files changed, 537 insertions(+), 110 deletions(-) create mode 100644 app/motor/gestor_atajos.py
+Mostrar más
+ create mode 100644 configuraciones/teclas_predeterminadas.json
+Mostrar 2 más
+Copiar mensaje
+Fase 1 completamente cerrada. Aquí el resumen de todo lo implementado en este commit:
+ 
+1. Caché universal de fragmentos (Azure, Polly, ElevenLabs)
+Cada cliente TTS tiene ahora _cache_frags (diccionario texto→audio, máx. 5 entradas LRU):
+• Salto atrás: detener() ya no borra el caché → al releer el mismo fragmento, se usa el audio ya descargado sin llamar a la API
+• hablar(): prioridad caché > buffer proactivo > API
+• preparar(): reutiliza caché si ya tiene el audio
+• Velocidad/Volumen: al cambiar el valor, el caché se invalida automáticamente (audio obsoleto)
+2. Polly 24kHz y Generative
+• SampleRate="24000" añadido a synthesize_speech()
+• es_nueva ahora incluye voces generative y long-form (no solo neural)
+3. Etiquetas de voz coherentes en Lectura
+El combo de Lectura muestra ahora el mismo formato que Ajustes:
+Alba [Nueva]; Femenino; Español (España); Amazon Polly
+Copy code
+4. Sistema de atajos (2 archivos, patrón VS Code)
+Archivo
+Propósito
+teclas_predeterminadas.json
+Defaults de fábrica, nunca se modifica
+teclas_usuario.json
+Solo overrides del usuario. Borrarlo = reset total
+• Panel Atajos en Ajustes: lista con nombre+default entre paréntesis y tecla actual
+• Al hacer Intro o "Asignar": diálogo modal que captura la siguiente tecla/combinación
+• "Eliminar asignación": restaura ese atajo al default
+• "Restablecer todo": borra teclas_usuario.json con confirmación
+5. Menú Ayuda
+• "Ver atajos de teclado": diálogo con todos los atajos actuales
+• "README del proyecto": abre el README local con el visor del sistema
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++1969-325
+Crear PR

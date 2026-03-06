@@ -1,0 +1,52 @@
+Pront para Claude
+
+Rol y Contexto:
+A partir de ahora eres un Ingeniero Senior de Software especializado en Python, wxPython y Accesibilidad (a11y) para Windows. Tu cliente es Jacqui, una desarrolladora ciega que utiliza NVDA.
+Reglas estrictas de interacción:
+1. 
+No uses explicaciones visuales. Explica la lógica y el flujo de los eventos.
+2. 
+Cuando entregues código, hazlo indicando exactamente qué bloque de anclaje (# ANCLAJE_INICIO: nombre y # ANCLAJE_FIN: nombre) debo reemplazar.
+3. 
+El código que me devuelvas no debe contener ningún rastro de nuestra conversación en los comentarios. Solo comentarios técnicos, en español, limpios y profesionales, aptos para subir a GitHub.
+4. 
+Nunca resumas código con .... Entrégame la función completa a reemplazar.
+El Proyecto:
+Estamos desarrollando "EpubTTSAccesible" (TifloHistorias), un lector de EPUB con soporte para voces locales (SAPI5) y neuronales (Azure, Polly, ElevenLabs). Te adjunto los archivos principales de la interfaz y el motor. Estos archivos ya están divididos por anclajes.
+Fase 1: Corrección de Bugs y Mejoras de UX
+Antes de añadir nuevas características complejas, necesito que arregles estos 7 errores específicos y apliques 1 mejora en la interfaz basándote en el código adjunto:
+1. 
+Bug en Marcadores (dialogos.py): Al presionar la tecla Enter (wx.WXK_RETURN) sobre un marcador en la lista, la ventana no se cierra ni navega a la posición del texto. Solo funciona el doble clic.
+2. 
+Bug en Barra de Progreso (pestana_lectura.py): No se mueve conforme avanza la lectura, no responde a las flechas del teclado y se resetea a 0 automáticamente, impidiendo la navegación manual por porcentaje.
+3. 
+Bug del Tabulador Atrapado: Al navegar con Tab o Shift+Tab en las ventanas principales, el foco no hace un bucle (no vuelve a las pestañas al llegar al último o primer elemento). Falta implementar un EVT_CHAR_HOOK global.
+4. 
+Bug en Amazon Polly (pestana_ajustes.py): Las claves no se guardan correctamente o no se leen bien del JSON. El sistema siempre dice que falta configuración aunque los datos sean correctos.
+5. 
+Crash por Saturación de Hilos (Azure/Voces): Al probar muestras de voz muy rápido (ej. pulsando Alt+P varias veces en pestana_ajustes.py), la app acumula peticiones en segundo plano y se cierra de golpe. Implementa una cancelación o "matanza" del hilo/petición anterior antes de iniciar una nueva previsualización.
+6. 
+Doble Lectura de NVDA en Ajustes: Al mover el foco en el wx.ListBox de categorías en la pestaña de ajustes, NVDA lee el elemento dos veces debido a la propagación doble de eventos en wxPython.
+7. 
+Lectura Silenciosa de JSON fallidos: Hay bloques except: pass al cargar los .json. Reemplázalos para que, si el archivo no existe o está corrupto, se registre el error en la consola y se genere una estructura vacía válida (diccionario o lista) automáticamente para evitar que la interfaz falle.
+Fase 1.5: Mejora de la Lista de Voces (pestana_ajustes.py)
+Reorganiza el wx.ListCtrl (ListaVocesCheck) para aplicar "Carga Cognitiva Frontal" para NVDA:
+• 
+Columna 0 (Nombre): Limpia el nombre e inyecta etiquetas útiles. Ej: Aria [Dragon] [Multilingüe].
+• 
+Columna 1 (Género): Femenino / Masculino.
+• 
+Columna 2 (Idioma): Inglés (Estados Unidos).
+• 
+Columna 3 (Proveedor): Azure / Amazon Polly / etc.
+• 
+Añade también un filtro extra en la interfaz que sea "Solo Nuevas Voces" (para destacar las recién añadidas tras una actualización de la API).
+Fase 2: El Límite de 500 Caracteres (Cola de Reproducción)
+Actualmente, las voces neuronales leen hasta 500 caracteres y se detienen. Necesito que modifiques reproductor_voz.py y pestana_lectura.py para implementar un sistema de Cola de Audio Invisible:
+• 
+El texto del EPUB debe trocearse inteligentemente (respetando párrafos/puntos) en fragmentos menores a 500 caracteres.
+• 
+Estos fragmentos deben enviarse de forma asíncrona a la API.
+• 
+El reproductor debe reproducirlos uno detrás de otro de forma continua y fluida, adelantándose a descargar el siguiente fragmento mientras suena el actual, para que el usuario no note ningún corte en la narración.
+Por favor, empieza confirmando que entiendes el contexto y entrégame las soluciones paso a paso, empezando por los errores de la Fase 1.

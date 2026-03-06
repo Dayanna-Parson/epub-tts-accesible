@@ -1,0 +1,21 @@
+Respuestas claude 6
+
+Entendido en ambos puntos. Leo el archivo actual para hacer los cambios exactos:
+Read recording tab Python file section around line 510-516
+Read recording tab Python file section around line 510-516
+Copiar mensaje
+Tres cambios concretos:
+1. Revertir la deduplicación de voces (era innecesaria)
+2. Arreglar al_marcar_voz: ignorar cuando el usuario desmarca (actualmente también asigna al desmarcar)
+3. Descripción concisa para el botón Examinar
+Pushed recording tab implementation branch to origin
+Pushed recording tab implementation branch to origin
+Copiar mensaje
+Commit 23b7e6d pusheado. Tres cambios exactos:
+1. 
+Deduplicación revertida — las voces estaban bien, he quitado el código innecesario que añadí.
+2. 
+al_marcar_voz corregido — EVT_CHECKLISTBOX se dispara tanto al marcar como al desmarcar. Ahora lo primero que hace el handler es if not self.check_voces.IsChecked(idx_marcado): return — si el usuario desmarca, se sale sin hacer nada.
+3. 
+Tooltip del botón Examinar — "Carga un archivo TXT con etiquetas {{@personaje}} para asignar una voz a cada personaje y grabar el audio." NVDA lo lee con Ins+T cuando el botón tiene el foco.
+Y apuntado para el futuro: si me dices lo que sale con NVDA sin especificar qué está roto, te pregunto antes de tocar nada.

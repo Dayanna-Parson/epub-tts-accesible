@@ -1,0 +1,606 @@
+respuesta 3 (claude)
+
+Voy a leer todos los archivos relevantes antes de tocar nada.
+Read and audited five project files for code review
+Read and audited five project files for code review
+AgentLeer todos los archivos del proyecto para auditoría
+Aquí está el contenido completo de los cinco archivos solicitados:---
+Mostrar más
+## 1. /home/user/epub-tts-accesible/app/servicios/cliente_polly.py```python     1	class ClientePolly:     2	    def __init__(self): pass     3	    def obtener_voces(self): return []     4	    def hablar(self, texto, id_voz): pass     5	    def detener(self): pass```---## 2. /home/user/epub-tts-accesible/app/motor/control_cuota.py```python     1	import os     2	import json     3	from datetime import datetime     4	import wx     5	     6	class ControlCuota:     7	    def __init__(self):     8	        self.ruta_uso = os.path.join("configuraciones", "uso_cuota.json")     9	        # Límites por defecto (basados en la info que me diste)    10	        self.limites_defecto = {    11	            "azure": 500000,      # 500k caracteres (Capa gratuita)    12	            "polly": 1000000,     # 1 Millón (Capa gratuita estándar)    13	            "elevenlabs": 10000,  # 10k (Plan gratis)    14	            "local": 999999999    # SAPI5 es gratis infinito    15	        }    16	        self.datos = self.cargar_datos()    17	    18	    def cargar_datos(self):    19	        datos_base = {    20	            "mes_actual": datetime.now().month,    21	            "gastado": {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0},    22	            "limites": self.limites_defecto.copy()    23	        }    24	            25	        if os.path.exists(self.ruta_uso):    26	            try:    27	                with open(self.ruta_uso, 'r') as f:    28	                    cargado = json.load(f)    29	                    # Fusionar por si faltan claves nuevas    30	                    datos_base.update(cargado)    31	                    # Asegurar que existen sub-diccionarios    32	                    if "gastado" not in datos_base: datos_base["gastado"] = {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0}    33	                    if "limites" not in datos_base: datos_base["limites"] = self.limites_defecto.copy()    34	                    return datos_base    35	            except: pass    36	        return datos_base    37	    38	    def guardar_datos(self):    39	        try:    39	            os.makedirs("configuraciones", exist_ok=True)    40	            with open(self.ruta_uso, 'w') as f: json.dump(self.datos, f, indent=4)    41	        except: pass    42	    43	    def reiniciar_contadores_si_mes_nuevo(self):    44	        mes_hoy = datetime.now().month    45	        if mes_hoy != self.datos.get("mes_actual"):    46	            print("📅 ¡Nuevo mes! Reiniciando contadores de cuota.")    47	            self.datos["mes_actual"] = mes_hoy    48	            self.datos["gastado"] = {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0}    49	            self.guardar_datos()    50	    51	    def verificar_y_registrar(self, texto, proveedor):    52	        """    52	        Retorna TRUE si hay saldo. Retorna FALSE si se pasó el límite.    53	        """    54	        self.reiniciar_contadores_si_mes_nuevo()    55	            56	        prov_key = proveedor.lower()    57	        if "azure" in prov_key: clave = "azure"    58	        elif "polly" in prov_key: clave = "polly"    59	        elif "eleven" in prov_key: clave = "elevenlabs"    60	        else: return True # Local siempre es gratis    61	    62	        cantidad = len(texto)    63	        gastado = self.datos["gastado"].get(clave, 0)    64	        límite = self.datos["limites"].get(clave, 0)    65	            66	        # Comprobar límite    67	        if gastado + cantidad > límite:    68	            wx.MessageBox(    69	                f"🚫 ¡ALTO! Se ha detenido la lectura por seguridad.\n\n"    69	                f"Proveedor: {clave.upper()}\n"    70	                f"Has gastado: {gastado} chars\n"    71	                f"Intentaste leer: {cantidad} chars\n"    72	                f"Límite configurado: {límite}\n\n"    73	                "Se usará la voz LOCAL para no generar costes extra.",    74	                "Escudo de Presupuesto Activo"    75	            )    76	            return False    77	            78	        # Registrar gasto    79	        self.datos["gastado"][clave] = gastado + cantidad    80	        self.guardar_datos()    81	        return True    82	    83	    def get_info_uso(self, proveedor):    84	        clave = proveedor.lower()    84	        gastado = self.datos["gastado"].get(clave, 0)    85	        límite = self.datos["limites"].get(clave, 0)    86	        return gastado, límite    87	    88	    def set_limite(self, proveedor, nuevo_limite):    89	        clave = proveedor.lower()    90	        self.datos["limites"][clave] = int(nuevo_limite)    91	        self.guardar_datos()```---## 3. /home/user/epub-tts-accesible/app/motor/procesador_etiquetas.pyEl archivo está vacío o contiene solo una línea en blanco.---## 4. /home/user/epub-tts-accesible/app/motor/gestor_epub.py```python     1	import ebooklib     2	from ebooklib import epub     3	from bs4 import BeautifulSoup     4	import warnings     5	import re     6	import os     7	     8	# Filtramos advertencias de bs4 para mantener la salida limpia en la consola     9	warnings.filterwarnings("ignore", category=UserWarning, module='bs4')    10	    11	def extraer_datos_epub(ruta_epub):    12	    """    12	    Extrae el texto completo y la estructura del índice (TOC) de un archivo EPUB.    13	    Retorna:    14	        - texto_completo (str): El texto del libro limpio.    15	        - datos_indice (list): Estructura jerárquica para el árbol de navegación.    16	        - posiciones_capitulos (dict): Diccionario {titulo_capitulo: posicion_caracter}.    17	    """    18	    if not os.path.exists(ruta_epub):    19	        raise FileNotFoundError(f"No se encontró el archivo: {ruta_epub}")    20	    21	    try:    22	        libro = epub.read_epub(ruta_epub)    23	    except Exception as e:    23	        raise Exception(f"Error al leer el formato EPUB: {e}")    24	    25	    texto_completo = ""    26	    posiciones_capitulos = {}     27	    # Mapeo para saber en qué carácter del texto global empieza cada archivo interno    28	    posiciones_inicio_archivo = {}    29	        30	    # --- 1. PROCESAR LA COLUMNA VERTEBRAL (Orden de lectura lineal) ---    31	    for id_item in libro.spine:    32	        item = libro.get_item_with_id(id_item[0])    33	            34	        if not item:    35	            continue    36	                37	        if item.get_type() == ebooklib.ITEM_DOCUMENT:    38	            posiciones_inicio_archivo[item.file_name] = len(texto_completo)    39	                40	            # Corrección de indentación aquí:    41	            sopa = BeautifulSoup(item.get_content(), 'html.parser')    42	                43	            for script in sopa(["script", "style", "head", "title", "meta"]):     44	                script.extract()    45	                46	            texto_crudo = sopa.get_text(separator='\n')    47	                47	            lines = []    48	            for line in texto_crudo.splitlines():    48	                stripped = line.strip()    49	                if stripped:    50	                    lines.append(stripped)    51	                52	            fragmento_limpio = "\n\n".join(lines)    53	                54	            texto_completo += fragmento_limpio + "\n\n"    55	    56	    # --- 2. PROCESAR EL ÍNDICE (TOC Jerárquico) ---    57	    datos_indice = []    58	        59	    def procesar_nodo_indice(nodo):    60	        titulo = ""    61	        enlace = ""    62	        hijos = []    63	    64	        if isinstance(nodo, epub.Link):    65	            titulo = nodo.title    66	            enlace = nodo.href    67	        elif isinstance(nodo, (tuple, list)):    68	            cabecera = nodo[0]    69	            if isinstance(cabecera, (epub.Section, epub.Link)):    70	                titulo = cabecera.title    71	                enlace = cabecera.href    72	            if len(nodo) > 1 and isinstance(nodo[1], list):    73	                for hijo in nodo[1]:    74	                    datos_hijo = procesar_nodo_indice(hijo)    75	                    if datos_hijo:    76	                        hijos.append(datos_hijo)    77	            78	        if not titulo: return None    79	    80	        nombre_archivo = enlace.split('#')[0]    81	        pos_inicio = posiciones_inicio_archivo.get(nombre_archivo, 0)    82	        posiciones_capitulos[titulo] = pos_inicio    83	            84	        return {    85	            'title': titulo,       86	            'offset': pos_inicio,     87	            'children': hijos    88	        }    89	    90	    for item in libro.toc:    91	        datos_nodo = procesar_nodo_indice(item)    92	        if datos_nodo:    93	            datos_indice.append(datos_nodo)    94	    95	    return texto_completo, datos_indice, posiciones_capitulos```---## 5. /home/user/epub-tts-accesible/app/servicios/cliente_sapi5.py```python     1	import comtypes.client     2	     3	# Constantes SAPI     4	SPF_ASYNC = 1            # No congela la app     5	SPF_PURGEBEFORESPEAK = 2 # Stop inmediato     6	SPF_IS_NOT_XML = 8       # Tratar texto como plano (evita errores con símbolos < >)     7	     8	class ClienteSapi5:     9	    def __init__(self):    10	        self.motor = None    11	        self.conectado = False    12	        self._inicializar_motor()    13	    14	    def _inicializar_motor(self):    15	        try:    16	            self.motor = comtypes.client.CreateObject("SAPI.SpVoice")    17	            self.motor.Rate = 0    18	            self.motor.Volume = 100    19	            self.conectado = True    20	        except Exception as e:    20	            print(f"Error SAPI5 init: {e}")    21	            self.conectado = False    22	    23	    def obtener_voces(self):    24	        lista = []    24	        if self.conectado:    25	            try:    26	                voces = self.motor.GetVoices()    27	                for i in range(voces.Count):    28	                    item = voces.Item(i)    29	                    desc = item.GetDescription()    30	                    lista.append({    31	                        "id": item.Id,    32	                        "nombre": desc,    33	                        "proveedor_id": "local",     34	                        "objeto_real": item    35	                    })    36	            except: pass    37	        return lista    38	    39	    def hablar(self, texto):    40	        if self.conectado:    40	            try:    41	                # SOLUCIÓN DEL SILENCIO:    42	                # 1. Aseguramos volumen al 100 por si acaso    43	                self.motor.Volume = 100    44	                    45	                # 2. NO paramos aquí. Ya lo hizo el reproductor antes.    46	                # 3. Usamos SPF_IS_NOT_XML para que si el libro tiene símbolos < o >    47	                #    SAPI no se crea que son comandos y falle.    48	                self.motor.Speak(texto, SPF_ASYNC | SPF_IS_NOT_XML)    49	            except Exception as e:    49	                print(f"Error SAPI hablar: {e}")    50	                # Si falla, intentamos revivir el motor    51	                self._inicializar_motor()    52	    53	    def detener(self):    54	        if self.conectado:    54	            try:    55	                # Aquí sí paramos y purgamos la cola    56	                self.motor.Speak("", SPF_ASYNC | SPF_PURGEBEFORESPEAK)    57	            except: pass    58	    59	    def pausar(self):    60	        if self.conectado:    60	            try: self.motor.Pause()    61	            except: pass    62	    63	    def reanudar(self):    64	        if self.conectado:    64	            try: self.motor.Resume()    65	            except: pass    66	    67	    def fijar_velocidad(self, v):    68	        if self.conectado:    68	            try:    69	                tasa = int((v / 5) - 10)    70	                self.motor.Rate = max(-10, min(10, tasa))    71	            except: pass    72	    73	    def fijar_volumen(self, v):    74	        if self.conectado:    74	            try: self.motor.Volume = int(v)    75	            except: pass    76	    77	    def cambiar_voz_por_nombre(self, nombre_objetivo):    78	        """Busca y activa una voz local de forma inteligente."""    79	        if not self.motor: return    80	        print(f"--> [Local] Buscando voz: {nombre_objetivo}")    81	            82	        try:    83	            voces = self.motor.GetVoices()    84	            for i in range(voces.Count):    85	                voz = voces.Item(i)    86	                desc = voz.GetDescription()    87	                if nombre_objetivo.lower() in desc.lower():    88	                    self.motor.Voice = voz    89	                    print(f"--> [Local] Voz cambiada a: {desc}")    90	                    return    91	            print("--> [Local] No se encontró coincidencia exacta.")    92	        except Exception as e:    92	            print(f"Error cambiando voz local: {e}")```---agentId: af0c93322eb90ed7c (for resuming to continue this agent's work if needed)<usage>total_tokens: 20109tool_uses: 5duration_ms: 33595</usage>
+Copiar mensaje
+API Error: Claude's response exceeded the 32000 output token maximum. To configure this behavior, set the CLAUDE_CODE_MAX_OUTPUT_TOKENS environment variable.
+Created todo list for Polly region normalization and ControlCuota fixes
+Created todo list for Polly region normalization and ControlCuota fixes
+Update Todos
+☐ Task 1: Amazon Polly region normalization (cliente_polly.py)☐ Task 2: JSON audit + ControlCuota fix (control_cuota.py)☐ Task 3: Bidirectional Tab loop (ventana_principal.py)☐ Task 4: Voice parameters for AI voices (cliente_azure.py, cliente_eleven.py, cliente_polly.py)☐ Task 5: Continuous audio queue (reproductor_voz.py, pestana_lectura.py)☐ Task 6: Cursor sync while audio plays (pestana_lectura.py, reproductor_voz.py)☐ Task 7: Jump buttons read live seconds from Ajustes☐ Task 8: EPUB text cleanup (procesador_etiquetas.py)☐ Commit and push all changes
+Copiar mensaje
+Let me read all the relevant files to understand the current state before implementing.
+Examined EPUB TTS application's reading and settings interface modules
+Examined EPUB TTS application's reading and settings interface modules
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.py
+Leer 5 líneas
+Read/home/user/epub-tts-accesible/app/motor/control_cuota.py
+Leer 95 líneas
+Read/home/user/epub-tts-accesible/app/motor/procesador_etiquetas.py
+Mostrar 4 más
+Copiar mensaje
+Now I have a clear picture of all files. Let me check the git branch status and start implementing.
+Checked current git branch and repository status
+Checked current git branch and repository status
+Bashgit branch --show-current && git status --short
+claude/python-wxpython-accessibility-ZPVzL
+Copiar mensaje
+Good. Now let me implement all tasks. I'll start with the self-contained files and work towards the more complex ones.
+Created text processing module for EPUB content cleaning
+Created text processing module for EPUB content cleaning
+Update Todos
+☐ Implementing EPUB text cleanup☐ Task 2: JSON audit + ControlCuota fix (control_cuota.py)☐ Task 1+4: Amazon Polly full implementation + voice params (cliente_polly.py)☐ Task 4: Voice parameters for Azure + ElevenLabs (cliente_azure.py, cliente_eleven.py)☐ Task 5+6: Audio queue + cursor sync (reproductor_voz.py, pestana_lectura.py)☐ Task 3: Bidirectional Tab loop (ventana_principal.py)☐ Task 7: Jump buttons notify on save (pestana_ajustes.py)☐ Commit and push all changes
+Write/home/user/epub-tts-accesible/app/motor/procesador_etiquetas.py
+1+
+import re
+2+
+3+
+4+
+def limpiar_texto(texto):
+5+
+    """
+6+
+    Limpia el texto extraído de un EPUB eliminando artefactos de formato:
+7+
+    - Une palabras cortadas con guion al final de línea (e.g., "cami-\nnando" → "caminando")
+8+
+    - Elimina líneas en blanco excesivas (más de una consecutiva)
+9+
+    - Normaliza espacios internos múltiples
+10+
+    """
+11+
+    if not texto:
+12+
+        return texto
+13+
+14+
+    # 1. Unir palabras cortadas con guion al final de línea
+15+
+    texto = re.sub(r'-\n(\w)', r'\1', texto)
+16+
+17+
+    # 2. Eliminar espacios o tabuladores múltiples internos
+18+
+    texto = re.sub(r'[ \t]{2,}', ' ', texto)
+19+
+20+
+    # 3. Reducir más de dos saltos de línea consecutivos a exactamente dos
+Show full diff (4 more lines)
+Copiar mensaje
+Now update gestor_epub.py to use the new cleaner:
+Updated task tracking: completed EPUB text cleanup, progressing on JSON audit and ControlCuota fix
+Updated task tracking: completed EPUB text cleanup, progressing on JSON audit and ControlCuota fix
+Edit/home/user/epub-tts-accesible/app/motor/gestor_epub.py+7-6
+44
+import warnings
+55
+import re
+66
+import os
+7+
+from app.motor.procesador_etiquetas import limpiar_texto
+Edit/home/user/epub-tts-accesible/app/motor/gestor_epub.py+4-1
+99+
+    # Limpieza final: eliminar artefactos de formato del EPUB
+100+
+    texto_completo = limpiar_texto(texto_completo)
+101+
+99102
+    return texto_completo, datos_indice, posiciones_capitulos
+Update Todos
+☐ Task 8: EPUB text cleanup (procesador_etiquetas.py + gestor_epub.py)☐ Auditing JSON and fixing ControlCuota☐ Task 1+4: Amazon Polly full implementation + voice params (cliente_polly.py)☐ Task 4: Voice parameters for Azure + ElevenLabs (cliente_azure.py, cliente_eleven.py)☐ Task 5+6: Audio queue + cursor sync (reproductor_voz.py, pestana_lectura.py)☐ Task 3: Bidirectional Tab loop (ventana_principal.py)☐ Task 7: Jump buttons notify on save (pestana_ajustes.py)☐ Commit and push all changes
+Copiar mensaje
+Now fix control_cuota.py:
+Updated task tracking with EPUB cleanup and JSON audit completions
+Updated task tracking with EPUB cleanup and JSON audit completions
+Write/home/user/epub-tts-accesible/app/motor/control_cuota.py
+1+
+import os
+2+
+import json
+3+
+from datetime import datetime
+4+
+import wx
+5+
+6+
+7+
+class ControlCuota:
+8+
+    def __init__(self):
+9+
+        self.ruta_uso = os.path.join("configuraciones", "uso_cuota.json")
+10+
+        # Límites mensuales por defecto (basados en las capas gratuitas de cada proveedor)
+11+
+        self.limites_defecto = {
+12+
+            "azure": 500000,      # 500 000 caracteres (Capa gratuita)
+13+
+            "polly": 1000000,     # 1 000 000 (Capa gratuita estándar, primer año)
+14+
+            "elevenlabs": 10000,  # 10 000 (Plan gratuito)
+15+
+            "local": 999999999    # SAPI5 es gratuito e ilimitado
+16+
+        }
+17+
+        self.datos = self.cargar_datos()
+18+
+19+
+    def cargar_datos(self):
+20+
+        datos_base = {
+Show full diff (98 more lines)
+Update Todos
+☐ Task 8: EPUB text cleanup (procesador_etiquetas.py + gestor_epub.py)☐ Task 2: JSON audit + ControlCuota fix (control_cuota.py)☐ Implementing Amazon Polly client☐ Task 4: Voice parameters for Azure + ElevenLabs (cliente_azure.py, cliente_eleven.py)☐ Task 5+6: Audio queue + cursor sync (reproductor_voz.py, pestana_lectura.py)☐ Task 3: Bidirectional Tab loop (ventana_principal.py)☐ Task 7: Jump buttons notify on save (pestana_ajustes.py)☐ Commit and push all changes
+Copiar mensaje
+Now implement the full cliente_polly.py (Tasks 1 + 4):
+Created Polly client service module with AWS region mapping
+Created Polly client service module with AWS region mapping
+Write/home/user/epub-tts-accesible/app/servicios/cliente_polly.py
+1+
+import os
+2+
+import json
+3+
+import io
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+7+
+# Mapeo de nombres de región descriptivos a códigos AWS estándar.
+8+
+# Permite al usuario escribir "US East (North Virginia)" o "us-east-1": ambos son válidos.
+9+
+_REGIONES_AWS = {
+10+
+    "us east (north virginia)": "us-east-1",
+11+
+    "us east (ohio)": "us-east-2",
+12+
+    "us west (n. california)": "us-west-1",
+13+
+    "us west (oregon)": "us-west-2",
+14+
+    "eu (ireland)": "eu-west-1",
+15+
+    "eu (london)": "eu-west-2",
+16+
+    "eu (paris)": "eu-west-3",
+17+
+    "eu (frankfurt)": "eu-central-1",
+18+
+    "eu (stockholm)": "eu-north-1",
+19+
+    "ap (tokyo)": "ap-northeast-1",
+20+
+    "ap (seoul)": "ap-northeast-2",
+Show full diff (121 more lines)
+Copiar mensaje
+Now update cliente_azure.py with speed/volume via SSML prosody (Task 4):
+Created Azure client service module with TTS integration
+Created Azure client service module with TTS integration
+Write/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+import time
+8+
+9+
+10+
+class ClienteAzure:
+11+
+    def __init__(self):
+12+
+        self.config = {}
+13+
+        # Parámetros de reproducción (0-100)
+14+
+        self._velocidad = 50   # 50 = velocidad normal
+15+
+        self._volumen = 100    # 100 = volumen máximo
+16+
+        # Una sesión reutilizable mejora el rendimiento (keep-alive HTTP) y permite
+17+
+        # cancelar peticiones en curso llamando a self._sesion.close().
+18+
+        self._sesion = requests.Session()
+19+
+20+
+    def _cargar_config(self):
+Show full diff (145 more lines)
+Copiar mensaje
+Now update cliente_eleven.py with speed/volume control (Task 4):
+Updated todo list marking EPUB cleanup and JSON audit tasks completed
+Updated todo list marking EPUB cleanup and JSON audit tasks completed
+Write/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py
+1+
+import os
+2+
+import json
+3+
+import requests
+4+
+import sounddevice as sd
+5+
+import soundfile as sf
+6+
+import io
+7+
+8+
+9+
+class ClienteEleven:
+10+
+    def __init__(self):
+11+
+        self.config = {}
+12+
+        # Parámetros de reproducción (0-100)
+13+
+        self._velocidad = 50   # 50 = velocidad normal
+14+
+        self._volumen = 100    # 100 = volumen máximo
+15+
+        # Sesión reutilizable con soporte para cancelación inmediata.
+16+
+        self._sesion = requests.Session()
+17+
+18+
+    def _cargar_config(self):
+19+
+        try:
+20+
+            ruta = os.path.join("configuraciones", "config_general.json")
+Show full diff (77 more lines)
+Update Todos
+☐ Task 8: EPUB text cleanup (procesador_etiquetas.py + gestor_epub.py)☐ Task 2: JSON audit + ControlCuota fix (control_cuota.py)☐ Task 1+4: Amazon Polly full implementation + voice params (cliente_polly.py)☐ Task 4: Voice parameters for Azure + ElevenLabs (cliente_azure.py, cliente_eleven.py)☐ Implementing audio queue and cursor sync☐ Task 3: Bidirectional Tab loop (ventana_principal.py)☐ Task 7: Jump buttons notify on save (pestana_ajustes.py)☐ Commit and push all changes
+Copiar mensaje
+Now update reproductor_voz.py to support the completion callback (Task 5):
+Updated voice player stop method in reproductor_voz.py
+Updated voice player stop method in reproductor_voz.py
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+9-6
+3535
+        # Los hilos anteriores lo comparan antes de reproducir y se descartan si ya no
+3636
+        # coincide, evitando acumulación de hilos y colisión de audio.
+3737
+        self._generacion = 0
+38+
+        # Callback opcional que se ejecuta en el hilo principal cuando un fragmento
+39+
+        # termina de reproducirse. Lo usa PestanaLectura para encadenar la cola de audio.
+40+
+        self._callback_completado = None
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+44-36
+7878
+# ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
+79-
+    def cargar_texto(self, texto):
+80-
+        """
+81-
+        Inicia la lectura del texto.
+82-
+        Aplica el método adecuado según si se usa una voz local o una voz neuronal.
+83-
+        Incrementa el contador de generación para invalidar cualquier hilo anterior
+84-
+        que pudiera estar esperando respuesta de la API.
+85-
+        """
+86-
+        if not texto: return
+87-
+88-
+        # Detener cualquier lectura en curso antes de iniciar una nueva
+89-
+        self.detener()
+90-
+        time.sleep(0.05)
+91-
+92-
+        # Incrementar generación: los hilos de síntesis anteriores quedan invalidados
+93-
+        self._generacion += 1
+94-
+        generacion_actual = self._generacion
+95-
+96-
+        self.estado = "reproduciendo"
+97-
+Show full diff (44 more lines)
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+6-4
+135-
+        # Solo actualizar el estado si este hilo sigue siendo el válido
+136-
+        if self._generacion == generacion:
+137-
+            self.estado = "detenido"
+135+
+        # Solo actualizar el estado y disparar el callback si este hilo sigue siendo el válido
+136+
+        if self._generacion == generacion:
+137+
+            self.estado = "detenido"
+138+
+            if self._callback_completado:
+139+
+                wx.CallAfter(self._callback_completado)
+138140
+    # ANCLAJE_FIN: PROCESAMIENTO_VOCES_NEURONALES
+Mostrar 1 más
+Copiar mensaje
+Now the major update to pestana_lectura.py for Tasks 5, 6, and part of 7:
+Updated progress tracking variables in pestana_lectura.py
+Updated progress tracking variables in pestana_lectura.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+8-5
+3434
+        # Variables para la estimación temporal del progreso de voces neuronales
+3535
+        self._tiempo_inicio_frag = 0.0
+3636
+        self._longitud_frag_actual = 0
+37+
+        # Cola de fragmentos para lectura continua de voces neuronales
+38+
+        self._cola_lectura = []
+39+
+        self._idx_fragmento_actual = 0
+3740
+        self.ruta_libro_actual = None
+Copiar mensaje
+Now replace the al_alternar_reproduccion method to remove the 500-char limit and add queue logic:
+Fixed playback toggle functionality in reading tab interface
+Fixed playback toggle functionality in reading tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+136-55
+235235
+            estado = self.reproductor.obtener_estado()
+236236
+        elif hasattr(self.reproductor, 'estado'):
+237237
+            estado = self.reproductor.estado
+238-
+239-
+        # 2. Transiciones de estado (Play/Pausa)
+240-
+        if estado == 'reproduciendo':
+241-
+            if hasattr(self.reproductor, 'pausar'): self.reproductor.pausar()
+242-
+        elif estado == 'pausado':
+243-
+            if hasattr(self.reproductor, 'reanudar'): self.reproductor.reanudar()
+244-
+        else:
+245-
+            # 3. Inicio de nueva lectura desde la posición del cursor
+246-
+            pos_actual = self.txt_contenido.GetInsertionPoint()
+247-
+            self.pos_inicio_fragmento = pos_actual
+248-
+249-
+            texto_completo = self.txt_contenido.GetValue()
+250-
+            if not texto_completo: return 
+251-
+252-
+            fragmento = texto_completo[pos_actual:]
+253-
+254-
+# Verificación del tipo de motor para gestionar el tamaño del texto
+Show full diff (151 more lines)
+Copiar mensaje
+Now update al_actualizar_ui to add cursor sync (Task 6):
+Marked EPUB text cleanup and JSON audit tasks completed
+Marked EPUB text cleanup and JSON audit tasks completed
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+27-23
+307-
+        # 2. Barra de progreso: solo se actualiza mientras se reproduce activamente.
+308-
+        # Cuando está detenida, el usuario controla la posición con flechas o clic.
+309-
+        if estado == 'reproduciendo' and self.longitud_texto > 0:
+310-
+            if self._longitud_frag_actual > 0:
+311-
+                # Para voces neuronales (y locales), el cursor del TextCtrl no avanza
+312-
+                # durante la síntesis. Se estima la posición usando tiempo transcurrido
+313-
+                # a una velocidad media de 14 caracteres por segundo.
+314-
+                tiempo_transcurrido = time.time() - self._tiempo_inicio_frag
+315-
+                avance_estimado = min(
+316-
+                    self._longitud_frag_actual,
+317-
+                    int(tiempo_transcurrido * 14)
+318-
+                )
+319-
+                pos_estimada = self.pos_inicio_fragmento + avance_estimado
+320-
+            else:
+321-
+                pos_estimada = self.txt_contenido.GetInsertionPoint()
+307+
+        # 2. Barra de progreso y sincronización de cursor.
+308+
+        # Solo se actualiza durante la reproducción activa para no sobreescribir
+309+
+        # la posición que el usuario haya establecido manualmente.
+310+
+        if estado == 'reproduciendo' and self.longitud_texto > 0:
+311+
+            if self._longitud_frag_actual > 0:
+Show full diff (17 more lines)
+Update Todos
+☐ Task 8: EPUB text cleanup (procesador_etiquetas.py + gestor_epub.py)☐ Task 2: JSON audit + ControlCuota fix (control_cuota.py)☐ Task 1+4: Amazon Polly full implementation + voice params (cliente_polly.py)☐ Task 4: Voice parameters for Azure + ElevenLabs (cliente_azure.py, cliente_eleven.py)☐ Task 5+6: Audio queue + cursor sync (reproductor_voz.py, pestana_lectura.py)☐ Implementing bidirectional Tab loop☐ Task 7: Jump buttons notify on save (pestana_ajustes.py)☐ Commit and push all changes
+Copiar mensaje
+Now update ventana_principal.py for the bidirectional Tab loop (Task 3):
+Updated task list marking EPUB cleanup and JSON audit tasks completed
+Updated task list marking EPUB cleanup and JSON audit tasks completed
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+44-39
+11
+    # ANCLAJE_INICIO: EVENTOS_GLOBALES
+22
+    def al_navegacion_tab_global(self, evento):
+33
+        """
+4-
+        Implementa el bucle de tabulación accesible para todas las pestañas.
+5-
+        Al detectar Tab/Shift+Tab en el primer o último control de un panel,
+6-
+        devuelve el foco al Notebook en lugar de dejarlo atrapado.
+7-
+        Vinculado al Frame en lugar de a cada Panel individual para evitar
+8-
+        interferencias con eventos internos de controles hijo como el TreeCtrl.
+9-
+        """
+10-
+        if evento.GetKeyCode() != wx.WXK_TAB:
+11-
+            evento.Skip()
+12-
+            return
+13-
+14-
+        foco = self.FindFocus()
+15-
+        if foco is None:
+16-
+            evento.Skip()
+17-
+            return
+18-
+19-
+        shift = evento.ShiftDown()
+20-
+        indice = self.notebook.GetSelection()
+Show full diff (57 more lines)
+Update Todos
+☐ Task 8: EPUB text cleanup (procesador_etiquetas.py + gestor_epub.py)☐ Task 2: JSON audit + ControlCuota fix (control_cuota.py)☐ Task 1+4: Amazon Polly full implementation + voice params (cliente_polly.py)☐ Task 4: Voice parameters for Azure + ElevenLabs (cliente_azure.py, cliente_eleven.py)☐ Task 5+6: Audio queue + cursor sync (reproductor_voz.py, pestana_lectura.py)☐ Task 3: Bidirectional Tab loop (ventana_principal.py)☐ Wiring jump buttons to live seconds value☐ Commit and push all changes
+Copiar mensaje
+Now update pestana_ajustes.py to notify PestanaLectura when config is saved (Task 7):
+Completed EPUB text cleanup and JSON audit tasks
+Completed EPUB text cleanup and JSON audit tasks
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+18-7
+691691
+            os.makedirs(os.path.dirname(self.ruta_config), exist_ok=True)
+692692
+            with open(self.ruta_config, "w", encoding='utf-8') as f:
+693693
+                json.dump(self.config, f, indent=4, ensure_ascii=False)
+694+
+            # Notificar a PestanaLectura para que actualice las etiquetas de los botones
+695+
+            # de salto con el nuevo valor de segundos guardado
+696+
+            try:
+697+
+                ventana = self.GetParent().GetParent()  # Notebook → VentanaPrincipal
+698+
+                if hasattr(ventana, 'pestana_lectura'):
+699+
+                    pl = ventana.pestana_lectura
+700+
+                    pl.cargar_config_salto()
+701+
+                    pl.btn_atras.SetLabel(f"Atrás {pl.segundos_salto}s")
+702+
+                    pl.btn_adelante.SetLabel(f"Adelante {pl.segundos_salto}s")
+703+
+            except Exception:
+704+
+                pass
+694705
+        except Exception as e:
+695706
+            wx.MessageBox(str(e))
+Update Todos
+☐ Task 8: EPUB text cleanup (procesador_etiquetas.py + gestor_epub.py)☐ Task 2: JSON audit + ControlCuota fix (control_cuota.py)☐ Task 1+4: Amazon Polly full implementation + voice params (cliente_polly.py)☐ Task 4: Voice parameters for Azure + ElevenLabs (cliente_azure.py, cliente_eleven.py)☐ Task 5+6: Audio queue + cursor sync (reproductor_voz.py, pestana_lectura.py)☐ Task 3: Bidirectional Tab loop (ventana_principal.py)☐ Task 7: Jump buttons notify on save (pestana_ajustes.py)☐ Committing and pushing changes
+Copiar mensaje
+Now let me do a quick sanity check of the key files before committing:
+Verified syntax validity of three Python interface modules
+Verified syntax validity of three Python interface modules
+Bash
+python -c " import ast, sys files = [ 'app/motor/procesador_etiquetas.py', 'app/motor/control_cuota.py', 'app/servicios/cliente_polly.py', 'app/servicios/cliente_azure.py', 'app/servicios/cliente_eleven.py', 'app/motor/reproductor_voz.py', 'app/motor/gestor_epub.py', ] ok = True for f in files: try: with open(f) as fh: ast.parse(fh.read()) print(f'OK: {f}') except SyntaxError as e: print(f'SYNTAX ERROR in {f}: {e}') ok = False sys.exit(0 if ok else 1) "
+OK: app/motor/procesador_etiquetas.pyOK: app/motor/control_cuota.pyOK: app/servicios/cliente_polly.py
+Mostrar más
+OK: app/servicios/cliente_azure.pyOK: app/servicios/cliente_eleven.pyOK: app/motor/reproductor_voz.pyOK: app/motor/gestor_epub.py
+Bash
+python -c " import ast, sys files = [ 'app/interfaz/pestana_lectura.py', 'app/interfaz/ventana_principal.py', 'app/interfaz/pestana_ajustes.py', ] ok = True for f in files: try: with open(f) as fh: ast.parse(fh.read()) print(f'OK: {f}') except SyntaxError as e: print(f'SYNTAX ERROR in {f}: {e}') ok = False sys.exit(0 if ok else 1) "
+OK: app/interfaz/pestana_lectura.pyOK: app/interfaz/ventana_principal.pyOK: app/interfaz/pestana_ajustes.py
+Copiar mensaje
+All syntax checks pass. Now commit and push:
+Completed EPUB text cleanup and JSON audit tasks
+Completed EPUB text cleanup and JSON audit tasks
+Bashgit diff --stat HEAD
+app/interfaz/pestana_ajustes.py   |  11 +++ app/interfaz/pestana_lectura.py   | 160 +++++++++++++++++++++++++++++--------- app/interfaz/ventana_principal.py |  13 +++-
+Mostrar más
+ app/motor/control_cuota.py        |  90 +++++++++++++-------- app/motor/gestor_epub.py          |   4 + app/motor/procesador_etiquetas.py |  23 ++++++ app/motor/reproductor_voz.py      |  24 +++++- app/servicios/cliente_azure.py    |  51 +++++++++++- app/servicios/cliente_eleven.py   |  20 ++++- app/servicios/cliente_polly.py    | 143 +++++++++++++++++++++++++++++++++- 10 files changed, 454 insertions(+), 85 deletions(-)
+Bash
+git add app/motor/procesador_etiquetas.py app/motor/control_cuota.py app/motor/gestor_epub.py app/motor/reproductor_voz.py app/servicios/cliente_polly.py app/servicios/cliente_azure.py app/servicios/cliente_eleven.py app/interfaz/pestana_lectura.py app/interfaz/ventana_principal.py app/interfaz/pestana_ajustes.py && git commit -m "$(cat <<'EOF' Fase 1 final: 8 tareas de accesibilidad y calidad de audio - Task 1: Normalización de región Amazon Polly (nombres descriptivos → código AWS) - Task 2: Auditoría JSON completa en control_cuota.py (encoding, merge seguro, logging) - Task 3: Bucle Tab bidireccional — Shift+Tab en primer control salta al último del panel - Task 4: Parámetros de voz en Azure (SSML prosody rate/volume), ElevenLabs (fs/volumen), Polly (SSML prosody) + implementación completa de ClientePolly con boto3 - Task 5: Lectura continua sin límite de 500 caracteres — cola de fragmentos con encadenamiento automático vía callback al terminar cada fragmento neuronal - Task 6: Sincronización de cursor — SetInsertionPoint cada 200ms para que NVDA siga la posición de lectura estimada por tiempo (~14 chars/s) - Task 7: Botones de salto se actualizan al guardar Ajustes sin necesitar cambiar pestaña - Task 8: procesador_etiquetas.py — limpieza de artefactos EPUB (guiones, espacios, saltos excesivos); integrado en gestor_epub.py https://claude.ai/code/session_0159Kt7FS8ZUgfoYrEuTMhKU EOF )"
+[claude/python-wxpython-accessibility-ZPVzL d1e5e0a] Fase 1 final: 8 tareas de accesibilidad y calidad de audio 10 files changed, 454 insertions(+), 85 deletions(-)
+Bashgit push -u origin claude/python-wxpython-accessibility-ZPVzL
+To http://127.0.0.1:63473/git/Dayanna-Parson/epub-tts-accesible   2fbf3a3..d1e5e0a  claude/python-wxpython-accessibility-ZPVzL -> claude/python-wxpython-accessibility-ZPVzLbranch 'claude/python-wxpython-accessibility-ZPVzL' set up to track 'origin/claude/python-wxpython-accessibility-ZPVzL'.
+Mostrar 1 más
+Copiar mensaje
+Pushed. Here is a summary of everything implemented:
+ 
+Fase 1 Final — 8 tareas completadas
+Tarea 1 — Región Amazon Polly (cliente_polly.py)
+• Implementación completa de ClientePolly con boto3
+• Diccionario _REGIONES_AWS que mapea nombres descriptivos como "US East (North Virginia)" al código "us-east-1". Si ya es un código directo, se devuelve sin cambios.
+Tarea 2 — Auditoría JSON / ControlCuota (control_cuota.py)
+• cargar_datos: fusión segura de sub-dicts (gastado, limites) sin sobreescribir claves nuevas si el archivo guardado es antiguo
+• Todas las lecturas/escrituras usan encoding='utf-8' y ensure_ascii=False
+• except: pass sustituidos por except Exception as e: print(...)
+Tarea 3 — Bucle Tab bidireccional (ventana_principal.py)
+• Tab en el último control → foco al Notebook (salir del panel)
+• Shift+Tab en el primer control → foco salta al último control del mismo panel (bucle circular dentro del panel)
+Tarea 4 — Parámetros de voz en voces IA
+• Azure (cliente_azure.py): SSML <prosody rate='+X%' volume='loud'> — slider 0-100 mapeado a ±80% / nombres de volumen
+• ElevenLabs (cliente_eleven.py): velocidad ajustando fs_efectiva = fs * factor (0.5x–1.5x), volumen multiplicando la señal
+• Polly (cliente_polly.py): SSML <prosody rate='+X%'> + volumen post-procesado
+• Todos los clientes exponen fijar_velocidad(v) y fijar_volumen(v)
+Tarea 5 — Lectura continua (pestana_lectura.py + reproductor_voz.py)
+• Eliminado el límite de 500 caracteres
+• _dividir_en_fragmentos(): divide por \n\n, luego por frases, fragmentos ≤1500 chars
+• Cola _cola_lectura + callback _al_fragmento_completado encadena fragmentos automáticamente hasta el final del libro
+• ReproductorVoz.cargar_texto() acepta callback_completado y lo dispara vía wx.CallAfter al terminar
+Tarea 6 — Sincronización de cursor (al_actualizar_ui)
+• Cada 200ms: txt_contenido.SetInsertionPoint(pos_estimada) — NVDA sigue la posición de lectura estimada (~14 chars/s)
+Tarea 7 — Botones de salto actualizan en tiempo real (pestana_ajustes.py)
+• guardar_config_en_archivo() navega hasta VentanaPrincipal y llama cargar_config_salto() + actualiza las etiquetas "Atrás Xs" / "Adelante Xs" sin necesidad de cambiar pestaña
+Tarea 8 — Limpieza EPUB (procesador_etiquetas.py + gestor_epub.py)
+• procesador_etiquetas.limpiar_texto(): une palabras cortadas con guion (cami-\nnando → caminando), elimina espacios múltiples, reduce 3+ saltos de línea a 2
+• gestor_epub.py aplica limpiar_texto() sobre el texto completo antes de devolverlo
+ 
+beta
+claude/python-wxpython-accessibility-ZPVzL
++868-227
+Crear PR

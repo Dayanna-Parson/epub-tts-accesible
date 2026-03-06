@@ -1,0 +1,19 @@
+pront claude 16
+
+Claude, necesitamos retocar tres puntos específicos para que la experiencia con NVDA sea perfecta antes de cerrar esta rama:
+1. 
+Comportamiento del Espacio (Atajos): * Actualmente, la tecla 'Espacio' siempre dispara la reproducción, incluso si el foco está sobre un botón (impidiendo pulsarlo con espacio).
+• 
+Corrección: El atajo global de 'Espacio' solo debe activar la voz si el foco no está en un botón (wx.Button) o un control que requiera la tecla espacio para su funcionamiento normal. Si el foco está en un botón, el espacio debe actuar como un 'Enter' (comportamiento estándar de Windows).
+2. 
+Botón "Eliminar asignación" en Atajos:
+• 
+Al pulsar este botón, el atajo debe volver a su valor predeterminado (el que viene en el JSON original) y actualizarse inmediatamente en la configuración activa y en el archivo de usuario. Asegúrate de que el cambio se refleje en el wx.ListCtrl o el panel de atajos de forma inmediata.
+3. 
+Limpieza de la Pestaña General:
+• 
+Elimina el cuadro de texto y el botón "Examinar" que están en el apartado General. Esa configuración (ruta de exportación) la moveremos a la pestaña de Grabación en la Fase 2.
+4. 
+Confirmación de Accesibilidad de Costes:
+• 
+Verifica que los cambios del SetHelpText para los límites de Azure/Polly se mantengan, para que NVDA cante el coste/restante al tabular.

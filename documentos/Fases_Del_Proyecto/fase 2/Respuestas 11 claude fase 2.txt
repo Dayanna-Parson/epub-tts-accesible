@@ -1,0 +1,31 @@
+Respuestas 11 claude fase 2
+
+Déjame revisar el estado real del código antes de confirmar.
+Verified audio recorder module, identified missing wx dependency
+Verified audio recorder module, identified missing wx dependency
+Copiar mensaje
+El entorno Linux de desarrollo no tiene wx (lógico, es una app de escritorio Windows). El motor base importa perfectamente.
+Estado real:
+Componente
+Estado
+grabador_audio.py
+✅ Importa sin errores
+pestana_grabacion.py
+✅ Código OK — falla solo porque wx no existe en Linux
+bin/ffmpeg.exe
+✅ En su sitio, pydub lo detecta al arrancar
+requisitos.txt
+✅ Completo con boto3
+Para probarlo de verdad necesitas hacerlo en tu Windows:
+# 1. Instalar dependencias (solo la primera vez)
+pip install -r requisitos.txt
+
+# 2. Arrancar la app
+INICIAR_APP.bat
+Copy code
+Lo que puedes probar en la pestaña Grabación:
+• Cargar un TXT con el botón Examinar
+• Asignar voces a los interlocutores detectados
+• Pulsar Iniciar grabación → debe generar MP3 en la carpeta de salida
+• Verificar en los logs que dice ffmpeg local detectado: ...bin\ffmpeg.exe
+¿Tienes Python y las dependencias ya instaladas en tu Windows, o lo instalamos todo desde cero?

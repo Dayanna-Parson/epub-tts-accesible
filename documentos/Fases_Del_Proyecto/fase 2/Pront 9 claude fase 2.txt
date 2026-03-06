@@ -1,0 +1,3 @@
+Pront 9 claude fase 2
+
+de momento integra solo ffmpeg nada mas Y actualiza requisitos.txt si fuese necesario. Y o si has incluido librerías o dependencias nuevas
