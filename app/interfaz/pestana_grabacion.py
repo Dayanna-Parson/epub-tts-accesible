@@ -30,6 +30,7 @@ import subprocess
 import logging
 
 from app.config_rutas import ruta_config
+from app.motor.gestor_config import TIPOS_PROYECTO
 from app.motor.procesador_etiquetas import (
     escanear_etiquetas,
     fragmentar_texto,
@@ -39,6 +40,163 @@ from app.motor.procesador_etiquetas import (
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
 
 logger = logging.getLogger(__name__)
+
+
+# ── Diálogo de bautizo: asociar TXT al Gestor de Proyectos ───────────────────
+class DialogoBautizo(wx.Dialog):
+    """
+    Diálogo que aparece automáticamente cuando todas las etiquetas tienen voz asignada
+    y el archivo TXT no está aún en ningún proyecto.
+
+    Permite al usuario:
+      - Crear un nuevo proyecto (con nombre editable y selector de tipo).
+      - Añadir el TXT a un proyecto existente (seleccionable en lista).
+      - Cancelar sin asociar nada ("Ahora no").
+    """
+
+    def __init__(self, parent, gestor_proyectos, nombre_sugerido: str = ""):
+        super().__init__(
+            parent,
+            title="Guardar en el Gestor de Proyectos",
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        self._gestor = gestor_proyectos
+        self._resultado_proyecto_id = None
+
+        self._panel = wx.Panel(self)
+        sz = wx.BoxSizer(wx.VERTICAL)
+
+        # Texto informativo
+        lbl_info = wx.StaticText(
+            self._panel,
+            label=(
+                "¡Todas las etiquetas tienen voz asignada!\n"
+                "¿Deseas guardar este archivo en el Gestor de Proyectos?"
+            ),
+        )
+        sz.Add(lbl_info, 0, wx.ALL, 10)
+
+        # Radio: Crear nuevo / Añadir a existente
+        self.radio_nuevo = wx.RadioButton(
+            self._panel, label="Crear nuevo proyecto", style=wx.RB_GROUP
+        )
+        self.radio_nuevo.SetHelpText("Crea un proyecto nuevo y asocia este archivo.")
+        self.radio_existente = wx.RadioButton(
+            self._panel, label="Añadir a un proyecto existente"
+        )
+        self.radio_existente.SetHelpText("Añade este archivo a un proyecto ya creado.")
+        sz.Add(self.radio_nuevo,    0, wx.LEFT | wx.RIGHT, 10)
+        sz.Add(self.radio_existente, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        # ── Panel: nuevo proyecto ─────────────────────────────────────────
+        self._panel_nuevo = wx.Panel(self._panel)
+        sz_nuevo = wx.BoxSizer(wx.VERTICAL)
+        lbl_nombre = wx.StaticText(self._panel_nuevo, label="Nombre del proyecto:")
+        self.txt_nombre = wx.TextCtrl(self._panel_nuevo, value=nombre_sugerido, style=wx.TE_PROCESS_ENTER)
+        self.txt_nombre.SetHelpText("Escribe el nombre del nuevo proyecto.")
+        lbl_tipo = wx.StaticText(self._panel_nuevo, label="Tipo:")
+        self.combo_tipo = wx.Choice(self._panel_nuevo, choices=TIPOS_PROYECTO)
+        self.combo_tipo.SetSelection(0)
+        sz_nuevo.Add(lbl_nombre,    0, wx.BOTTOM, 2)
+        sz_nuevo.Add(self.txt_nombre, 0, wx.EXPAND | wx.BOTTOM, 6)
+        sz_nuevo.Add(lbl_tipo,      0, wx.BOTTOM, 2)
+        sz_nuevo.Add(self.combo_tipo, 0, wx.EXPAND)
+        self._panel_nuevo.SetSizer(sz_nuevo)
+        sz.Add(self._panel_nuevo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        # ── Panel: proyecto existente ─────────────────────────────────────
+        self._panel_existente = wx.Panel(self._panel)
+        sz_ex = wx.BoxSizer(wx.VERTICAL)
+        lbl_ex = wx.StaticText(self._panel_existente, label="Selecciona el proyecto:")
+        proyectos = gestor_proyectos.listar_todos()
+        self._proyectos_lista = proyectos
+        nombres = [f"{p['nombre']} [{p['tipo']}]" for p in proyectos]
+        self.choice_existente = wx.Choice(
+            self._panel_existente,
+            choices=nombres if nombres else ["(No hay proyectos aún)"],
+        )
+        self.choice_existente.SetHelpText("Elige el proyecto al que quieres añadir este archivo.")
+        if nombres:
+            self.choice_existente.SetSelection(0)
+        sz_ex.Add(lbl_ex,                0, wx.BOTTOM, 2)
+        sz_ex.Add(self.choice_existente, 0, wx.EXPAND)
+        self._panel_existente.SetSizer(sz_ex)
+        sz.Add(self._panel_existente, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        # Botones
+        sz_btn = wx.BoxSizer(wx.HORIZONTAL)
+        self._btn_ok     = wx.Button(self._panel, wx.ID_OK,     label="Guardar en proyecto")
+        btn_cancel       = wx.Button(self._panel, wx.ID_CANCEL, label="Ahora no")
+        self._btn_ok.SetHelpText("Confirma la asociación del archivo al proyecto seleccionado.")
+        btn_cancel.SetHelpText("Cierra este diálogo sin asociar el archivo a ningún proyecto.")
+        sz_btn.Add(self._btn_ok, 0, wx.RIGHT, 8)
+        sz_btn.Add(btn_cancel,  0)
+        sz.Add(sz_btn, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
+
+        self._panel.SetSizer(sz)
+        dlg_sz = wx.BoxSizer(wx.VERTICAL)
+        dlg_sz.Add(self._panel, 1, wx.EXPAND)
+        self.SetSizer(dlg_sz)
+        self.Fit()
+
+        # Eventos
+        self.radio_nuevo.Bind(wx.EVT_RADIOBUTTON,    self._al_cambiar_modo)
+        self.radio_existente.Bind(wx.EVT_RADIOBUTTON, self._al_cambiar_modo)
+        self._btn_ok.Bind(wx.EVT_BUTTON, self._al_ok)
+        self.txt_nombre.Bind(
+            wx.EVT_TEXT_ENTER,
+            lambda e: self._btn_ok.GetEventHandler().ProcessEvent(
+                wx.CommandEvent(wx.EVT_BUTTON.typeId, self._btn_ok.GetId())
+            ),
+        )
+
+        # Estado inicial
+        self.radio_nuevo.SetValue(True)
+        self._actualizar_paneles()
+        wx.CallAfter(self.txt_nombre.SetFocus)
+
+    def _al_cambiar_modo(self, evento):
+        self._actualizar_paneles()
+        evento.Skip()
+
+    def _actualizar_paneles(self):
+        modo_nuevo = self.radio_nuevo.GetValue()
+        self._panel_nuevo.Show(modo_nuevo)
+        self._panel_existente.Show(not modo_nuevo)
+        self._panel.Layout()
+        self.Fit()
+        if modo_nuevo:
+            wx.CallAfter(self.txt_nombre.SetFocus)
+        else:
+            wx.CallAfter(self.choice_existente.SetFocus)
+
+    def _al_ok(self, evento):
+        if self.radio_nuevo.GetValue():
+            nombre = self.txt_nombre.GetValue().strip()
+            if not nombre:
+                wx.MessageBox(
+                    "Escribe un nombre para el proyecto.",
+                    "Nombre requerido", wx.OK | wx.ICON_WARNING
+                )
+                self.txt_nombre.SetFocus()
+                return
+            tipo_idx = self.combo_tipo.GetSelection()
+            tipo = TIPOS_PROYECTO[tipo_idx] if tipo_idx >= 0 else "otro"
+            self._resultado_proyecto_id = self._gestor.crear_proyecto(nombre, tipo)
+        else:
+            idx = self.choice_existente.GetSelection()
+            if idx == wx.NOT_FOUND or not self._proyectos_lista:
+                wx.MessageBox(
+                    "Selecciona un proyecto de la lista.",
+                    "Sin selección", wx.OK | wx.ICON_WARNING
+                )
+                return
+            self._resultado_proyecto_id = self._proyectos_lista[idx]["id"]
+        self.EndModal(wx.ID_OK)
+
+    def obtener_resultado(self) -> tuple:
+        """Devuelve (proyecto_id, None). proyecto_id es None si se canceló."""
+        return self._resultado_proyecto_id, None
 
 
 # ── Lista con casillas de verificación (igual que en pestana_ajustes) ────────
@@ -106,8 +264,9 @@ class PestanaGrabacion(wx.Panel):
 
         # ── Estado interno ────────────────────────────────────────────────
         from app.motor.gestor_config import GestorProyectos
-        self.proyecto_actual  = None          # dict del proyecto activo o None
-        self.gestor_proyectos = GestorProyectos()
+        self.proyecto_actual   = None          # dict del proyecto activo o None
+        self.gestor_proyectos  = GestorProyectos()
+        self._ofrecio_proyecto = False         # evita mostrar el diálogo dos veces por TXT
         self.ruta_txt_actual      = None
         self.nombre_base_txt      = ""
         self.texto_cargado        = ""
@@ -176,7 +335,8 @@ class PestanaGrabacion(wx.Panel):
         self.txt_titulo = wx.TextCtrl(self)
         self.txt_titulo.SetHelpText(
             "Título del libro o proyecto. Si se deja vacío se usa el nombre del "
-            "archivo TXT. Define la subcarpeta de grabaciones."
+            "archivo TXT. Define la subcarpeta de grabaciones. "
+            "Si el archivo está asociado a un proyecto, el título sincroniza el nombre del proyecto al salir del campo."
         )
         sz_titulo.Add(lbl_titulo,      0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         sz_titulo.Add(self.txt_titulo, 1, wx.EXPAND)
@@ -317,6 +477,7 @@ class PestanaGrabacion(wx.Panel):
         # ── Eventos ───────────────────────────────────────────────────────
         self.btn_examinar.Bind(wx.EVT_BUTTON,       self.al_examinar)
         self.btn_limpiar.Bind(wx.EVT_BUTTON,        self.al_limpiar)
+        self.txt_titulo.Bind(wx.EVT_KILL_FOCUS,     self._al_perder_foco_titulo)
         self.btn_probar.Bind(wx.EVT_BUTTON,         self.al_probar_voz)
         self.btn_preescucha.Bind(wx.EVT_BUTTON,     self.al_preescucha_general)
         self.chk_dividir.Bind(wx.EVT_CHECKBOX,      self.al_cambiar_division)
@@ -445,7 +606,41 @@ class PestanaGrabacion(wx.Panel):
     # Carga y escaneo automático del archivo TXT
     # ================================================================== #
 
+    def _al_perder_foco_titulo(self, evento):
+        """
+        Sincroniza el campo Título con el nombre del proyecto asociado (feature f).
+        Se activa al salir del campo (EVT_KILL_FOCUS).
+        """
+        evento.Skip()  # IMPRESCINDIBLE para no bloquear el ciclo de foco
+        if not self.proyecto_actual:
+            return
+        titulo = self.txt_titulo.GetValue().strip()
+        if titulo and titulo != self.proyecto_actual.get("nombre", ""):
+            self.gestor_proyectos.renombrar_proyecto(self.proyecto_actual["id"], titulo)
+            self.proyecto_actual["nombre"] = titulo
+
+    def _ofrecer_guardar_en_proyecto(self):
+        """
+        Muestra el diálogo de bautizo para asociar el TXT al Gestor de Proyectos.
+        Se llama automáticamente cuando todas las etiquetas tienen voz asignada.
+        """
+        if not self.ruta_txt_actual:
+            return
+        nombre_sugerido = self._resolver_titulo()
+        dlg = DialogoBautizo(self, self.gestor_proyectos, nombre_sugerido)
+        if dlg.ShowModal() == wx.ID_OK:
+            proyecto_id, _ = dlg.obtener_resultado()
+            if proyecto_id:
+                self.gestor_proyectos.asociar_archivo(proyecto_id, self.ruta_txt_actual)
+                self.proyecto_actual = self.gestor_proyectos.obtener_proyecto(proyecto_id)
+                if self.proyecto_actual:
+                    self.lbl_progreso.SetLabel(
+                        f"Archivo asociado al proyecto «{self.proyecto_actual['nombre']}»."
+                    )
+        dlg.Destroy()
+
     def al_examinar(self, evento):
+        self._ofrecio_proyecto = False
         with wx.FileDialog(
             self,
             "Seleccionar archivo de texto con etiquetas",
@@ -572,6 +767,8 @@ class PestanaGrabacion(wx.Panel):
         self.asignaciones         = {}
         self.titulo_libro         = ""
         self._ultima_carpeta      = None
+        self.proyecto_actual      = None
+        self._ofrecio_proyecto    = False
 
         self.txt_ruta.SetValue("")
         self.txt_titulo.SetValue("")
@@ -637,6 +834,13 @@ class PestanaGrabacion(wx.Panel):
             )
         self._guardar_mapeo()
         self._actualizar_resumen_asignaciones()
+
+        # Diálogo de bautizo: solo cuando TODAS las etiquetas tienen voz
+        # y el TXT no está aún en un proyecto
+        sin_voz = [e for e in self.etiquetas_detectadas if e not in self.asignaciones]
+        if not sin_voz and not self.proyecto_actual and not self._ofrecio_proyecto:
+            self._ofrecio_proyecto = True
+            wx.CallAfter(self._ofrecer_guardar_en_proyecto)
 
         self.lbl_progreso.SetLabel(
             f"Asignado: @{etiqueta}  →  {nombre_voz_disp}"

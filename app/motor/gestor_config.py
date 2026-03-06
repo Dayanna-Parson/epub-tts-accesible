@@ -324,6 +324,33 @@ class GestorProyectos:
 
     # ── Utilidades ────────────────────────────────────────────────────────────
 
+    def mover_proyecto(self, proyecto_id: str, delta: int) -> bool:
+        """
+        Mueve un proyecto una posición arriba (delta=-1) o abajo (delta=+1)
+        dentro de la lista de hijos de su padre.
+        Los proyectos raíz no son reordenables manualmente (se muestran alfabéticamente).
+        Devuelve True si se realizó el movimiento, False si ya está en el límite.
+        """
+        proyecto = self.obtener_proyecto(proyecto_id)
+        if not proyecto:
+            return False
+        padre_id = proyecto.get("padre")
+        if not padre_id:
+            return False  # Proyectos raíz: ordenados alfabéticamente, no reordenables
+        padre = self._datos["proyectos"].get(padre_id)
+        if not padre:
+            return False
+        hijos = padre.get("hijos", [])
+        if proyecto_id not in hijos:
+            return False
+        idx = hijos.index(proyecto_id)
+        nuevo_idx = idx + delta
+        if nuevo_idx < 0 or nuevo_idx >= len(hijos):
+            return False
+        hijos[idx], hijos[nuevo_idx] = hijos[nuevo_idx], hijos[idx]
+        self.guardar()
+        return True
+
     def listar_todos(self) -> list:
         """Devuelve todos los proyectos en lista plana, ordenados por nombre."""
         return sorted(

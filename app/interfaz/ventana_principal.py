@@ -94,6 +94,9 @@ class VentanaPrincipal(wx.Frame):
         self.ruta_recientes = ruta_config("libros_recientes.json")
         self.cargar_historial_recientes()
 
+        # TXT recientes (para el submenú de Grabación)
+        self.txt_recientes = []
+
         # Aplicar AcceleratorTable al Frame para que los atajos funcionen
         # incluso cuando el foco está dentro del RichTextCtrl de lectura
         self._ids_atajos_global = {}
@@ -117,7 +120,12 @@ class VentanaPrincipal(wx.Frame):
             wx.ID_ANY, "Abrir &TXT para grabar...\tCtrl+T"
         )
 
-        # Submenú Recientes
+        # Submenú TXT Recientes (Grabación)
+        self.menu_txt_recientes = wx.Menu()
+        self.menu_txt_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+        self.menu_archivo.AppendSubMenu(self.menu_txt_recientes, "TXT Recientes para &grabar")
+
+        # Submenú Recientes (EPUB Lectura)
         self.menu_recientes = wx.Menu()
         self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
         self.menu_archivo.AppendSubMenu(self.menu_recientes, "Libros &Recientes")
@@ -244,20 +252,36 @@ class VentanaPrincipal(wx.Frame):
         evento.Skip()
 
     def al_abrir_gestor_proyectos(self, evento):
-        """Abre la ventana de gestión de proyectos. Evita doble instancia."""
+        """
+        Abre la ventana de gestión de proyectos.
+        Evita doble instancia. Captura el foco previo para devolverlo al cerrar (feature b).
+        Si hay un TXT cargado en Grabación, navega al nodo del archivo (feature o).
+        """
+        foco_previo = wx.Window.FindFocus()
+        ruta_txt = self.pestana_grabacion.ruta_txt_actual
         if self._ventana_proyectos and not self._ventana_proyectos.IsBeingDeleted():
             try:
                 self._ventana_proyectos.Raise()
+                if ruta_txt:
+                    self._ventana_proyectos._navegar_a_archivo(ruta_txt)
                 return
             except Exception:
                 pass
-        self._ventana_proyectos = VentanaProyectos(parent=self)
+        self._ventana_proyectos = VentanaProyectos(
+            parent=self,
+            ruta_txt_activo=ruta_txt,
+            foco_previo=foco_previo,
+        )
         self._ventana_proyectos.Show()
 
     def al_abrir_txt_grabacion(self, evento):
         """Activa la pestaña Grabación y llama al método Examinar del panel."""
         self.notebook.SetSelection(1)
+        ruta_previa = self.pestana_grabacion.ruta_txt_actual
         self.pestana_grabacion.al_examinar(None)
+        ruta_nueva = self.pestana_grabacion.ruta_txt_actual
+        if ruta_nueva and ruta_nueva != ruta_previa:
+            self.agregar_txt_a_recientes(ruta_nueva)
 
     def al_abrir_archivo(self, evento):
         self.notebook.SetSelection(0)
@@ -336,7 +360,87 @@ class VentanaPrincipal(wx.Frame):
         ultimo_txt = config.get("ultimo_txt_grabacion", "")
         if ultimo_txt and os.path.exists(ultimo_txt):
             self.pestana_grabacion.cargar_txt_desde_ruta(ultimo_txt)
+
+        # Cargar lista de TXT recientes y actualizar submenú
+        self.txt_recientes = [
+            r for r in config.get("txt_recientes", [])
+            if os.path.exists(r)
+        ]
+        self.actualizar_menu_txt_recientes()
     # ANCLAJE_FIN: MEMORIA_SESION
+
+    # ANCLAJE_INICIO: TXT_RECIENTES
+    def agregar_txt_a_recientes(self, ruta: str):
+        """Añade un TXT a la lista de recientes de grabación y actualiza el submenú."""
+        if ruta in self.txt_recientes:
+            self.txt_recientes.remove(ruta)
+        self.txt_recientes.insert(0, ruta)
+        self.txt_recientes = self.txt_recientes[:10]
+        self._guardar_txt_recientes()
+        self.actualizar_menu_txt_recientes()
+
+    def _guardar_txt_recientes(self):
+        try:
+            config = self._cargar_config_general()
+            config["txt_recientes"] = self.txt_recientes
+            os.makedirs(os.path.dirname(self._ruta_config_general), exist_ok=True)
+            with open(self._ruta_config_general, "w", encoding="utf-8") as f:
+                json.dump(config, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+
+    def actualizar_menu_txt_recientes(self):
+        """Reconstruye el submenú de TXT recientes mostrando el nombre del proyecto."""
+        for item in self.menu_txt_recientes.GetMenuItems():
+            self.menu_txt_recientes.Delete(item)
+
+        if not self.txt_recientes:
+            self.menu_txt_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+            return
+
+        gestor = self.pestana_grabacion.gestor_proyectos
+        gestor.recargar()
+
+        for i, ruta in enumerate(self.txt_recientes):
+            nombre_archivo = os.path.basename(ruta)
+            proyecto = gestor.proyecto_de_archivo(ruta)
+            if proyecto:
+                etiqueta = f"{i+1}. {nombre_archivo}  ({proyecto['nombre']})"
+            else:
+                etiqueta = f"{i+1}. {nombre_archivo}"
+            id_item = wx.NewIdRef()
+            self.menu_txt_recientes.Append(id_item, etiqueta)
+            self.Bind(
+                wx.EVT_MENU,
+                lambda evt, p=ruta: self._abrir_txt_reciente(p),
+                id=id_item,
+            )
+
+        self.menu_txt_recientes.AppendSeparator()
+        item_borrar = self.menu_txt_recientes.Append(wx.ID_ANY, "Borrar historial de TXT")
+        self.Bind(wx.EVT_MENU, self._al_borrar_txt_recientes, item_borrar)
+
+    def _abrir_txt_reciente(self, ruta: str):
+        if os.path.exists(ruta):
+            self.notebook.SetSelection(1)
+            self.pestana_grabacion.cargar_txt_desde_ruta(ruta)
+            self.agregar_txt_a_recientes(ruta)
+        else:
+            wx.MessageBox("El archivo ya no existe en disco.", "Archivo no encontrado")
+            if ruta in self.txt_recientes:
+                self.txt_recientes.remove(ruta)
+                self._guardar_txt_recientes()
+                self.actualizar_menu_txt_recientes()
+
+    def _al_borrar_txt_recientes(self, evento):
+        if wx.MessageBox(
+            "¿Borrar el historial de TXT recientes?",
+            "Confirmar", wx.YES_NO | wx.ICON_QUESTION
+        ) == wx.YES:
+            self.txt_recientes = []
+            self._guardar_txt_recientes()
+            self.actualizar_menu_txt_recientes()
+    # ANCLAJE_FIN: TXT_RECIENTES
 
     # ANCLAJE_INICIO: HISTORIAL_RECIENTES
     def cargar_historial_recientes(self):
