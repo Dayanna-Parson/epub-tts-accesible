@@ -317,6 +317,8 @@ class PestanaGrabacion(wx.Panel):
         # ── Eventos ───────────────────────────────────────────────────────
         self.btn_examinar.Bind(wx.EVT_BUTTON,       self.al_examinar)
         self.btn_limpiar.Bind(wx.EVT_BUTTON,        self.al_limpiar)
+        self.txt_titulo.Bind(wx.EVT_TEXT,           self._al_cambiar_titulo)
+        self.txt_capitulo.Bind(wx.EVT_TEXT,         self._al_cambiar_capitulo)
         self.btn_probar.Bind(wx.EVT_BUTTON,         self.al_probar_voz)
         self.btn_preescucha.Bind(wx.EVT_BUTTON,     self.al_preescucha_general)
         self.chk_dividir.Bind(wx.EVT_CHECKBOX,      self.al_cambiar_division)
@@ -364,6 +366,23 @@ class PestanaGrabacion(wx.Panel):
     def _resolver_capitulo(self) -> str:
         c = self.txt_capitulo.GetValue().strip()
         return c if c else (self.nombre_base_txt or "Sin_Capitulo")
+
+    def _al_cambiar_titulo(self, evento):
+        """Cuando el usuario edita el título, sincroniza con el proyecto si existe."""
+        if self.proyecto_actual:
+            nuevo_titulo = self.txt_titulo.GetValue().strip()
+            if nuevo_titulo:
+                self.gestor_proyectos.renombrar_proyecto(
+                    self.proyecto_actual["id"], nuevo_titulo
+                )
+        evento.Skip()
+
+    def _al_cambiar_capitulo(self, evento):
+        """Cuando el usuario edita el capítulo, actualiza el mapeo local."""
+        # El capítulo afecta a la clave en mapeo_etiquetas.json; se guardará
+        # al siguiente cambio de asignación. Solo necesitamos dejar que el
+        # evento fluya con normalidad.
+        evento.Skip()
 
     # ================================================================== #
     # Carga de voces disponibles — ListaVocesCheck con columnas
@@ -470,6 +489,7 @@ class PestanaGrabacion(wx.Panel):
         self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(
             self.ruta_txt_actual
         )
+        self._notificar_txt_reciente()
         self._cargar_y_escanear()
 
     def cargar_txt_desde_ruta(self, ruta: str):
@@ -487,7 +507,19 @@ class PestanaGrabacion(wx.Panel):
         if not self.txt_capitulo.GetValue().strip():
             self.txt_capitulo.SetValue(self.nombre_base_txt)
         self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(ruta)
+        self._notificar_txt_reciente()
         self._cargar_y_escanear()
+
+    def _notificar_txt_reciente(self):
+        """Añade el TXT actual al historial de recientes de la ventana principal."""
+        if not self.ruta_txt_actual:
+            return
+        try:
+            ventana = self.GetTopLevelParent()
+            if hasattr(ventana, 'agregar_txt_a_recientes'):
+                ventana.agregar_txt_a_recientes(self.ruta_txt_actual)
+        except Exception:
+            pass
 
     def _cargar_y_escanear(self):
         if not self.ruta_txt_actual:
@@ -602,6 +634,7 @@ class PestanaGrabacion(wx.Panel):
           1. Comportamiento radio: desmarca todas las demás.
           2. Auto-asigna la voz marcada a la etiqueta activa.
           3. Avanza el combo a la siguiente etiqueta sin asignar.
+          4. Si todas las etiquetas quedan asignadas, ofrece guardar en proyecto.
         """
         if self._radio_activo:
             return
@@ -656,11 +689,172 @@ class PestanaGrabacion(wx.Panel):
             preservar_etiqueta=etiq_siguiente if etiq_siguiente else etiqueta
         )
 
+        # Si todas las etiquetas ya tienen voz, ofrecer añadir al gestor de proyectos
+        if not etiq_siguiente and self._todas_asignadas():
+            wx.CallAfter(self._ofrecer_agregar_a_proyecto)
+
     def al_desmarcar_voz(self, evento):
         """Al desmarcar una voz manualmente no se borra la asignación."""
         # La guardia _radio_activo evita efectos secundarios al desmarcar
         # en el comportamiento radio de al_marcar_voz.
         pass
+
+    # ================================================================== #
+    # Integración con el gestor de proyectos
+    # ================================================================== #
+
+    def _todas_asignadas(self) -> bool:
+        """Devuelve True si todas las etiquetas detectadas tienen voz asignada."""
+        return bool(self.etiquetas_detectadas) and all(
+            e in self.asignaciones for e in self.etiquetas_detectadas
+        )
+
+    def _ofrecer_agregar_a_proyecto(self):
+        """
+        Cuando todas las voces están asignadas y el TXT aún no pertenece a un
+        proyecto, pregunta al usuario si quiere añadirlo al gestor de proyectos.
+        Si ya pertenece a uno, no molesta.
+        """
+        if not self.ruta_txt_actual:
+            return
+        # Si ya está en un proyecto, no preguntar
+        if self.proyecto_actual:
+            return
+
+        respuesta = wx.MessageBox(
+            "¡Todas las voces han sido asignadas!\n\n"
+            "¿Deseas añadir este archivo al Gestor de Proyectos para "
+            "organizar tus sagas y heredar las voces automáticamente?",
+            "¿Añadir al Gestor de Proyectos?",
+            wx.YES_NO | wx.ICON_QUESTION,
+        )
+        if respuesta != wx.YES:
+            return
+
+        self._dialogo_elegir_o_crear_proyecto()
+
+    def _dialogo_elegir_o_crear_proyecto(self):
+        """
+        Muestra un diálogo para elegir un proyecto existente o crear uno nuevo,
+        y luego asocia el TXT actual a ese proyecto.
+        """
+        from app.motor.gestor_config import TIPOS_PROYECTO
+
+        self.gestor_proyectos.recargar()
+        todos = self.gestor_proyectos.listar_todos()
+
+        dlg = wx.Dialog(
+            self.GetTopLevelParent(),
+            title="Añadir al Gestor de Proyectos",
+            size=(480, 320),
+        )
+        panel = wx.Panel(dlg)
+        sz = wx.BoxSizer(wx.VERTICAL)
+
+        lbl_info = wx.StaticText(
+            panel,
+            label=f"Archivo: {os.path.basename(self.ruta_txt_actual)}\n"
+                  "Elige un proyecto existente o crea uno nuevo:"
+        )
+        sz.Add(lbl_info, 0, wx.ALL, 8)
+
+        # Opciones: existente o nuevo
+        rb_existente = wx.RadioButton(panel, label="Añadir a proyecto existente:", style=wx.RB_GROUP)
+        rb_nuevo     = wx.RadioButton(panel, label="Crear nuevo proyecto raíz:")
+        sz.Add(rb_existente, 0, wx.LEFT | wx.RIGHT, 8)
+
+        # Lista de proyectos existentes
+        nombres_proyectos = [
+            f"{p['nombre']} [{p['tipo']}]" for p in todos
+        ]
+        self._proyectos_lista_dlg = todos
+        combo_existente = wx.Choice(panel, choices=nombres_proyectos or ["(No hay proyectos)"])
+        if nombres_proyectos:
+            combo_existente.SetSelection(0)
+        else:
+            combo_existente.Enable(False)
+            rb_existente.Enable(False)
+            rb_nuevo.SetValue(True)
+        combo_existente.SetHelpText("Elige el proyecto al que añadir el archivo TXT.")
+        sz.Add(combo_existente, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+        sz.Add(rb_nuevo, 0, wx.LEFT | wx.RIGHT, 8)
+
+        # Campos para nuevo proyecto
+        sz_nuevo = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_nombre_n = wx.StaticText(panel, label="Nombre:")
+        txt_nombre_n = wx.TextCtrl(panel)
+        txt_nombre_n.SetValue(self._resolver_titulo())
+        txt_nombre_n.SetHelpText("Nombre del nuevo proyecto raíz a crear.")
+        lbl_tipo_n   = wx.StaticText(panel, label="Tipo:")
+        combo_tipo_n = wx.Choice(panel, choices=TIPOS_PROYECTO)
+        combo_tipo_n.SetSelection(0)
+        sz_nuevo.Add(lbl_nombre_n, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
+        sz_nuevo.Add(txt_nombre_n, 1, wx.RIGHT, 8)
+        sz_nuevo.Add(lbl_tipo_n,   0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
+        sz_nuevo.Add(combo_tipo_n, 0)
+        sz.Add(sz_nuevo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+        # Activar/desactivar campos según radio
+        def _actualizar_estado(e=None):
+            es_nuevo = rb_nuevo.GetValue()
+            combo_existente.Enable(not es_nuevo and bool(nombres_proyectos))
+            txt_nombre_n.Enable(es_nuevo)
+            combo_tipo_n.Enable(es_nuevo)
+
+        rb_existente.Bind(wx.EVT_RADIOBUTTON, _actualizar_estado)
+        rb_nuevo.Bind(wx.EVT_RADIOBUTTON, _actualizar_estado)
+        _actualizar_estado()
+
+        # Botones
+        btn_ok     = wx.Button(panel, wx.ID_OK,     label="Añadir")
+        btn_cancel = wx.Button(panel, wx.ID_CANCEL, label="Cancelar")
+        sz_btns = wx.BoxSizer(wx.HORIZONTAL)
+        sz_btns.Add(btn_ok, 0, wx.RIGHT, 8)
+        sz_btns.Add(btn_cancel, 0)
+        sz.Add(sz_btns, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
+
+        panel.SetSizer(sz)
+        dlg_sz = wx.BoxSizer(wx.VERTICAL)
+        dlg_sz.Add(panel, 1, wx.EXPAND)
+        dlg.SetSizer(dlg_sz)
+        dlg.Fit()
+
+        resultado = dlg.ShowModal()
+        if resultado != wx.ID_OK:
+            dlg.Destroy()
+            return
+
+        if rb_nuevo.GetValue():
+            nombre_nuevo = txt_nombre_n.GetValue().strip()
+            if not nombre_nuevo:
+                nombre_nuevo = self._resolver_titulo()
+            tipo_idx = combo_tipo_n.GetSelection()
+            from app.motor.gestor_config import TIPOS_PROYECTO as TP
+            tipo_nuevo = TP[tipo_idx] if tipo_idx >= 0 else "otro"
+            proyecto_id = self.gestor_proyectos.crear_proyecto(nombre_nuevo, tipo_nuevo)
+        else:
+            idx_sel = combo_existente.GetSelection()
+            if idx_sel == wx.NOT_FOUND or idx_sel >= len(todos):
+                dlg.Destroy()
+                return
+            proyecto_id = todos[idx_sel]["id"]
+
+        dlg.Destroy()
+
+        self.gestor_proyectos.asociar_archivo(proyecto_id, self.ruta_txt_actual)
+        # Guardar también las asignaciones de voces actuales en el proyecto
+        self.gestor_proyectos.guardar_voces_proyecto(proyecto_id, self.asignaciones)
+        self.proyecto_actual = self.gestor_proyectos.obtener_proyecto(proyecto_id)
+
+        nombre_proyecto = self.proyecto_actual.get("nombre", "")
+        self.lbl_progreso.SetLabel(
+            f"Archivo añadido al proyecto «{nombre_proyecto}». "
+            "Las voces se heredarán en futuros capítulos."
+        )
+
+        # Notificar al menú de recientes de la ventana principal
+        self._notificar_txt_reciente()
 
     def al_probar_voz(self, evento):
         """Reproduce una muestra de la voz marcada (hilo de fondo)."""

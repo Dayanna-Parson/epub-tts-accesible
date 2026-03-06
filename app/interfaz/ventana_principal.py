@@ -89,10 +89,15 @@ class VentanaPrincipal(wx.Frame):
         # Referencia a la ventana de proyectos (prevención de doble instancia)
         self._ventana_proyectos = None
 
-        # Historial de recientes — ruta absoluta para evitar fallos de permisos según CWD
+        # Historial de recientes (EPUBs) — ruta absoluta para evitar fallos de permisos
         self.archivos_recientes = []
         self.ruta_recientes = ruta_config("libros_recientes.json")
         self.cargar_historial_recientes()
+
+        # Historial de TXTs recientes para grabación
+        self.txts_recientes = []
+        self.ruta_txts_recientes = ruta_config("txts_recientes.json")
+        self.cargar_historial_txts_recientes()
 
         # Aplicar AcceleratorTable al Frame para que los atajos funcionen
         # incluso cuando el foco está dentro del RichTextCtrl de lectura
@@ -113,14 +118,21 @@ class VentanaPrincipal(wx.Frame):
         # MENÚ ARCHIVO
         self.menu_archivo = wx.Menu()
         self.item_abrir = self.menu_archivo.Append(wx.ID_OPEN, "&Abrir Libro...\tCtrl+A")
-        self.item_abrir_txt = self.menu_archivo.Append(
-            wx.ID_ANY, "Abrir &TXT para grabar...\tCtrl+T"
-        )
 
-        # Submenú Recientes
+        # Submenú Recientes (EPUBs)
         self.menu_recientes = wx.Menu()
         self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
         self.menu_archivo.AppendSubMenu(self.menu_recientes, "Libros &Recientes")
+
+        self.menu_archivo.AppendSeparator()
+
+        # Submenú TXT Recientes (grabación)
+        self.item_abrir_txt = self.menu_archivo.Append(
+            wx.ID_ANY, "Abrir &TXT para grabar...\tCtrl+T"
+        )
+        self.menu_txts_recientes = wx.Menu()
+        self.menu_txts_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+        self.menu_archivo.AppendSubMenu(self.menu_txts_recientes, "TXT &Recientes para grabar")
 
         self.menu_archivo.AppendSeparator()
         self.item_salir = self.menu_archivo.Append(wx.ID_EXIT, "&Salir\tAlt+F4")
@@ -408,6 +420,83 @@ class VentanaPrincipal(wx.Frame):
                 self.archivos_recientes.remove(ruta)
                 self._guardar_recientes()
                 self.actualizar_menu_recientes()
+
+    # ── Historial de TXTs recientes para grabación ────────────────────
+    def cargar_historial_txts_recientes(self):
+        self.txts_recientes = []
+        try:
+            if os.path.exists(self.ruta_txts_recientes):
+                with open(self.ruta_txts_recientes, "r", encoding="utf-8") as f:
+                    self.txts_recientes = json.load(f)
+        except Exception:
+            self.txts_recientes = []
+        self.actualizar_menu_txts_recientes()
+
+    def agregar_txt_a_recientes(self, ruta):
+        if ruta in self.txts_recientes:
+            self.txts_recientes.remove(ruta)
+        self.txts_recientes.insert(0, ruta)
+        self.txts_recientes = self.txts_recientes[:10]
+        self._guardar_txts_recientes()
+        self.actualizar_menu_txts_recientes()
+
+    def _guardar_txts_recientes(self):
+        try:
+            os.makedirs(os.path.dirname(self.ruta_txts_recientes), exist_ok=True)
+            with open(self.ruta_txts_recientes, "w", encoding="utf-8") as f:
+                json.dump(self.txts_recientes, f)
+        except Exception as e:
+            print(f"Error guardando TXTs recientes: {e}")
+
+    def actualizar_menu_txts_recientes(self):
+        from app.motor.gestor_config import GestorProyectos
+        gestor = GestorProyectos()
+
+        for item in self.menu_txts_recientes.GetMenuItems():
+            self.menu_txts_recientes.Delete(item)
+
+        if not self.txts_recientes:
+            self.menu_txts_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+        else:
+            for i, ruta in enumerate(self.txts_recientes):
+                nombre_archivo = os.path.basename(ruta)
+                # Añadir nombre del proyecto si está asociado
+                proyecto = gestor.proyecto_de_archivo(ruta)
+                if proyecto:
+                    etiqueta = f"{i+1}. {nombre_archivo}  [{proyecto['nombre']}]"
+                else:
+                    etiqueta = f"{i+1}. {nombre_archivo}"
+                id_item = wx.NewIdRef()
+                self.menu_txts_recientes.Append(id_item, etiqueta)
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda evt, p=ruta: self.abrir_txt_reciente(p),
+                    id=id_item,
+                )
+
+            self.menu_txts_recientes.AppendSeparator()
+            item_borrar = self.menu_txts_recientes.Append(wx.ID_ANY, "Borrar historial de TXTs")
+            self.Bind(wx.EVT_MENU, self.al_borrar_txts_recientes, item_borrar)
+
+    def al_borrar_txts_recientes(self, evento):
+        if wx.MessageBox(
+            "¿Seguro que quieres borrar el historial de TXTs recientes?",
+            "Confirmar", wx.YES_NO | wx.ICON_QUESTION
+        ) == wx.YES:
+            self.txts_recientes = []
+            self._guardar_txts_recientes()
+            self.actualizar_menu_txts_recientes()
+
+    def abrir_txt_reciente(self, ruta):
+        if os.path.exists(ruta):
+            self.notebook.SetSelection(1)
+            self.pestana_grabacion.cargar_txt_desde_ruta(ruta)
+        else:
+            wx.MessageBox("El archivo TXT ya no existe en disco.", "Error")
+            if ruta in self.txts_recientes:
+                self.txts_recientes.remove(ruta)
+                self._guardar_txts_recientes()
+                self.actualizar_menu_txts_recientes()
     # ANCLAJE_FIN: HISTORIAL_RECIENTES
 
     # ANCLAJE_INICIO: ACELERADORES_GLOBALES

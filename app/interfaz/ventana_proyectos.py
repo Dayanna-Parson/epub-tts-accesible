@@ -1,4 +1,5 @@
 # ANCLAJE_INICIO: DEPENDENCIAS_VENTANA_PROYECTOS
+import os
 import wx
 import logging
 
@@ -24,6 +25,9 @@ class VentanaProyectos(wx.Frame):
       - Al seleccionar un nodo en el árbol el foco pasa al campo Nombre.
       - Confirmación antes de eliminar.
       - Al cerrar, el foco vuelve al Frame principal.
+      - Alt+Arriba/Abajo reordena el nodo seleccionado.
+      - Tecla Aplicaciones o Shift+F10 abre menú contextual.
+      - Escape cierra la ventana y devuelve el foco.
     """
 
     def __init__(self, parent):
@@ -39,6 +43,7 @@ class VentanaProyectos(wx.Frame):
 
         self._construir_interfaz()
         self._cargar_arbol()
+        self._verificar_archivos_faltantes()
 
         self.Bind(wx.EVT_CLOSE, self._al_cerrar)
 
@@ -67,9 +72,10 @@ class VentanaProyectos(wx.Frame):
             ),
         )
         self.arbol.SetHelpText(
-            "Árbol de proyectos. Usa las flechas para navegar entre nodos. "
-            "F2 renombra el nodo seleccionado. Supr elimina el nodo seleccionado. "
-            "Enter o Espacio despliega o contrae un nodo con hijos."
+            "Árbol de proyectos. Flechas para navegar. "
+            "F2 renombra el nodo seleccionado. Supr elimina. "
+            "Alt+Arriba/Abajo reordena el nodo. "
+            "Tecla Aplicaciones o Shift+F10 abre el menú contextual."
         )
         sz_arbol.Add(lbl_arbol,   0, wx.BOTTOM, 4)
         sz_arbol.Add(self.arbol,  1, wx.EXPAND)
@@ -102,8 +108,7 @@ class VentanaProyectos(wx.Frame):
         self.lista_archivos.InsertColumn(1, "Ruta completa",      width=280)
         self.lista_archivos.SetHelpText(
             "Lista de archivos TXT asociados a este proyecto. "
-            "Usa las flechas para navegar por la lista. "
-            "Selecciona un archivo y usa el botón Quitar para desasociarlo."
+            "Flechas para navegar. Quitar para desasociar el seleccionado."
         )
 
         sz_btn_archivos = wx.BoxSizer(wx.HORIZONTAL)
@@ -164,7 +169,7 @@ class VentanaProyectos(wx.Frame):
             "Elimina el proyecto seleccionado. Si tiene hijos, se eliminarán también. "
             "Se pedirá confirmación antes de proceder."
         )
-        self.btn_cerrar = wx.Button(panel_raiz, label="&Cerrar esta ventana")
+        self.btn_cerrar = wx.Button(panel_raiz, label="&Cerrar")
         self.btn_cerrar.SetHelpText(
             "Cierra la ventana de gestión de proyectos y devuelve el foco a la ventana principal."
         )
@@ -185,6 +190,7 @@ class VentanaProyectos(wx.Frame):
         self.arbol.Bind(wx.EVT_TREE_SEL_CHANGED,    self._al_seleccionar_nodo)
         self.arbol.Bind(wx.EVT_TREE_KEY_DOWN,        self._al_tecla_arbol)
         self.arbol.Bind(wx.EVT_TREE_END_LABEL_EDIT,  self._al_fin_edicion_nodo)
+        self.arbol.Bind(wx.EVT_TREE_ITEM_MENU,       self._al_menu_contexto)
 
         self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
         self.combo_tipo.Bind(wx.EVT_CHOICE,     self._al_cambiar_tipo)
@@ -196,6 +202,9 @@ class VentanaProyectos(wx.Frame):
         self.btn_nuevo_hijo.Bind(wx.EVT_BUTTON, self._al_nuevo_hijo)
         self.btn_eliminar.Bind(wx.EVT_BUTTON,   self._al_eliminar)
         self.btn_cerrar.Bind(wx.EVT_BUTTON,     lambda e: self.Close())
+
+        # Escape cierra la ventana desde cualquier control del panel
+        panel_raiz.Bind(wx.EVT_CHAR_HOOK, self._al_char_hook)
 
         # Forzar Intro en txt_nombre (EVT_TEXT_ENTER requiere style=wx.TE_PROCESS_ENTER)
         self.txt_nombre.SetWindowStyleFlag(
@@ -241,6 +250,61 @@ class VentanaProyectos(wx.Frame):
         return self._gestor.obtener_proyecto(proyecto_id)
 
     # ================================================================== #
+    # Verificación de archivos faltantes al abrir
+    # ================================================================== #
+
+    def _verificar_archivos_faltantes(self):
+        """Al abrir la ventana, avisa de archivos TXT que ya no existen en disco."""
+        faltantes = []
+        for proyecto in self._gestor.listar_todos():
+            perdidos = self._gestor.verificar_archivos_proyecto(proyecto["id"])
+            for ruta in perdidos:
+                faltantes.append((proyecto["nombre"], ruta))
+
+        if not faltantes:
+            return
+
+        lineas = "\n".join(
+            f"  • {nombre}: {os.path.basename(ruta)}"
+            for nombre, ruta in faltantes[:10]
+        )
+        if len(faltantes) > 10:
+            lineas += f"\n  … y {len(faltantes) - 10} más."
+
+        respuesta = wx.MessageBox(
+            f"Los siguientes archivos TXT ya no se encuentran en disco:\n\n{lineas}\n\n"
+            "¿Deseas relocalizarlos ahora? (Puedes hacerlo más tarde desde el menú "
+            "contextual del árbol con la tecla Aplicaciones.)",
+            "Archivos no encontrados",
+            wx.YES_NO | wx.ICON_WARNING,
+        )
+        if respuesta == wx.YES:
+            for nombre_proyecto, ruta_antigua in faltantes:
+                self._ofrecer_relocalizar(ruta_antigua)
+
+    def _ofrecer_relocalizar(self, ruta_antigua: str):
+        """Muestra un FileDialog para que el usuario localice un TXT perdido."""
+        nombre_archivo = os.path.basename(ruta_antigua)
+        with wx.FileDialog(
+            self,
+            f"Localizar archivo perdido: {nombre_archivo}",
+            wildcard="Archivos de texto (*.txt)|*.txt|Todos (*.*)|*.*",
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            ruta_nueva = dlg.GetPath()
+
+        self._gestor.relocalizar_archivo(ruta_antigua, ruta_nueva)
+        self.lbl_estado_rapido(f"Archivo relocalizado: {os.path.basename(ruta_nueva)}")
+        # Refrescar lista de archivos si hay proyecto seleccionado
+        proyecto = self._proyecto_seleccionado()
+        if proyecto:
+            proyecto_actualizado = self._gestor.obtener_proyecto(proyecto["id"])
+            if proyecto_actualizado:
+                self._actualizar_lista_archivos(proyecto_actualizado)
+
+    # ================================================================== #
     # Detalle del nodo seleccionado
     # ================================================================== #
 
@@ -282,8 +346,10 @@ class VentanaProyectos(wx.Frame):
         """Rellena la lista de archivos TXT asociados al proyecto."""
         self.lista_archivos.DeleteAllItems()
         for ruta in proyecto.get("archivos", []):
-            import os
             nombre = os.path.basename(ruta)
+            # Indicar visualmente si el archivo ya no existe
+            if not os.path.exists(ruta):
+                nombre = f"[NO ENCONTRADO] {nombre}"
             idx = self.lista_archivos.InsertItem(self.lista_archivos.GetItemCount(), nombre)
             self.lista_archivos.SetItem(idx, 1, ruta)
 
@@ -335,20 +401,63 @@ class VentanaProyectos(wx.Frame):
         self.arbol.SetItemText(nodo, f"{nombre} [{nuevo_tipo}]")
 
     # ================================================================== #
-    # Teclas rápidas en el árbol: F2 = renombrar, Supr = eliminar
+    # Teclas rápidas en el árbol
     # ================================================================== #
 
+    def _al_char_hook(self, evento):
+        """Escape cierra la ventana desde cualquier control."""
+        if evento.GetKeyCode() == wx.WXK_ESCAPE:
+            self.Close()
+            return
+        evento.Skip()
+
     def _al_tecla_arbol(self, evento):
-        """Gestiona F2 (renombrar) y Supr (eliminar) en el árbol."""
+        """
+        Gestiona teclas especiales en el árbol:
+          F2       → renombrar nodo
+          Supr     → eliminar nodo
+          Alt+Arr  → mover nodo arriba
+          Alt+Abj  → mover nodo abajo
+        """
         keycode = evento.GetKeyCode()
+        alt = evento.GetKeyEvent().AltDown()
+
         if keycode == wx.WXK_F2:
             nodo = self.arbol.GetSelection()
             if nodo and nodo.IsOk():
                 self.arbol.EditLabel(nodo)
         elif keycode == wx.WXK_DELETE:
             self._al_eliminar(None)
+        elif alt and keycode == wx.WXK_UP:
+            self._mover_nodo_seleccionado("arriba")
+        elif alt and keycode == wx.WXK_DOWN:
+            self._mover_nodo_seleccionado("abajo")
         else:
             evento.Skip()
+
+    def _mover_nodo_seleccionado(self, direccion: str):
+        """Mueve el nodo seleccionado arriba o abajo y recarga el árbol."""
+        proyecto = self._proyecto_seleccionado()
+        if proyecto is None:
+            return
+        movido = self._gestor.mover_proyecto(proyecto["id"], direccion)
+        if movido:
+            proyecto_id = proyecto["id"]
+            self._cargar_arbol()
+            # Reseleccionar el nodo movido
+            self._seleccionar_nodo_por_id(proyecto_id)
+            self.lbl_estado_rapido(
+                f"Movido {'arriba' if direccion == 'arriba' else 'abajo'}: {proyecto['nombre']}"
+            )
+
+    def _seleccionar_nodo_por_id(self, proyecto_id: str):
+        """Busca y selecciona en el árbol el nodo con el proyecto_id dado."""
+        for item, pid in self._mapa_nodos.items():
+            if pid == proyecto_id:
+                self.arbol.SelectItem(item)
+                self.arbol.EnsureVisible(item)
+                wx.CallAfter(self.arbol.SetFocus)
+                return
 
     def _al_fin_edicion_nodo(self, evento):
         """Guarda el nuevo nombre tras la edición inline en el árbol (F2)."""
@@ -370,13 +479,89 @@ class VentanaProyectos(wx.Frame):
             if proyecto:
                 self._gestor.renombrar_proyecto(proyecto_id, nuevo_nombre)
                 tipo = proyecto.get("tipo", "otro")
-                # Actualizar etiqueta con el nuevo nombre y el tipo
                 wx.CallAfter(
                     self.arbol.SetItemText, nodo, f"{nuevo_nombre} [{tipo}]"
                 )
-                # Refrescar campo de nombre en el detalle
                 wx.CallAfter(self.txt_nombre.ChangeValue, nuevo_nombre)
         evento.Skip()
+
+    # ================================================================== #
+    # Menú contextual del árbol (tecla Aplicaciones / Shift+F10)
+    # ================================================================== #
+
+    def _al_menu_contexto(self, evento):
+        """Muestra un menú contextual sobre el nodo del árbol."""
+        proyecto = self._proyecto_seleccionado()
+        if proyecto is None:
+            return
+
+        menu = wx.Menu()
+
+        # Asociar TXT actual de la pestaña Grabación
+        txt_actual = self._obtener_txt_grabacion_actual()
+        if txt_actual:
+            nombre_txt = os.path.basename(txt_actual)
+            item_asoc = menu.Append(wx.ID_ANY, f"Asociar «{nombre_txt}» a este proyecto")
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e, pid=proyecto["id"], ruta=txt_actual: self._asociar_txt_directo(pid, ruta),
+                item_asoc,
+            )
+            menu.AppendSeparator()
+
+        # Mover nodo
+        item_arriba = menu.Append(wx.ID_ANY, "Mover arriba\tAlt+↑")
+        item_abajo  = menu.Append(wx.ID_ANY, "Mover abajo\tAlt+↓")
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo_seleccionado("arriba"), item_arriba)
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo_seleccionado("abajo"),  item_abajo)
+
+        menu.AppendSeparator()
+
+        # Nuevo hijo
+        item_hijo = menu.Append(wx.ID_ANY, "Nuevo hijo en este proyecto")
+        self.Bind(wx.EVT_MENU, self._al_nuevo_hijo, item_hijo)
+
+        menu.AppendSeparator()
+
+        # Relocalizar archivos perdidos
+        perdidos = self._gestor.verificar_archivos_proyecto(proyecto["id"])
+        if perdidos:
+            item_reloc = menu.Append(
+                wx.ID_ANY,
+                f"Relocalizar archivos perdidos ({len(perdidos)})"
+            )
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e, ruts=perdidos: [self._ofrecer_relocalizar(r) for r in ruts],
+                item_reloc,
+            )
+            menu.AppendSeparator()
+
+        # Eliminar
+        item_elim = menu.Append(wx.ID_ANY, f"Eliminar «{proyecto['nombre']}»…")
+        self.Bind(wx.EVT_MENU, self._al_eliminar, item_elim)
+
+        self.PopupMenu(menu)
+        menu.Destroy()
+
+    def _obtener_txt_grabacion_actual(self) -> str | None:
+        """Obtiene la ruta del TXT cargado en la pestaña Grabación, si existe."""
+        try:
+            pestana = self._frame_principal.pestana_grabacion
+            ruta = pestana.ruta_txt_actual
+            if ruta and os.path.exists(ruta):
+                return ruta
+        except Exception:
+            pass
+        return None
+
+    def _asociar_txt_directo(self, proyecto_id: str, ruta_txt: str):
+        """Asocia el TXT directamente sin diálogo de apertura."""
+        self._gestor.asociar_archivo(proyecto_id, ruta_txt)
+        proyecto_actualizado = self._gestor.obtener_proyecto(proyecto_id)
+        if proyecto_actualizado:
+            self._actualizar_lista_archivos(proyecto_actualizado)
+        self.lbl_estado_rapido(f"Asociado: {os.path.basename(ruta_txt)}")
 
     # ================================================================== #
     # Gestión de archivos TXT
@@ -402,7 +587,6 @@ class VentanaProyectos(wx.Frame):
             ruta = dlg.GetPath()
 
         self._gestor.asociar_archivo(proyecto["id"], ruta)
-        # Recargar el proyecto desde el gestor (datos actualizados)
         proyecto_actualizado = self._gestor.obtener_proyecto(proyecto["id"])
         if proyecto_actualizado:
             self._actualizar_lista_archivos(proyecto_actualizado)

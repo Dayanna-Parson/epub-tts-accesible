@@ -97,10 +97,21 @@ class GestorProyectos:
                 with open(RUTA_PROYECTOS, "r", encoding="utf-8") as f:
                     contenido = f.read().strip()
                 if contenido:
-                    return json.loads(contenido)
+                    datos = json.loads(contenido)
+                    # Migración: asegurar que existe orden_raiz
+                    if "orden_raiz" not in datos:
+                        raices = [
+                            p["id"] for p in datos.get("proyectos", {}).values()
+                            if p.get("padre") is None
+                        ]
+                        datos["orden_raiz"] = sorted(
+                            raices,
+                            key=lambda pid: datos["proyectos"].get(pid, {}).get("nombre", "").lower()
+                        )
+                    return datos
         except Exception:
             pass
-        return {"version": 1, "proyectos": {}}
+        return {"version": 1, "proyectos": {}, "orden_raiz": []}
 
     def guardar(self):
         """Persiste el estado actual en proyectos.json."""
@@ -140,6 +151,9 @@ class GestorProyectos:
 
         if padre_id and padre_id in self._datos["proyectos"]:
             self._datos["proyectos"][padre_id]["hijos"].append(nuevo_id)
+        else:
+            # Proyecto raíz: añadir al orden
+            self._datos.setdefault("orden_raiz", []).append(nuevo_id)
 
         self.guardar()
         return nuevo_id
@@ -149,12 +163,17 @@ class GestorProyectos:
         return self._datos["proyectos"].get(proyecto_id)
 
     def listar_proyectos_raiz(self) -> list:
-        """Devuelve los proyectos sin padre (nivel raíz), ordenados por nombre."""
-        raices = [
-            p for p in self._datos["proyectos"].values()
-            if p.get("padre") is None
-        ]
-        return sorted(raices, key=lambda p: p["nombre"].lower())
+        """Devuelve los proyectos sin padre (nivel raíz), en orden personalizado."""
+        orden = self._datos.get("orden_raiz", [])
+        proyectos = self._datos["proyectos"]
+        # Proyectos en el orden guardado
+        resultado = [proyectos[pid] for pid in orden if pid in proyectos]
+        # Agregar los que no estén en orden_raiz (por si acaso)
+        ids_en_orden = set(orden)
+        for p in proyectos.values():
+            if p.get("padre") is None and p["id"] not in ids_en_orden:
+                resultado.append(p)
+        return resultado
 
     def listar_hijos(self, proyecto_id: str) -> list:
         """Devuelve los proyectos hijos directos de un proyecto."""
@@ -219,12 +238,16 @@ class GestorProyectos:
             for hijo_id in list(hijos):
                 self.eliminar_proyecto(hijo_id, recursivo=True)
 
-        # Desvincularse del padre
+        # Desvincularse del padre o del orden raíz
         padre_id = proyecto.get("padre")
         if padre_id and padre_id in self._datos["proyectos"]:
             hijos_padre = self._datos["proyectos"][padre_id]["hijos"]
             if proyecto_id in hijos_padre:
                 hijos_padre.remove(proyecto_id)
+        else:
+            orden_raiz = self._datos.get("orden_raiz", [])
+            if proyecto_id in orden_raiz:
+                orden_raiz.remove(proyecto_id)
 
         del self._datos["proyectos"][proyecto_id]
         self.guardar()
@@ -333,3 +356,65 @@ class GestorProyectos:
 
     def total_proyectos(self) -> int:
         return len(self._datos["proyectos"])
+
+    # ── Reordenación de nodos ─────────────────────────────────────────────────
+
+    def mover_proyecto(self, proyecto_id: str, direccion: str) -> bool:
+        """
+        Mueve un proyecto arriba o abajo dentro de su contenedor (hijos del padre
+        o lista raíz). direccion='arriba' | 'abajo'.
+        Devuelve True si el movimiento se realizó, False si ya estaba en el límite.
+        """
+        proyecto = self._datos["proyectos"].get(proyecto_id)
+        if not proyecto:
+            return False
+
+        padre_id = proyecto.get("padre")
+        if padre_id and padre_id in self._datos["proyectos"]:
+            lista = self._datos["proyectos"][padre_id]["hijos"]
+        else:
+            lista = self._datos.setdefault("orden_raiz", [])
+            if proyecto_id not in lista:
+                lista.append(proyecto_id)
+
+        try:
+            idx = lista.index(proyecto_id)
+        except ValueError:
+            return False
+
+        if direccion == "arriba":
+            if idx == 0:
+                return False
+            lista[idx], lista[idx - 1] = lista[idx - 1], lista[idx]
+        else:
+            if idx >= len(lista) - 1:
+                return False
+            lista[idx], lista[idx + 1] = lista[idx + 1], lista[idx]
+
+        self.guardar()
+        return True
+
+    # ── Gestión de archivos (verificación y relocalización) ───────────────────
+
+    def verificar_archivos_proyecto(self, proyecto_id: str) -> list:
+        """
+        Devuelve lista de rutas que ya no existen en disco para el proyecto dado.
+        """
+        proyecto = self._datos["proyectos"].get(proyecto_id)
+        if not proyecto:
+            return []
+        return [r for r in proyecto.get("archivos", []) if not os.path.exists(r)]
+
+    def relocalizar_archivo(self, ruta_antigua: str, ruta_nueva: str):
+        """Reemplaza la ruta de un TXT en todos los proyectos donde aparezca."""
+        ruta_antigua_abs = os.path.abspath(ruta_antigua)
+        ruta_nueva_abs   = os.path.abspath(ruta_nueva)
+        modificado = False
+        for proyecto in self._datos["proyectos"].values():
+            archivos = proyecto.get("archivos", [])
+            for i, r in enumerate(archivos):
+                if os.path.abspath(r) == ruta_antigua_abs:
+                    archivos[i] = ruta_nueva_abs
+                    modificado = True
+        if modificado:
+            self.guardar()
