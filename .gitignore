@@ -23,3 +23,5 @@ configuraciones/voces_disponibles.json
 # Binarios externos portables (no se incluyen en el repo)
 bin/*.exe
 bin/*.dll
+Grabaciones_TifloHistorias/
+Grabaciones_TifloHistorias/
