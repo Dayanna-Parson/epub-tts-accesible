@@ -116,6 +116,12 @@ class VentanaPrincipal(wx.Frame):
         
         self.barra_menu.Append(self.menu_archivo, "&Archivo")
         
+        # FASE_3_PROYECTOS: añadir aquí el menú Proyectos entre Archivo e Ir a...
+        # self.menu_proyectos = wx.Menu()
+        # self.item_gestionar_proyectos = self.menu_proyectos.Append(wx.ID_ANY, "&Gestionar proyectos...\tCtrl+P")
+        # self.barra_menu.Append(self.menu_proyectos, "&Proyectos")
+        # Vincular: self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, self.item_gestionar_proyectos)
+
         # MENÚ IR A
         self.menu_ir = wx.Menu()
         self.item_buscar = self.menu_ir.Append(wx.ID_FIND, "&Buscar en texto...\tCtrl+B")

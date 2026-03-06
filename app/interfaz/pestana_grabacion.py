@@ -105,6 +105,9 @@ class PestanaGrabacion(wx.Panel):
         super().__init__(padre, style=wx.TAB_TRAVERSAL)
 
         # ── Estado interno ────────────────────────────────────────────────
+        # FASE_3_PROYECTOS: añadir aquí self.proyecto_actual = None
+        # y self.gestor_proyectos = GestorProyectos() para vincular el TXT
+        # cargado a su proyecto y heredar voces automáticamente.
         self.ruta_txt_actual      = None
         self.nombre_base_txt      = ""
         self.texto_cargado        = ""
@@ -463,6 +466,9 @@ class PestanaGrabacion(wx.Panel):
             if not self.txt_capitulo.GetValue().strip():
                 self.txt_capitulo.SetValue(self.nombre_base_txt)
 
+        # FASE_3_PROYECTOS: aquí consultar gestor_proyectos.proyecto_de_archivo(ruta)
+        # Si devuelve un proyecto, preguntar al usuario si quiere usarlo o elegir otro.
+        # Si no hay proyecto asociado, ofrecer asignarlo o continuar sin proyecto.
         self._cargar_y_escanear()
 
     def _cargar_y_escanear(self):
@@ -508,6 +514,9 @@ class PestanaGrabacion(wx.Panel):
         titulo = self._resolver_titulo()
         self.titulo_libro = titulo
         self.asignaciones = {}
+        # FASE_3_PROYECTOS: si self.proyecto_actual está establecido, llamar a
+        # gestor_proyectos.obtener_voces_heredadas(self.proyecto_actual["id"])
+        # y fusionarlas con el mapeo local. Las voces del proyecto tienen prioridad.
         self._cargar_mapeo(titulo)
         self._actualizar_resumen_asignaciones()
         # Construir combo con estado (incluye asignaciones recuperadas del mapeo)
@@ -596,6 +605,9 @@ class PestanaGrabacion(wx.Panel):
         etiqueta = self._etiqueta_de_combo(idx_etiq)
 
         self.asignaciones[etiqueta] = datos_voz
+        # FASE_3_PROYECTOS: si self.proyecto_actual está establecido, propagar
+        # la asignación al nivel de proyecto con:
+        # gestor_proyectos.actualizar_voz_proyecto(self.proyecto_actual["id"], etiqueta, datos_voz)
         self._guardar_mapeo()
         self._actualizar_resumen_asignaciones()
 
