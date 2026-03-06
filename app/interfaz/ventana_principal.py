@@ -130,7 +130,7 @@ class VentanaPrincipal(wx.Frame):
         # Menú Proyectos (transversal a todas las pestañas)
         self.menu_proyectos = wx.Menu()
         self.item_gestionar_proyectos = self.menu_proyectos.Append(
-            wx.ID_ANY, "&Gestionar proyectos...\tCtrl+P"
+            wx.ID_ANY, "&Gestionar proyectos...\tCtrl+Shift+P"
         )
         self.barra_menu.Append(self.menu_proyectos, "&Proyectos")
 
@@ -237,14 +237,6 @@ class VentanaPrincipal(wx.Frame):
         if indice == 0:
             # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
             self._configurar_aceleradores_globales()
-            # Foco en el primer control lógico de Lectura (árbol de índice)
-            wx.CallAfter(self.pestana_lectura.primer_control.SetFocus)
-        elif indice == 1:
-            # Foco en el botón Examinar de Grabación
-            wx.CallAfter(self.pestana_grabacion.primer_control.SetFocus)
-        elif indice == 2:
-            # Foco en el primer control de Ajustes
-            wx.CallAfter(self.pestana_ajustes.primer_control.SetFocus)
 
         # Guardar la pestaña activa inmediatamente
         self._guardar_sesion()

@@ -797,6 +797,23 @@ class PanelAtajos(wx.Panel):
         hbox.Add(self.btn_restablecer, 0)
         sizer.Add(hbox, 0, wx.ALL, 10)
 
+        # Sección de atajos fijos del menú (no configurables desde esta lista)
+        sb_fijos = wx.StaticBox(self, label="Atajos fijos del menú (no configurables)")
+        sz_fijos = wx.StaticBoxSizer(sb_fijos, wx.VERTICAL)
+        _FIJOS = [
+            ("Ctrl+A",           "Abrir libro EPUB (menú Archivo)"),
+            ("Ctrl+T",           "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
+            ("Ctrl+Shift+P",     "Abrir gestor de proyectos (menú Proyectos)"),
+            ("Ctrl+B",           "Buscar en el texto (menú Ir a...)"),
+            ("Ctrl+G",           "Ir a porcentaje del libro (menú Ir a...)"),
+            ("Ctrl+M",           "Gestor de marcadores (menú Ir a...)"),
+            ("Alt+F4",           "Salir de la aplicación"),
+        ]
+        for atajo, desc in _FIJOS:
+            lbl = wx.StaticText(self, label=f"  {atajo:<20}  {desc}")
+            sz_fijos.Add(lbl, 0, wx.LEFT | wx.TOP, 4)
+        sizer.Add(sz_fijos, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
         self.SetSizer(sizer)
         self._rellenar_lista()
 
