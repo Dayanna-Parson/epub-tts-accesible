@@ -314,6 +314,20 @@ class PanelClaves(wx.ScrolledWindow):
 
     def al_comprobar(self, event):
         self.al_guardar(None)
+        # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces
+        # Así el filtro "Solo nuevas voces" detectará solo las recién llegadas
+        try:
+            ruta_voces = ruta_config("voces_disponibles.json")
+            ruta_conocidas = ruta_config("voces_conocidas.json")
+            if os.path.exists(ruta_voces):
+                with open(ruta_voces, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                ids_actuales = [v.get("id","") for lista in datos.values() for v in lista if v.get("id")]
+                os.makedirs(os.path.dirname(ruta_conocidas), exist_ok=True)
+                with open(ruta_conocidas, 'w', encoding='utf-8') as f:
+                    json.dump(ids_actuales, f)
+        except Exception:
+            pass
         wx.BeginBusyCursor()
         try:
             gestor = GestorVoces()
@@ -361,21 +375,21 @@ class PanelVoces(wx.Panel):
         sb_filtros = wx.StaticBox(self, label="Filtros de Voces")
         sz_filtros = wx.StaticBoxSizer(sb_filtros, wx.VERTICAL)
         
-        # Fila A: Idioma y Proveedor
+        # Fila A: Proveedor primero, luego Idioma (el idioma se filtra según el proveedor)
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1.Add(wx.StaticText(self, label="Idioma:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
-        self.combo_idioma.SetSelection(0)
-        self.combo_idioma.SetHelpText("Filtra la lista de voces por idioma. Selecciona Todos para ver todas las voces.")
-        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
-        hbox1.Add(self.combo_idioma, 1, wx.RIGHT, 15)
-
         hbox1.Add(wx.StaticText(self, label="Proveedor:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
         self.combo_proveedor = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
         self.combo_proveedor.SetSelection(0)
-        self.combo_proveedor.SetHelpText("Filtra la lista de voces por proveedor: Azure, Amazon Polly, ElevenLabs, o Todos.")
-        self.combo_proveedor.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
-        hbox1.Add(self.combo_proveedor, 0)
+        self.combo_proveedor.SetHelpText("Filtra la lista de voces por proveedor: Azure, Amazon Polly, ElevenLabs, o Todos. Al cambiar el proveedor, el filtro de idioma se actualiza automáticamente.")
+        self.combo_proveedor.Bind(wx.EVT_COMBOBOX, self.al_cambiar_proveedor)
+        hbox1.Add(self.combo_proveedor, 0, wx.RIGHT, 15)
+
+        hbox1.Add(wx.StaticText(self, label="Idioma:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+        self.combo_idioma.SetSelection(0)
+        self.combo_idioma.SetHelpText("Filtra la lista de voces por idioma. Muestra solo los idiomas del proveedor seleccionado.")
+        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+        hbox1.Add(self.combo_idioma, 1)
         sz_filtros.Add(hbox1, 0, wx.EXPAND|wx.ALL, 5)
         
         # Fila B: Tipo y Gestión
@@ -491,6 +505,7 @@ class PanelVoces(wx.Panel):
             if id_voz not in self.favoritos:
                 self.favoritos.append(id_voz)
                 self.guardar_favoritos()
+                self._notificar_grabacion()
 
     def al_desmarcar_favorito(self, event):
         idx = event.GetIndex()
@@ -500,12 +515,32 @@ class PanelVoces(wx.Panel):
             if id_voz in self.favoritos:
                 self.favoritos.remove(id_voz)
                 self.guardar_favoritos()
+                self._notificar_grabacion()
+
+    def _notificar_grabacion(self):
+        """Recarga la lista de voces en PestanaGrabacion al instante."""
+        try:
+            # PanelVoces → Simplebook → SplitterWindow → PestanaAjustes → Notebook → VentanaPrincipal
+            ventana = self.GetParent().GetParent().GetParent().GetParent().GetParent()
+            if hasattr(ventana, 'pestana_grabacion'):
+                ventana.pestana_grabacion._cargar_voces_disponibles()
+        except Exception:
+            pass
 
     def cargar_datos_y_llenar(self):
         ruta = ruta_config("voces_disponibles.json")
+        ruta_conocidas = ruta_config("voces_conocidas.json")
         self.voces_todas = []
-        idiomas = set()
-        
+
+        # Cargar IDs de voces conocidas (para detectar novedades)
+        voces_conocidas = set()
+        try:
+            if os.path.exists(ruta_conocidas):
+                with open(ruta_conocidas, 'r', encoding='utf-8') as f:
+                    voces_conocidas = set(json.load(f))
+        except Exception:
+            pass
+
         if os.path.exists(ruta):
             try:
                 with open(ruta, 'r', encoding='utf-8') as f:
@@ -513,22 +548,25 @@ class PanelVoces(wx.Panel):
                     for prov, lista in datos.items():
                         for v in lista:
                             v["proveedor_id"] = prov
+                            # Es nueva si hay conocidas previas y esta no estaba
+                            v["es_nueva"] = bool(voces_conocidas) and v.get("id","") not in voces_conocidas
                             self.voces_todas.append(v)
-                            if v.get("idioma"): idiomas.add(v.get("idioma"))
             except Exception as e:
                 print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
                 self.voces_todas = []
-            
-        lista_idiomas = sorted(list(idiomas))
-        self.combo_idioma.Clear()
-        self.combo_idioma.Append("Todos")
-        self.combo_idioma.AppendItems(lista_idiomas)
-        self.combo_idioma.SetSelection(0)
-        
+
+        # Proveedor con opciones fijas; idioma se rellena según proveedor seleccionado
         self.combo_proveedor.Clear()
         self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "ElevenLabs"])
         self.combo_proveedor.SetSelection(0)
-        
+
+        # Con proveedor=Todos, poblar idioma con todos los disponibles
+        idiomas = sorted(set(v.get("idioma","") for v in self.voces_todas if v.get("idioma")))
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(idiomas)
+        self.combo_idioma.SetSelection(0)
+
         self.filtrar_y_mostrar()
 
     # Tabla de traducción de códigos de idioma a texto legible en español
@@ -587,6 +625,31 @@ class PanelVoces(wx.Panel):
         if etiquetas:
             return f"{nombre_base} {' '.join(etiquetas)}"
         return nombre_base
+
+    def al_cambiar_proveedor(self, event):
+        """Actualiza el combo de idioma para mostrar solo los del proveedor seleccionado."""
+        f_prov = self.combo_proveedor.GetValue()
+        if f_prov == "Todos":
+            voces_prov = self.voces_todas
+        elif f_prov == "Amazon Polly":
+            voces_prov = [v for v in self.voces_todas if "polly" in v.get("proveedor_id","").lower()]
+        elif f_prov == "Azure":
+            voces_prov = [v for v in self.voces_todas if "azure" in v.get("proveedor_id","").lower()]
+        elif f_prov == "ElevenLabs":
+            voces_prov = [v for v in self.voces_todas if "eleven" in v.get("proveedor_id","").lower()]
+        else:
+            voces_prov = self.voces_todas
+
+        idiomas = sorted(set(v.get("idioma","") for v in voces_prov if v.get("idioma")))
+        idioma_actual = self.combo_idioma.GetValue()
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(idiomas)
+        if idioma_actual in idiomas:
+            self.combo_idioma.SetValue(idioma_actual)
+        else:
+            self.combo_idioma.SetSelection(0)
+        self.filtrar_y_mostrar()
 
     def al_filtrar(self, event):
         self.filtrar_y_mostrar()
@@ -901,6 +964,50 @@ class PanelAtajos(wx.Panel):
             self._refrescar_aceleradores_frame()
             wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
 
+class PanelAcercaDe(wx.ScrolledWindow):
+    def __init__(self, padre):
+        super().__init__(padre, style=wx.VSCROLL)
+        self.SetScrollRate(0, 20)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        lineas = [
+            ("Epub TTS Accesible", True),
+            ("Versión: Fase 3 (2026)", False),
+            ("", False),
+            ("Aplicación de texto a voz accesible para libros EPUB y archivos TXT.", False),
+            ("Diseñada para usuarios de lectores de pantalla como NVDA.", False),
+            ("", False),
+            ("Créditos", True),
+            ("Desarrollo: Dayanna Parson", False),
+            ("Asistencia IA: Claude (Anthropic)", False),
+            ("", False),
+            ("Proveedores de voz:", True),
+            ("  Microsoft Azure Text to Speech", False),
+            ("  Amazon Polly (AWS)", False),
+            ("  ElevenLabs", False),
+            ("  Microsoft SAPI5 (voces del sistema, sin coste)", False),
+        ]
+        for texto, negrita in lineas:
+            if not texto:
+                sizer.Add((0, 6))
+                continue
+            lbl = wx.StaticText(self, label=texto)
+            if negrita:
+                f = lbl.GetFont()
+                f.SetWeight(wx.FONTWEIGHT_BOLD)
+                lbl.SetFont(f)
+            sizer.Add(lbl, 0, wx.LEFT | wx.TOP, 10 if negrita else 4)
+
+        self.btn_github = wx.Button(self, label="Abrir repositorio en GitHub")
+        self.btn_github.SetHelpText("Abre el repositorio del proyecto en el navegador.")
+        self.btn_github.Bind(
+            wx.EVT_BUTTON,
+            lambda e: webbrowser.open("https://github.com/Dayanna-Parson/epub-tts-accesible")
+        )
+        sizer.Add(self.btn_github, 0, wx.ALL, 12)
+        self.SetSizer(sizer)
+
+
 class PestanaAjustes(wx.Panel):
     def __init__(self, padre):
         super().__init__(padre)
@@ -908,12 +1015,13 @@ class PestanaAjustes(wx.Panel):
         self.config = self.cargar_config()
 
         self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
-        
+
         self.lista_cat = wx.ListBox(self.splitter, style=wx.LB_SINGLE)
         self.lista_cat.Append("General")
         self.lista_cat.Append("Claves y Proveedores")
         self.lista_cat.Append("Voces e Idiomas")
         self.lista_cat.Append("Atajos de teclado")
+        self.lista_cat.Append("Acerca de")
         self.lista_cat.SetSelection(0)
         self.lista_cat.SetHelpText(
             "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "
@@ -926,12 +1034,14 @@ class PestanaAjustes(wx.Panel):
         self.pag_claves = PanelClaves(self.panel_derecho, self.config)
         self.pag_voces = PanelVoces(self.panel_derecho, self.config)
         self.pag_atajos = PanelAtajos(self.panel_derecho)
-        
+        self.pag_acerca = PanelAcercaDe(self.panel_derecho)
+
         self.panel_derecho.AddPage(self.pag_general, "General")
         self.panel_derecho.AddPage(self.pag_claves, "Claves")
         self.panel_derecho.AddPage(self.pag_voces, "Voces")
         self.panel_derecho.AddPage(self.pag_atajos, "Atajos")
-        
+        self.panel_derecho.AddPage(self.pag_acerca, "Acerca de")
+
         self.splitter.SetMinimumPaneSize(150)
         self.splitter.SplitVertically(self.lista_cat, self.panel_derecho, 200)
 
@@ -954,8 +1064,10 @@ class PestanaAjustes(wx.Panel):
             return self.pag_claves.btn_save
         elif idx == 2:
             return self.pag_voces.btn_escuchar
-        else:
+        elif idx == 3:
             return self.pag_atajos.btn_restablecer
+        else:
+            return self.pag_acerca.btn_github
 
     def al_cambiar_cat(self, event):
         idx = self.lista_cat.GetSelection()

@@ -413,7 +413,7 @@ class VentanaPrincipal(wx.Frame):
         menu = wx.Menu()
 
         # Abrir libro
-        item_abrir = menu.Append(wx.ID_ANY, "Abrir libro EPUB…\tCtrl+A")
+        item_abrir = menu.Append(wx.ID_ANY, "Abrir libro EPUB")
         self.Bind(wx.EVT_MENU, self.al_abrir_archivo, item_abrir)
 
         # Submenú libros recientes
@@ -439,27 +439,23 @@ class VentanaPrincipal(wx.Frame):
         menu.AppendSeparator()
 
         # Navegación por el texto
-        item_b = menu.Append(wx.ID_ANY, "Buscar en el texto…\tCtrl+B")
+        item_b = menu.Append(wx.ID_ANY, "Buscar en el texto")
         self.Bind(wx.EVT_MENU, self.al_buscar, item_b)
-        item_g = menu.Append(wx.ID_ANY, "Ir a porcentaje…\tCtrl+G")
+        item_g = menu.Append(wx.ID_ANY, "Ir a porcentaje")
         self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, item_g)
-        item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores…\tCtrl+M")
+        item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores")
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
 
         menu.AppendSeparator()
-        item_salir = menu.Append(wx.ID_EXIT, "Salir\tAlt+F4")
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
         self.pestana_lectura.PopupMenu(menu)
         menu.Destroy()
 
     def _menu_contextual_grabacion(self):
-        """Menú contextual de la pestaña Grabación: TXT, recientes, proyectos."""
+        """Menú contextual de la pestaña Grabación: TXT recientes y proyectos."""
         menu = wx.Menu()
-
-        # Abrir TXT
-        item_abrir = menu.Append(wx.ID_ANY, "Abrir TXT para grabar…\tCtrl+T")
-        self.Bind(wx.EVT_MENU, self.al_abrir_txt_grabacion, item_abrir)
 
         # Submenú TXT recientes
         sub_txt = wx.Menu()
@@ -491,11 +487,11 @@ class VentanaPrincipal(wx.Frame):
 
         menu.AppendSeparator()
 
-        item_proy = menu.Append(wx.ID_ANY, "Abrir Gestor de Proyectos…\tCtrl+Shift+P")
+        item_proy = menu.Append(wx.ID_ANY, "Abrir Gestor de Proyectos")
         self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, item_proy)
 
         menu.AppendSeparator()
-        item_salir = menu.Append(wx.ID_EXIT, "Salir\tAlt+F4")
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
         self.pestana_grabacion.PopupMenu(menu)
