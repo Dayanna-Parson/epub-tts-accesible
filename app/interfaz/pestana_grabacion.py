@@ -667,6 +667,14 @@ class PestanaGrabacion(wx.Panel):
         )
         self._cargar_y_escanear()
 
+        # Notificar a VentanaPrincipal para añadir a TXT Recientes
+        try:
+            ventana = wx.GetTopLevelParent(self.GetParent())
+            if hasattr(ventana, 'agregar_txt_a_recientes'):
+                ventana.agregar_txt_a_recientes(self.ruta_txt_actual)
+        except Exception:
+            pass
+
     def cargar_txt_desde_ruta(self, ruta: str):
         """
         Carga un archivo TXT directamente (sin diálogo de apertura).

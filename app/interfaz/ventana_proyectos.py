@@ -354,8 +354,24 @@ class VentanaProyectos(wx.Frame):
     # ================================================================== #
 
     def _al_tecla_global(self, evento):
-        if evento.GetKeyCode() == wx.WXK_ESCAPE:
+        keycode = evento.GetKeyCode()
+        if keycode == wx.WXK_ESCAPE:
             self.Close()
+            return
+        # Alt+Arriba/Abajo: reordenar nodos (capturado en CHAR_HOOK para que el
+        # TreeCtrl no los consuma para su propia navegación)
+        if evento.AltDown() and keycode == wx.WXK_UP:
+            self._mover_nodo(-1)
+            return
+        if evento.AltDown() and keycode == wx.WXK_DOWN:
+            self._mover_nodo(+1)
+            return
+        # Tecla Menú / Shift+F10: menú contextual del árbol
+        if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
+            self._mostrar_menu_contextual()
+            return
+        if keycode == wx.WXK_F10 and evento.ShiftDown():
+            self._mostrar_menu_contextual()
             return
         evento.Skip()
 
@@ -448,6 +464,17 @@ class VentanaProyectos(wx.Frame):
 
         menu = wx.Menu()
 
+        # Nuevo proyecto raíz (siempre disponible)
+        item_nuevo_raiz = menu.Append(wx.ID_ANY, "Nuevo proyecto raíz")
+        self.Bind(wx.EVT_MENU, self._al_nuevo_raiz, item_nuevo_raiz)
+
+        # Nuevo hijo (requiere selección)
+        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo subproyecto hijo")
+        item_nuevo_hijo.Enable(bool(proyecto))
+        self.Bind(wx.EVT_MENU, self._al_nuevo_hijo, item_nuevo_hijo)
+
+        menu.AppendSeparator()
+
         item_asociar = menu.Append(wx.ID_ANY, "Asociar TXT actual de Grabación")
         item_asociar.Enable(bool(proyecto and ruta_txt))
         self.Bind(
@@ -455,12 +482,6 @@ class VentanaProyectos(wx.Frame):
             lambda e: self._asociar_txt_actual(proyecto, ruta_txt),
             item_asociar,
         )
-
-        menu.AppendSeparator()
-
-        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo &hijo…")
-        item_nuevo_hijo.Enable(bool(proyecto))
-        self.Bind(wx.EVT_MENU, self._al_nuevo_hijo, item_nuevo_hijo)
 
         menu.AppendSeparator()
 
