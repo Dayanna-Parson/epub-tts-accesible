@@ -35,17 +35,14 @@ from app.config_rutas import ruta_config
 
 
 # ── Tipos de proyecto disponibles ────────────────────────────────────────────
+# Mapeo interno simplificado (4 categorías legibles por NVDA).
+# Proyectos creados con los tipos anteriores (saga, libro, capitulo…) conservan
+# su valor almacenado; el combo no los preselecciona pero no los sobreescribe.
 TIPOS_PROYECTO = [
-    "saga",
-    "libro",
-    "capitulo",
-    "autoconclusivo",
-    "podcast",
-    "episodio",
-    "video_youtube",
-    "guion",
-    "dialogo",
-    "otro",
+    "Obra Mayor",       # Sagas, series, colecciones de varios volúmenes
+    "Obra Única",       # Libros, relatos, YouTube, autoconclusivos
+    "Podcast/Canal",    # Podcasts, episodios, series periódicas
+    "Otros",            # Guiones, diálogos, miscelánea
 ]
 
 # Ruta del archivo de persistencia
@@ -125,7 +122,7 @@ class GestorProyectos:
         Si se especifica padre_id, lo registra como hijo del padre.
         """
         if tipo not in TIPOS_PROYECTO:
-            tipo = "otro"
+            tipo = "Otros"
 
         nuevo_id = str(uuid.uuid4())
         self._datos["proyectos"][nuevo_id] = {

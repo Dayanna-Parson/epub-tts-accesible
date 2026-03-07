@@ -739,7 +739,16 @@ class PestanaGrabacion(wx.Panel):
                     self.asignaciones[etiqueta] = datos_voz
         self._actualizar_resumen_asignaciones()
         # Construir combo con estado (incluye asignaciones recuperadas del mapeo)
-        self._actualizar_combo_etiquetas(preservar_etiqueta=self.etiquetas_detectadas[0] if self.etiquetas_detectadas else None)
+        self._actualizar_combo_etiquetas(
+            preservar_etiqueta=self.etiquetas_detectadas[0] if self.etiquetas_detectadas else None
+        )
+
+        # Bautizo en carga inicial: si todas las etiquetas ya tienen voz asignada
+        # (recuperadas del mapeo local o del proyecto), ofrecer guardar en proyecto
+        sin_voz_inicial = [e for e in self.etiquetas_detectadas if e not in self.asignaciones]
+        if not sin_voz_inicial and not self.proyecto_actual and not self._ofrecio_proyecto:
+            self._ofrecio_proyecto = True
+            wx.CallAfter(self._ofrecer_guardar_en_proyecto)
 
         total    = len(self.fragmentos)
         etiq_str = ', '.join('@' + e for e in self.etiquetas_detectadas)
