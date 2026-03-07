@@ -74,8 +74,9 @@ class VentanaPrincipal(wx.Frame):
         self.pestana_ajustes = PestanaAjustes(self.notebook)
         self.notebook.AddPage(self.pestana_ajustes, "Ajustes")
 
-        # 2. Configurar Menú
-        self._configurar_menu()
+        # 2. La barra de menú clásica se ha eliminado.
+        # Toda la funcionalidad está en los menús contextuales de cada pestaña
+        # (Tecla Menú / Shift+F10) y en los atajos de teclado del AcceleratorTable.
 
         # Eventos
         self.Bind(wx.EVT_CLOSE, self.al_cerrar)
@@ -110,88 +111,33 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
 
     # ANCLAJE_INICIO: CONFIGURACION_MENUS
-    def _configurar_menu(self):
-        self.barra_menu = wx.MenuBar()
-        
-        # MENÚ ARCHIVO
-        self.menu_archivo = wx.Menu()
-        self.item_abrir = self.menu_archivo.Append(wx.ID_OPEN, "&Abrir Libro...\tCtrl+A")
-        self.item_abrir_txt = self.menu_archivo.Append(
-            wx.ID_ANY, "Abrir &TXT para grabar...\tCtrl+T"
-        )
-
-        # Submenú TXT Recientes (Grabación)
-        self.menu_txt_recientes = wx.Menu()
-        self.menu_txt_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
-        self.menu_archivo.AppendSubMenu(self.menu_txt_recientes, "TXT Recientes para &grabar")
-
-        # Submenú Recientes (EPUB Lectura)
-        self.menu_recientes = wx.Menu()
-        self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
-        self.menu_archivo.AppendSubMenu(self.menu_recientes, "Libros &Recientes")
-
-        self.menu_archivo.AppendSeparator()
-        self.item_salir = self.menu_archivo.Append(wx.ID_EXIT, "&Salir\tAlt+F4")
-
-        self.barra_menu.Append(self.menu_archivo, "&Archivo")
-
-        # Menú Proyectos (transversal a todas las pestañas)
-        self.menu_proyectos = wx.Menu()
-        self.item_gestionar_proyectos = self.menu_proyectos.Append(
-            wx.ID_ANY, "&Gestionar proyectos...\tCtrl+Shift+P"
-        )
-        self.barra_menu.Append(self.menu_proyectos, "&Proyectos")
-
-        # MENÚ IR A
-        self.menu_ir = wx.Menu()
-        self.item_buscar = self.menu_ir.Append(wx.ID_FIND, "&Buscar en texto...\tCtrl+B")
-        self.item_porcentaje = self.menu_ir.Append(wx.ID_ANY, "Ir a &Porcentaje...\tCtrl+G")
-        self.item_marcadores = self.menu_ir.Append(wx.ID_ANY, "Gestor de &Marcadores...\tCtrl+M")
-        
-        self.barra_menu.Append(self.menu_ir, "&Ir a...")
-
-        # MENÚ AYUDA
-        self.menu_ayuda = wx.Menu()
-        self.item_atajos = self.menu_ayuda.Append(wx.ID_ANY, "&Ver atajos de teclado")
-        self.item_readme = self.menu_ayuda.Append(wx.ID_ANY, "&README del proyecto")
-        self.menu_ayuda.AppendSeparator()
-        self.item_github = self.menu_ayuda.Append(wx.ID_ANY, "&Repositorio del Proyecto (GitHub)")
-        self.item_web = self.menu_ayuda.Append(wx.ID_ANY, "TifloHistorias.com (Próximamente)")
-        self.item_web.Enable(False)
-        self.barra_menu.Append(self.menu_ayuda, "A&yuda")
-
-        self.SetMenuBar(self.barra_menu)
-
-        # Vincular eventos
-        self.Bind(wx.EVT_MENU, self.al_abrir_archivo,          self.item_abrir)
-        self.Bind(wx.EVT_MENU, self.al_abrir_txt_grabacion,    self.item_abrir_txt)
-        self.Bind(wx.EVT_MENU, self.al_salir,                  self.item_salir)
-        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,       self.item_marcadores)
-        self.Bind(wx.EVT_MENU, self.al_buscar,                 self.item_buscar)
-        self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje,        self.item_porcentaje)
-        self.Bind(wx.EVT_MENU, self.al_ver_atajos,             self.item_atajos)
-        self.Bind(wx.EVT_MENU, self.al_abrir_readme,           self.item_readme)
-        self.Bind(wx.EVT_MENU, self.al_abrir_github,           self.item_github)
-        self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, self.item_gestionar_proyectos)
-
-        # Estado inicial: arranca en pestaña Lectura
-        self.item_abrir.Enable(True)
-        self.item_abrir_txt.Enable(False)
+    # (La barra de menú clásica fue eliminada en Prompt 8.
+    #  Toda la funcionalidad está en los menús contextuales por pestaña
+    #  — método _mostrar_menu_contextual() — y en el AcceleratorTable.)
     # ANCLAJE_FIN: CONFIGURACION_MENUS
 
     # ANCLAJE_INICIO: EVENTOS_GLOBALES
     def al_navegacion_tab_global(self, evento):
         """
-        Implementa el bucle de tabulación accesible bidireccional para todas las pestañas.
-
-        Tab en el último control    → foco vuelve al Notebook (salir del panel)
-        Shift+Tab en el primer control → foco salta al último control del mismo panel
-                                         (bucle circular dentro del panel)
+        Gestiona:
+          - Tab cíclico accesible (bucle dentro de cada pestaña).
+          - Tecla Menú / Shift+F10: abre el menú contextual de la pestaña activa.
 
         Vinculado al Frame en lugar de a cada Panel individual para evitar
         interferencias con eventos internos de controles hijo como el TreeCtrl.
         """
-        if evento.GetKeyCode() != wx.WXK_TAB:
+        keycode = evento.GetKeyCode()
+
+        # Tecla Menú (Applications key) → menú contextual de la pestaña activa
+        if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
+            self._mostrar_menu_contextual()
+            return
+        # Shift+F10 → ídem (alternativa universal para teclados sin tecla Menú)
+        if keycode == wx.WXK_F10 and evento.ShiftDown():
+            self._mostrar_menu_contextual()
+            return
+
+        if keycode != wx.WXK_TAB:
             evento.Skip()
             return
 
@@ -231,24 +177,10 @@ class VentanaPrincipal(wx.Frame):
 
     def al_cambiar_pestana(self, evento):
         indice = evento.GetSelection()
-        es_lectura   = (indice == 0)
-        es_grabacion = (indice == 1)
-
-        # El menú "Ir a..." solo está activo en pestaña Lectura
-        # Índice de menú: 0=Archivo, 1=Proyectos, 2=Ir a..., 3=Ayuda
-        self.barra_menu.EnableTop(2, es_lectura)
-
-        # Menú Archivo: ítems contextuales según pestaña activa
-        self.item_abrir.Enable(es_lectura)
-        self.item_abrir_txt.Enable(es_grabacion)
-
         if indice == 0:
             # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
             self._configurar_aceleradores_globales()
-
-        # Guardar la pestaña activa inmediatamente
         self._guardar_sesion()
-
         evento.Skip()
 
     def al_abrir_gestor_proyectos(self, evento):
@@ -506,6 +438,110 @@ class VentanaPrincipal(wx.Frame):
                 self.actualizar_menu_recientes()
     # ANCLAJE_FIN: HISTORIAL_RECIENTES
 
+    # ANCLAJE_INICIO: MENUS_CONTEXTUALES
+    def _mostrar_menu_contextual(self):
+        """Muestra el menú contextual correspondiente a la pestaña activa."""
+        indice = self.notebook.GetSelection()
+        if indice == 0:
+            self._menu_contextual_lectura()
+        elif indice == 1:
+            self._menu_contextual_grabacion()
+        # Pestaña Ajustes (2): no tiene menú contextual propio
+
+    def _menu_contextual_lectura(self):
+        """Menú contextual de la pestaña Lectura: abrir, recientes, navegación."""
+        menu = wx.Menu()
+
+        # Abrir libro
+        item_abrir = menu.Append(wx.ID_ANY, "Abrir libro EPUB…\tCtrl+A")
+        self.Bind(wx.EVT_MENU, self.al_abrir_archivo, item_abrir)
+
+        # Submenú libros recientes
+        sub_rec = wx.Menu()
+        if self.archivos_recientes:
+            for i, ruta in enumerate(self.archivos_recientes):
+                nombre = os.path.basename(ruta)
+                id_item = wx.NewIdRef()
+                sub_rec.Append(id_item, f"{i+1}. {nombre}")
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda e, p=ruta: self.abrir_libro_reciente(p),
+                    id=id_item,
+                )
+            sub_rec.AppendSeparator()
+            id_borrar = wx.NewIdRef()
+            sub_rec.Append(id_borrar, "Borrar historial")
+            self.Bind(wx.EVT_MENU, self.al_borrar_recientes, id=id_borrar)
+        else:
+            sub_rec.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+        menu.AppendSubMenu(sub_rec, "Libros Recientes")
+
+        menu.AppendSeparator()
+
+        # Navegación por el texto
+        item_b = menu.Append(wx.ID_ANY, "Buscar en el texto…\tCtrl+B")
+        self.Bind(wx.EVT_MENU, self.al_buscar, item_b)
+        item_g = menu.Append(wx.ID_ANY, "Ir a porcentaje…\tCtrl+G")
+        self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, item_g)
+        item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores…\tCtrl+M")
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
+
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir\tAlt+F4")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+
+        self.pestana_lectura.PopupMenu(menu)
+        menu.Destroy()
+
+    def _menu_contextual_grabacion(self):
+        """Menú contextual de la pestaña Grabación: TXT, recientes, proyectos."""
+        menu = wx.Menu()
+
+        # Abrir TXT
+        item_abrir = menu.Append(wx.ID_ANY, "Abrir TXT para grabar…\tCtrl+T")
+        self.Bind(wx.EVT_MENU, self.al_abrir_txt_grabacion, item_abrir)
+
+        # Submenú TXT recientes
+        sub_txt = wx.Menu()
+        if self.txt_recientes:
+            gestor = self.pestana_grabacion.gestor_proyectos
+            gestor.recargar()
+            for i, ruta in enumerate(self.txt_recientes):
+                nombre = os.path.basename(ruta)
+                proyecto = gestor.proyecto_de_archivo(ruta)
+                etiqueta = (
+                    f"{i+1}. {nombre}  ({proyecto['nombre']})"
+                    if proyecto else
+                    f"{i+1}. {nombre}"
+                )
+                id_item = wx.NewIdRef()
+                sub_txt.Append(id_item, etiqueta)
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda e, p=ruta: self._abrir_txt_reciente(p),
+                    id=id_item,
+                )
+            sub_txt.AppendSeparator()
+            id_borrar = wx.NewIdRef()
+            sub_txt.Append(id_borrar, "Borrar historial de TXT")
+            self.Bind(wx.EVT_MENU, self._al_borrar_txt_recientes, id=id_borrar)
+        else:
+            sub_txt.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+        menu.AppendSubMenu(sub_txt, "TXT Recientes para grabar")
+
+        menu.AppendSeparator()
+
+        item_proy = menu.Append(wx.ID_ANY, "Abrir Gestor de Proyectos…\tCtrl+Shift+P")
+        self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, item_proy)
+
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir\tAlt+F4")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+
+        self.pestana_grabacion.PopupMenu(menu)
+        menu.Destroy()
+    # ANCLAJE_FIN: MENUS_CONTEXTUALES
+
     # ANCLAJE_INICIO: ACELERADORES_GLOBALES
     def _configurar_aceleradores_globales(self):
         """
@@ -537,6 +573,18 @@ class VentanaPrincipal(wx.Frame):
             self.Bind(wx.EVT_MENU,
                       lambda e, c=clave: self._ejecutar_atajo_global(c),
                       id=id_atajo)
+
+        # Atajos fijos adicionales (Ctrl+T y Ctrl+Shift+P, antes en el menú)
+        _FIJOS_EXTRA = [
+            ("ctrl_t",  wx.ACCEL_CTRL,              ord('T'), self.al_abrir_txt_grabacion),
+            ("ctrl_sp", wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('P'), self.al_abrir_gestor_proyectos),
+        ]
+        for clave, flag, keycode, handler in _FIJOS_EXTRA:
+            if clave not in self._ids_atajos_global:
+                self._ids_atajos_global[clave] = wx.NewIdRef()
+            id_atajo = self._ids_atajos_global[clave]
+            entradas.append((flag, keycode, id_atajo))
+            self.Bind(wx.EVT_MENU, handler, id=id_atajo)
 
         if entradas:
             self.SetAcceleratorTable(wx.AcceleratorTable(entradas))

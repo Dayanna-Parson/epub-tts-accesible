@@ -81,9 +81,11 @@ class VentanaProyectos(wx.Frame):
             ),
         )
         self.arbol.SetHelpText(
-            "Árbol de proyectos. Flechas: navegar. F2: renombrar. Supr: eliminar. "
-            "Alt+Arriba o Alt+Abajo: reordenar hermanos. "
-            "Tecla Menú o Shift+F10: más opciones. Intro/Espacio: expandir o contraer."
+            "Árbol de proyectos. Flechas: navegar entre nodos. "
+            "Tab: pasar al panel de detalle para editar nombre o tipo. "
+            "Alt+Arriba o Alt+Abajo: reordenar el nodo dentro de sus hermanos. "
+            "F2: renombrar inline. Supr: eliminar. "
+            "Tecla Menú o Shift+F10: más opciones (nuevo hijo, asociar TXT, cambiar tipo)."
         )
         sz_arbol.Add(lbl_arbol,  0, wx.BOTTOM, 4)
         sz_arbol.Add(self.arbol, 1, wx.EXPAND)
@@ -155,33 +157,31 @@ class VentanaProyectos(wx.Frame):
         sizer_principal.Add(sz_detalle, 3, wx.EXPAND | wx.TOP | wx.RIGHT | wx.BOTTOM, 8)
 
         # ── Barra inferior ────────────────────────────────────────────────
+        # Nota: "Nuevo proyecto raíz" y "Nuevo hijo" se eliminaron de esta barra;
+        # están accesibles vía menú contextual (Tecla Menú / Shift+F10 / clic derecho).
         sz_barra = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_nuevo_raiz = wx.Button(panel_raiz, label="&Nuevo proyecto raíz")
-        self.btn_nuevo_raiz.SetHelpText("Crea un nuevo proyecto de nivel raíz sin padre.")
-        self.btn_nuevo_hijo = wx.Button(panel_raiz, label="Nuevo &hijo del seleccionado")
-        self.btn_nuevo_hijo.SetHelpText("Crea un proyecto hijo dentro del proyecto seleccionado.")
         self.btn_eliminar = wx.Button(panel_raiz, label="&Eliminar proyecto seleccionado")
         self.btn_eliminar.SetHelpText(
-            "Elimina el proyecto seleccionado y sus hijos si los tiene. Pide confirmación."
+            "Elimina el proyecto seleccionado y sus hijos si los tiene. Pide confirmación. "
+            "También puedes eliminar con la tecla Supr estando en el árbol."
         )
         self.btn_cerrar = wx.Button(panel_raiz, label="&Cerrar")
         self.btn_cerrar.SetHelpText(
-            "Cierra esta ventana y devuelve el foco a donde estaba en la ventana principal."
+            "Cierra esta ventana y devuelve el foco a donde estaba en la ventana principal. "
+            "También puedes cerrar con la tecla Escape."
         )
 
         # Etiqueta de estado — retroalimentación sin diálogos modales
         self.lbl_estado = wx.StaticText(panel_raiz, label="")
         self.lbl_estado.SetHelpText(
-            "Muestra el resultado de la última acción realizada en el gestor de proyectos."
+            "Muestra el resultado de la última acción. NVDA lo verbaliza al enfocar esta etiqueta."
         )
 
-        sz_barra.Add(self.btn_nuevo_raiz, 0, wx.RIGHT, 8)
-        sz_barra.Add(self.btn_nuevo_hijo, 0, wx.RIGHT, 8)
-        sz_barra.Add(self.btn_eliminar,   0, wx.RIGHT, 8)
-        sz_barra.Add((0, 0),             1)   # separador flexible
-        sz_barra.Add(self.lbl_estado,    0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 16)
-        sz_barra.Add(self.btn_cerrar,     0)
+        sz_barra.Add(self.btn_eliminar,  0, wx.RIGHT, 8)
+        sz_barra.Add((0, 0),            1)   # separador flexible
+        sz_barra.Add(self.lbl_estado,   0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 16)
+        sz_barra.Add(self.btn_cerrar,    0)
 
         sizer_raiz.Add(sizer_principal, 1, wx.EXPAND)
         sizer_raiz.Add(wx.StaticLine(panel_raiz), 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
@@ -202,10 +202,8 @@ class VentanaProyectos(wx.Frame):
         self.btn_añadir_txt.Bind(wx.EVT_BUTTON, self._al_añadir_txt)
         self.btn_quitar_txt.Bind(wx.EVT_BUTTON, self._al_quitar_txt)
 
-        self.btn_nuevo_raiz.Bind(wx.EVT_BUTTON, self._al_nuevo_raiz)
-        self.btn_nuevo_hijo.Bind(wx.EVT_BUTTON, self._al_nuevo_hijo)
-        self.btn_eliminar.Bind(wx.EVT_BUTTON,   self._al_eliminar)
-        self.btn_cerrar.Bind(wx.EVT_BUTTON,     lambda e: self.Close())
+        self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
+        self.btn_cerrar.Bind(wx.EVT_BUTTON,   lambda e: self.Close())
 
     # ================================================================== #
     # Carga y reconstrucción del árbol
@@ -280,6 +278,12 @@ class VentanaProyectos(wx.Frame):
     # ================================================================== #
 
     def _al_seleccionar_nodo(self, evento):
+        """
+        Actualiza el panel de detalle al cambiar la selección en el árbol.
+        El foco NO se mueve automáticamente al panel de detalle —
+        el usuario navega con flechas en el árbol y pulsa Tab cuando quiere editar.
+        Esto evita el salto errático de foco que confunde a NVDA.
+        """
         proyecto = self._proyecto_seleccionado()
         if proyecto is None:
             self._limpiar_detalle()
@@ -292,7 +296,7 @@ class VentanaProyectos(wx.Frame):
             self.combo_tipo.SetSelection(idx_tipo)
         self._actualizar_lista_archivos(proyecto)
         self._actualizar_lista_voces(proyecto["id"])
-        wx.CallAfter(self.txt_nombre.SetFocus)
+        # NO SetFocus aquí: el foco se queda en el árbol para que NVDA lea el nodo
         evento.Skip()
 
     def _limpiar_detalle(self):
