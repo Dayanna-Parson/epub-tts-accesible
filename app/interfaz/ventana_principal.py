@@ -322,35 +322,8 @@ class VentanaPrincipal(wx.Frame):
             pass
 
     def actualizar_menu_txt_recientes(self):
-        """Reconstruye el submenú de TXT recientes mostrando el nombre del proyecto."""
-        for item in self.menu_txt_recientes.GetMenuItems():
-            self.menu_txt_recientes.Delete(item)
-
-        if not self.txt_recientes:
-            self.menu_txt_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
-            return
-
-        gestor = self.pestana_grabacion.gestor_proyectos
-        gestor.recargar()
-
-        for i, ruta in enumerate(self.txt_recientes):
-            nombre_archivo = os.path.basename(ruta)
-            proyecto = gestor.proyecto_de_archivo(ruta)
-            if proyecto:
-                etiqueta = f"{i+1}. {nombre_archivo}  ({proyecto['nombre']})"
-            else:
-                etiqueta = f"{i+1}. {nombre_archivo}"
-            id_item = wx.NewIdRef()
-            self.menu_txt_recientes.Append(id_item, etiqueta)
-            self.Bind(
-                wx.EVT_MENU,
-                lambda evt, p=ruta: self._abrir_txt_reciente(p),
-                id=id_item,
-            )
-
-        self.menu_txt_recientes.AppendSeparator()
-        item_borrar = self.menu_txt_recientes.Append(wx.ID_ANY, "Borrar historial de TXT")
-        self.Bind(wx.EVT_MENU, self._al_borrar_txt_recientes, item_borrar)
+        """No-op: los TXT recientes se construyen dinámicamente en _menu_contextual_grabacion."""
+        pass
 
     def _abrir_txt_reciente(self, ruta: str):
         if os.path.exists(ruta):
@@ -410,21 +383,8 @@ class VentanaPrincipal(wx.Frame):
             print(f"Error guardando recientes: {e}")
 
     def actualizar_menu_recientes(self):
-        for item in self.menu_recientes.GetMenuItems():
-            self.menu_recientes.Delete(item)
-            
-        if not self.archivos_recientes:
-            self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
-        else:
-            for i, ruta in enumerate(self.archivos_recientes):
-                nombre_archivo = os.path.basename(ruta)
-                id_item = wx.NewIdRef()
-                self.menu_recientes.Append(id_item, f"{i+1}. {nombre_archivo}")
-                self.Bind(wx.EVT_MENU, lambda evt, p=ruta: self.abrir_libro_reciente(p), id=id_item)
-            
-            self.menu_recientes.AppendSeparator()
-            item_borrar = self.menu_recientes.Append(wx.ID_ANY, "Borrar historial")
-            self.Bind(wx.EVT_MENU, self.al_borrar_recientes, item_borrar)
+        """No-op: los libros recientes se construyen dinámicamente en _menu_contextual_lectura."""
+        pass
 
     def abrir_libro_reciente(self, ruta):
         if os.path.exists(ruta):
