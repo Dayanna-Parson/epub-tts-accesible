@@ -196,10 +196,13 @@ class GestorProyectos:
 
     def eliminar_proyecto(self, proyecto_id: str, recursivo: bool = False):
         """
-        Elimina un proyecto.
-        Si recursivo=True, elimina también todos sus hijos en cascada.
+        Mueve un proyecto (y opcionalmente sus hijos) a la papelera (soft-delete).
+        Si recursivo=True, incluye todos los hijos en cascada en la misma entrada.
         Si recursivo=False y tiene hijos, lanza ValueError.
+        Permite restaurar con restaurar_proyecto(raiz_id).
         """
+        import datetime
+
         proyecto = self._datos["proyectos"].get(proyecto_id)
         if not proyecto:
             return
@@ -211,10 +214,22 @@ class GestorProyectos:
                 "Usa recursivo=True para eliminarlo junto con sus hijos."
             )
 
-        # Eliminar hijos primero si es recursivo
-        if recursivo:
-            for hijo_id in list(hijos):
-                self.eliminar_proyecto(hijo_id, recursivo=True)
+        # Recolectar todo el subárbol en una sola entrada de papelera
+        entrada = {
+            "timestamp": datetime.datetime.now().isoformat(),
+            "raiz_id": proyecto_id,
+            "padre_original": proyecto.get("padre"),
+            "proyectos": {},   # {id: copia_del_proyecto}
+        }
+
+        def _recolectar(pid):
+            p = self._datos["proyectos"].get(pid)
+            if p:
+                entrada["proyectos"][pid] = dict(p)
+                for hijo_id in p.get("hijos", []):
+                    _recolectar(hijo_id)
+
+        _recolectar(proyecto_id)
 
         # Desvincularse del padre
         padre_id = proyecto.get("padre")
@@ -223,7 +238,65 @@ class GestorProyectos:
             if proyecto_id in hijos_padre:
                 hijos_padre.remove(proyecto_id)
 
-        del self._datos["proyectos"][proyecto_id]
+        # Eliminar del dict activo (en orden: hijos antes que raíz)
+        def _borrar_recursivo(pid):
+            p = self._datos["proyectos"].get(pid)
+            if p:
+                for hijo_id in list(p.get("hijos", [])):
+                    _borrar_recursivo(hijo_id)
+                del self._datos["proyectos"][pid]
+
+        _borrar_recursivo(proyecto_id)
+
+        # Añadir a la papelera
+        self._datos.setdefault("papelera", []).append(entrada)
+        self.guardar()
+
+    # ── Papelera (soft-delete) ─────────────────────────────────────────────────
+
+    def listar_papelera(self) -> list:
+        """
+        Devuelve la lista de entradas en la papelera.
+        Cada entrada es un dict con: raiz_id, timestamp, padre_original, proyectos.
+        """
+        return list(self._datos.get("papelera", []))
+
+    def restaurar_proyecto(self, raiz_id: str) -> bool:
+        """
+        Restaura un proyecto desde la papelera al lugar que ocupaba antes.
+        Si el padre original ya no existe, se restaura como raíz.
+        Devuelve True si se restauró, False si no se encontró en la papelera.
+        """
+        papelera = self._datos.get("papelera", [])
+        idx = next(
+            (i for i, e in enumerate(papelera) if e["raiz_id"] == raiz_id),
+            None,
+        )
+        if idx is None:
+            return False
+
+        entrada = papelera.pop(idx)
+
+        # Reintegrar todos los proyectos del subárbol
+        for pid, p in entrada["proyectos"].items():
+            self._datos["proyectos"][pid] = p
+
+        # Re-vincular al padre original si sigue existiendo
+        padre_id = entrada.get("padre_original")
+        if padre_id and padre_id in self._datos["proyectos"]:
+            padre = self._datos["proyectos"][padre_id]
+            if raiz_id not in padre.get("hijos", []):
+                padre.setdefault("hijos", []).append(raiz_id)
+        else:
+            # El padre ya no existe: la raíz pasa a ser proyecto raíz
+            self._datos["proyectos"][raiz_id]["padre"] = None
+
+        self.guardar()
+        return True
+
+    def vaciar_papelera(self):
+        """Elimina definitiva e irreversiblemente todos los proyectos en la papelera."""
+        self._datos["papelera"] = []
         self.guardar()
 
     # ── Asociación de archivos TXT ────────────────────────────────────────────

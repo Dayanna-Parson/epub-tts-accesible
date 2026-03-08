@@ -204,6 +204,7 @@ class VentanaPrincipal(wx.Frame):
             parent=self,
             ruta_txt_activo=ruta_txt,
             foco_previo=foco_previo,
+            gestor_proyectos=self.pestana_grabacion.gestor_proyectos,
         )
         self._ventana_proyectos.Show()
 
