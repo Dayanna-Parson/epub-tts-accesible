@@ -48,6 +48,7 @@ class VentanaProyectos(wx.Frame):
 
         self._construir_interfaz()
         self._cargar_arbol()
+        self._configurar_aceleradores()
 
         if ruta_txt_activo:
             wx.CallAfter(self._navegar_a_archivo, ruta_txt_activo)
@@ -206,6 +207,37 @@ class VentanaProyectos(wx.Frame):
 
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
         self.btn_cerrar.Bind(wx.EVT_BUTTON,   lambda e: self.Close())
+
+    # ================================================================== #
+    # Aceleradores de ventana (Ctrl+Arriba/Abajo/Intro)
+    # ================================================================== #
+
+    def _configurar_aceleradores(self):
+        """
+        Registra Ctrl+Arriba, Ctrl+Abajo y Ctrl+Intro como aceleradores
+        a nivel de ventana (SetAcceleratorTable sobre el Frame).
+
+        Usar AcceleratorTable —en lugar de EVT_KEY_DOWN— fuerza a Windows a
+        entregar el evento a la app ANTES de que NVDA u otros interceptores
+        del sistema lo procesen, resolviendo el problema de atajos silenciosos.
+
+        Los mismos IDs (self._id_mover_*) se reutilizan en el menú contextual,
+        de modo que menú y atajo comparten un único handler cada uno.
+        """
+        self._id_mover_arriba  = wx.NewIdRef()
+        self._id_mover_abajo   = wx.NewIdRef()
+        self._id_abrir_carpeta = wx.NewIdRef()
+
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo(-1),          id=self._id_mover_arriba)
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo(+1),          id=self._id_mover_abajo)
+        self.Bind(wx.EVT_MENU, lambda e: self._abrir_carpeta_proyecto(), id=self._id_abrir_carpeta)
+
+        self.SetAcceleratorTable(wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, wx.WXK_UP,           self._id_mover_arriba),
+            (wx.ACCEL_CTRL, wx.WXK_DOWN,         self._id_mover_abajo),
+            (wx.ACCEL_CTRL, wx.WXK_RETURN,       self._id_abrir_carpeta),
+            (wx.ACCEL_CTRL, wx.WXK_NUMPAD_ENTER, self._id_abrir_carpeta),
+        ]))
 
     # ================================================================== #
     # Carga y reconstrucción del árbol
@@ -485,6 +517,15 @@ class VentanaProyectos(wx.Frame):
 
         menu.AppendSeparator()
 
+        # Reordenar — solo disponible para proyectos con padre (no raíz)
+        puede_mover = bool(proyecto and proyecto.get("padre"))
+        item_mover_arriba = menu.Append(self._id_mover_arriba, "Mover arriba (Ctrl+Arriba)")
+        item_mover_arriba.Enable(puede_mover)
+        item_mover_abajo = menu.Append(self._id_mover_abajo, "Mover abajo (Ctrl+Abajo)")
+        item_mover_abajo.Enable(puede_mover)
+
+        menu.AppendSeparator()
+
         item_renombrar = menu.Append(wx.ID_ANY, "Renombrar (F2)")
         item_renombrar.Enable(bool(proyecto))
         self.Bind(
@@ -531,7 +572,7 @@ class VentanaProyectos(wx.Frame):
     def _mover_nodo(self, delta: int):
         """
         Mueve el nodo seleccionado una posición arriba (delta=-1) o abajo (delta=+1).
-        Anuncia el resultado mediante la barra de estado y pyttsx3 para NVDA.
+        Anuncia resultado, devuelve el foco al árbol y selecciona el nodo movido.
         """
         proyecto = self._proyecto_seleccionado()
         if proyecto is None:
@@ -540,13 +581,17 @@ class VentanaProyectos(wx.Frame):
         if movido:
             id_movido = proyecto["id"]
             self._cargar_arbol(seleccionar_id=id_movido)
+            # Devolver foco al árbol después de reconstruirlo
+            wx.CallAfter(self.arbol.SetFocus)
             direccion = "arriba" if delta < 0 else "abajo"
-            self._anunciar_estado(f"Movido {direccion}: {proyecto['nombre']}")
-            self._hablar(f"Movido {direccion}")
+            nombre = proyecto["nombre"]
+            self._anunciar_estado(f"Movido {direccion}: {nombre}")
+            self._hablar(f"{nombre} movido {direccion}")
         else:
             self._anunciar_estado(
                 "No se puede mover: ya está en el límite o es un proyecto raíz."
             )
+            self._hablar("No se puede mover")
 
     # ================================================================== #
     # Guardar nombre y tipo desde el panel de detalle
