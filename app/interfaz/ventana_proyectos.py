@@ -34,14 +34,16 @@ class VentanaProyectos(wx.Frame):
       - Volcado de voces desde mapeo_etiquetas.json además de proyectos.json.
     """
 
-    def __init__(self, parent, ruta_txt_activo=None, foco_previo=None):
+    def __init__(self, parent, ruta_txt_activo=None, foco_previo=None, gestor_proyectos=None):
         super().__init__(
             parent,
             title="Gestión de Proyectos — Epub TTS",
             size=(900, 600),
         )
         self._frame_principal = parent
-        self._gestor = GestorProyectos()
+        # Compartir la instancia del gestor con PestanaGrabacion para evitar
+        # que dos instancias independientes se sobreescriban mutuamente al guardar.
+        self._gestor = gestor_proyectos if gestor_proyectos is not None else GestorProyectos()
         self._mapa_nodos = {}           # {TreeItemId → proyecto_id (str uuid)}
         self._ruta_txt_activo = ruta_txt_activo
         self._foco_previo = foco_previo
@@ -88,7 +90,7 @@ class VentanaProyectos(wx.Frame):
             "Ctrl+Arriba o Ctrl+Abajo: reordenar el nodo dentro de sus hermanos. "
             "Ctrl+Intro: abrir la carpeta del proyecto en el Explorador. "
             "F2: renombrar inline. Supr: eliminar. "
-            "Tecla Menú o Shift+F10: más opciones (nuevo hijo, asociar TXT, cambiar tipo)."
+            "Tecla Menú o Shift+F10: más opciones (nuevo hijo, asociar TXT, cambiar tipo, restaurar eliminados)."
         )
         sz_arbol.Add(lbl_arbol,  0, wx.BOTTOM, 4)
         sz_arbol.Add(self.arbol, 1, wx.EXPAND)
@@ -540,9 +542,34 @@ class VentanaProyectos(wx.Frame):
 
         menu.AppendSeparator()
 
-        item_eliminar = menu.Append(wx.ID_ANY, "Eliminar…")
+        item_eliminar = menu.Append(wx.ID_ANY, "Eliminar…\tSupr")
         item_eliminar.Enable(bool(proyecto))
         self.Bind(wx.EVT_MENU, self._al_eliminar, item_eliminar)
+
+        # Submenú Restaurar eliminado
+        papelera = self._gestor.listar_papelera()
+        sub_restaurar = wx.Menu()
+        if papelera:
+            for entrada in papelera:
+                raiz = entrada["proyectos"].get(entrada["raiz_id"], {})
+                nombre_pap = raiz.get("nombre", entrada["raiz_id"])
+                ts = entrada.get("timestamp", "")[:10]   # solo la fecha
+                etiq = f"{nombre_pap}  [{ts}]"
+                item_rest = sub_restaurar.Append(wx.ID_ANY, etiq)
+                raiz_id_cap = entrada["raiz_id"]
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda e, rid=raiz_id_cap: self._al_restaurar(rid),
+                    item_rest,
+                )
+            sub_restaurar.AppendSeparator()
+            item_vaciar = sub_restaurar.Append(wx.ID_ANY, "Vaciar papelera (eliminar definitivamente)")
+            self.Bind(wx.EVT_MENU, self._al_vaciar_papelera, item_vaciar)
+        else:
+            item_vacio = sub_restaurar.Append(wx.ID_ANY, "No hay elementos eliminados")
+            item_vacio.Enable(False)
+
+        menu.AppendSubMenu(sub_restaurar, "Restaurar eliminado…")
 
         self.arbol.PopupMenu(menu)
         menu.Destroy()
@@ -744,6 +771,41 @@ class VentanaProyectos(wx.Frame):
         self._cargar_arbol()
 
     # ================================================================== #
+    # Restaurar proyectos eliminados (papelera)
+    # ================================================================== #
+
+    def _al_restaurar(self, raiz_id: str):
+        """Restaura un proyecto desde la papelera al árbol."""
+        ok = self._gestor.restaurar_proyecto(raiz_id)
+        if ok:
+            self._cargar_arbol(seleccionar_id=raiz_id)
+            self._anunciar_estado("Proyecto restaurado correctamente.")
+        else:
+            wx.MessageBox(
+                "No se encontró el proyecto en la papelera.",
+                "Error al restaurar", wx.OK | wx.ICON_WARNING
+            )
+
+    def _al_vaciar_papelera(self, evento):
+        """Elimina definitivamente todos los proyectos en la papelera."""
+        papelera = self._gestor.listar_papelera()
+        n = len(papelera)
+        if n == 0:
+            return
+        dlg = wx.MessageDialog(
+            self,
+            f"¿Eliminar definitivamente {n} proyecto(s) de la papelera?\n\n"
+            "Esta acción NO se puede deshacer.",
+            "Vaciar papelera",
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING,
+        )
+        resp = dlg.ShowModal()
+        dlg.Destroy()
+        if resp == wx.ID_YES:
+            self._gestor.vaciar_papelera()
+            self._anunciar_estado("Papelera vaciada.")
+
+    # ================================================================== #
     # Eliminar proyecto
     # ================================================================== #
 
@@ -757,11 +819,11 @@ class VentanaProyectos(wx.Frame):
             return
         tiene_hijos = bool(self._gestor.listar_hijos(proyecto["id"]))
         mensaje = (
-            f"¿Eliminar «{proyecto['nombre']}» y TODOS sus hijos?\n\n"
-            "Esta acción no se puede deshacer."
+            f"¿Eliminar «{proyecto['nombre']}» y TODOS sus subproyectos?\n\n"
+            "Podrás restaurarlos desde el menú contextual (opción «Restaurar eliminado»)."
             if tiene_hijos else
             f"¿Eliminar el proyecto «{proyecto['nombre']}»?\n\n"
-            "Esta acción no se puede deshacer."
+            "Podrás restaurarlo desde el menú contextual (opción «Restaurar eliminado»)."
         )
         dlg = wx.MessageDialog(
             self, mensaje, "Confirmar eliminación",
