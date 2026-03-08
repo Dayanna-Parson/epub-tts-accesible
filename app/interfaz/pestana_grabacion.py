@@ -610,6 +610,7 @@ class PestanaGrabacion(wx.Panel):
         """
         Sincroniza el campo Título con el nombre del proyecto asociado (feature f).
         Se activa al salir del campo (EVT_KILL_FOCUS).
+        También actualiza el nodo en VentanaProyectos si está abierta.
         """
         evento.Skip()  # IMPRESCINDIBLE para no bloquear el ciclo de foco
         if not self.proyecto_actual:
@@ -618,6 +619,14 @@ class PestanaGrabacion(wx.Panel):
         if titulo and titulo != self.proyecto_actual.get("nombre", ""):
             self.gestor_proyectos.renombrar_proyecto(self.proyecto_actual["id"], titulo)
             self.proyecto_actual["nombre"] = titulo
+            # Notificar al árbol de proyectos si está abierto
+            try:
+                ventana = wx.GetTopLevelParent(self.GetParent())
+                vp = getattr(ventana, '_ventana_proyectos', None)
+                if vp and vp.IsShown():
+                    vp.actualizar_nombre_proyecto(self.proyecto_actual["id"], titulo)
+            except Exception:
+                pass
 
     def _ofrecer_guardar_en_proyecto(self):
         """

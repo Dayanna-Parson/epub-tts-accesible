@@ -37,7 +37,7 @@ class VentanaProyectos(wx.Frame):
     def __init__(self, parent, ruta_txt_activo=None, foco_previo=None):
         super().__init__(
             parent,
-            title="Gestión de Proyectos — TifloHistorias",
+            title="Gestión de Proyectos — Epub TTS",
             size=(900, 600),
         )
         self._frame_principal = parent
@@ -82,8 +82,10 @@ class VentanaProyectos(wx.Frame):
         )
         self.arbol.SetHelpText(
             "Árbol de proyectos. Flechas: navegar entre nodos. "
+            "Cada nodo anuncia nombre, estado (Grabado o Pendiente) y nivel. "
             "Tab: pasar al panel de detalle para editar nombre o tipo. "
-            "Alt+Arriba o Alt+Abajo: reordenar el nodo dentro de sus hermanos. "
+            "Ctrl+Arriba o Ctrl+Abajo: reordenar el nodo dentro de sus hermanos. "
+            "Ctrl+Intro: abrir la carpeta del proyecto en el Explorador. "
             "F2: renombrar inline. Supr: eliminar. "
             "Tecla Menú o Shift+F10: más opciones (nuevo hijo, asociar TXT, cambiar tipo)."
         )
@@ -228,12 +230,12 @@ class VentanaProyectos(wx.Frame):
         else:
             self._limpiar_detalle()
 
-    def _añadir_nodo_recursivo(self, nodo_padre_wx, proyecto: dict):
-        etiqueta = f"{proyecto['nombre']} [{proyecto['tipo']}]"
+    def _añadir_nodo_recursivo(self, nodo_padre_wx, proyecto: dict, nivel: int = 1):
+        etiqueta = self._etiqueta_nodo(proyecto, nivel)
         nodo = self.arbol.AppendItem(nodo_padre_wx, etiqueta)
         self._mapa_nodos[nodo] = proyecto["id"]
         for hijo in self._gestor.listar_hijos(proyecto["id"]):
-            self._añadir_nodo_recursivo(nodo, hijo)
+            self._añadir_nodo_recursivo(nodo, hijo, nivel + 1)
 
     def _proyecto_seleccionado(self) -> dict | None:
         nodo = self.arbol.GetSelection()
@@ -358,14 +360,6 @@ class VentanaProyectos(wx.Frame):
         if keycode == wx.WXK_ESCAPE:
             self.Close()
             return
-        # Alt+Arriba/Abajo: reordenar nodos (capturado en CHAR_HOOK para que el
-        # TreeCtrl no los consuma para su propia navegación)
-        if evento.AltDown() and keycode == wx.WXK_UP:
-            self._mover_nodo(-1)
-            return
-        if evento.AltDown() and keycode == wx.WXK_DOWN:
-            self._mover_nodo(+1)
-            return
         # Tecla Menú / Shift+F10: menú contextual del árbol
         if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
             self._mostrar_menu_contextual()
@@ -393,18 +387,23 @@ class VentanaProyectos(wx.Frame):
 
     def _al_tecla_arbol_raw(self, evento):
         """
-        Gestiona Alt+Arriba, Alt+Abajo (reordenar) y tecla Menú / Shift+F10
-        (menú contextual) — EVT_KEY_DOWN para acceder a modificadores.
+        EVT_KEY_DOWN directo sobre el TreeCtrl.
+        Ctrl+Arriba / Ctrl+Abajo : reordenar nodo entre hermanos.
+        Ctrl+Intro               : abrir carpeta del proyecto en el Explorador.
+        Tecla Menú / Shift+F10   : menú contextual.
         """
-        keycode  = evento.GetKeyCode()
-        alt      = evento.AltDown()
-        shift    = evento.ShiftDown()
+        keycode = evento.GetKeyCode()
+        ctrl    = evento.ControlDown()
+        shift   = evento.ShiftDown()
 
-        if alt and keycode == wx.WXK_UP:
+        if ctrl and keycode == wx.WXK_UP:
             self._mover_nodo(-1)
-            return   # consumir la tecla
-        elif alt and keycode == wx.WXK_DOWN:
+            return
+        elif ctrl and keycode == wx.WXK_DOWN:
             self._mover_nodo(+1)
+            return
+        elif ctrl and keycode in (wx.WXK_RETURN, wx.WXK_NUMPAD_ENTER):
+            self._abrir_carpeta_proyecto()
             return
         elif keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
             self._mostrar_menu_contextual()
@@ -437,8 +436,9 @@ class VentanaProyectos(wx.Frame):
             proyecto = self._gestor.obtener_proyecto(proyecto_id)
             if proyecto:
                 self._gestor.renombrar_proyecto(proyecto_id, nuevo_nombre)
-                tipo = proyecto.get("tipo", "otro")
-                wx.CallAfter(self.arbol.SetItemText, nodo, f"{nuevo_nombre} [{tipo}]")
+                proyecto["nombre"] = nuevo_nombre
+                nivel = self._nivel_nodo(nodo)
+                wx.CallAfter(self.arbol.SetItemText, nodo, self._etiqueta_nodo(proyecto, nivel))
                 wx.CallAfter(self.txt_nombre.ChangeValue, nuevo_nombre)
         evento.Skip()
 
@@ -565,8 +565,8 @@ class VentanaProyectos(wx.Frame):
             return
         self._gestor.renombrar_proyecto(proyecto["id"], nuevo_nombre)
         nodo = self.arbol.GetSelection()
-        tipo = proyecto.get("tipo", "otro")
-        self.arbol.SetItemText(nodo, f"{nuevo_nombre} [{tipo}]")
+        proyecto["nombre"] = nuevo_nombre
+        self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
         self._anunciar_estado(f"Nombre guardado: {nuevo_nombre}")
 
     def _al_cambiar_tipo(self, evento):
@@ -579,8 +579,8 @@ class VentanaProyectos(wx.Frame):
         nuevo_tipo = TIPOS_PROYECTO[idx]
         self._gestor.cambiar_tipo(proyecto["id"], nuevo_tipo)
         nodo = self.arbol.GetSelection()
-        nombre = proyecto.get("nombre", "")
-        self.arbol.SetItemText(nodo, f"{nombre} [{nuevo_tipo}]")
+        proyecto["tipo"] = nuevo_tipo
+        self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
 
     # ================================================================== #
     # Gestión de archivos TXT asociados
@@ -741,6 +741,100 @@ class VentanaProyectos(wx.Frame):
     # Auxiliares
     # ================================================================== #
 
+    def _nivel_nodo(self, nodo) -> int:
+        """Devuelve la profundidad del nodo (1 = raíz visible)."""
+        nivel = 1
+        actual = nodo
+        raiz = self.arbol.GetRootItem()
+        while True:
+            padre = self.arbol.GetItemParent(actual)
+            if not padre or not padre.IsOk() or padre == raiz:
+                break
+            nivel += 1
+            actual = padre
+        return nivel
+
+    def _estado_proyecto(self, proyecto: dict) -> str:
+        """
+        Devuelve 'Grabado' si existe al menos un archivo .mp3/.wav generado
+        para este proyecto; 'Pendiente' si no.
+        Comprueba:
+          1. Carpeta Grabaciones_TifloHistorias/<nombre_proyecto>/ (salida de grabador_audio).
+          2. Archivos .mp3/.wav hermanos de cualquier TXT asociado.
+        """
+        import re
+        from app.config_rutas import RAIZ
+
+        def _limpiar(nombre):
+            return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"
+
+        nombre = proyecto.get("nombre", "")
+        carpeta_audio = os.path.join(RAIZ, "Grabaciones_TifloHistorias", _limpiar(nombre))
+        if os.path.isdir(carpeta_audio):
+            for _, _, archivos in os.walk(carpeta_audio):
+                if any(f.endswith(('.mp3', '.wav')) for f in archivos):
+                    return "Grabado"
+
+        for ruta_txt in proyecto.get("archivos", []):
+            base = os.path.splitext(ruta_txt)[0]
+            if os.path.exists(base + ".mp3") or os.path.exists(base + ".wav"):
+                return "Grabado"
+
+        return "Pendiente"
+
+    def _etiqueta_nodo(self, proyecto: dict, nivel: int) -> str:
+        """Devuelve el texto del nodo tal como NVDA lo leerá al navegar."""
+        estado = self._estado_proyecto(proyecto)
+        return f"{proyecto['nombre']} [{proyecto['tipo']}] — {estado} — Nivel {nivel}"
+
+    def _abrir_carpeta_proyecto(self):
+        """Ctrl+Intro: abre en el Explorador la carpeta de audio o TXT del proyecto."""
+        import re
+        from app.config_rutas import RAIZ
+
+        proyecto = self._proyecto_seleccionado()
+        if proyecto is None:
+            self._anunciar_estado("Selecciona primero un proyecto en el árbol.")
+            return
+
+        def _limpiar(nombre):
+            return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"
+
+        nombre = proyecto.get("nombre", "")
+        carpeta_audio = os.path.join(RAIZ, "Grabaciones_TifloHistorias", _limpiar(nombre))
+
+        if os.path.isdir(carpeta_audio):
+            carpeta = carpeta_audio
+        elif proyecto.get("archivos"):
+            carpeta = os.path.dirname(proyecto["archivos"][0])
+        else:
+            self._anunciar_estado("No hay carpeta asociada a este proyecto.")
+            return
+
+        try:
+            if os.name == "nt":
+                os.startfile(carpeta)
+            else:
+                import subprocess
+                subprocess.Popen(["xdg-open", carpeta])
+            self._anunciar_estado(f"Abriendo carpeta: {nombre}")
+        except Exception as e:
+            self._anunciar_estado(f"No se pudo abrir la carpeta: {e}")
+
+    def actualizar_nombre_proyecto(self, proyecto_id: str, nuevo_nombre: str):
+        """
+        Actualiza en tiempo real el nodo del árbol cuando el nombre del proyecto
+        cambia desde PestanaGrabacion (campo Título al perder el foco).
+        Llama a GestorProyectos.renombrar_proyecto antes de invocar este método.
+        """
+        for nodo, pid in self._mapa_nodos.items():
+            if pid == proyecto_id:
+                proyecto = self._gestor.obtener_proyecto(proyecto_id)
+                if proyecto:
+                    nivel = self._nivel_nodo(nodo)
+                    self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, nivel))
+                break
+
     def _anunciar_estado(self, mensaje: str):
         """Actualiza la barra de estado y el título de la ventana temporalmente."""
         self.lbl_estado.SetLabel(mensaje)
@@ -749,7 +843,7 @@ class VentanaProyectos(wx.Frame):
 
     def _restaurar_titulo(self):
         if self:
-            self.SetTitle("Gestión de Proyectos — TifloHistorias")
+            self.SetTitle("Gestión de Proyectos — Epub TTS")
 
     def _hablar(self, texto: str):
         """Verbaliza texto con pyttsx3 en hilo de fondo para anuncios NVDA urgentes."""
