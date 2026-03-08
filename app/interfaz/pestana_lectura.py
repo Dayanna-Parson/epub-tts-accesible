@@ -381,13 +381,21 @@ class PestanaLectura(wx.Panel):
 
     def _dividir_en_fragmentos(self, texto, pos_base):
         """
-        Divide el texto en fragmentos de máximo MAX_CHARS caracteres,
-        respetando límites de párrafo o frase para no cortar palabras.
-        300 caracteres es el punto óptimo: respuesta casi instantánea
-        de la API sin perder calidad de entonación por frases incompletas.
+        Divide el texto en fragmentos de máximo MAX_CHARS caracteres usando
+        una jerarquía de puntos de corte para preservar la entonación natural:
+
+          P0 · Límite de párrafo (\n\n)
+          P1 · Pausas fuertes  (. ! ? … seguidos de espacio o salto de línea)
+          P2 · Pausas medias   (, ; seguidos de espacio)
+          P3 · Seguridad       (último espacio — nunca partir palabras)
+          P4 · Último recurso  (corte estricto en MAX_CHARS)
+
+        La búsqueda de P1–P3 se realiza en los últimos VENTANA_BUSQUEDA
+        caracteres del bloque, garantizando fragmentos compactos sin silabear.
         Retorna lista de (texto_fragmento, pos_inicio_global).
         """
         MAX_CHARS = 200
+        VENTANA = 200  # ventana hacia atrás para buscar puntos de corte naturales
         resultado = []
         restante = texto
         pos_actual = pos_base
@@ -397,26 +405,44 @@ class PestanaLectura(wx.Panel):
                 resultado.append((restante, pos_actual))
                 break
 
-            # Buscar punto de corte ideal: doble salto de línea antes de MAX_CHARS
-            corte = restante.rfind('\n\n', 0, MAX_CHARS)
-            if corte != -1:
-                corte += 2  # incluir el \n\n en el fragmento anterior
-            else:
-                # Sin párrafo, buscar final de frase
-                for sep in ['. ', '! ', '? ', '.\n', '!\n', '?\n']:
-                    corte = restante.rfind(sep, 0, MAX_CHARS)
-                    if corte != -1:
-                        corte += len(sep)
+            inicio = max(0, MAX_CHARS - VENTANA)
+            corte = -1
+
+            # P0: Límite de párrafo — doble salto de línea
+            c = restante.rfind('\n\n', inicio, MAX_CHARS)
+            if c != -1:
+                corte = c + 2
+
+            # P1: Pausas fuertes — punto, exclamación, interrogación, elipsis
+            if corte <= 0:
+                for sep in ('. ', '! ', '? ', '…', '...',
+                            '.\n', '!\n', '?\n'):
+                    c = restante.rfind(sep, inicio, MAX_CHARS)
+                    if c != -1:
+                        corte = c + len(sep)
                         break
 
+            # P2: Pausas medias — coma o punto y coma
             if corte <= 0:
-                # Sin punto de corte natural: cortar en el límite estricto
+                for sep in (', ', '; '):
+                    c = restante.rfind(sep, inicio, MAX_CHARS)
+                    if c != -1:
+                        corte = c + len(sep)
+                        break
+
+            # P3: Último espacio — nunca partir palabras
+            if corte <= 0:
+                c = restante.rfind(' ', inicio, MAX_CHARS)
+                if c > 0:
+                    corte = c + 1
+
+            # P4: Último recurso — corte estricto
+            if corte <= 0:
                 corte = MAX_CHARS
 
-            fragmento = restante[:corte]
-            resultado.append((fragmento, pos_actual))
-            restante = restante[corte:]
+            resultado.append((restante[:corte], pos_actual))
             pos_actual += corte
+            restante = restante[corte:]
 
         return resultado
 

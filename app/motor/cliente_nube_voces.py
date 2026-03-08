@@ -236,6 +236,67 @@ class GestorVoces:
 
         return voces_procesadas
 
+    def actualizar_proveedor(self, proveedor: str) -> str:
+        """
+        Descarga y guarda las voces de un único proveedor sin tocar los demás.
+        proveedor: "azure" | "polly" | "elevenlabs"
+        """
+        # Cargar la caché existente para no machacar los otros proveedores
+        if os.path.exists(self.ruta_cache_voces):
+            try:
+                with open(self.ruta_cache_voces, 'r', encoding='utf-8') as f:
+                    self.voces_cache = json.load(f)
+            except Exception:
+                pass
+
+        config = self.cargar_configuracion()
+
+        if proveedor == "azure":
+            datos = config.get("azure", {})
+            key = datos.get("key", "").strip()
+            region = datos.get("region", "").strip()
+            if not (key and region):
+                return "Azure: Faltan datos (Key/Región)."
+            try:
+                voces = self._descargar_azure(key, region)
+                self.voces_cache["azure"] = voces
+                self._guardar_cache()
+                return f"Azure: {len(voces)} voces descargadas."
+            except Exception as e:
+                return f"Azure Error: {e}"
+
+        elif proveedor == "polly":
+            datos = config.get("polly", {})
+            access_key = datos.get("access_key", "").strip()
+            secret_key = datos.get("secret_key", "").strip()
+            region = datos.get("region", "us-east-1").strip() or "us-east-1"
+            if not (access_key and secret_key):
+                return "Amazon Polly: Faltan credenciales (Access Key / Secret Key)."
+            try:
+                voces = self._descargar_polly(access_key, secret_key, region)
+                self.voces_cache["polly"] = voces
+                self._guardar_cache()
+                return f"Amazon Polly: {len(voces)} voces descargadas."
+            except ImportError:
+                return "Amazon Polly Error: boto3 no instalado (pip install boto3)."
+            except Exception as e:
+                return f"Amazon Polly Error: {e}"
+
+        elif proveedor == "elevenlabs":
+            datos = config.get("elevenlabs", {})
+            key = datos.get("api_key", "").strip()
+            if not key:
+                return "ElevenLabs: Falta API Key."
+            try:
+                voces = self._descargar_elevenlabs(key)
+                self.voces_cache["elevenlabs"] = voces
+                self._guardar_cache()
+                return f"ElevenLabs: {len(voces)} voces descargadas."
+            except Exception as e:
+                return f"ElevenLabs Error: {e}"
+
+        return f"Proveedor desconocido: {proveedor}"
+
     def _guardar_cache(self):
         """Guarda el diccionario completo de voces en voces_disponibles.json"""
         try:
