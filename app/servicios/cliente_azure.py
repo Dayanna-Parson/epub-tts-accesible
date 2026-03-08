@@ -26,12 +26,12 @@ class ClienteAzure:
 
     def _cargar_config(self):
         try:
-            ruta = ruta_config("config_general.json")
+            ruta = ruta_config("ajustes.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"[Error] No se pudo leer config_general.json en ClienteAzure: {e}")
+            print(f"[Error] No se pudo leer ajustes.json en ClienteAzure: {e}")
         return {}
 
     def obtener_voces(self):

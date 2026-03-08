@@ -5,7 +5,7 @@ import json
 import logging
 import threading
 
-from app.motor.gestor_config import GestorProyectos, TIPOS_PROYECTO
+from app.motor.gestor_proyectos import GestorProyectos, TIPOS_PROYECTO
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
@@ -464,12 +464,12 @@ class VentanaProyectos(wx.Frame):
 
         menu = wx.Menu()
 
-        # Nuevo proyecto raíz (siempre disponible)
-        item_nuevo_raiz = menu.Append(wx.ID_ANY, "Nuevo proyecto raíz")
+        # Nuevo proyecto (siempre disponible)
+        item_nuevo_raiz = menu.Append(wx.ID_ANY, "Nuevo proyecto")
         self.Bind(wx.EVT_MENU, self._al_nuevo_raiz, item_nuevo_raiz)
 
-        # Nuevo hijo (requiere selección)
-        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo subproyecto hijo")
+        # Nuevo subproyecto dentro del seleccionado (requiere selección)
+        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo subproyecto dentro del seleccionado")
         item_nuevo_hijo.Enable(bool(proyecto))
         self.Bind(wx.EVT_MENU, self._al_nuevo_hijo, item_nuevo_hijo)
 
