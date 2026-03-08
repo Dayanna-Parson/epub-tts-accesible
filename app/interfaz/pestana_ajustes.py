@@ -279,7 +279,7 @@ class PanelClaves(wx.ScrolledWindow):
         btn_az_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://azure.microsoft.com/es-es/services/cognitive-services/text-to-speech/"))
         btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")
         btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")
-        btn_az_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+        btn_az_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "azure"))
         btn_az_del = wx.Button(self, label="Borrar clave Azure")
         btn_az_del.SetHelpText("Borra los datos de acceso de Azure guardados en la aplicación.")
         btn_az_del.Bind(wx.EVT_BUTTON, self.al_borrar_azure)
@@ -324,7 +324,7 @@ class PanelClaves(wx.ScrolledWindow):
         btn_po_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aws.amazon.com/polly/"))
         btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
         btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
-        btn_po_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+        btn_po_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "polly"))
         
         hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
         hb_po.Add(btn_po_check, 0)
@@ -349,7 +349,7 @@ class PanelClaves(wx.ScrolledWindow):
         btn_el_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://elevenlabs.io/"))
         btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
         btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")
-        btn_el_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+        btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))
         
         hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
         hb_el.Add(btn_el_check, 0)
@@ -398,7 +398,7 @@ class PanelClaves(wx.ScrolledWindow):
         self.txt_az_region.Clear()
         self.al_guardar(None)
 
-    def al_comprobar(self, event):
+    def al_comprobar(self, event, proveedor=None):
         self.al_guardar(None)
         # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces
         # Así el filtro "Solo nuevas voces" detectará solo las recién llegadas
@@ -417,7 +417,10 @@ class PanelClaves(wx.ScrolledWindow):
         wx.BeginBusyCursor()
         try:
             gestor = GestorVoces()
-            res = gestor.actualizar_voces_desde_internet()
+            if proveedor:
+                res = gestor.actualizar_proveedor(proveedor)
+            else:
+                res = gestor.actualizar_voces_desde_internet()
             wx.EndBusyCursor()
             wx.MessageBox(f"Resultado:\n{res}", "Info")
         except Exception as e:
