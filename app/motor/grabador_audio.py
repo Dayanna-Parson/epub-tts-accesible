@@ -88,7 +88,7 @@ class GrabadorAudio:
 
     def _cargar_config(self):
         try:
-            ruta = ruta_config("config_general.json")
+            ruta = ruta_config("ajustes.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     self.config = json.load(f)

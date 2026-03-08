@@ -17,7 +17,7 @@ class GestorVoces:
     """
     def __init__(self):
         # Rutas absolutas — evita fallos cuando el CWD no es la raíz del proyecto
-        self.ruta_config = ruta_config("config_general.json")
+        self.ruta_config = ruta_config("ajustes.json")
         self.ruta_cache_voces = ruta_config("voces_disponibles.json")
 
         # Estructura base para guardar las voces

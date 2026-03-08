@@ -30,7 +30,7 @@ import subprocess
 import logging
 
 from app.config_rutas import ruta_config
-from app.motor.gestor_config import TIPOS_PROYECTO
+from app.motor.gestor_proyectos import TIPOS_PROYECTO
 from app.motor.procesador_etiquetas import (
     escanear_etiquetas,
     fragmentar_texto,
@@ -263,7 +263,7 @@ class PestanaGrabacion(wx.Panel):
         super().__init__(padre, style=wx.TAB_TRAVERSAL)
 
         # ── Estado interno ────────────────────────────────────────────────
-        from app.motor.gestor_config import GestorProyectos
+        from app.motor.gestor_proyectos import GestorProyectos
         self.proyecto_actual   = None          # dict del proyecto activo o None
         self.gestor_proyectos  = GestorProyectos()
         self._ofrecio_proyecto = False         # evita mostrar el diálogo dos veces por TXT

@@ -3,7 +3,7 @@ import os
 import json
 import webbrowser
 import wx.lib.mixins.listctrl as listmix
-from app.motor.gestor_voces import GestorVoces
+from app.motor.cliente_nube_voces import GestorVoces
 from app.motor.reproductor_voz import ReproductorVoz
 from app.config_rutas import ruta_config, CONFIG_DIR
 
@@ -118,7 +118,16 @@ class PanelGeneral(wx.ScrolledWindow):
         )
         self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
         sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
-        
+
+        self.btn_limpiar = wx.Button(self, label="Limpiar caché")
+        self.btn_limpiar.SetHelpText(
+            "Elimina carpetas __pycache__, archivos .tmp y audio temporal generado "
+            "por la aplicación. Al terminar muestra cuántos archivos se borraron y "
+            "cuánto espacio se liberó."
+        )
+        self.btn_limpiar.Bind(wx.EVT_BUTTON, self._limpiar_cache)
+        sizer.Add(self.btn_limpiar, 0, wx.ALL, 10)
+
         self.SetSizer(sizer)
 
     def _crear_fila_limite(self, nombre, gastado, limite, clave):
@@ -156,6 +165,83 @@ class PanelGeneral(wx.ScrolledWindow):
                     self.cuota.set_limite(clave, int(val))
         
         wx.MessageBox("Configuración y límites guardados.")
+
+    def _limpiar_cache(self, event=None):
+        from app.config_rutas import RAIZ
+        import shutil
+
+        total_archivos = 0
+        total_bytes = 0
+        errores = 0
+
+        # 1. Carpetas __pycache__ en el árbol del proyecto
+        for dirpath, dirnames, _ in os.walk(RAIZ):
+            # No entrar en carpetas ocultas ni en el entorno virtual
+            dirnames[:] = [
+                d for d in dirnames
+                if not d.startswith('.') and d not in ('venv', '.venv', 'env', 'node_modules')
+            ]
+            if os.path.basename(dirpath) == '__pycache__':
+                try:
+                    size = sum(
+                        os.path.getsize(os.path.join(dirpath, f))
+                        for f in os.listdir(dirpath)
+                        if os.path.isfile(os.path.join(dirpath, f))
+                    )
+                    n = len(os.listdir(dirpath))
+                    shutil.rmtree(dirpath, ignore_errors=True)
+                    total_archivos += n
+                    total_bytes += size
+                except Exception:
+                    errores += 1
+
+        # 2. Archivos .tmp en todo el proyecto
+        for dirpath, dirnames, filenames in os.walk(RAIZ):
+            dirnames[:] = [
+                d for d in dirnames
+                if not d.startswith('.') and d not in ('venv', '.venv', 'env', 'node_modules')
+            ]
+            for fname in filenames:
+                if fname.endswith('.tmp'):
+                    fpath = os.path.join(dirpath, fname)
+                    try:
+                        total_bytes += os.path.getsize(fpath)
+                        os.remove(fpath)
+                        total_archivos += 1
+                    except Exception:
+                        errores += 1
+
+        # 3. Archivos de audio temporal en la carpeta 'cache' del proyecto
+        carpeta_cache = os.path.join(RAIZ, 'cache')
+        if os.path.isdir(carpeta_cache):
+            for fname in os.listdir(carpeta_cache):
+                if fname.endswith(('.mp3', '.wav', '.ogg', '.pcm')):
+                    fpath = os.path.join(carpeta_cache, fname)
+                    try:
+                        total_bytes += os.path.getsize(fpath)
+                        os.remove(fpath)
+                        total_archivos += 1
+                    except Exception:
+                        errores += 1
+
+        # Formatear tamaño legible
+        if total_bytes >= 1_048_576:
+            tam_str = f"{total_bytes / 1_048_576:.1f} MB"
+        elif total_bytes >= 1024:
+            tam_str = f"{total_bytes / 1024:.1f} KB"
+        else:
+            tam_str = f"{total_bytes} bytes"
+
+        if total_archivos == 0:
+            msg = "No se encontró ningún archivo temporal que limpiar."
+        else:
+            msg = f"Limpieza completada.\n{total_archivos} archivo(s) eliminado(s) — {tam_str} liberado(s)."
+        if errores:
+            msg += f"\n({errores} archivo(s) no pudieron borrarse por estar en uso.)"
+
+        wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+
+
 class PanelClaves(wx.ScrolledWindow):
     def __init__(self, padre, config):
         super().__init__(padre, style=wx.VSCROLL)
@@ -1011,7 +1097,7 @@ class PanelAcercaDe(wx.ScrolledWindow):
 class PestanaAjustes(wx.Panel):
     def __init__(self, padre):
         super().__init__(padre)
-        self.ruta_config = ruta_config("config_general.json")
+        self.ruta_config = ruta_config("ajustes.json")
         self.config = self.cargar_config()
 
         self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
@@ -1059,7 +1145,7 @@ class PestanaAjustes(wx.Panel):
         """
         idx = self.panel_derecho.GetSelection()
         if idx == 0:
-            return self.pag_general.btn_guardar
+            return self.pag_general.btn_limpiar
         elif idx == 1:
             return self.pag_claves.btn_save
         elif idx == 2:
@@ -1089,7 +1175,7 @@ class PestanaAjustes(wx.Panel):
         except FileNotFoundError:
             return {}
         except Exception as e:
-            print(f"[Error] No se pudo leer config_general.json: {e}")
+            print(f"[Error] No se pudo leer ajustes.json: {e}")
             return {}
 
     def guardar_config_en_archivo(self):

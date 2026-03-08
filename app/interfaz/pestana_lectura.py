@@ -87,7 +87,7 @@ class PestanaLectura(wx.Panel):
         # del siguiente cuando queda ~30% del actual
         self._precarga_solicitada = False
         self.ruta_libro_actual = None
-        self.ruta_datos_lectura = ruta_config("datos_lectura.json")
+        self.ruta_datos_lectura = ruta_config("estado_lectura.json")
         
         sizer_principal = wx.BoxSizer(wx.VERTICAL)
 

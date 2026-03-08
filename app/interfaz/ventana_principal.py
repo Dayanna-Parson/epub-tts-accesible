@@ -55,7 +55,7 @@ class VentanaPrincipal(wx.Frame):
     """Ventana raíz de la aplicación que contiene las pestañas y el menú principal."""
     
     # ANCLAJE_INICIO: CONSTRUCCION_INTERFAZ_PRINCIPAL
-    def __init__(self, padre, titulo):
+    def __init__(self, padre, titulo="Epub TTS"):
         super().__init__(padre, title=titulo, size=(1000, 700))
         self.Maximize(True)
 
@@ -92,11 +92,12 @@ class VentanaPrincipal(wx.Frame):
 
         # Historial de recientes — ruta absoluta para evitar fallos de permisos según CWD
         self.archivos_recientes = []
-        self.ruta_recientes = ruta_config("libros_recientes.json")
+        self.ruta_recientes = ruta_config("historial_epub.json")
         self.cargar_historial_recientes()
 
-        # TXT recientes (para el submenú de Grabación)
+        # TXT recientes — archivo independiente historial_grabacion.json
         self.txt_recientes = []
+        self._ruta_historial_grabacion = ruta_config("historial_grabacion.json")
 
         # Aplicar AcceleratorTable al Frame para que los atajos funcionen
         # incluso cuando el foco está dentro del RichTextCtrl de lectura
@@ -104,7 +105,7 @@ class VentanaPrincipal(wx.Frame):
         self._configurar_aceleradores_globales()
 
         # Restaurar sesión anterior antes de mostrar la ventana
-        self._ruta_config_general = ruta_config("config_general.json")
+        self._ruta_config_general = ruta_config("ajustes.json")
         self._restaurar_sesion()
 
         self.Show()
@@ -245,7 +246,7 @@ class VentanaPrincipal(wx.Frame):
 
     # ANCLAJE_INICIO: MEMORIA_SESION
     def _cargar_config_general(self) -> dict:
-        """Lee config_general.json sin borrar claves existentes."""
+        """Lee ajustes.json sin borrar claves existentes."""
         try:
             if os.path.exists(self._ruta_config_general):
                 with open(self._ruta_config_general, "r", encoding="utf-8") as f:
@@ -257,7 +258,7 @@ class VentanaPrincipal(wx.Frame):
         return {}
 
     def _guardar_sesion(self):
-        """Persiste el estado de sesión en config_general.json."""
+        """Persiste el estado de sesión en ajustes.json."""
         try:
             config = self._cargar_config_general()
             config["ultima_pestana"]       = self.notebook.GetSelection()
@@ -274,7 +275,7 @@ class VentanaPrincipal(wx.Frame):
             pass  # No es crítico si falla el guardado de sesión
 
     def _restaurar_sesion(self):
-        """Restaura el estado de sesión desde config_general.json."""
+        """Restaura el estado de sesión desde ajustes.json."""
         config = self._cargar_config_general()
 
         # Restaurar pestaña activa
@@ -293,11 +294,14 @@ class VentanaPrincipal(wx.Frame):
         if ultimo_txt and os.path.exists(ultimo_txt):
             self.pestana_grabacion.cargar_txt_desde_ruta(ultimo_txt)
 
-        # Cargar lista de TXT recientes y actualizar submenú
-        self.txt_recientes = [
-            r for r in config.get("txt_recientes", [])
-            if os.path.exists(r)
-        ]
+        # Cargar lista de TXT recientes desde historial_grabacion.json
+        self.txt_recientes = []
+        try:
+            if os.path.exists(self._ruta_historial_grabacion):
+                with open(self._ruta_historial_grabacion, encoding="utf-8") as f:
+                    self.txt_recientes = [r for r in json.load(f) if os.path.exists(r)]
+        except Exception:
+            pass
         self.actualizar_menu_txt_recientes()
     # ANCLAJE_FIN: MEMORIA_SESION
 
@@ -313,11 +317,9 @@ class VentanaPrincipal(wx.Frame):
 
     def _guardar_txt_recientes(self):
         try:
-            config = self._cargar_config_general()
-            config["txt_recientes"] = self.txt_recientes
-            os.makedirs(os.path.dirname(self._ruta_config_general), exist_ok=True)
-            with open(self._ruta_config_general, "w", encoding="utf-8") as f:
-                json.dump(config, f, ensure_ascii=False, indent=2)
+            os.makedirs(os.path.dirname(self._ruta_historial_grabacion), exist_ok=True)
+            with open(self._ruta_historial_grabacion, "w", encoding="utf-8") as f:
+                json.dump(self.txt_recientes, f, ensure_ascii=False)
         except Exception:
             pass
 

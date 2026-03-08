@@ -23,14 +23,24 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# --- MIGRACIÓN DE ARCHIVOS DE CONFIGURACIÓN ---
+# Se ejecuta antes de importar nada de la app para garantizar que los nombres
+# de archivo nuevos (ajustes.json, historial_epub.json, etc.) ya existen.
+try:
+    sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+    from app.config_rutas import migrar_archivos_config
+    migrar_archivos_config()
+except Exception:
+    pass
+
 # --- ARCHIVO DE PÁNICO ---
 # Captura cualquier excepción no controlada que cierre la app y la escribe en
-# error_tiflo.log en la raíz del proyecto, para diagnóstico sin necesidad de consola.
-_RUTA_PANIC_LOG = os.path.join(_RAIZ, 'error_tiflo.log')
+# error_log.txt en la raíz del proyecto, para diagnóstico sin necesidad de consola.
+_RUTA_PANIC_LOG = os.path.join(_RAIZ, 'error_log.txt')
 
 
 def _manejador_excepcion_global(tipo, valor, traza):
-    """Hook de pánico: registra el crash en error_tiflo.log y en el logger estándar."""
+    """Hook de pánico: registra el crash en error_log.txt y en el logger estándar."""
     mensaje = "".join(traceback.format_exception(tipo, valor, traza))
     logger.critical(f"CRASH NO CONTROLADO:\n{mensaje}")
     try:
@@ -82,14 +92,14 @@ except ImportError as e:
     sys.exit(1)
 
 class TifloApp(wx.App):
-    """Aplicación principal de Epub TTS Accesible."""
+    """Aplicación principal de Epub TTS."""
 
     def OnInit(self):
         """Inicializa la aplicación."""
         try:
-            logger.info("Iniciando Epub TTS Accesible")
+            logger.info("Iniciando Epub TTS")
             # CORRECCIÓN: Usamos 'titulo' en lugar de 'title'
-            self.frame = VentanaPrincipal(None, titulo="Epub TTS Accesible")
+            self.frame = VentanaPrincipal(None, titulo="Epub TTS")
             self.frame.Show()
             return True
         except Exception as e:

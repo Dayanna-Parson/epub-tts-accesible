@@ -53,12 +53,12 @@ class ReproductorVoz:
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
         try:
-            ruta = ruta_config("config_general.json")
+            ruta = ruta_config("ajustes.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"[Error] No se pudo leer config_general.json en el reproductor: {e}")
+            print(f"[Error] No se pudo leer ajustes.json en el reproductor: {e}")
         return {}
     def fijar_voz(self, datos_voz):
         self.detener()
