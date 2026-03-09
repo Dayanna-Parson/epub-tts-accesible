@@ -1,0 +1,542 @@
+respuestas 16 claude (fase 3)
+Explored API key storage locations and settings management in pestana_ajustes.py
+Explored API key storage locations and settings management in pestana_ajustes.py
+Bashcat /home/user/epub-tts-accesible/.gitignore 2>/dev/null || echo "NO EXISTE"
+# Python
+__pycache__/
+*.pyc
+Mostrar más
+
+# Caché y datos generados
+cache/
+registros/
+
+# Entornos y secretos
+.env
+
+# Sistema
+.DS_Store
+Thumbs.db
+# Configuraciones locales y claves API (¡NO SUBIR!)
+configuraciones/config_general.json
+configuraciones/uso_cuota.json
+configuraciones/voces_favoritas.json
+configuraciones/datos_lectura.json
+configuraciones/libros_recientes.json
+configuraciones/voces_disponibles.json
+
+# Binarios externos portables (no se incluyen en el repo)
+bin/*.exe
+bin/*.dll
+Grabaciones_TifloHistorias/Grabaciones_TifloHistorias/
+Bash
+ls /home/user/epub-tts-accesible/configuraciones/ 2>/dev/null && echo "---" && ls /home/user/epub-tts-accesible/documentos/ 2>/dev/null
+ajustes_globales.jsonmapeo_etiquetas.jsonteclas_predeterminadas.json
+Mostrar más
+---CHANGELOG.mdFases_Del_Proyecto
+Bash
+ls /home/user/epub-tts-accesible/app/motor/ && echo "---" && ls /home/user/epub-tts-accesible/app/
+__init__.pycliente_nube_voces.pycontrol_cuota.py
+Mostrar más
+gestor_atajos.pygestor_epub.pygestor_proyectos.pygrabador_audio.pylimpiador_lectura.pyprocesador_etiquetas.pyreproductor_voz.py---__init__.pyconfig_rutas.pyinterfazmotorservicios
+Mostrar 9 más
+Copiar mensaje
+Now I understand the full picture. Let me read the service clients to see how they access the keys:
+Updated .gitignore and added key management configuration
+Updated .gitignore and added key management configuration
+Bash
+grep -n "ajustes\|azure\|polly\|elevenlabs\|key\|region\|access_key\|api_key" /home/user/epub-tts-accesible/app/servicios/cliente_azure.py | head -30
+29:            ruta = ruta_config("ajustes.json")
+34:            print(f"[Error] No se pudo leer ajustes.json en ClienteAzure: {e}")
+77:        az_conf = self.config.get("azure", {})
+Mostrar más
+78:        key = az_conf.get("key")
+79:        region = az_conf.get("region")
+82:        if not key or not region:
+85:        url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1"
+87:            "Ocp-Apim-Subscription-Key": key,
+Bash
+grep -n "ajustes\|polly\|access_key\|secret\|region" /home/user/epub-tts-accesible/app/servicios/cliente_polly.py | head -20 && echo "---" && grep -n "ajustes\|elevenlabs\|api_key" /home/user/epub-tts-accesible/app/servicios/cliente_eleven.py | head -20
+61:def _normalizar_region(valor):
+96:            ruta = ruta_config("ajustes.json")
+101:            print(f"[Error] No se pudo leer ajustes.json en ClientePolly: {e}")
+Mostrar más
+141:        po_conf = config.get("polly", {})
+142:        access_key = po_conf.get("access_key", "").strip()
+143:        secret_key = po_conf.get("secret_key", "").strip()
+144:        region_raw = po_conf.get("region", "").strip()
+145:        region = _normalizar_region(region_raw)
+147:        if not access_key or not secret_key:
+170:            "polly",
+171:            region_name=region,
+172:            aws_access_key_id=access_key,
+173:            aws_secret_access_key=secret_key,
+---26:            ruta = ruta_config("ajustes.json")
+31:            print(f"[Error] No se pudo leer ajustes.json en ClienteEleven: {e}")
+48:        el_conf = self.config.get("elevenlabs", {})
+49:        key = el_conf.get("api_key")
+59:        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+Read/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+Leer 50 líneas
+Mostrar 7 más
+Copiar mensaje
+Now update config_rutas.py to add centralized key management and first-launch defaults:
+Updated configuration file paths in config_rutas.py
+Updated configuration file paths in config_rutas.py
+Edit/home/user/epub-tts-accesible/app/config_rutas.py+51-15
+55
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+66
+CONFIG_DIR = os.path.join(RAIZ, "configuraciones")
+77
+8-
+9-
+def ruta_config(nombre_archivo):
+10-
+    """
+11-
+    Devuelve la ruta absoluta a un archivo dentro de la carpeta configuraciones.
+12-
+    Garantiza que la ruta es correcta independientemente del directorio de trabajo
+13-
+    desde el que se lanza la aplicación.
+14-
+    """
+15-
+    return os.path.join(CONFIG_DIR, nombre_archivo)
+8+
+# Valores por defecto neutros para claves_api.json (sin secretos reales)
+9+
+_CLAVES_DEFAULT = {
+10+
+    "azure":       {"key": "", "region": ""},
+11+
+    "polly":       {"access_key": "", "secret_key": "", "region": ""},
+12+
+    "elevenlabs":  {"api_key": ""},
+13+
+}
+14+
+15+
+16+
+def ruta_config(nombre_archivo):
+Show full diff (35 more lines)
+Copiar mensaje
+Now update migrar_archivos_config() to:
+1. Create claves_api.json if missing
+2. Migrate any keys already in ajustes.json into claves_api.json
+Updated .gitignore and added key management configuration
+Updated .gitignore and added key management configuration
+Edit/home/user/epub-tts-accesible/app/config_rutas.py+38-14
+7373
+                    json.dump(datos, f, ensure_ascii=False, indent=2)
+7474
+        except Exception:
+7575
+            pass
+76+
+77+
+    # ── Migrar claves API de ajustes.json → claves_api.json ──────────────────
+78+
+    # Si ajustes.json contenía azure/polly/elevenlabs y claves_api.json aún no
+79+
+    # existe, moverlas allí para separar secretos del resto de ajustes.
+80+
+    ruta_claves = ruta_config("claves_api.json")
+81+
+    if not os.path.exists(ruta_claves):
+82+
+        claves = {k: dict(v) for k, v in _CLAVES_DEFAULT.items()}
+83+
+        if os.path.exists(ruta_ajustes):
+84+
+            try:
+85+
+                with open(ruta_ajustes, encoding="utf-8") as f:
+86+
+                    datos_aj = json.load(f)
+87+
+                for proveedor in ("azure", "polly", "elevenlabs"):
+88+
+                    if proveedor in datos_aj:
+89+
+                        claves[proveedor] = datos_aj.pop(proveedor)
+90+
+                # Guardar ajustes.json sin las claves (si hubo cambio)
+91+
+                with open(ruta_ajustes, "w", encoding="utf-8") as f:
+92+
+                    json.dump(datos_aj, f, ensure_ascii=False, indent=2)
+Show full diff (7 more lines)
+Update Todos
+☐ Update .gitignore with missing sensitive file rules☐ Add cargar_claves/guardar_claves to config_rutas.py + first-launch defaults☐ Migrating service clients to claves_api.json☐ Refactor PestanaAjustes to read/write keys from claves_api.json☐ Update documentos/CHANGELOG.md☐ Commit and push
+Copiar mensaje
+Now update the 3 service clients to read from claves_api.json:
+Verified os and json imports not used in cliente_azure.py
+Verified os and json imports not used in cliente_azure.py
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+1-1
+8-
+from app.config_rutas import ruta_config
+8+
+from app.config_rutas import cargar_claves
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_azure.py+2-9
+2727
+    def _cargar_config(self):
+28-
+        try:
+29-
+            ruta = ruta_config("ajustes.json")
+30-
+            if os.path.exists(ruta):
+31-
+                with open(ruta, 'r', encoding='utf-8') as f:
+32-
+                    return json.load(f)
+33-
+        except Exception as e:
+34-
+            print(f"[Error] No se pudo leer ajustes.json en ClienteAzure: {e}")
+35-
+        return {}
+28+
+        return cargar_claves()
+Read/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+Leer 5 líneas
+Mostrar 2 más
+Copiar mensaje
+Good, os and json were only used in _cargar_config. Now update Polly:
+Removed unused imports from cliente_polly.py
+Removed unused imports from cliente_polly.py
+Read/home/user/epub-tts-accesible/app/servicios/cliente_polly.py
+Leer 15 líneas
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+1-1
+7-
+from app.config_rutas import ruta_config
+7+
+from app.config_rutas import cargar_claves
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_polly.py+2-9
+11
+    def _cargar_config(self):
+2-
+        try:
+3-
+            ruta = ruta_config("ajustes.json")
+4-
+            if os.path.exists(ruta):
+5-
+                with open(ruta, 'r', encoding='utf-8') as f:
+6-
+                    return json.load(f)
+7-
+        except Exception as e:
+8-
+            print(f"[Error] No se pudo leer ajustes.json en ClientePolly: {e}")
+9-
+        return {}
+2+
+        return cargar_claves()
+Mostrar 3 más
+Copiar mensaje
+Now ElevenLabs:
+Updated .gitignore and added key management configuration
+Updated .gitignore and added key management configuration
+Read/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py
+Leer 15 líneas
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py+5-7
+1-
+import os
+2-
+import json
+3-
+import requests
+4-
+import sounddevice as sd
+5-
+import soundfile as sf
+6-
+import io
+7-
+from app.config_rutas import ruta_config
+1+
+import requests
+2+
+import sounddevice as sd
+3+
+import soundfile as sf
+4+
+import io
+5+
+from app.config_rutas import cargar_claves
+Edit/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py+2-9
+11
+    def _cargar_config(self):
+2-
+        try:
+3-
+            ruta = ruta_config("ajustes.json")
+4-
+            if os.path.exists(ruta):
+5-
+                with open(ruta, 'r', encoding='utf-8') as f:
+6-
+                    return json.load(f)
+7-
+        except Exception as e:
+8-
+            print(f"[Error] No se pudo leer ajustes.json en ClienteEleven: {e}")
+9-
+        return {}
+2+
+        return cargar_claves()
+Mostrar 1 más
+Copiar mensaje
+Now refactor PestanaAjustes to use claves_api.json. I need to find the exact lines for the key-related methods:
+Updated imports in pestana_ajustes.py file
+Updated imports in pestana_ajustes.py file
+Bash
+grep -n "cargar_datos_visuales\|al_guardar\|self\.config\[.azure\|self\.config\[.polly\|self\.config\[.elevenlabs\|txt_az\|txt_po\|txt_el\|ruta_config.*ajustes\|self\.ruta_config\|self\.config = " /home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py | head -50
+73:        self.config = config
+249:        self.config = config
+259:        self.txt_az_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+Mostrar más
+260:        self.txt_az_key.SetHelpText(
+265:        sz_az.Add(self.txt_az_key, 0, wx.EXPAND|wx.ALL, 5)
+268:        self.txt_az_region = wx.TextCtrl(self)
+269:        self.txt_az_region.SetHelpText(
+274:        sz_az.Add(self.txt_az_region, 0, wx.EXPAND|wx.ALL, 5)
+298:        self.txt_po_key = wx.TextCtrl(self)
+299:        self.txt_po_key.SetHelpText(
+303:        sz_po.Add(self.txt_po_key, 0, wx.EXPAND|wx.ALL, 5)
+306:        self.txt_po_secret = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+307:        self.txt_po_secret.SetHelpText(
+311:        sz_po.Add(self.txt_po_secret, 0, wx.EXPAND|wx.ALL, 5)
+314:        self.txt_po_region = wx.TextCtrl(self)
+315:        self.txt_po_region.SetHelpText(
+319:        sz_po.Add(self.txt_po_region, 0, wx.EXPAND|wx.ALL, 5)
+339:        self.txt_el_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+340:        self.txt_el_key.SetHelpText(
+344:        sz_el.Add(self.txt_el_key, 0, wx.EXPAND|wx.ALL, 5)
+361:        self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
+365:        self.cargar_datos_visuales()
+367:    def cargar_datos_visuales(self):
+369:        self.txt_az_key.SetValue(d_az.get("key", ""))
+370:        self.txt_az_region.SetValue(d_az.get("region", ""))
+373:        self.txt_po_key.SetValue(d_po.get("access_key", ""))
+374:        self.txt_po_secret.SetValue(d_po.get("secret_key", ""))
+375:        self.txt_po_region.SetValue(d_po.get("region", ""))
+378:        self.txt_el_key.SetValue(d_el.get("api_key", ""))
+380:    def al_guardar(self, event):
+381:        self.config["azure"] = {
+382:            "key": self.txt_az_key.GetValue().strip(),
+383:            "region": self.txt_az_region.GetValue().strip()
+385:        self.config["polly"] = {
+386:            "access_key": self.txt_po_key.GetValue().strip(),
+387:            "secret_key": self.txt_po_secret.GetValue().strip(),
+388:            "region": self.txt_po_region.GetValue().strip()
+390:        self.config["elevenlabs"] = {
+391:            "api_key": self.txt_el_key.GetValue().strip()
+397:        self.txt_az_key.Clear()
+398:        self.txt_az_region.Clear()
+399:        self.al_guardar(None)
+402:        self.al_guardar(None)
+433:        self.config = config
+1103:        self.ruta_config = ruta_config("ajustes.json")
+1104:        self.config = self.cargar_config()
+1176:            with open(self.ruta_config, "r", encoding='utf-8') as f:
+1187:            with open(self.ruta_config, "w", encoding='utf-8') as f:
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 60 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 70 líneas
+Mostrar 2 más
+Copiar mensaje
+Now update PanelClaves to use claves_api.json instead of self.config:
+Updated settings panel visual data loading method
+Updated settings panel visual data loading method
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+5-5
+22
+    def __init__(self, padre, config):
+33
+        super().__init__(padre, style=wx.VSCROLL)
+44
+        self.SetScrollRate(0, 20)
+5-
+        self.config = config
+5+
+        self.config = config   # ajustes generales (NO contiene claves API)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+34-28
+11
+    def cargar_datos_visuales(self):
+2-
+        d_az = self.config.get("azure", {})
+3-
+        self.txt_az_key.SetValue(d_az.get("key", ""))
+4-
+        self.txt_az_region.SetValue(d_az.get("region", ""))
+5-
+6-
+        d_po = self.config.get("polly", {})
+7-
+        self.txt_po_key.SetValue(d_po.get("access_key", ""))
+8-
+        self.txt_po_secret.SetValue(d_po.get("secret_key", ""))
+9-
+        self.txt_po_region.SetValue(d_po.get("region", ""))
+10-
+11-
+        d_el = self.config.get("elevenlabs", {})
+12-
+        self.txt_el_key.SetValue(d_el.get("api_key", ""))
+13-
+14-
+    def al_guardar(self, event):
+15-
+        self.config["azure"] = {
+16-
+            "key": self.txt_az_key.GetValue().strip(),
+17-
+            "region": self.txt_az_region.GetValue().strip()
+18-
+        }
+19-
+        self.config["polly"] = {
+20-
+            "access_key": self.txt_po_key.GetValue().strip(),
+Show full diff (41 more lines)
+Copiar mensaje
+Now check how PanelClaves is instantiated to see what config is passed, and if there's any init that creates PanelClaves with config from ajustes:
+Read settings panel code section in Python file
+Read settings panel code section in Python file
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 40 líneas
+Copiar mensaje
+Good. PanelClaves receives self.config (ajustes.json data) but now cargar_datos_visuales and al_guardar use cargar_claves()/guardar_claves() from claves_api.json independently. The self.config argument is kept for compatibility but is no longer used for key operations — that's correct.
+Now also need to check al_borrar_azure — it calls al_guardar(None) which is correct since now that saves to claves_api.json. Let me also check the PanelClaves init for config when passed to set the class attribute but reading from claves_api instead. That's fine.
+Now check the cliente_nube_voces.py too since it may also read ajustes.json for keys:
+Fixed configuration loading in voice client module
+Fixed configuration loading in voice client module
+Bash
+grep -n "ajustes\|azure\|polly\|elevenlabs\|api_key\|access_key\|subscription" /home/user/epub-tts-accesible/app/motor/cliente_nube_voces.py | head -20
+20:        self.ruta_config = ruta_config("ajustes.json")
+25:            "azure": [],
+26:            "polly": [],
+Mostrar más
+27:            "elevenlabs": []
+50:        datos_azure = config.get("azure", {})
+51:        key_az = datos_azure.get("key", "").strip()
+52:        region_az = datos_azure.get("region", "").strip()
+56:                voces = self._descargar_azure(key_az, region_az)
+57:                self.voces_cache["azure"] = voces
+65:        datos_eleven = config.get("elevenlabs", {})
+66:        key_el = datos_eleven.get("api_key", "").strip()
+70:                voces = self._descargar_elevenlabs(key_el)
+71:                self.voces_cache["elevenlabs"] = voces
+79:        datos_polly = config.get("polly", {})
+80:        access_key_po = datos_polly.get("access_key", "").strip()
+81:        secret_key_po = datos_polly.get("secret_key", "").strip()
+82:        region_po = datos_polly.get("region", "us-east-1").strip() or "us-east-1"
+84:        if access_key_po and secret_key_po:
+86:                voces = self._descargar_polly(access_key_po, secret_key_po, region_po)
+87:                self.voces_cache["polly"] = voces
+Read/home/user/epub-tts-accesible/app/motor/cliente_nube_voces.py
+Leer 50 líneas
+Edit/home/user/epub-tts-accesible/app/motor/cliente_nube_voces.py+1-1
+6-
+from app.config_rutas import ruta_config
+6+
+from app.config_rutas import ruta_config, cargar_claves
+Mostrar 2 más
+Copiar mensaje
+Now check if os and json are still used elsewhere in cliente_nube_voces.py:
+Checked remaining os/json module usage in cliente_nube_voces.py file
+Checked remaining os/json module usage in cliente_nube_voces.py file
+Bash
+grep -n "^import os\|^import json\|\bos\.\|\bjson\." /home/user/epub-tts-accesible/app/motor/cliente_nube_voces.py | head -15
+1:import json
+2:import os
+30:        """Lee las claves API desde configuraciones/claves_api.json."""
+Mostrar más
+237:        if os.path.exists(self.ruta_cache_voces):
+240:                    self.voces_cache = json.load(f)
+295:            os.makedirs(os.path.dirname(self.ruta_cache_voces), exist_ok=True)
+297:                json.dump(self.voces_cache, f, indent=4, ensure_ascii=False)
+303:        if os.path.exists(self.ruta_cache_voces):
+306:                    return json.load(f)
+Copiar mensaje
+Good, os and json are still needed. Now update CHANGELOG.md:
+Fetched remote branch and compared local versus remote commits
+Fetched remote branch and compared local versus remote commits
+Update Todos
+☐ Update .gitignore with missing sensitive file rules☐ Add cargar_claves/guardar_claves to config_rutas.py + first-launch defaults☐ Migrate API key reading in 3 service clients to claves_api.json☐ Refactor PestanaAjustes to read/write keys from claves_api.json☐ Updating CHANGELOG.md☐ Commit and push
+Read/home/user/epub-tts-accesible/documentos/CHANGELOG.md
+Leer 40 líneas
+Write/home/user/epub-tts-accesible/documentos/CHANGELOG.md
+1+
+# Historial de Cambios
+2+
+3+
+## [Fase 3, Prompt 16b] - 2026-03-09 — Seguridad y separación de secretos
+4+
+5+
+### Nuevas características
+6+
+- **`configuraciones/claves_api.json`**: Nuevo archivo exclusivo para las claves API de Azure, Amazon Polly y ElevenLabs. Separado de `ajustes.json` para que los secretos nunca mezclen con la configuración general de la sesión.
+7+
+- **`cargar_claves()` / `guardar_claves()`** en `app/config_rutas.py`: Funciones centralizadas para leer y escribir `claves_api.json`. Fallo seguro: si el archivo no existe (primer arranque o repo recién clonado), devuelven una estructura vacía en lugar de lanzar excepción.
+8+
+- **Migración automática al primer arranque**: `migrar_archivos_config()` detecta si `claves_api.json` no existe y, en ese caso, extrae las claves de `ajustes.json` (si las había) y las mueve al nuevo archivo, dejando `ajustes.json` limpio de secretos.
+9+
+10+
+### Mejoras de seguridad
+11+
+- **`.gitignore` ampliado**: Ahora se excluyen correctamente:
+12+
+  - `configuraciones/claves_api.json` y `configuraciones/ajustes.json` (GitHub detectó secretos en ajustes.json).
+13+
+  - Todos los archivos de historial y caché del usuario (`historial_grabacion.json`, `historial_epub.json`, `estado_lectura.json`, `proyectos.json`, `mapeo_etiquetas.json`, etc.).
+14+
+  - Archivos legacy con nombres anteriores a la migración.
+15+
+  - `*.log`, `logs/`, `registros/`.
+16+
+  - Patrones genéricos `*token*.json` y `*secret*.json`.
+17+
+- **Refactorización de clientes de servicio**: `cliente_azure.py`, `cliente_polly.py`, `cliente_eleven.py` y `cliente_nube_voces.py` ahora leen las claves exclusivamente desde `claves_api.json` a través de `cargar_claves()`.
+18+
+- **`PanelClaves`**: Los métodos `cargar_datos_visuales()` y `al_guardar()` usan `cargar_claves()`/`guardar_claves()` en lugar de `self.config` (ajustes.json). Las claves nunca se escriben en `ajustes.json`.
+19+
+20+
+### Lógica de primer inicio
+Show full diff (48 more lines)
+Mostrar 5 más
+Copiar mensaje
+El usuario subió documentación a la rama. Hago rebase:
+Updated .gitignore and added key management configuration
+Updated .gitignore and added key management configuration
+Bash
+git pull --rebase origin claude/fase3-proyectos-memoria-accesibilidad-X9aWP && git push -u origin claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+From http://127.0.0.1:36124/git/Dayanna-Parson/epub-tts-accesible * branch            claude/fase3-proyectos-memoria-accesibilidad-X9aWP -> FETCH_HEADRebasing (1/1)
+
+                                                                                
+Successfully rebased and updated refs/heads/claude/fase3-proyectos-memoria-accesibilidad-X9aWP.
+Mostrar más
+To http://127.0.0.1:36124/git/Dayanna-Parson/epub-tts-accesible   3b60062..7dcbda5  claude/fase3-proyectos-memoria-accesibilidad-X9aWP -> claude/fase3-proyectos-memoria-accesibilidad-X9aWPbranch 'claude/fase3-proyectos-memoria-accesibilidad-X9aWP' set up to track 'origin/claude/fase3-proyectos-memoria-accesibilidad-X9aWP'.
+Update Todos
+☐ Update .gitignore with missing sensitive file rules☐ Add cargar_claves/guardar_claves to config_rutas.py + first-launch defaults☐ Migrate API key reading in 3 service clients to claves_api.json☐ Refactor PestanaAjustes to read/write keys from claves_api.json☐ Update documentos/CHANGELOG.md☐ Commit and push
+Copiar mensaje
+Todo subido. Resumen de lo implementado:
+ 
+.gitignore blindado — añadidas todas las reglas que faltaban:
+• configuraciones/claves_api.json y configuraciones/ajustes.json (GitHub detectó secretos ahí)
+• Todos los archivos de historial y datos del usuario (nombres actuales + nombres legacy de migración)
+• Patrones genéricos: *token*.json, *secret*.json, *.env, *.log
+• Eliminada la línea duplicada de Grabaciones_TifloHistorias/
+configuraciones/claves_api.json — nuevo archivo separado para las claves de Azure, Polly y ElevenLabs. Nunca se mezcla con la configuración de sesión.
+cargar_claves() / guardar_claves() en config_rutas.py — acceso centralizado. Si el archivo no existe (repo recién clonado, primer arranque), devuelve estructura vacía sin lanzar excepción. Al primer arranque también migra automáticamente las claves que hubiera en ajustes.json al nuevo archivo.
+Refactorización de clientes — cliente_azure.py, cliente_polly.py, cliente_eleven.py y cliente_nube_voces.py usan ahora cargar_claves(). PanelClaves guarda con guardar_claves() directamente, sin pasar por ajustes.json.
+CHANGELOG.md — actualizado con el historial completo de la Fase 3 (prompts 13–16).
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++7044-460
+Crear PR
