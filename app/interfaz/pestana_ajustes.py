@@ -5,7 +5,7 @@ import webbrowser
 import wx.lib.mixins.listctrl as listmix
 from app.motor.cliente_nube_voces import GestorVoces
 from app.motor.reproductor_voz import ReproductorVoz
-from app.config_rutas import ruta_config, CONFIG_DIR
+from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 
 # --- CLASE ESPECIAL PARA LA LISTA CON CASILLAS ---
 class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
@@ -246,7 +246,7 @@ class PanelClaves(wx.ScrolledWindow):
     def __init__(self, padre, config):
         super().__init__(padre, style=wx.VSCROLL)
         self.SetScrollRate(0, 20)
-        self.config = config
+        self.config = config   # ajustes generales (NO contiene claves API)
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(self, label="Configura tus claves API."), 0, wx.ALL, 10)
@@ -365,33 +365,39 @@ class PanelClaves(wx.ScrolledWindow):
         self.cargar_datos_visuales()
 
     def cargar_datos_visuales(self):
-        d_az = self.config.get("azure", {})
+        """Carga las claves desde configuraciones/claves_api.json (separado de ajustes)."""
+        claves = cargar_claves()
+        d_az = claves.get("azure", {})
         self.txt_az_key.SetValue(d_az.get("key", ""))
         self.txt_az_region.SetValue(d_az.get("region", ""))
-        
-        d_po = self.config.get("polly", {})
+
+        d_po = claves.get("polly", {})
         self.txt_po_key.SetValue(d_po.get("access_key", ""))
         self.txt_po_secret.SetValue(d_po.get("secret_key", ""))
         self.txt_po_region.SetValue(d_po.get("region", ""))
-        
-        d_el = self.config.get("elevenlabs", {})
+
+        d_el = claves.get("elevenlabs", {})
         self.txt_el_key.SetValue(d_el.get("api_key", ""))
 
     def al_guardar(self, event):
-        self.config["azure"] = {
-            "key": self.txt_az_key.GetValue().strip(),
-            "region": self.txt_az_region.GetValue().strip()
+        """Guarda las claves en configuraciones/claves_api.json (nunca en ajustes.json)."""
+        claves = {
+            "azure": {
+                "key": self.txt_az_key.GetValue().strip(),
+                "region": self.txt_az_region.GetValue().strip(),
+            },
+            "polly": {
+                "access_key": self.txt_po_key.GetValue().strip(),
+                "secret_key": self.txt_po_secret.GetValue().strip(),
+                "region": self.txt_po_region.GetValue().strip(),
+            },
+            "elevenlabs": {
+                "api_key": self.txt_el_key.GetValue().strip(),
+            },
         }
-        self.config["polly"] = {
-            "access_key": self.txt_po_key.GetValue().strip(),
-            "secret_key": self.txt_po_secret.GetValue().strip(),
-            "region": self.txt_po_region.GetValue().strip()
-        }
-        self.config["elevenlabs"] = {
-            "api_key": self.txt_el_key.GetValue().strip()
-        }
-        self.GetParent().GetParent().GetParent().guardar_config_en_archivo()
-        if event: wx.MessageBox("Claves guardadas.", "Éxito")
+        guardar_claves(claves)
+        if event:
+            wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")
 
     def al_borrar_azure(self, event):
         self.txt_az_key.Clear()
