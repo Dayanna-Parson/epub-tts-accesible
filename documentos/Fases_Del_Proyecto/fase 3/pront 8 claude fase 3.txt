@@ -1,0 +1,114 @@
+pront 8 claude fase 3
+
+Primero, las dos cosas que me he acordado!
+En ajustes,
+ cuando marcamos la casilla nuevas voces, efectivamente salen las nuevas voces. pero, a no ser que ya las hallamos preescuchado pulsando alt mas p o el botón probar voz, pues no tiene sentido que salgan las voces nuevas si previamente emos hecho ambas cosas. Solo se tendría que actualizar la lista si se descargan nuevas voces en alguna de las apis que tengamos guardadas en ajustes
+
+Y la otra cosa es: Que hay cosas que no se si están bien, suenan un poco redundantes, o hay alguna otra forma de clasificar los tipos de proyectos cuando abrimos esta ventana. Me refiero a esto: saga
+libro
+capitulo
+autoconclusivo
+podcast
+episodio
+video_youtube
+guion
+dialogo
+otro.
+
+Vale. Lo e revisado mas o menos todo, y estas son las cosas que hay que eliminar.
+La verdad es que no se si eliminar esto o no... Nuevo proyecto raíz  botón  Alt+  n
+pulsado
+Nuevo proyecto raíz  diálogo
+Nombre del proyecto (obligatorio):  edición  en blanco
+Tipo de proyecto:  cuadro combinado  saga  contraído
+Crear proyecto  botón
+Cancelar  botón
+Gestión de Proyectos — TifloHistorias
+Nuevo proyecto raíz  botón  Alt+  n
+Nuevo hijo del seleccionado  botón  Alt+  h
+pulsado
+Nuevo hijo de «prueba de texto mas larga»  diálogo
+Nombre del proyecto (obligatorio):  edición  en blanco
+Tipo de proyecto:  cuadro combinado  saga  contraído
+Crear proyecto  botón
+Gestión de Proyectos — TifloHistorias
+Nuevo hijo del seleccionado  botón  Alt+  h
+Eliminar proyecto seleccionado  botón  Alt+  e.
+Aunque lo normal abría sido cargar primero un txt y después que se asigne a un proyecto, yo lo e querido hacer al revés. asignar un proyecto a un txt, y aunque e probado ya con uno que tenía etiquetas asignadas, pues no me saltó el diálogo preguntándome si lo quería guardar en el proyecto... A, otro error que me e encontrado es este. al navegar por el árbol, el foco se vuelbe un poco loco, y en vez de enfocar pues lo que tenga por encima y por debajo... Pues el foco salta a los cuadros de edición, y tengo que hacer shift tab para encontrar el arbol. A, y efectivamente se muestra bien el menú de recientes pero, dos cosas. bueno, tres. En el sub menú falta un botón para borrar el historial. También hay que eliminar este íten del menú porque ya no sirve. Abrir TXT para grabar...	Ctrl+T  t. Y la última cosa que hay que hacer aquí es, mover el menú de estos libros recientes, me refiero a esta opción. TXT Recientes para grabar  submenú  g. al menú proyecto. Y aquí hay que hacer dos ajustes. primero mover la pestaña proyecto después de ir. Ya que está entre archivo e ir... Y la otra cosa es... en vez de que el apartado del menú se llame proyecto, no se... podemos reenombrarlo comoo grabación... o algo así...
+Aunque ahora que lo pienso... No se... Creo que no me termina de convencer del todo todo el menú en general, porque cada apartado pues solo tiene uno o dos elementos... Y no se... Por una parte es buena idea porque así se accede algo más rápido a las opciones más útiles, pero por otro lado pienso... Al ser una app tan complej, pues no sería mejor meter los apartados en sus pestañas correspondientes? no se... Es que tampoco como no hay una app como esta... Pues no se que hacer, o que es lo mejor... Que me recomiendas?
+
+Necesito que me pases otro texto largo para probar
+Y dime que cosas faltan por probar para entregarle una visión completa y no a medias.
+
+
+
+• 
+Obra Mayor (Saga/Serie)
+• 
+Obra Única (Libro/Relato/YouTube)
+• 
+Contenido Periódico (Podcast/Canal)
+• 
+Otros
+(Claude puede mapear esto internamente para que NVDA lo lea de forma sencilla).
+3. El Error del Foco en el Árbol
+Ese salto del foco a los cuadros de edición al moverte por el árbol es un error de "Binding" (vinculación de eventos). Al moverte con las flechas, el programa está disparando el evento de "selección" y enviando el foco al panel derecho automáticamente. Hay que pedirle a Claude que solo cambie el foco si pulsas Tab o Enter, nunca solo con las flechas.
+
+Filtro de Voces: No actualizar la lista de voces en Ajustes al marcar la casilla si no hay descargas nuevas de las APIs. 
+Consulta los detalles de la fuente. Abre el panel lateral.
+2. 
+Eliminar Redundancia: Quitar los botones de "Nuevo proyecto raíz/hijo" si ya vamos a usar el menú de contexto y el diálogo automático. 
+Consulta los detalles de la fuente. Abre el panel lateral.
+3. 
+Arreglo del Árbol: Impedir que el foco salte a los cuadros de edición al navegar con flechas.
+Limpieza: Borrar la opción antigua de "Abrir TXT" y añadir el botón de "Borrar Historial" en el submenú de recientes. 
+El Diálogo Perdido: Revisar por qué no saltó el aviso de guardado al terminar de asignar voces en un proyecto ya existente. 
+Has dicho
+ahora cuando pruebe con el texto que me has dado te doy mas detalles pero, una cosa. Esto no se parece en nada a reaper o a un editor de audio... Es más no sabría ni yo como clasificar mi app por lo rrara que es jaja. Yo creo que es más como un valabolka que otra cosa... a. y si mejor que la barra de menú, porqué no movemos las opciones correspondientes a cada pestaña al menú contextual de cada pestaña? menos de ajustes ovbiamente, que allí podemos crear una opción después del listado de atajos, ya sabes, donde está para cambiar y demás, un nuevo apartado de acerca de... donde movamos el menú de ayuda... Obviamente también quitando esa opción de atajos que está inculída allí
+Mostrar
+Escuchar
+Gemini ha dicho
+¡Tienes toda la razón, Jacqui! Si lo pensamos bien, TifloHistorias es una herramienta de autoría muy específica, casi como un híbrido entre un lector de documentos y un estudio de doblaje automatizado. Tienes razón en que se acerca más al concepto de Balabolka pero con esteroides para producción narrativa.
+Sobre tu idea de la interfaz, me parece un cambio de rumbo valiente y muy acertado para la accesibilidad. Al quitar la barra de menú superior y mover todo a menús contextuales (Tecla Aplicaciones) en cada pestaña, consigues que la navegación sea mucho más "plana" y directa. No tienes que estar saltando entre la zona de trabajo y la barra superior.
+Aquí tienes cómo quedaría el plan para esta Refactorización de Interfaz:
+1. Reorganización de Menús a Contextuales
+• 
+Pestaña Grabación: Al pulsar la tecla Aplicaciones, aparecería el submenú de TXT Recientes, la opción de Borrar Historial y la de Asociar a Proyecto. 
+Consulta los detalles de la fuente. Abre el panel lateral.
+• 
+Pestaña Proyectos (ahora Producción): El menú contextual gestionaría todo el árbol (Renombrar, Mover con Alt+Flechas, Eliminar). 
+Consulta los detalles de la fuente. Abre el panel lateral.
+• 
+Pestaña Ajustes:
+• 
+Sección "Acerca de": Al final de la lista, un apartado que contenga la información de versión, créditos y la ayuda que antes estaba en el menú superior. 
+Consulta los detalles de la fuente. Abre el panel lateral.
+• 
+Limpieza: Eliminamos la opción de "Atajos" duplicada si ya están listados de forma clara.
+2. El Filtro de Voces Inteligente
+Tal como mencionaste, Claude debe ajustar la lógica en Ajustes: la lista de voces no debe refrescarse por el simple hecho de marcar la casilla "Nuevas voces". Solo debe dispararse una actualización real si el sistema detecta que has descargado o configurado una nueva API (Azure, OpenAI, etc.) o si pulsas un botón específico de "Sincronizar Catálogo".
+
+Actualización! El diálogo solo se abre cuando hay un txt cargado y no tiene voces asignadas. Y se abre correctamente cuando terminamos de asignar todas las voces a sus etiquetas, Y se guarda correctamente en la ventana de proyecto.
+
+🧹 Limpieza y Reorganización de Interfaz (El toque final)
+• 
+Eliminar Barra de Menú: Moveremos todas las funciones a menús contextuales (Tecla Aplicaciones) dentro de cada pestaña para que no tengas que subir a la barra superior.
+• 
+Pestaña Grabación (Menú Contextual):
+• 
+Historial: Submenú con los 10 TXT recientes (mostrando el nombre del proyecto entre paréntesis).
+• 
+Limpieza: Opción para "Borrar Historial" y eliminar el ítem antiguo de "Abrir TXT para grabar".
+• 
+Pestaña Ajustes (Sección "Acerca de"): Crear un nuevo apartado al final de la lista de atajos para mover allí la Ayuda y los Créditos, eliminando el menú superior de Ayuda.
+• 
+Filtro de Voces en Ajustes: Corregir que la lista solo se actualice si hay cambios reales en las APIs o descargas nuevas, no solo por marcar la casilla.
+🛠️ Ajustes de Usabilidad en el Árbol
+• 
+Foco Inteligente: Bloquear el salto automático a los campos de edición al navegar por el árbol con las flechas; el foco debe quedarse en el nodo seleccionado.
+• 
+Categorías Simplificadas: Reducir los tipos de proyecto a: Saga, Obra Única, Podcast y Otros.
+• 
+Eliminar Botones Redundantes: Quitar los botones físicos de "Nuevo proyecto raíz/hijo" ahora que todo se gestionará desde el menú contextual del árbol o el diálogo automático. A, y confirmo dos cosas más: ahora si la ventana se cierra con escape, volviendo correctamente a donde estaba el foco,y lo único que no se si funciona es el alt flecha arriba / abajo, ya que como el foco salta al cuadro de edición del nombre del nodo, pues no puedo comprobarlo, aunque lo intenté, me puse en el arbol, e hice las combinaciones, pero no paso nada, o al menos NVDA no me vervalizó nada. Pero, tampoco hizo nada, porque no se había movido ningún elemento.
+
+A, esta vez no te mando log, ya que no salió ningún error de interfaz ni ningún aviso crítico.

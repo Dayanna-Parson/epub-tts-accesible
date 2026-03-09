@@ -1,0 +1,398 @@
+Respuestas 7 claude fase 3
+
+Completed key file review and rewrote ventana_proyectos.py module
+Completed key file review and rewrote ventana_proyectos.py module
+Update Todos
+☐ Leyendo archivos clave☐ a) 'Cerrar' en vez de 'Cerrar ventana'☐ b) Escape cierra ventana + foco de retorno☐ o) Abrir en nodo correcto al pulsar Ctrl+Shift+P☐ i) Menú de contexto (tecla Aplicaciones) en nodos del árbol☐ h) Alt+Arriba/Abajo para reordenar + anuncio NVDA☐ d+2) Diálogo post-asignación con campo nombre + selector proyecto☐ f) Sincronización Título/Capítulo Grabación → Proyectos☐ g) Volcado de voces desde mapeo_etiquetas.json en la ventana☐ c+3) TXT Recientes como submenú con nombre de proyecto☐ Commit y push a la rama
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 570 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 508 líneas
+Mostrar 7 más
+Copiar mensaje
+Ahora el diálogo Bautizo y el sync en pestana_grabacion.py:
+Fixed event binding alignment in recording panel file
+Fixed event binding alignment in recording panel file
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+3-2
+3232
+from app.config_rutas import ruta_config
+33+
+from app.motor.gestor_config import TIPOS_PROYECTO
+3334
+from app.motor.procesador_etiquetas import (
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+5-4
+107107
+        # ── Estado interno ────────────────────────────────────────────────
+108108
+        from app.motor.gestor_config import GestorProyectos
+109-
+        self.proyecto_actual  = None          # dict del proyecto activo o None
+110-
+        self.gestor_proyectos = GestorProyectos()
+109+
+        self.proyecto_actual   = None          # dict del proyecto activo o None
+110+
+        self.gestor_proyectos  = GestorProyectos()
+111+
+        self._ofrecio_proyecto = False         # evita mostrar el diálogo dos veces por TXT
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+10-9
+176176
+        self.txt_titulo = wx.TextCtrl(self)
+177177
+        self.txt_titulo.SetHelpText(
+178178
+            "Título del libro o proyecto. Si se deja vacío se usa el nombre del "
+179-
+            "archivo TXT. Define la subcarpeta de grabaciones."
+179+
+            "archivo TXT. Define la subcarpeta de grabaciones. "
+180+
+            "Si el archivo está asociado a un proyecto, el título sincroniza el nombre del proyecto al salir del campo."
+180181
+        )
+181182
+        sz_titulo.Add(lbl_titulo,      0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+182183
+        sz_titulo.Add(self.txt_titulo, 1, wx.EXPAND)
+Mostrar 1 más
+Copiar mensaje
+Ahora añado la lógica del bautizo en al_marcar_voz y el reset en al_limpiar:
+Updated todo list with completed tasks and progress tracking
+Updated todo list with completed tasks and progress tracking
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+14-7
+637637
+            )
+638638
+        self._guardar_mapeo()
+639639
+        self._actualizar_resumen_asignaciones()
+640+
+641+
+        # Diálogo de bautizo: solo cuando TODAS las etiquetas tienen voz
+642+
+        # y el TXT no está aún en un proyecto
+643+
+        sin_voz = [e for e in self.etiquetas_detectadas if e not in self.asignaciones]
+644+
+        if not sin_voz and not self.proyecto_actual and not self._ofrecio_proyecto:
+645+
+            self._ofrecio_proyecto = True
+646+
+            wx.CallAfter(self._ofrecer_guardar_en_proyecto)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+11-9
+572572
+        self.asignaciones         = {}
+573573
+        self.titulo_libro         = ""
+574574
+        self._ultima_carpeta      = None
+575+
+        self.proyecto_actual      = None
+576+
+        self._ofrecio_proyecto    = False
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+159-2
+44+
+# ── Diálogo de bautizo: asociar TXT al Gestor de Proyectos ───────────────────
+45+
+class DialogoBautizo(wx.Dialog):
+46+
+    """
+47+
+    Diálogo que aparece automáticamente cuando todas las etiquetas tienen voz asignada
+48+
+    y el archivo TXT no está aún en ningún proyecto.
+49+
+50+
+    Permite al usuario:
+51+
+      - Crear un nuevo proyecto (con nombre editable y selector de tipo).
+52+
+      - Añadir el TXT a un proyecto existente (seleccionable en lista).
+53+
+      - Cancelar sin asociar nada ("Ahora no").
+54+
+    """
+55+
+56+
+    def __init__(self, parent, gestor_proyectos, nombre_sugerido: str = ""):
+57+
+        super().__init__(
+58+
+            parent,
+59+
+            title="Guardar en el Gestor de Proyectos",
+60+
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+61+
+        )
+62+
+        self._gestor = gestor_proyectos
+63+
+        self._resultado_proyecto_id = None
+Show full diff (139 more lines)
+Mostrar 1 más
+Copiar mensaje
+Ahora los cambios en ventana_principal.py: foco previo, TXT recientes vitaminado:
+Fixed duplicate window instance check in project manager opener
+Fixed duplicate window instance check in project manager opener
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+7-4
+9393
+        self.archivos_recientes = []
+9494
+        self.ruta_recientes = ruta_config("libros_recientes.json")
+9595
+        self.cargar_historial_recientes()
+96+
+97+
+        # TXT recientes (para el submenú de Grabación)
+98+
+        self.txt_recientes = []
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+13-8
+117117
+            wx.ID_ANY, "Abrir &TXT para grabar...\tCtrl+T"
+118118
+        )
+119119
+120-
+        # Submenú Recientes
+120+
+        # Submenú TXT Recientes (Grabación)
+121+
+        self.menu_txt_recientes = wx.Menu()
+122+
+        self.menu_txt_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+123+
+        self.menu_archivo.AppendSubMenu(self.menu_txt_recientes, "TXT Recientes para &grabar")
+124+
+125+
+        # Submenú Recientes (EPUB Lectura)
+121126
+        self.menu_recientes = wx.Menu()
+122127
+        self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+123128
+        self.menu_archivo.AppendSubMenu(self.menu_recientes, "Libros &Recientes")
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+31-15
+246246
+    def al_abrir_gestor_proyectos(self, evento):
+247-
+        """Abre la ventana de gestión de proyectos. Evita doble instancia."""
+248-
+        if self._ventana_proyectos and not self._ventana_proyectos.IsBeingDeleted():
+249-
+            try:
+250-
+                self._ventana_proyectos.Raise()
+251-
+                return
+252-
+            except Exception:
+253-
+                pass
+254-
+        self._ventana_proyectos = VentanaProyectos(parent=self)
+255-
+        self._ventana_proyectos.Show()
+256-
+257-
+    def al_abrir_txt_grabacion(self, evento):
+258-
+        """Activa la pestaña Grabación y llama al método Examinar del panel."""
+259-
+        self.notebook.SetSelection(1)
+260-
+        self.pestana_grabacion.al_examinar(None)
+247+
+        """
+248+
+        Abre la ventana de gestión de proyectos.
+249+
+        Evita doble instancia. Captura el foco previo para devolverlo al cerrar (feature b).
+250+
+        Si hay un TXT cargado en Grabación, navega al nodo del archivo (feature o).
+251+
+        """
+Show full diff (25 more lines)
+Copiar mensaje
+Ahora añado los métodos de gestión de TXT recientes y la carga inicial en _restaurar_sesion:
+Renamed method and updated anchor in ventana_principal.py
+Renamed method and updated anchor in ventana_principal.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+75-2
+341+
+    # ANCLAJE_INICIO: TXT_RECIENTES
+342+
+    def agregar_txt_a_recientes(self, ruta: str):
+343+
+        """Añade un TXT a la lista de recientes de grabación y actualiza el submenú."""
+344+
+        if ruta in self.txt_recientes:
+345+
+            self.txt_recientes.remove(ruta)
+346+
+        self.txt_recientes.insert(0, ruta)
+347+
+        self.txt_recientes = self.txt_recientes[:10]
+348+
+        self._guardar_txt_recientes()
+349+
+        self.actualizar_menu_txt_recientes()
+350+
+351+
+    def _guardar_txt_recientes(self):
+352+
+        try:
+353+
+            config = self._cargar_config_general()
+354+
+            config["txt_recientes"] = self.txt_recientes
+355+
+            os.makedirs(os.path.dirname(self._ruta_config_general), exist_ok=True)
+356+
+            with open(self._ruta_config_general, "w", encoding="utf-8") as f:
+357+
+                json.dump(config, f, ensure_ascii=False, indent=2)
+358+
+        except Exception:
+359+
+            pass
+360+
+Show full diff (55 more lines)
+Copiar mensaje
+Ahora cargo los TXT recientes desde config_general.json en _restaurar_sesion:
+Tracked progress on reading files and rewriting ventana_proyectos.py
+Tracked progress on reading files and rewriting ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+12-5
+336336
+        ultimo_txt = config.get("ultimo_txt_grabacion", "")
+337337
+        if ultimo_txt and os.path.exists(ultimo_txt):
+338338
+            self.pestana_grabacion.cargar_txt_desde_ruta(ultimo_txt)
+339+
+340+
+        # Cargar lista de TXT recientes y actualizar submenú
+341+
+        self.txt_recientes = [
+342+
+            r for r in config.get("txt_recientes", [])
+343+
+            if os.path.exists(r)
+344+
+        ]
+345+
+        self.actualizar_menu_txt_recientes()
+339346
+    # ANCLAJE_FIN: MEMORIA_SESION
+Update Todos
+☐ Leer archivos clave antes de implementar☐ a+b+o+i+h+g) Reescribir ventana_proyectos.py con todas las mejoras☐ gestor_config.py: añadir método mover_proyecto☐ d+2) Diálogo Bautizo + sync título en pestana_grabacion.py☐ c+3+o) TXT Recientes vitaminado + navegar al nodo en ventana_principal.py☐ Haciendo commit y push
+Copiar mensaje
+Verifico que no haya errores de importación obvios antes de hacer el commit:
+Validated Python syntax across four application files
+Validated Python syntax across four application files
+Bash
+python -c " import ast, sys files = [ 'app/interfaz/ventana_proyectos.py', 'app/interfaz/pestana_grabacion.py', 'app/interfaz/ventana_principal.py', 'app/motor/gestor_config.py', ] all_ok = True for f in files: try: with open(f) as fh: ast.parse(fh.read()) print(f'OK {f}') except SyntaxError as e: print(f'ERR {f}: {e}') all_ok = False sys.exit(0 if all_ok else 1) "
+OK  app/interfaz/ventana_proyectos.pyOK  app/interfaz/pestana_grabacion.pyOK  app/interfaz/ventana_principal.py
+Mostrar más
+OK  app/motor/gestor_config.py
+Copiar mensaje
+Los 4 ficheros pasan el análisis sintáctico. Ahora el commit y push:
+Pushed feature branch with accessibility memory project updates
+Pushed feature branch with accessibility memory project updates
+Bash
+git add app/interfaz/ventana_proyectos.py app/interfaz/pestana_grabacion.py app/interfaz/ventana_principal.py app/motor/gestor_config.py && git status
+On branch claude/fase3-proyectos-memoria-accesibilidad-X9aWPYour branch is up to date with 'origin/claude/fase3-proyectos-memoria-accesibilidad-X9aWP'.
+Mostrar más
+Changes to be committed:  (use "git restore --staged <file>..." to unstage)	modified:   app/interfaz/pestana_grabacion.py	modified:   app/interfaz/ventana_principal.py	modified:   app/interfaz/ventana_proyectos.py	modified:   app/motor/gestor_config.py
+Bash
+git commit -m "$(cat <<'EOF' Feat: rediseño ventana_proyectos, diálogo Bautizo, TXT Recientes vitaminados ventana_proyectos.py (v2): - Botón «Cerrar» (sin «esta ventana») - Escape cierra + foco devuelto al control exacto previo (foco_previo) - Navega al nodo del TXT activo al abrirse (Ctrl+Shift+P con TXT cargado) - Menú contextual: tecla Aplicaciones / Shift+F10 / clic derecho · Asociar TXT actual de Grabación · Nuevo hijo, Renombrar (F2), Cambiar tipo, Eliminar - Alt+Arriba / Alt+Abajo reordena nodos hermanos · anuncia «Movido arriba/abajo» vía pyttsx3 + título de ventana - Volcado de voces desde mapeo_etiquetas.json además de proyectos.json - lbl_estado integrado en barra inferior (retroalimentación sin diálogos) gestor_config.py: - Nuevo método mover_proyecto(id, delta) para reordenar hijos en proyectos.json pestana_grabacion.py: - DialogoBautizo: aparece cuando todas las etiquetas tienen voz y el TXT no está en ningún proyecto; permite crear proyecto nuevo o elegir existente en un único diálogo sin salir de la pestaña - Sync Título → Proyecto: EVT_KILL_FOCUS en txt_titulo actualiza el nombre del proyecto asociado al salir del campo - _ofrecio_proyecto: flag que evita mostrar el Bautizo más de una vez por TXT - Reset de estado en al_limpiar y al_examinar ventana_principal.py: - al_abrir_gestor_proyectos: captura foco_previo + pasa ruta_txt_activo - TXT Recientes para grabar: submenú con nombre del proyecto entre paréntesis · Muestra «Capítulo 1 (Saga Ciudad de Cristal)» si está asociado · Persiste en config_general.json["txt_recientes"] · Se actualiza al abrir TXT desde menú o desde TXT recientes https://claude.ai/code/session_01XvhzyP6xV5UmDzherfvKBy EOF )"
+[claude/fase3-proyectos-memoria-accesibilidad-X9aWP d7ae409] Feat: rediseño ventana_proyectos, diálogo Bautizo, TXT Recientes vitaminados 4 files changed, 689 insertions(+), 168 deletions(-)
+Bashgit push -u origin claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+To http://127.0.0.1:31292/git/Dayanna-Parson/epub-tts-accesible   20c1d2d..d7ae409  claude/fase3-proyectos-memoria-accesibilidad-X9aWP -> claude/fase3-proyectos-memoria-accesibilidad-X9aWPbranch 'claude/fase3-proyectos-memoria-accesibilidad-X9aWP' set up to track 'origin/claude/fase3-proyectos-memoria-accesibilidad-X9aWP'.
+Mostrar 1 más
+Copiar mensaje
+Todo subido. Resumen de lo implementado:
+ 
+Qué se ha implementado
+ventana_proyectos.py (v2 completa)
+Feature
+Detalle
+a) Cerrar
+Botón renombrado a &Cerrar
+b) Escape + foco
+EVT_CHAR_HOOK captura Escape → Close(). _foco_previo recibido de VentanaPrincipal y restaurado en _al_cerrar
+o) Nodo correcto
+Al abrir con TXT cargado → _navegar_a_archivo(ruta) busca en el árbol y selecciona/anuncia
+i) Menú contextual
+Tecla Aplicaciones, Shift+F10 y clic derecho → menú con: Asociar TXT actual, Nuevo hijo, Renombrar, Cambiar tipo, Eliminar
+h) Alt+Arriba/Abajo
+EVT_KEY_DOWN detecta Alt+Flecha → mover_proyecto(delta) + anuncia por _hablar() (pyttsx3) y _anunciar_estado()
+g) Volcado voces
+_actualizar_lista_voces combina proyectos.json + mapeo_etiquetas.json
+Barra de estado
+lbl_estado en la barra inferior para retroalimentación sin diálogos
+gestor_config.py
+• mover_proyecto(id, delta): intercambia posición en la lista hijos del padre
+pestana_grabacion.py
+Feature
+Detalle
+d+2) Bautizo
+DialogoBautizo: aparece cuando todas las etiquetas tienen voz y el TXT no está en ningún proyecto. Tiene radio "Crear nuevo" (con nombre + tipo) y "Añadir a existente" (con lista de proyectos)
+f) Sync título
+EVT_KILL_FOCUS en txt_titulo → renombra el proyecto asociado al salir del campo
+Reset de estado
+_ofrecio_proyecto = False en al_limpiar y al_examinar
+ventana_principal.py
+Feature
+Detalle
+o) Foco previo
+al_abrir_gestor_proyectos captura FindFocus() antes de crear la ventana
+c+3) TXT Recientes
+Submenú "TXT Recientes para grabar" con nombre_archivo (Nombre Proyecto). Persiste en config_general.json["txt_recientes"]
+Read key files and rewrote ventana_proyectos.py improvements
+Read key files and rewrote ventana_proyectos.py improvements
+Update Todos
+☐ Leer archivos clave antes de implementar☐ a+b+o+i+h+g) Reescribir ventana_proyectos.py con todas las mejoras☐ gestor_config.py: añadir método mover_proyecto☐ d+2) Diálogo Bautizo + sync título en pestana_grabacion.py☐ c+3+o) TXT Recientes vitaminado + navegar al nodo en ventana_principal.py☐ Commit y push a la rama
+Copiar mensaje
+Todo subido. Resumen de lo implementado:
+ 
+Qué se ha implementado
+ventana_proyectos.py (v2 completa)
+Feature
+Detalle
+a) Cerrar
+Botón renombrado a &Cerrar
+b) Escape + foco
+EVT_CHAR_HOOK captura Escape → Close(). _foco_previo recibido de VentanaPrincipal y restaurado en _al_cerrar
+o) Nodo correcto
+Al abrir con TXT cargado → _navegar_a_archivo(ruta) busca en el árbol y selecciona/anuncia
+i) Menú contextual
+Tecla Aplicaciones, Shift+F10 y clic derecho → menú con: Asociar TXT actual, Nuevo hijo, Renombrar, Cambiar tipo, Eliminar
+h) Alt+Arriba/Abajo
+EVT_KEY_DOWN detecta Alt+Flecha → mover_proyecto(delta) + anuncia por _hablar() (pyttsx3) y _anunciar_estado()
+g) Volcado voces
+_actualizar_lista_voces combina proyectos.json + mapeo_etiquetas.json
+Barra de estado
+lbl_estado en la barra inferior para retroalimentación sin diálogos
+gestor_config.py
+• mover_proyecto(id, delta): intercambia posición en la lista hijos del padre
+pestana_grabacion.py
+Feature
+Detalle
+d+2) Bautizo
+DialogoBautizo: aparece cuando todas las etiquetas tienen voz y el TXT no está en ningún proyecto. Tiene radio "Crear nuevo" (con nombre + tipo) y "Añadir a existente" (con lista de proyectos)
+f) Sync título
+EVT_KILL_FOCUS en txt_titulo → renombra el proyecto asociado al salir del campo
+Reset de estado
+_ofrecio_proyecto = False en al_limpiar y al_examinar
+ventana_principal.py
+Feature
+Detalle
+o) Foco previo
+al_abrir_gestor_proyectos captura FindFocus() antes de crear la ventana
+c+3) TXT Recientes
+Submenú "TXT Recientes para grabar" con nombre_archivo (Nombre Proyecto). Persiste en config_general.json["txt_recientes"]
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++710-185
+Crear PR

@@ -1,0 +1,8 @@
+Pront y respuesta 3 claude fase 3
+
+vale, puedes continuar
+Copiar mensaje
+Copiar mensaje
+El mensaje original solo incluía el punto 1 (configuración del entorno). Parece que el resto de las instrucciones de la Fase 3 no se incluyeron en el prompt.
+Por favor, comparte los puntos restantes del "Prompt 2 claude (fase 3)" para poder continuar.
+todo lo que tienes que hacer y las instrucciones que tienes que seguir están en el documento pronpt maestro, está en la sub carpeta fase 3

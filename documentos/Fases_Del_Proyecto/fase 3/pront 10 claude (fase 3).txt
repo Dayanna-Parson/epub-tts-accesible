@@ -1,0 +1,56 @@
+pront 10 claude (fase 3)
+
+Bien aparentemente todo funciona bien. Pero, hay cosas que arreglar. Pero lo bueno, es que cada vez son mas pequeñas!
+Empezamos con el sub menú de la pestaña grabación:
+Este elemento, hay que quitarlo de aquí, porque no tiene sentido, teniendo el botón de examinar. (Contexto  menú
+Abrir TXT para grabar…	Ctrl+T  a)
+y en este submenú de aquí, (
+TXT Recientes para grabar  submenú  t
+(Vacío)  no disponible  abrir paréntesis) pues como puedes observar, no se guardan los libros que como su nombre indica, abrir recientes. Luego de cerrar la app, y al volverla a abrir.
+A, y ahora si que funciona lo del foco en el árbol (me refiero a la ventana gestor de proyecto). Ya me puedo mover con livertad! Pero, al abrir el menú contextual, me salen las mismas opciones que en el menú de grabación. Y aquí tendrían que salir pues todas las opciones relevantes para los proyectos. Pues poder crear uno nuevo si estamos en un proyecto creado, pues lo más lógico es crear un subproyecto nuevo. Por si estamos trabajando en un libro o lo que sea, y queremos trabajar en más cosas...
+
+Se me ocurre una solución. Si estamos en la ventana gestor de proyectos, no tiene sentido que salga esto no crees? (Jerarquía de proyectos:  árbol
+prueba de texto 2 (fase 3) [Otros]
+Contexto  menú
+Abrir TXT para grabar…	Ctrl+T  a
+TXT Recientes para grabar  submenú  t
+Abrir Gestor de Proyectos…	Ctrl+Shift+P  a
+
+A, y tampoco está en ajustes acerca de...
+Y quiero que elimines todos los atajos de los menús contextuales y de los submenús, incluyendo las letras. No tienen mucho sentido la verdad
+
+A, y cuando añado una voz a las favoritas, pues no se actualiza inmediatamente en las voces para asignar a las etiquetas. Tengo que cerrar la ap, y ahí si que aparece la nueva voz
+A, también, tampoco funciona en la ventana de proyectos los comandos para subir o bajar de posición un proyecto, con alt flecha arriba o abajo.
+A, y tampoco funciona el filtro de nuevas voces cuando está seleccionado. de hecho, hoy al pulsar en comprobar voces... en el apartado claves y provedores se han descargado nuevas voces de amazon polly esta vez han sido nueve. Pero como siguen saliendo las que ya añadí antes como nuevas, pues... No se cuales han sido las nuevas. Se me ocurre que podría mirar el archivo json voces disponibles a ver si se a añadido nuevas voces.
+A, y por último, el filtro de idioma no respeta el proobedor que tengamos seleccionado. Por ej. si en el probedor seleccionamos amazon polly, pues que en el filtro de idioma, solo se muestren los idiomas que tenga dicho proovedor. Porque ahora mismo muestra todos, independientemente de cual tengamos seleccionado. Y me preguntaba si se puede intercambiar de posición. en vez de primero el idioma y luego el proovedor, pues que sea al revés. Pienso que así tendría algo más de sentido.
+
+Correcciones de Interfaz y Menús
+Limpieza de Duplicados: El ítem "Abrir TXT para grabar" debe desaparecer del menú contextual de Grabación, ya que para eso tienes el botón "Examinar".
+
+Persistencia de Recientes: Hay un fallo en el guardado. Los TXT recientes deben escribirse en el config_general.json para que sigan ahí al reabrir la app.
+Menú Contextual del Árbol: Ahora mismo el árbol de proyectos está mostrando el menú de la pestaña de grabación por error. Debe mostrar sus propias opciones: "Nuevo Subproyecto", "Renombrar", "Eliminar" y "Asociar TXT".
+Limpieza de Atajos: Eliminaremos las letras de acceso rápido (como esa "a" o "t" al final) y los atajos visuales en los menús contextuales para que la lectura de NVDA sea más limpia.
+⚙️ Ajustes y Voces
+Sincronización de Favoritos: Al añadir una voz a favoritas, la lista de asignación en la pestaña de grabación debe refrescarse al instante sin necesidad de reiniciar la app.
+Filtros Inteligentes:
+Inversión de Orden: Primero seleccionas el Proveedor (ej. Amazon Polly) y luego el Idioma, para que el filtro de idioma solo te muestre lo que ese proveedor ofrece realmente.
+Detección de Novedades: El filtro de "Nuevas voces" debe comparar el JSON de voces_disponibles para marcar solo las que no estaban en la sesión anterior.
+Funcionalidad del Gestor
+Alt + Flechas: Claude debe revisar por qué no se dispara el anuncio de "Movido arriba/abajo" ni se ejecuta el intercambio de posición en el JSON de proyectos.
+Ubicación de "Acerca de": Se le olvidó crear la sección al final de la pestaña de Ajustes.
+ 
+Propuesta de Mensaje para Claude:
+"Claude, vamos a trabajar con tareas más pequeñas y manejables para asegurar la calidad. Por ahora, olvida funciones nuevas y céntrate exclusivamente en corregir estos fallos de la Fase 3:
+
+Corrección de Menús Contextuales:
+Árbol de Proyectos: Quita el menú de grabación que sale por error. Debe mostrar: Nuevo Subproyecto, Renombrar, Cambiar Tipo, Eliminar y Asociar TXT.
+Pestaña Grabación: Elimina 'Abrir TXT' (redundante) y limpia todos los atajos/letras de los menús para que NVDA lea solo el nombre de la opción.
+Persistencia: Asegura que txt_recientes se guarde y cargue correctamente de config_general.json.
+Lógica de Voces y Ajustes:
+Favoritos: Haz que la lista de voces en Grabación se actualice en cuanto se añade una favorita.
+Filtros: Invierte el orden (1. Proveedor, 2. Idioma). El idioma debe filtrarse según el proveedor elegido.
+Nuevas Voces: El filtro debe basarse en cambios reales del JSON de voces disponibles.
+Gestor de Proyectos:
+Reordenar: Arregla Alt + Flecha Arriba/Abajo para que funcione el movimiento y NVDA lo anuncie.
+Categorías: Usa solo las 4 acordadas: Obra Mayor, Obra Única, Podcast/Canal y Otros.
+Sección Acerca de: Crea el apartado al final de la lista de atajos en Ajustes con la información de Ayuda y Créditos."

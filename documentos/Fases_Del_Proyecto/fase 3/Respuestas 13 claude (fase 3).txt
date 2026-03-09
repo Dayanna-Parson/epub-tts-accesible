@@ -1,0 +1,320 @@
+Respuestas 13 claude (fase 3)
+
+Read voice reproduction and project management modules
+Read voice reproduction and project management modules
+Read/home/user/epub-tts-accesible/app/motor/reproductor_voz.py
+Leer 334 líneas
+Read/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py
+Leer 360 líneas
+Copiar mensaje
+Now let me look at the chunking logic in the clients and ventana_proyectos:
+Read voice caching implementation in Polly client
+Read voice caching implementation in Polly client
+Grepchunk|LIMITE|limite|fragmento|cortar|split
+79:        self.pos_inicio_fragmento = 0
+83:        # Cola de fragmentos para lectura continua de voces neuronales
+85:        self._idx_fragmento_actual = 0
+Mostrar más
+86:        # Buffer proactivo: evita silencios entre fragmentos disparando la descarga
+95:        self.divisor = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
+116:        self.divisor.SplitVertically(self.arbol_indice, self.txt_contenido, 280)
+338:                # Las voces neuronales no pueden retomar desde mitad de fragmento.
+345:            self.pos_inicio_fragmento = pos_actual
+351:            fragmento_total = texto_completo[pos_actual:]
+352:            if not fragmento_total.strip():
+371:                # Voces neuronales: dividir en fragmentos y reproducir en cola continua
+372:                self._cola_lectura = self._dividir_en_fragmentos(fragmento_total, pos_actual)
+373:                self._idx_fragmento_actual = 0
+374:                self._reproducir_siguiente_fragmento()
+379:                self._longitud_frag_actual = len(fragmento_total)
+380:                self.reproductor.cargar_texto(fragmento_total)
+382:    def _dividir_en_fragmentos(self, texto, pos_base):
+384:        Divide el texto en fragmentos de máximo MAX_CHARS caracteres,
+385:        respetando límites de párrafo o frase para no cortar palabras.
+388:        Retorna lista de (texto_fragmento, pos_inicio_global).
+403:                corte += 2  # incluir el \n\n en el fragmento anterior
+413:                # Sin punto de corte natural: cortar en el límite estricto
+416:            fragmento = restante[:corte]
+417:            resultado.append((fragmento, pos_actual))
+423:    def _reproducir_siguiente_fragmento(self):
+424:        """Inicia la reproducción del siguiente fragmento de la cola."""
+425:        if not self._cola_lectura or self._idx_fragmento_actual >= len(self._cola_lectura):
+428:        texto_frag, pos_inicio = self._cola_lectura[self._idx_fragmento_actual]
+431:            # Saltar fragmento vacío y continuar con el siguiente
+432:            self._idx_fragmento_actual += 1
+433:            self._reproducir_siguiente_fragmento()
+436:        self.pos_inicio_fragmento = pos_inicio
+439:        # Resetear flag de precarga para este nuevo fragmento
+442:        # Mover el cursor al inicio del fragmento para que NVDA sepa dónde empieza
+446:        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado)
+448:    def _al_fragmento_completado(self):
+449:        """Callback invocado por ReproductorVoz cuando termina un fragmento neuronal."""
+450:        self._idx_fragmento_actual += 1
+451:        if self._cola_lectura and self._idx_fragmento_actual < len(self._cola_lectura):
+452:            self._reproducir_siguiente_fragmento()
+457:        self._idx_fragmento_actual = 0
+498:                pos_estimada = self.pos_inicio_fragmento + avance_estimado
+500:                # Buffer proactivo: cuando queda ~30% del fragmento actual,
+502:                # Esto elimina el silencio de 1-2s entre fragmentos.
+507:                    idx_siguiente = self._idx_fragmento_actual + 1
+515:                            self.reproductor.precargar_fragmento(texto_sig, voz)
+588:            self.pos_inicio_fragmento = pos
+619:        self.pos_inicio_fragmento = pos
+696:            self.pos_inicio_fragmento = 0
+Grepchunk|LIMITE|limite_chars|fragmentar|trocear|split_text
+app/motor/procesador_etiquetas.py:72:def fragmentar_texto(texto: str) -> list:app/interfaz/pestana_grabacion.py:36:    fragmentar_texto,app/interfaz/pestana_grabacion.py:713:        self.fragmentos = fragmentar_texto(self.texto_cargado)
+Mostrar más
+app/motor/grabador_audio.py:18:Chunking inteligente para textos largos:app/motor/grabador_audio.py:242:    # Chunking inteligente para textos largosapp/motor/grabador_audio.py:297:    # Grabación de un fragmento (con chunking automático)app/motor/control_cuota.py:12:        self.limites_defecto = {
+app/motor/control_cuota.py:24:            "limites": self.limites_defecto.copy()
+app/motor/control_cuota.py:43:            limites_guardados = cargado.get("limites", {})
+app/motor/control_cuota.py:44:            for k in datos_base["limites"]:
+app/motor/control_cuota.py:45:                if k in limites_guardados:
+app/motor/control_cuota.py:46:                    datos_base["limites"][k] = limites_guardados[k]
+app/motor/control_cuota.py:90:        limite = self.datos["limites"].get(clave, 0)
+app/motor/control_cuota.py:92:        if gastado + cantidad > limite:
+app/motor/control_cuota.py:98:                f"Límite configurado: {limite}\n\n"
+app/motor/control_cuota.py:112:        limite = self.datos["limites"].get(clave, 0)
+app/motor/control_cuota.py:113:        return gastado, limite
+app/motor/control_cuota.py:115:    def set_limite(self, proveedor, nuevo_limite):
+app/motor/control_cuota.py:117:        self.datos["limites"][clave] = int(nuevo_limite)
+app/motor/control_cuota.py:137:        limite = self.datos["limites"].get(clave, 0)
+app/motor/control_cuota.py:138:        return gastado + len(texto) <= limite
+app/interfaz/pestana_ajustes.py:33:def _texto_ayuda_limite(proveedor, gastado, limite_chars):
+app/interfaz/pestana_ajustes.py:35:    Genera el texto de SetHelpText que NVDA verbalizara al tabular al campo de limite.
+app/interfaz/pestana_ajustes.py:40:        lim = int(limite_chars)
+app/interfaz/pestana_ajustes.py:54:            f"Coste total al limite: {coste_lim} dolares al mes."
+app/interfaz/pestana_ajustes.py:86:        sizer_cuota.Add(self._crear_fila_limite("Azure", g_az, l_az, "azure"), 0, wx.EXPAND|wx.ALL, 2)
+app/interfaz/pestana_ajustes.py:90:        sizer_cuota.Add(self._crear_fila_limite("Polly", g_po, l_po, "polly"), 0, wx.EXPAND|wx.ALL, 2)
+app/interfaz/pestana_ajustes.py:94:        sizer_cuota.Add(self._crear_fila_limite("ElevenLabs", g_el, l_el, "elevenlabs"), 0, wx.EXPAND|wx.ALL, 2)
+app/interfaz/pestana_ajustes.py:133:    def _crear_fila_limite(self, nombre, gastado, limite, clave):
+app/interfaz/pestana_ajustes.py:134:        if not hasattr(self, "txt_limites"): self.txt_limites = {}
+app/interfaz/pestana_ajustes.py:138:        txt = wx.TextCtrl(self, value=str(limite))
+app/interfaz/pestana_ajustes.py:139:        txt.SetName(f"limite_{clave}")
+app/interfaz/pestana_ajustes.py:141:        txt.SetHelpText(_texto_ayuda_limite(clave, gastado, limite))
+app/interfaz/pestana_ajustes.py:142:        self.txt_limites[clave] = txt
+app/interfaz/pestana_ajustes.py:145:            _txt.SetHelpText(_texto_ayuda_limite(_clave, _gas, event.GetString()))
+app/interfaz/pestana_ajustes.py:161:        if hasattr(self, "txt_limites"):
+app/interfaz/pestana_ajustes.py:162:            for clave, txt in self.txt_limites.items():
+app/interfaz/pestana_ajustes.py:165:                    self.cuota.set_limite(clave, int(val))
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 60 líneas
+Mostrar 9 más
+Copiar mensaje
+Now I have a clear picture. Let me set up the todos and implement all three tasks:
+Updated todo list with intelligent chunking and API independence tasks
+Updated todo list with intelligent chunking and API independence tasks
+Update Todos
+☐ Implementando chunking inteligente con jerarquía de pausas☐ Independencia de APIs: per-provider en GestorVoces + PanelClaves☐ Verificar Alt+Flechas ya implementado y funcional☐ Commit y push de Prompt 13
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+66-40
+382382
+    def _dividir_en_fragmentos(self, texto, pos_base):
+383383
+        """
+384-
+        Divide el texto en fragmentos de máximo MAX_CHARS caracteres,
+385-
+        respetando límites de párrafo o frase para no cortar palabras.
+386-
+        300 caracteres es el punto óptimo: respuesta casi instantánea
+387-
+        de la API sin perder calidad de entonación por frases incompletas.
+388-
+        Retorna lista de (texto_fragmento, pos_inicio_global).
+389-
+        """
+390-
+        MAX_CHARS = 200
+391-
+        resultado = []
+392-
+        restante = texto
+393-
+        pos_actual = pos_base
+394-
+395-
+        while restante:
+396-
+            if len(restante) <= MAX_CHARS:
+397-
+                resultado.append((restante, pos_actual))
+398-
+                break
+399-
+400-
+            # Buscar punto de corte ideal: doble salto de línea antes de MAX_CHARS
+401-
+            corte = restante.rfind('\n\n', 0, MAX_CHARS)
+Show full diff (82 more lines)
+Update Todos
+☐ Chunking inteligente: jerarquía de pausas en _dividir_en_fragmentos☐ Implementando independencia de APIs en Ajustes☐ Verificar Alt+Flechas ya implementado y funcional☐ Commit y push de Prompt 13
+Copiar mensaje
+Now add actualizar_proveedor() to GestorVoces:
+Updated cloud voice client provider switching functionality
+Updated cloud voice client provider switching functionality
+Edit/home/user/epub-tts-accesible/app/motor/cliente_nube_voces.py+63-2
+239+
+    def actualizar_proveedor(self, proveedor: str) -> str:
+240+
+        """
+241+
+        Descarga y guarda las voces de un único proveedor sin tocar los demás.
+242+
+        proveedor: "azure" | "polly" | "elevenlabs"
+243+
+        """
+244+
+        # Cargar la caché existente para no machacar los otros proveedores
+245+
+        if os.path.exists(self.ruta_cache_voces):
+246+
+            try:
+247+
+                with open(self.ruta_cache_voces, 'r', encoding='utf-8') as f:
+248+
+                    self.voces_cache = json.load(f)
+249+
+            except Exception:
+250+
+                pass
+251+
+252+
+        config = self.cargar_configuracion()
+253+
+254+
+        if proveedor == "azure":
+255+
+            datos = config.get("azure", {})
+256+
+            key = datos.get("key", "").strip()
+257+
+            region = datos.get("region", "").strip()
+258+
+            if not (key and region):
+Show full diff (43 more lines)
+Copiar mensaje
+Now update PanelClaves to bind each button to its provider and update al_comprobar to accept a provider parameter:
+Updated ElevenLabs API key verification button in settings panel
+Updated ElevenLabs API key verification button in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+3-3
+11
+        btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")
+22
+        btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")
+3-
+        btn_az_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+3+
+        btn_az_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "azure"))
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+3-3
+11
+        btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
+22
+        btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
+3-
+        btn_po_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+3+
+        btn_po_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "polly"))
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+3-3
+11
+        btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
+22
+        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")
+3-
+        btn_el_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+3+
+        btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))
+Copiar mensaje
+Now update al_comprobar to use actualizar_proveedor when a provider is specified:
+Updated settings tab component to save voice snapshots before downloading
+Updated settings tab component to save voice snapshots before downloading
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+28-25
+401-
+    def al_comprobar(self, event):
+402-
+        self.al_guardar(None)
+403-
+        # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces
+404-
+        # Así el filtro "Solo nuevas voces" detectará solo las recién llegadas
+405-
+        try:
+406-
+            ruta_voces = ruta_config("voces_disponibles.json")
+407-
+            ruta_conocidas = ruta_config("voces_conocidas.json")
+408-
+            if os.path.exists(ruta_voces):
+409-
+                with open(ruta_voces, 'r', encoding='utf-8') as f:
+410-
+                    datos = json.load(f)
+411-
+                ids_actuales = [v.get("id","") for lista in datos.values() for v in lista if v.get("id")]
+412-
+                os.makedirs(os.path.dirname(ruta_conocidas), exist_ok=True)
+413-
+                with open(ruta_conocidas, 'w', encoding='utf-8') as f:
+414-
+                    json.dump(ids_actuales, f)
+415-
+        except Exception:
+416-
+            pass
+417-
+        wx.BeginBusyCursor()
+418-
+        try:
+419-
+            gestor = GestorVoces()
+420-
+            res = gestor.actualizar_voces_desde_internet()
+Show full diff (26 more lines)
+Copiar mensaje
+Now verify Alt+Flechas is already properly implemented (already confirmed from the grep above — _mover_nodo calls self._gestor.mover_proyecto() which calls self.guardar() immediately):
+Updated task tracking for intelligent chunking and API independence implementation
+Updated task tracking for intelligent chunking and API independence implementation
+Update Todos
+☐ Chunking inteligente: jerarquía de pausas en _dividir_en_fragmentos☐ Independencia de APIs: per-provider en GestorVoces + PanelClaves☐ Verificar Alt+Flechas ya implementado y funcional☐ Haciendo commit y push
+Bashgit diff --stat
+app/interfaz/pestana_ajustes.py | 13 +++++---- app/interfaz/pestana_lectura.py | 62 +++++++++++++++++++++++++++++------------ app/motor/cliente_nube_voces.py | 61 ++++++++++++++++++++++++++++++++++++++++
+Mostrar más
+ 3 files changed, 113 insertions(+), 23 deletions(-)
+Bash
+git add app/interfaz/pestana_ajustes.py app/interfaz/pestana_lectura.py app/motor/cliente_nube_voces.py && git commit -m "$(cat <<'EOF' Prompt 13: Chunking inteligente, independencia de APIs y Alt+Flechas Chunking inteligente (_dividir_en_fragmentos en pestana_lectura.py): - Jerarquía de corte: P0=párrafo (\n\n), P1=pausas fuertes (.!?…), P2=pausas medias (,;), P3=último espacio, P4=corte estricto - Ventana de búsqueda configurable (VENTANA=200 chars hacia atrás) - Nunca parte palabras; la IA cierra frases completas → entonación natural Independencia de APIs en Ajustes (GestorVoces.actualizar_proveedor): - Nuevo método actualizar_proveedor(proveedor) en cliente_nube_voces.py - Carga la caché existente antes de actualizar para preservar otros proveedores - Botones "Comprobar" de Azure/Polly/ElevenLabs llaman solo a su proveedor - al_comprobar(event, proveedor=None): acepta proveedor opcional Alt+Flechas (ventana_proyectos.py): ya estaba implementado y funcional. _mover_nodo → GestorProyectos.mover_proyecto → guardar() inmediato. https://claude.ai/code/session_01XvhzyP6xV5UmDzherfvKBy EOF )"
+[claude/fase3-proyectos-memoria-accesibilidad-X9aWP b3cc44d] Prompt 13: Chunking inteligente, independencia de APIs y Alt+Flechas 3 files changed, 113 insertions(+), 23 deletions(-)
+Mostrar 2 más
+Copiar mensaje
+Commit b3cc44d pusheado. Resumen de lo implementado:
+ 
+1. Chunking Inteligente (pestana_lectura.py::_dividir_en_fragmentos)
+Implementé la jerarquía de pausas sin cambiar MAX_CHARS=200:
+Prioridad
+Tipo
+Separadores
+P0
+Límite de párrafo
+\n\n
+P1
+Pausas fuertes
+. ! ? … ... (seguidos de espacio o \n)
+P2
+Pausas medias
+, ; (seguidos de espacio)
+P3
+Seguridad
+último espacio (nunca parte palabras)
+P4
+Último recurso
+corte estricto en MAX_CHARS
+La búsqueda se hace con rfind dentro de una ventana VENTANA=200 hacia atrás desde el límite. Cuando MAX_CHARS sea mayor, automáticamente deja una zona de búsqueda de 200 chars.
+ 
+2. Independencia de APIs (cliente_nube_voces.py + pestana_ajustes.py)
+• GestorVoces.actualizar_proveedor(proveedor): nuevo método que carga la caché existente, descarga solo el proveedor indicado y guarda — sin tocar Azure, Polly ni ElevenLabs si no es su turno.
+• Los tres botones "Comprobar" ahora llaman al_comprobar(e, "azure"), al_comprobar(e, "polly"), al_comprobar(e, "elevenlabs") respectivamente — completamente aislados.
+ 
+3. Alt+Flechas
+Ya estaba completamente implementado desde el Prompt 12: _mover_nodo() en ventana_proyectos.py llama GestorProyectos.mover_proyecto() que llama guardar() inmediatamente. Sin cambios necesarios.
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++1309-380
+Crear PR

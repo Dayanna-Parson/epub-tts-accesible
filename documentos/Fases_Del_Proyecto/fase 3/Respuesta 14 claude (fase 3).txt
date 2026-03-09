@@ -1,0 +1,275 @@
+Respuesta 14 claude (fase 3)
+Read ventana_proyectos.py file and examined dependencies
+Read ventana_proyectos.py file and examined dependencies
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 781 líneas
+Copiar mensaje
+Now let me check PestanaGrabacion for the title-sync feature:
+Updated todo list with keyboard shortcut and NVDA accessibility tasks
+Updated todo list with keyboard shortcut and NVDA accessibility tasks
+Grep
+renombrar|titulo|nombre.*proyecto|proyecto.*nombre|cambiar.*nombre|actualizar.*nodo|guardar.*nombre
+52:      - Crear un nuevo proyecto (con nombre editable y selector de tipo).57:    def __init__(self, parent, gestor_proyectos, nombre_sugerido: str = ""):94:        lbl_nombre = wx.StaticText(self._panel_nuevo, label="Nombre del proyecto:")
+Mostrar más
+96:        self.txt_nombre.SetHelpText("Escribe el nombre del nuevo proyecto.")113:        nombres = [f"{p['nombre']} [{p['tipo']}]" for p in proyectos]116:            choices=nombres if nombres else ["(No hay proyectos aún)"],178:                    "Escribe un nombre para el proyecto.",185:            self._resultado_proyecto_id = self._gestor.crear_proyecto(nombre, tipo)278:        self.titulo_libro         = ""333:        sz_titulo = wx.BoxSizer(wx.HORIZONTAL)334:        lbl_titulo = wx.StaticText(self, label="Título (opcional):")335:        self.txt_titulo = wx.TextCtrl(self)336:        self.txt_titulo.SetHelpText(337:            "Título del libro o proyecto. Si se deja vacío se usa el nombre del "339:            "Si el archivo está asociado a un proyecto, el título sincroniza el nombre del proyecto al salir del campo."341:        sz_titulo.Add(lbl_titulo,      0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)342:        sz_titulo.Add(self.txt_titulo, 1, wx.EXPAND)355:        sz_carga.Add(sz_titulo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)480:        self.txt_titulo.Bind(wx.EVT_KILL_FOCUS,     self._al_perder_foco_titulo)521:    def _resolver_titulo(self) -> str:522:        t = self.txt_titulo.GetValue().strip()523:        return t if t else (self.nombre_base_txt or "Sin_Titulo")609:    def _al_perder_foco_titulo(self, evento):611:        Sincroniza el campo Título con el nombre del proyecto asociado (feature f).617:        titulo = self.txt_titulo.GetValue().strip()618:        if titulo and titulo != self.proyecto_actual.get("nombre", ""):619:            self.gestor_proyectos.renombrar_proyecto(self.proyecto_actual["id"], titulo)620:            self.proyecto_actual["nombre"] = titulo629:        nombre_sugerido = self._resolver_titulo()630:        dlg = DialogoBautizo(self, self.gestor_proyectos, nombre_sugerido)638:                        f"Archivo asociado al proyecto «{self.proyecto_actual['nombre']}»."659:            if not self.txt_titulo.GetValue().strip():660:                self.txt_titulo.SetValue(self.nombre_base_txt)688:        if not self.txt_titulo.GetValue().strip():689:            self.txt_titulo.SetValue(self.nombre_base_txt)735:        titulo = self._resolver_titulo()736:        self.titulo_libro = titulo739:        self._cargar_mapeo(titulo)785:        self.titulo_libro         = ""791:        self.txt_titulo.SetValue("")1052:        titulo        = self._resolver_titulo()1053:        mapeo[titulo] = self.asignaciones1056:    def _cargar_mapeo(self, titulo: str):1060:        datos = mapeo.get(titulo, {})1068:                f"para «{titulo}»."1102:        titulo   = self._resolver_titulo()1123:        self.titulo_libro    = titulo1129:            args=(titulo, capitulo, modo_dividido),1151:    def _ejecutar_grabacion(self, titulo, capitulo, modo_dividido):1156:                titulo_libro=titulo,1229:            titulo  = self._resolver_titulo()1232:                limpiar_nombre_archivo(titulo),
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Leer 40 líneas
+Grepsalida|carpeta|ruta_salida|titulo_libro|output
+15:  Todos los archivos de salida se re-codifican a MP3 320 kbps respetando38:# El usuario solo necesita copiar ffmpeg.exe en esa carpeta; no hace falta55:CARPETA_RAIZ_GRABACIONES = "Grabaciones_TifloHistorias"
+Mostrar más
+65:# ── Formatos de salida de alta calidad ───────────────────────────────────────66:_AZURE_OUTPUT_FORMAT  = "audio-48khz-192kbitrate-mono-mp3"67:_ELEVEN_OUTPUT_FORMAT = "mp3_44100_192"83:        self._ultima_carpeta = None106:    def obtener_ultima_carpeta(self) -> str:107:        return self._ultima_carpeta109:    def obtener_carpeta_libro(self, titulo_libro: str) -> str:110:        titulo_limpio = limpiar_nombre_archivo(titulo_libro)111:        carpeta = os.path.join(CARPETA_RAIZ_GRABACIONES, titulo_limpio)112:        os.makedirs(carpeta, exist_ok=True)113:        return carpeta119:        titulo_libro: str,127:            (archivos_generados, errores, carpeta_destino)132:        carpeta_libro   = self.obtener_carpeta_libro(titulo_libro)136:            subcarpeta = os.path.join(carpeta_libro, f"Fragmentos_{nombre_cap_limpio}")138:            subcarpeta = os.path.join(carpeta_libro, f"Audio_Completo_{nombre_cap_limpio}")140:        os.makedirs(subcarpeta, exist_ok=True)141:        self._ultima_carpeta = subcarpeta147:                fragmentos, asignaciones_voz, subcarpeta, total151:                fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total154:        return archivos, errores, subcarpeta160:    def _grabar_modo_dividido(self, fragmentos, asignaciones_voz, subcarpeta, total):175:            ruta_arch   = os.path.join(subcarpeta, nombre_arch)193:        self, fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total227:                ruta_final = os.path.join(subcarpeta, f"{nombre_cap_limpio}.mp3")300:    def _grabar_fragmento(self, texto: str, datos_voz, ruta_salida: str):331:                    self._concatenar_audios(archivos_tmp, ruta_salida)[Showing results with pagination = limit: 30, offset: 0]
+Mostrar 1 más
+Copiar mensaje
+Now I'll implement all changes to ventana_proyectos.py in sequence:
+Fixed keyboard event handling in project window interface
+Fixed keyboard event handling in project window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+6-6
+3737
+    def __init__(self, parent, ruta_txt_activo=None, foco_previo=None):
+3838
+        super().__init__(
+3939
+            parent,
+40-
+            title="Gestión de Proyectos — TifloHistorias",
+40+
+            title="Gestión de Proyectos — Epub TTS",
+4141
+            size=(900, 600),
+4242
+        )
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-7
+8383
+        self.arbol.SetHelpText(
+8484
+            "Árbol de proyectos. Flechas: navegar entre nodos. "
+85-
+            "Tab: pasar al panel de detalle para editar nombre o tipo. "
+86-
+            "Alt+Arriba o Alt+Abajo: reordenar el nodo dentro de sus hermanos. "
+85+
+            "Cada nodo anuncia nombre, estado (Grabado o Pendiente) y nivel. "
+86+
+            "Tab: pasar al panel de detalle para editar nombre o tipo. "
+87+
+            "Ctrl+Arriba o Ctrl+Abajo: reordenar el nodo dentro de sus hermanos. "
+88+
+            "Ctrl+Intro: abrir la carpeta del proyecto en el Explorador. "
+8789
+            "F2: renombrar inline. Supr: eliminar. "
+8890
+            "Tecla Menú o Shift+F10: más opciones (nuevo hijo, asociar TXT, cambiar tipo)."
+8991
+        )
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+6-6
+231-
+    def _añadir_nodo_recursivo(self, nodo_padre_wx, proyecto: dict):
+232-
+        etiqueta = f"{proyecto['nombre']} [{proyecto['tipo']}]"
+233-
+        nodo = self.arbol.AppendItem(nodo_padre_wx, etiqueta)
+234-
+        self._mapa_nodos[nodo] = proyecto["id"]
+235-
+        for hijo in self._gestor.listar_hijos(proyecto["id"]):
+236-
+            self._añadir_nodo_recursivo(nodo, hijo)
+231+
+    def _añadir_nodo_recursivo(self, nodo_padre_wx, proyecto: dict, nivel: int = 1):
+232+
+        etiqueta = self._etiqueta_nodo(proyecto, nivel)
+233+
+        nodo = self.arbol.AppendItem(nodo_padre_wx, etiqueta)
+234+
+        self._mapa_nodos[nodo] = proyecto["id"]
+235+
+        for hijo in self._gestor.listar_hijos(proyecto["id"]):
+236+
+            self._añadir_nodo_recursivo(nodo, hijo, nivel + 1)
+Mostrar 2 más
+Copiar mensaje
+Now update _al_fin_edicion_nodo, _al_guardar_nombre, and _al_cambiar_tipo to use the new label format:
+Updated project window interface file with selection handling changes
+Updated project window interface file with selection handling changes
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-8
+437437
+            proyecto = self._gestor.obtener_proyecto(proyecto_id)
+438438
+            if proyecto:
+439439
+                self._gestor.renombrar_proyecto(proyecto_id, nuevo_nombre)
+440-
+                tipo = proyecto.get("tipo", "otro")
+441-
+                wx.CallAfter(self.arbol.SetItemText, nodo, f"{nuevo_nombre} [{tipo}]")
+440+
+                proyecto["nombre"] = nuevo_nombre
+441+
+                nivel = self._nivel_nodo(nodo)
+442+
+                wx.CallAfter(self.arbol.SetItemText, nodo, self._etiqueta_nodo(proyecto, nivel))
+442443
+                wx.CallAfter(self.txt_nombre.ChangeValue, nuevo_nombre)
+443444
+        evento.Skip()
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+5-5
+566566
+        self._gestor.renombrar_proyecto(proyecto["id"], nuevo_nombre)
+567567
+        nodo = self.arbol.GetSelection()
+568-
+        tipo = proyecto.get("tipo", "otro")
+569-
+        self.arbol.SetItemText(nodo, f"{nuevo_nombre} [{tipo}]")
+568+
+        proyecto["nombre"] = nuevo_nombre
+569+
+        self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
+570570
+        self._anunciar_estado(f"Nombre guardado: {nuevo_nombre}")
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+4-4
+580580
+        self._gestor.cambiar_tipo(proyecto["id"], nuevo_tipo)
+581581
+        nodo = self.arbol.GetSelection()
+582-
+        nombre = proyecto.get("nombre", "")
+583-
+        self.arbol.SetItemText(nodo, f"{nombre} [{nuevo_tipo}]")
+582+
+        proyecto["tipo"] = nuevo_tipo
+583+
+        self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
+Copiar mensaje
+Now update _restaurar_titulo and the _mover_nodo docstring, then add all new helper methods before the _anunciar_estado section:
+Fixed self reference typo in window title restoration method
+Fixed self reference typo in window title restoration method
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+3-3
+750750
+    def _restaurar_titulo(self):
+751751
+        if self:
+752-
+            self.SetTitle("Gestión de Proyectos — TifloHistorias")
+752+
+            self.SetTitle("Gestión de Proyectos — Epub TTS")
+Copiar mensaje
+Now add all new helper methods before _anunciar_estado:
+Updated todo list with completed tasks and NVDA accessibility features
+Updated todo list with completed tasks and NVDA accessibility features
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+99-5
+741741
+    # Auxiliares
+742742
+    # ================================================================== #
+743743
+744+
+    def _nivel_nodo(self, nodo) -> int:
+745+
+        """Devuelve la profundidad del nodo (1 = raíz visible)."""
+746+
+        nivel = 1
+747+
+        actual = nodo
+748+
+        raiz = self.arbol.GetRootItem()
+749+
+        while True:
+750+
+            padre = self.arbol.GetItemParent(actual)
+751+
+            if not padre or not padre.IsOk() or padre == raiz:
+752+
+                break
+753+
+            nivel += 1
+754+
+            actual = padre
+755+
+        return nivel
+756+
+757+
+    def _estado_proyecto(self, proyecto: dict) -> str:
+758+
+        """
+759+
+        Devuelve 'Grabado' si existe al menos un archivo .mp3/.wav generado
+760+
+        para este proyecto; 'Pendiente' si no.
+Show full diff (78 more lines)
+Update Todos
+☐ Ctrl+Arriba/Abajo en lugar de Alt+Arriba/Abajo para reordenar nodos☐ NVDA anuncia [Nombre], [Grabado/Pendiente], nivel [X] en nodos☐ Ctrl+Enter abre carpeta del proyecto en Explorador☐ Sincronizando nombre de nodo desde Grabación☐ Commit y push de Prompt 14
+Copiar mensaje
+Now update pestana_grabacion.py to notify the tree when the title changes:
+Updated todo list with completed tasks and NVDA accessibility states
+Updated todo list with completed tasks and NVDA accessibility states
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+21-12
+610610
+        """
+611611
+        Sincroniza el campo Título con el nombre del proyecto asociado (feature f).
+612612
+        Se activa al salir del campo (EVT_KILL_FOCUS).
+613-
+        """
+614-
+        evento.Skip()  # IMPRESCINDIBLE para no bloquear el ciclo de foco
+615-
+        if not self.proyecto_actual:
+616-
+            return
+617-
+        titulo = self.txt_titulo.GetValue().strip()
+618-
+        if titulo and titulo != self.proyecto_actual.get("nombre", ""):
+619-
+            self.gestor_proyectos.renombrar_proyecto(self.proyecto_actual["id"], titulo)
+620-
+            self.proyecto_actual["nombre"] = titulo
+613+
+        También actualiza el nodo en VentanaProyectos si está abierta.
+614+
+        """
+615+
+        evento.Skip()  # IMPRESCINDIBLE para no bloquear el ciclo de foco
+616+
+        if not self.proyecto_actual:
+617+
+            return
+618+
+        titulo = self.txt_titulo.GetValue().strip()
+619+
+        if titulo and titulo != self.proyecto_actual.get("nombre", ""):
+620+
+            self.gestor_proyectos.renombrar_proyecto(self.proyecto_actual["id"], titulo)
+621+
+            self.proyecto_actual["nombre"] = titulo
+Show full diff (8 more lines)
+Update Todos
+☐ Ctrl+Arriba/Abajo en lugar de Alt+Arriba/Abajo para reordenar nodos☐ NVDA anuncia [Nombre], [Grabado/Pendiente], nivel [X] en nodos☐ Ctrl+Enter abre carpeta del proyecto en Explorador☐ Sinc nombre de nodo desde PestanaGrabacion al árbol☐ Haciendo commit y push
+Bashgit diff --stat
+app/interfaz/pestana_grabacion.py |   9 +++ app/interfaz/ventana_proyectos.py | 150 +++++++++++++++++++++++++++++++------- 2 files changed, 131 insertions(+), 28 deletions(-)
+Mostrar 3 más
+Copiar mensaje
+Commit b7832ad pusheado. Todo listo. Resumen:
+ 
+1. Ctrl+Arriba / Ctrl+Abajo (reordenar)
+• Eliminado de CHAR_HOOK (frame). Ahora está solo en EVT_KEY_DOWN directo del TreeCtrl (_al_tecla_arbol_raw), que es el lugar más limpio.
+• NVDA anuncia el movimiento vía _hablar() (pyttsx3) + título de ventana.
+2. Estados NVDA en nodos
+• Cada nodo muestra: Capítulo 1 [Obra Única] — Grabado — Nivel 2
+• NVDA lo lee al navegar con flechas (texto del TreeItem = accesible nativo)
+• _estado_proyecto(): busca .mp3/.wav en Grabaciones_TifloHistorias/<nombre>/ y también verifica archivos hermanos de los TXT asociados
+• _nivel_nodo(): sube por la jerarquía del árbol contando padres
+• _etiqueta_nodo(): método centralizado — todos los setItemText lo usan para coherencia
+3. Ctrl+Intro → abrir carpeta en Explorador
+• _abrir_carpeta_proyecto(): abre primero la carpeta de audio generada; si no existe, la carpeta del TXT; si no hay nada, avisa
+• os.startfile en Windows, xdg-open en Linux
+4. Sincronización nombre árbol ↔ Grabación
+• Al perder el foco del campo Título en PestanaGrabacion (_al_perder_foco_titulo), si hay un VentanaProyectos abierto se llama actualizar_nombre_proyecto(id, nuevo_nombre)
+• El nodo se actualiza en tiempo real sin reconstruir el árbol entero
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++1418-386
+Crear PR

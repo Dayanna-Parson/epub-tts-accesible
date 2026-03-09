@@ -1,0 +1,41 @@
+pront 9 claude:
+Mira esto al abrir la app
+Error Fatal  fila 1  columna 2
+Error Fatal  diálogo  Error al iniciar la aplicación: 'VentanaPrincipal' object has no attribute 'menu_recientes'
+OK  botón
+
+Se te olvidó eliminar por completo todo el menú antiguo incluido este, por eso supongo que no abre. Porfa, ten mas cuidado la próxima vez que te pida un gran cambio como este, y vigila cada detalle con lupa. Para minimizar todos estos errores que puedan surgir.
+
+Te paso el log:
+---------------------------------------------------
+   INICIANDO TIFLO HISTORIAS...
+---------------------------------------------------
+2026-03-07 13:05:36,940 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-07 13:05:36,941 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-07 13:05:36,941 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-07 13:05:36,945 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-07 13:05:37,974 - __main__ - INFO - Iniciando Epub TTS Accesible
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+
+Así que ahora hay que decirles a todos los json relacionado con los items del antiguo menú que ahora están en los respectivos menús contextuales de cada pestaña.
+
+
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+2026-03-07 13:05:39,290 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\iniciar_tiflohistorias.py", line 92, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Epub TTS Accesible")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 96, in __init__
+    self.cargar_historial_recientes()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 387, in cargar_historial_recientes
+    self.actualizar_menu_recientes()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 413, in actualizar_menu_recientes
+    for item in self.menu_recientes.GetMenuItems():
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'VentanaPrincipal' object has no attribute 'menu_recientes'. Did you mean: 'ruta_recientes'?
+
+
+El conflicto: El método actualizar_menu_recientes en la línea 413 de ventana_principal.py sigue buscando self.menu_recientes, que ya no existe porque se eliminó el menú superior.
+La solución: Debe redirigir todas esas actualizaciones de los JSON (tanto de libros EPUB como de archivos TXT) hacia los nuevos menús contextuales que ha creado en cada pestaña.
+Vigilar el OnInit: El error ocurre justo al arrancar porque la app intenta restaurar la sesión y "pintar" los menús recientes que ya no están en su sitio original.

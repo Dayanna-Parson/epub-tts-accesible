@@ -1,0 +1,557 @@
+Respuesta 10 claude (fase 3)
+
+Updated todo list with context menu and persistence tasks
+Updated todo list with context menu and persistence tasks
+Update Todos
+☐ Menús contextuales: limpiar grabación y crear menú propio para árbol proyectos☐ Persistencia TXT recientes: verificar guardado/carga en config_general.json☐ Favoritos: actualizar lista de voces en Grabación al instante☐ Filtros voces: invertir orden Proveedor→Idioma y filtrar idiomas por proveedor☐ Nuevas voces: detectar novedades comparando JSON actual vs sesión anterior☐ Alt+Flechas: arreglar reordenación en ventana_proyectos☐ Acerca de: añadir sección al final de la pestaña Ajustes
+Copiar mensaje
+Voy a leer todos los archivos relevantes en paralelo.
+Reviewed project window and settings tab interface files
+Reviewed project window and settings tab interface files
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 760 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 100 líneas
+Copiar mensaje
+Necesito leer más partes de los archivos relevantes.
+Examined settings panel code and project movement configuration logic
+Examined settings panel code and project movement configuration logic
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 200 líneas
+Grepfavoritos|voces_para_asignar|cargar_voces|favoritas
+6-Flujo de uso (diseñado para NVDA + teclado):7-  1. Pulsa "Examinar…" → selecciona un TXT → el escaneo es automático.8-  2. En el combo "Etiqueta activa" selecciona la primera etiqueta.
+Mostrar más
+9:  3. Marca una voz en la lista de favoritos → se auto-asigna y el combo avanza.10-  4. Repite hasta cubrir todas las etiquetas.11-  5. Pulsa "Iniciar Grabación".12-  6. "Limpiar" restablece la pestaña para cargar otro fragmento sin reiniciar.--283-284-        # ── Rutas de configuración ────────────────────────────────────────285-        self.ruta_mapeo = ruta_config("mapeo_etiquetas.json")286:        self.ruta_favs  = ruta_config("voces_favoritas.json")287-        self.ruta_todas = ruta_config("voces_disponibles.json")288-289-        self._construir_interfaz()290:        self._cargar_voces_disponibles()291-292-    # ================================================================== #293-    # Propiedades para Tab cíclico (usadas por ventana_principal.py)--373-        sz_etiq.Add(lbl_etiq,             0, wx.BOTTOM, 3)374-        sz_etiq.Add(self.combo_etiquetas, 0, wx.EXPAND)375-376:        # Columna der: voces favoritas con ListaVocesCheck + columnas377-        sz_voces = wx.BoxSizer(wx.VERTICAL)378-        lbl_voces = wx.StaticText(self, label="Asigna voces a la etiqueta seleccionada:")379-        self.check_voces = ListaVocesCheck(self)--382-        self.check_voces.InsertColumn(2, "Idioma",           width=130)383-        self.check_voces.InsertColumn(3, "Proveedor",        width=90)384-        self.check_voces.SetHelpText(385:            "Lista de voces favoritas. Pulsa Espacio sobre una voz para asignarla "386-            "a la etiqueta activa. Solo puede haber una voz marcada a la vez."387-        )388-        sz_voces.Add(lbl_voces,        0, wx.BOTTOM, 3)--530-    # Carga de voces disponibles — ListaVocesCheck con columnas531-    # ================================================================== #532-533:    def _cargar_voces_disponibles(self):534:        """Puebla check_voces con voces favoritas (columnas) y SAPI5 locales."""535-        self.voces_disponibles = []536-        self._mapa_indices     = {}537-        self.check_voces.DeleteAllItems()538-539-        idx = 0540-541:        # ── Voces neuronales favoritas ────────────────────────────────────542-        ids_favs_raw = self._cargar_json(self.ruta_favs)543-        ids_favs = set(ids_favs_raw) if isinstance(ids_favs_raw, list) else set()544---596-597-        if idx == 0:598-            pos = self.check_voces.InsertItem(599:                0, "No hay voces. Añade favoritas en la pestaña Ajustes."600-            )601-            self.check_voces.SetItem(pos, 1, "")602-            self.check_voces.SetItem(pos, 2, "")
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 200 líneas
+Mostrar 2 más
+Copiar mensaje
+Ahora tengo suficiente contexto. Voy a hacer todos los cambios en paralelo trabajando por archivos.
+Resumen de cambios a hacer:
+1. ventana_principal.py: Quitar "Abrir TXT" del menú grabación, eliminar atajos de texto en menús
+2. ventana_proyectos.py: El menú contextual ya es correcto (tiene sus propias opciones); el problema es que el menú de la VentanaPrincipal se activa también por el Shift+F10 del Frame principal — esto se debe a que al_navegacion_tab_global del frame padre está capturando Shift+F10 antes que la ventana hija
+3. pestana_ajustes.py: Invertir orden filtros (Proveedor→Idioma), actualizar idiomas según proveedor, arreglar "nuevas voces", añadir "Acerca de"
+4. pestana_grabacion.py: Notificar cambio de favoritos a grabación al instante
+5. gestor_config.py: Verificar mover_proyecto para proyectos raíz
+Updated todo list with context menu and persistence tasks
+Updated todo list with context menu and persistence tasks
+Read/home/user/epub-tts-accesible/app/motor/gestor_config.py
+Leer 40 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 30 líneas
+Update Todos
+☐ Arreglando menús contextuales☐ Persistencia TXT recientes: verificar guardado/carga en config_general.json☐ Favoritos: actualizar lista de voces en Grabación al instante☐ Filtros voces: invertir orden Proveedor→Idioma y filtrar idiomas por proveedor☐ Nuevas voces: detectar novedades comparando JSON actual vs sesión anterior☐ Alt+Flechas: arreglar reordenación en ventana_proyectos☐ Acerca de: añadir sección al final de la pestaña Ajustes
+Copiar mensaje
+1. ventana_principal.py — Limpiar menús contextuales (quitar "Abrir TXT" y atajos \t):
+Updated todo list with context menu fixes and file persistence tasks
+Updated todo list with context menu fixes and file persistence tasks
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+88-92
+33
+        menu = wx.Menu()
+44
+55
+        # Abrir libro
+6-
+        item_abrir = menu.Append(wx.ID_ANY, "Abrir libro EPUB…\tCtrl+A")
+7-
+        self.Bind(wx.EVT_MENU, self.al_abrir_archivo, item_abrir)
+8-
+9-
+        # Submenú libros recientes
+10-
+        sub_rec = wx.Menu()
+11-
+        if self.archivos_recientes:
+12-
+            for i, ruta in enumerate(self.archivos_recientes):
+13-
+                nombre = os.path.basename(ruta)
+14-
+                id_item = wx.NewIdRef()
+15-
+                sub_rec.Append(id_item, f"{i+1}. {nombre}")
+16-
+                self.Bind(
+17-
+                    wx.EVT_MENU,
+18-
+                    lambda e, p=ruta: self.abrir_libro_reciente(p),
+19-
+                    id=id_item,
+20-
+                )
+21-
+            sub_rec.AppendSeparator()
+22-
+            id_borrar = wx.NewIdRef()
+Show full diff (148 more lines)
+Update Todos
+☐ Menús contextuales: limpiar grabación y crear menú propio para árbol proyectos☐ Arreglando persistencia TXT recientes☐ Favoritos: actualizar lista de voces en Grabación al instante☐ Filtros voces: invertir orden Proveedor→Idioma y filtrar idiomas por proveedor☐ Nuevas voces: detectar novedades comparando JSON actual vs sesión anterior☐ Alt+Flechas: arreglar reordenación en ventana_proyectos☐ Acerca de: añadir sección al final de la pestaña Ajustes
+Copiar mensaje
+Ahora necesito ver cargar_txt_desde_ruta en pestana_grabacion.py:
+Searched for recording tab functions in Python file
+Searched for recording tab functions in Python file
+Grepdef cargar_txt_desde_ruta|def al_examinar
+627-        if not self.ruta_txt_actual:628-            return629-        nombre_sugerido = self._resolver_titulo()
+Mostrar más
+630-        dlg = DialogoBautizo(self, self.gestor_proyectos, nombre_sugerido)631-        if dlg.ShowModal() == wx.ID_OK:632-            proyecto_id, _ = dlg.obtener_resultado()633-            if proyecto_id:634-                self.gestor_proyectos.asociar_archivo(proyecto_id, self.ruta_txt_actual)635-                self.proyecto_actual = self.gestor_proyectos.obtener_proyecto(proyecto_id)636-                if self.proyecto_actual:637-                    self.lbl_progreso.SetLabel(638-                        f"Archivo asociado al proyecto «{self.proyecto_actual['nombre']}»."639-                    )640-        dlg.Destroy()641-642:    def al_examinar(self, evento):643-        self._ofrecio_proyecto = False644-        with wx.FileDialog(645-            self,646-            "Seleccionar archivo de texto con etiquetas",647-            wildcard="Archivos de texto (*.txt)|*.txt|Todos (*.*)|*.*",648-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,649-        ) as dlg:650-            if dlg.ShowModal() != wx.ID_OK:651-                return652-653-            self.ruta_txt_actual = dlg.GetPath()654-            self.nombre_base_txt = os.path.splitext(655-                os.path.basename(self.ruta_txt_actual)656-            )[0]657-            self.txt_ruta.SetValue(self.ruta_txt_actual)658-659-            if not self.txt_titulo.GetValue().strip():660-                self.txt_titulo.SetValue(self.nombre_base_txt)661-            if not self.txt_capitulo.GetValue().strip():662-                self.txt_capitulo.SetValue(self.nombre_base_txt)663-664-        # Consultar si el TXT ya pertenece a un proyecto665-        self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(666-            self.ruta_txt_actual667-        )668-        self._cargar_y_escanear()669-670:    def cargar_txt_desde_ruta(self, ruta: str):671-        """672-        Carga un archivo TXT directamente (sin diálogo de apertura).673-        Usado por VentanaPrincipal al restaurar la sesión anterior.674-        """675-        if not os.path.exists(ruta):676-            return677-        self.ruta_txt_actual = ruta678-        self.nombre_base_txt = os.path.splitext(os.path.basename(ruta))[0]679-        self.txt_ruta.SetValue(ruta)680-        if not self.txt_titulo.GetValue().strip():681-            self.txt_titulo.SetValue(self.nombre_base_txt)682-        if not self.txt_capitulo.GetValue().strip():683-            self.txt_capitulo.SetValue(self.nombre_base_txt)684-        self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(ruta)685-        self._cargar_y_escanear()
+Copiar mensaje
+Añado notificación a VentanaPrincipal desde al_examinar para cuando el usuario usa el botón Examinar directamente:
+Updated task list with completed context menu and file persistence work
+Updated task list with completed context menu and file persistence work
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+13-5
+33
+            self.ruta_txt_actual
+44
+        )
+55
+        self._cargar_y_escanear()
+6+
+7+
+        # Notificar a VentanaPrincipal para añadir a TXT Recientes
+8+
+        try:
+9+
+            ventana = wx.GetTopLevelParent(self.GetParent())
+10+
+            if hasattr(ventana, 'agregar_txt_a_recientes'):
+11+
+                ventana.agregar_txt_a_recientes(self.ruta_txt_actual)
+12+
+        except Exception:
+13+
+            pass
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Leer 15 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+15-7
+667667
+        )
+668668
+        self._cargar_y_escanear()
+669669
+670+
+        # Notificar a VentanaPrincipal para añadir a TXT Recientes
+671+
+        try:
+672+
+            ventana = wx.GetTopLevelParent(self.GetParent())
+673+
+            if hasattr(ventana, 'agregar_txt_a_recientes'):
+674+
+                ventana.agregar_txt_a_recientes(self.ruta_txt_actual)
+675+
+        except Exception:
+676+
+            pass
+677+
+670678
+    def cargar_txt_desde_ruta(self, ruta: str):
+Mostrar 1 más
+Copiar mensaje
+Ahora los cambios grandes en pestana_ajustes.py. Primero: notificación a Grabación desde favoritos:
+Fixed favorite voice marking functionality in settings panel
+Fixed favorite voice marking functionality in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+29-17
+66
+            if id_voz not in self.favoritos:
+77
+                self.favoritos.append(id_voz)
+88
+                self.guardar_favoritos()
+9-
+10-
+    def al_desmarcar_favorito(self, event):
+11-
+        idx = event.GetIndex()
+12-
+        voz = self.mapa_indices.get(idx)
+13-
+        if voz:
+14-
+            id_voz = voz.get("id")
+15-
+            if id_voz in self.favoritos:
+16-
+                self.favoritos.remove(id_voz)
+17-
+                self.guardar_favoritos()
+9+
+                self._notificar_grabacion()
+10+
+11+
+    def al_desmarcar_favorito(self, event):
+12+
+        idx = event.GetIndex()
+13+
+        voz = self.mapa_indices.get(idx)
+14+
+        if voz:
+15+
+            id_voz = voz.get("id")
+16+
+            if id_voz in self.favoritos:
+Show full diff (13 more lines)
+Copiar mensaje
+Ahora: invertir orden Proveedor→Idioma y filtrar idiomas por proveedor:
+Refactored settings panel layout in pestana_ajustes.py
+Refactored settings panel layout in pestana_ajustes.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+16-16
+1-
+        # Fila A: Idioma y Proveedor
+2-
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+3-
+        hbox1.Add(wx.StaticText(self, label="Idioma:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+4-
+        self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+5-
+        self.combo_idioma.SetSelection(0)
+6-
+        self.combo_idioma.SetHelpText("Filtra la lista de voces por idioma. Selecciona Todos para ver todas las voces.")
+7-
+        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+8-
+        hbox1.Add(self.combo_idioma, 1, wx.RIGHT, 15)
+9-
+10-
+        hbox1.Add(wx.StaticText(self, label="Proveedor:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+11-
+        self.combo_proveedor = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+12-
+        self.combo_proveedor.SetSelection(0)
+13-
+        self.combo_proveedor.SetHelpText("Filtra la lista de voces por proveedor: Azure, Amazon Polly, ElevenLabs, o Todos.")
+14-
+        self.combo_proveedor.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+15-
+        hbox1.Add(self.combo_proveedor, 0)
+1+
+        # Fila A: Proveedor primero, luego Idioma (el idioma se filtra según el proveedor)
+2+
+        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
+3+
+        hbox1.Add(wx.StaticText(self, label="Proveedor:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+4+
+        self.combo_proveedor = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+5+
+        self.combo_proveedor.SetSelection(0)
+Show full diff (11 more lines)
+Copiar mensaje
+Ahora añado el método al_cambiar_proveedor y la corrección de cargar_datos_y_llenar para nuevas voces:
+Refactored provider change handler in settings tab
+Refactored provider change handler in settings tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+29-4
+591+
+    def al_cambiar_proveedor(self, event):
+592+
+        """Actualiza el combo de idioma para mostrar solo los del proveedor seleccionado."""
+593+
+        f_prov = self.combo_proveedor.GetValue()
+594+
+        if f_prov == "Todos":
+595+
+            voces_prov = self.voces_todas
+596+
+        elif f_prov == "Amazon Polly":
+597+
+            voces_prov = [v for v in self.voces_todas if "polly" in v.get("proveedor_id","").lower()]
+598+
+        elif f_prov == "Azure":
+599+
+            voces_prov = [v for v in self.voces_todas if "azure" in v.get("proveedor_id","").lower()]
+600+
+        elif f_prov == "ElevenLabs":
+601+
+            voces_prov = [v for v in self.voces_todas if "eleven" in v.get("proveedor_id","").lower()]
+602+
+        else:
+603+
+            voces_prov = self.voces_todas
+604+
+605+
+        idiomas = sorted(set(v.get("idioma","") for v in voces_prov if v.get("idioma")))
+606+
+        idioma_actual = self.combo_idioma.GetValue()
+607+
+        self.combo_idioma.Clear()
+608+
+        self.combo_idioma.Append("Todos")
+609+
+        self.combo_idioma.AppendItems(idiomas)
+610+
+        if idioma_actual in idiomas:
+Show full diff (8 more lines)
+Copiar mensaje
+Ahora corrijo cargar_datos_y_llenar para: 1) poblar proveedor primero con idioma filtrado, 2) detectar nuevas voces con voces_conocidas.json:
+Updated voice loading logic in settings panel configuration file
+Updated voice loading logic in settings panel configuration file
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+41-29
+11
+    def cargar_datos_y_llenar(self):
+22
+        ruta = ruta_config("voces_disponibles.json")
+3-
+        self.voces_todas = []
+4-
+        idiomas = set()
+5-
+6-
+        if os.path.exists(ruta):
+7-
+            try:
+8-
+                with open(ruta, 'r', encoding='utf-8') as f:
+9-
+                    datos = json.load(f)
+10-
+                    for prov, lista in datos.items():
+11-
+                        for v in lista:
+12-
+                            v["proveedor_id"] = prov
+13-
+                            self.voces_todas.append(v)
+14-
+                            if v.get("idioma"): idiomas.add(v.get("idioma"))
+15-
+            except Exception as e:
+16-
+                print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
+17-
+                self.voces_todas = []
+18-
+19-
+        lista_idiomas = sorted(list(idiomas))
+20-
+        self.combo_idioma.Clear()
+Show full diff (47 more lines)
+Copiar mensaje
+Ahora corrijo al_comprobar en PanelClaves para guardar voces_conocidas.json ANTES de descargar:
+Updated task list and marked context menus completed
+Updated task list and marked context menus completed
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+25-11
+11
+    def al_comprobar(self, event):
+22
+        self.al_guardar(None)
+3+
+        # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces
+4+
+        # Así el filtro "Solo nuevas voces" detectará solo las recién llegadas
+5+
+        try:
+6+
+            ruta_voces = ruta_config("voces_disponibles.json")
+7+
+            ruta_conocidas = ruta_config("voces_conocidas.json")
+8+
+            if os.path.exists(ruta_voces):
+9+
+                with open(ruta_voces, 'r', encoding='utf-8') as f:
+10+
+                    datos = json.load(f)
+11+
+                ids_actuales = [v.get("id","") for lista in datos.values() for v in lista if v.get("id")]
+12+
+                os.makedirs(os.path.dirname(ruta_conocidas), exist_ok=True)
+13+
+                with open(ruta_conocidas, 'w', encoding='utf-8') as f:
+14+
+                    json.dump(ids_actuales, f)
+15+
+        except Exception:
+16+
+            pass
+317
+        except Exception as e:
+418
+            wx.EndBusyCursor()
+519
+            wx.MessageBox(f"Error: {e}", "Error")
+Update Todos
+☐ Menús contextuales: limpiar grabación y crear menú propio para árbol proyectos☐ Persistencia TXT recientes: añadir notificación desde cargar_txt_desde_ruta☐ Favoritos + filtros + nuevas voces en pestana_ajustes☐ Arreglando Alt+Flechas y menú contextual en gestor proyectos☐ Acerca de: añadir sección al final de la pestaña Ajustes
+Copiar mensaje
+Ahora arreglo ventana_proyectos.py: Alt+Flechas en CHAR_HOOK, menú contextual con "Nuevo raíz" y manejo de Shift+F10:
+Modified keyboard event handler in ventana_proyectos.py
+Modified keyboard event handler in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+21-5
+356356
+    def _al_tecla_global(self, evento):
+357-
+        if evento.GetKeyCode() == wx.WXK_ESCAPE:
+358-
+            self.Close()
+357+
+        keycode = evento.GetKeyCode()
+358+
+        if keycode == wx.WXK_ESCAPE:
+359+
+            self.Close()
+360+
+            return
+361+
+        # Alt+Arriba/Abajo: reordenar nodos (capturado en CHAR_HOOK para que el
+362+
+        # TreeCtrl no los consuma para su propia navegación)
+363+
+        if evento.AltDown() and keycode == wx.WXK_UP:
+364+
+            self._mover_nodo(-1)
+365+
+            return
+366+
+        if evento.AltDown() and keycode == wx.WXK_DOWN:
+367+
+            self._mover_nodo(+1)
+368+
+            return
+369+
+        # Tecla Menú / Shift+F10: menú contextual del árbol
+370+
+        if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
+371+
+            self._mostrar_menu_contextual()
+372+
+            return
+373+
+        if keycode == wx.WXK_F10 and evento.ShiftDown():
+Show full diff (3 more lines)
+Copiar mensaje
+Ahora añado "Nuevo proyecto raíz" al menú contextual:
+Updated project window context menu to associate TXT files
+Updated project window context menu to associate TXT files
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+22-15
+449449
+        menu = wx.Menu()
+450450
+451-
+        item_asociar = menu.Append(wx.ID_ANY, "Asociar TXT actual de Grabación")
+452-
+        item_asociar.Enable(bool(proyecto and ruta_txt))
+453-
+        self.Bind(
+454-
+            wx.EVT_MENU,
+455-
+            lambda e: self._asociar_txt_actual(proyecto, ruta_txt),
+456-
+            item_asociar,
+457-
+        )
+458-
+459-
+        menu.AppendSeparator()
+460-
+461-
+        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo &hijo…")
+462-
+        item_nuevo_hijo.Enable(bool(proyecto))
+463-
+        self.Bind(wx.EVT_MENU, self._al_nuevo_hijo, item_nuevo_hijo)
+451+
+        # Nuevo proyecto raíz (siempre disponible)
+452+
+        item_nuevo_raiz = menu.Append(wx.ID_ANY, "Nuevo proyecto raíz")
+453+
+        self.Bind(wx.EVT_MENU, self._al_nuevo_raiz, item_nuevo_raiz)
+454+
+455+
+        # Nuevo hijo (requiere selección)
+Show full diff (15 more lines)
+Copiar mensaje
+Necesito eliminar el item_nuevo_hijo duplicado que quedó después del separador:
+Read rename project menu item implementation in wxPython interface file
+Read rename project menu item implementation in wxPython interface file
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 40 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 20 líneas
+Copiar mensaje
+Hay un separador duplicado (líneas 486 y 488). Lo elimino:
+Updated todo list with completed context menu fixes and recent file persistence tasks
+Updated todo list with completed context menu fixes and recent file persistence tasks
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+3-5
+11
+        menu.AppendSeparator()
+22
+3-
+        menu.AppendSeparator()
+4-
+53
+        item_renombrar = menu.Append(wx.ID_ANY, "Renombrar (F2)")
+Update Todos
+☐ Menús contextuales: limpiar grabación y crear menú propio para árbol proyectos☐ Persistencia TXT recientes: añadir notificación desde cargar_txt_desde_ruta☐ Favoritos + filtros + nuevas voces en pestana_ajustes☐ Alt+Flechas y menú contextual: arreglar en ventana_proyectos☐ Añadiendo sección Acerca de
+Copiar mensaje
+Ahora añado el panel "Acerca de". Primero veo el final del archivo:
+Updated todo list with completed context menu and file persistence tasks
+Updated todo list with completed context menu and file persistence tasks
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 60 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 30 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+117-68
+1-
+class PestanaAjustes(wx.Panel):
+2-
+    def __init__(self, padre):
+3-
+        super().__init__(padre)
+4-
+        self.ruta_config = ruta_config("config_general.json")
+5-
+        self.config = self.cargar_config()
+6-
+7-
+        self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
+8-
+9-
+        self.lista_cat = wx.ListBox(self.splitter, style=wx.LB_SINGLE)
+10-
+        self.lista_cat.Append("General")
+11-
+        self.lista_cat.Append("Claves y Proveedores")
+12-
+        self.lista_cat.Append("Voces e Idiomas")
+13-
+        self.lista_cat.Append("Atajos de teclado")
+14-
+        self.lista_cat.SetSelection(0)
+15-
+        self.lista_cat.SetHelpText(
+16-
+            "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "
+17-
+            "Pulsa Intro o Espacio para abrir la categoría seleccionada en el panel de la derecha."
+18-
+        )
+19-
+        self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
+20-
+Show full diff (142 more lines)
+Mostrar 1 más
+Copiar mensaje
+Ahora commit y push de todos los cambios:
+Committed UI improvements for context menus, favorites, filters, and accessibility features
+Committed UI improvements for context menus, favorites, filters, and accessibility features
+Bash
+git add app/interfaz/ventana_principal.py app/interfaz/ventana_proyectos.py app/interfaz/pestana_ajustes.py app/interfaz/pestana_grabacion.py && git commit -m "$(cat <<'EOF' Fix Prompt 10: menús, favoritos, filtros, nuevas voces, Alt+Flechas, Acerca de Menús contextuales: - Grabación: elimina ítem redundante "Abrir TXT" (hay botón Examinar) - Ambos menús: quita atajos \t de las etiquetas para NVDA más limpio - VentanaProyectos: menú contextual del árbol añade "Nuevo proyecto raíz" y "Nuevo subproyecto hijo"; Shift+F10 / Tecla Menú capturados en CHAR_HOOK del Frame para que funcionen con foco en cualquier control Alt+Flechas (ventana_proyectos): - Movidos de EVT_KEY_DOWN (consumido por TreeCtrl) a CHAR_HOOK del Frame → Alt+Arriba/Abajo ahora reordena e informa "Movido arriba/abajo" Favoritos → Grabación en tiempo real: - al_marcar/al_desmarcar_favorito llama _notificar_grabacion() que recarga check_voces en PestanaGrabacion sin reiniciar la app Persistencia TXT Recientes: - al_examinar notifica a VentanaPrincipal.agregar_txt_a_recientes() cuando el usuario usa el botón Examinar directamente (no solo Ctrl+T) Filtros de voces (Ajustes → Voces e Idiomas): - Orden invertido: Proveedor primero, Idioma después - Al cambiar proveedor, el combo de idioma se repuebla con solo los idiomas de ese proveedor (al_cambiar_proveedor) Nuevas voces: - voces_conocidas.json guarda IDs antes de cada "Comprobar voces" - PanelVoces calcula es_nueva dinámicamente al cargar: voz no en conocidas - Primera vez (sin conocidas.json): ninguna voz marcada como nueva Acerca de: - Nueva categoría en Ajustes con nombre, créditos, proveedores y botón para abrir GitHub https://claude.ai/code/session_01XvhzyP6xV5UmDzherfvKBy EOF )" && git push -u origin claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+[claude/fase3-proyectos-memoria-accesibilidad-X9aWP 6142fde] Fix Prompt 10: menús, favoritos, filtros, nuevas voces, Alt+Flechas, Acerca de 4 files changed, 181 insertions(+), 44 deletions(-)To http://127.0.0.1:59430/git/Dayanna-Parson/epub-tts-accesible
+Mostrar más
+   13e6466..6142fde  claude/fase3-proyectos-memoria-accesibilidad-X9aWP -> claude/fase3-proyectos-memoria-accesibilidad-X9aWPbranch 'claude/fase3-proyectos-memoria-accesibilidad-X9aWP' set up to track 'origin/claude/fase3-proyectos-memoria-accesibilidad-X9aWP'.
+Copiar mensaje
+Commit 6142fde subido. Resumen de todo lo corregido:
+Menús contextuales:
+• Grabación: eliminado "Abrir TXT" (redundante con el botón Examinar)
+• Todos los menús: quitados los atajos \t de las etiquetas para que NVDA lea limpio
+• Árbol de proyectos: añadidos "Nuevo proyecto raíz" y "Nuevo subproyecto hijo"; Shift+F10 capturado en CHAR_HOOK del Frame (antes solo lo capturaba el TreeCtrl)
+Alt+Flechas: movido de EVT_KEY_DOWN (que el TreeCtrl consumía) al CHAR_HOOK del Frame — ahora funciona siempre
+Favoritos → Grabación en tiempo real: al marcar/desmarcar favorito, se recarga check_voces en PestanaGrabación sin reiniciar
+TXT Recientes: el botón Examinar ahora notifica a VentanaPrincipal para añadir a recientes (antes solo funcionaba vía Ctrl+T)
+Filtros de voces: orden invertido (Proveedor→Idioma); al cambiar proveedor, el combo de idioma muestra solo los idiomas de ese proveedor
+Nuevas voces: usa voces_conocidas.json — guarda los IDs antes de descargar, y marca como "nueva" solo las que no estaban
+Acerca de: nueva categoría en Ajustes con créditos y botón GitHub
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++1007-327
+Crear PR

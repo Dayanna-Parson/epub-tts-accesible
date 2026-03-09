@@ -1,0 +1,24 @@
+Pront 12 claude fase (3)
+
+MUDANZA, AUDITORÍA Y LIMPIEZA PROFUNDA
+Contexto: Realizaremos una reestructuración total antes de subir a GitHub. La app debe ser 100% portable, ligera y amigable para el usuario final. 
+Reestructuración y Mudanza de Archivos:
+Módulos (.py): gestor_config.py → gestor_proyectos.py; gestor_voces.py → cliente_nube_voces.py. 
+Datos (.json): config_general.json → ajustes.json; libros_recientes.json → historial_epub.json; datos_lectura.json → estado_lectura.json. 
+Independencia: Crea historial_grabacion.json para separar los TXT recientes. Borra ajustes_globales.json si está vacío. 
+Gestión de Errores y Logs:
+Mensajes: Revisa todos los diálogos de error. Deben ser cortos, amigables y concisos, explicando qué pasó y por qué, sin tecnicismos innecesarios. 
+Registro: Asegura que todo error que vea el usuario se guarde en un archivo de log (error_log.txt) para soporte técnico. Limpia registros antiguos o innecesarios que solo ocupen espacio. 
+Accesibilidad y Navegación (NVDA):
+Bucle de Tabulación: Corrige el fallo en Ajustes > General: al llegar al botón "Guardar", el siguiente Tab debe volver al inicio de la pestaña (Notebook), cerrando el bucle como en el resto de la app.
+Labels: Prioridad absoluta al Label sobre el HelpText. Usa lenguaje natural: "Subproyecto" en lugar de "Hijo" y elimina "Raíz". 
+4. Mantenimiento y Portabilidad:
+• 
+Botón Limpiar Caché: Revisa la función del botón "Limpiar basura/caché" en Ajustes. Debe borrar archivos temporales, carpetas __pycache__ y cualquier residuo no crítico para que la app sea ligera y estable. 
+
+"El botón de limpieza debe eliminar de forma recursiva: carpetas __pycache__, archivos de audio temporales en la carpeta de caché, archivos .tmp y registros de log antiguos, asegurando que la estructura de carpetas de configuración permanezca intacta pero limpia. Y al terminar de limpiar, que salga un diálogo confirmando que ya terminó de limpiar y cuanto se eliminó (número de archivos)
+
+Rutas: Prohibidas las rutas absolutas. Todo debe usar ruta_config() para asegurar la portabilidad desde un USB. 
+Librerías: Elimina import huérfanos para optimizar el futuro .exe. 
+Identidad:
+Usa "Epub TTS" como título provisional. Sugerencia de 5 nombres nuevos con gancho (sin la palabra "Accesible"). (no pongas ninguno de esos nombres sugeridos en el código. Solo dámelos en tu respuesta, para que yo decida cual me gusta más.)

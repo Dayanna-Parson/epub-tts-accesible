@@ -1,0 +1,84 @@
+
+============================================================
+2026-03-08T14:41:04.911396
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+============================================================
+2026-03-08T14:41:04.914357
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+============================================================
+2026-03-08T14:43:12.720793
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+============================================================
+2026-03-08T15:34:22.008603
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+============================================================
+2026-03-08T15:34:22.018145
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+============================================================
+2026-03-08T20:51:37.459895
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 289, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 241, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+============================================================
+2026-03-08T20:51:37.465173
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 289, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 241, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+

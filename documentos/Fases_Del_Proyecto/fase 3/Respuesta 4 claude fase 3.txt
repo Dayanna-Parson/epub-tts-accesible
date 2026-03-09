@@ -1,0 +1,1143 @@
+Respuesta 4 claude fase 3
+
+Read Phase 3 master prompt for TifloHistorias project
+Read Phase 3 master prompt for TifloHistorias project
+Glob**/fase3/**/*No files found
+Glob**/fase 3/**/*/home/user/epub-tts-accesible/documentos/Fases_Del_Proyecto/fase 3/Pront MAESTRO claude fase 3.txt
+Read
+/home/user/epub-tts-accesible/documentos/Fases_Del_Proyecto/fase 3/Pront MAESTRO claude fase 3.txt
+Leer 373 líneas
+Copiar mensaje
+He leído el prompt maestro. Entiendo el alcance completo. Voy a leer los archivos clave antes de empezar.
+Read main window and recording tab components
+Read main window and recording tab components
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.pyLeer 409 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 1005 líneas
+Copiar mensaje
+Ahora leo el gestor_config.py y config_general.json para entender la API completa:
+Read project configuration manager and checked missing config file
+Read project configuration manager and checked missing config file
+Read/home/user/epub-tts-accesible/app/motor/gestor_config.pyLeer 336 líneas
+Read/home/user/epub-tts-accesible/configuraciones/config_general.jsonFile does not exist. Note: your current working directory is /home/user/epub-tts-accesible.
+Copiar mensaje
+Entendido el contexto completo. Voy a establecer el plan de trabajo:
+Updated todo list with Phase 3 project tasks
+Updated todo list with Phase 3 project tasks
+Update Todos☐ Tarea 1A: Crear app/interfaz/ventana_proyectos.py☐ Tarea 1B: Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py☐ Tarea 1C: Descomentar menú Proyectos y mejorar menú Archivo en ventana_principal.py☐ Tarea 4: Foco inteligente al cambiar de pestaña☐ Tarea 2: Memoria de sesión con config_general.json☐ Tarea 3: Limpieza profunda de accesibilidad NVDA☐ Commit y push a rama claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+Update Todos☐ Creando ventana_proyectos.py☐ Tarea 1B: Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py☐ Tarea 1C: Descomentar menú Proyectos y mejorar menú Archivo en ventana_principal.py☐ Tarea 4: Foco inteligente al cambiar de pestaña☐ Tarea 2: Memoria de sesión con config_general.json☐ Tarea 3: Limpieza profunda de accesibilidad NVDA☐ Commit y push a rama claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+Copiar mensaje
+Comienzo con la Tarea 1A: crear ventana_proyectos.py desde cero.
+si
+Copiar mensaje
+Copiar mensaje
+Empiezo por la Tarea 1A: crear ventana_proyectos.py.
+Created ventana_proyectos.py and filled FASE_3_PROYECTOS markers
+Created ventana_proyectos.py and filled FASE_3_PROYECTOS markers
+Write/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+1+
+# ANCLAJE_INICIO: DEPENDENCIAS_VENTANA_PROYECTOS
+2+
+import wx
+3+
+import logging
+4+
+5+
+from app.motor.gestor_config import GestorProyectos, TIPOS_PROYECTO
+6+
+7+
+logger = logging.getLogger(__name__)
+8+
+# ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
+9+
+10+
+11+
+# ANCLAJE_INICIO: VENTANA_PROYECTOS
+12+
+class VentanaProyectos(wx.Frame):
+13+
+    """
+14+
+    Ventana independiente (no modal) para gestionar la jerarquía de proyectos.
+15+
+    Se abre con Ctrl+P desde el menú principal.
+16+
+17+
+    Layout:
+18+
+      - Panel izquierdo: TreeCtrl con la jerarquía de proyectos.
+19+
+      - Panel derecho: formulario de detalle del nodo seleccionado.
+20+
+      - Barra inferior: botones de acción sobre proyectos.
+Show full diff (555 more lines)
+Update Todos
+☐ Tarea 1A: Crear app/interfaz/ventana_proyectos.py☐ Rellenando marcadores FASE_3_PROYECTOS☐ Tarea 1C: Descomentar menú Proyectos y mejorar menú Archivo en ventana_principal.py☐ Tarea 4: Foco inteligente al cambiar de pestaña☐ Tarea 2: Memoria de sesión con config_general.json☐ Tarea 3: Limpieza profunda de accesibilidad NVDA☐ Commit y push a rama claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+Copiar mensaje
+Tarea 1A completada. Ahora la Tarea 1B: rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py.
+Marcador 1 — Estado interno (línea ~108):
+Updated pestana_grabacion.py with project management initialization
+Updated pestana_grabacion.py with project management initialization
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+5-5
+11
+        # ── Estado interno ────────────────────────────────────────────────
+2-
+        # FASE_3_PROYECTOS: añadir aquí self.proyecto_actual = None
+3-
+        # y self.gestor_proyectos = GestorProyectos() para vincular el TXT
+4-
+        # cargado a su proyecto y heredar voces automáticamente.
+2+
+        from app.motor.gestor_config import GestorProyectos
+3+
+        self.proyecto_actual  = None          # dict del proyecto activo o None
+4+
+        self.gestor_proyectos = GestorProyectos()
+55
+        self.ruta_txt_actual      = None
+Copiar mensaje
+Marcador 2 — Dentro de al_examinar, tras leer la ruta (línea ~469):
+Implemented project detection and selection logic in recording tab
+Implemented project detection and selection logic in recording tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+5-4
+1-
+        # FASE_3_PROYECTOS: aquí consultar gestor_proyectos.proyecto_de_archivo(ruta)
+2-
+        # Si devuelve un proyecto, preguntar al usuario si quiere usarlo o elegir otro.
+3-
+        # Si no hay proyecto asociado, ofrecer asignarlo o continuar sin proyecto.
+1+
+        # Consultar si el TXT ya pertenece a un proyecto
+2+
+        self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(
+3+
+            self.ruta_txt_actual
+4+
+        )
+45
+        self._cargar_y_escanear()
+Copiar mensaje
+Marcador 3 — Dentro de _cargar_y_escanear, tras recuperar asignaciones (línea ~517):
+Updated recording tab interface file with project voice inheritance logic
+Updated recording tab interface file with project voice inheritance logic
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+11-5
+11
+        self.asignaciones = {}
+2-
+        # FASE_3_PROYECTOS: si self.proyecto_actual está establecido, llamar a
+3-
+        # gestor_proyectos.obtener_voces_heredadas(self.proyecto_actual["id"])
+4-
+        # y fusionarlas con el mapeo local. Las voces del proyecto tienen prioridad.
+5-
+        self._cargar_mapeo(titulo)
+2+
+        # Cargar mapeo local primero y después sobrescribir con voces del proyecto
+3+
+        self._cargar_mapeo(titulo)
+4+
+        if self.proyecto_actual:
+5+
+            voces_heredadas = self.gestor_proyectos.obtener_voces_heredadas(
+6+
+                self.proyecto_actual["id"]
+7+
+            )
+8+
+            # Las voces del proyecto tienen prioridad sobre el mapeo local
+9+
+            for etiqueta, datos_voz in voces_heredadas.items():
+10+
+                if etiqueta in self.etiquetas_detectadas:
+11+
+                    self.asignaciones[etiqueta] = datos_voz
+Copiar mensaje
+Marcador 4 — Dentro de al_marcar_voz, tras guardar el mapeo (línea ~608):
+Created ventana_proyectos.py and filled FASE_3_PROYECTOS markers
+Created ventana_proyectos.py and filled FASE_3_PROYECTOS markers
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+8-5
+11
+        self.asignaciones[etiqueta] = datos_voz
+2-
+        # FASE_3_PROYECTOS: si self.proyecto_actual está establecido, propagar
+3-
+        # la asignación al nivel de proyecto con:
+4-
+        # gestor_proyectos.actualizar_voz_proyecto(self.proyecto_actual["id"], etiqueta, datos_voz)
+2+
+        # Propagar la asignación al proyecto si hay uno activo
+3+
+        if self.proyecto_actual:
+4+
+            self.gestor_proyectos.guardar_voces_proyecto(
+5+
+                self.proyecto_actual["id"],
+6+
+                self.asignaciones
+7+
+            )
+58
+        self._guardar_mapeo()
+Update Todos
+☐ Tarea 1A: Crear app/interfaz/ventana_proyectos.py☐ Tarea 1B: Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py☐ Actualizando ventana_principal.py☐ Tarea 4: Foco inteligente al cambiar de pestaña☐ Tarea 2: Memoria de sesión con config_general.json☐ Tarea 3: Limpieza profunda de accesibilidad NVDA☐ Commit y push a rama claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+Copiar mensaje
+Tarea 1B completada. Ahora la Tarea 1C: descomentar menú Proyectos, añadir el método al_abrir_gestor_proyectos, inicializar _ventana_proyectos, y mejorar el menú Archivo según pestaña activa.
+Updated main window file with dependency imports
+Updated main window file with dependency imports
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+10-9
+55
+from app.interfaz.pestana_lectura import PestanaLectura
+66
+from app.interfaz.pestana_ajustes import PestanaAjustes
+77
+from app.interfaz.pestana_grabacion import PestanaGrabacion
+8+
+from app.interfaz.ventana_proyectos import VentanaProyectos
+89
+from app.config_rutas import ruta_config
+910
+# ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
+Copiar mensaje
+Ahora inicializar _ventana_proyectos = None en __init__ y añadir el ítem de menú TXT para grabación:
+Updated recent files path configuration in main window interface
+Updated recent files path configuration in main window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+7-4
+1+
+        # Referencia a la ventana de proyectos (prevención de doble instancia)
+2+
+        self._ventana_proyectos = None
+3+
+14
+        self.archivos_recientes = []
+25
+        self.ruta_recientes = ruta_config("libros_recientes.json")
+36
+        self.cargar_historial_recientes()
+Copiar mensaje
+Ahora descomentar el bloque del menú Proyectos y añadir el ítem "Abrir TXT para grabar" en el menú Archivo:
+Updated menu structure in ventana_principal.py file
+Updated menu structure in ventana_principal.py file
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+23-19
+11
+        # MENÚ ARCHIVO
+22
+        self.menu_archivo = wx.Menu()
+33
+        self.item_abrir = self.menu_archivo.Append(wx.ID_OPEN, "&Abrir Libro...\tCtrl+A")
+4-
+5-
+        # Submenú Recientes
+6-
+        self.menu_recientes = wx.Menu()
+7-
+        self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+8-
+        self.menu_archivo.AppendSubMenu(self.menu_recientes, "Libros &Recientes")
+9-
+10-
+        self.menu_archivo.AppendSeparator()
+11-
+        self.item_salir = self.menu_archivo.Append(wx.ID_EXIT, "&Salir\tAlt+F4")
+12-
+13-
+        self.barra_menu.Append(self.menu_archivo, "&Archivo")
+14-
+15-
+        # FASE_3_PROYECTOS: añadir aquí el menú Proyectos entre Archivo e Ir a...
+16-
+        # self.menu_proyectos = wx.Menu()
+17-
+        # self.item_gestionar_proyectos = self.menu_proyectos.Append(wx.ID_ANY, "&Gestionar proyectos...\tCtrl+P")
+18-
+        # self.barra_menu.Append(self.menu_proyectos, "&Proyectos")
+19-
+        # Vincular: self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, self.item_gestionar_proyectos)
+4+
+        self.item_abrir_txt = self.menu_archivo.Append(
+Show full diff (19 more lines)
+Copiar mensaje
+Ahora vincular los nuevos eventos en el bloque de vinculación:
+Updated event bindings in main window interface file
+Updated event bindings in main window interface file
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+12-10
+11
+        # Vincular eventos
+2-
+        self.Bind(wx.EVT_MENU, self.al_abrir_archivo, self.item_abrir)
+3-
+        self.Bind(wx.EVT_MENU, self.al_salir, self.item_salir)
+4-
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, self.item_marcadores)
+5-
+        self.Bind(wx.EVT_MENU, self.al_buscar, self.item_buscar)
+6-
+        self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, self.item_porcentaje)
+7-
+        self.Bind(wx.EVT_MENU, self.al_ver_atajos, self.item_atajos)
+8-
+        self.Bind(wx.EVT_MENU, self.al_abrir_readme, self.item_readme)
+9-
+        self.Bind(wx.EVT_MENU, self.al_abrir_github, self.item_github)
+2+
+        self.Bind(wx.EVT_MENU, self.al_abrir_archivo,          self.item_abrir)
+3+
+        self.Bind(wx.EVT_MENU, self.al_abrir_txt_grabacion,    self.item_abrir_txt)
+4+
+        self.Bind(wx.EVT_MENU, self.al_salir,                  self.item_salir)
+5+
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,       self.item_marcadores)
+6+
+        self.Bind(wx.EVT_MENU, self.al_buscar,                 self.item_buscar)
+7+
+        self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje,        self.item_porcentaje)
+8+
+        self.Bind(wx.EVT_MENU, self.al_ver_atajos,             self.item_atajos)
+9+
+        self.Bind(wx.EVT_MENU, self.al_abrir_readme,           self.item_readme)
+10+
+        self.Bind(wx.EVT_MENU, self.al_abrir_github,           self.item_github)
+11+
+        self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, self.item_gestionar_proyectos)
+1012
+    # ANCLAJE_FIN: CONFIGURACION_MENUS
+Copiar mensaje
+Ahora actualizar al_cambiar_pestana para gestionar el estado de los ítems según pestaña, y añadir los métodos nuevos:
+Updated tab-switching logic in main window interface
+Updated tab-switching logic in main window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+17-8
+11
+    def al_cambiar_pestana(self, evento):
+22
+        indice = evento.GetSelection()
+3-
+        es_lectura = (indice == 0)
+4-
+        self.barra_menu.EnableTop(1, es_lectura)
+3+
+        es_lectura  = (indice == 0)
+4+
+        es_grabacion = (indice == 1)
+5+
+6+
+        # El menú "Ir a..." solo está activo en pestaña Lectura
+7+
+        # Índice de menú: 0=Archivo, 1=Proyectos, 2=Ir a..., 3=Ayuda
+8+
+        self.barra_menu.EnableTop(2, es_lectura)
+9+
+10+
+        # Menú Archivo: ítems contextuales según pestaña activa
+11+
+        self.item_abrir.Enable(es_lectura)
+12+
+        self.item_abrir_txt.Enable(es_grabacion)
+13+
+514
+            # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
+615
+            self._configurar_aceleradores_globales()
+716
+        evento.Skip()
+Copiar mensaje
+Ahora añadir los métodos al_abrir_gestor_proyectos y al_abrir_txt_grabacion en el bloque EVENTOS_GLOBALES:
+Updated main window file handler method in ventana_principal.py
+Updated main window file handler method in ventana_principal.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+19-3
+1+
+    def al_abrir_gestor_proyectos(self, evento):
+2+
+        """Abre la ventana de gestión de proyectos. Evita doble instancia."""
+3+
+        if self._ventana_proyectos and not self._ventana_proyectos.IsBeingDeleted():
+4+
+            try:
+5+
+                self._ventana_proyectos.Raise()
+6+
+                return
+7+
+            except Exception:
+8+
+                pass
+9+
+        self._ventana_proyectos = VentanaProyectos(parent=self)
+10+
+        self._ventana_proyectos.Show()
+11+
+12+
+    def al_abrir_txt_grabacion(self, evento):
+13+
+        """Activa la pestaña Grabación y llama al método Examinar del panel."""
+14+
+        self.notebook.SetSelection(1)
+15+
+        self.pestana_grabacion.al_examinar(None)
+16+
+117
+    def al_abrir_archivo(self, evento):
+218
+        self.notebook.SetSelection(0)
+319
+        self.pestana_lectura.al_cargar_libro(None)
+Copiar mensaje
+Necesito establecer el estado inicial de los ítems al arrancar (pestaña Lectura por defecto):
+Updated task list for project interface development work
+Updated task list for project interface development work
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+6-2
+11
+        self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, self.item_gestionar_proyectos)
+2+
+3+
+        # Estado inicial: arranca en pestaña Lectura
+4+
+        self.item_abrir.Enable(True)
+5+
+        self.item_abrir_txt.Enable(False)
+26
+    # ANCLAJE_FIN: CONFIGURACION_MENUS
+Update Todos
+☐ Tarea 1A: Crear app/interfaz/ventana_proyectos.py☐ Tarea 1B: Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py☐ Tarea 1C: Descomentar menú Proyectos y mejorar menú Archivo en ventana_principal.py☐ Implementando foco inteligente☐ Tarea 2: Memoria de sesión con config_general.json☐ Tarea 3: Limpieza profunda de accesibilidad NVDA☐ Commit y push a rama claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+Copiar mensaje
+Tarea 1C completada. Ahora la Tarea 4: foco inteligente al cambiar de pestaña. Necesito saber cuál es el primer_control de las pestañas Lectura y Ajustes:
+Searched codebase for focus management patterns across UI tabs
+Searched codebase for focus management patterns across UI tabs
+Grepprimer_control|obtener_ultimo_control|btn_cargar|btn_examinar|SetFocus
+176:        self.primer_control = self.arbol_indice
+564:            wx.CallAfter(self.txt_contenido.SetFocus)
+593:        self.txt_contenido.SetFocus()
+Mostrar más
+679:            self.arbol_indice.SetFocus()[Showing results with pagination = limit: 30, offset: 0]
+Grepprimer_control|obtener_ultimo_control|SetFocus
+835:        self.primer_control = self.lista_cat
+837:    def obtener_ultimo_control(self):
+858:            # Sin este SetFocus, al cambiar de página el panel derecho roba el foco
+Mostrar más
+860:            wx.CallAfter(self.lista_cat.SetFocus)[Showing results with pagination = limit: 30, offset: 0]
+Copiar mensaje
+Ahora añado el foco inteligente en al_cambiar_pestana:
+Created ventana_proyectos.py and filled PHASE_3_PROYECTOS markers
+Created ventana_proyectos.py and filled PHASE_3_PROYECTOS markers
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+26-17
+11
+    def al_cambiar_pestana(self, evento):
+22
+        indice = evento.GetSelection()
+3-
+        es_lectura  = (indice == 0)
+4-
+        es_grabacion = (indice == 1)
+5-
+6-
+        # El menú "Ir a..." solo está activo en pestaña Lectura
+7-
+        # Índice de menú: 0=Archivo, 1=Proyectos, 2=Ir a..., 3=Ayuda
+8-
+        self.barra_menu.EnableTop(2, es_lectura)
+9-
+10-
+        # Menú Archivo: ítems contextuales según pestaña activa
+11-
+        self.item_abrir.Enable(es_lectura)
+12-
+        self.item_abrir_txt.Enable(es_grabacion)
+13-
+14-
+        if indice == 0:
+15-
+            # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
+16-
+            self._configurar_aceleradores_globales()
+3+
+        es_lectura   = (indice == 0)
+4+
+        es_grabacion = (indice == 1)
+5+
+6+
+        # El menú "Ir a..." solo está activo en pestaña Lectura
+Show full diff (20 more lines)
+Update Todos
+☐ Tarea 1A: Crear app/interfaz/ventana_proyectos.py☐ Tarea 1B: Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py☐ Tarea 1C: Descomentar menú Proyectos y mejorar menú Archivo en ventana_principal.py☐ Tarea 4: Foco inteligente al cambiar de pestaña☐ Implementando memoria de sesión☐ Tarea 3: Limpieza profunda de accesibilidad NVDA☐ Commit y push a rama claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+Copiar mensaje
+Tarea 4 completada. Ahora la Tarea 2: memoria de sesión con config_general.json. Necesito leer config_rutas.py para saber cómo obtener la ruta:
+Read config_rutas.py to review project path configuration
+Read config_rutas.py to review project path configuration
+Read/home/user/epub-tts-accesible/app/config_rutas.py
+Leer 15 líneas
+Copiar mensaje
+Primero añado cargar_txt_desde_ruta a PestanaGrabacion para que VentanaPrincipal pueda restaurar el TXT al arrancar:
+Added file loading method to recording interface
+Added file loading method to recording interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+18-1
+1+
+    def cargar_txt_desde_ruta(self, ruta: str):
+2+
+        """
+3+
+        Carga un archivo TXT directamente (sin diálogo de apertura).
+4+
+        Usado por VentanaPrincipal al restaurar la sesión anterior.
+5+
+        """
+6+
+        if not os.path.exists(ruta):
+7+
+            return
+8+
+        self.ruta_txt_actual = ruta
+9+
+        self.nombre_base_txt = os.path.splitext(os.path.basename(ruta))[0]
+10+
+        self.txt_ruta.SetValue(ruta)
+11+
+        if not self.txt_titulo.GetValue().strip():
+12+
+            self.txt_titulo.SetValue(self.nombre_base_txt)
+13+
+        if not self.txt_capitulo.GetValue().strip():
+14+
+            self.txt_capitulo.SetValue(self.nombre_base_txt)
+15+
+        self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(ruta)
+16+
+        self._cargar_y_escanear()
+17+
+118
+    def _cargar_y_escanear(self):
+Copiar mensaje
+Ahora implemento la memoria de sesión en ventana_principal.py. Añado los métodos de config y la restauración:
+Fixed keyboard shortcuts handling in main window interface
+Fixed keyboard shortcuts handling in main window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+10-6
+33
+        self._ids_atajos_global = {}
+44
+        self._configurar_aceleradores_globales()
+55
+6+
+        # Restaurar sesión anterior antes de mostrar la ventana
+7+
+        self._ruta_config_general = ruta_config("config_general.json")
+8+
+        self._restaurar_sesion()
+9+
+610
+        self.Show()
+Copiar mensaje
+Ahora actualizar al_cerrar para guardar la sesión, y al_cambiar_pestana para guardar ultima_pestana:
+Fixed cleanup logic in main window close handler
+Fixed cleanup logic in main window close handler
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+8-7
+33
+            if hasattr(self.pestana_lectura, 'reproductor'):
+44
+                self.pestana_lectura.al_detener(None)
+55
+        except: pass
+6+
+        self._guardar_sesion()
+67
+        self.Destroy()
+78
+    # ANCLAJE_FIN: EVENTOS_GLOBALES
+Copiar mensaje
+Añadir guardado de ultima_pestana al cambiar pestaña:
+Updated keyboard accelerator configuration in main window interface
+Updated keyboard accelerator configuration in main window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+16-13
+1010
+            # Foco en el primer control de Ajustes
+1111
+            wx.CallAfter(self.pestana_ajustes.primer_control.SetFocus)
+1212
+13+
+        # Guardar la pestaña activa inmediatamente
+14+
+        self._guardar_sesion()
+15+
+1316
+        evento.Skip()
+Copiar mensaje
+Ahora añado los métodos _restaurar_sesion y _guardar_sesion al bloque HISTORIAL_RECIENTES:
+Updated task list and marked project window creation complete
+Updated task list and marked project window creation complete
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+52-1
+1+
+    # ANCLAJE_INICIO: MEMORIA_SESION
+2+
+    def _cargar_config_general(self) -> dict:
+3+
+        """Lee config_general.json sin borrar claves existentes."""
+4+
+        try:
+5+
+            if os.path.exists(self._ruta_config_general):
+6+
+                with open(self._ruta_config_general, "r", encoding="utf-8") as f:
+7+
+                    contenido = f.read().strip()
+8+
+                if contenido:
+9+
+                    return json.loads(contenido)
+10+
+        except Exception:
+11+
+            pass
+12+
+        return {}
+13+
+14+
+    def _guardar_sesion(self):
+15+
+        """Persiste el estado de sesión en config_general.json."""
+16+
+        try:
+17+
+            config = self._cargar_config_general()
+18+
+            config["ultima_pestana"]       = self.notebook.GetSelection()
+19+
+            config["ultimo_txt_grabacion"] = (
+20+
+                self.pestana_grabacion.ruta_txt_actual or ""
+Show full diff (32 more lines)
+Update Todos
+☐ Tarea 1A: Crear app/interfaz/ventana_proyectos.py☐ Tarea 1B: Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py☐ Tarea 1C: Descomentar menú Proyectos y mejorar menú Archivo en ventana_principal.py☐ Tarea 4: Foco inteligente al cambiar de pestaña☐ Tarea 2: Memoria de sesión con config_general.json☐ Revisando accesibilidad NVDA☐ Commit y push a rama claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+Copiar mensaje
+Tarea 2 completada. Ahora la Tarea 3: limpieza profunda de accesibilidad NVDA. Necesito leer las tres pestañas:
+Read settings and reading panel interface files from EPUB TTS application
+Read settings and reading panel interface files from EPUB TTS application
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 892 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 100 líneas
+Copiar mensaje
+Necesito leer más de pestana_lectura.py para la revisión de accesibilidad:
+Read pestana_lectura.py file content from lines 100-120
+Read pestana_lectura.py file content from lines 100-120
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 120 líneas
+Copiar mensaje
+Ahora aplico la Tarea 3 — limpieza de accesibilidad. Empiezo con pestana_ajustes.py (la más crítica, no revisada en Fase 2):
+3A — SetHelpText en PanelClaves:
+Modified API key input field in settings tab
+Modified API key input field in settings tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+17-7
+164-
+        sz_az.Add(wx.StaticText(self, label="Clave (Key):"), 0, wx.ALL, 2)
+165-
+        self.txt_az_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+166-
+        sz_az.Add(self.txt_az_key, 0, wx.EXPAND|wx.ALL, 5)
+167-
+168-
+        sz_az.Add(wx.StaticText(self, label="Región (ej: eastus):"), 0, wx.ALL, 2)
+169-
+        self.txt_az_region = wx.TextCtrl(self)
+164+
+        sz_az.Add(wx.StaticText(self, label="Clave de suscripción (Key). Formato: 32 caracteres hexadecimales:"), 0, wx.ALL, 2)
+165+
+        self.txt_az_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+166+
+        self.txt_az_key.SetHelpText(
+167+
+            "Clave de suscripción de Azure Text to Speech. "
+168+
+            "Puedes encontrarla en el Portal de Azure, en tu recurso de Servicios Cognitivos, "
+169+
+            "sección Claves y Punto de conexión."
+170+
+        )
+171+
+        sz_az.Add(self.txt_az_key, 0, wx.EXPAND|wx.ALL, 5)
+172+
+173+
+        sz_az.Add(wx.StaticText(self, label="Región del recurso (ej: eastus, westeurope):"), 0, wx.ALL, 2)
+174+
+        self.txt_az_region = wx.TextCtrl(self)
+175+
+        self.txt_az_region.SetHelpText(
+176+
+            "Región de Azure donde está creado tu recurso. "
+177+
+            "Ejemplos: eastus, westus2, westeurope. "
+Show full diff (3 more lines)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+23-11
+190-
+        sz_po.Add(wx.StaticText(self, label="Access Key ID:"), 0, wx.ALL, 2)
+191-
+        self.txt_po_key = wx.TextCtrl(self)
+192-
+        sz_po.Add(self.txt_po_key, 0, wx.EXPAND|wx.ALL, 5)
+193-
+194-
+        sz_po.Add(wx.StaticText(self, label="Secret Access Key:"), 0, wx.ALL, 2)
+195-
+        self.txt_po_secret = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+196-
+        sz_po.Add(self.txt_po_secret, 0, wx.EXPAND|wx.ALL, 5)
+197-
+198-
+        sz_po.Add(wx.StaticText(self, label="Región (ej: us-east-1):"), 0, wx.ALL, 2)
+199-
+        self.txt_po_region = wx.TextCtrl(self)
+190+
+        sz_po.Add(wx.StaticText(self, label="Access Key ID (identificador de la clave AWS):"), 0, wx.ALL, 2)
+191+
+        self.txt_po_key = wx.TextCtrl(self)
+192+
+        self.txt_po_key.SetHelpText(
+193+
+            "Identificador de clave de acceso de AWS. "
+194+
+            "Lo encontrarás en la consola de AWS, sección IAM, Mis credenciales de seguridad."
+195+
+        )
+196+
+        sz_po.Add(self.txt_po_key, 0, wx.EXPAND|wx.ALL, 5)
+197+
+198+
+        sz_po.Add(wx.StaticText(self, label="Secret Access Key (clave secreta, se muestra solo al crearla):"), 0, wx.ALL, 2)
+199+
+        self.txt_po_secret = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+Show full diff (13 more lines)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+7-3
+217-
+        sz_el.Add(wx.StaticText(self, label="API Key:"), 0, wx.ALL, 2)
+218-
+        self.txt_el_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+217+
+        sz_el.Add(wx.StaticText(self, label="API Key (clave de acceso de ElevenLabs):"), 0, wx.ALL, 2)
+218+
+        self.txt_el_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+219+
+        self.txt_el_key.SetHelpText(
+220+
+            "Clave API de ElevenLabs. La encontrarás en tu perfil de ElevenLabs, "
+221+
+            "sección Profile Settings, apartado API Key."
+222+
+        )
+219223
+        sz_el.Add(self.txt_el_key, 0, wx.EXPAND|wx.ALL, 5)
+Copiar mensaje
+3B — SetHelpText en botones de PanelClaves:
+Updated settings tab UI to modify key retrieval button
+Updated settings tab UI to modify key retrieval button
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+10-7
+172172
+        hb_az = wx.BoxSizer(wx.HORIZONTAL)
+173-
+        btn_az_web = wx.Button(self, label="Conseguir clave")
+174-
+        btn_az_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://azure.microsoft.com/es-es/services/cognitive-services/text-to-speech/"))
+175-
+        btn_az_check = wx.Button(self, label="Comprobar y descargar")
+176-
+        btn_az_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+177-
+        btn_az_del = wx.Button(self, label="Borrar")
+173+
+        btn_az_web = wx.Button(self, label="Conseguir clave Azure")
+174+
+        btn_az_web.SetHelpText("Abre el navegador en la página de Azure Text to Speech para crear o consultar tu clave.")
+175+
+        btn_az_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://azure.microsoft.com/es-es/services/cognitive-services/text-to-speech/"))
+176+
+        btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")
+177+
+        btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")
+178+
+        btn_az_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+179+
+        btn_az_del = wx.Button(self, label="Borrar clave Azure")
+180+
+        btn_az_del.SetHelpText("Borra los datos de acceso de Azure guardados en la aplicación.")
+178181
+        btn_az_del.Bind(wx.EVT_BUTTON, self.al_borrar_azure)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+7-5
+202202
+        hb_po = wx.BoxSizer(wx.HORIZONTAL)
+203-
+        btn_po_web = wx.Button(self, label="Conseguir clave")
+204-
+        btn_po_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aws.amazon.com/polly/"))
+205-
+        btn_po_check = wx.Button(self, label="Comprobar")
+203+
+        btn_po_web = wx.Button(self, label="Conseguir clave Amazon Polly")
+204+
+        btn_po_web.SetHelpText("Abre el navegador en la página de Amazon Polly para crear o gestionar tus credenciales AWS.")
+205+
+        btn_po_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aws.amazon.com/polly/"))
+206+
+        btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
+207+
+        btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
+206208
+        btn_po_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+7-5
+221221
+        hb_el = wx.BoxSizer(wx.HORIZONTAL)
+222-
+        btn_el_web = wx.Button(self, label="Conseguir clave")
+223-
+        btn_el_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://elevenlabs.io/"))
+224-
+        btn_el_check = wx.Button(self, label="Comprobar")
+222+
+        btn_el_web = wx.Button(self, label="Conseguir clave ElevenLabs")
+223+
+        btn_el_web.SetHelpText("Abre el navegador en la página de ElevenLabs para crear una cuenta o consultar tu clave API.")
+224+
+        btn_el_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://elevenlabs.io/"))
+225+
+        btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
+226+
+        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")
+225227
+        btn_el_check.Bind(wx.EVT_BUTTON, self.al_comprobar)
+Copiar mensaje
+3C — SetHelpText en PanelGeneral (txt_salto) y PanelVoces:
+Modified settings tab UI slider control configuration
+Modified settings tab UI slider control configuration
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+8-4
+101101
+        hbox_salto = wx.BoxSizer(wx.HORIZONTAL)
+102-
+        hbox_salto.Add(wx.StaticText(self, label="Segundos de salto:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
+103-
+        self.txt_salto = wx.TextCtrl(self, value=str(self.config.get("segundos_salto", "10")), size=(50, -1))
+102+
+        hbox_salto.Add(wx.StaticText(self, label="Segundos de salto (botones Atrás y Adelante en Lectura):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
+103+
+        self.txt_salto = wx.TextCtrl(self, value=str(self.config.get("segundos_salto", "10")), size=(50, -1))
+104+
+        self.txt_salto.SetHelpText(
+105+
+            "Número de segundos que avanza o retrocede el audio al pulsar los botones "
+106+
+            "Atrás y Adelante en la pestaña Lectura. Introduce un número entero. Valor recomendado: 10."
+107+
+        )
+104108
+        hbox_salto.Add(self.txt_salto, 0)
+Copiar mensaje
+3D — SetHelpText en PanelVoces (combos, casillas, lista, botón):
+Updated settings panel button bindings and event handlers
+Updated settings panel button bindings and event handlers
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+7-2
+300-
+        sz_libro.Add(wx.StaticText(self, label="Idioma del libro (Para acento):"), 0, wx.BOTTOM, 5)
+301-
+        self.combo_idioma_libro = wx.ComboBox(self, choices=["Detectar auto", "Español (ES)", "Español (LAT)", "Inglés"], style=wx.CB_READONLY)
+300+
+        sz_libro.Add(wx.StaticText(self, label="Idioma del libro, usado para seleccionar el acento de la voz por defecto:"), 0, wx.BOTTOM, 5)
+301+
+        self.combo_idioma_libro = wx.ComboBox(self, choices=["Detectar auto", "Español (ES)", "Español (LAT)", "Inglés"], style=wx.CB_READONLY)
+302+
+        self.combo_idioma_libro.SetHelpText(
+303+
+            "Define el idioma principal del libro para preseleccionar el acento correcto "
+304+
+            "en el combo de voz de la pestaña Lectura. "
+305+
+            "Elige Español (ES) para España, Español (LAT) para Latinoamérica, o Inglés."
+306+
+        )
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+13-11
+320320
+        hbox1.Add(wx.StaticText(self, label="Idioma:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+321321
+        self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+322322
+        self.combo_idioma.SetSelection(0)
+323-
+        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+324-
+        hbox1.Add(self.combo_idioma, 1, wx.RIGHT, 15)
+325-
+326-
+        hbox1.Add(wx.StaticText(self, label="Proveedor:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+327-
+        self.combo_proveedor = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+328-
+        self.combo_proveedor.SetSelection(0)
+323+
+        self.combo_idioma.SetHelpText("Filtra la lista de voces por idioma. Selecciona Todos para ver todas las voces.")
+324+
+        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+325+
+        hbox1.Add(self.combo_idioma, 1, wx.RIGHT, 15)
+326+
+327+
+        hbox1.Add(wx.StaticText(self, label="Proveedor:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+328+
+        self.combo_proveedor = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+329+
+        self.combo_proveedor.SetSelection(0)
+330+
+        self.combo_proveedor.SetHelpText("Filtra la lista de voces por proveedor: Azure, Amazon Polly, ElevenLabs, o Todos.")
+329331
+        self.combo_proveedor.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+330332
+        hbox1.Add(self.combo_proveedor, 0)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+23-14
+335335
+        hbox2.Add(wx.StaticText(self, label="Tipo:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+336336
+        self.combo_tipo = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos", "Femenino", "Masculino", "Multilingüe", "Dragon"])
+337337
+        self.combo_tipo.SetSelection(0)
+338-
+        self.combo_tipo.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+339-
+        hbox2.Add(self.combo_tipo, 0, wx.RIGHT, 15)
+340-
+341-
+        # Casillas de gestión y filtros especiales
+342-
+        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+343-
+        self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
+344-
+        hbox2.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 15)
+345-
+346-
+        self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
+338+
+        self.combo_tipo.SetHelpText("Filtra por tipo de voz: Femenino, Masculino, voces Multilingüe, voces Dragon HD, o Todos.")
+339+
+        self.combo_tipo.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+340+
+        hbox2.Add(self.combo_tipo, 0, wx.RIGHT, 15)
+341+
+342+
+        # Casillas de gestión y filtros especiales
+343+
+        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+344+
+        self.chk_solo_favs.SetHelpText(
+345+
+            "Marcada: muestra solo las voces que ya tienes marcadas como favoritas. "
+Show full diff (12 more lines)
+Mostrar 3 más
+Copiar mensaje
+3E — SetHelpText en PanelAtajos (lista y botones):
+Updated keyboard shortcuts help text in settings panel
+Updated keyboard shortcuts help text in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+35-18
+690690
+        sizer.Add(wx.StaticText(self, label=(
+691-
+            "Lista de atajos de teclado. Selecciona uno y pulsa 'Asignar' o Intro para cambiarlo.\n"
+692-
+            "La tecla predeterminada aparece entre paréntesis junto al nombre."
+693-
+        )), 0, wx.ALL, 10)
+694-
+695-
+        self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+696-
+        self.lista.InsertColumn(0, "Acción (predeterminado)", width=340)
+697-
+        self.lista.InsertColumn(1, "Tecla asignada", width=200)
+698-
+        self.lista.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista)
+699-
+        sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+700-
+701-
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+702-
+        self.btn_asignar = wx.Button(self, label="Asignar tecla (Intro)")
+703-
+        self.btn_eliminar = wx.Button(self, label="Eliminar asignación")
+704-
+        self.btn_restablecer = wx.Button(self, label="Restablecer todo")
+691+
+            "Lista de atajos de teclado. Selecciona uno y pulsa Intro o el botón Asignar para cambiarlo. "
+692+
+            "La tecla predeterminada aparece entre paréntesis junto al nombre."
+693+
+        )), 0, wx.ALL, 10)
+694+
+695+
+        self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+Show full diff (29 more lines)
+Copiar mensaje
+3F — SetHelpText en lista_cat de PestanaAjustes y btn_guardar de PanelGeneral:
+Fixed button accessibility in settings panel UI component
+Fixed button accessibility in settings panel UI component
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+11-7
+811811
+        self.lista_cat.Append("Voces e Idiomas")
+812812
+        self.lista_cat.Append("Atajos de teclado")
+813813
+        self.lista_cat.SetSelection(0)
+814+
+        self.lista_cat.SetHelpText(
+815+
+            "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "
+816+
+            "Pulsa Intro o Espacio para abrir la categoría seleccionada en el panel de la derecha."
+817+
+        )
+814818
+        self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+8-4
+108108
+        # GUARDAR — guardado como atributo para que VentanaPrincipal pueda usarlo
+109109
+        # como punto de anclaje del bucle de tabulación accesible
+110-
+        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites")
+110+
+        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
+111+
+        self.btn_guardar.SetHelpText(
+112+
+            "Guarda los segundos de salto y los límites de presupuesto de cada proveedor "
+113+
+            "en el archivo de configuración."
+114+
+        )
+111115
+        self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
+Copiar mensaje
+3G — SetHelpText en controles interactivos de pestana_lectura.py:
+Updated reading panel velocity slider range to 0-200
+Updated reading panel velocity slider range to 0-200
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+16-8
+11
+        self.arbol_indice = wx.TreeCtrl(self.divisor, style=wx.TR_DEFAULT_STYLE | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_HIDE_ROOT)
+22
+        self.arbol_indice.SetName("Índice")
+3-
+        self.raiz_id = self.arbol_indice.AddRoot("Libro")
+4-
+        self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo) 
+5-
+6-
+        self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
+7-
+        self.txt_contenido.SetName("Contenido del libro") 
+3+
+        self.arbol_indice.SetHelpText(
+4+
+            "Índice del libro cargado. Usa las flechas Arriba y Abajo para navegar por los capítulos. "
+5+
+            "Pulsa Intro o Enter sobre un capítulo para saltar a él en el área de texto."
+6+
+        )
+7+
+        self.raiz_id = self.arbol_indice.AddRoot("Libro")
+8+
+        self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
+9+
+10+
+        self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
+11+
+        self.txt_contenido.SetName("Contenido del libro")
+12+
+        self.txt_contenido.SetHelpText(
+13+
+            "Área de texto de solo lectura con el contenido del capítulo activo. "
+14+
+            "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
+15+
+        )
+Show full diff (1 more lines)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+9-4
+113113
+        self.lbl_progreso = wx.StaticText(self, label="Progreso: 0%")
+114114
+        self.deslizador_progreso = wx.Slider(self, value=0, minValue=0, maxValue=100)
+115-
+        self.deslizador_progreso.SetName("Barra de progreso")
+115+
+        self.deslizador_progreso.SetName("Barra de progreso de lectura")
+116+
+        self.deslizador_progreso.SetHelpText(
+117+
+            "Posición de lectura expresada en porcentaje del libro. "
+118+
+            "Usa las flechas Izquierda y Derecha para navegar. "
+119+
+            "Al soltar la tecla, la voz saltará a esa posición."
+120+
+        )
+116121
+        self.deslizador_progreso.Bind(wx.EVT_SLIDER, self.al_buscar_usuario)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+8-4
+125-
+        self.lbl_voz = wx.StaticText(self, label="Voz:")
+126-
+        self.combo_voz = wx.ComboBox(self, style=wx.CB_READONLY)
+127-
+        self.combo_voz.SetName("Selector de voz")
+125+
+        self.lbl_voz = wx.StaticText(self, label="Voz para lectura:")
+126+
+        self.combo_voz = wx.ComboBox(self, style=wx.CB_READONLY)
+127+
+        self.combo_voz.SetName("Selector de voz")
+128+
+        self.combo_voz.SetHelpText(
+129+
+            "Voz con la que se leerá el libro. Contiene las voces favoritas marcadas en Ajustes "
+130+
+            "y las voces SAPI5 locales instaladas en el sistema."
+131+
+        )
+128132
+        self.combo_voz.Bind(wx.EVT_COMBOBOX, self.al_cambiar_voz)
+Mostrar 1 más
+Copiar mensaje
+Tarea 3 completada. Ahora el commit y push:
+Created window module and filled project phase markers
+Created window module and filled project phase markers
+Update Todos
+☐ Tarea 1A: Crear app/interfaz/ventana_proyectos.py☐ Tarea 1B: Rellenar los 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py☐ Tarea 1C: Descomentar menú Proyectos y mejorar menú Archivo en ventana_principal.py☐ Tarea 4: Foco inteligente al cambiar de pestaña☐ Tarea 2: Memoria de sesión con config_general.json☐ Tarea 3: Limpieza profunda de accesibilidad NVDA☐ Haciendo commit y push
+Bashgit status
+On branch claude/fase3-proyectos-memoria-accesibilidad-X9aWPChanges not staged for commit:  (use "git add <file>..." to update what will be committed)
+Mostrar más
+  (use "git restore <file>..." to discard changes in working directory)	modified:   app/interfaz/pestana_ajustes.py	modified:   app/interfaz/pestana_grabacion.py	modified:   app/interfaz/pestana_lectura.py	modified:   app/interfaz/ventana_principal.pyUntracked files:  (use "git add <file>..." to include in what will be committed)	app/interfaz/ventana_proyectos.pyno changes added to commit (use "git add" and/or "git commit -a")
+Bash
+git add app/interfaz/ventana_proyectos.py app/interfaz/pestana_ajustes.py app/interfaz/pestana_grabacion.py app/interfaz/pestana_lectura.py app/interfaz/ventana_principal.py
+Mostrar 3 más
+Copiar mensaje
+Fase 3 completada y subida. Resumen de lo implementado:
+ 
+Tarea 1A — ventana_proyectos.py (nuevo archivo)
+• wx.Frame independiente con TreeCtrl jerárquico y panel de detalle
+• Nodos muestran "Nombre [tipo]", F2 renombra, Supr elimina
+• Panel derecho: campo Nombre (Intro guarda), combo Tipo, ListCtrl de archivos TXT con botones Añadir/Quitar, ListCtrl de voces heredadas
+• Barra inferior: Nuevo raíz / Nuevo hijo / Eliminar / Cerrar
+• Al seleccionar nodo → foco al campo Nombre vía wx.CallAfter
+• Confirmación antes de eliminar; al cerrar devuelve foco al Frame principal
+• Prevención de doble instancia con Raise()
+Tarea 1B — 4 marcadores FASE_3_PROYECTOS en pestana_grabacion.py
+• Import y creación de GestorProyectos + self.proyecto_actual
+• Consulta proyecto_de_archivo al cargar TXT
+• Herencia de voces del proyecto (prioridad sobre mapeo local)
+• Propagación de asignaciones al proyecto al marcar voz
+Tarea 1C — ventana_principal.py
+• Menú Proyectos activo siempre (índice 1, entre Archivo e Ir a...)
+• Ítem Abrir TXT para grabar...\tCtrl+T en menú Archivo
+• Ítems contextuales: Abrir Libro activo solo en Lectura, Abrir TXT solo en Grabación
+Tarea 4 — Foco inteligente al cambiar pestaña
+• wx.CallAfter(control.SetFocus) al cambiar pestaña para cada una
+Tarea 2 — Memoria de sesión
+• _restaurar_sesion() al arrancar: última pestaña, último TXT, estado checkbox dividir
+• _guardar_sesion() al cerrar y al cambiar pestaña
+• Método público cargar_txt_desde_ruta() en PestanaGrabacion
+Tarea 3 — Limpieza NVDA
+• SetHelpText en todos los controles de pestana_ajustes.py (no revisada en F2): labels de TextCtrl de claves API, combos, checkboxes, ListCtrl de voces y atajos, todos los botones
+• SetHelpText en arbol_indice, txt_contenido, deslizadores y combo de voz en pestana_lectura.py
+• Labels de StaticText mejorados con contexto de formato
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++890-66
+Crear PR

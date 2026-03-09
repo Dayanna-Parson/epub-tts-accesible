@@ -1,0 +1,181 @@
+Respuestas 5 claude fase 3
+
+Entendido. Voy a leer los archivos necesarios para los 4 arreglos:
+Searched for keyboard shortcuts in interface files
+Searched for keyboard shortcuts in interface files
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 60 líneas
+Glob**/configuraciones/teclas_predeterminadas.json
+/home/user/epub-tts-accesible/configuraciones/teclas_predeterminadas.json
+Read/home/user/epub-tts-accesible/configuraciones/teclas_predeterminadas.json
+Leer 33 líneas
+Mostrar 2 más
+Copiar mensaje
+Tengo todo lo que necesito. Son 4 arreglos independientes:
+1. Crash: txt_nombre necesita style=wx.TE_PROCESS_ENTER desde la creación
+2. Atajo Ctrl+P → Ctrl+Shift+P
+3. Eliminar los SetFocus automáticos de al_cambiar_pestana
+4. Añadir el atajo de proyectos al panel Ajustes
+Los hago todos en paralelo:
+Updated todo list tracking project window crash fix and keyboard shortcut changes
+Updated todo list tracking project window crash fix and keyboard shortcut changes
+Update Todos
+☐ Arreglando crash de ventana_proyectos☐ Cambiar atajo Ctrl+P a Ctrl+Shift+P para Gestionar proyectos☐ Eliminar SetFocus automáticos de al_cambiar_pestana☐ Añadir atajo Ctrl+Shift+P al panel Atajos en Ajustes☐ Commit y push de los arreglos
+Copiar mensaje
+Fix 1: Crash — txt_nombre con style=wx.TE_PROCESS_ENTER desde la creación:
+Fixed event binding and text input handling in project window
+Fixed event binding and text input handling in project window
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+6-6
+11
+        # Nombre
+22
+        lbl_nombre = wx.StaticText(panel_raiz, label="Nombre del proyecto (Intro para guardar):")
+3-
+        self.txt_nombre = wx.TextCtrl(panel_raiz)
+3+
+        self.txt_nombre = wx.TextCtrl(panel_raiz, style=wx.TE_PROCESS_ENTER)
+44
+        self.txt_nombre.SetHelpText(
+55
+            "Nombre del proyecto seleccionado. Edítalo y pulsa Intro para guardar el cambio."
+66
+        )
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+1-6
+198198
+        self.btn_cerrar.Bind(wx.EVT_BUTTON,     lambda e: self.Close())
+199-
+200-
+        # Forzar Intro en txt_nombre (EVT_TEXT_ENTER requiere style=wx.TE_PROCESS_ENTER)
+201-
+        self.txt_nombre.SetWindowStyleFlag(
+202-
+            self.txt_nombre.GetWindowStyleFlag() | wx.TE_PROCESS_ENTER
+203-
+        )
+Copiar mensaje
+También actualizar el docstring de la clase que menciona Ctrl+P:
+Updated todo list with completed crash fix and in-progress shortcut change
+Updated todo list with completed crash fix and in-progress shortcut change
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+1-1
+1-
+    Se abre con Ctrl+P desde el menú principal.
+1+
+    Se abre con Ctrl+Shift+P desde el menú principal.
+Update Todos
+☐ Fix crash: wx.TE_PROCESS_ENTER en txt_nombre de ventana_proyectos.py☐ Cambiando atajo de teclado☐ Eliminar SetFocus automáticos de al_cambiar_pestana☐ Añadir atajo Ctrl+Shift+P al panel Atajos en Ajustes☐ Commit y push de los arreglos
+Copiar mensaje
+Fix 2: Atajo Ctrl+P → Ctrl+Shift+P en ventana_principal.py:
+Fixed wx.TE_PROCESS_ENTER crash and updated keyboard shortcut
+Fixed wx.TE_PROCESS_ENTER crash and updated keyboard shortcut
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+3-3
+11
+        self.item_gestionar_proyectos = self.menu_proyectos.Append(
+2-
+            wx.ID_ANY, "&Gestionar proyectos...\tCtrl+P"
+2+
+            wx.ID_ANY, "&Gestionar proyectos...\tCtrl+Shift+P"
+33
+        )
+Update Todos
+☐ Fix crash: wx.TE_PROCESS_ENTER en txt_nombre de ventana_proyectos.py☐ Cambiar atajo Ctrl+P a Ctrl+Shift+P para Gestionar proyectos☐ Eliminando saltos de foco automáticos☐ Añadir atajo Ctrl+Shift+P al panel Atajos en Ajustes☐ Commit y push de los arreglos
+Copiar mensaje
+Fix 3: Eliminar los SetFocus automáticos de al_cambiar_pestana:
+Fixed crash in ventana_proyectos.py and changed keyboard shortcut
+Fixed crash in ventana_proyectos.py and changed keyboard shortcut
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+6-14
+11
+        if indice == 0:
+22
+            # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
+33
+            self._configurar_aceleradores_globales()
+4-
+            # Foco en el primer control lógico de Lectura (árbol de índice)
+5-
+            wx.CallAfter(self.pestana_lectura.primer_control.SetFocus)
+6-
+        elif indice == 1:
+7-
+            # Foco en el botón Examinar de Grabación
+8-
+            wx.CallAfter(self.pestana_grabacion.primer_control.SetFocus)
+9-
+        elif indice == 2:
+10-
+            # Foco en el primer control de Ajustes
+11-
+            wx.CallAfter(self.pestana_ajustes.primer_control.SetFocus)
+124
+135
+        # Guardar la pestaña activa inmediatamente
+146
+        self._guardar_sesion()
+Update Todos
+☐ Fix crash: wx.TE_PROCESS_ENTER en txt_nombre de ventana_proyectos.py☐ Cambiar atajo Ctrl+P a Ctrl+Shift+P para Gestionar proyectos☐ Eliminar SetFocus automáticos de al_cambiar_pestana☐ Documentando atajos fijos en panel Ajustes☐ Commit y push de los arreglos
+Copiar mensaje
+Fix 4: Añadir sección de atajos fijos al PanelAtajos en pestana_ajustes.py:
+Fixed crash in ventana_proyectos.py, changed keyboard shortcut
+Fixed crash in ventana_proyectos.py, changed keyboard shortcut
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 20 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+24-7
+33
+        hbox.Add(self.btn_restablecer, 0)
+44
+        sizer.Add(hbox, 0, wx.ALL, 10)
+55
+6+
+        # Sección de atajos fijos del menú (no configurables desde esta lista)
+7+
+        sb_fijos = wx.StaticBox(self, label="Atajos fijos del menú (no configurables)")
+8+
+        sz_fijos = wx.StaticBoxSizer(sb_fijos, wx.VERTICAL)
+9+
+        _FIJOS = [
+10+
+            ("Ctrl+A",           "Abrir libro EPUB (menú Archivo)"),
+11+
+            ("Ctrl+T",           "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
+12+
+            ("Ctrl+Shift+P",     "Abrir gestor de proyectos (menú Proyectos)"),
+13+
+            ("Ctrl+B",           "Buscar en el texto (menú Ir a...)"),
+14+
+            ("Ctrl+G",           "Ir a porcentaje del libro (menú Ir a...)"),
+15+
+            ("Ctrl+M",           "Gestor de marcadores (menú Ir a...)"),
+16+
+            ("Alt+F4",           "Salir de la aplicación"),
+17+
+        ]
+18+
+        for atajo, desc in _FIJOS:
+19+
+            lbl = wx.StaticText(self, label=f"  {atajo:<20}  {desc}")
+20+
+            sz_fijos.Add(lbl, 0, wx.LEFT | wx.TOP, 4)
+21+
+        sizer.Add(sz_fijos, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+22+
+Show full diff (2 more lines)
+Update Todos
+☐ Fix crash: wx.TE_PROCESS_ENTER en txt_nombre de ventana_proyectos.py☐ Cambiar atajo Ctrl+P a Ctrl+Shift+P para Gestionar proyectos☐ Eliminar SetFocus automáticos de al_cambiar_pestana☐ Añadir atajo Ctrl+Shift+P al panel Atajos en Ajustes☐ Haciendo commit y push
+Mostrar 4 más
+Copiar mensaje
+Todo subido. Resumen de los 4 arreglos:
+ 
+1. Crash de ventana_proyectos.py — RESUELTO
+• El error era que txt_nombre se creaba sin style=wx.TE_PROCESS_ENTER y luego se intentaba vincular EVT_TEXT_ENTER, lo que provoca el wxAssertionError de C++.
+• Solución: wx.TextCtrl(panel_raiz, style=wx.TE_PROCESS_ENTER) desde la creación. Eliminado el bloque SetWindowStyleFlag que no funcionaba.
+2. Atajo Ctrl+P → Ctrl+Shift+P — RESUELTO
+• Conflicto identificado: Ctrl+P estaba asignado a Reproducir/Pausar en gestor_atajos Y al menú Gestionar proyectos.
+• Solución: el menú Proyectos ahora muestra \tCtrl+Shift+P. No hay más conflictos en ninguna pestaña.
+3. Saltos de foco erráticos con NVDA — RESUELTO
+• Eliminados los tres wx.CallAfter(primer_control.SetFocus) de al_cambiar_pestana. El foco ahora se comporta de forma estándar al cambiar de pestaña.
+4. Atajos en panel Ajustes — IMPLEMENTADO
+• Añadida sección "Atajos fijos del menú (no configurables)" al final del PanelAtajos con los 7 atajos de menú: Ctrl+A, Ctrl+T, Ctrl+Shift+P, Ctrl+B, Ctrl+G, Ctrl+M, Alt+F4.
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++20-16
+Crear PR

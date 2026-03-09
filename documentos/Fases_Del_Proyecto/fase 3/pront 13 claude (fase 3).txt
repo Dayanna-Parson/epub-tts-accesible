@@ -1,0 +1,24 @@
+pront 13 claude (fase 3)
+
+FLUIDEZ Y CONTROL TÉCNICO
+Contexto: La mudanza fue un éxito. Ahora vamos a centrarnos en la fluidez de lectura y la gestión del árbol de proyectos en los nuevos módulos.
+1. Chunking Inteligente (Refactorización de reproductor_voz.py):
+• 
+Localización: Busca el límite de caracteres que se está usando actualmente para enviar fragmentos a las APIs (Azure, ElevenLabs, etc.).
+• 
+Optimización: No cambies ese número de caracteres, pero refina la lógica de corte. Implementa una jerarquía de "pausas naturales":
+El sistema debe intentar cortar siempre en el punto final (.) más cercano al límite.
+Si no hay puntos en los últimos 200 caracteres del bloque, busca signos de exclamación, puntos suspensivos o interrogación (! ?).
+Si tampoco hay, busca comas (,) o puntos y coma (;).
+Como último recurso, corta por el último espacio en blanco para jamás partir una palabra.
+Prioridad 1 (Pausas fuertes): Busca el último punto final (.), punto y aparte, signos de exclamación (!), interrogación (?) o puntos suspensivos (...). Si encuentras uno dentro de los últimos 200 caracteres del bloque, corta ahí.
+Prioridad 2 (Pausas medias): Si no hay pausas fuertes, busca la última coma (,) o punto y coma (;).
+Prioridad 3 (Seguridad): Como último recurso, busca el último espacio en blanco para no romper una palabra."
+Objetivo: Que la entonación de la IA sea perfecta al cerrar frases y que el usuario no note saltos bruscos.
+Reordenar el Árbol (Alt + Flechas):
+En gestor_proyectos.py y la interfaz del árbol, implementa los atajos Alt + Flecha Arriba y Alt + Flecha Abajo.
+Al mover un capítulo o subproyecto, el cambio debe guardarse inmediatamente en proyectos.json para que la nueva jerarquía sea persistente.
+Independencia de APIs en Ajustes:
+Asegura que los botones de "Descargar Voces" en la pestaña de Ajustes funcionen de forma aislada. Si pulso el de Amazon, solo debe gestionar Amazon Polly, sin disparar procesos de Azure o ElevenLabs.
+Verificación de Identidad:
+Recuerda que seguimos usando "Epub TTS" como nombre provisional en todos los títulos de ventana y logs.
