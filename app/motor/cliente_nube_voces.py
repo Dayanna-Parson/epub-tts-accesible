@@ -3,7 +3,7 @@ import os
 import requests
 import warnings
 
-from app.config_rutas import ruta_config
+from app.config_rutas import ruta_config, cargar_claves
 
 # Suprimimos advertencias técnicas de conexión segura
 warnings.filterwarnings("ignore")
@@ -17,7 +17,6 @@ class GestorVoces:
     """
     def __init__(self):
         # Rutas absolutas — evita fallos cuando el CWD no es la raíz del proyecto
-        self.ruta_config = ruta_config("ajustes.json")
         self.ruta_cache_voces = ruta_config("voces_disponibles.json")
 
         # Estructura base para guardar las voces
@@ -28,15 +27,8 @@ class GestorVoces:
         }
 
     def cargar_configuracion(self):
-        """Lee las claves API del archivo de configuración."""
-        if os.path.exists(self.ruta_config):
-            try:
-                with open(self.ruta_config, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"[GestorVoces] Error leyendo config: {e}")
-                return {}
-        return {}
+        """Lee las claves API desde configuraciones/claves_api.json."""
+        return cargar_claves()
 
     def actualizar_voces_desde_internet(self):
         """

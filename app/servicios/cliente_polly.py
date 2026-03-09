@@ -1,10 +1,8 @@
-import os
-import json
 import io
 import time
 import sounddevice as sd
 import soundfile as sf
-from app.config_rutas import ruta_config
+from app.config_rutas import cargar_claves
 
 # ── Comprobación inmediata de boto3 ──────────────────────────────────────────
 # Se comprueba al importar el módulo para que el fallo sea visible desde
@@ -92,14 +90,7 @@ class ClientePolly:
         self._cache_lru = []
 
     def _cargar_config(self):
-        try:
-            ruta = ruta_config("ajustes.json")
-            if os.path.exists(ruta):
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-        except Exception as e:
-            print(f"[Error] No se pudo leer ajustes.json en ClientePolly: {e}")
-        return {}
+        return cargar_claves()
 
     def obtener_voces(self):
         return []

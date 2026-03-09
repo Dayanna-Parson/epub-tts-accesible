@@ -1,11 +1,9 @@
-import os
-import json
 import requests
 import sounddevice as sd
 import soundfile as sf
 import io
 import time
-from app.config_rutas import ruta_config
+from app.config_rutas import cargar_claves
 
 _MAX_CACHE = 5  # Máximo de fragmentos de audio en caché por cliente
 
@@ -25,14 +23,7 @@ class ClienteAzure:
         self._cache_lru = []     # lista de claves en orden de inserción
 
     def _cargar_config(self):
-        try:
-            ruta = ruta_config("ajustes.json")
-            if os.path.exists(ruta):
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-        except Exception as e:
-            print(f"[Error] No se pudo leer ajustes.json en ClienteAzure: {e}")
-        return {}
+        return cargar_claves()
 
     def obtener_voces(self):
         return []

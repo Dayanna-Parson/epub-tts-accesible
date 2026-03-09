@@ -4,24 +4,47 @@ __pycache__/
 
 # Caché y datos generados
 cache/
-registros/
-
-# Entornos y secretos
-.env
 
 # Sistema
 .DS_Store
 Thumbs.db
-# Configuraciones locales y claves API (¡NO SUBIR!)
-configuraciones/config_general.json
+
+# ── Claves API y secretos (NUNCA SUBIR) ──────────────────────────────────────
+configuraciones/claves_api.json
+configuraciones/ajustes.json
+*.env
+.env
+.env.*
+*token*.json
+*secret*.json
+
+# ── Configuraciones locales del usuario (datos personales) ───────────────────
+# Nombres actuales
+configuraciones/historial_grabacion.json
+configuraciones/historial_epub.json
+configuraciones/estado_lectura.json
+configuraciones/proyectos.json
+configuraciones/mapeo_etiquetas.json
 configuraciones/uso_cuota.json
+configuraciones/voces_disponibles.json
+# Nombres legacy (anterior al esquema de migración)
+configuraciones/config_general.json
 configuraciones/voces_favoritas.json
 configuraciones/datos_lectura.json
 configuraciones/libros_recientes.json
-configuraciones/voces_disponibles.json
+# Genéricos
+configuraciones/recientes.json
+configuraciones/favoritos.json
+configuraciones/cache_voces*.json
 
-# Binarios externos portables (no se incluyen en el repo)
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+registros/
+
+# ── Audio generado (producción) ───────────────────────────────────────────────
+Grabaciones_TifloHistorias/
+
+# ── Binarios externos portables ──────────────────────────────────────────────
 bin/*.exe
 bin/*.dll
-Grabaciones_TifloHistorias/
-Grabaciones_TifloHistorias/
