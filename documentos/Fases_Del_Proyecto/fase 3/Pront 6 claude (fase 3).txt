@@ -1,0 +1,271 @@
+Pront 6 claude (fase 3)
+Varias cosas. El foco ahora si funciona bien.
+La ventana abre sin problemas, y funcionan todos los comandos.
+Pero, no se si es un error de diseño, o de que las ideas no las pensamos bien, pero... No entiendo la interfaz, y tampoco no termino de entender el modo de uso... Porque, cuando yo abro un txt pues lo hago directamente en el modo grabación... para asignar las voces, y demás. Pero, el propósito de esta bentana, tal y como está construida...
+Porque, que sentido tiene rellenar los campos  aquí (Nombre del proyecto (Intro para guardar):  edición  seleccionado Infiltración en la Ciudad de Cristal: El Protocolo TifloHistorias
+Tipo de proyecto:  cuadro combinado  dialogo  contraído
+Archivos TXT asociados a este proyecto:  lista
+Añadir TXT al proyecto…  botón  Alt+  a
+Quitar TXT seleccionado  botón  Alt+  q
+Voces del proyecto (heredadas del padre si no hay propias):  lista. Y hacerlo en esta ventana que es prácticamente la misma (Nuevo proyecto raíz  botón  Alt+  n) O incluso en estos campos? (Título (opcional):  edición  seleccionado Infiltración en la Ciudad de Cristal  El Protocolo TifloHistorias
+Capítulo (opcional):  edición  seleccionado Infiltración en la Ciudad de Cristal  El Protocolo TifloHistorias
+Asignación de voces  agrupación
+Etiquetas detectadas:  cuadro combinado  @nar → Lucia  contraído
+Asigna voces a la etiqueta seleccionada:  lista
+Seraphina Mehrsprachig; Género: Femenino; Idioma: Alemán; Proveedor: Azure  casilla de verificación  sin marcar)
+Hay que darle una vuelta y reepemsar bien esta ventana y su función. El resto funciona todo bien, no necesita mas cambios por ahora.
+
+¡Qué buena reflexión, Jacqui! Tienes toda la razón: ahora mismo hay una duplicidad de tareas que no tiene sentido. Si ya estás en la pestaña de Grabación con tu TXT abierto, ¿para qué vas a ir a otra ventana a rellenar lo mismo? 
+
+El error ha sido diseñar la ventana de Proyectos como un "formulario repetido" en lugar de una biblioteca de consulta.  Aquí tienes el enfoque para que Claude lo rediseñe y sea útil de verdad para tu flujo de trabajo:
+
+💡 La nueva lógica: Menos rellenar, más organizar
+La Ventana de Proyectos NO es para editar el TXT: Su única función debe ser crear la estructura (carpetas/jerarquía) y gestionar las voces globales. 
+
+La Pestaña de Grabación es la "Jefa": Tú abres tu TXT allí como siempre.  La app debe detectar si ese archivo ya está en algún proyecto y, si no lo está, preguntarte: ¿Quieres añadir este capítulo al proyecto "Ciudad de Cristal"?.
+
+Herencia real: Si en la ventana de proyectos dices que "Jacqui" siempre es la voz de Lucia (Polly), al abrir cualquier capítulo de esa saga en Grabación, la voz ya debe estar puesta. 
+
+ 
+🏁 ¿Qué ganamos con esto?
+Que la ventana de Proyectos sea solo para configurar una vez tu saga o podcast. El resto del tiempo, tú solo abres tus archivos en Grabación y la app "sabe" mágicamente qué voces usar porque lo lee del proyecto. 
+
+¿Te parece que este cambio de rumbo soluciona esa sensación de "estar haciendo lo mismo dos veces"? Si estás de acuerdo, pásale este mensaje a Claude y que limpie la interfaz para que sea más minimalista. 
+
+
+
+
+petición
+Has dicho
+no se... vamos a darle una vuelta mas. y además, como ya comenté, como el txt no tiene metadatos del libro, aunque la apartado en la pestaña grabación, título y capítulo... Se me ocurre que podría coger de lo que esté escrito en uno o en ambos, para rellenar los campos de la ventana del proyecto. En cuando tengamos eso bien redondito, pues te digo tres detalles mas para cambiar
+Gemini ha dicho
+Tienes toda la razón, Jacqui. Al no tener los archivos TXT metadatos propios (como sí los tiene un EPUB), estamos perdiendo una oportunidad de oro para automatizar el trabajo. Si ya te has tomado la molestia de escribir el título o el capítulo en la pestaña de Grabación, la ventana de Proyectos debería "beber" de ahí para no hacerte escribir lo mismo dos veces.
+
+Aquí tienes el enfoque "redondito" para que Claude ajuste la lógica de comunicación entre ambas partes:
+💡 El nuevo flujo de sincronización
+Captura Inteligente: Cuando rellenes el campo Título o Capítulo en la pestaña de Grabación y el archivo esté asociado a un proyecto, esa información debe viajar automáticamente a la base de datos del proyecto.
+
+Ventana de Proyectos como "Espejo": En la ventana de proyectos, esos campos deben ser informativos o de actualización masiva. Si cambias el nombre de una "Saga" en la ventana de proyectos, todos los TXT asociados deberían saber que ahora pertenecen a esa nueva saga.
+
+Adiós a la redundancia: Si abres la ventana de proyectos (Ctrl+Shift+P) mientras tienes un TXT cargado, el árbol debería expandirse automáticamente y situarte en el nodo de ese archivo.
+
+ 
+🏁 ¿Qué ganamos con esto?
+Que no sientas que estás rellenando fichas de biblioteca. La aplicación simplemente va "aprendiendo" de lo que tú haces mientras grabas y lo organiza en el árbol de proyectos por detrás.
+¿Te parece que este sistema de "" los datos de la grabación al proyecto resuelve el problema? En cuanto Claude nos confirme que esta comunicación funciona, lanzamos esos tres detalles finales que tienes guardados. ¡Esto está quedando de lujo para tus tutoriales!.
+
+
+
+
+petición
+Has dicho
+me gustan tus sugerencias guárdatelas para añadirlas a lo que te voy a decir y a las preguntas que ahora me están rondaando... Te voy a decir lo que se me ocurre y las 3 cosas que quiero cambiar además, antes de que se me olviden jaja. A ver... Tenemos que buscar una forma en la que sea cómoda y rápida de gestionar todo esto. Porque puede que al principio solo sean dos o tres libros, muy pocos, pero, puede que dentro de un tiempo, ese arbol con los metadatos va a ir sumándose cada vez más así que... bueno. Además, cuando abra un txt con etiquetas o sin ellas, pues no siempre voy a querer guardarlo o que se guade en esta ventana... Así que primero después de detectar las etiquetas, y solo cuando se hallan rellenado o mas bien, asignado todas las correspondientes voces, que salte un diálogo preguntándole al usuario si quiere agregarlo a la ventana de gestión de proyectos. para quiero haacerlo así para que la ventana no sea intrusiva ni entorpezca la experiencia... Ya eso depende del usuario independientemente de que grabe o no... Te parece bien así? o le ves problemas o algo parecido? bueno ahora sí, las 3 cosas. Me parece muy bien que esté el botón cerrar bentana pero, primero me parece redundante lo de ventana... ya es ovbio. Segundo, que al pulsar escape se cierre para que vuelva a donde estaba. Bien, la segunda cosa es que arregule o más bien, que sea como el menú reciente de los libros. que habren los 10 libros recientes... y esto de aquí? Abrir TXT para grabar... Ctrl+T  t. Abre el mismo diálogo que abre el botón examinar para buscar el txt con etiquetas... Y la idea es que sea un sub menú... Y lo último que falta son dos cuestiones relacionadas con los json. que esta ventana del proyecto devería de extraer de l json de las etiquetas y voces ya asignadas... para volcarlas... Bueno creo que entiendes por donde voy no? Y si no está creado ya, pues otro json o csv pues donde se guarden los proyectos...
+Gemini ha dicho
+Me parece un planteamiento excelente, Jacqui. Estás aplicando la lógica de "menos es más" para que la herramienta no sea un estorbo, sino un asistente que solo aparece cuando realmente lo necesitas. 
+
+Aquí tienes mi análisis de tus ideas y cómo las vamos a "empaquetar" para Claude:
+🧠 Análisis de tu nueva lógica
+Crecimiento Sostenible: Tienes razón con el árbol de proyectos. Si no lo gestionamos bien, en un año será una selva. La clave es que el usuario decida qué entra ahí. 
+
+El Diálogo de Confirmación: Me encanta. En lugar de que la app "asuma" que todo TXT es un proyecto, que pregunte: "Se han asignado todas las voces. ¿Deseas guardar este archivo en tu Gestor de Proyectos?". Es mucho más limpio para el usuario. 
+
+Extracción de JSON: Es lo más lógico. Si ya tenemos un mapeo_etiquetas.json con voces que te gustan, la ventana de proyectos debe "beber" de ahí para ofrecerte sugerencias. Y sí, usaremos un nuevo archivo (seguramente proyectos.json) para guardar esa jerarquía de forma independiente. 
+
+ 
+🛠️ Las 3 cosas a cambiar (y el "Redondeo" final)
+Esto es lo que le vamos a pedir a Claude para dejar la Fase 3 niquelada:
+Limpieza de Interfaz y Atajo de Salida
+• 
+Renombrar: Cambiar el botón "Cerrar ventana" por simplemente "Cerrar". Como bien dices, es obvio dónde estamos. 
+
+• 
+Tecla Escape: Configurar que al pulsar Esc la ventana se cierre y el foco vuelva automáticamente a la ventana principal. 
+
+Evolución del Menú Archivo (Submenú Recientes)
+• 
+Submenú TXT: Transformar "Abrir TXT para grabar" en un submenú dentro de "Archivo". 
+
+• 
+Historial: Que funcione igual que el de los libros EPUB, guardando los últimos 10 archivos TXT utilizados para que puedas retomarlos con un solo Enter. 
+
+El Vínculo con los JSON
+• 
+Volcado de datos: Que la ventana de proyectos extraiga la información del JSON de etiquetas para mostrar qué voces están disponibles o ya asignadas. 
+
+• 
+Persistencia: Crear el sistema de guardado (JSON/CSV) para la base de datos de proyectos si no existe todavía. 
+
+ 
+
+¿Quieres que le pida también que el submenú de TXT recientes incluya el nombre del proyecto si el archivo ya está asociado? Así, al pasar por encima con NVDA, sabrías no solo qué archivo es, sino a qué saga pertenece.
+¡Dime si le damos ya "candela" a Claude con esto! 
+
+
+
+
+petición
+Has dicho
+sii, acepto todas tus sugerencias pero siempre te olvidas de responderme a todas las preguntas que te hago
+Gemini ha dicho
+¡Tienes toda la razón, Jacqui! Me entusiasma tanto el código que a veces me lanzo a las soluciones y me dejo las respuestas en el tintero. Perdona ese despiste, vamos a ponerle remedio ahora mismo respondiendo a todo lo que tienes en la cabeza antes de lanzarnos con Claude.
+Aquí tienes las respuestas a tus dudas:
+Sobre la gestión del árbol a largo plazo
+Tu pregunta: "¿Cómo gestionar esto cuando haya muchísimos libros?".
+Respuesta: Tienes razón, un árbol gigante es una pesadilla para NVDA. Por eso, la clave es lo que propusiste: que el usuario elija qué entra en el árbol. Además, le pediremos a Claude que el árbol sea colapsable por niveles. Así, cuando tengas 20 sagas, solo oirás los 20 nombres de las sagas, y solo "abrirás" con la flecha derecha la que estés trabajando en ese momento.
+
+Sobre la "intrusión" de la ventana de proyectos
+Tu pregunta: "¿Te parece bien que solo salte el diálogo al final de asignar las voces?".
+Respuesta: Me parece la mejor decisión de diseño que hemos tomado hasta ahora. Si el sistema te obligara a crear un proyecto cada vez que abres un TXT de prueba, acabarías odiando la función. Al hacerlo al final, solo guardas lo que de verdad tiene valor. Es un filtro de calidad manual perfecto.
+
+Sobre la extracción y el volcado de los JSON
+Tu pregunta: "¿Entiendes por dónde voy con lo de extraer del JSON de etiquetas y guardarlo en otro?".
+Respuesta: Perfectamente. Claude ya está usando un proyectos.json (o similar) para la jerarquía, pero le falta esa "comunicación" que pides. La idea es que cuando la ventana de proyectos necesite saber qué voces hay, no se lo invente, sino que lea el mapeo_etiquetas.json que tú ya tienes trabajado de la Fase 2. Así, tus voces favoritas de siempre aparecerán como sugerencias en tus nuevos proyectos.
+
+ 
+
+
+
+petición
+Has dicho
+revisa que no falte nada de lo que hemos mencionado en toda esta conversación. Por ej, te has olvidado de dos detalles... de lo del arbol,... poder mover para reoordenar hijos o sagas etc, en el árbol... con alt flecha arriba para subirlo hacia harriba, y alt flecha abajo... y
+
+Gemini ha dicho
+¡Tienes toda la razón, Jacqui! Se me estaban escapando esos dos "caramelos" de usabilidad que son vitales para que el árbol no sea una cárcel de datos, sino algo vivo que puedas organizar a tu gusto. 
+
+Aquí tienes la revisión completa para que no se quede ni un solo cable suelto antes de darle la orden a Claude:
+Reordenar con el Teclado (La pieza que faltaba)
+Para que la gestión sea profesional, le pediremos que implemente Alt + Flecha Arriba y Alt + Flecha Abajo dentro del árbol de proyectos.  Esto te permitirá mover una "Saga" o un "Capítulo" de posición sin tener que borrar y volver a crear nada. NVDA deberá anunciar: "Movido hacia arriba" o "Movido hacia abajo". 
+
+El Segundo Detalle: El Menú de Contexto
+Mencionaste que querías una forma rápida y cómoda de gestionar todo.  Le pediremos que añada un Menú de Contexto (tecla Aplicaciones o Shift+F10) sobre los nodos del árbol para que puedas:
+
+• 
+Asociar el TXT actual rápidamente. 
+
+• 
+Cambiar el tipo de proyecto. 
+
+• 
+Eliminar con confirmación. 
+
+ 
+petición
+Has dicho
+siento que siguen faltando detalles de los que ya hablamos... como lo de que quitara esa ventana... la que es redundante... aaa, se que era algo más, pero no me puedo acordar...
+
+Gemini ha dicho
+Tienes toda la razón, se me estaban quedando en el tintero un par de puntos clave de nuestra charla. Al final, lo que buscamos es que la aplicación sea invisible hasta que la necesites.
+He revisado nuestras notas y aquí están esos "cabos sueltos" que faltaban para que el diseño sea redondo:
+La "Ventana Invisible" (Lo que faltaba)
+Habíamos dicho que la ventana de proyectos actual es redundante porque repite lo que ya haces en la pestaña de Grabación.
+• 
+El cambio: En lugar de ser un formulario donde escribes todo otra vez, la ventana de proyectos se convierte en un Gestor de Estructura.
+• 
+La magia: Solo se abre para que muevas carpetas o veas el árbol. Los datos (Título, Capítulo, Voces) los "absorbe" directamente de lo que tú ya estás escribiendo en la pestaña de Grabación. Ya no tienes que rellenar dos veces lo mismo.
+El "Segundo Detalle" olvidado: El guardado inteligente
+Es lo que mencionaste de los JSON. No queremos que la app te obligue a guardar cada prueba.
+• 
+La regla: La app solo guardará en el proyectos.json cuando tú confirmes en el diálogo final. Si solo estás probando un TXT rápido y no quieres que ensucie tu árbol de proyectos, simplemente le dices que "No" al diálogo y listo.
+ 
+petición
+Has dicho
+si, y era algo mas...
+
+Gemini ha dicho
+¡Tienes razón! Hay un par de detalles que se nos estaban quedando en el tintero para que el flujo sea 100% cómodo para ti:
+El "Foco de Vuelta" al cerrar
+No solo queremos que la ventana se cierre con Escape, sino que es vital que, al hacerlo, el foco regrese exactamente al control donde estabas en la Ventana Principal. Si estabas en el botón "Grabar", NVDA debe volver a decir "Grabar" en cuanto cierres el gestor de proyectos.
+
+La Extracción de Voces del JSON (El "Volcado")
+Habías mencionado que la ventana de proyectos debería extraer la información de los JSON de etiquetas y voces ya asignadas para "volcarlas".
+
+• 
+El detalle: Si ya tienes una voz perfecta para @nar en tu mapeo_etiquetas.json, cuando crees un proyecto nuevo, la ventana de proyectos debería ofrecerte esa misma voz por defecto en lugar de dejar el campo vacío. Así el sistema "aprende" de tus gustos previos.
+
+ 
+petición
+Has dicho
+si, pero sigue siendo algo más... no me des tantas veces el pront... Solo dámelo cuando ya lo tengamos bien pensado todo, y todo bien atado... Sin ningún cabo suelto o que pueda quedar suelto... Hay que pensar en absolutamente todo
+
+Gemini ha dicho
+He estado repasando mentalmente todo lo que hemos hablado y creo que he encontrado esos "cabos sueltos" que tu intuición te dice que faltan. Dime si son estos:
+El "Bautizo" del Proyecto
+Si decidimos que la ventana de proyectos es solo un organizador, hay un momento crítico: cuando aceptas el diálogo de "¿Quieres agregar este archivo al Gestor de Proyectos?".
+• 
+Cabo suelto: ¿A qué proyecto lo añade? Si ya tienes 5 sagas creadas, la app no puede adivinar en cuál va.
+• 
+Solución: Ese diálogo debería permitirte elegir una saga existente de una lista o crear una nueva ahí mismo, sin tener que abrir la ventana de proyectos a mano.
+¿Qué pasa si el TXT cambia de nombre en el disco?
+Este es un fallo clásico de estos sistemas.
+• 
+Cabo suelto: Si hoy grabas capitulo1.txt y mañana le cambias el nombre en Windows a capitulo1_final.txt, el Gestor de Proyectos se va a quedar "huérfano" porque no encontrará el archivo.
+• 
+Solución: Necesitamos que el Gestor tenga una función de "Relocalizar archivo" o que sea capaz de avisarte: "El archivo del proyecto X no se encuentra, ¿quieres buscarlo?".
+La Coherencia de Voces (El alma de TifloHistorias)
+• 
+Cabo suelto: Imagina que cambias la voz del Narrador en la pestaña de Grabación porque te gusta más una de ElevenLabs.
+• 
+La pregunta clave: ¿Ese cambio debe afectar solo a ese capítulo o a toda la Saga?
+• 
+Solución: Al cambiar una voz en grabación, si el archivo está en un proyecto, debería salir un aviso: "Has cambiado la voz del Narrador. ¿Quieres que este sea el nuevo estándar para toda la Saga [Nombre]?". Así mantienes la coherencia sin esfuerzo.
+¿Y si no hay etiquetas?
+• 
+Cabo suelto: El sistema está muy pensado para @nar, @personaje, etc. Pero, ¿y si grabas un TXT plano?
+• 
+Solución: El Gestor de Proyectos debe funcionar igual de bien para archivos sin etiquetas, permitiéndote organizarlos por carpetas aunque no haya un mapeo de voces complejo.
+ 
+• 
+¿Cómo quieres que se comporte el buscador dentro del árbol de proyectos si llegas a tener 100 archivos?
+• 
+¿Te gustaría que hubiera una opción de "Exportar Proyecto" que te junte todos los audios de una saga en una sola carpeta final?
+
+
+
+petición
+Has dicho
+no había `pensado en esas cosas, gárdatelas para añadirlas y si. A las dos preguntas que me lanzas, pero no... Se que era algo más, que se me había ocurrido cuando estaba revisando la ventana... Pero se me a ido por completo de la cabeza...
+
+Gemini ha dicho
+• 
+Adiós a la redundancia: La ventana de proyectos deja de ser un espejo de la grabación; solo gestiona la estructura y las voces globales.
+
+• 
+Mover con el teclado: Implementar Alt + Flecha Arriba/Abajo para que puedas organizar tus sagas sin usar el ratón.
+
+• 
+Foco de retorno: Al cerrar con Escape, el NVDA debe devolverte exactamente a donde estabas en la ventana principal.
+
+• 
+Diálogo de confirmación: Solo preguntar si se quiere crear el proyecto al final, cuando las voces ya están listas (nada de intrusiones constantes).
+• 
+Submenú de Recientes: Un historial de 10 archivos TXT que además te diga a qué proyecto pertenecen.
+
+• 
+Sincronización de nombres: Si cambias el título en la grabación, se actualiza en el proyecto.
+
+• 
+Relocalización: Capacidad de buscar un archivo si le has cambiado el nombre en Windows para no perder el hilo.
+• 
+Exportación: Una función para juntar todos los audios de una saga en una carpeta final.
+ 
+🕵️‍♂️ Pistas para ayudarte a recordar ese "Algo más":
+Piensa en el momento en que estabas revisando la ventana... ¿Fue al tabular por la lista? ¿Fue al intentar borrar algo? Te lanzo unas ideas por si alguna te "enciende la bombilla":
+¿Borrado accidental?: ¿Te diste cuenta de si era demasiado fácil borrar un proyecto entero sin querer?
+¿Información visual vs. auditiva?: ¿Viste algún campo que NVDA leía pero que parecía que no servía para nada (como un label vacío o confuso)? 
+
+¿El orden de tabulación?: ¿Quizás el orden en que pasabas por los botones no era lógico (ejemplo: primero el botón de borrar y luego el de crear)?
+¿Multiselección?: ¿Pensaste en si podrías seleccionar varios archivos a la vez para moverlos de una saga a otra?
+¿Estados de grabación?: ¿Tal vez algo que te indique visualmente o por voz cuántos capítulos de esa saga ya tienes grabados y cuáles te faltan?
+
+Y como siempre, el log
+
+---------------------------------------------------
+   INICIANDO TIFLO HISTORIAS...
+---------------------------------------------------
+2026-03-06 20:22:03,189 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 20:22:03,190 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 20:22:03,191 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 20:22:03,196 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 20:22:03,652 - __main__ - INFO - Iniciando Epub TTS Accesible
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)

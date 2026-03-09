@@ -1,0 +1,436 @@
+Respuestas 12 claude (fase 3)
+
+Este prompt es grande. Antes de tocar nada, necesito entender bien el alcance. Voy a explorar el codebase para planificar sin romper nada.
+Launched async code audit agent for refactoring analysis
+Launched async code audit agent for refactoring analysis
+AgentAuditar codebase para refactoring
+Async agent launched successfully.agentId: a273526267efffd5f (internal ID - do not mention to user. Use to resume later if needed.)The agent is working in the background. You will be notified automatically when it completes.
+Mostrar más
+Do not duplicate this agent's work — avoid working with the same files or topics it is using. Work on non-overlapping tasks, or briefly tell the user what you launched and end your response.output_file: /tmp/claude-0/-home-user-epub-tts-accesible/tasks/a273526267efffd5f.outputIf asked, you can check progress before completion by using Read or Bash tail on the output file.
+Copiar mensaje
+El agente de exploración está analizando el codebase. Mientras espero su informe completo, te respondo la parte de identidad:
+ 
+5 nombres sugeridos para la app (sin "Accesible"):
+1. VozLibre — directo, evoca libertad de leer en voz propia
+2. NarraKit — narrativa + herramienta, suena a producto profesional
+3. TifloVoz — mantiene la raíz "tiflo" que ya usas en TifloHistorias, coherente con tu marca
+4. EchoEPUB — eco como metáfora de dar voz, + formato principal
+5. LeeConmigo — íntimo, inclusivo, en español natural
+ 
+Ahora espero el informe del agente antes de tocar el código. Este prompt implica renombrar módulos y archivos JSON en cascada — si ejecuto sin un mapa completo de dependencias, rompo la app. Cuando llegue el informe, procedo con el plan completo.
+Tengo el informe completo. Ahora tengo una visión clara de todo el proyecto. Voy a proceder sistemáticamente.
+Renamed two module files for better clarity
+Renamed two module files for better clarity
+Update Todos
+☐ Renombrando módulos Python☐ Actualizar referencias JSON en todos los archivos☐ Separar historial_grabacion.json de ajustes.json☐ Añadir función de migración automática de archivos viejos☐ Título 'Epub TTS', labels 'Subproyecto', borrar ajustes_globales.json vacío☐ Botón Limpiar caché en Ajustes☐ Fix bucle Tab en Ajustes > General + renombrar error_tiflo.log
+Bash
+git mv app/motor/gestor_config.py app/motor/gestor_proyectos.py && git mv app/motor/gestor_voces.py app/motor/cliente_nube_voces.py && echo "OK"
+OK
+Copiar mensaje
+Ahora leo los archivos que necesito modificar en paralelo:
+Read configuration loading code across three service files
+Read configuration loading code across three service files
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 15 líneas
+Read/home/user/epub-tts-accesible/app/motor/grabador_audio.py
+Leer 20 líneas
+Read/home/user/epub-tts-accesible/app/servicios/cliente_azure.py
+Leer 15 líneas
+Mostrar 3 más
+Copiar mensaje
+Ahora voy a hacer todos los cambios en paralelo. Primero: actualizar los imports de módulos renombrados:
+Updated todo list tracking Python module refactoring progress
+Updated todo list tracking Python module refactoring progress
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Leer 10 líneas
+Read/home/user/epub-tts-accesible/app/motor/cliente_nube_voces.py
+Leer 10 líneas
+Read/home/user/epub-tts-accesible/app/config_rutas.py
+Leer 15 líneas
+Mostrar 8 más
+Copiar mensaje
+Ahora actualizo todas las referencias JSON en paralelo:
+Updated config filename references in reproductor_voz.py
+Updated config filename references in reproductor_voz.py
+Copiar mensaje
+Ahora actualizo pestana_ajustes.py y ventana_principal.py y pestana_lectura.py:
+Updated todo list tracking Python module refactoring progress
+Updated todo list tracking Python module refactoring progress
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+1-1
+1-
+config_general.json
+1+
+ajustes.json
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+1-1
+1-
+config_general.json
+1+
+ajustes.json
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+1-1
+1-
+libros_recientes.json
+1+
+historial_epub.json
+Mostrar 3 más
+Copiar mensaje
+Ahora: separar historial_grabacion.json y añadir migración automática. Leo ventana_principal.py para ver las secciones relevantes:
+Read session persistence code in ventana_principal.py
+Read session persistence code in ventana_principal.py
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 80 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 80 líneas
+Copiar mensaje
+Ahora hago todos los cambios restantes en paralelo: separar historial_grabacion.json, migración, título, labels, botón limpiar caché, y fix del Tab loop:
+Created configuration file with project root and directory paths
+Created configuration file with project root and directory paths
+Write/home/user/epub-tts-accesible/app/config_rutas.py
+1+
+import os
+2+
+import json
+3+
+4+
+# Directorio raíz del proyecto: un nivel por encima del paquete app/
+5+
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+6+
+CONFIG_DIR = os.path.join(RAIZ, "configuraciones")
+7+
+8+
+9+
+def ruta_config(nombre_archivo):
+10+
+    """
+11+
+    Devuelve la ruta absoluta a un archivo dentro de la carpeta configuraciones.
+12+
+    Garantiza que la ruta es correcta independientemente del directorio de trabajo
+13+
+    desde el que se lanza la aplicación.
+14+
+    """
+15+
+    return os.path.join(CONFIG_DIR, nombre_archivo)
+16+
+17+
+18+
+def migrar_archivos_config():
+19+
+    """
+20+
+    Renombra archivos de configuración viejos al nuevo esquema de nombres.
+Show full diff (56 more lines)
+Copiar mensaje
+Llamo a la migración desde el arranque:
+Updated application title in initialization script
+Updated application title in initialization script
+Read/home/user/epub-tts-accesible/iniciar_tiflohistorias.py
+Leer 113 líneas
+Edit/home/user/epub-tts-accesible/iniciar_tiflohistorias.py+14-4
+26-
+# --- ARCHIVO DE PÁNICO ---
+27-
+# Captura cualquier excepción no controlada que cierre la app y la escribe en
+28-
+# error_tiflo.log en la raíz del proyecto, para diagnóstico sin necesidad de consola.
+29-
+_RUTA_PANIC_LOG = os.path.join(_RAIZ, 'error_tiflo.log')
+26+
+# --- MIGRACIÓN DE ARCHIVOS DE CONFIGURACIÓN ---
+27+
+# Se ejecuta antes de importar nada de la app para garantizar que los nombres
+28+
+# de archivo nuevos (ajustes.json, historial_epub.json, etc.) ya existen.
+29+
+try:
+30+
+    sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+31+
+    from app.config_rutas import migrar_archivos_config
+32+
+    migrar_archivos_config()
+33+
+except Exception:
+34+
+    pass
+35+
+36+
+# --- ARCHIVO DE PÁNICO ---
+37+
+# Captura cualquier excepción no controlada que cierre la app y la escribe en
+38+
+# error_log.txt en la raíz del proyecto, para diagnóstico sin necesidad de consola.
+39+
+_RUTA_PANIC_LOG = os.path.join(_RAIZ, 'error_log.txt')
+Edit/home/user/epub-tts-accesible/iniciar_tiflohistorias.py+1-1
+1-
+error_tiflo.log
+1+
+error_log.txt
+Mostrar 1 más
+Copiar mensaje
+Ahora: separar txt_recientes a historial_grabacion.json en ventana_principal.py:
+Updated recent files storage mechanism in main window interface
+Updated recent files storage mechanism in main window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+3-2
+1-
+        # TXT recientes (para el submenú de Grabación)
+2-
+        self.txt_recientes = []
+1+
+        # TXT recientes — archivo independiente historial_grabacion.json
+2+
+        self.txt_recientes = []
+3+
+        self._ruta_historial_grabacion = ruta_config("historial_grabacion.json")
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+9-6
+296-
+        # Cargar lista de TXT recientes y actualizar submenú
+297-
+        self.txt_recientes = [
+298-
+            r for r in config.get("txt_recientes", [])
+299-
+            if os.path.exists(r)
+300-
+        ]
+296+
+        # Cargar lista de TXT recientes desde historial_grabacion.json
+297+
+        self.txt_recientes = []
+298+
+        try:
+299+
+            if os.path.exists(self._ruta_historial_grabacion):
+300+
+                with open(self._ruta_historial_grabacion, encoding="utf-8") as f:
+301+
+                    self.txt_recientes = [r for r in json.load(f) if os.path.exists(r)]
+302+
+        except Exception:
+303+
+            pass
+301304
+        self.actualizar_menu_txt_recientes()
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+7-9
+314314
+    def _guardar_txt_recientes(self):
+315315
+        try:
+316-
+            config = self._cargar_config_general()
+317-
+            config["txt_recientes"] = self.txt_recientes
+318-
+            os.makedirs(os.path.dirname(self._ruta_config_general), exist_ok=True)
+319-
+            with open(self._ruta_config_general, "w", encoding="utf-8") as f:
+320-
+                json.dump(config, f, ensure_ascii=False, indent=2)
+316+
+            os.makedirs(os.path.dirname(self._ruta_historial_grabacion), exist_ok=True)
+317+
+            with open(self._ruta_historial_grabacion, "w", encoding="utf-8") as f:
+318+
+                json.dump(self.txt_recientes, f, ensure_ascii=False)
+321319
+        except Exception:
+322320
+            pass
+Copiar mensaje
+Ahora actualizo el título en ventana_principal.py y los labels en ventana_proyectos.py:
+Fixed default window title parameter in main interface class
+Fixed default window title parameter in main interface class
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 5 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+2-2
+1-
+    def __init__(self, padre, titulo):
+1+
+    def __init__(self, padre, titulo="Epub TTS"):
+22
+        super().__init__(padre, title=titulo, size=(1000, 700))
+Copiar mensaje
+Ahora labels en ventana_proyectos.py — cambiar "Raíz" → quitar y "Hijo" → "Subproyecto":
+Read settings tab file to examine save configuration method
+Read settings tab file to examine save configuration method
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+8-8
+1-
+        # Nuevo proyecto raíz (siempre disponible)
+2-
+        item_nuevo_raiz = menu.Append(wx.ID_ANY, "Nuevo proyecto raíz")
+3-
+        self.Bind(wx.EVT_MENU, self._al_nuevo_raiz, item_nuevo_raiz)
+4-
+5-
+        # Nuevo hijo (requiere selección)
+6-
+        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo subproyecto hijo")
+1+
+        # Nuevo proyecto (siempre disponible)
+2+
+        item_nuevo_raiz = menu.Append(wx.ID_ANY, "Nuevo proyecto")
+3+
+        self.Bind(wx.EVT_MENU, self._al_nuevo_raiz, item_nuevo_raiz)
+4+
+5+
+        # Nuevo subproyecto dentro del seleccionado (requiere selección)
+6+
+        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo subproyecto dentro del seleccionado")
+77
+        item_nuevo_hijo.Enable(bool(proyecto))
+88
+        self.Bind(wx.EVT_MENU, self._al_nuevo_hijo, item_nuevo_hijo)
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Read
+/root/.claude/projects/-home-user-epub-tts-accesible/b6c41fd5-2cb8-479b-9f4f-c82e6a1c75a9/tool-results/toolu_01A2vFDUjNN7UsUFPygQifZL.txt
+Mostrar 3 más
+Copiar mensaje
+Now let me read the Tab loop handling in ventana_principal.py:
+Updated todo list tracking Python module refactoring progress
+Updated todo list tracking Python module refactoring progress
+Grepobtener_ultimo_control|navegacion_tab|al_navegacion_tab
+88:        self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab_global)
+121:    def al_navegacion_tab_global(self, evento):
+161:            ultimo = self.pestana_ajustes.obtener_ultimo_control()
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 40 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 70 líneas
+Mostrar 2 más
+Copiar mensaje
+Now I'll add the "Limpiar caché" button to PanelGeneral. The button goes after btn_guardar, and needs a method _limpiar_cache in the class:
+Updated settings tab button labels and help text in Spanish interface
+Updated settings tab button labels and help text in Spanish interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+18-9
+55
+        )
+66
+        self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
+77
+        sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
+8-
+8+
+9+
+        self.btn_limpiar = wx.Button(self, label="Limpiar caché")
+10+
+        self.btn_limpiar.SetHelpText(
+11+
+            "Elimina carpetas __pycache__, archivos .tmp y audio temporal generado "
+12+
+            "por la aplicación. Al terminar muestra cuántos archivos se borraron y "
+13+
+            "cuánto espacio se liberó."
+14+
+        )
+15+
+        self.btn_limpiar.Bind(wx.EVT_BUTTON, self._limpiar_cache)
+16+
+        sizer.Add(self.btn_limpiar, 0, wx.ALL, 10)
+17+
+918
+        self.SetSizer(sizer)
+Copiar mensaje
+Now add the _limpiar_cache method to PanelGeneral, right before class PanelClaves:
+Added method to PanelClaves class in settings panel
+Added method to PanelClaves class in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+79-2
+11
+        wx.MessageBox("Configuración y límites guardados.")
+2+
+3+
+    def _limpiar_cache(self, event=None):
+4+
+        from app.config_rutas import RAIZ
+5+
+        import shutil
+6+
+7+
+        total_archivos = 0
+8+
+        total_bytes = 0
+9+
+        errores = 0
+10+
+11+
+        # 1. Carpetas __pycache__ en el árbol del proyecto
+12+
+        for dirpath, dirnames, _ in os.walk(RAIZ):
+13+
+            # No entrar en carpetas ocultas ni en el entorno virtual
+14+
+            dirnames[:] = [
+15+
+                d for d in dirnames
+16+
+                if not d.startswith('.') and d not in ('venv', '.venv', 'env', 'node_modules')
+17+
+            ]
+18+
+            if os.path.basename(dirpath) == '__pycache__':
+19+
+                try:
+20+
+                    size = sum(
+Show full diff (59 more lines)
+Copiar mensaje
+Now update obtener_ultimo_control() so that for idx==0 it returns btn_limpiar (the new last control in General), and also verify the Tab loop for the Ajustes panel. The old last control was btn_guardar, but now btn_limpiar is after it:
+Updated todo list with module renaming and JSON reference tasks
+Updated todo list with module renaming and JSON reference tasks
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-2
+10611061
+        if idx == 0:
+1062-
+            return self.pag_general.btn_guardar
+1062+
+            return self.pag_general.btn_limpiar
+Update Todos
+☐ Renombrar módulos Python (git mv + actualizar imports)☐ Actualizar referencias JSON en todos los archivos☐ Separar historial_grabacion.json + migración automática☐ Título 'Epub TTS', labels, borrar ajustes_globales.json vacío☐ Botón Limpiar caché en Ajustes☐ Corrigiendo bucle Tab☐ Commit y push de todos los cambios
+Copiar mensaje
+Now let me verify the Tab loop. The issue is that when user presses Tab on the last control of a panel inside PestanaAjustes, the focus comparison foco == ultimo must work. The problem is that PanelGeneral is a ScrolledWindow — focus might land on the scrolled child panel rather than the button itself. Let me check how ScrolledWindow focus works and also ensure the primer_control comparison works:
+Read event binding section of main window interface file
+Read event binding section of main window interface file
+Grepprimer_control|CHAR_HOOK|al_navegacion_tab
+871:        self.Bind(wx.EVT_CHAR_HOOK, self._al_capturar)
+1139:        self.primer_control = self.lista_cat
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 40 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 45 líneas
+Copiar mensaje
+The Tab loop logic is already correct in ventana_principal.py — foco == ultimo comparison works with wx objects. The fix was just updating obtener_ultimo_control() to return btn_limpiar (the new actual last control). Let me now commit everything:
+Updated todo list with completed Python module refactoring tasks
+Updated todo list with completed Python module refactoring tasks
+Update Todos
+☐ Renombrar módulos Python (git mv + actualizar imports)☐ Actualizar referencias JSON en todos los archivos☐ Separar historial_grabacion.json + migración automática☐ Título 'Epub TTS', labels, borrar ajustes_globales.json vacío☐ Botón Limpiar caché en Ajustes☐ Fix bucle Tab en Ajustes > General☐ Haciendo commit y push
+Bashgit status && git log --oneline -5
+On branch claude/fase3-proyectos-memoria-accesibilidad-X9aWPYour branch is up to date with 'origin/claude/fase3-proyectos-memoria-accesibilidad-X9aWP'.
+Mostrar más
+Changes to be committed:  (use "git restore --staged <file>..." to unstage)	renamed:    app/motor/gestor_voces.py -> app/motor/cliente_nube_voces.py	renamed:    app/motor/gestor_config.py -> app/motor/gestor_proyectos.pyChanges not staged for commit:  (use "git add <file>..." to update what will be committed)  (use "git restore <file>..." to discard changes in working directory)	modified:   app/config_rutas.py	modified:   app/interfaz/pestana_ajustes.py	modified:   app/interfaz/pestana_grabacion.py	modified:   app/interfaz/pestana_lectura.py	modified:   app/interfaz/ventana_principal.py	modified:   app/interfaz/ventana_proyectos.py	modified:   app/motor/cliente_nube_voces.py	modified:   app/motor/grabador_audio.py	modified:   app/motor/reproductor_voz.py	modified:   app/servicios/cliente_azure.py	modified:   app/servicios/cliente_eleven.py	modified:   app/servicios/cliente_polly.py	modified:   iniciar_tiflohistorias.py6142fde Fix Prompt 10: menús, favoritos, filtros, nuevas voces, Alt+Flechas, Acerca de13e6466 Fix: crash al inicio por referencias a menu_recientes y menu_txt_recientes eliminados9b63a42 Accesibilidad: menús contextuales, foco NVDA y tipos de proyecto simplificadosd7ae409 Feat: rediseño ventana_proyectos, diálogo Bautizo, TXT Recientes vitaminados20c1d2d Fix: crash ventana_proyectos, atajo Ctrl+Shift+P, eliminar foco automático
+Bash
+git add app/config_rutas.py app/interfaz/pestana_ajustes.py app/interfaz/pestana_grabacion.py app/interfaz/pestana_lectura.py app/interfaz/ventana_principal.py app/interfaz/ventana_proyectos.py app/motor/cliente_nube_voces.py app/motor/grabador_audio.py app/motor/reproductor_voz.py app/servicios/cliente_azure.py app/servicios/cliente_eleven.py app/servicios/cliente_polly.py iniciar_tiflohistorias.py
+Mostrar 3 más
+Copiar mensaje
+Todo listo. Commit 31fb49d pusheado a la rama. Resumen de lo que se hizo en el Prompt 12:
+Mudanza de módulos:
+• gestor_config.py → gestor_proyectos.py (git mv)
+• gestor_voces.py → cliente_nube_voces.py (git mv)
+• Todos los imports actualizados en los archivos que los usaban
+Renombrado de JSON con migración automática:
+• config_general.json → ajustes.json
+• libros_recientes.json → historial_epub.json
+• datos_lectura.json → estado_lectura.json
+• txt_recientes extraído de ajustes.json → historial_grabacion.json
+• migrar_archivos_config() en config_rutas.py se ejecuta al arranque
+Otros cambios:
+• Título de la app: "Epub TTS"
+• Panic log: error_log.txt
+• Labels del árbol de proyectos: "Nuevo proyecto" / "Nuevo subproyecto dentro del seleccionado"
+• Botón "Limpiar caché" en Ajustes > General: elimina __pycache__, .tmp y audio temporal, muestra diálogo con archivos borrados y espacio liberado
+• Tab loop en Ajustes > General corregido: obtener_ultimo_control() ahora devuelve btn_limpiar (el verdadero último control)
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++1196-357
+Crear PR

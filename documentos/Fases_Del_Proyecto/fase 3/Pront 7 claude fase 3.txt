@@ -1,0 +1,17 @@
+Pront 7 claude fase 3
+
+me parece perfecto! y si puedes implementar las propuestas urgentes, y las medias ahora, sería magnífico! y las idéas para la fase posterior, pues las implementaremos, pero cuando revisemos que todo lo anterior funciona bien y no hay mas errores. ¿vale? a, y por supuesto, estas 3: 1. 
+
+Confirmación de Movimiento (Voz NVDA): Al usar Alt + Flecha Arriba/Abajo, el sistema debe anunciar: "Movido arriba" o "Movido abajo".
+
+Consulta los detalles de la fuente. Abre el panel lateral.
+
+2. 
+
+El "Bautizo" en el Diálogo: Cuando aparezca el aviso de "¿Deseas agregar este archivo al Gestor de Proyectos?", debe permitirte escribir el nombre del proyecto o elegir uno existente sin salir de ahí.
+
+Consulta los detalles de la fuente. Abre el panel lateral.
+
+3. 
+
+Submenú de Recientes Vitaminado: La lista de los 10 últimos TXT debe decirte el nombre del proyecto entre paréntesis (ej: "Capítulo 1 (Saga Ciudad de Cristal)"). también!

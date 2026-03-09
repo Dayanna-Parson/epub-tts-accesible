@@ -1,0 +1,164 @@
+pront 5 claude fase 3
+La primera cosa que tienes que cambiar es el atajo para abrir la ventana para gestionar proyectos. de control p a control shift mas p.
+Y también verifica que si hay funciones con los mismos atajos en toda la app, incluyendo las 3 pestañas y los ajustes y todas las ventanas que tengan conflictos entre ellos que sean los mismos, pues cámbialos. A, y otra cosa importante para cuando crees nuevos atajos o cambies los existentes. Recuerda que uso el teclado de Español España.
+A, y los atajos relevantes como este para abrir la ventana de gestión de proyectos, pues agrégalo al apartado atajos en la pestaña ajustes.
+
+Mas fallos que he encontrado: no se abre la ventana, ni pinchando, bueno, dando enter en la opción del menú ni pulsando control p, pero creo que esto último es por lo que ya comenté...
+Y no puedo probar mucho porque no me dejó abrir esa ventana.
+después el resto funciona bien.
+Y lo único que no termina de funcionar, y le vamos a pedir que quite todos los cambios de foco, no se como explicarlo.
+
+"Claude, hay errores críticos que debes solucionar en la rama -X9aWP antes de seguir:
+Arreglo del Crash (ventana_proyectos.py)
+La ventana de proyectos no abre y lanza un error de C++ porque intentas usar wx.EVT_TEXT_ENTER en un wx.TextCtrl que no tiene el estilo adecuado.
+• 
+Corrección: Al definir self.txt_nombre, añade style=wx.TE_PROCESS_ENTER. Sin esto, no hace nada al intentar abrir la ventana.
+Auditoría y Cambio de Atajos (Prioridad Alta)
+Jacqui usa el teclado de España y hay conflictos graves de funcionalidad:
+• 
+Cambio: El atajo para abrir Proyectos no puede ser Ctrl+P, ya que ese se usa para Pausar/Reproducir el audio. Cámbialo a Ctrl+Shift+P.
+• 
+Revisión de Conflictos: Verifica todos los atajos de la app (ventana principal, pestañas de Lectura, Grabación y Ajustes). No puede haber dos acciones con el mismo atajo. Por ejemplo, revisa que Ctrl+T (Abrir TXT) no choque con nada más.
+• 
+Documentación: Agrega el nuevo atajo de gestión de proyectos a la lista visual de la pestaña Ajustes.
+Eliminación de Saltos de Foco
+El sistema de "foco inteligente" que añadiste en la Tarea 4 está entorpeciendo la navegación con NVDA. Jacqui prefiere tener el control manual.
+• 
+Acción: Elimina todos los saltos de foco automáticos (SetFocus) que pusiste en el método al_cambiar_pestana. Deja que el foco se comporte de manera estándar al cambiar de pestaña.
+4. Menú Archivo y Estado Inicial
+Asegúrate de que al arrancar la app, el ítem "Abrir Libro" esté habilitado y "Abrir TXT" deshabilitado (ya que arranca en Lectura), y que esto cambie correctamente al alternar pestañas."
+
+Problema de Foco con NVDA (Tarea 4):
+El "foco inteligente" que implementaste en al_cambiar_pestana  está rompiendo la experiencia de navegación. Te adjunto cómo verbaliza NVDA cuando intento moverme entre pestañas tras tus cambios:
+
+
+Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador  botón  Alt+  b
+Modo Grabación  pestaña  seleccionado
+Archivo de texto  agrupación
+Examinar… — Selecciona un TXT con etiquetas de personaje  botón  Alt+  e
+Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador  botón  Alt+  b
+Opciones de salida  agrupación
+Dividir por etiquetas: archivos numerados (001_nar.mp3, 002_pj1.mp3…)  casilla de verificación  marcado
+Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador  botón  Alt+  b
+Modo Grabación  pestaña  seleccionado
+lista
+General
+Guardar Configuración General y Límites de presupuesto  botón
+Ajustes  pestaña  seleccionado
+Archivo de texto  agrupación
+Examinar… — Selecciona un TXT con etiquetas de personaje  botón  Alt+  e
+Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador  botón  Alt+  b
+Opciones de salida  agrupación
+Dividir por etiquetas: archivos numerados (001_nar.mp3, 002_pj1.mp3…)  casilla de verificación  marcado
+Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador  botón  Alt+  b
+Modo Grabación  pestaña  seleccionado
+árbol
+edición  sólo lectura  Bienvenida a Epub TTS Accesible. Pulsa Ctrl+A para abrir un libro EPUB.
+árbol
+Volumen:  deslizador  100
+Modo Lectura  pestaña  seleccionado
+
+Como ves, e tenido que hacer tab y shift tab para que me verbalice las pestañas, por eso ves cosas duplicadas, pero no hay nada duplicado. Antes funcionaba mejor.
+Nota importante: Como ves en el log de NVDA, el foco salta de forma errática y obliga a hacer Tab/Shift+Tab constantemente para saber dónde se está. Elimina todos los SetFocus automáticos que añadiste al cambiar de pestaña. Deja que el foco se comporte de forma estándar.
+
+
+Log:
+
+---------------------------------------------------
+   INICIANDO TIFLO HISTORIAS...
+---------------------------------------------------
+2026-03-06 17:29:50,816 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 17:29:50,817 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 17:29:50,818 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 17:29:50,823 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 17:29:52,542 - __main__ - INFO - Iniciando Epub TTS Accesible
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+2026-03-06 17:30:42,821 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+--> [Local] Buscando voz: Microsoft Zira Desktop - English (United States)
+--> [Local] Voz cambiada a: Microsoft Zira Desktop - English (United States)
+2026-03-06 17:33:20,669 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+2026-03-06 17:39:07,800 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+[Polly] Conexión establecida | 0.86s | Motor: long-form | Voz: Raul | 52 chars
+[Polly] Conexión establecida | 1.03s | Motor: generative | Voz: Lucia | 52 chars
+[Polly] Conexión establecida | 0.99s | Motor: standard | Voz: Conchita | 52 chars

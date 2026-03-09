@@ -1,0 +1,53 @@
+Respuesta 6 claude fase 3
+
+Tras revisar las propuestas con detenimiento, aquí va mi valoración técnica ordenada por impacto y complejidad:
+ 
+Opinión técnica — Propuestas de rediseño
+Propuestas excelentes, implementar sí o sí
+e) Ventana como organizador, no formulario duplicado
+Es el cambio más importante conceptualmente. La ventana actual comete el error de reeditar datos que ya están en Grabación. El árbol debe mostrar lo que ya existe, no pedir que se rellene de nuevo.
+o) Abrir en nodo correcto (Ctrl+Shift+P con TXT cargado)
+Esencial para que la ventana sea útil. Sin esto, el usuario abre la ventana y tiene que buscar manualmente su archivo en el árbol — anula el propósito.
+b) Escape cierra + foco de retorno
+Comportamiento estándar en cualquier ventana auxiliar de Windows. Fácil de implementar: guardar wx.Window.FindFocus() antes de abrir, restaurar en al_cerrar(). Crítico para NVDA.
+d) Diálogo post-asignación no intrusivo
+Muy bien pensado. La clave es el "solo cuando todas las etiquetas tienen voz" — evita interrupciones prematuras. Hay que implementarlo con un wx.MessageDialog simple, no una ventana nueva.
+i) Menú de contexto con tecla Aplicaciones
+Imprescindible para accesibilidad. Sin menú contextual, las acciones sobre nodos (asociar, cambiar tipo, eliminar) son inaccesibles para usuarios de NVDA que no conocen los botones de la barra.
+ 
+Buenas ideas, prioridad media
+a) "Cerrar" en vez de "Cerrar ventana"
+Trivial, correcto. Cambio de 2 segundos.
+f) Sincronización Grabación → Proyectos
+Bien pensado, pero hay que tener cuidado: la sincronización debe ser unidireccional (Grabación → Proyectos, no al revés) para no sobrescribir ediciones hechas en la ventana de proyectos. Implementar en al_cambiar_pestana o con EVT_TEXT + debounce.
+g) Volcado de voces desde mapeo_etiquetas.json
+Correcto. La ventana ya puede leer ese JSON — es solo mostrar la info que ya existe.
+h) Alt+Arriba / Alt+Abajo para reordenar
+Útil para usuarios avanzados. wx.TreeCtrl no tiene reordenación nativa — hay que implementar: quitar nodo, reinsertar en nueva posición, actualizar proyectos.json. No es complejo pero requiere cuidado.
+c) TXT Recientes como submenú
+Consistente con EPUB recientes. La lista debe leer de config_general.json y mostrar nombre del proyecto entre paréntesis si está asociado.
+ 
+Ideas válidas pero para una fase posterior
+k) Relocalización de archivo
+Importante para robustez, pero compleja de hacer bien (hay que decidir si buscar automáticamente o solo avisar). Dejarlo para Fase 4.
+j) Árbol colapsable por niveles / m) Buscador en el árbol
+Útiles solo cuando haya colecciones grandes. El wx.TreeCtrl ya soporta colapso nativo — lo que falta es un atajo "colapsar todo" (p.ej. Ctrl+Menos del numpad). El buscador es complejo, para después.
+n) Diálogo de coherencia de voces en saga
+Excelente idea conceptualmente, pero es el cambio más complejo de todos: hay que detectar el cambio de voz en tiempo real, verificar si el TXT tiene proyecto, buscar todos los archivos de la saga y preguntar. Demasiado para ahora.
+l) Exportar proyecto
+Feature nuevo, fuera del alcance actual.
+ 
+Lo que veo que falta (la "cosa" que no recordabas)
+Revisando lo que hay implementado y las propuestas... creo que lo que falta y no está en la lista es:
+El estado de grabación por nodo en el árbol — un indicador visual/textual de si un archivo asociado ya tiene audio generado, está en proceso o no se ha grabado todavía. Sin eso, el árbol muestra la estructura pero no el progreso real del proyecto. Para un usuario de NVDA sería: leer el nodo y escuchar "Capítulo 3 — Sin grabar" o "Capítulo 3 — Grabado".
+¿Es eso lo que faltaba? ¿O era otra cosa?
+ 
+Propuesta de orden de implementación
+Si quieres avanzar, yo implementaría en este orden:
+1. a, b (triviales, alto impacto en usabilidad)
+2. o (abrir en nodo correcto — cambia la percepción de la ventana)
+3. i (menú contextual — accesibilidad crítica)
+4. d (diálogo post-asignación)
+5. f, g (sincronización y volcado de voces)
+6. c, h (recientes + reordenación)
+¿Qué te parece este análisis? ¿Cuáles son los "tres detalles más" que querías añadir antes de implementar?

@@ -1,0 +1,20 @@
+Pront 16 claude (fase 3)
+
+Actualización del .gitignore (No sobrescribir, solo añadir):
+Revisa mi .gitignore actual y añade (si no están) las reglas para ignorar:
+Archivos de claves: claves_api.json, .env, o cualquier archivo con "tokens". 
+Historial y favoritos: recientes.json, favoritos.json, y cualquier caché de voces locales. 
+Producción: La carpeta completa de Grabaciones_TifloHistorias/ y archivos .log. 
+Lógica de "Primer Inicio":
+Asegúrate de que en el arranque (probablemente en gestor_configuracion.py o similar), si un archivo de configuración esencial no existe, la app lo cree vacío o con valores por defecto neutros. 
+El objetivo es que un usuario que clone el repo pueda abrir la app sin errores, pero encontrándola totalmente limpia de mis voces favoritas o historiales. 
+Verificación de Rutas Sensibles:
+Confirma que todos los archivos que guardan datos del usuario (voces, proyectos, ajustes) se gestionen desde la carpeta /configuraciones para que el mantenimiento de la privacidad sea centralizado.A, y actualiza el documento changelog.md que está en la carpeta documentos.
+Además también e subido a esta rama, todos los documentos con los pronts y respuestas contigo.
+A, actualiza el archivo changelog.md que está en la carpeta documentos.
+
+Separación de Secretos: Crea un archivo independiente llamado configuraciones/claves_api.json. Mueve allí todas las claves de Azure, AWS y ElevenLabs que actualmente están en los ajustes generales.
+Actualización del .gitignore: Añade configuraciones/claves_api.json y configuraciones/ajustes.json al .gitignore. GitHub ha detectado que ajustes.json contenía secretos, así que ningún JSON de esa carpeta debe subirse.
+Lógica de Emergencia: Asegúrate de que si la app no encuentra claves_api.json, la abra con los campos vacíos y no se cierre con error. El usuario debe poder introducir sus claves desde la interfaz.
+Refactorización: Actualiza el gestor de configuración para que lea las claves desde este nuevo archivo y no desde el diccionario general de ajustes.
+

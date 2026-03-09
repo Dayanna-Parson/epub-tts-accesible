@@ -1,0 +1,4 @@
+Pronpt 2 claude (fase 3)
+"Claude, vamos a empezar la Fase 3 oficialmente.
+1. 
+Entorno: Trabaja exclusivamente en la rama actual: claude/fase3-proyectos-memoria-accesibilidad. No crees ramas propias ni nuevas; quiero que todos los cambios de esta sesión se apliquen y se suban a esta misma rama.

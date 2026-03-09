@@ -1,0 +1,100 @@
+respuesta 9 claude (fase 3)
+Read main window interface file with dependencies and structure
+Read main window interface file with dependencies and structure
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.pyLeer 660 líneas
+Copiar mensaje
+El problema es claro: actualizar_menu_recientes() y actualizar_menu_txt_recientes() siguen intentando manipular self.menu_recientes y self.menu_txt_recientes que ya no existen. Los menús contextuales se construyen dinámicamente al abrirse, así que estos métodos ya no necesitan hacer nada con wx.Menu.
+Fixed menu update method in main window interface
+Fixed menu update method in main window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+3-30
+324324
+    def actualizar_menu_txt_recientes(self):
+325-
+        """Reconstruye el submenú de TXT recientes mostrando el nombre del proyecto."""
+326-
+        for item in self.menu_txt_recientes.GetMenuItems():
+327-
+            self.menu_txt_recientes.Delete(item)
+328-
+329-
+        if not self.txt_recientes:
+330-
+            self.menu_txt_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+331-
+            return
+332-
+333-
+        gestor = self.pestana_grabacion.gestor_proyectos
+334-
+        gestor.recargar()
+335-
+336-
+        for i, ruta in enumerate(self.txt_recientes):
+337-
+            nombre_archivo = os.path.basename(ruta)
+338-
+            proyecto = gestor.proyecto_de_archivo(ruta)
+339-
+            if proyecto:
+340-
+                etiqueta = f"{i+1}. {nombre_archivo}  ({proyecto['nombre']})"
+341-
+            else:
+342-
+                etiqueta = f"{i+1}. {nombre_archivo}"
+343-
+            id_item = wx.NewIdRef()
+Show full diff (12 more lines)
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+3-16
+412412
+    def actualizar_menu_recientes(self):
+413-
+        for item in self.menu_recientes.GetMenuItems():
+414-
+            self.menu_recientes.Delete(item)
+415-
+416-
+        if not self.archivos_recientes:
+417-
+            self.menu_recientes.Append(wx.ID_ANY, "(Vacío)").Enable(False)
+418-
+        else:
+419-
+            for i, ruta in enumerate(self.archivos_recientes):
+420-
+                nombre_archivo = os.path.basename(ruta)
+421-
+                id_item = wx.NewIdRef()
+422-
+                self.menu_recientes.Append(id_item, f"{i+1}. {nombre_archivo}")
+423-
+                self.Bind(wx.EVT_MENU, lambda evt, p=ruta: self.abrir_libro_reciente(p), id=id_item)
+424-
+425-
+            self.menu_recientes.AppendSeparator()
+426-
+            item_borrar = self.menu_recientes.Append(wx.ID_ANY, "Borrar historial")
+427-
+            self.Bind(wx.EVT_MENU, self.al_borrar_recientes, item_borrar)
+413+
+        """No-op: los libros recientes se construyen dinámicamente en _menu_contextual_lectura."""
+414+
+        pass
+Copiar mensaje
+Ahora hago commit y push:
+Fixed startup crash by removing references to deleted menu attributes
+Fixed startup crash by removing references to deleted menu attributes
+Bash
+git add app/interfaz/ventana_principal.py && git commit -m "$(cat <<'EOF' Fix: crash al inicio por referencias a menu_recientes y menu_txt_recientes eliminados actualizar_menu_recientes() y actualizar_menu_txt_recientes() seguían intentando manipular self.menu_recientes/self.menu_txt_recientes de la barra de menú eliminada. Ambos métodos se convierten en no-op: los recientes se construyen dinámicamente al abrir cada menú contextual (lectura/grabación). https://claude.ai/code/session_01XvhzyP6xV5UmDzherfvKBy EOF )" && git push -u origin claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+[claude/fase3-proyectos-memoria-accesibilidad-X9aWP 13e6466] Fix: crash al inicio por referencias a menu_recientes y menu_txt_recientes eliminados 1 file changed, 4 insertions(+), 44 deletions(-)To http://127.0.0.1:59662/git/Dayanna-Parson/epub-tts-accesible
+Mostrar más
+   9b63a42..13e6466  claude/fase3-proyectos-memoria-accesibilidad-X9aWP -> claude/fase3-proyectos-memoria-accesibilidad-X9aWPbranch 'claude/fase3-proyectos-memoria-accesibilidad-X9aWP' set up to track 'origin/claude/fase3-proyectos-memoria-accesibilidad-X9aWP'.
+Copiar mensaje
+Listo. Commit 13e6466 subido.
+El problema era exactamente lo que describes: al eliminar la barra de menú, dejé dos métodos que seguían intentando manipular widgets (self.menu_recientes, self.menu_txt_recientes) que ya no existían. Los he convertido en no-ops porque los menús contextuales ya construyen los recientes dinámicamente cada vez que se abren.
+Tienes razón en el reproche — en cambios grandes como este hay que rastrear todas las referencias a los objetos eliminados, no solo el punto donde se crean. Lo tendré más en cuenta.
+ 
+claude/fase3-proyectos-memoria-accesibilidad
+claude/fase3-proyectos-memoria-accesibilidad-X9aWP
++848-305
+Crear PR

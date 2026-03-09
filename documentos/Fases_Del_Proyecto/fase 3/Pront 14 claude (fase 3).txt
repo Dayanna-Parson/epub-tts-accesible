@@ -1,0 +1,10 @@
+Pront 14 claude (fase 3)
+
+Contexto: Vamos a finalizar la Fase 3 (Proyectos y Memoria) aplicando los últimos ajustes de usabilidad y accesibilidad detectados en el documento de ideas.
+Reparación y Cambio de Atajos (Prioridad Alta):
+Sustituye el fallido Alt + Flechas por Control + Flecha Arriba/Abajo para reordenar elementos en el árbol.
+Asegúrate de que el evento de teclado esté vinculado directamente al objeto TreeCtrl y que NVDA anuncie el movimiento (ej: 'Movido arriba').
+Estados de Audio: Al navegar por los nodos, NVDA debe leer: '[Nombre], [Grabado/Pendiente], nivel [X]'. Un nodo es 'Grabado' si existe su archivo de audio en la carpeta del proyecto.
+Acceso Rápido: Implementa Control + Enter para abrir la carpeta del capítulo seleccionado en el Explorador de Windows.
+Sincronización de Nombres: Si el usuario cambia el título de un capítulo en la pestaña de grabación, el nodo correspondiente en el árbol debe actualizarse automáticamente.
+Mantén el nombre provisional 'Epub TTS' y asegúrate de que todos los cambios se guarden en proyectos.json al instante.

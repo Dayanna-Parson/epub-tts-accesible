@@ -1,0 +1,15 @@
+pront 15 claude (fase 3)
+
+Contexto: Los atajos de Control + Flecha siguen sin responder en el árbol de proyectos, probablemente porque NVDA o el sistema interceptan la tecla antes que la app. Vamos a usar una estrategia de "doble seguridad".
+En ventana_proyectos.py, añade al menú que aparece con la tecla Aplicaciones (o click derecho) las opciones:
+Mover arriba
+Mover abajo
+Estas opciones deben ejecutar la lógica de intercambio de posición que ya creamos en gestor_proyectos.py.
+Aceleradores de Ventana (Blindaje del atajo):
+En lugar de un Bind simple en el árbol, registra Control + Flecha Arriba y Control + Flecha Abajo en una wx.AcceleratorTable a nivel de la ventana VentanaProyectos.
+Vincula estos aceleradores a las mismas funciones del menú de "Mover arriba/abajo". Esto fuerza a Windows a dar prioridad a la app sobre el lector de pantalla.
+Tras mover un elemento (ya sea por menú o por atajo), ejecuta self.arbol.SetFocus() y self.arbol.SelectItem(nuevo_item).
+• 
+Asegúrate de que se anuncie el movimiento con la voz de apoyo (ej: "Capítulo movido hacia arriba") para que yo tenga confirmación inmediata.
+Asegúrate de que el atajo Control + Enter para abrir la carpeta también esté en la tabla de aceleradores para que sea igual de robusto.
+a, y se me olvidó decirte que comprobaras y lo implementaras si no lo está ya. Que cuando pulsemos sobre un subproyecto la tecla suprimir, efectivamente se elimine del árbol como del json porque. lo e probado, y me a saltado el diálogo preguntando si quería eliminarlos, y si. Se han eliminado todos correctamente, pero al cerrar y al volver a abrir la app, han regresado todos los elementos que había eliminado. A, Y otra cosa más que se me ocurre, además de que si pulsamos suprimir en el padre, se elimine ovbiamente preguntándonos primero si queremos que se eliminen todos los subproyectos de una vez, añade también al menú contextual para recuperar o mejor dicho, restaurar uno o todos los elementos eliminados por si lo borramos accidentalmente. Y añade también al menú la misma acción que con suprimir, haciendo esas diferencias que te e comentado antes.

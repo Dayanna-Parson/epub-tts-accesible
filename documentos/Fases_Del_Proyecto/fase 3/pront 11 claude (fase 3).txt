@@ -1,0 +1,16 @@
+pront 11 claude (fase 3)
+
+Sigue sin funcionar en el árbol en el gestor de proyectos para mover un proyecto de posición.
+Adiós al ruido: Se han eliminado todas las letras de acceso rápido y los atajos visuales (\tCtrl+T, etc.) de los menús contextuales. Ahora, cuando pulses la tecla Aplicaciones, NVDA debería leer solo el nombre de la opción de forma limpia. (exacto, ahora se muestra sin las letras)
+Contexto real en el Árbol: Se ha corregido el error donde salía el menú de grabación en la ventana de proyectos. Ahora el árbol tiene sus propias opciones: Nuevo proyecto raíz y Nuevo subproyecto hijo. (efectivamente, aunque quiero que hagas dos modificaciones aquí. Elimina raíz, y sustituye proyecto hijo por subproyecto)
+Captura Global: Ha movido la detección de la tecla Menú y Shift+F10 a un nivel superior del código (CHAR_HOOK). Esto significa que el menú contextual debería saltar sin importar en qué parte de la ventana estés posicionada. (si, funciona bien y se abre el menú contextual correspondientes)
+Movimiento recuperado: Al igual que con el menú, ha movido el comando Alt + Flecha Arriba/Abajo fuera del árbol para que no haya conflictos. Ahora el reordenado debería funcionar siempre y anunciarte por voz: "Movido arriba" o "Movido abajo". (como ya dije antes, esto sigue sin funcionar)
+Todo esto que te voy a escribir ahora ya funciona, y no hace falta que lo toques más:
+Inversión Lógica: Tal como pediste, ahora el orden es Proveedor primero, luego Idioma. 
+Filtro Dinámico: Al elegir "Amazon Polly", el combo de idiomas se vacía y se vuelve a llenar solo con los idiomas que ofrece Amazon. ¡Ya no tendrás que navegar por idiomas que no tienen voces en el proveedor seleccionado! 
+Detección de Novedades: Ahora la app hace una "foto" de tus voces conocidas antes de descargar nuevas. Solo marcará como "Nueva" aquella voz cuyo ID no estuviera en esa lista previa. 
+Sincronización y Memoria
+Favoritos al instante: Se ha creado un sistema de notificación interna. En cuanto marcas una voz como favorita en Ajustes, la pestaña de Grabación se entera y actualiza su lista sin que tengas que cerrar la aplicación. 
+Persistencia Real: Se ha corregido el guardado de los TXT Recientes. Ahora, tanto si abres un archivo con Ctrl+T como si usas el botón Examinar, la ruta se guarda en tu config_general.json para la próxima vez. 
+
+Sección Acerca de: Ve al final de la lista de categorías en Ajustes y confirma que ahora sí aparece la ayuda y los créditos. (si, efectivamente ahora si aparece el nuevo apartado de acerca de... Pero no están las opciones que estaban antes en el submenú de ayuda. Solo está para ir al repo de github... Y si no recuerdo mal, estaba el readme que, y el acceso directo de la sección tiflohistorias en mi web tiflotutos.com.) (A, una aclaración, no pongas o no te inventes los enlaces. Dejalo listo en el código para cuando los tenga listos y funcionando, pues los pueda añadir manualmente)
