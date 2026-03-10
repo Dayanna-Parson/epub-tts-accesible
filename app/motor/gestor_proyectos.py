@@ -34,15 +34,20 @@ from typing import Optional
 from app.config_rutas import ruta_config
 
 
-# ── Tipos de proyecto disponibles ────────────────────────────────────────────
-# Mapeo interno simplificado (4 categorías legibles por NVDA).
-# Proyectos creados con los tipos anteriores (saga, libro, capitulo…) conservan
-# su valor almacenado; el combo no los preselecciona pero no los sobreescribe.
+# ── Categorías de proyecto disponibles ───────────────────────────────────────
+# Lista fija de 10 categorías. El campo 'tipo' en proyectos.json es ahora
+# una lista, por lo que un proyecto puede pertenecer a varias a la vez.
 TIPOS_PROYECTO = [
-    "Obra Mayor",       # Sagas, series, colecciones de varios volúmenes
-    "Obra Única",       # Libros, relatos, YouTube, autoconclusivos
-    "Podcast/Canal",    # Podcasts, episodios, series periódicas
-    "Otros",            # Guiones, diálogos, miscelánea
+    "Serie",
+    "Libro",
+    "Fantasía",
+    "Distopía",
+    "Tecno-thriller",
+    "Diálogos",
+    "Tutorial",
+    "Publicidad",
+    "Artículo",
+    "Otros",
 ]
 
 # Ruta del archivo de persistencia
@@ -94,7 +99,13 @@ class GestorProyectos:
                 with open(RUTA_PROYECTOS, "r", encoding="utf-8") as f:
                     contenido = f.read().strip()
                 if contenido:
-                    return json.loads(contenido)
+                    datos = json.loads(contenido)
+                    # Migración: convierte el campo 'tipo' de str a list
+                    for p in datos.get("proyectos", {}).values():
+                        if isinstance(p.get("tipo"), str):
+                            t = p["tipo"]
+                            p["tipo"] = [t] if t else []
+                    return datos
         except Exception:
             pass
         return {"version": 1, "proyectos": {}}
@@ -121,8 +132,10 @@ class GestorProyectos:
         Crea un nuevo proyecto y devuelve su id.
         Si se especifica padre_id, lo registra como hijo del padre.
         """
-        if tipo not in TIPOS_PROYECTO:
-            tipo = "Otros"
+        # Normalizar tipo a lista y filtrar solo categorías válidas
+        if isinstance(tipo, str):
+            tipo = [tipo] if tipo else []
+        tipo = [t for t in tipo if t in TIPOS_PROYECTO]
 
         nuevo_id = str(uuid.uuid4())
         self._datos["proyectos"][nuevo_id] = {
@@ -188,10 +201,12 @@ class GestorProyectos:
             self._datos["proyectos"][proyecto_id]["nombre"] = nuevo_nombre
             self.guardar()
 
-    def cambiar_tipo(self, proyecto_id: str, nuevo_tipo: str):
-        """Cambia el tipo de un proyecto."""
+    def cambiar_tipo(self, proyecto_id: str, nuevo_tipo):
+        """Cambia las categorías de un proyecto. nuevo_tipo es una lista de strings."""
+        if isinstance(nuevo_tipo, str):
+            nuevo_tipo = [nuevo_tipo] if nuevo_tipo else []
         if proyecto_id in self._datos["proyectos"]:
-            self._datos["proyectos"][proyecto_id]["tipo"] = nuevo_tipo
+            self._datos["proyectos"][proyecto_id]["tipo"] = list(nuevo_tipo)
             self.guardar()
 
     def eliminar_proyecto(self, proyecto_id: str, recursivo: bool = False):
