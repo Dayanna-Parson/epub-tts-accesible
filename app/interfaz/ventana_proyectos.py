@@ -4,11 +4,41 @@ import os
 import json
 import logging
 import threading
+import wx.lib.mixins.listctrl as listmix
 
 from app.motor.gestor_proyectos import GestorProyectos, TIPOS_PROYECTO
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
+
+
+# ANCLAJE_INICIO: LISTA_CATEGORIAS
+class ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
+    """
+    ListCtrl con casillas de verificación para seleccionar múltiples categorías.
+    NVDA anuncia el estado (marcado/desmarcado) al navegar con las flechas.
+    """
+    def __init__(self, parent):
+        wx.ListCtrl.__init__(
+            self, parent,
+            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,
+        )
+        listmix.CheckListCtrlMixin.__init__(self)
+        listmix.ListCtrlAutoWidthMixin.__init__(self)
+        # Imprescindible para que las casillas sean visibles
+        self.EnableCheckBoxes(True)
+        self.InsertColumn(0, "Categoría", width=wx.LIST_AUTOSIZE_USEHEADER)
+        for cat in TIPOS_PROYECTO:
+            self.InsertItem(self.GetItemCount(), cat)
+        self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
+
+    def _al_tecla(self, event):
+        if event.GetKeyCode() == wx.WXK_SPACE:
+            idx = self.GetFirstSelected()
+            if idx != -1:
+                self.ToggleItem(idx)
+        event.Skip()
+# ANCLAJE_FIN: LISTA_CATEGORIAS
 
 
 # ANCLAJE_INICIO: VENTANA_PROYECTOS
@@ -104,11 +134,15 @@ class VentanaProyectos(wx.Frame):
             "Nombre del proyecto seleccionado. Edítalo y pulsa Intro para guardar."
         )
 
-        lbl_tipo = wx.StaticText(panel_raiz, label="Tipo de proyecto:")
-        self.combo_tipo = wx.Choice(panel_raiz, choices=TIPOS_PROYECTO)
-        self.combo_tipo.SetHelpText(
-            "Tipo de proyecto: saga, libro, capitulo, autoconclusivo, podcast, episodio, "
-            "video_youtube, guion, dialogo u otro. Cambia el tipo del proyecto seleccionado."
+        lbl_tipo = wx.StaticText(
+            panel_raiz,
+            label="Categorías del proyecto (Espacio para marcar o desmarcar):",
+        )
+        self.lista_cats = ListaCategorias(panel_raiz)
+        self.lista_cats.SetMinSize((-1, 170))
+        self.lista_cats.SetHelpText(
+            "Lista de categorías del proyecto. Flechas Arriba y Abajo para navegar. "
+            "Espacio para marcar o desmarcar. Puedes asignar varias categorías a la vez."
         )
 
         lbl_archivos = wx.StaticText(panel_raiz, label="Archivos TXT asociados a este proyecto:")
@@ -151,7 +185,7 @@ class VentanaProyectos(wx.Frame):
         sz_detalle.Add(lbl_nombre,          0, wx.BOTTOM, 2)
         sz_detalle.Add(self.txt_nombre,     0, wx.EXPAND | wx.BOTTOM, 8)
         sz_detalle.Add(lbl_tipo,            0, wx.BOTTOM, 2)
-        sz_detalle.Add(self.combo_tipo,     0, wx.EXPAND | wx.BOTTOM, 8)
+        sz_detalle.Add(self.lista_cats,     0, wx.EXPAND | wx.BOTTOM, 8)
         sz_detalle.Add(lbl_archivos,        0, wx.BOTTOM, 2)
         sz_detalle.Add(self.lista_archivos, 1, wx.EXPAND | wx.BOTTOM, 4)
         sz_detalle.Add(sz_btn_archivos,     0, wx.BOTTOM, 8)
@@ -202,7 +236,8 @@ class VentanaProyectos(wx.Frame):
         self.arbol.Bind(wx.EVT_KEY_DOWN,              self._al_tecla_arbol_raw)
 
         self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
-        self.combo_tipo.Bind(wx.EVT_CHOICE,     self._al_cambiar_tipo)
+        self.lista_cats.Bind(wx.EVT_LIST_ITEM_CHECKED,   self._al_marcar_categoria)
+        self.lista_cats.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_categoria)
 
         self.btn_añadir_txt.Bind(wx.EVT_BUTTON, self._al_añadir_txt)
         self.btn_quitar_txt.Bind(wx.EVT_BUTTON, self._al_quitar_txt)
@@ -326,10 +361,11 @@ class VentanaProyectos(wx.Frame):
             evento.Skip()
             return
         self.txt_nombre.ChangeValue(proyecto.get("nombre", ""))
-        tipo = proyecto.get("tipo", "otro")
-        idx_tipo = TIPOS_PROYECTO.index(tipo) if tipo in TIPOS_PROYECTO else -1
-        if idx_tipo >= 0:
-            self.combo_tipo.SetSelection(idx_tipo)
+        tipos_activos = proyecto.get("tipo", [])
+        if isinstance(tipos_activos, str):
+            tipos_activos = [tipos_activos]
+        for i in range(self.lista_cats.GetItemCount()):
+            self.lista_cats.CheckItem(i, self.lista_cats.GetItemText(i) in tipos_activos)
         self._actualizar_lista_archivos(proyecto)
         self._actualizar_lista_voces(proyecto["id"])
         # NO SetFocus aquí: el foco se queda en el árbol para que NVDA lea el nodo
@@ -337,7 +373,8 @@ class VentanaProyectos(wx.Frame):
 
     def _limpiar_detalle(self):
         self.txt_nombre.ChangeValue("")
-        self.combo_tipo.SetSelection(wx.NOT_FOUND)
+        for i in range(self.lista_cats.GetItemCount()):
+            self.lista_cats.CheckItem(i, False)
         self.lista_archivos.DeleteAllItems()
         self.lista_voces.DeleteAllItems()
 
@@ -536,10 +573,6 @@ class VentanaProyectos(wx.Frame):
             item_renombrar,
         )
 
-        item_tipo = menu.Append(wx.ID_ANY, "Cambiar tipo…")
-        item_tipo.Enable(bool(proyecto))
-        self.Bind(wx.EVT_MENU, lambda e: self.combo_tipo.SetFocus(), item_tipo)
-
         menu.AppendSeparator()
 
         item_eliminar = menu.Append(wx.ID_ANY, "Eliminar…\tSupr")
@@ -641,18 +674,30 @@ class VentanaProyectos(wx.Frame):
         self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
         self._anunciar_estado(f"Nombre guardado: {nuevo_nombre}")
 
-    def _al_cambiar_tipo(self, evento):
+    def _al_marcar_categoria(self, evento):
+        """Actualiza las categorías del proyecto al marcar una casilla."""
         proyecto = self._proyecto_seleccionado()
-        if proyecto is None:
-            return
-        idx = self.combo_tipo.GetSelection()
-        if idx == wx.NOT_FOUND:
-            return
-        nuevo_tipo = TIPOS_PROYECTO[idx]
-        self._gestor.cambiar_tipo(proyecto["id"], nuevo_tipo)
+        if proyecto:
+            self._guardar_categorias_actuales(proyecto)
+
+    def _al_desmarcar_categoria(self, evento):
+        """Actualiza las categorías del proyecto al desmarcar una casilla."""
+        proyecto = self._proyecto_seleccionado()
+        if proyecto:
+            self._guardar_categorias_actuales(proyecto)
+
+    def _guardar_categorias_actuales(self, proyecto: dict):
+        """Lee el estado de todas las casillas y persiste la lista de categorías."""
+        categorias = [
+            self.lista_cats.GetItemText(i)
+            for i in range(self.lista_cats.GetItemCount())
+            if self.lista_cats.IsItemChecked(i)
+        ]
+        self._gestor.cambiar_tipo(proyecto["id"], categorias)
+        proyecto["tipo"] = categorias
         nodo = self.arbol.GetSelection()
-        proyecto["tipo"] = nuevo_tipo
-        self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
+        if nodo and nodo.IsOk():
+            self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
 
     # ================================================================== #
     # Gestión de archivos TXT asociados
@@ -709,12 +754,15 @@ class VentanaProyectos(wx.Frame):
         lbl_n = wx.StaticText(panel, label="Nombre del proyecto (obligatorio):")
         txt_n = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
         txt_n.SetHelpText("Escribe el nombre del nuevo proyecto.")
-        lbl_t = wx.StaticText(panel, label="Tipo de proyecto:")
-        combo_t = wx.Choice(panel, choices=TIPOS_PROYECTO)
-        combo_t.SetSelection(0)
-        combo_t.SetHelpText(
-            "Elige el tipo: saga, libro, capitulo, autoconclusivo, podcast, "
-            "episodio, video_youtube, guion, dialogo u otro."
+        lbl_t = wx.StaticText(
+            panel,
+            label="Categorías (Espacio para marcar o desmarcar, puede elegir varias):",
+        )
+        lista_t = wx.CheckListBox(panel, choices=TIPOS_PROYECTO)
+        lista_t.SetMinSize((-1, 180))
+        lista_t.SetHelpText(
+            "Categorías del proyecto. Usa las flechas para moverte y Espacio para marcar "
+            "o desmarcar. Puedes asignar varias categorías al mismo tiempo."
         )
         btn_ok     = wx.Button(panel, wx.ID_OK,     label="Crear proyecto")
         btn_cancel = wx.Button(panel, wx.ID_CANCEL, label="Cancelar")
@@ -725,7 +773,7 @@ class VentanaProyectos(wx.Frame):
         sz.Add(lbl_n,   0, wx.ALL, 6)
         sz.Add(txt_n,   0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
         sz.Add(lbl_t,   0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
-        sz.Add(combo_t, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
+        sz.Add(lista_t, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
         sz.Add(sz_btn,  0, wx.ALIGN_RIGHT | wx.ALL, 6)
         panel.SetSizer(sz)
 
@@ -736,14 +784,13 @@ class VentanaProyectos(wx.Frame):
         wx.CallAfter(txt_n.SetFocus)
 
         resultado = dlg.ShowModal()
-        nombre   = txt_n.GetValue().strip()
-        tipo_idx = combo_t.GetSelection()
-        tipo     = TIPOS_PROYECTO[tipo_idx] if tipo_idx >= 0 else "otro"
+        nombre = txt_n.GetValue().strip()
+        tipos  = [TIPOS_PROYECTO[i] for i in lista_t.GetCheckedItems()]
         dlg.Destroy()
 
         if resultado != wx.ID_OK or not nombre:
             return None
-        return nombre, tipo
+        return nombre, tipos
 
     def _al_nuevo_raiz(self, evento):
         resultado = self._pedir_nombre_y_tipo("Nuevo proyecto raíz")
@@ -892,7 +939,11 @@ class VentanaProyectos(wx.Frame):
     def _etiqueta_nodo(self, proyecto: dict, nivel: int) -> str:
         """Devuelve el texto del nodo tal como NVDA lo leerá al navegar."""
         estado = self._estado_proyecto(proyecto)
-        return f"{proyecto['nombre']} [{proyecto['tipo']}] — {estado} — Nivel {nivel}"
+        tipos = proyecto.get("tipo", [])
+        if isinstance(tipos, str):
+            tipos = [tipos]
+        tipo_str = ", ".join(tipos) if tipos else "Sin categoría"
+        return f"{proyecto['nombre']} [{tipo_str}] — {estado} — Nivel {nivel}"
 
     def _abrir_carpeta_proyecto(self):
         """Ctrl+Intro: abre en el Explorador la carpeta de audio o TXT del proyecto."""
