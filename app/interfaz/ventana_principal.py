@@ -109,6 +109,9 @@ class VentanaPrincipal(wx.Frame):
         self._restaurar_sesion()
 
         self.Show()
+
+        # Verificación automática de voces nuevas (una vez al día, hilo de fondo)
+        wx.CallAfter(self._iniciar_verificacion_voces)
     # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
 
     # ANCLAJE_INICIO: CONFIGURACION_MENUS
@@ -616,4 +619,34 @@ class VentanaPrincipal(wx.Frame):
         import webbrowser
         webbrowser.open(_URL_GITHUB)
     # ANCLAJE_FIN: AYUDA
+
+    # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS
+    def _iniciar_verificacion_voces(self):
+        """
+        Comprueba si hay voces nuevas en las APIs (Azure, Polly, ElevenLabs).
+        Solo se ejecuta si han pasado más de 24 horas desde la última comprobación.
+        Corre en hilo de fondo para no bloquear la UI al arrancar.
+        """
+        from app.motor.verificador_voces_nuevas import VerificadorVocesNuevas
+        verificador = VerificadorVocesNuevas()
+        if not verificador.puede_verificar():
+            return
+        verificador.verificar_en_hilo(self._al_resultado_voces)
+
+    def _al_resultado_voces(self, resultado: dict):
+        """
+        Recibe el dict del hilo de fondo.
+        Usa wx.CallAfter para agendar cualquier acción de UI en el hilo principal.
+        """
+        nuevas = resultado.get("nuevas", {})
+        if nuevas:
+            wx.CallAfter(self._mostrar_dialogo_voces_nuevas, nuevas)
+
+    def _mostrar_dialogo_voces_nuevas(self, nuevas: dict):
+        """Muestra el diálogo de novedades (siempre en hilo principal)."""
+        from app.interfaz.dialogo_voces_nuevas import DialogoVocesNuevas
+        dlg = DialogoVocesNuevas(self, nuevas)
+        dlg.ShowModal()
+        dlg.Destroy()
+    # ANCLAJE_FIN: VERIFICACION_VOCES_NUEVAS
 # ANCLAJE_FIN: DEFINICION_VENTANA
