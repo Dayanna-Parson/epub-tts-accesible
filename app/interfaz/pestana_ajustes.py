@@ -437,10 +437,12 @@ class PanelVoces(wx.Panel):
     def __init__(self, padre, config):
         super().__init__(padre)
         self.config = config
-        self.voces_todas = [] 
+        self.voces_todas = []
         self.reproductor = ReproductorVoz()
         self.ruta_favs = ruta_config("voces_favoritas.json")
         self.favoritos = self.cargar_favoritos()
+        # Temporizador para debounce del cuadro de búsqueda (300 ms)
+        self._timer_busqueda = None
         
         sizer = wx.BoxSizer(wx.VERTICAL)
         
@@ -522,7 +524,8 @@ class PanelVoces(wx.Panel):
             "Escribe parte del nombre de una voz para filtrar la lista en tiempo real. "
             "Borra el campo para volver a ver todas las voces del filtro activo."
         )
-        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar)
+        # Debounce: reconstruye la lista 300 ms después de la última pulsación
+        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)
         hbox3.Add(self.txt_buscar, 1, wx.EXPAND)
         sz_filtros.Add(hbox3, 0, wx.EXPAND|wx.ALL, 5)
         
@@ -560,7 +563,9 @@ class PanelVoces(wx.Panel):
         self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_ALT, ord('P'), id_play)]))
         
         self.SetSizer(sizer)
-        self.cargar_datos_y_llenar()
+        # Diferir la carga pesada de voces para que el panel se muestre antes
+        # de leer los JSONs. El foco llega al control antes de que empiece la carga.
+        wx.CallAfter(self.cargar_datos_y_llenar)
 
     def al_cambiar_idioma_libro(self, event):
         seleccion = self.combo_idioma_libro.GetSelection()
@@ -749,7 +754,20 @@ class PanelVoces(wx.Panel):
     def al_filtrar(self, event):
         self.filtrar_y_mostrar()
 
+    def al_filtrar_texto(self, event):
+        """
+        Filtro con debounce: espera 300 ms tras la última pulsación antes de
+        reconstruir la lista. Evita congelar la UI en cada carácter tecleado.
+        """
+        if self._timer_busqueda:
+            self._timer_busqueda.Stop()
+        self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
+        event.Skip()
+
     def filtrar_y_mostrar(self):
+        # Freeze suspende el redibujado del ListCtrl durante la inserción masiva,
+        # eliminando el parpadeo y reduciendo el tiempo de pintado a una sola pasada.
+        self.lista_voces.Freeze()
         self.lista_voces.DeleteAllItems()
 
         f_idioma = self.combo_idioma.GetValue()
@@ -820,6 +838,9 @@ class PanelVoces(wx.Panel):
 
             self.mapa_indices[pos] = voz
             idx += 1
+
+        # Thaw reactiva el redibujado y pinta todos los items de una sola vez
+        self.lista_voces.Thaw()
 
     def al_escuchar(self, event):
         idx = self.lista_voces.GetFirstSelected()
@@ -1175,7 +1196,9 @@ class PestanaAjustes(wx.Panel):
             wx.CallAfter(self.lista_cat.SetFocus)
             # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter y mueva el foco.
             if idx == 2:
-                self.pag_voces.cargar_datos_y_llenar()
+                # Diferir la carga para que el foco vuelva a lista_cat antes de
+                # que comience la lectura del JSON de voces.
+                wx.CallAfter(self.pag_voces.cargar_datos_y_llenar)
 
     def cargar_config(self):
         try:

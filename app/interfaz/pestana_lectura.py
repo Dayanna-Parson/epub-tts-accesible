@@ -194,7 +194,9 @@ class PestanaLectura(wx.Panel):
         self.temporizador_ui.Start(200)
 
         self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
-        self.cargar_voces_usuario()
+        # Diferir la carga de voces para que el panel reciba el foco antes de que
+        # comience la lectura de JSONs y la enumeración de voces SAPI5.
+        wx.CallAfter(self.cargar_voces_usuario)
 
         # Puntos de anclaje para el bucle de tabulación gestionado desde la ventana principal.
         # VentanaPrincipal usa estas referencias para saber dónde termina y empieza este panel.
@@ -224,10 +226,12 @@ class PestanaLectura(wx.Panel):
 
     def al_cambiar_pestana_padre(self, event):
         if event.GetSelection() == 0:
-            self.cargar_voces_usuario()
             self.cargar_config_salto()
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+            # Diferir la carga de voces para que el foco llegue al panel antes
+            # de que comience la lectura de JSONs. El combo se llena tras el cambio de pestaña.
+            wx.CallAfter(self.cargar_voces_usuario)
         event.Skip()
     # ANCLAJE_FIN: GESTION_CONFIGURACION_Y_PESTANAS
 
