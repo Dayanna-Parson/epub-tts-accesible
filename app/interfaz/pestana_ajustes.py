@@ -1,6 +1,7 @@
 import wx
 import os
 import json
+import threading
 import webbrowser
 import wx.lib.mixins.listctrl as listmix
 from app.motor.cliente_nube_voces import GestorVoces
@@ -522,7 +523,8 @@ class PanelVoces(wx.Panel):
             "Escribe parte del nombre de una voz para filtrar la lista en tiempo real. "
             "Borra el campo para volver a ver todas las voces del filtro activo."
         )
-        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar)
+        # El binding usa debounce para no reconstruir la lista en cada pulsación de tecla
+        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)
         hbox3.Add(self.txt_buscar, 1, wx.EXPAND)
         sz_filtros.Add(hbox3, 0, wx.EXPAND|wx.ALL, 5)
         
@@ -560,7 +562,16 @@ class PanelVoces(wx.Panel):
         self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_ALT, ord('P'), id_play)]))
         
         self.SetSizer(sizer)
-        self.cargar_datos_y_llenar()
+
+        # Bandera para evitar hilos duplicados si el usuario navega rápido entre categorías
+        self._cargando = False
+        # Temporizador para debounce del cuadro de búsqueda (se reemplaza en cada pulsación)
+        self._timer_busqueda = None
+
+        # Deshabilitar filtros y lanzar la carga pesada en segundo plano
+        self._deshabilitar_filtros()
+        self._cargando = True
+        threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
 
     def al_cambiar_idioma_libro(self, event):
         seleccion = self.combo_idioma_libro.GetSelection()
@@ -622,12 +633,16 @@ class PanelVoces(wx.Panel):
         except Exception:
             pass
 
-    def cargar_datos_y_llenar(self):
+    def _cargar_datos_hilo(self):
+        """
+        Lee los JSON de voces fuera del hilo principal para evitar bloqueo de foco.
+        Llama a wx.CallAfter al terminar para actualizar los controles de forma segura.
+        """
         ruta = ruta_config("voces_disponibles.json")
         ruta_conocidas = ruta_config("voces_conocidas.json")
-        self.voces_todas = []
+        voces_todas = []
 
-        # Cargar IDs de voces conocidas (para detectar novedades)
+        # Cargar IDs de voces conocidas para marcar novedades
         voces_conocidas = set()
         try:
             if os.path.exists(ruta_conocidas):
@@ -643,26 +658,58 @@ class PanelVoces(wx.Panel):
                     for prov, lista in datos.items():
                         for v in lista:
                             v["proveedor_id"] = prov
-                            # Es nueva si hay conocidas previas y esta no estaba
-                            v["es_nueva"] = bool(voces_conocidas) and v.get("id","") not in voces_conocidas
-                            self.voces_todas.append(v)
+                            v["es_nueva"] = bool(voces_conocidas) and v.get("id", "") not in voces_conocidas
+                            voces_todas.append(v)
             except Exception as e:
                 print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
-                self.voces_todas = []
 
-        # Proveedor con opciones fijas; idioma se rellena según proveedor seleccionado
+        wx.CallAfter(self._poblar_filtros_y_lista, voces_todas)
+
+    def _poblar_filtros_y_lista(self, voces_todas):
+        """
+        Llena los combos de filtro y la lista de voces con los datos cargados.
+        Debe ejecutarse siempre en el hilo principal (se invoca via wx.CallAfter).
+        """
+        self.voces_todas = voces_todas
+
+        # Proveedor: opciones fijas; idioma se rellena según selección de proveedor
         self.combo_proveedor.Clear()
         self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "ElevenLabs"])
         self.combo_proveedor.SetSelection(0)
 
-        # Con proveedor=Todos, poblar idioma con todos los disponibles
-        idiomas = sorted(set(v.get("idioma","") for v in self.voces_todas if v.get("idioma")))
+        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
         self.combo_idioma.Clear()
         self.combo_idioma.Append("Todos")
         self.combo_idioma.AppendItems(idiomas)
         self.combo_idioma.SetSelection(0)
 
         self.filtrar_y_mostrar()
+        self._habilitar_filtros()
+        self._cargando = False
+        # Situar foco en la lista para que NVDA anuncie la primera voz inmediatamente
+        wx.CallAfter(self.lista_voces.SetFocus)
+
+    def al_filtrar_texto(self, event):
+        """
+        Gestiona el filtrado por texto con debounce de 300 ms.
+        Evita reconstruir la lista completa en cada pulsación de tecla.
+        """
+        if self._timer_busqueda:
+            self._timer_busqueda.Stop()
+        self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
+        event.Skip()
+
+    def _deshabilitar_filtros(self):
+        """Desactiva todos los controles de filtro mientras la carga está en progreso."""
+        for ctrl in (self.combo_proveedor, self.combo_idioma, self.combo_tipo,
+                     self.chk_solo_favs, self.chk_solo_nuevas, self.txt_buscar):
+            ctrl.Disable()
+
+    def _habilitar_filtros(self):
+        """Reactiva todos los controles de filtro una vez finalizada la carga."""
+        for ctrl in (self.combo_proveedor, self.combo_idioma, self.combo_tipo,
+                     self.chk_solo_favs, self.chk_solo_nuevas, self.txt_buscar):
+            ctrl.Enable()
 
     # Tabla de traducción de códigos de idioma a texto legible en español
     _LOCALES_ES = {
@@ -1174,8 +1221,13 @@ class PestanaAjustes(wx.Panel):
             # y NVDA deja de leer las flechas de navegación en la lista de categorías.
             wx.CallAfter(self.lista_cat.SetFocus)
             # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter y mueva el foco.
-            if idx == 2:
-                self.pag_voces.cargar_datos_y_llenar()
+            if idx == 2 and not self.pag_voces._cargando:
+                # Recargar voces en segundo plano para que el foco llegue sin bloqueo
+                self.pag_voces._cargando = True
+                self.pag_voces._deshabilitar_filtros()
+                threading.Thread(
+                    target=self.pag_voces._cargar_datos_hilo, daemon=True
+                ).start()
 
     def cargar_config(self):
         try:
