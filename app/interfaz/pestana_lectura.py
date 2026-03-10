@@ -3,7 +3,6 @@ import wx
 import os
 import json
 import time
-import threading
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
@@ -195,14 +194,7 @@ class PestanaLectura(wx.Panel):
         self.temporizador_ui.Start(200)
 
         self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
-
-        # La carga de voces se hace en un hilo secundario para que la pestaña
-        # reciba el foco de forma inmediata sin bloqueo del hilo principal.
-        self._cargando_voces = True
-        self._deshabilitar_controles_voz()
-        threading.Thread(
-            target=self._cargar_voces_hilo, args=("",), daemon=True
-        ).start()
+        self.cargar_voces_usuario()
 
         # Puntos de anclaje para el bucle de tabulación gestionado desde la ventana principal.
         # VentanaPrincipal usa estas referencias para saber dónde termina y empieza este panel.
@@ -232,32 +224,20 @@ class PestanaLectura(wx.Panel):
 
     def al_cambiar_pestana_padre(self, event):
         if event.GetSelection() == 0:
+            self.cargar_voces_usuario()
             self.cargar_config_salto()
             self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
             self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
-            # Recargar voces en segundo plano; la bandera evita hilos duplicados
-            # si el usuario cambia de pestaña antes de que termine la carga anterior.
-            if not self._cargando_voces:
-                seleccion_previa = self.combo_voz.GetStringSelection()
-                self._cargando_voces = True
-                self._deshabilitar_controles_voz()
-                threading.Thread(
-                    target=self._cargar_voces_hilo,
-                    args=(seleccion_previa,),
-                    daemon=True,
-                ).start()
         event.Skip()
     # ANCLAJE_FIN: GESTION_CONFIGURACION_Y_PESTANAS
 
     # ANCLAJE_INICIO: CARGA_Y_CAMBIO_VOCES
-    def _cargar_voces_hilo(self, seleccion_previa):
-        """
-        Lee los JSONs de voces y enumera las voces SAPI5 locales fuera del hilo
-        principal. Llama a wx.CallAfter al terminar para actualizar la UI de forma segura.
-        """
+    def cargar_voces_usuario(self):
+        seleccion_previa = self.combo_voz.GetStringSelection()
+        self.combo_voz.Clear()
         voces_para_combo = []
 
-        # Enumeración de voces locales SAPI5 (puede ser lenta en sistemas con muchas voces)
+        # Carga de voces locales SAPI5
         try:
             if hasattr(self.reproductor, 'cliente_local'):
                 voces_locales = self.reproductor.cliente_local.obtener_voces()
@@ -267,7 +247,7 @@ class PestanaLectura(wx.Panel):
         except Exception as e:
             print(f"[Aviso] No se pudieron cargar las voces locales SAPI5: {e}")
 
-        # Lectura de voces neuronales favoritas desde disco
+        # Carga de voces neuronales favoritas
         ruta_favs = ruta_config("voces_favoritas.json")
         ruta_todas = ruta_config("voces_disponibles.json")
 
@@ -278,6 +258,7 @@ class PestanaLectura(wx.Panel):
                     ids_favoritos = json.load(f)
             except Exception as e:
                 print(f"[Aviso] No se pudo leer voces_favoritas.json: {e}")
+                ids_favoritos = []
 
         if ids_favoritos and os.path.exists(ruta_todas):
             try:
@@ -292,23 +273,13 @@ class PestanaLectura(wx.Panel):
             except Exception as e:
                 print(f"[Aviso] No se pudo leer voces_disponibles.json: {e}")
 
-        # Actualizar la UI siempre desde el hilo principal
-        wx.CallAfter(self._aplicar_voces_en_ui, voces_para_combo, seleccion_previa)
-
-    def _aplicar_voces_en_ui(self, voces_para_combo, seleccion_previa):
-        """
-        Llena el combo de voces y reactiva los controles.
-        Debe ejecutarse siempre en el hilo principal (se invoca via wx.CallAfter).
-        """
-        self.combo_voz.Clear()
-
         if not voces_para_combo:
             self.combo_voz.Append("No hay voces disponibles")
         else:
             for nombre, datos in voces_para_combo:
                 idx = self.combo_voz.Append(nombre)
                 self.combo_voz.SetClientData(idx, datos)
-
+            
             if seleccion_previa:
                 res = self.combo_voz.FindString(seleccion_previa)
                 if res != wx.NOT_FOUND:
@@ -317,20 +288,9 @@ class PestanaLectura(wx.Panel):
                     self.combo_voz.SetSelection(0)
             else:
                 self.combo_voz.SetSelection(0)
-
+        
+        # Forzar actualización inicial del reproductor
         self.al_cambiar_voz(None)
-        self._habilitar_controles_voz()
-        self._cargando_voces = False
-        # Situar foco en el combo para que NVDA anuncie la voz activa al terminar la carga
-        wx.CallAfter(self.combo_voz.SetFocus)
-
-    def _deshabilitar_controles_voz(self):
-        """Desactiva el combo de voz mientras la carga está en progreso."""
-        self.combo_voz.Disable()
-
-    def _habilitar_controles_voz(self):
-        """Reactiva el combo de voz una vez finalizada la carga."""
-        self.combo_voz.Enable()
 
     def al_cambiar_voz(self, event):
         """
