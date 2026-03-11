@@ -108,7 +108,38 @@ class PanelGeneral(wx.ScrolledWindow):
         hbox_salto.Add(self.txt_salto, 0)
         sizer_nav.Add(hbox_salto, 0, wx.ALL, 5)
         sizer.Add(sizer_nav, 0, wx.EXPAND | wx.ALL, 10)
-        
+
+        # ACTUALIZACIONES
+        sb_updates = wx.StaticBox(self, label="Actualizaciones")
+        sizer_updates = wx.StaticBoxSizer(sb_updates, wx.VERTICAL)
+
+        self.chk_actualizar = wx.CheckBox(
+            self,
+            label="Buscar actualizaciones automáticamente al iniciar la app",
+        )
+        self.chk_actualizar.SetValue(
+            self.config.get("actualizar_automaticamente", True)
+        )
+        self.chk_actualizar.SetHelpText(
+            "Si está marcado, la aplicación comprueba si hay una nueva versión "
+            "disponible cada vez que se inicia. La comprobación se hace en segundo "
+            "plano y no ralentiza el arranque. Guarda la configuración para que "
+            "el cambio surta efecto."
+        )
+        sizer_updates.Add(self.chk_actualizar, 0, wx.ALL, 5)
+
+        self.btn_buscar_updates = wx.Button(self, label="Buscar actualizaciones ahora")
+        self.btn_buscar_updates.SetHelpText(
+            "Comprueba si hay una versión nueva comparando tu version.json local "
+            "con el del repositorio de GitHub. Si hay novedades, se abre un diálogo "
+            "accesible con el contenido de novedades.txt. "
+            "La consulta se hace en segundo plano; el botón se reactiva al terminar."
+        )
+        self.btn_buscar_updates.Bind(wx.EVT_BUTTON, self._al_buscar_actualizaciones)
+        sizer_updates.Add(self.btn_buscar_updates, 0, wx.ALL, 5)
+
+        sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
+
         # GUARDAR — guardado como atributo para que VentanaPrincipal pueda usarlo
         # como punto de anclaje del bucle de tabulación accesible
         self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
@@ -153,6 +184,7 @@ class PanelGeneral(wx.ScrolledWindow):
     def guardar_todo(self):
         # Guardar config general
         self.config["segundos_salto"] = self.txt_salto.GetValue()
+        self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
         padre = self.GetParent().GetParent().GetParent()
         if hasattr(padre, "guardar_config_en_archivo"):
             padre.guardar_config_en_archivo()
@@ -240,6 +272,42 @@ class PanelGeneral(wx.ScrolledWindow):
             msg += f"\n({errores} archivo(s) no pudieron borrarse por estar en uso.)"
 
         wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+
+    def _al_buscar_actualizaciones(self, event=None):
+        """Lanza la comprobación de versión en hilo de fondo y deshabilita el botón."""
+        from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
+        self.btn_buscar_updates.Disable()
+        self.btn_buscar_updates.SetLabel("Comprobando…")
+        comp = ComprobadorActualizaciones()
+        comp.comprobar_en_hilo(
+            lambda r: wx.CallAfter(self._al_resultado_actualizacion, r)
+        )
+
+    def _al_resultado_actualizacion(self, resultado: dict):
+        """Recibe el resultado del hilo y muestra el diálogo o un aviso."""
+        self.btn_buscar_updates.Enable()
+        self.btn_buscar_updates.SetLabel("Buscar actualizaciones ahora")
+
+        if resultado.get("error"):
+            wx.MessageBox(
+                f"No se pudo comprobar la actualización:\n{resultado['error']}",
+                "Error de conexión", wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        v_local  = resultado.get("version_local",  "—")
+        v_remota = resultado.get("version_remota", "—")
+
+        if resultado.get("hay_nueva"):
+            from app.interfaz.dialogo_novedades import DialogoNovedades
+            dlg = DialogoNovedades(self, v_remota, resultado.get("novedades", ""))
+            dlg.ShowModal()
+            dlg.Destroy()
+        else:
+            wx.MessageBox(
+                f"Ya tienes la versión más reciente ({v_local}).",
+                "Sin actualizaciones", wx.OK | wx.ICON_INFORMATION,
+            )
 
 
 class PanelClaves(wx.ScrolledWindow):
