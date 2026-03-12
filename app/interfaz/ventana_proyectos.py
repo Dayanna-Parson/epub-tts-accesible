@@ -200,12 +200,6 @@ class VentanaProyectos(wx.Frame):
         # están accesibles vía menú contextual (Tecla Menú / Shift+F10 / clic derecho).
         sz_barra = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_trocear_epub = wx.Button(panel_raiz, label="&Trocear EPUB…")
-        self.btn_trocear_epub.SetHelpText(
-            "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "
-            "No requiere tener un proyecto seleccionado."
-        )
-
         self.btn_eliminar = wx.Button(panel_raiz, label="&Eliminar proyecto seleccionado")
         self.btn_eliminar.SetHelpText(
             "Elimina el proyecto seleccionado y sus hijos si los tiene. Pide confirmación. "
@@ -223,7 +217,6 @@ class VentanaProyectos(wx.Frame):
             "Muestra el resultado de la última acción. NVDA lo verbaliza al enfocar esta etiqueta."
         )
 
-        sz_barra.Add(self.btn_trocear_epub, 0, wx.RIGHT, 8)
         sz_barra.Add(self.btn_eliminar,    0, wx.RIGHT, 8)
         sz_barra.Add((0, 0),               1)   # separador flexible
         sz_barra.Add(self.lbl_estado,   0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 16)
@@ -249,7 +242,6 @@ class VentanaProyectos(wx.Frame):
         self.btn_añadir_txt.Bind(wx.EVT_BUTTON, self._al_añadir_txt)
         self.btn_quitar_txt.Bind(wx.EVT_BUTTON, self._al_quitar_txt)
 
-        self.btn_trocear_epub.Bind(wx.EVT_BUTTON, self._al_trocear_epub)
         self.btn_eliminar.Bind(    wx.EVT_BUTTON, self._al_eliminar)
         self.btn_cerrar.Bind(      wx.EVT_BUTTON, lambda e: self.Close())
 
@@ -921,7 +913,7 @@ class VentanaProyectos(wx.Frame):
         Devuelve 'Grabado' si existe al menos un archivo .mp3/.wav generado
         para este proyecto; 'Pendiente' si no.
         Comprueba:
-          1. Carpeta Grabaciones_TifloHistorias/<nombre_proyecto>/ (salida de grabador_audio).
+          1. Carpeta Grabaciones_Epub-TTS/<nombre_proyecto>/ (salida de grabador_audio).
           2. Archivos .mp3/.wav hermanos de cualquier TXT asociado.
         """
         import re
@@ -931,7 +923,7 @@ class VentanaProyectos(wx.Frame):
             return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"
 
         nombre = proyecto.get("nombre", "")
-        carpeta_audio = os.path.join(RAIZ, "Grabaciones_TifloHistorias", _limpiar(nombre))
+        carpeta_audio = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre))
         if os.path.isdir(carpeta_audio):
             for _, _, archivos in os.walk(carpeta_audio):
                 if any(f.endswith(('.mp3', '.wav')) for f in archivos):
@@ -967,7 +959,7 @@ class VentanaProyectos(wx.Frame):
             return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"
 
         nombre = proyecto.get("nombre", "")
-        carpeta_audio = os.path.join(RAIZ, "Grabaciones_TifloHistorias", _limpiar(nombre))
+        carpeta_audio = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre))
 
         if os.path.isdir(carpeta_audio):
             carpeta = carpeta_audio
@@ -1023,19 +1015,6 @@ class VentanaProyectos(wx.Frame):
             except Exception:
                 pass
         threading.Thread(target=_run, daemon=True).start()
-
-    # ================================================================== #
-    # Trocear EPUB
-    # ================================================================== #
-
-    def _al_trocear_epub(self, evento=None):
-        """Abre el diálogo de troceado de EPUB (import lazy para no retrasar el arranque)."""
-        from app.interfaz.dialogo_troceador import DialogoTroceador
-        from app.interfaz.ui_recursos import aplicar_icono_boton
-        aplicar_icono_boton(self.btn_trocear_epub, "trocear", "Trocear EPUB en capítulos TXT")
-        dlg = DialogoTroceador(self)
-        dlg.ShowModal()
-        dlg.Destroy()
 
     def _al_cerrar(self, evento):
         """Al cerrar, devuelve el foco exactamente al control que lo tenía antes."""

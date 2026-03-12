@@ -324,11 +324,19 @@ class PestanaGrabacion(wx.Panel):
         self.btn_limpiar = wx.Button(
             self, label="&Limpiar — Restablece la pestaña para cargar otro fragmento"
         )
+        self.btn_dividir_epub = wx.Button(
+            self, label="&Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"
+        )
+        self.btn_dividir_epub.SetHelpText(
+            "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "
+            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/originales/."
+        )
 
-        sz_ruta.Add(lbl_ruta,          0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        sz_ruta.Add(self.txt_ruta,     1, wx.EXPAND)
-        sz_ruta.Add(self.btn_examinar, 0, wx.LEFT, 5)
-        sz_ruta.Add(self.btn_limpiar,  0, wx.LEFT, 5)
+        sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)
+        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
+        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)
+        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
 
         sz_titulo = wx.BoxSizer(wx.HORIZONTAL)
         lbl_titulo = wx.StaticText(self, label="Título (opcional):")
@@ -475,8 +483,9 @@ class PestanaGrabacion(wx.Panel):
         self.SetSizer(sizer_raiz)
 
         # ── Eventos ───────────────────────────────────────────────────────
-        self.btn_examinar.Bind(wx.EVT_BUTTON,       self.al_examinar)
-        self.btn_limpiar.Bind(wx.EVT_BUTTON,        self.al_limpiar)
+        self.btn_examinar.Bind(wx.EVT_BUTTON,        self.al_examinar)
+        self.btn_limpiar.Bind(wx.EVT_BUTTON,         self.al_limpiar)
+        self.btn_dividir_epub.Bind(wx.EVT_BUTTON,    self._al_dividir_epub)
         self.txt_titulo.Bind(wx.EVT_KILL_FOCUS,     self._al_perder_foco_titulo)
         self.btn_probar.Bind(wx.EVT_BUTTON,         self.al_probar_voz)
         self.btn_preescucha.Bind(wx.EVT_BUTTON,     self.al_preescucha_general)
@@ -814,6 +823,19 @@ class PestanaGrabacion(wx.Panel):
         self.btn_abortar.Enable(False)
 
         self.btn_examinar.SetFocus()
+
+    # ================================================================== #
+    # División de EPUB
+    # ================================================================== #
+
+    def _al_dividir_epub(self, evento=None):
+        """Abre el diálogo de división de EPUB en capítulos TXT."""
+        from app.interfaz.dialogo_troceador import DialogoTroceador
+        from app.interfaz.ui_recursos import aplicar_icono_boton
+        aplicar_icono_boton(self.btn_dividir_epub, "trocear", "Dividir EPUB en capítulos TXT")
+        dlg = DialogoTroceador(self)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     # ================================================================== #
     # Casting: auto-asignación al marcar una voz

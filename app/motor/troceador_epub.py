@@ -23,8 +23,8 @@ Tipos de índice soportados
                   Parte II > Capítulo 3, Capítulo 4 …
   · Plano       → Dedicatoria / Prólogo / Capítulo 1 / Epílogo …
 
-La carpeta de salida se llama exactamente igual que el archivo EPUB
-(sin extensión), en el mismo directorio que el EPUB de origen.
+Estructura de salida:
+  Grabaciones_Epub-TTS/<NombreLibro>/originales/01_Titulo.txt …
 
 Formato de salida: TXT con cabecera (título + separador) y texto limpio.
 """
@@ -37,7 +37,11 @@ import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
+from app.config_rutas import RAIZ
 from app.motor.limpiador_lectura import limpiar_para_lectura
+
+# Carpeta raíz donde se generan los proyectos de grabación
+CARPETA_RAIZ = os.path.join(RAIZ, "Grabaciones_Epub-TTS")
 
 warnings.filterwarnings("ignore", category=UserWarning, module="bs4")
 
@@ -98,13 +102,14 @@ def _html_a_texto(html_data: str) -> str:
 # ═════════════════════════════════════════════════════════════════════════════
 class TroceadorEpub:
     """
-    Motor de troceado de EPUB. Sin dependencias wx.
+    Motor de división de EPUB en archivos TXT. Sin dependencias wx.
 
     Flujo:
         t = TroceadorEpub()
         caps = t.cargar("/ruta/libro.epub")
         # caps → list[dict]  (titulo, display, nivel, es_padre, pos_inicio=0)
-        n = t.trocear([0, 1, 3], "/ruta/libro/", callback_progreso=fn)
+        carpeta = TroceadorEpub.carpeta_salida_para("/ruta/libro.epub")
+        n = t.dividir([0, 1, 3], carpeta, callback_progreso=fn)
     """
 
     def __init__(self):
@@ -265,9 +270,9 @@ class TroceadorEpub:
             return self._items_por_href[bn].file_name
         return href
 
-    # ── Troceado ──────────────────────────────────────────────────────────────
+    # ── División ──────────────────────────────────────────────────────────────
 
-    def trocear(
+    def dividir(
         self,
         indices_seleccionados: list,
         carpeta_salida: str,
@@ -341,11 +346,14 @@ class TroceadorEpub:
     @staticmethod
     def carpeta_salida_para(ruta_epub: str) -> str:
         """
-        Devuelve la ruta de la carpeta de salida:
-          mismo directorio que el EPUB, nombre = archivo EPUB sin extensión.
-        Ej: /libros/Mi Novela.epub  →  /libros/Mi Novela/
+        Devuelve la ruta de la subcarpeta /originales/ donde se guardan los TXT.
+
+        Estructura:
+          Grabaciones_Epub-TTS/<NombreLibro>/originales/
+
+        Donde <NombreLibro> es el nombre del archivo EPUB sin extensión.
+        Ej: /libros/Mi Novela.epub  →  Grabaciones_Epub-TTS/Mi Novela/originales/
         """
-        dir_epub    = os.path.dirname(os.path.abspath(ruta_epub))
         nombre_base = os.path.splitext(os.path.basename(ruta_epub))[0]
-        return os.path.join(dir_epub, nombre_base)
+        return os.path.join(CARPETA_RAIZ, nombre_base, "originales")
 # ANCLAJE_FIN: TROCEADOR_EPUB
