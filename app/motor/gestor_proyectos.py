@@ -1,7 +1,7 @@
 """
 gestor_config.py  →  GestorProyectos
 --------------------------------------
-Motor de gestión de proyectos para TifloHistorias.
+Motor de gestión de proyectos para Epub-TTS.
 
 Gestiona la organización jerárquica de cualquier tipo de trabajo:
   Saga → Libro → Capítulo

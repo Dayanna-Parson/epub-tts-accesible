@@ -52,7 +52,7 @@ try:
 except ImportError:
     pass  # pydub no instalado — los métodos individuales manejan el fallback
 
-CARPETA_RAIZ_GRABACIONES = "Grabaciones_TifloHistorias"
+CARPETA_RAIZ_GRABACIONES = "Grabaciones_Epub-TTS"
 
 # ── Máximo de caracteres por petición a cada proveedor ────────────────────────
 _MAX_CHARS = {
@@ -685,7 +685,7 @@ class GrabadorAudio:
 
     def probar_voz(self, datos_voz: dict):
         """Reproduce una muestra de la voz por los altavoces (previsualización)."""
-        texto_prueba = "Hola. Esta es una prueba de voz para TifloHistorias."
+        texto_prueba = "Hola. Esta es una prueba de voz para Epub-TTS."
         proveedor = (
             datos_voz.get('proveedor_id', 'local').lower()
             if isinstance(datos_voz, dict) else 'local'
