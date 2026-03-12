@@ -19,7 +19,7 @@ except ImportError:
     print("=" * 60)
     print(f"[ADVERTENCIA] {_MSG_BOTO3}")
     print("=" * 60)
-    # Escribir al log del sistema si ya está configurado (se configura en iniciar_tiflohistorias.py)
+    # Escribir al log del sistema si ya está configurado (se configura en iniciar_epub_tts.py)
     try:
         import logging as _logging
         _logging.getLogger(__name__).warning(_MSG_BOTO3)

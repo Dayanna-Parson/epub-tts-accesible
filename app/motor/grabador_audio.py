@@ -132,10 +132,13 @@ class GrabadorAudio:
         carpeta_libro   = self.obtener_carpeta_libro(titulo_libro)
         nombre_cap_limpio = limpiar_nombre_archivo(nombre_capitulo)
 
+        # Los audios siempre van dentro de /grabaciones/ para coexistir con
+        # /originales/ (los TXT del divisor de EPUB) sin mezclarse.
+        base_grabaciones = os.path.join(carpeta_libro, "grabaciones")
         if modo_dividido:
-            subcarpeta = os.path.join(carpeta_libro, f"Fragmentos_{nombre_cap_limpio}")
+            subcarpeta = os.path.join(base_grabaciones, f"Fragmentos_{nombre_cap_limpio}")
         else:
-            subcarpeta = os.path.join(carpeta_libro, f"Audio_Completo_{nombre_cap_limpio}")
+            subcarpeta = os.path.join(base_grabaciones, f"Audio_Completo_{nombre_cap_limpio}")
 
         os.makedirs(subcarpeta, exist_ok=True)
         self._ultima_carpeta = subcarpeta

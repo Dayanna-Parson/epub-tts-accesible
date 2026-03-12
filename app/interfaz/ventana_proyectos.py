@@ -355,6 +355,10 @@ class VentanaProyectos(wx.Frame):
         el usuario navega con flechas en el árbol y pulsa Tab cuando quiere editar.
         Esto evita el salto errático de foco que confunde a NVDA.
         """
+        # Guardia: el árbol puede haberse destruido antes de que el evento llegue
+        if not self.arbol or self.arbol.IsBeingDeleted():
+            evento.Skip()
+            return
         proyecto = self._proyecto_seleccionado()
         if proyecto is None:
             self._limpiar_detalle()
@@ -913,7 +917,7 @@ class VentanaProyectos(wx.Frame):
         Devuelve 'Grabado' si existe al menos un archivo .mp3/.wav generado
         para este proyecto; 'Pendiente' si no.
         Comprueba:
-          1. Carpeta Grabaciones_Epub-TTS/<nombre_proyecto>/ (salida de grabador_audio).
+          1. Carpeta Grabaciones_Epub-TTS/<nombre_proyecto>/grabaciones/ (salida de grabador_audio).
           2. Archivos .mp3/.wav hermanos de cualquier TXT asociado.
         """
         import re
@@ -923,7 +927,7 @@ class VentanaProyectos(wx.Frame):
             return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"
 
         nombre = proyecto.get("nombre", "")
-        carpeta_audio = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre))
+        carpeta_audio = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre), "grabaciones")
         if os.path.isdir(carpeta_audio):
             for _, _, archivos in os.walk(carpeta_audio):
                 if any(f.endswith(('.mp3', '.wav')) for f in archivos):
@@ -959,10 +963,13 @@ class VentanaProyectos(wx.Frame):
             return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"
 
         nombre = proyecto.get("nombre", "")
-        carpeta_audio = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre))
-
+        # Intenta abrir /grabaciones/ si existe; si no, la raíz del proyecto
+        carpeta_libro = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre))
+        carpeta_audio = os.path.join(carpeta_libro, "grabaciones")
         if os.path.isdir(carpeta_audio):
             carpeta = carpeta_audio
+        elif os.path.isdir(carpeta_libro):
+            carpeta = carpeta_libro
         elif proyecto.get("archivos"):
             carpeta = os.path.dirname(proyecto["archivos"][0])
         else:
