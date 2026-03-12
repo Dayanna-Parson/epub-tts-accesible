@@ -37,23 +37,23 @@ from app.interfaz.ui_recursos import aplicar_icono_boton
 
 class ListaCapitulos(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
     """
-    ListCtrl accesible con casillas. Dos columnas: Nº | Título (con indentación de nivel).
-    NVDA anuncia el estado de cada casilla al navegar con flechas.
+    ListCtrl accesible con casillas. Una sola columna: "01 Nombre del capítulo".
+    NVDA anuncia directamente el número y el título sin separadores artificiales.
     """
     def __init__(self, parent):
         wx.ListCtrl.__init__(
             self, parent,
-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,
+            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES | wx.LC_NO_HEADER,
         )
         listmix.CheckListCtrlMixin.__init__(self)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.EnableCheckBoxes(True)
-        self.InsertColumn(0, "Nº",                    width=44)
-        self.InsertColumn(1, "Título del capítulo",   width=440)
+        self.InsertColumn(0, "Capítulo", width=500)
         self.SetHelpText(
             "Lista de capítulos del EPUB. Flechas Arriba y Abajo para navegar. "
             "Espacio para marcar o desmarcar el capítulo enfocado. "
-            "Los capítulos marcados se exportarán como archivos TXT individuales."
+            "Los capítulos marcados se exportarán como archivos TXT individuales. "
+            "El número de cada capítulo coincide con el número del archivo TXT generado."
         )
         self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
 
@@ -237,8 +237,10 @@ class DialogoTroceador(wx.Dialog):
 
         self.lista_caps.DeleteAllItems()
         for i, cap in enumerate(caps):
-            self.lista_caps.InsertItem(i, str(i + 1))
-            self.lista_caps.SetItem(i, 1, cap["display"])
+            # Una sola columna: "01 Nombre del capítulo"
+            # El número coincide con el nombre del fichero TXT generado (idx+1)
+            etiqueta = f"{i + 1:02d}  {cap['display']}"
+            self.lista_caps.InsertItem(i, etiqueta)
             # Hojas (sin subniveles) → marcadas por defecto
             # Padres (secciones contenedoras) → desmarcados por defecto
             self.lista_caps.CheckItem(i, not cap["es_padre"])

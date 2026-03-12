@@ -286,9 +286,10 @@ class TroceadorEpub:
         os.makedirs(carpeta_salida, exist_ok=True)
 
         guardados = 0
-        total     = len(indices_seleccionados)
+        indices_sorted = sorted(indices_seleccionados)
+        total          = len(indices_sorted)
 
-        for num, idx in enumerate(sorted(indices_seleccionados), 1):
+        for num, idx in enumerate(indices_sorted, 1):
             sl      = self._split_lines[idx]
             next_sl = self._split_lines[idx + 1] if idx + 1 < len(self._split_lines) else None
 
@@ -301,8 +302,11 @@ class TroceadorEpub:
             if not texto:
                 continue
 
+            # El número del archivo coincide con la posición del capítulo en la
+            # lista completa (idx+1), no con su orden entre los seleccionados.
+            # Así "03_Capitulo.txt" corresponde exactamente al ítem "03" de la lista.
             titulo_limpio  = _nombre_seguro(sl["titulo"])
-            nombre_archivo = f"{num:02d}_{titulo_limpio}.txt"
+            nombre_archivo = f"{idx + 1:02d}_{titulo_limpio}.txt"
             ruta           = os.path.join(carpeta_salida, nombre_archivo)
 
             with open(ruta, "w", encoding="utf-8") as f:

@@ -1,9 +1,9 @@
 @echo off
 cls
 echo ---------------------------------------------------
-echo    INICIANDO TIFLO HISTORIAS...
+echo    INICIANDO EPUB-TTS...
 echo ---------------------------------------------------
-python iniciar_tiflohistorias.py
+python iniciar_epub_tts.py
 echo.
 echo ---------------------------------------------------
 echo    PROGRAMA CERRADO O FINALIZADO
