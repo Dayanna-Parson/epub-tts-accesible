@@ -2,38 +2,36 @@
 """
 reproductor_sonidos.py
 ───────────────────────
-Infraestructura de sonidos de la aplicación.
+Infraestructura de sonidos de baja latencia.
 
-Características:
-  · Reproducción asíncrona (hilo daemon) → nunca bloquea la UI.
-  · Sin excepciones si el archivo .wav no existe.
-  · Sin excepciones si winsound no está disponible (Linux/Mac).
-  · Las constantes canónicas se pueden importar directamente para
-    evitar cadenas literales dispersas por el código.
+Estrategia de latencia mínima:
+  1. Al importar el módulo, todos los .wav se leen a RAM (_CACHE).
+  2. Cada reproducción usa winsound.PlaySound(bytes, SND_MEMORY | SND_ASYNC):
+       · SND_MEMORY  → datos desde RAM, sin I/O de disco en el evento.
+       · SND_ASYNC   → devuelve control de inmediato (no bloquea la UI).
+       · SND_NODEFAULT → sin sonido de sistema si falla.
+  3. No se crean hilos manuales: el OS gestiona el audio.
+  4. Llamadas rápidas sucesivas (e.g. LIST_NAV) interrumpen el anterior
+     y arrancan el nuevo al instante → efecto "click" limpio sin cola.
 
-Archivos esperados en /recursos/sonidos/  (WAV 16-bit, 44100 Hz):
-  app_ready.wav     ventana principal completamente cargada y lista
-  rec_start.wav     inicio de grabación multivoz
-  rec_end.wav       fin de grabación multivoz (éxito real)
-  progress.wav      tick rítmico durante proceso largo (modo no dividido)
-  list_nav.wav      navegación con flechas en listas y árboles
-  move_up.wav       nodo o elemento movido hacia arriba
-  move_down.wav     nodo o elemento movido hacia abajo
-  open_folder.wav   apertura de diálogo o carpeta
-  success.wav       proceso largo completado con éxito
-  click.wav         clic en botón simple o cambio de pestaña
-  error.wav         error en cualquier operación
-  clear.wav         borrado o limpieza de elementos
+Sin excepciones si el archivo .wav no existe o winsound no está disponible.
+
+Archivos en /recursos/sonidos/ (WAV 16-bit, 44100 Hz):
+  app_ready.wav   open_folder.wav   rec_start.wav   rec_end.wav
+  progress.wav    list_nav.wav      move_up.wav     move_down.wav
+  success.wav     click.wav         error.wav       clear.wav
 
 Uso:
-    from app.motor.reproductor_sonidos import reproducir, CLICK, ERROR
-    reproducir(CLICK)   # no bloquea, no lanza excepción
+    from app.motor.reproductor_sonidos import reproducir, CLICK, LIST_NAV
+    reproducir(CLICK)   # instantáneo, no bloquea
 """
 
 import os
-import threading
+import logging
 
 from app.config_rutas import RAIZ
+
+logger = logging.getLogger(__name__)
 
 _RUTA_SONIDOS = os.path.join(RAIZ, "recursos", "sonidos")
 
@@ -51,36 +49,53 @@ CLICK       = "click"
 ERROR       = "error"
 CLEAR       = "clear"
 
-# Alias de compatibilidad con código previo
+# Alias de compatibilidad con sesiones anteriores
 REC_STOP     = REC_END
 REC_PROGRESS = PROGRESS
 PROCESO      = PROGRESS
 VOZ_NUEVA    = SUCCESS
 APP_UPDATE   = SUCCESS
 
+# ── Caché de bytes en RAM  ────────────────────────────────────────────────────
+# Cargada una sola vez al importar el módulo.
+# Las claves son los nombres sin extensión (= las constantes de arriba).
+_CACHE: dict[str, bytes] = {}
+
+def _poblar_cache() -> None:
+    """Lee todos los .wav disponibles y los deja en memoria."""
+    try:
+        if not os.path.isdir(_RUTA_SONIDOS):
+            return
+        for archivo in os.listdir(_RUTA_SONIDOS):
+            if archivo.lower().endswith(".wav"):
+                nombre = archivo[:-4]               # quita ".wav"
+                ruta   = os.path.join(_RUTA_SONIDOS, archivo)
+                try:
+                    with open(ruta, "rb") as f:
+                        _CACHE[nombre] = f.read()
+                except OSError as exc:
+                    logger.debug("[Sonidos] No se pudo leer %s: %s", archivo, exc)
+    except Exception as exc:
+        logger.debug("[Sonidos] Error al poblar caché: %s", exc)
+
+_poblar_cache()   # se ejecuta una sola vez al importar
+
 
 # ── API pública ───────────────────────────────────────────────────────────────
 
-def reproducir(nombre_sonido: str):
+def reproducir(nombre_sonido: str) -> None:
     """
-    Reproduce <nombre_sonido>.wav de forma asíncrona.
-    No hace nada si el archivo no existe o winsound no está disponible.
+    Reproduce el sonido indicado desde RAM, sin bloquear y sin hilos manuales.
+    No hace nada si el sonido no está en caché o winsound no está disponible.
     """
-    ruta = os.path.join(_RUTA_SONIDOS, f"{nombre_sonido}.wav")
-    if not os.path.exists(ruta):
+    datos = _CACHE.get(nombre_sonido)
+    if not datos:
         return
-    threading.Thread(target=_play_wav, args=(ruta,), daemon=True).start()
-
-
-# ── Implementación privada ────────────────────────────────────────────────────
-
-def _play_wav(ruta: str):
-    """Reproduce un WAV de forma bloqueante (ejecutado dentro de hilo daemon)."""
     try:
         import winsound
         winsound.PlaySound(
-            ruta,
-            winsound.SND_FILENAME | winsound.SND_NODEFAULT,
+            datos,
+            winsound.SND_MEMORY | winsound.SND_ASYNC | winsound.SND_NODEFAULT,
         )
     except Exception:
         pass
