@@ -48,8 +48,8 @@ try:
     sys.path.insert(0, _RAIZ)
     from app.config_rutas import migrar_archivos_config
     migrar_archivos_config()
-except Exception:
-    pass
+except Exception as _e:
+    logging.getLogger(__name__).warning("Migración de configuración fallida: %s", _e)
 
 # ── Hooks de pánico ──────────────────────────────────────────────────────────
 # Capturan cualquier excepción no controlada (hilo principal y threads de fondo)

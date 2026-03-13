@@ -1,4 +1,7 @@
+import logging
 import comtypes.client
+
+logger = logging.getLogger(__name__)
 
 # Constantes SAPI
 SPF_ASYNC = 1            # No congela la app
@@ -18,7 +21,7 @@ class ClienteSapi5:
             self.motor.Volume = 100
             self.conectado = True
         except Exception as e:
-            print(f"Error SAPI5 init: {e}")
+            logger.warning("[SAPI5] No se pudo inicializar el motor: %s", e)
             self.conectado = False
 
     def obtener_voces(self):
@@ -50,8 +53,7 @@ class ClienteSapi5:
                 #    SAPI no se crea que son comandos y falle.
                 self.motor.Speak(texto, SPF_ASYNC | SPF_IS_NOT_XML)
             except Exception as e:
-                print(f"Error SAPI hablar: {e}")
-                # Si falla, intentamos revivir el motor
+                logger.warning("[SAPI5] Error al hablar: %s", e)
                 self._inicializar_motor()
 
     def detener(self):
@@ -86,8 +88,7 @@ class ClienteSapi5:
     def cambiar_voz_por_nombre(self, nombre_objetivo):
         """Busca y activa una voz local de forma inteligente."""
         if not self.motor: return
-        print(f"--> [Local] Buscando voz: {nombre_objetivo}")
-        
+        logger.debug("[SAPI5] Buscando voz: %s", nombre_objetivo)
         try:
             voces = self.motor.GetVoices()
             for i in range(voces.Count):
@@ -95,8 +96,8 @@ class ClienteSapi5:
                 desc = voz.GetDescription()
                 if nombre_objetivo.lower() in desc.lower():
                     self.motor.Voice = voz
-                    print(f"--> [Local] Voz cambiada a: {desc}")
+                    logger.debug("[SAPI5] Voz cambiada a: %s", desc)
                     return
-            print("--> [Local] No se encontró coincidencia exacta.")
+            logger.debug("[SAPI5] No se encontró voz: %s", nombre_objetivo)
         except Exception as e:
-            print(f"Error cambiando voz local: {e}")
+            logger.warning("[SAPI5] Error al cambiar voz: %s", e)
