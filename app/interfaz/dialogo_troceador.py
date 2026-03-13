@@ -29,7 +29,7 @@ import wx
 import wx.lib.mixins.listctrl as listmix
 
 from app.motor.troceador_epub import TroceadorEpub
-from app.motor.reproductor_sonidos import reproducir, PROCESO, ERROR
+from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS
 from app.interfaz.ui_recursos import aplicar_icono_boton
 
 
@@ -58,7 +58,11 @@ class ListaCapitulos(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAu
         self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
 
     def _al_tecla(self, event):
-        if event.GetKeyCode() == wx.WXK_SPACE:
+        keycode = event.GetKeyCode()
+        # Navegar con flechas → sonido de navegación (no al marcar/desmarcar)
+        if keycode in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
+        elif keycode == wx.WXK_SPACE:
             idx = self.GetFirstSelected()
             if idx != -1:
                 self.ToggleItem(idx)
@@ -325,6 +329,7 @@ class DialogoTroceador(wx.Dialog):
         self._set_progreso(f"División completada: {n_archivos} archivo(s) TXT generado(s).")
         self.btn_abrir_carpeta.Show()
         self.Layout()
+        reproducir(SUCCESS)
 
         # Diálogo Sí/No para abrir la carpeta /capitulos/
         respuesta = wx.MessageBox(
@@ -350,6 +355,7 @@ class DialogoTroceador(wx.Dialog):
                 "Carpeta no encontrada", wx.OK | wx.ICON_WARNING,
             )
             return
+        reproducir(OPEN_FOLDER)
         try:
             if os.name == "nt":
                 os.startfile(self._carpeta_salida)
