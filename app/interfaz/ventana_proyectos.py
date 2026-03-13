@@ -7,6 +7,9 @@ import threading
 import wx.lib.mixins.listctrl as listmix
 
 from app.motor.gestor_proyectos import GestorProyectos, TIPOS_PROYECTO
+from app.motor.reproductor_sonidos import (
+    reproducir, LIST_NAV, MOVE_UP, MOVE_DOWN, OPEN_FOLDER, CLEAR, CLICK, ERROR,
+)
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
@@ -458,6 +461,9 @@ class VentanaProyectos(wx.Frame):
         elif keycode == wx.WXK_DELETE:
             self._al_eliminar(None)
         else:
+            # Navegar con flechas → sonido de navegación
+            if keycode in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
+                reproducir(LIST_NAV)
             evento.Skip()
 
     def _al_tecla_arbol_raw(self, evento):
@@ -643,6 +649,7 @@ class VentanaProyectos(wx.Frame):
             return
         movido = self._gestor.mover_proyecto(proyecto["id"], delta)
         if movido:
+            reproducir(MOVE_UP if delta < 0 else MOVE_DOWN)
             id_movido = proyecto["id"]
             self._cargar_arbol(seleccionar_id=id_movido)
             # Devolver foco al árbol después de reconstruirlo
@@ -742,6 +749,7 @@ class VentanaProyectos(wx.Frame):
             return
         ruta = self.lista_archivos.GetItem(idx, 1).GetText()
         self._gestor.desasociar_archivo(ruta)
+        reproducir(CLEAR)
         proyecto_actualizado = self._gestor.obtener_proyecto(proyecto["id"])
         if proyecto_actualizado:
             self._actualizar_lista_archivos(proyecto_actualizado)
@@ -886,7 +894,9 @@ class VentanaProyectos(wx.Frame):
             return
         try:
             self._gestor.eliminar_proyecto(proyecto["id"], recursivo=True)
+            reproducir(CLEAR)
         except Exception as e:
+            reproducir(ERROR)
             wx.MessageBox(
                 f"No se pudo eliminar el proyecto:\n{e}",
                 "Error al eliminar", wx.OK | wx.ICON_ERROR
@@ -958,6 +968,7 @@ class VentanaProyectos(wx.Frame):
         if proyecto is None:
             self._anunciar_estado("Selecciona primero un proyecto en el árbol.")
             return
+        reproducir(OPEN_FOLDER)
 
         def _limpiar(nombre):
             return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"

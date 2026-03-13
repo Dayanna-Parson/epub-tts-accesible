@@ -2,15 +2,15 @@
 """
 ui_recursos.py
 ───────────────
-Helper para aplicar iconos PNG a botones wx de forma segura.
+Helpers para aplicar iconos a botones wx de forma segura.
 
-Características:
-  · No lanza excepciones si el archivo .png no existe.
-  · Siempre asigna el accessible_name (SetName) para que NVDA lo anuncie,
-    independientemente de si se encontró el icono.
-  · Los iconos se buscan en /recursos/iconos/<nombre>.png.
+Fuentes de icono (por orden de prioridad):
+  1. PNG propio en /recursos/iconos/<nombre>.png
+  2. wx.ArtProvider (iconos del sistema operativo)
+  El AccessibleName (SetName) se asigna siempre para que NVDA
+  anuncie la función del botón independientemente del icono.
 
-Iconos esperados (preparados para cuando existan los archivos):
+Iconos PNG esperados (opcionales):
   examinar.png       buscar / abrir archivo
   trocear.png        dividir / cortar EPUB
   carpeta.png        abrir carpeta en el explorador
@@ -33,6 +33,28 @@ from app.config_rutas import RAIZ
 
 _RUTA_ICONOS = os.path.join(RAIZ, "recursos", "iconos")
 
+# ── Mapa de nombre interno → wx.ArtProvider ID  ──────────────────────────────
+# Usado como fallback cuando no existe el PNG propio.
+_ART_FALLBACK = {
+    "examinar":      wx.ART_FILE_OPEN,
+    "carpeta":       wx.ART_FOLDER_OPEN,
+    "trocear":       wx.ART_CUT,
+    "seleccionar":   wx.ART_TICK_MARK,
+    "deseleccionar": wx.ART_CROSS_MARK,
+    "eliminar":      wx.ART_DELETE,
+    "cerrar":        wx.ART_QUIT,
+    "buscar":        wx.ART_FIND,
+    "proyectos":     wx.ART_LIST_VIEW,
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+    "detener":       wx.ART_STOP,
+    "añadir":        wx.ART_PLUS,
+    "nuevo":         wx.ART_NEW,
+    "guardar":       wx.ART_FILE_SAVE,
+    "informacion":   wx.ART_INFORMATION,
+    "advertencia":   wx.ART_WARNING,
+    "error":         wx.ART_ERROR,
+}
+
 
 def aplicar_icono_boton(
     btn: wx.Button,
@@ -41,8 +63,14 @@ def aplicar_icono_boton(
     size: tuple = (16, 16),
 ):
     """
-    Aplica un icono PNG al botón si el archivo existe en /recursos/iconos/.
-    Siempre asigna accessible_name (btn.SetName) para NVDA, con o sin icono.
+    Aplica un icono al botón manteniendo el texto label intacto.
+
+    Prioridad:
+      1. PNG propio en /recursos/iconos/<nombre_icono>.png
+      2. wx.ArtProvider (icono del sistema, si hay mapeo)
+
+    Siempre asigna accessible_name (btn.SetName) para NVDA.
+    No lanza excepciones si el archivo no existe.
 
     Parámetros
     ----------
@@ -56,16 +84,37 @@ def aplicar_icono_boton(
     if nombre:
         btn.SetName(nombre)
 
-    ruta = os.path.join(_RUTA_ICONOS, f"{nombre_icono}.png")
-    if not os.path.exists(ruta):
-        return
+    bmp = _cargar_bmp_png(nombre_icono, size) or _cargar_bmp_art(nombre_icono, size)
+    if bmp and bmp.IsOk():
+        btn.SetBitmap(bmp)
+        btn.SetBitmapMargins(4, 2)
 
+
+# ── Helpers privados ──────────────────────────────────────────────────────────
+
+def _cargar_bmp_png(nombre: str, size: tuple):
+    """Intenta cargar un PNG propio; devuelve Bitmap o None."""
+    ruta = os.path.join(_RUTA_ICONOS, f"{nombre}.png")
+    if not os.path.exists(ruta):
+        return None
     try:
         img = wx.Image(ruta, wx.BITMAP_TYPE_PNG)
         if img.IsOk():
             img = img.Scale(*size, wx.IMAGE_QUALITY_HIGH)
-            btn.SetBitmap(wx.Bitmap(img))
-            btn.SetBitmapMargins(4, 2)
+            return wx.Bitmap(img)
     except Exception:
         pass
+    return None
+
+
+def _cargar_bmp_art(nombre: str, size: tuple):
+    """Intenta obtener un icono del wx.ArtProvider; devuelve Bitmap o None."""
+    art_id = _ART_FALLBACK.get(nombre)
+    if art_id is None:
+        return None
+    try:
+        bmp = wx.ArtProvider.GetBitmap(art_id, wx.ART_BUTTON, size)
+        return bmp if bmp.IsOk() else None
+    except Exception:
+        return None
 # ANCLAJE_FIN: UI_RECURSOS

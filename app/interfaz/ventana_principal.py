@@ -7,6 +7,7 @@ from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
 from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
@@ -58,6 +59,14 @@ class VentanaPrincipal(wx.Frame):
     def __init__(self, padre, titulo="Epub TTS"):
         super().__init__(padre, title=titulo, size=(1000, 700))
         self.Maximize(True)
+
+        # Icono de ventana con el sistema de arte estándar de wx
+        try:
+            bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_FRAME_ICON, (32, 32))
+            if bmp.IsOk():
+                self.SetIcon(wx.Icon(bmp))
+        except Exception:
+            pass
 
         # 1. Configurar Panel de Pestañas (Notebook)
         self.notebook = wx.Notebook(self)
@@ -112,6 +121,10 @@ class VentanaPrincipal(wx.Frame):
 
         # Verificación automática de voces nuevas (una vez al día, hilo de fondo)
         wx.CallAfter(self._iniciar_verificacion_voces)
+
+        # Sonido "aplicación lista" — 600 ms de margen para que NVDA
+        # termine de anunciar la ventana antes de reproducir el sonido.
+        wx.CallLater(600, reproducir, APP_READY)
     # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
 
     # ANCLAJE_INICIO: CONFIGURACION_MENUS
@@ -184,6 +197,7 @@ class VentanaPrincipal(wx.Frame):
         if indice == 0:
             # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
             self._configurar_aceleradores_globales()
+        reproducir(CLICK)
         self._guardar_sesion()
         evento.Skip()
 
@@ -193,6 +207,7 @@ class VentanaPrincipal(wx.Frame):
         Evita doble instancia. Captura el foco previo para devolverlo al cerrar (feature b).
         Si hay un TXT cargado en Grabación, navega al nodo del archivo (feature o).
         """
+        reproducir(OPEN_FOLDER)
         foco_previo = wx.Window.FindFocus()
         ruta_txt = self.pestana_grabacion.ruta_txt_actual
         if self._ventana_proyectos and not self._ventana_proyectos.IsBeingDeleted():

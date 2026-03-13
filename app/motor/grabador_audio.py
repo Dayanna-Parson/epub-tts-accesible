@@ -52,7 +52,8 @@ try:
 except ImportError:
     pass  # pydub no instalado — los métodos individuales manejan el fallback
 
-CARPETA_RAIZ_GRABACIONES = "Grabaciones_Epub-TTS"
+# Ruta absoluta → funciona independientemente del directorio de trabajo actual
+CARPETA_RAIZ_GRABACIONES = os.path.join(_RAIZ, "Grabaciones_Epub-TTS")
 
 # ── Máximo de caracteres por petición a cada proveedor ────────────────────────
 _MAX_CHARS = {

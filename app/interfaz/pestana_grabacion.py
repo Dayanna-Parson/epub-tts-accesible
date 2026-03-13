@@ -38,7 +38,11 @@ from app.motor.procesador_etiquetas import (
     limpiar_nombre_archivo,
 )
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
-from app.motor.reproductor_sonidos import reproducir, REC_START, REC_STOP, ERROR as SND_ERROR
+from app.motor.reproductor_sonidos import (
+    reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
+    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR,
+)
+REC_STOP = REC_END   # alias interno de compatibilidad
 
 logger = logging.getLogger(__name__)
 
@@ -1207,6 +1211,7 @@ class PestanaGrabacion(wx.Panel):
             return
 
         modo_dividido = self.chk_dividir.IsChecked()
+        self._modo_dividido = modo_dividido   # accesible desde _callback_progreso
 
         self.btn_iniciar.Enable(False)
         self.btn_abortar.Enable(True)
@@ -1232,11 +1237,17 @@ class PestanaGrabacion(wx.Panel):
             f"(Etiqueta: @{etiqueta}  —  Voz: {nombre_voz})"
         )
         wx.CallAfter(self._actualizar_progreso_ui, pct, msg)
-        # Verbalizar con voz del sistema para que el usuario sepa qué se está grabando
-        texto_voz = f"Fragmento {actual} de {total}. Etiqueta {etiqueta}."
-        threading.Thread(
-            target=self._hablar, args=(texto_voz,), daemon=True
-        ).start()
+
+        modo_dividido = getattr(self, "_modo_dividido", True)
+        if not modo_dividido:
+            # Modo audio único: SAPI no informa por voz → tick de progreso rítmico
+            reproducir(PROGRESS)
+        else:
+            # Modo dividido: SAPI verbaliza cada fragmento → sin tick sonoro adicional
+            texto_voz = f"Fragmento {actual} de {total}. Etiqueta {etiqueta}."
+            threading.Thread(
+                target=self._hablar, args=(texto_voz,), daemon=True
+            ).start()
 
     def _actualizar_progreso_ui(self, pct, msg):
         self.gauge.SetValue(pct)
@@ -1295,7 +1306,9 @@ class PestanaGrabacion(wx.Panel):
         self.lbl_progreso.SetLabel(
             f"Proceso finalizado. {n} archivo(s) generado(s) en {nombre_carpeta}."
         )
-        reproducir(REC_STOP)
+        reproducir(REC_END)
+        # Sonido adicional de "proceso largo completado" al finalizar el libro
+        reproducir(SUCCESS)
         threading.Thread(
             target=self._hablar,
             args=(f"Grabación completada. {n} archivos generados.",),
