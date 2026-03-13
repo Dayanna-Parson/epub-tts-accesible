@@ -1,8 +1,11 @@
 # ANCLAJE_INICIO: IMPORTACIONES
 import os
 import json
+import logging
 import threading
 import time
+
+logger = logging.getLogger(__name__)
 import wx
 from app.servicios.cliente_sapi5 import ClienteSapi5
 from app.servicios.cliente_azure import ClienteAzure
@@ -58,7 +61,7 @@ class ReproductorVoz:
                 with open(ruta, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"[Error] No se pudo leer ajustes.json en el reproductor: {e}")
+            logger.warning("[ReproductorVoz] No se pudo leer ajustes.json: %s", e)
         return {}
     def fijar_voz(self, datos_voz):
         self.detener()
@@ -118,7 +121,7 @@ class ReproductorVoz:
                 self._control_cuota.registrar_gasto(texto, tipo)
                 # Cambiar motor activo si difiere del actual
                 if tipo != self.tipo_motor_actual:
-                    print(f"[Cuota] '{self.tipo_motor_actual}' sin cuota → usando '{tipo}'")
+                    logger.info("[ReproductorVoz] '%s' sin cuota → usando '%s'", self.tipo_motor_actual, tipo)
                     self.motor_activo = motor
                     self.tipo_motor_actual = tipo
                 return tipo
@@ -174,7 +177,7 @@ class ReproductorVoz:
             try:
                 self.cliente_local.hablar(texto)
             except Exception as e:
-                print(f"[Error] Voz local SAPI5: {e}")
+                logger.warning("[ReproductorVoz] Error en voz local SAPI5: %s", e)
                 self.estado = "detenido"
             # Las voces locales gestionan su propia cola internamente; no se usa callback
         else:
@@ -201,7 +204,7 @@ class ReproductorVoz:
                 self.motor_activo.hablar(texto, self.voz_actual)
         except Exception as e:
             error_msg = str(e)
-            print(f"[Error] Voz neuronal ({self.tipo_motor_actual}): {error_msg}")
+            logger.warning("[ReproductorVoz] Error en voz neuronal (%s): %s", self.tipo_motor_actual, error_msg)
 
             if self._generacion == generacion and not self._detenido_intencionalmente:
                 if self._es_error_cuota(error_msg):
@@ -287,7 +290,7 @@ class ReproductorVoz:
             try:
                 motor.preparar(texto, datos_voz)
             except Exception as e:
-                print(f"[Precarga] Error: {e}")
+                logger.warning("[ReproductorVoz] Error en precarga: %s", e)
 
         threading.Thread(target=_preparar, daemon=True).start()
     # ANCLAJE_FIN: PRECARGA_SIGUIENTE_FRAGMENTO

@@ -1,8 +1,11 @@
 import os
 import json
+import logging
 from datetime import datetime
 import wx
 from app.config_rutas import ruta_config
+
+logger = logging.getLogger(__name__)
 
 
 class ControlCuota:
@@ -48,22 +51,22 @@ class ControlCuota:
             return datos_base
 
         except Exception as e:
-            print(f"[Error] No se pudo leer uso_cuota.json: {e}")
+            logger.warning("[ControlCuota] No se pudo leer uso_cuota.json: %s", e)
 
         return datos_base
 
     def guardar_datos(self):
         try:
-            os.makedirs("configuraciones", exist_ok=True)
+            os.makedirs(os.path.dirname(self.ruta_uso), exist_ok=True)
             with open(self.ruta_uso, 'w', encoding='utf-8') as f:
                 json.dump(self.datos, f, indent=4, ensure_ascii=False)
         except Exception as e:
-            print(f"[Error] No se pudo guardar uso_cuota.json: {e}")
+            logger.warning("[ControlCuota] No se pudo guardar uso_cuota.json: %s", e)
 
     def reiniciar_contadores_si_mes_nuevo(self):
         mes_hoy = datetime.now().month
         if mes_hoy != self.datos.get("mes_actual"):
-            print(f"[Cuota] Nuevo mes detectado. Reiniciando contadores.")
+            logger.info("[ControlCuota] Nuevo mes detectado. Reiniciando contadores.")
             self.datos["mes_actual"] = mes_hoy
             self.datos["gastado"] = {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0}
             self.guardar_datos()

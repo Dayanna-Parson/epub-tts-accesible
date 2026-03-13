@@ -463,10 +463,9 @@ class GrabadorAudio:
     # ------------------------------------------------------------------ #
 
     def _limpiar_xml(self, texto: str) -> str:
-        t = texto.replace("&", "y")
-        t = t.replace("<", "").replace(">", "")
-        t = t.replace('"', "").replace("'", "")
-        return t
+        """Escapa caracteres especiales XML para usarlos dentro de SSML."""
+        import xml.sax.saxutils
+        return xml.sax.saxutils.escape(texto)
 
     def _grabar_azure(self, texto: str, datos_voz, ruta_salida: str):
         """MP3 48 kHz / 192 kbps desde Azure, re-codificado a MP3 320 kbps."""
