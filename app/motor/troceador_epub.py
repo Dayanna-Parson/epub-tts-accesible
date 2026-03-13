@@ -24,7 +24,7 @@ Tipos de índice soportados
   · Plano       → Dedicatoria / Prólogo / Capítulo 1 / Epílogo …
 
 Estructura de salida:
-  Grabaciones_Epub-TTS/<NombreLibro>/originales/01_Titulo.txt …
+  Grabaciones_Epub-TTS/<NombreLibro>/capitulos/01_Titulo.txt …
 
 Formato de salida: TXT con cabecera (título + separador) y texto limpio.
 """
@@ -350,14 +350,14 @@ class TroceadorEpub:
     @staticmethod
     def carpeta_salida_para(ruta_epub: str) -> str:
         """
-        Devuelve la ruta de la subcarpeta /originales/ donde se guardan los TXT.
+        Devuelve la ruta de la subcarpeta /capitulos/ donde se guardan los TXT.
 
         Estructura:
-          Grabaciones_Epub-TTS/<NombreLibro>/originales/
+          Grabaciones_Epub-TTS/<NombreLibro>/capitulos/
 
         Donde <NombreLibro> es el nombre del archivo EPUB sin extensión.
-        Ej: /libros/Mi Novela.epub  →  Grabaciones_Epub-TTS/Mi Novela/originales/
+        Ej: /libros/Mi Novela.epub  →  Grabaciones_Epub-TTS/Mi Novela/capitulos/
         """
         nombre_base = os.path.splitext(os.path.basename(ruta_epub))[0]
-        return os.path.join(CARPETA_RAIZ, nombre_base, "originales")
+        return os.path.join(CARPETA_RAIZ, nombre_base, "capitulos")
 # ANCLAJE_FIN: TROCEADOR_EPUB
