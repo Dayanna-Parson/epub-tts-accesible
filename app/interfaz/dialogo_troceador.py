@@ -148,7 +148,7 @@ class DialogoTroceador(wx.Dialog):
         self.btn_dividir = wx.Button(panel, label="&Dividir seleccionados")
         self.btn_dividir.SetHelpText(
             "Genera un archivo TXT por cada capítulo marcado. "
-            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/originales/."
+            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
         )
         self.btn_dividir.Disable()
         aplicar_icono_boton(self.btn_dividir, "trocear", "Dividir seleccionados")
@@ -159,12 +159,12 @@ class DialogoTroceador(wx.Dialog):
             "NVDA lo leerá al enfocar esta etiqueta."
         )
 
-        self.btn_abrir_carpeta = wx.Button(panel, label="Abrir carpeta &originales")
+        self.btn_abrir_carpeta = wx.Button(panel, label="Abrir carpeta &capitulos")
         self.btn_abrir_carpeta.SetHelpText(
-            "Abre en el Explorador la carpeta /originales/ donde se generaron los TXT."
+            "Abre en el Explorador la carpeta /capitulos/ donde se generaron los TXT."
         )
         self.btn_abrir_carpeta.Hide()
-        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta originales")
+        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta capitulos")
 
         sz_accion.Add(self.btn_dividir,      0, wx.RIGHT, 8)
         sz_accion.Add(self.lbl_progreso,     1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
@@ -326,14 +326,14 @@ class DialogoTroceador(wx.Dialog):
         self.btn_abrir_carpeta.Show()
         self.Layout()
 
-        # Diálogo Sí/No para abrir la carpeta /originales/
+        # Diálogo Sí/No para abrir la carpeta /capitulos/
         respuesta = wx.MessageBox(
             f"Se han generado {n_archivos} archivo(s).\n¿Abrir carpeta de destino?",
             "División completada",
             wx.YES_NO | wx.ICON_INFORMATION,
         )
         if respuesta == wx.YES:
-            self._abrir_carpeta_originales()
+            self._abrir_carpeta_capitulos()
 
     def _set_progreso(self, texto: str):
         """Actualiza label de progreso Y título de la ventana (retroalimentación NVDA)."""
@@ -343,7 +343,7 @@ class DialogoTroceador(wx.Dialog):
 
     # ── Abrir carpeta de destino ──────────────────────────────────────────────
 
-    def _abrir_carpeta_originales(self):
+    def _abrir_carpeta_capitulos(self):
         if not self._carpeta_salida or not os.path.isdir(self._carpeta_salida):
             wx.MessageBox(
                 "La carpeta de destino no existe todavía o no se ha generado correctamente.",
@@ -363,7 +363,7 @@ class DialogoTroceador(wx.Dialog):
             )
 
     def _al_abrir_carpeta(self, evento=None):
-        self._abrir_carpeta_originales()
+        self._abrir_carpeta_capitulos()
 
     # ── Teclado global ────────────────────────────────────────────────────────
 

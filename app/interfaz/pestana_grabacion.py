@@ -38,6 +38,7 @@ from app.motor.procesador_etiquetas import (
     limpiar_nombre_archivo,
 )
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
+from app.motor.reproductor_sonidos import reproducir, REC_START, REC_STOP, ERROR as SND_ERROR
 
 logger = logging.getLogger(__name__)
 
@@ -329,7 +330,7 @@ class PestanaGrabacion(wx.Panel):
         )
         self.btn_dividir_epub.SetHelpText(
             "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "
-            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/originales/."
+            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
         )
 
         sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
@@ -1122,6 +1123,54 @@ class PestanaGrabacion(wx.Panel):
     # Proceso de grabación
     # ================================================================== #
 
+    def _verificar_credenciales_previas(self) -> list:
+        """
+        Comprueba que cada proveedor de voz en uso tenga credenciales configuradas.
+        Retorna lista de mensajes de error; vacía = todo OK.
+        """
+        errores = []
+        try:
+            ruta = ruta_config("ajustes.json")
+            config = {}
+            if os.path.exists(ruta):
+                with open(ruta, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+        except Exception as e:
+            errores.append(f"No se pudo leer ajustes.json: {e}")
+            return errores
+
+        proveedores = set()
+        for datos in self.asignaciones.values():
+            if isinstance(datos, dict):
+                proveedores.add(datos.get("proveedor_id", "local").lower())
+
+        for prov in proveedores:
+            if "azure" in prov:
+                az = config.get("azure", {})
+                if not az.get("key") or not az.get("region"):
+                    errores.append(
+                        "Azure TTS: credenciales no configuradas "
+                        "(clave de suscripción o región vacías).\n"
+                        "Configúralas en Ajustes → Azure."
+                    )
+            elif "eleven" in prov:
+                el = config.get("elevenlabs", {})
+                if not el.get("api_key"):
+                    errores.append(
+                        "ElevenLabs: API Key no configurada.\n"
+                        "Configúrala en Ajustes → ElevenLabs."
+                    )
+            elif "polly" in prov:
+                po = config.get("polly", {})
+                if not po.get("access_key") or not po.get("secret_key"):
+                    errores.append(
+                        "Amazon Polly: credenciales no configuradas "
+                        "(Access Key / Secret Key vacíos).\n"
+                        "Configúralas en Ajustes → Amazon Polly."
+                    )
+            # 'local' (SAPI5): no requiere credenciales
+        return errores
+
     def al_iniciar_grabacion(self, evento):
         if not self.fragmentos:
             wx.MessageBox(
@@ -1144,12 +1193,26 @@ class PestanaGrabacion(wx.Panel):
             ) != wx.YES:
                 return
 
+        # ── Pre-chequeo preventivo de credenciales ────────────────────────────
+        fallos_cred = self._verificar_credenciales_previas()
+        if fallos_cred:
+            detalle = "\n\n".join(fallos_cred)
+            reproducir(SND_ERROR)
+            wx.MessageBox(
+                f"No se puede iniciar la grabación:\n\n{detalle}\n\n"
+                "Revisa la configuración antes de continuar.",
+                "Credenciales no configuradas",
+                wx.OK | wx.ICON_ERROR,
+            )
+            return
+
         modo_dividido = self.chk_dividir.IsChecked()
 
         self.btn_iniciar.Enable(False)
         self.btn_abortar.Enable(True)
         self.gauge.SetValue(0)
         self.lbl_progreso.SetLabel("Iniciando grabación…")
+        reproducir(REC_START)
 
         self.titulo_libro    = titulo
         self._ultima_carpeta = None
@@ -1198,14 +1261,41 @@ class PestanaGrabacion(wx.Panel):
         self._ultima_carpeta = carpeta
         self.gauge.SetValue(100)
 
-        n              = len(archivos)
+        # ── Validar que los archivos existen físicamente y tienen contenido ────
+        archivos_reales = [
+            a for a in archivos
+            if os.path.exists(a) and os.path.getsize(a) > 0
+        ]
+        n              = len(archivos_reales)
         nombre_carpeta = os.path.basename(carpeta)
 
-        self.lbl_progreso.SetLabel(
-            f"Proceso finalizado. {n} archivos generados en {nombre_carpeta}."
-        )
+        if n == 0:
+            # Ningún archivo de audio válido generado → error real
+            reproducir(SND_ERROR)
+            self.lbl_progreso.SetLabel(
+                "Error: no se generó ningún archivo de audio válido."
+            )
+            detalle = ""
+            if errores:
+                resumen = "\n".join(errores[:5])
+                if len(errores) > 5:
+                    resumen += f"\n… y {len(errores) - 5} errores más."
+                detalle = f"\n\nDetalle de errores:\n{resumen}"
+            wx.MessageBox(
+                "La grabación finalizó pero no se generó ningún archivo de audio válido.\n"
+                "Es posible que las credenciales del servicio sean incorrectas "
+                f"o que no haya conexión a Internet.{detalle}\n\n"
+                "Revisa la configuración y vuelve a intentarlo.",
+                "Error de grabación",
+                wx.OK | wx.ICON_ERROR,
+            )
+            return
 
-        # Verbalizar fin de grabación
+        # ── Éxito (con o sin errores parciales) ───────────────────────────────
+        self.lbl_progreso.SetLabel(
+            f"Proceso finalizado. {n} archivo(s) generado(s) en {nombre_carpeta}."
+        )
+        reproducir(REC_STOP)
         threading.Thread(
             target=self._hablar,
             args=(f"Grabación completada. {n} archivos generados.",),
@@ -1237,6 +1327,7 @@ class PestanaGrabacion(wx.Panel):
         self.btn_iniciar.Enable(True)
         self.btn_abortar.Enable(False)
         self.lbl_progreso.SetLabel(f"Error durante la grabación: {error}")
+        reproducir(SND_ERROR)
         wx.MessageBox(
             f"Error durante la grabación:\n\n{error}",
             "Error de grabación", wx.OK | wx.ICON_ERROR,
