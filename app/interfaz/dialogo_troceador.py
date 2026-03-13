@@ -29,7 +29,7 @@ import wx
 import wx.lib.mixins.listctrl as listmix
 
 from app.motor.troceador_epub import TroceadorEpub
-from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS
+from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS, PROCESO
 from app.interfaz.ui_recursos import aplicar_icono_boton
 
 

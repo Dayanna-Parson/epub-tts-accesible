@@ -338,9 +338,9 @@ class PestanaGrabacion(wx.Panel):
 
         sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)
+        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
         sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
         sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)
-        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
 
         sz_titulo = wx.BoxSizer(wx.HORIZONTAL)
         lbl_titulo = wx.StaticText(self, label="Título (opcional):")

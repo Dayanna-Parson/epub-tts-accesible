@@ -310,7 +310,10 @@ class VentanaProyectos(wx.Frame):
             self._añadir_nodo_recursivo(nodo, hijo, nivel + 1)
 
     def _proyecto_seleccionado(self) -> dict | None:
-        nodo = self.arbol.GetSelection()
+        try:
+            nodo = self.arbol.GetSelection()
+        except RuntimeError:
+            return None
         if not nodo or not nodo.IsOk():
             return None
         proyecto_id = self._mapa_nodos.get(nodo)
@@ -358,8 +361,13 @@ class VentanaProyectos(wx.Frame):
         el usuario navega con flechas en el árbol y pulsa Tab cuando quiere editar.
         Esto evita el salto errático de foco que confunde a NVDA.
         """
-        # Guardia: el árbol puede haberse destruido antes de que el evento llegue
-        if not self.arbol or self.arbol.IsBeingDeleted():
+        # Guardia: el árbol puede haberse destruido antes de que el evento llegue.
+        # IsBeingDeleted() también puede lanzar RuntimeError si el objeto C++ ya no existe.
+        try:
+            if self.arbol.IsBeingDeleted():
+                evento.Skip()
+                return
+        except RuntimeError:
             evento.Skip()
             return
         proyecto = self._proyecto_seleccionado()
