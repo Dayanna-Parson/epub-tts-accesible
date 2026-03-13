@@ -18,14 +18,17 @@ _RUTA_LOG = os.path.join(_DIR_REGISTROS, "app.log")
 
 _handler_archivo = logging.handlers.RotatingFileHandler(
     _RUTA_LOG,
-    maxBytes=5 * 1024 * 1024,   # 5 MB
-    backupCount=3,
+    maxBytes=512 * 1024,   # 512 KB — solo errores, no se llena nunca
+    backupCount=1,         # un único archivo de respaldo
     encoding="utf-8",
 )
+_handler_archivo.setLevel(logging.WARNING)   # archivo: solo WARNING / ERROR / CRITICAL
 _handler_archivo.setFormatter(
     logging.Formatter("%(asctime)s  %(levelname)-8s  %(name)s  %(message)s")
 )
+
 _handler_consola = logging.StreamHandler()
+_handler_consola.setLevel(logging.INFO)      # consola: INFO y superiores (útil en desarrollo)
 _handler_consola.setFormatter(
     logging.Formatter("%(levelname)-8s  %(name)s  %(message)s")
 )
@@ -34,8 +37,11 @@ logging.basicConfig(
     level=logging.INFO,
     handlers=[_handler_archivo, _handler_consola],
 )
+
+# comtypes genera líneas INFO muy ruidosas sobre su caché interna — silenciar en archivo
+logging.getLogger("comtypes").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
-logger.info("Epub-TTS arrancando. Log: %s", _RUTA_LOG)
+logger.info("Epub-TTS arrancando. Errores → %s", _RUTA_LOG)
 
 # ── Migración de archivos de configuración ────────────────────────────────────
 try:
@@ -110,4 +116,4 @@ if __name__ == "__main__":
         logger.exception("Error fatal al ejecutar la aplicación")
         sys.exit(1)
     finally:
-        logger.info("Epub-TTS cerrado")
+        logger.info("Epub-TTS cerrado")   # solo consola, no llega al archivo
