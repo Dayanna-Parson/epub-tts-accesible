@@ -2,30 +2,32 @@
 """
 reproductor_sonidos.py
 ───────────────────────
-Infraestructura de sonidos de baja latencia.
+Infraestructura de sonidos portables usando wxPython.
 
-Estrategia:
-  1. Al importar el módulo, todos los .wav se leen a RAM (_CACHE_BYTES).
-     También se guarda la ruta absoluta en _CACHE_RUTA como último recurso.
-  2. Cada llamada a reproducir() hace solo un lookup en dict (sin I/O de disco).
-  3. Ruta de reproducción (en orden):
-       a) winsound.PlaySound(bytes, SND_MEMORY|SND_ASYNC|SND_NODEFAULT)
-          — sin hilos, retorno inmediato; máxima latencia baja.
-          — Si falla (algunos entornos Windows no admiten SND_ASYNC+SND_MEMORY):
-       b) hilo daemon + SND_MEMORY (bloqueante dentro del hilo).
-          — Los datos siguen siendo bytes en RAM, sin disco.
-          — Si también falla (driver incompatible):
-       c) hilo daemon + SND_FILENAME desde la ruta en caché.
+Motor principal: wx.adv.Sound
+  · Parte de wxPython, que YA ES dependencia obligatoria de la app.
+  · Funciona en cualquier Windows independientemente del driver de audio,
+    configuración del sistema o versión de Python.
+  · Reproduce WAV de forma asíncrona (SOUND_ASYNC) sin bloquear la UI.
+  · IMPORTANTE: Play() debe llamarse desde el hilo principal de wx.
+    Para llamadas desde hilos de fondo usar wx.CallAfter(reproducir, SONIDO).
 
-Sin excepciones visibles; los fallos se registran en el log de la app.
+Motor fallback: winsound (stdlib de Python en Windows)
+  · Se usa si wx.adv.Sound falla por algún motivo inesperado.
+
+Inicialización en dos fases:
+  1. Al importar: _precargar_rutas() → guarda rutas en _CACHE_RUTA (sin wx).
+  2. Primer reproducir(): _inicializar_wx() → crea objetos wx.adv.Sound.
+     Esto ocurre siempre DESPUÉS de que wx.App esté activo.
 
 Archivos en /recursos/sonidos/ (WAV 16-bit, 44100 Hz):
   app_ready, rec_start, rec_end, progress, list_nav, move_up, move_down,
   open_folder, success, click, error, clear
 
 Uso:
-    from app.motor.reproductor_sonidos import reproducir, CLICK, LIST_NAV
-    reproducir(CLICK)   # instantáneo, no bloquea
+    from app.motor.reproductor_sonidos import reproducir, CLICK, ERROR
+    reproducir(CLICK)                          # desde hilo principal
+    wx.CallAfter(reproducir, PROGRESS)         # desde hilo de fondo
 """
 
 import os
@@ -59,98 +61,93 @@ PROCESO      = PROGRESS
 VOZ_NUEVA    = SUCCESS
 APP_UPDATE   = SUCCESS
 
-# ── Cachés  ───────────────────────────────────────────────────────────────────
-_CACHE_BYTES: dict[str, bytes] = {}   # nombre → datos WAV en RAM
-_CACHE_RUTA:  dict[str, str]  = {}   # nombre → ruta absoluta (fallback final)
+# ── Cachés ────────────────────────────────────────────────────────────────────
+_CACHE_RUTA:    dict[str, str]   = {}   # nombre → ruta absoluta  (llenado al importar)
+_CACHE_SONIDOS: dict[str, object] = {}  # nombre → wx.adv.Sound   (llenado en primer uso)
+_wx_cache_listo = False
 
 
-def _poblar_cache() -> None:
-    """Lee todos los .wav del directorio de sonidos a memoria al arrancar."""
+# ── Fase 1: cargar rutas al importar (sin wx todavía) ────────────────────────
+
+def _precargar_rutas() -> None:
     if not os.path.isdir(_RUTA_SONIDOS):
         logger.warning("[Sonidos] Directorio no encontrado: %s", _RUTA_SONIDOS)
         return
-
-    cargados = 0
     for archivo in os.listdir(_RUTA_SONIDOS):
-        if not archivo.lower().endswith(".wav"):
-            continue
-        nombre = archivo[:-4]
-        ruta   = os.path.join(_RUTA_SONIDOS, archivo)
-        _CACHE_RUTA[nombre] = ruta
+        if archivo.lower().endswith(".wav"):
+            nombre = archivo[:-4]
+            _CACHE_RUTA[nombre] = os.path.join(_RUTA_SONIDOS, archivo)
+    logger.info("[Sonidos] %d archivos disponibles en %s", len(_CACHE_RUTA), _RUTA_SONIDOS)
+
+_precargar_rutas()
+
+
+# ── Fase 2: crear objetos wx.adv.Sound (lazy, tras wx.App) ───────────────────
+
+def _inicializar_wx() -> None:
+    global _wx_cache_listo
+    if _wx_cache_listo:
+        return
+    try:
+        import wx
+        import wx.adv
+    except ImportError:
+        logger.warning("[Sonidos] wx no disponible — usando fallback winsound")
+        _wx_cache_listo = True
+        return
+
+    ok = 0
+    for nombre, ruta in _CACHE_RUTA.items():
         try:
-            with open(ruta, "rb") as f:
-                _CACHE_BYTES[nombre] = f.read()
-            cargados += 1
-        except OSError as exc:
-            logger.warning("[Sonidos] No se pudo leer %s: %s", archivo, exc)
+            s = wx.adv.Sound(ruta)
+            if s.IsOk():
+                _CACHE_SONIDOS[nombre] = s
+                ok += 1
+            else:
+                logger.warning("[Sonidos] wx.adv.Sound rechazó '%s'", nombre)
+        except Exception as exc:
+            logger.warning("[Sonidos] Error cargando '%s': %s", nombre, exc)
 
-    logger.info("[Sonidos] %d/%d archivos en caché RAM (%s)",
-                cargados, cargados, _RUTA_SONIDOS)
-
-
-_poblar_cache()   # una sola vez al importar el módulo
+    logger.info("[Sonidos] %d/%d sonidos listos en wx.adv.Sound", ok, len(_CACHE_RUTA))
+    _wx_cache_listo = True
 
 
 # ── API pública ───────────────────────────────────────────────────────────────
 
 def reproducir(nombre_sonido: str) -> None:
     """
-    Reproduce el sonido desde RAM sin bloquear el hilo de la UI.
-    Tres niveles de fallback garantizan que el sonido se escuche
-    aunque la configuración de Windows no admita SND_ASYNC+SND_MEMORY.
+    Reproduce el sonido indicado de forma asíncrona.
+
+    Debe llamarse desde el hilo principal de wx.
+    Desde hilos de fondo: wx.CallAfter(reproducir, NOMBRE_SONIDO).
     """
-    datos = _CACHE_BYTES.get(nombre_sonido)
-    ruta  = _CACHE_RUTA.get(nombre_sonido)
+    # Inicialización lazy (primera llamada, wx.App ya activo)
+    if not _wx_cache_listo:
+        _inicializar_wx()
 
-    if not datos and not ruta:
-        # Sonido no cargado — ocurre si el .wav no existe en disco
-        return
-
-    # ── Nivel A: SND_MEMORY + SND_ASYNC (sin hilo, máxima velocidad) ─────
-    if datos:
+    # ── Motor principal: wx.adv.Sound ─────────────────────────────────────
+    sound = _CACHE_SONIDOS.get(nombre_sonido)
+    if sound is not None:
         try:
-            import winsound
-            winsound.PlaySound(
-                datos,
-                winsound.SND_MEMORY | winsound.SND_ASYNC | winsound.SND_NODEFAULT,
-            )
-            return   # éxito: salida rápida
+            import wx.adv
+            sound.Play(wx.adv.SOUND_ASYNC)
+            return
         except Exception as exc:
-            logger.debug(
-                "[Sonidos] SND_MEMORY|SND_ASYNC no disponible para '%s': %s",
-                nombre_sonido, exc,
-            )
+            logger.debug("[Sonidos] wx.adv.Sound.Play falló ('%s'): %s", nombre_sonido, exc)
 
-    # ── Nivel B: SND_MEMORY bloqueante en hilo daemon ─────────────────────
-    if datos:
-        threading.Thread(
-            target=_play_memory, args=(datos, nombre_sonido), daemon=True
-        ).start()
-        return
-
-    # ── Nivel C: SND_FILENAME desde ruta en caché (último recurso) ────────
+    # ── Fallback: winsound en hilo daemon ─────────────────────────────────
+    ruta = _CACHE_RUTA.get(nombre_sonido)
     if ruta:
         threading.Thread(
-            target=_play_filename, args=(ruta, nombre_sonido), daemon=True
+            target=_play_winsound, args=(ruta, nombre_sonido), daemon=True
         ).start()
 
 
-# ── Implementaciones privadas ─────────────────────────────────────────────────
-
-def _play_memory(datos: bytes, nombre: str) -> None:
-    """Reproduce bytes WAV de forma bloqueante (dentro de un hilo daemon)."""
-    try:
-        import winsound
-        winsound.PlaySound(datos, winsound.SND_MEMORY | winsound.SND_NODEFAULT)
-    except Exception as exc:
-        logger.warning("[Sonidos] _play_memory falló para '%s': %s", nombre, exc)
-
-
-def _play_filename(ruta: str, nombre: str) -> None:
-    """Fallback final: reproduce desde ruta en disco (dentro de un hilo daemon)."""
+def _play_winsound(ruta: str, nombre: str) -> None:
+    """Fallback: winsound.PlaySound desde un hilo daemon."""
     try:
         import winsound
         winsound.PlaySound(ruta, winsound.SND_FILENAME | winsound.SND_NODEFAULT)
     except Exception as exc:
-        logger.warning("[Sonidos] _play_filename falló para '%s': %s", nombre, exc)
+        logger.warning("[Sonidos] winsound también falló ('%s'): %s", nombre, exc)
 # ANCLAJE_FIN: REPRODUCTOR_SONIDOS

@@ -1240,7 +1240,7 @@ class PestanaGrabacion(wx.Panel):
         modo_dividido = self._modo_dividido
         if not modo_dividido:
             # Modo audio único: SAPI no informa por voz → tick de progreso rítmico
-            reproducir(PROGRESS)
+            wx.CallAfter(reproducir, PROGRESS)
         else:
             # Modo dividido: SAPI verbaliza cada fragmento → sin tick sonoro adicional
             texto_voz = f"Fragmento {actual} de {total}. Etiqueta {etiqueta}."
