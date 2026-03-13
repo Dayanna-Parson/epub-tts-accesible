@@ -454,6 +454,9 @@ class VentanaProyectos(wx.Frame):
     def _al_tecla_arbol(self, evento):
         """Gestiona F2 (renombrar) y Supr (eliminar) — EVT_TREE_KEY_DOWN."""
         keycode = evento.GetKeyCode()
+        # PRIMERO: feedback de navegación antes de procesar cualquier lógica
+        if keycode in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
+            reproducir(LIST_NAV)
         if keycode == wx.WXK_F2:
             nodo = self.arbol.GetSelection()
             if nodo and nodo.IsOk():
@@ -461,9 +464,6 @@ class VentanaProyectos(wx.Frame):
         elif keycode == wx.WXK_DELETE:
             self._al_eliminar(None)
         else:
-            # Navegar con flechas → sonido de navegación
-            if keycode in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
-                reproducir(LIST_NAV)
             evento.Skip()
 
     def _al_tecla_arbol_raw(self, evento):

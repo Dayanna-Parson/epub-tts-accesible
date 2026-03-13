@@ -122,9 +122,9 @@ class VentanaPrincipal(wx.Frame):
         # Verificación automática de voces nuevas (una vez al día, hilo de fondo)
         wx.CallAfter(self._iniciar_verificacion_voces)
 
-        # Sonido "aplicación lista" — 600 ms de margen para que NVDA
-        # termine de anunciar la ventana antes de reproducir el sonido.
-        wx.CallLater(600, reproducir, APP_READY)
+        # Sonido "aplicación lista" — 200 ms de margen para que NVDA
+        # empiece a leer la ventana antes de sonar (sin ser tardío).
+        wx.CallLater(200, reproducir, APP_READY)
     # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
 
     # ANCLAJE_INICIO: CONFIGURACION_MENUS
@@ -193,11 +193,11 @@ class VentanaPrincipal(wx.Frame):
         evento.Skip()
 
     def al_cambiar_pestana(self, evento):
+        reproducir(CLICK)   # PRIMERO — feedback antes de cualquier procesado visual
         indice = evento.GetSelection()
         if indice == 0:
             # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
             self._configurar_aceleradores_globales()
-        reproducir(CLICK)
         self._guardar_sesion()
         evento.Skip()
 

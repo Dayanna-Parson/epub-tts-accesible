@@ -42,7 +42,6 @@ from app.motor.reproductor_sonidos import (
     reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
     ERROR as SND_ERROR, OPEN_FOLDER, CLEAR,
 )
-REC_STOP = REC_END   # alias interno de compatibilidad
 
 logger = logging.getLogger(__name__)
 
@@ -1238,7 +1237,7 @@ class PestanaGrabacion(wx.Panel):
         )
         wx.CallAfter(self._actualizar_progreso_ui, pct, msg)
 
-        modo_dividido = getattr(self, "_modo_dividido", True)
+        modo_dividido = self._modo_dividido
         if not modo_dividido:
             # Modo audio único: SAPI no informa por voz → tick de progreso rítmico
             reproducir(PROGRESS)
@@ -1306,9 +1305,7 @@ class PestanaGrabacion(wx.Panel):
         self.lbl_progreso.SetLabel(
             f"Proceso finalizado. {n} archivo(s) generado(s) en {nombre_carpeta}."
         )
-        reproducir(REC_END)
-        # Sonido adicional de "proceso largo completado" al finalizar el libro
-        reproducir(SUCCESS)
+        reproducir(SUCCESS)   # único feedback de finalización — no duplicar
         threading.Thread(
             target=self._hablar,
             args=(f"Grabación completada. {n} archivos generados.",),

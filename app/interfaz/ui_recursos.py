@@ -95,8 +95,6 @@ def aplicar_icono_boton(
 def _cargar_bmp_png(nombre: str, size: tuple):
     """Intenta cargar un PNG propio; devuelve Bitmap o None."""
     ruta = os.path.join(_RUTA_ICONOS, f"{nombre}.png")
-    if not os.path.exists(ruta):
-        return None
     try:
         img = wx.Image(ruta, wx.BITMAP_TYPE_PNG)
         if img.IsOk():
