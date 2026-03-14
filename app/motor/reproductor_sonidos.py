@@ -77,7 +77,7 @@ def _precargar_rutas() -> None:
         if archivo.lower().endswith(".wav"):
             nombre = archivo[:-4]
             _CACHE_RUTA[nombre] = os.path.join(_RUTA_SONIDOS, archivo)
-    logger.info("[Sonidos] %d archivos disponibles en %s", len(_CACHE_RUTA), _RUTA_SONIDOS)
+    logger.debug("[Sonidos] %d archivos disponibles en %s", len(_CACHE_RUTA), _RUTA_SONIDOS)
 
 _precargar_rutas()
 
@@ -108,7 +108,7 @@ def _inicializar_wx() -> None:
         except Exception as exc:
             logger.warning("[Sonidos] Error cargando '%s': %s", nombre, exc)
 
-    logger.info("[Sonidos] %d/%d sonidos listos en wx.adv.Sound", ok, len(_CACHE_RUTA))
+    logger.debug("[Sonidos] %d/%d sonidos listos en wx.adv.Sound", ok, len(_CACHE_RUTA))
     _wx_cache_listo = True
 
 
