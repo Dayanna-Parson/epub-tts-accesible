@@ -7,6 +7,7 @@ from app.motor.cliente_nube_voces import GestorVoces
 from app.motor.reproductor_voz import ReproductorVoz
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 from app.motor.control_cuota import ControlCuota
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV
 
 # --- CLASE ESPECIAL PARA LA LISTA CON CASILLAS ---
 class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
@@ -24,6 +25,8 @@ class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlA
         key = event.GetKeyCode()
         if key == wx.WXK_SPACE:
             self.ToggleItem(self.GetFirstSelected())
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
         event.Skip()
 
 
@@ -1094,9 +1097,12 @@ class PanelAtajos(wx.Panel):
             self.lista.Select(0)
 
     def _al_tecla_lista(self, event):
-        if event.GetKeyCode() == wx.WXK_RETURN:
+        key = event.GetKeyCode()
+        if key == wx.WXK_RETURN:
             self._al_asignar(None)
         else:
+            if key in (wx.WXK_UP, wx.WXK_DOWN):
+                reproducir(LIST_NAV)
             event.Skip()
 
     def _refrescar_aceleradores_frame(self):

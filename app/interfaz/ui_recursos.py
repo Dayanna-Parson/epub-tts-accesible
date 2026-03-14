@@ -46,8 +46,8 @@ _ART_FALLBACK = {
     "buscar":        wx.ART_FIND,
     "proyectos":     wx.ART_LIST_VIEW,
     "grabar":        getattr(wx, "ART_RECORD", wx.ART_EXECUTABLE_FILE),  # ART_RECORD no existe en wxPython < 4.2
-    "detener":       wx.ART_STOP,
-    "añadir":        wx.ART_PLUS,
+    "detener":       getattr(wx, "ART_STOP", wx.ART_DELETE),
+    "añadir":        getattr(wx, "ART_PLUS", wx.ART_NEW),
     "nuevo":         wx.ART_NEW,
     "guardar":       wx.ART_FILE_SAVE,
     "informacion":   wx.ART_INFORMATION,
