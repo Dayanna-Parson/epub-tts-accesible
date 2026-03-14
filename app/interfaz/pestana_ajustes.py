@@ -185,7 +185,7 @@ class PanelGeneral(wx.ScrolledWindow):
         # Guardar config general
         self.config["segundos_salto"] = self.txt_salto.GetValue()
         self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
-        padre = self.GetParent().GetParent().GetParent()
+        padre = wx.GetTopLevelParent(self)
         if hasattr(padre, "guardar_config_en_archivo"):
             padre.guardar_config_en_archivo()
             
@@ -647,10 +647,11 @@ class PanelVoces(wx.Panel):
         self.config["idioma_libro_codigo"] = codigo
         # Guardar en disco
         try:
-            padre_ajustes = self.GetParent().GetParent().GetParent()
+            padre_ajustes = wx.GetTopLevelParent(self)
             if hasattr(padre_ajustes, "guardar_config_en_archivo"):
                 padre_ajustes.guardar_config_en_archivo()
-        except: pass
+        except Exception:
+            pass
 
     def cargar_favoritos(self):
         try:
@@ -689,8 +690,7 @@ class PanelVoces(wx.Panel):
     def _notificar_grabacion(self):
         """Recarga la lista de voces en PestanaGrabacion al instante."""
         try:
-            # PanelVoces → Simplebook → SplitterWindow → PestanaAjustes → Notebook → VentanaPrincipal
-            ventana = self.GetParent().GetParent().GetParent().GetParent().GetParent()
+            ventana = wx.GetTopLevelParent(self)
             if hasattr(ventana, 'pestana_grabacion'):
                 ventana.pestana_grabacion._cargar_voces_disponibles()
         except Exception:
@@ -1287,7 +1287,7 @@ class PestanaAjustes(wx.Panel):
             # Notificar a PestanaLectura para que actualice las etiquetas de los botones
             # de salto con el nuevo valor de segundos guardado
             try:
-                ventana = self.GetParent().GetParent()  # Notebook → VentanaPrincipal
+                ventana = wx.GetTopLevelParent(self)
                 if hasattr(ventana, 'pestana_lectura'):
                     pl = ventana.pestana_lectura
                     pl.cargar_config_salto()

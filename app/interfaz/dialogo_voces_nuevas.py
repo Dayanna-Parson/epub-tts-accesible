@@ -89,12 +89,12 @@ class DialogoVocesNuevas(wx.Dialog):
         # Separador y botón
         sz.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
-        btn_ok = wx.Button(panel, wx.ID_OK, label="Entendido")
-        btn_ok.SetDefault()
-        btn_ok.SetHelpText(
+        self.btn_ok = wx.Button(panel, wx.ID_OK, label="Entendido")
+        self.btn_ok.SetDefault()
+        self.btn_ok.SetHelpText(
             "Cierra este aviso. Puedes explorar las novedades en la pestaña Ajustes."
         )
-        sz.Add(btn_ok, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        sz.Add(self.btn_ok, 0, wx.ALIGN_CENTER | wx.ALL, 10)
 
         panel.SetSizer(sz)
 
@@ -103,5 +103,5 @@ class DialogoVocesNuevas(wx.Dialog):
         self.SetSizer(outer)
 
         # El foco cae en el botón al abrirse → NVDA lo lee de inmediato
-        wx.CallAfter(btn_ok.SetFocus)
+        wx.CallAfter(self.btn_ok.SetFocus)
 # ANCLAJE_FIN: DIALOGO_VOCES_NUEVAS
