@@ -37,12 +37,12 @@ class ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlA
 
     def _al_tecla(self, event):
         key = event.GetKeyCode()
-        if key == wx.WXK_SPACE:
+        if key in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
+        elif key == wx.WXK_SPACE:
             idx = self.GetFirstSelected()
             if idx != -1:
                 self.ToggleItem(idx)
-        elif key in (wx.WXK_UP, wx.WXK_DOWN):
-            reproducir(LIST_NAV)
         event.Skip()
 # ANCLAJE_FIN: LISTA_CATEGORIAS
 

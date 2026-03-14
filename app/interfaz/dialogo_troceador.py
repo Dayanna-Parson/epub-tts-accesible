@@ -29,7 +29,7 @@ import wx
 import wx.lib.mixins.listctrl as listmix
 
 from app.motor.troceador_epub import TroceadorEpub
-from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS, PROCESO
+from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS, PROGRESS, CLEAR
 from app.interfaz.ui_recursos import aplicar_icono_boton
 
 
@@ -264,6 +264,7 @@ class DialogoTroceador(wx.Dialog):
 
     def _al_limpiar(self, evento=None):
         """Resetea el diálogo para cargar otro EPUB."""
+        reproducir(CLEAR)
         self.lista_caps.DeleteAllItems()
         self.txt_ruta.SetValue("")
         self.btn_dividir.Disable()
@@ -296,7 +297,7 @@ class DialogoTroceador(wx.Dialog):
         self._set_progreso("Dividiendo…")
         self.Layout()
 
-        reproducir(PROCESO)
+        reproducir(PROGRESS)
 
         def _progreso(actual, total, titulo):
             wx.CallAfter(
