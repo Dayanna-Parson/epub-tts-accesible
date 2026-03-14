@@ -7,6 +7,7 @@ from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
 
 # ── Tablas de traducción para etiquetas del combo de voz ─────────────────────
@@ -42,8 +43,6 @@ def _nombre_combo_neuronal(voz, prov_id):
         etiquetas.append("[Multilingüe]")
     if "hd" in id_voz and "dragonhd" not in id_voz:
         etiquetas.append("[HD]")
-    if voz.get("es_nueva"):
-        etiquetas.append("[Nueva]")
     nombre_completo = f"{nombre} {' '.join(etiquetas)}" if etiquetas else nombre
 
     genero = _GENEROS_ES.get(voz.get("genero", ""), voz.get("genero", ""))
@@ -102,6 +101,7 @@ class PestanaLectura(wx.Panel):
         )
         self.raiz_id = self.arbol_indice.AddRoot("Libro")
         self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
+        self.arbol_indice.Bind(wx.EVT_TREE_KEY_DOWN, self._al_tecla_arbol_indice)
 
         self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
         self.txt_contenido.SetName("Contenido del libro")
@@ -612,6 +612,12 @@ class PestanaLectura(wx.Panel):
         except Exception as e:
             print(f"[Aviso] No se pudo guardar ajuste de slider '{clave}': {e}")
     
+    def _al_tecla_arbol_indice(self, evento):
+        """Sonido de navegación al moverse por el árbol de índice del libro."""
+        if evento.GetKeyCode() in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
+            reproducir(LIST_NAV)
+        evento.Skip()
+
     def al_activar_capitulo(self, evento):
         id_item = evento.GetItem()
         titulo = self.arbol_indice.GetItemText(id_item)
