@@ -396,9 +396,13 @@ class PanelClaves(wx.ScrolledWindow):
         btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
         btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
         btn_po_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "polly"))
-        
+        btn_po_del = wx.Button(self, label="Borrar clave Polly")
+        btn_po_del.SetHelpText("Borra los datos de acceso de Amazon Polly guardados en la aplicación.")
+        btn_po_del.Bind(wx.EVT_BUTTON, self.al_borrar_polly)
+
         hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
-        hb_po.Add(btn_po_check, 0)
+        hb_po.Add(btn_po_check, 0, wx.RIGHT, 5)
+        hb_po.Add(btn_po_del, 0)
         sz_po.Add(hb_po, 0, wx.ALL, 5)
         sizer.Add(sz_po, 0, wx.EXPAND|wx.ALL, 10)
 
@@ -421,9 +425,13 @@ class PanelClaves(wx.ScrolledWindow):
         btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
         btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")
         btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))
-        
+        btn_el_del = wx.Button(self, label="Borrar clave ElevenLabs")
+        btn_el_del.SetHelpText("Borra la API Key de ElevenLabs guardada en la aplicación.")
+        btn_el_del.Bind(wx.EVT_BUTTON, self.al_borrar_elevenlabs)
+
         hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
-        hb_el.Add(btn_el_check, 0)
+        hb_el.Add(btn_el_check, 0, wx.RIGHT, 5)
+        hb_el.Add(btn_el_del, 0)
         sz_el.Add(hb_el, 0, wx.ALL, 5)
         sizer.Add(sz_el, 0, wx.EXPAND|wx.ALL, 10)
 
@@ -473,6 +481,16 @@ class PanelClaves(wx.ScrolledWindow):
     def al_borrar_azure(self, event):
         self.txt_az_key.Clear()
         self.txt_az_region.Clear()
+        self.al_guardar(None)
+
+    def al_borrar_polly(self, event):
+        self.txt_po_key.Clear()
+        self.txt_po_secret.Clear()
+        self.txt_po_region.Clear()
+        self.al_guardar(None)
+
+    def al_borrar_elevenlabs(self, event):
+        self.txt_el_key.Clear()
         self.al_guardar(None)
 
     def al_comprobar(self, event, proveedor=None):

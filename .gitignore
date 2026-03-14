@@ -27,6 +27,8 @@ configuraciones/proyectos.json
 configuraciones/mapeo_etiquetas.json
 configuraciones/uso_cuota.json
 configuraciones/voces_disponibles.json
+configuraciones/voces_conocidas.json
+configuraciones/voces_ultima_comprobacion.json
 # Nombres legacy (anterior al esquema de migración)
 configuraciones/config_general.json
 configuraciones/voces_favoritas.json
