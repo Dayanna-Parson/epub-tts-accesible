@@ -1234,6 +1234,7 @@ class PestanaAjustes(wx.Panel):
             "Pulsa Intro o Espacio para abrir la categoría seleccionada en el panel de la derecha."
         )
         self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
+        self.lista_cat.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista_cat)
 
         self.panel_derecho = wx.Simplebook(self.splitter)
         self.pag_general = PanelGeneral(self.panel_derecho, self.config)
@@ -1274,6 +1275,12 @@ class PestanaAjustes(wx.Panel):
             return self.pag_atajos.btn_restablecer
         else:
             return self.pag_acerca.btn_github
+
+    def _al_tecla_lista_cat(self, evento):
+        """Sonido de navegación al moverse por la lista de categorías de ajustes."""
+        if evento.GetKeyCode() in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
+        evento.Skip()
 
     def al_cambiar_cat(self, event):
         idx = self.lista_cat.GetSelection()
