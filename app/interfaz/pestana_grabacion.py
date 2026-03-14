@@ -324,18 +324,19 @@ class PestanaGrabacion(wx.Panel):
         self.txt_ruta.SetHelpText("Ruta del archivo de texto actualmente cargado.")
 
         # Etiqueta descriptiva en el botón — NVDA la lee directamente al recibir foco
-        self.btn_examinar = wx.Button(
-            self, label="&Examinar… — Selecciona un TXT con etiquetas de personaje"
-        )
-        self.btn_limpiar = wx.Button(
-            self, label="&Limpiar — Restablece la pestaña para cargar otro fragmento"
-        )
+        # btn_dividir_epub se crea primero para que sea el primero en el orden de tabulación
         self.btn_dividir_epub = wx.Button(
-            self, label="&Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"
+            self, label="Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"
         )
         self.btn_dividir_epub.SetHelpText(
             "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "
             "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
+        )
+        self.btn_examinar = wx.Button(
+            self, label="Examinar… — Selecciona un TXT con etiquetas de personaje"
+        )
+        self.btn_limpiar = wx.Button(
+            self, label="Limpiar — Restablece la pestaña para cargar otro fragmento"
         )
 
         sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
@@ -408,10 +409,10 @@ class PestanaGrabacion(wx.Panel):
         # Botones del panel de casting
         sz_btn_cast = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_probar = wx.Button(
-            self, label="&Probar voz — Escucha una muestra de la voz marcada"
+            self, label="Probar voz — Escucha una muestra de la voz marcada"
         )
         self.btn_preescucha = wx.Button(
-            self, label="Pre-escucha &General — Oye todas las voces asignadas en secuencia"
+            self, label="Pre-escucha General — Oye todas las voces asignadas en secuencia"
         )
         sz_btn_cast.Add(self.btn_probar,     0, wx.RIGHT, 8)
         sz_btn_cast.Add(self.btn_preescucha, 0)
@@ -461,18 +462,18 @@ class PestanaGrabacion(wx.Panel):
         sz_botones = wx.BoxSizer(wx.HORIZONTAL)
 
         self.btn_iniciar = wx.Button(
-            self, label="&Iniciar Grabación — Comienza el proceso de grabación multivoz"
+            self, label="Iniciar Grabación — Comienza el proceso de grabación multivoz"
         )
         self.btn_iniciar.Enable(False)
 
         self.btn_abortar = wx.Button(
             self,
-            label="A&bortar — Detiene la grabación; los archivos ya generados se conservan",
+            label="Abortar — Detiene la grabación; los archivos ya generados se conservan",
         )
         self.btn_abortar.Enable(False)
 
         self.btn_abrir_carpeta = wx.Button(
-            self, label="A&brir Carpeta — Abre la carpeta de grabaciones en el Explorador"
+            self, label="Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador"
         )
 
         sz_botones.Add(self.btn_iniciar,       0, wx.RIGHT, 5)

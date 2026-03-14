@@ -157,6 +157,13 @@ class VentanaPrincipal(wx.Frame):
             self._mostrar_menu_contextual()
             return
 
+        # Ctrl+1 / Ctrl+2 / Ctrl+3 → cambiar de pestaña directamente
+        # Solo cuando el foco está dentro de la ventana principal (no en diálogos externos)
+        if evento.ControlDown() and keycode in (ord('1'), ord('2'), ord('3')):
+            idx = keycode - ord('1')   # 0, 1 ó 2
+            self.notebook.SetSelection(idx)
+            return
+
         if keycode != wx.WXK_TAB:
             evento.Skip()
             return
