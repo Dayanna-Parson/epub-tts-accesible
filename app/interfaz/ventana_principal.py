@@ -2,6 +2,9 @@
 import wx
 import os
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
@@ -258,7 +261,8 @@ class VentanaPrincipal(wx.Frame):
         try:
             if hasattr(self.pestana_lectura, 'reproductor'):
                 self.pestana_lectura.al_detener(None)
-        except: pass
+        except Exception:
+            logger.warning("Error al detener la reproducción durante el cierre", exc_info=True)
         self._guardar_sesion()
         self.Destroy()
     # ANCLAJE_FIN: EVENTOS_GLOBALES
