@@ -3,6 +3,7 @@ import wx
 import os
 import json
 import logging
+import queue
 import threading
 import wx.lib.mixins.listctrl as listmix
 
@@ -84,6 +85,10 @@ class VentanaProyectos(wx.Frame):
         self._ruta_txt_activo = ruta_txt_activo
         self._foco_previo = foco_previo
         self._proyecto_en_portapapeles: str | None = None  # id del proyecto cortado con Ctrl+X
+
+        # Cola TTS: una sola instancia de pyttsx3 reutilizable para no bloquear el hilo principal.
+        self._cola_tts: queue.Queue = queue.Queue()
+        threading.Thread(target=self._worker_tts, daemon=True).start()
 
         self._construir_interfaz()
         self._cargar_arbol()
@@ -1155,24 +1160,47 @@ class VentanaProyectos(wx.Frame):
         if self:
             self.SetTitle("Gestión de Proyectos — Epub TTS")
 
-    def _hablar(self, texto: str):
-        """Verbaliza texto con pyttsx3 en hilo de fondo para anuncios NVDA urgentes."""
-        def _run():
+    def _worker_tts(self):
+        """
+        Hilo persistente con una sola instancia de pyttsx3.
+        Consume mensajes de _cola_tts; None como señal de parada.
+        """
+        try:
+            import pyttsx3
+            engine = pyttsx3.init()
+        except Exception:
+            return
+        while True:
+            texto = self._cola_tts.get()
+            if texto is None:
+                break
             try:
-                import pyttsx3
-                engine = pyttsx3.init()
                 engine.say(texto)
                 engine.runAndWait()
-                engine.stop()
             except Exception:
                 pass
-        threading.Thread(target=_run, daemon=True).start()
+
+    def _hablar(self, texto: str):
+        """
+        Encola un texto para verbalizarlo con pyttsx3.
+        Descarta mensajes pendientes para que NVDA oiga siempre el más reciente.
+        """
+        # Vaciar backlog (p.ej. al mover nodos rápidamente)
+        while not self._cola_tts.empty():
+            try:
+                self._cola_tts.get_nowait()
+            except queue.Empty:
+                break
+        self._cola_tts.put(texto)
 
     def _al_cerrar(self, evento):
         """Al cerrar, devuelve el foco exactamente al control que lo tenía antes."""
         # Desconectar el evento del árbol ANTES de destruir la ventana.
         # EVT_TREE_SEL_CHANGED puede dispararse durante la destrucción (deselección
         # automática de nodos) y acceder a objetos C++ ya liberados.
+        # Detener el hilo TTS limpiamente
+        self._cola_tts.put(None)
+
         try:
             self.arbol.Unbind(wx.EVT_TREE_SEL_CHANGED)
         except Exception:
