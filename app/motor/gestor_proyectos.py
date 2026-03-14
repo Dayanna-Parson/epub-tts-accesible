@@ -436,6 +436,58 @@ class GestorProyectos:
         self.guardar()
         return True
 
+    def reparentar_proyecto(
+        self, proyecto_id: str, nuevo_padre_id: Optional[str]
+    ) -> bool:
+        """
+        Mueve un proyecto a un nuevo padre (o a raíz si nuevo_padre_id es None).
+
+        Previene ciclos: no se puede hacer un proyecto hijo de sí mismo ni de
+        alguno de sus propios descendientes.
+        Devuelve True si el movimiento se realizó, False si no es posible.
+        """
+        proyecto = self.obtener_proyecto(proyecto_id)
+        if not proyecto:
+            return False
+
+        # Sin cambio real
+        if proyecto.get("padre") == nuevo_padre_id:
+            return False
+
+        # No puede ser hijo de sí mismo
+        if nuevo_padre_id == proyecto_id:
+            return False
+
+        # Prevenir ciclos: recorrer la cadena de ancestros del destino
+        if nuevo_padre_id:
+            actual = nuevo_padre_id
+            visitados: set = set()
+            while actual and actual not in visitados:
+                visitados.add(actual)
+                if actual == proyecto_id:
+                    return False  # ciclo detectado
+                p = self._datos["proyectos"].get(actual)
+                if not p:
+                    break
+                actual = p.get("padre")
+
+        # Desvincularse del padre actual
+        padre_actual_id = proyecto.get("padre")
+        if padre_actual_id and padre_actual_id in self._datos["proyectos"]:
+            hijos = self._datos["proyectos"][padre_actual_id]["hijos"]
+            if proyecto_id in hijos:
+                hijos.remove(proyecto_id)
+
+        # Vincularse al nuevo padre
+        proyecto["padre"] = nuevo_padre_id
+        if nuevo_padre_id and nuevo_padre_id in self._datos["proyectos"]:
+            hijos_nuevo = self._datos["proyectos"][nuevo_padre_id].setdefault("hijos", [])
+            if proyecto_id not in hijos_nuevo:
+                hijos_nuevo.append(proyecto_id)
+
+        self.guardar()
+        return True
+
     def listar_todos(self) -> list:
         """Devuelve todos los proyectos en lista plana, ordenados por nombre."""
         return sorted(
