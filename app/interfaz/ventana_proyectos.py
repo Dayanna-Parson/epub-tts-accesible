@@ -61,7 +61,7 @@ class VentanaProyectos(wx.Frame):
         NVDA anuncia "Movido arriba" / "Movido abajo" vía pyttsx3 + título.
       - Menú contextual (tecla Aplicaciones / Shift+F10 / clic derecho):
           · Asociar TXT actual de Grabación
-          · Nuevo hijo
+          · Nuevo subproyecto
           · Renombrar (F2)
           · Cambiar tipo
           · Eliminar
@@ -130,7 +130,7 @@ class VentanaProyectos(wx.Frame):
             "o como proyecto raíz si no hay nada seleccionado. Escape cancela el corte. "
             "Ctrl+Intro: abrir la carpeta del proyecto en el Explorador. "
             "F2: renombrar inline. Supr: eliminar. "
-            "Tecla Menú o Shift+F10: más opciones (nuevo hijo, asociar TXT, cambiar tipo, restaurar eliminados)."
+            "Tecla Menú o Shift+F10: más opciones (nuevo subproyecto, asociar TXT, cambiar tipo, restaurar eliminados)."
         )
         sz_arbol.Add(lbl_arbol,  0, wx.BOTTOM, 4)
         sz_arbol.Add(self.arbol, 1, wx.EXPAND)
@@ -212,7 +212,7 @@ class VentanaProyectos(wx.Frame):
 
         self.btn_eliminar = wx.Button(panel_raiz, label="Eliminar proyecto seleccionado")
         self.btn_eliminar.SetHelpText(
-            "Elimina el proyecto seleccionado y sus hijos si los tiene. Pide confirmación. "
+            "Elimina el proyecto seleccionado y sus subproyectos si los tiene. Pide confirmación. "
             "También puedes eliminar con la tecla Supr estando en el árbol."
         )
         self.btn_cerrar = wx.Button(panel_raiz, label="Cerrar")
@@ -942,7 +942,7 @@ class VentanaProyectos(wx.Frame):
             )
             return
         resultado = self._pedir_nombre_y_tipo(
-            f"Nuevo hijo de «{proyecto_padre['nombre']}»"
+            f"Nuevo subproyecto de «{proyecto_padre['nombre']}»"
         )
         if resultado is None:
             return
@@ -1091,7 +1091,7 @@ class VentanaProyectos(wx.Frame):
         if padre_id:
             padre = self._gestor.obtener_proyecto(padre_id)
             if padre:
-                etiqueta += f" — Hijo de: {padre['nombre']}"
+                etiqueta += f" — Subproyecto de: {padre['nombre']}"
         return etiqueta
 
     def _abrir_carpeta_proyecto(self):
