@@ -6,6 +6,7 @@ import wx.lib.mixins.listctrl as listmix
 from app.motor.cliente_nube_voces import GestorVoces
 from app.motor.reproductor_voz import ReproductorVoz
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
+from app.motor.control_cuota import ControlCuota
 
 # --- CLASE ESPECIAL PARA LA LISTA CON CASILLAS ---
 class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
@@ -24,7 +25,6 @@ class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlA
         if key == wx.WXK_SPACE:
             self.ToggleItem(self.GetFirstSelected())
         event.Skip()
-from app.motor.control_cuota import ControlCuota
 
 
 _CHARS_POR_LIBRO = 300_000  # aprox. 300 paginas de 1000 caracteres
@@ -506,6 +506,7 @@ class PanelVoces(wx.Panel):
         super().__init__(padre)
         self.config = config
         self.voces_todas = []
+        self.mapa_indices = {}   # índice de fila → datos_voz; se rellena en filtrar_y_mostrar
         self.reproductor = ReproductorVoz()
         self.ruta_favs = ruta_config("voces_favoritas.json")
         self.favoritos = self.cargar_favoritos()

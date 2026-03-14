@@ -80,7 +80,6 @@ class ReproductorVoz:
         elif "polly" in proveedor:
             self.motor_activo = self.cliente_polly
             self.tipo_motor_actual = "polly"
-            pass
         else:
 
             # ANCLAJE_INICIO: CONFIGURACION_VOZ_ACTIVA

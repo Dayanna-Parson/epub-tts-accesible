@@ -149,10 +149,12 @@ class ClientePolly:
         pct_rate = max(-80, min(80, pct_rate))
         tasa = f"+{pct_rate}%" if pct_rate >= 0 else f"{pct_rate}%"
 
+        import xml.sax.saxutils
+        texto_escaped = xml.sax.saxutils.escape(texto)
         ssml = (
             "<speak>"
             f"<prosody rate='{tasa}'>"
-            f"{texto}"
+            f"{texto_escaped}"
             "</prosody>"
             "</speak>"
         )

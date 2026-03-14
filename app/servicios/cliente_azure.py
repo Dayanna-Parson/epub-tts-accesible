@@ -38,12 +38,8 @@ class ClienteAzure:
         self._cache_frags[texto] = (data, fs)
 
     def _limpiar_texto_xml(self, texto):
-        t = texto.replace("&", "y")
-        t = t.replace("<", "")
-        t = t.replace(">", "")
-        t = t.replace('"', "")
-        t = t.replace("'", "")
-        return t
+        import xml.sax.saxutils
+        return xml.sax.saxutils.escape(texto)
 
     def _velocidad_a_tasa(self):
         pct = int((self._velocidad - 50) * 1.6)
@@ -68,7 +64,18 @@ class ClienteAzure:
         az_conf = self.config.get("azure", {})
         key = az_conf.get("key")
         region = az_conf.get("region")
-        idioma_destino = self.config.get("idioma_libro_codigo", "es-ES")
+        # idioma_libro_codigo está en ajustes.json, no en claves_api.json
+        try:
+            import os, json
+            from app.config_rutas import ruta_config as _ruta_config
+            _ruta_aj = _ruta_config("ajustes.json")
+            if os.path.exists(_ruta_aj):
+                with open(_ruta_aj, "r", encoding="utf-8") as _f:
+                    idioma_destino = json.load(_f).get("idioma_libro_codigo", "es-ES")
+            else:
+                idioma_destino = "es-ES"
+        except Exception:
+            idioma_destino = "es-ES"
 
         if not key or not region:
             raise Exception("Faltan claves de Azure")
