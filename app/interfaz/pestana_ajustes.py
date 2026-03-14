@@ -23,10 +23,10 @@ class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlA
 
     def al_tecla(self, event):
         key = event.GetKeyCode()
-        if key == wx.WXK_SPACE:
-            self.ToggleItem(self.GetFirstSelected())
-        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+        if key in (wx.WXK_UP, wx.WXK_DOWN):
             reproducir(LIST_NAV)
+        elif key == wx.WXK_SPACE:
+            self.ToggleItem(self.GetFirstSelected())
         event.Skip()
 
 

@@ -40,7 +40,7 @@ from app.motor.procesador_etiquetas import (
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
 from app.motor.reproductor_sonidos import (
     reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
-    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV,
+    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV, CLICK,
 )
 
 logger = logging.getLogger(__name__)
@@ -224,12 +224,12 @@ class ListaVocesCheck(wx.ListCtrl,
 
     def _al_tecla(self, event):
         key = event.GetKeyCode()
-        if key == wx.WXK_SPACE:
+        if key in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
+        elif key == wx.WXK_SPACE:
             idx = self.GetFirstSelected()
             if idx != -1:
                 self.ToggleItem(idx)
-        elif key in (wx.WXK_UP, wx.WXK_DOWN):
-            reproducir(LIST_NAV)
         event.Skip()
 
 
@@ -801,6 +801,7 @@ class PestanaGrabacion(wx.Panel):
     # ================================================================== #
 
     def al_limpiar(self, evento):
+        reproducir(CLEAR)
         self.ruta_txt_actual      = None
         self.nombre_base_txt      = ""
         self.texto_cargado        = ""
@@ -1070,6 +1071,7 @@ class PestanaGrabacion(wx.Panel):
         una casilla verbaliza su label + estado (marcada/desmarcada),
         por lo que el nuevo texto queda inmediatamente accesible.
         """
+        reproducir(CLICK)
         if self.chk_dividir.IsChecked():
             self.chk_dividir.SetLabel(
                 "Dividir por etiquetas: archivos numerados (001_nar.mp3, 002_pj1.mp3…)"
