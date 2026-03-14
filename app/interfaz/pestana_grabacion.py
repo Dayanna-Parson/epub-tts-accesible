@@ -301,7 +301,7 @@ class PestanaGrabacion(wx.Panel):
 
     @property
     def primer_control(self):
-        return self.btn_examinar
+        return self.btn_dividir_epub
 
     @property
     def ultimo_control(self):
