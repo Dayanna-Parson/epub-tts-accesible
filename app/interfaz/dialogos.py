@@ -41,16 +41,16 @@ class DialogoMarcadores(wx.Dialog):
         # Botonera
         sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
         
-        self.btn_anadir = wx.Button(self, label="&Nuevo")
+        self.btn_anadir = wx.Button(self, label="Nuevo")
         self.btn_anadir.Bind(wx.EVT_BUTTON, self.al_anadir_marcador)
-        
-        self.btn_renombrar = wx.Button(self, label="&Renombrar")
+
+        self.btn_renombrar = wx.Button(self, label="Renombrar")
         self.btn_renombrar.Bind(wx.EVT_BUTTON, self.al_renombrar_marcador)
-        
-        self.btn_eliminar = wx.Button(self, label="&Eliminar")
+
+        self.btn_eliminar = wx.Button(self, label="Eliminar")
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar_marcador)
-        
-        self.btn_cerrar = wx.Button(self, wx.ID_CANCEL, "&Cerrar")
+
+        self.btn_cerrar = wx.Button(self, wx.ID_CANCEL, "Cerrar")
         
         sizer_botones.Add(self.btn_anadir, 0, wx.ALL, 5)
         sizer_botones.Add(self.btn_renombrar, 0, wx.ALL, 5)

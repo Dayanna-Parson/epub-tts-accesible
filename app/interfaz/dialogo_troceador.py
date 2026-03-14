@@ -105,7 +105,7 @@ class DialogoTroceador(wx.Dialog):
             "Ruta del archivo EPUB seleccionado. Solo lectura. "
             "Usa el botón 'Examinar EPUB' para seleccionar un archivo."
         )
-        self.btn_examinar = wx.Button(panel, label="&Examinar EPUB…")
+        self.btn_examinar = wx.Button(panel, label="Examinar EPUB…")
         self.btn_examinar.SetHelpText(
             "Abre un diálogo para seleccionar el archivo EPUB que deseas dividir en capítulos."
         )
@@ -127,9 +127,9 @@ class DialogoTroceador(wx.Dialog):
 
         # Botones de selección masiva + limpiar lista
         sz_sel = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_sel_todo   = wx.Button(panel, label="Seleccionar &todo")
-        self.btn_desel_todo = wx.Button(panel, label="&Deseleccionar todo")
-        self.btn_limpiar    = wx.Button(panel, label="&Limpiar lista")
+        self.btn_sel_todo   = wx.Button(panel, label="Seleccionar todo")
+        self.btn_desel_todo = wx.Button(panel, label="Deseleccionar todo")
+        self.btn_limpiar    = wx.Button(panel, label="Limpiar lista")
         self.btn_sel_todo.SetHelpText("Marca todos los capítulos de la lista.")
         self.btn_desel_todo.SetHelpText("Desmarca todos los capítulos de la lista.")
         self.btn_limpiar.SetHelpText(
@@ -149,7 +149,7 @@ class DialogoTroceador(wx.Dialog):
         # ── Barra de acción ───────────────────────────────────────────────────
         sz_accion = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_dividir = wx.Button(panel, label="&Dividir seleccionados")
+        self.btn_dividir = wx.Button(panel, label="Dividir seleccionados")
         self.btn_dividir.SetHelpText(
             "Genera un archivo TXT por cada capítulo marcado. "
             "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
@@ -163,7 +163,7 @@ class DialogoTroceador(wx.Dialog):
             "NVDA lo leerá al enfocar esta etiqueta."
         )
 
-        self.btn_abrir_carpeta = wx.Button(panel, label="Abrir carpeta &capitulos")
+        self.btn_abrir_carpeta = wx.Button(panel, label="Abrir carpeta capitulos")
         self.btn_abrir_carpeta.SetHelpText(
             "Abre en el Explorador la carpeta /capitulos/ donde se generaron los TXT."
         )
@@ -177,7 +177,7 @@ class DialogoTroceador(wx.Dialog):
 
         # ── Botón cerrar ──────────────────────────────────────────────────────
         sz.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
-        btn_cerrar = wx.Button(panel, wx.ID_CLOSE, label="&Cerrar (Escape)")
+        btn_cerrar = wx.Button(panel, wx.ID_CLOSE, label="Cerrar (Escape)")
         btn_cerrar.SetHelpText("Cierra este diálogo. También puedes pulsar Escape.")
         aplicar_icono_boton(btn_cerrar, "cerrar", "Cerrar diálogo")
         sz.Add(btn_cerrar, 0, wx.ALIGN_RIGHT | wx.ALL, 8)

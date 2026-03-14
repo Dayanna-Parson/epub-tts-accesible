@@ -164,11 +164,11 @@ class VentanaProyectos(wx.Frame):
         )
 
         sz_btn_archivos = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_añadir_txt = wx.Button(panel_raiz, label="&Añadir TXT al proyecto…")
+        self.btn_añadir_txt = wx.Button(panel_raiz, label="Añadir TXT al proyecto…")
         self.btn_añadir_txt.SetHelpText(
             "Abre un diálogo para seleccionar un archivo TXT y asociarlo a este proyecto."
         )
-        self.btn_quitar_txt = wx.Button(panel_raiz, label="&Quitar TXT seleccionado")
+        self.btn_quitar_txt = wx.Button(panel_raiz, label="Quitar TXT seleccionado")
         self.btn_quitar_txt.SetHelpText(
             "Desasocia el archivo TXT seleccionado de este proyecto. "
             "El archivo en disco no se elimina."
@@ -206,12 +206,12 @@ class VentanaProyectos(wx.Frame):
         # están accesibles vía menú contextual (Tecla Menú / Shift+F10 / clic derecho).
         sz_barra = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_eliminar = wx.Button(panel_raiz, label="&Eliminar proyecto seleccionado")
+        self.btn_eliminar = wx.Button(panel_raiz, label="Eliminar proyecto seleccionado")
         self.btn_eliminar.SetHelpText(
             "Elimina el proyecto seleccionado y sus hijos si los tiene. Pide confirmación. "
             "También puedes eliminar con la tecla Supr estando en el árbol."
         )
-        self.btn_cerrar = wx.Button(panel_raiz, label="&Cerrar")
+        self.btn_cerrar = wx.Button(panel_raiz, label="Cerrar")
         self.btn_cerrar.SetHelpText(
             "Cierra esta ventana y devuelve el foco a donde estaba en la ventana principal. "
             "También puedes cerrar con la tecla Escape."
