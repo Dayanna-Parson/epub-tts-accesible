@@ -29,7 +29,7 @@ import threading
 import subprocess
 import logging
 
-from app.config_rutas import ruta_config
+from app.config_rutas import ruta_config, cargar_claves
 from app.motor.gestor_proyectos import TIPOS_PROYECTO
 from app.motor.procesador_etiquetas import (
     escanear_etiquetas,
@@ -1134,15 +1134,8 @@ class PestanaGrabacion(wx.Panel):
         Retorna lista de mensajes de error; vacía = todo OK.
         """
         errores = []
-        try:
-            ruta = ruta_config("ajustes.json")
-            config = {}
-            if os.path.exists(ruta):
-                with open(ruta, "r", encoding="utf-8") as f:
-                    config = json.load(f)
-        except Exception as e:
-            errores.append(f"No se pudo leer ajustes.json: {e}")
-            return errores
+        # Las credenciales se guardan en claves_api.json (nunca en ajustes.json).
+        config = cargar_claves()
 
         proveedores = set()
         for datos in self.asignaciones.values():
