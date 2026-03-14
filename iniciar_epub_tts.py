@@ -10,7 +10,8 @@ import wx
 _RAIZ = os.path.dirname(os.path.abspath(__file__))
 
 # ── Sistema de logs centralizado ─────────────────────────────────────────────
-# Todos los registros van a app/registros/app.log (max 5 MB × 3 copias).
+# Todos los registros van a app/registros/app.log (max 2 MB × 3 copias = 6 MB total).
+# Solo se escriben WARNING / ERROR / CRITICAL → el archivo tarda mucho en llenarse.
 # Error_log.txt y error_tiflo.log ya no se usan.
 _DIR_REGISTROS = os.path.join(_RAIZ, "app", "registros")
 os.makedirs(_DIR_REGISTROS, exist_ok=True)
@@ -18,8 +19,8 @@ _RUTA_LOG = os.path.join(_DIR_REGISTROS, "app.log")
 
 _handler_archivo = logging.handlers.RotatingFileHandler(
     _RUTA_LOG,
-    maxBytes=512 * 1024,   # 512 KB — solo errores, no se llena nunca
-    backupCount=1,         # un único archivo de respaldo
+    maxBytes=2 * 1024 * 1024,  # 2 MB por archivo
+    backupCount=3,              # app.log + app.log.1 + app.log.2 + app.log.3
     encoding="utf-8",
 )
 _handler_archivo.setLevel(logging.WARNING)   # archivo: solo WARNING / ERROR / CRITICAL
