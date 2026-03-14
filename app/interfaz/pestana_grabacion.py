@@ -40,7 +40,7 @@ from app.motor.procesador_etiquetas import (
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
 from app.motor.reproductor_sonidos import (
     reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
-    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR,
+    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV,
 )
 
 logger = logging.getLogger(__name__)
@@ -228,6 +228,8 @@ class ListaVocesCheck(wx.ListCtrl,
             idx = self.GetFirstSelected()
             if idx != -1:
                 self.ToggleItem(idx)
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
         event.Skip()
 
 
@@ -1371,6 +1373,7 @@ class PestanaGrabacion(wx.Panel):
         self._abrir_carpeta_en_explorador(carpeta)
 
     def _abrir_carpeta_en_explorador(self, ruta):
+        reproducir(OPEN_FOLDER)
         ruta_abs = os.path.abspath(ruta)
         try:
             subprocess.Popen(['explorer', ruta_abs])

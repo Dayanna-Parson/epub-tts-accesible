@@ -36,10 +36,13 @@ class ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlA
         self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
 
     def _al_tecla(self, event):
-        if event.GetKeyCode() == wx.WXK_SPACE:
+        key = event.GetKeyCode()
+        if key == wx.WXK_SPACE:
             idx = self.GetFirstSelected()
             if idx != -1:
                 self.ToggleItem(idx)
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
         event.Skip()
 # ANCLAJE_FIN: LISTA_CATEGORIAS
 
@@ -244,6 +247,9 @@ class VentanaProyectos(wx.Frame):
 
         self.btn_añadir_txt.Bind(wx.EVT_BUTTON, self._al_añadir_txt)
         self.btn_quitar_txt.Bind(wx.EVT_BUTTON, self._al_quitar_txt)
+
+        self.lista_archivos.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla_lista_detalle)
+        self.lista_voces.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla_lista_detalle)
 
         self.btn_eliminar.Bind(    wx.EVT_BUTTON, self._al_eliminar)
         self.btn_cerrar.Bind(      wx.EVT_BUTTON, lambda e: self.Close())
@@ -453,6 +459,12 @@ class VentanaProyectos(wx.Frame):
         if keycode == wx.WXK_F10 and evento.ShiftDown():
             self._mostrar_menu_contextual()
             return
+        evento.Skip()
+
+    def _al_tecla_lista_detalle(self, evento):
+        """Sonido de navegación en lista_archivos y lista_voces."""
+        if evento.GetKeyCode() in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
         evento.Skip()
 
     # ================================================================== #

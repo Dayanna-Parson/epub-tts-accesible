@@ -1,6 +1,7 @@
 import wx
 import os
 import sys
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, OPEN_FOLDER
 
 class DialogoMarcadores(wx.Dialog):
     """
@@ -105,6 +106,8 @@ class DialogoMarcadores(wx.Dialog):
         if tecla == wx.WXK_DELETE:
             self.al_eliminar_marcador(None)
         else:
+            if tecla in (wx.WXK_UP, wx.WXK_DOWN):
+                reproducir(LIST_NAV)
             evento.Skip()
 
     def al_activar_item(self, evento):
@@ -202,6 +205,7 @@ class DialogoExportacion(wx.Dialog):
 
     def al_abrir_carpeta(self, evento):
         if os.path.exists(self.ruta_carpeta):
+            reproducir(OPEN_FOLDER)
             if sys.platform == 'win32':
                 os.startfile(self.ruta_carpeta)
         else:
