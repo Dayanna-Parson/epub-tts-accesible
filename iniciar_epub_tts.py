@@ -93,7 +93,6 @@ class EpubTTSApp(wx.App):
         try:
             logger.info("Iniciando ventana principal")
             self.frame = VentanaPrincipal(None, titulo="Epub-TTS")
-            self.frame.Show()
             return True
         except Exception as e:
             logger.exception("Error fatal en OnInit")

@@ -207,7 +207,7 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_INICIO: GESTION_CONFIGURACION_Y_PESTANAS
     def cargar_config_salto(self):
         try:
-            ruta = ruta_config("config_general.json")
+            ruta = ruta_config("ajustes.json")
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     conf = json.load(f)
@@ -561,12 +561,16 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_INICIO: NAVEGACION_TEXTO_Y_SALTOS
     def al_saltar_atras(self, evento):
         pos = self.txt_contenido.GetInsertionPoint()
-        caracteres = self.segundos_salto * 15 
+        caracteres = self.segundos_salto * 15
         nuevo = max(0, pos - caracteres)
         self.txt_contenido.SetInsertionPoint(nuevo)
         self.txt_contenido.ShowPosition(nuevo)
         if hasattr(self.reproductor, 'estado') and self.reproductor.estado == 'reproduciendo':
-             self.al_alternar_reproduccion(None)
+            # Detener y reiniciar desde la nueva posición (no pausar)
+            self._cola_lectura = []
+            self._idx_fragmento_actual = 0
+            self.reproductor.detener()
+            self.al_alternar_reproduccion(None)
 
     def al_saltar_adelante(self, evento):
         pos = self.txt_contenido.GetInsertionPoint()
@@ -575,7 +579,11 @@ class PestanaLectura(wx.Panel):
         self.txt_contenido.SetInsertionPoint(nuevo)
         self.txt_contenido.ShowPosition(nuevo)
         if hasattr(self.reproductor, 'estado') and self.reproductor.estado == 'reproduciendo':
-             self.al_alternar_reproduccion(None)
+            # Detener y reiniciar desde la nueva posición (no pausar)
+            self._cola_lectura = []
+            self._idx_fragmento_actual = 0
+            self.reproductor.detener()
+            self.al_alternar_reproduccion(None)
 
     def al_cambiar_velocidad(self, evento):
         v = self.deslizador_velocidad.GetValue()
@@ -590,9 +598,9 @@ class PestanaLectura(wx.Panel):
         self._guardar_ajuste_slider("volumen_lectura", v)
 
     def _guardar_ajuste_slider(self, clave, valor):
-        """Persiste el valor de un slider en config_general.json de forma inmediata."""
+        """Persiste el valor de un slider en ajustes.json de forma inmediata."""
         try:
-            ruta = ruta_config("config_general.json")
+            ruta = ruta_config("ajustes.json")
             datos = {}
             if os.path.exists(ruta):
                 with open(ruta, 'r', encoding='utf-8') as f:

@@ -96,6 +96,16 @@ class GrabadorAudio:
         except Exception as e:
             logger.warning(f"[GrabadorAudio] No se pudo cargar config: {e}")
             self.config = {}
+        # Las claves API se guardan en claves_api.json (separado de ajustes.json).
+        # Las fusionamos aquí para que _grabar_azure/polly/elevenlabs las encuentren.
+        try:
+            from app.config_rutas import cargar_claves
+            claves = cargar_claves()
+            for proveedor in ('azure', 'polly', 'elevenlabs'):
+                if proveedor in claves:
+                    self.config[proveedor] = claves[proveedor]
+        except Exception as e:
+            logger.warning(f"[GrabadorAudio] No se pudieron cargar claves API: {e}")
 
     # ------------------------------------------------------------------ #
     # API pública
