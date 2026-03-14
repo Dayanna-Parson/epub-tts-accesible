@@ -789,7 +789,7 @@ class VentanaProyectos(wx.Frame):
             panel,
             label="Categorías (Espacio para marcar o desmarcar, puede elegir varias):",
         )
-        lista_t = wx.CheckListBox(panel, choices=TIPOS_PROYECTO)
+        lista_t = ListaCategorias(panel)
         lista_t.SetMinSize((-1, 180))
         lista_t.SetHelpText(
             "Categorías del proyecto. Usa las flechas para moverte y Espacio para marcar "
@@ -816,7 +816,11 @@ class VentanaProyectos(wx.Frame):
 
         resultado = dlg.ShowModal()
         nombre = txt_n.GetValue().strip()
-        tipos  = [TIPOS_PROYECTO[i] for i in lista_t.GetCheckedItems()]
+        tipos  = [
+            lista_t.GetItemText(i)
+            for i in range(lista_t.GetItemCount())
+            if lista_t.IsItemChecked(i)
+        ]
         dlg.Destroy()
 
         if resultado != wx.ID_OK or not nombre:
@@ -976,7 +980,13 @@ class VentanaProyectos(wx.Frame):
         if isinstance(tipos, str):
             tipos = [tipos]
         tipo_str = ", ".join(tipos) if tipos else "Sin categoría"
-        return f"{proyecto['nombre']} [{tipo_str}] — {estado} — Nivel {nivel}"
+        etiqueta = f"{proyecto['nombre']} [{tipo_str}] — {estado} — Nivel {nivel}"
+        padre_id = proyecto.get("padre")
+        if padre_id:
+            padre = self._gestor.obtener_proyecto(padre_id)
+            if padre:
+                etiqueta += f" — Hijo de: {padre['nombre']}"
+        return etiqueta
 
     def _abrir_carpeta_proyecto(self):
         """Ctrl+Intro: abre en el Explorador la carpeta de audio o TXT del proyecto."""

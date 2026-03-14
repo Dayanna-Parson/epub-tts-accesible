@@ -809,9 +809,6 @@ class PanelVoces(wx.Panel):
             etiquetas.append("[Multilingüe]")
         if "hd" in id_voz and "dragonhd" not in id_voz:
             etiquetas.append("[HD]")
-        if voz.get("es_nueva"):
-            etiquetas.append("[Nueva]")
-
         if etiquetas:
             return f"{nombre_base} {' '.join(etiquetas)}"
         return nombre_base
