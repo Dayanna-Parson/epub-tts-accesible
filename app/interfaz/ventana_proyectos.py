@@ -367,28 +367,27 @@ class VentanaProyectos(wx.Frame):
         el usuario navega con flechas en el árbol y pulsa Tab cuando quiere editar.
         Esto evita el salto errático de foco que confunde a NVDA.
         """
-        # Guardia: el árbol puede haberse destruido antes de que el evento llegue.
-        # IsBeingDeleted() también puede lanzar RuntimeError si el objeto C++ ya no existe.
+        # Guardia ampliada: cualquier acceso al árbol o a los widgets del detalle
+        # puede lanzar RuntimeError si el objeto C++ ya fue destruido (p. ej. al cerrar).
         try:
             if self.arbol.IsBeingDeleted():
                 evento.Skip()
                 return
+            proyecto = self._proyecto_seleccionado()
+            if proyecto is None:
+                self._limpiar_detalle()
+                evento.Skip()
+                return
+            self.txt_nombre.ChangeValue(proyecto.get("nombre", ""))
+            tipos_activos = proyecto.get("tipo", [])
+            if isinstance(tipos_activos, str):
+                tipos_activos = [tipos_activos]
+            for i in range(self.lista_cats.GetItemCount()):
+                self.lista_cats.CheckItem(i, self.lista_cats.GetItemText(i) in tipos_activos)
+            self._actualizar_lista_archivos(proyecto)
+            self._actualizar_lista_voces(proyecto["id"])
         except RuntimeError:
-            evento.Skip()
-            return
-        proyecto = self._proyecto_seleccionado()
-        if proyecto is None:
-            self._limpiar_detalle()
-            evento.Skip()
-            return
-        self.txt_nombre.ChangeValue(proyecto.get("nombre", ""))
-        tipos_activos = proyecto.get("tipo", [])
-        if isinstance(tipos_activos, str):
-            tipos_activos = [tipos_activos]
-        for i in range(self.lista_cats.GetItemCount()):
-            self.lista_cats.CheckItem(i, self.lista_cats.GetItemText(i) in tipos_activos)
-        self._actualizar_lista_archivos(proyecto)
-        self._actualizar_lista_voces(proyecto["id"])
+            pass
         # NO SetFocus aquí: el foco se queda en el árbol para que NVDA lea el nodo
         evento.Skip()
 
@@ -1056,6 +1055,14 @@ class VentanaProyectos(wx.Frame):
 
     def _al_cerrar(self, evento):
         """Al cerrar, devuelve el foco exactamente al control que lo tenía antes."""
+        # Desconectar el evento del árbol ANTES de destruir la ventana.
+        # EVT_TREE_SEL_CHANGED puede dispararse durante la destrucción (deselección
+        # automática de nodos) y acceder a objetos C++ ya liberados.
+        try:
+            self.arbol.Unbind(wx.EVT_TREE_SEL_CHANGED)
+        except Exception:
+            pass
+
         if self._foco_previo:
             try:
                 if self._foco_previo.IsShown():
