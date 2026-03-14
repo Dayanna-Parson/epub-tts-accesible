@@ -43,6 +43,7 @@ _ART_FALLBACK = {
     "deseleccionar": wx.ART_CROSS_MARK,
     "eliminar":      wx.ART_DELETE,
     "cerrar":        wx.ART_QUIT,
+    "limpiar":       wx.ART_DELETE,
     "buscar":        wx.ART_FIND,
     "proyectos":     wx.ART_LIST_VIEW,
     "grabar":        getattr(wx, "ART_RECORD", wx.ART_EXECUTABLE_FILE),  # ART_RECORD no existe en wxPython < 4.2
