@@ -1204,13 +1204,35 @@ class PanelAcercaDe(wx.ScrolledWindow):
                 lbl.SetFont(f)
             sizer.Add(lbl, 0, wx.LEFT | wx.TOP, 10 if negrita else 4)
 
+        lbl_repo = wx.StaticText(
+            self,
+            label="Repositorio: github.com/Dayanna-Parson/epub-tts-accesible",
+        )
+        sizer.Add(lbl_repo, 0, wx.LEFT | wx.TOP, 10)
+
         self.btn_github = wx.Button(self, label="Abrir repositorio en GitHub")
-        self.btn_github.SetHelpText("Abre el repositorio del proyecto en el navegador.")
+        self.btn_github.SetHelpText(
+            "Abre el repositorio del proyecto en GitHub: "
+            "github.com/Dayanna-Parson/epub-tts-accesible"
+        )
         self.btn_github.Bind(
             wx.EVT_BUTTON,
             lambda e: webbrowser.open("https://github.com/Dayanna-Parson/epub-tts-accesible")
         )
-        sizer.Add(self.btn_github, 0, wx.ALL, 12)
+        sizer.Add(self.btn_github, 0, wx.LEFT, 10)
+
+        self.btn_releases = wx.Button(self, label="Ver todas las versiones en Releases")
+        self.btn_releases.SetHelpText(
+            "Abre la sección de Releases en GitHub, "
+            "donde puedes descargar versiones anteriores y la más reciente."
+        )
+        self.btn_releases.Bind(
+            wx.EVT_BUTTON,
+            lambda e: webbrowser.open(
+                "https://github.com/Dayanna-Parson/epub-tts-accesible/releases"
+            ),
+        )
+        sizer.Add(self.btn_releases, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
 
         lbl_tiflo = wx.StaticText(
             self,
