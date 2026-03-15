@@ -1,0 +1,6 @@
+Versión 1.0.0 — Lanzamiento inicial
+
+Esta es la primera versión pública de Epub TTS Accesible.
+
+Para descargar esta versión visita:
+https://github.com/Dayanna-Parson/epub-tts-accesible/releases

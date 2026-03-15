@@ -14,7 +14,10 @@ Características de accesibilidad:
   - RESIZE_BORDER: el usuario puede ampliar la ventana si necesita más espacio.
 """
 
+import webbrowser
 import wx
+
+_URL_RELEASES = "https://github.com/Dayanna-Parson/epub-tts-accesible/releases"
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -75,6 +78,17 @@ class DialogoNovedades(wx.Dialog):
 
         # Separador y botón
         sz.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
+
+        btn_descargar = wx.Button(panel, label="Descargar nueva versión en GitHub Releases")
+        btn_descargar.SetHelpText(
+            "Abre la página de Releases del repositorio en GitHub, "
+            "donde puedes descargar la nueva versión."
+        )
+        btn_descargar.Bind(
+            wx.EVT_BUTTON,
+            lambda e: webbrowser.open(_URL_RELEASES),
+        )
+        sz.Add(btn_descargar, 0, wx.ALIGN_CENTER | wx.TOP, 6)
 
         btn_cerrar = wx.Button(panel, wx.ID_OK, label="Cerrar (Escape)")
         btn_cerrar.SetDefault()
