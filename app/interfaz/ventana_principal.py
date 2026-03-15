@@ -10,7 +10,7 @@ from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
 from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config
-from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER, SUCCESS
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
@@ -671,6 +671,7 @@ class VentanaPrincipal(wx.Frame):
     def _mostrar_dialogo_voces_nuevas(self, nuevas: dict):
         """Muestra el diálogo de novedades (siempre en hilo principal)."""
         from app.interfaz.dialogo_voces_nuevas import DialogoVocesNuevas
+        reproducir(SUCCESS)
         dlg = DialogoVocesNuevas(self, nuevas)
         dlg.ShowModal()
         dlg.Destroy()
