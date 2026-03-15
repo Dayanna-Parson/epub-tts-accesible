@@ -1,0 +1,1023 @@
+Respuesta 1 claude (fase 1)
+Voy a explorar los archivos clave en paralelo antes de proponer el plan.
+
+
+Analyzed pestana_lectura.py and pestana_ajustes.py loading patterns and initialization
+Analyzed pestana_lectura.py and pestana_ajustes.py loading patterns and initialization
+
+Tengo toda la información necesaria. Ahora escribo el plan detallado.
+
+
+Created plan document for wxPython UI freezing issue
+Created plan document for wxPython UI freezing issue
+
+Confirmo que entiendo el contexto completo:
+
+CheckListCtrlMixin: patrón ya usado en favoritos de voces, lo aplicaremos igual en proyectos (Tarea 2).
+Prioridad Tarea 1: latencia al entrar en Pestaña Lectura (carga SAPI5 + JSONs) y al navegar Voces e Idiomas en Ajustes (reconstrucción O(n) de ListCtrl).
+Diagnóstico confirmado
+pestana_lectura.py
+Problema	Línea	Causa
+Bloqueo en __init__	197	cargar_voces_usuario() síncrona: lee 2 JSONs + enumera SAPI5
+Bloqueo en cada cambio de pestaña	227	Misma función llamada de nuevo sin caché
+pestana_ajustes.py (PanelVoces)
+Problema	Línea	Causa
+Bloqueo en init del panel	563	cargar_datos_y_llenar() lee 3 JSONs y rellena ListCtrl
+Bloqueo en cada clic a la subpestaña	1178	Repite la carga completa sin verificar si ya está cargado
+Congelado por teclado	525	Cada carácter en búsqueda dispara reconstrucción O(n) del ListCtrl
+Plan resumido
+Dos archivos, misma técnica:
+
+threading.Thread(daemon=True) para la I/O de disco (JSONs + SAPI5).
+wx.CallAfter(...) para tocar controles wx desde el worker.
+Bandera _cargando para evitar hilos duplicados si el usuario salta de pestaña rápido.
+Controles deshabilitados mientras carga → NVDA los anuncia como no disponibles (feedback implícito).
+wx.CallLater(300ms) como debounce en el cuadro de búsqueda de voces.
+wx.CallAfter(control.SetFocus) al final del llenado → NVDA anuncia el primer elemento inmediatamente.
+
+Plan finalizado
+Plan finalizado
+Revisar el plan de Claude
+
+
+Contexto
+Al entrar en la Pestaña Lectura y al hacer clic en la subpestaña Voces e Idiomas (Ajustes), wxPython congela la interfaz ~2 segundos porque carga JSONs pesados y reconstruye listas completas en el hilo principal (main thread). NVDA pierde el foco durante ese bloqueo.
+
+La solución es desplazar toda la I/O de disco y el llenado inicial de controles a un threading.Thread, y usar wx.CallAfter para actualizar los controles de vuelta en el hilo principal de forma segura.
+
+Archivos a modificar
+Archivo	Sección afectada
+app/interfaz/pestana_lectura.py	__init__ (línea 197), al_cambiar_pestana_padre (líneas 225-231), cargar_voces_usuario (líneas 235-293)
+app/interfaz/pestana_ajustes.py	PanelVoces.__init__ (línea 563), al_cambiar_cat (línea 1178), cargar_datos_y_llenar (líneas 625-665), filtrar_y_mostrar (líneas 752-822)
+Estrategia general
+Hilo principal                  Hilo worker
+──────────────                  ─────────────
+Tab visible al instante         Lee JSONs del disco
+Foco en primer control          Enumera voces SAPI5
+Spinner/estado "Cargando…"  ←── wx.CallAfter → llena combos/lista
+                                Activa controles
+threading.Thread(daemon=True) para que el worker muera si se cierra la app.
+wx.CallAfter(funcion, args) es el único mecanismo para tocar controles wx desde un hilo secundario.
+_cargando bandera booleana para evitar dobles cargas si el usuario cambia de pestaña rápidamente.
+Debounce en el cuadro de búsqueda de voces: wx.CallLater(300ms) antes de llamar filtrar_y_mostrar.
+Cambios detallados
+A · pestana_lectura.py
+1. Añadir al bloque de imports (arriba del todo)
+python
+import threading
+2. Ancla: # ANCLAJE_INICIO: init_lectura_post_ui → # ANCLAJE_FIN: init_lectura_post_ui
+En __init__, donde hoy se llama self.cargar_voces_usuario() (línea 197), sustituirlo por:
+
+python
+# Deshabilitar controles hasta que las voces estén cargadas
+self._cargando_voces = False
+self._deshabilitar_controles_voz()
+# Lanzar carga en segundo plano para no bloquear el foco
+threading.Thread(target=self._cargar_voces_hilo, daemon=True).start()
+3. Ancla: # ANCLAJE_INICIO: al_cambiar_pestana_padre → # ANCLAJE_FIN: al_cambiar_pestana_padre
+En al_cambiar_pestana_padre, donde hoy llama sincrónicamente a cargar_voces_usuario():
+
+Sólo relanzar el hilo si _cargando_voces es False.
+python
+def al_cambiar_pestana_padre(self, event):
+    if event.GetSelection() == 0 and not self._cargando_voces:
+        self._deshabilitar_controles_voz()
+        threading.Thread(target=self._cargar_voces_hilo, daemon=True).start()
+    self.cargar_config_salto()
+    event.Skip()
+4. Ancla: # ANCLAJE_INICIO: cargar_voces_usuario → # ANCLAJE_FIN: cargar_voces_usuario
+Renombrar la función actual a _cargar_voces_hilo (worker) y añadir al final:
+
+python
+def _cargar_voces_hilo(self):
+    """Carga JSONs de voces fuera del hilo principal para evitar bloqueo de foco."""
+    self._cargando_voces = True
+    # --- toda la lógica actual de lectura de JSON y construcción de lista ---
+    # Al final, en lugar de poblar el combo directamente:
+    wx.CallAfter(self._aplicar_voces_en_ui, voces_formateadas, seleccion_previa)
+    self._cargando_voces = False
+
+def _aplicar_voces_en_ui(self, voces_formateadas, seleccion_previa):
+    """Llena el combo de voces y reactiva controles. Siempre en hilo principal."""
+    self.combo_voz.Clear()
+    for nombre, datos in voces_formateadas:
+        idx = self.combo_voz.Append(nombre)
+        self.combo_voz.SetClientData(idx, datos)
+    self.combo_voz.SetSelection(seleccion_previa)
+    self.al_cambiar_voz(None)
+    self._habilitar_controles_voz()
+    # Situar foco en el combo para que NVDA lo anuncie inmediatamente
+    wx.CallAfter(self.combo_voz.SetFocus)
+
+def _deshabilitar_controles_voz(self):
+    self.combo_voz.Disable()
+
+def _habilitar_controles_voz(self):
+    self.combo_voz.Enable()
+B · pestana_ajustes.py — PanelVoces
+1. Añadir import threading al bloque de imports
+2. Ancla: # ANCLAJE_INICIO: panel_voces_init_carga → # ANCLAJE_FIN: panel_voces_init_carga
+En __init__ de PanelVoces, sustituir la llamada directa a cargar_datos_y_llenar() (línea 563):
+
+python
+self._cargando = False
+self._timer_busqueda = None          # para debounce del cuadro de texto
+self._deshabilitar_filtros()
+threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
+3. Ancla: # ANCLAJE_INICIO: al_cambiar_cat → # ANCLAJE_FIN: al_cambiar_cat
+En al_cambiar_cat (línea 1167-1178), sustituir la llamada a cargar_datos_y_llenar():
+
+python
+if not self._cargando:
+    self._deshabilitar_filtros()
+    threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
+4. Ancla: # ANCLAJE_INICIO: cargar_datos_y_llenar → # ANCLAJE_FIN: cargar_datos_y_llenar
+Renombrar a _cargar_datos_hilo (worker) y separar en dos partes:
+
+python
+def _cargar_datos_hilo(self):
+    """Lee los JSON de voces en segundo plano."""
+    self._cargando = True
+    # --- lógica actual de lectura de voces_disponibles.json,
+    #     voces_conocidas.json, voces_favoritas.json ---
+    # Guardar resultados en self.voces_todas
+    wx.CallAfter(self._poblar_filtros_y_lista)
+    self._cargando = False
+
+def _poblar_filtros_y_lista(self):
+    """Llena combos de filtro y lista. Siempre en hilo principal."""
+    # --- lógica actual de llenado de combo_proveedor, combo_idioma ---
+    self.filtrar_y_mostrar()
+    self._habilitar_filtros()
+    wx.CallAfter(self.lista_voces.SetFocus)
+5. Ancla: # ANCLAJE_INICIO: al_filtrar_texto → # ANCLAJE_FIN: al_filtrar_texto
+Añadir debounce de 300 ms al binding del cuadro de búsqueda para evitar reconstruir la lista
+en cada pulsación de tecla:
+
+python
+def al_filtrar_texto(self, event):
+    """Espera 300 ms tras la última pulsación antes de filtrar."""
+    if self._timer_busqueda:
+        self._timer_busqueda.Stop()
+    self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
+    event.Skip()
+Cambiar el binding en __init__:
+
+python
+self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)   # antes: al_filtrar
+6. Helpers de habilitación
+python
+def _deshabilitar_filtros(self):
+    for ctrl in (self.combo_proveedor, self.combo_idioma,
+                 self.combo_tipo, self.chk_favoritos,
+                 self.chk_nuevas, self.txt_buscar):
+        ctrl.Disable()
+
+def _habilitar_filtros(self):
+    for ctrl in (self.combo_proveedor, self.combo_idioma,
+                 self.combo_tipo, self.chk_favoritos,
+                 self.chk_nuevas, self.txt_buscar):
+        ctrl.Enable()
+```
+
+---
+
+## Flujo final de eventos
+```
+Pestaña Lectura abre
+  → __init__ lanza _cargar_voces_hilo en Thread daemon
+  → combo_voz deshabilitado (NVDA lo anuncia como no disponible)
+  → hilo lee JSONs + SAPI5
+  → wx.CallAfter(_aplicar_voces_en_ui)
+  → combo habilitado, foco colocado → NVDA anuncia la voz seleccionada
+
+Subpestaña Voces e Idiomas abre
+  → al_cambiar_cat lanza _cargar_datos_hilo en Thread daemon
+  → filtros deshabilitados
+  → hilo lee JSON
+  → wx.CallAfter(_poblar_filtros_y_lista)
+  → lista rellena, foco en lista_voces → NVDA anuncia primer elemento
+Verificación
+Ejecutar la app y cambiar a Pestaña Lectura con Ctrl+Tab: el foco debe llegar en <200 ms.
+NVDA debe anunciar "Cargando" implícitamente (control deshabilitado) y luego la voz al habilitarse.
+Abrir Ajustes → Voces e Idiomas: el foco en los filtros debe ser inmediato.
+Escribir en el cuadro de búsqueda rápidamente: la lista solo debe reconstruirse 300 ms después de la última pulsación, sin congelar.
+Cambiar de pestaña mientras carga y volver: la bandera _cargando debe evitar hilo duplicado.
+oy a explorar los archivos clave en paralelo antes de proponer el plan.
+
+
+Analyzed pestana_lectura.py and pestana_ajustes.py loading patterns and initialization
+Analyzed pestana_lectura.py and pestana_ajustes.py loading patterns and initialization
+
+Tengo toda la información necesaria. Ahora escribo el plan detallado.
+
+
+Created plan document for wxPython UI freezing issue
+Created plan document for wxPython UI freezing issue
+
+Confirmo que entiendo el contexto completo:
+
+CheckListCtrlMixin: patrón ya usado en favoritos de voces, lo aplicaremos igual en proyectos (Tarea 2).
+Prioridad Tarea 1: latencia al entrar en Pestaña Lectura (carga SAPI5 + JSONs) y al navegar Voces e Idiomas en Ajustes (reconstrucción O(n) de ListCtrl).
+Diagnóstico confirmado
+pestana_lectura.py
+Problema	Línea	Causa
+Bloqueo en __init__	197	cargar_voces_usuario() síncrona: lee 2 JSONs + enumera SAPI5
+Bloqueo en cada cambio de pestaña	227	Misma función llamada de nuevo sin caché
+pestana_ajustes.py (PanelVoces)
+Problema	Línea	Causa
+Bloqueo en init del panel	563	cargar_datos_y_llenar() lee 3 JSONs y rellena ListCtrl
+Bloqueo en cada clic a la subpestaña	1178	Repite la carga completa sin verificar si ya está cargado
+Congelado por teclado	525	Cada carácter en búsqueda dispara reconstrucción O(n) del ListCtrl
+Plan resumido
+Dos archivos, misma técnica:
+
+threading.Thread(daemon=True) para la I/O de disco (JSONs + SAPI5).
+wx.CallAfter(...) para tocar controles wx desde el worker.
+Bandera _cargando para evitar hilos duplicados si el usuario salta de pestaña rápido.
+Controles deshabilitados mientras carga → NVDA los anuncia como no disponibles (feedback implícito).
+wx.CallLater(300ms) como debounce en el cuadro de búsqueda de voces.
+wx.CallAfter(control.SetFocus) al final del llenado → NVDA anuncia el primer elemento inmediatamente.
+
+Plan finalizado
+Plan finalizado
+Revisar el plan de Claude
+
+
+Contexto
+Al entrar en la Pestaña Lectura y al hacer clic en la subpestaña Voces e Idiomas (Ajustes), wxPython congela la interfaz ~2 segundos porque carga JSONs pesados y reconstruye listas completas en el hilo principal (main thread). NVDA pierde el foco durante ese bloqueo.
+
+La solución es desplazar toda la I/O de disco y el llenado inicial de controles a un threading.Thread, y usar wx.CallAfter para actualizar los controles de vuelta en el hilo principal de forma segura.
+
+Archivos a modificar
+Archivo	Sección afectada
+app/interfaz/pestana_lectura.py	__init__ (línea 197), al_cambiar_pestana_padre (líneas 225-231), cargar_voces_usuario (líneas 235-293)
+app/interfaz/pestana_ajustes.py	PanelVoces.__init__ (línea 563), al_cambiar_cat (línea 1178), cargar_datos_y_llenar (líneas 625-665), filtrar_y_mostrar (líneas 752-822)
+Estrategia general
+Hilo principal                  Hilo worker
+──────────────                  ─────────────
+Tab visible al instante         Lee JSONs del disco
+Foco en primer control          Enumera voces SAPI5
+Spinner/estado "Cargando…"  ←── wx.CallAfter → llena combos/lista
+                                Activa controles
+threading.Thread(daemon=True) para que el worker muera si se cierra la app.
+wx.CallAfter(funcion, args) es el único mecanismo para tocar controles wx desde un hilo secundario.
+_cargando bandera booleana para evitar dobles cargas si el usuario cambia de pestaña rápidamente.
+Debounce en el cuadro de búsqueda de voces: wx.CallLater(300ms) antes de llamar filtrar_y_mostrar.
+Cambios detallados
+A · pestana_lectura.py
+1. Añadir al bloque de imports (arriba del todo)
+python
+import threading
+2. Ancla: # ANCLAJE_INICIO: init_lectura_post_ui → # ANCLAJE_FIN: init_lectura_post_ui
+En __init__, donde hoy se llama self.cargar_voces_usuario() (línea 197), sustituirlo por:
+
+python
+# Deshabilitar controles hasta que las voces estén cargadas
+self._cargando_voces = False
+self._deshabilitar_controles_voz()
+# Lanzar carga en segundo plano para no bloquear el foco
+threading.Thread(target=self._cargar_voces_hilo, daemon=True).start()
+3. Ancla: # ANCLAJE_INICIO: al_cambiar_pestana_padre → # ANCLAJE_FIN: al_cambiar_pestana_padre
+En al_cambiar_pestana_padre, donde hoy llama sincrónicamente a cargar_voces_usuario():
+
+Sólo relanzar el hilo si _cargando_voces es False.
+python
+def al_cambiar_pestana_padre(self, event):
+    if event.GetSelection() == 0 and not self._cargando_voces:
+        self._deshabilitar_controles_voz()
+        threading.Thread(target=self._cargar_voces_hilo, daemon=True).start()
+    self.cargar_config_salto()
+    event.Skip()
+4. Ancla: # ANCLAJE_INICIO: cargar_voces_usuario → # ANCLAJE_FIN: cargar_voces_usuario
+Renombrar la función actual a _cargar_voces_hilo (worker) y añadir al final:
+
+python
+def _cargar_voces_hilo(self):
+    """Carga JSONs de voces fuera del hilo principal para evitar bloqueo de foco."""
+    self._cargando_voces = True
+    # --- toda la lógica actual de lectura de JSON y construcción de lista ---
+    # Al final, en lugar de poblar el combo directamente:
+    wx.CallAfter(self._aplicar_voces_en_ui, voces_formateadas, seleccion_previa)
+    self._cargando_voces = False
+
+def _aplicar_voces_en_ui(self, voces_formateadas, seleccion_previa):
+    """Llena el combo de voces y reactiva controles. Siempre en hilo principal."""
+    self.combo_voz.Clear()
+    for nombre, datos in voces_formateadas:
+        idx = self.combo_voz.Append(nombre)
+        self.combo_voz.SetClientData(idx, datos)
+    self.combo_voz.SetSelection(seleccion_previa)
+    self.al_cambiar_voz(None)
+    self._habilitar_controles_voz()
+    # Situar foco en el combo para que NVDA lo anuncie inmediatamente
+    wx.CallAfter(self.combo_voz.SetFocus)
+
+def _deshabilitar_controles_voz(self):
+    self.combo_voz.Disable()
+
+def _habilitar_controles_voz(self):
+    self.combo_voz.Enable()
+B · pestana_ajustes.py — PanelVoces
+1. Añadir import threading al bloque de imports
+2. Ancla: # ANCLAJE_INICIO: panel_voces_init_carga → # ANCLAJE_FIN: panel_voces_init_carga
+En __init__ de PanelVoces, sustituir la llamada directa a cargar_datos_y_llenar() (línea 563):
+
+python
+self._cargando = False
+self._timer_busqueda = None          # para debounce del cuadro de texto
+self._deshabilitar_filtros()
+threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
+3. Ancla: # ANCLAJE_INICIO: al_cambiar_cat → # ANCLAJE_FIN: al_cambiar_cat
+En al_cambiar_cat (línea 1167-1178), sustituir la llamada a cargar_datos_y_llenar():
+
+python
+if not self._cargando:
+    self._deshabilitar_filtros()
+    threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
+4. Ancla: # ANCLAJE_INICIO: cargar_datos_y_llenar → # ANCLAJE_FIN: cargar_datos_y_llenar
+Renombrar a _cargar_datos_hilo (worker) y separar en dos partes:
+
+python
+def _cargar_datos_hilo(self):
+    """Lee los JSON de voces en segundo plano."""
+    self._cargando = True
+    # --- lógica actual de lectura de voces_disponibles.json,
+    #     voces_conocidas.json, voces_favoritas.json ---
+    # Guardar resultados en self.voces_todas
+    wx.CallAfter(self._poblar_filtros_y_lista)
+    self._cargando = False
+
+def _poblar_filtros_y_lista(self):
+    """Llena combos de filtro y lista. Siempre en hilo principal."""
+    # --- lógica actual de llenado de combo_proveedor, combo_idioma ---
+    self.filtrar_y_mostrar()
+    self._habilitar_filtros()
+    wx.CallAfter(self.lista_voces.SetFocus)
+5. Ancla: # ANCLAJE_INICIO: al_filtrar_texto → # ANCLAJE_FIN: al_filtrar_texto
+Añadir debounce de 300 ms al binding del cuadro de búsqueda para evitar reconstruir la lista
+en cada pulsación de tecla:
+
+python
+def al_filtrar_texto(self, event):
+    """Espera 300 ms tras la última pulsación antes de filtrar."""
+    if self._timer_busqueda:
+        self._timer_busqueda.Stop()
+    self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
+    event.Skip()
+Cambiar el binding en __init__:
+
+python
+self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)   # antes: al_filtrar
+6. Helpers de habilitación
+python
+def _deshabilitar_filtros(self):
+    for ctrl in (self.combo_proveedor, self.combo_idioma,
+                 self.combo_tipo, self.chk_favoritos,
+                 self.chk_nuevas, self.txt_buscar):
+        ctrl.Disable()
+
+def _habilitar_filtros(self):
+    for ctrl in (self.combo_proveedor, self.combo_idioma,
+                 self.combo_tipo, self.chk_favoritos,
+                 self.chk_nuevas, self.txt_buscar):
+        ctrl.Enable()
+```
+
+---
+
+## Flujo final de eventos
+```
+Pestaña Lectura abre
+  → __init__ lanza _cargar_voces_hilo en Thread daemon
+  → combo_voz deshabilitado (NVDA lo anuncia como no disponible)
+  → hilo lee JSONs + SAPI5
+  → wx.CallAfter(_aplicar_voces_en_ui)
+  → combo habilitado, foco colocado → NVDA anuncia la voz seleccionada
+
+Subpestaña Voces e Idiomas abre
+  → al_cambiar_cat lanza _cargar_datos_hilo en Thread daemon
+  → filtros deshabilitados
+  → hilo lee JSON
+  → wx.CallAfter(_poblar_filtros_y_lista)
+  → lista rellena, foco en lista_voces → NVDA anuncia primer elemento
+Verificación
+Ejecutar la app y cambiar a Pestaña Lectura con Ctrl+Tab: el foco debe llegar en <200 ms.
+NVDA debe anunciar "Cargando" implícitamente (control deshabilitado) y luego la voz al habilitarse.
+Abrir Ajustes → Voces e Idiomas: el foco en los filtros debe ser inmediato.
+Escribir en el cuadro de búsqueda rápidamente: la lista solo debe reconstruirse 300 ms después de la última pulsación, sin congelar.
+Cambiar de pestaña mientras carga y volver: la bandera _cargando debe evitar hilo duplicado.
+oy a explorar los archivos clave en paralelo antes de proponer el plan.
+
+
+Analyzed pestana_lectura.py and pestana_ajustes.py loading patterns and initialization
+Analyzed pestana_lectura.py and pestana_ajustes.py loading patterns and initialization
+
+Tengo toda la información necesaria. Ahora escribo el plan detallado.
+
+
+Created plan document for wxPython UI freezing issue
+Created plan document for wxPython UI freezing issue
+
+Confirmo que entiendo el contexto completo:
+
+CheckListCtrlMixin: patrón ya usado en favoritos de voces, lo aplicaremos igual en proyectos (Tarea 2).
+Prioridad Tarea 1: latencia al entrar en Pestaña Lectura (carga SAPI5 + JSONs) y al navegar Voces e Idiomas en Ajustes (reconstrucción O(n) de ListCtrl).
+Diagnóstico confirmado
+pestana_lectura.py
+Problema	Línea	Causa
+Bloqueo en __init__	197	cargar_voces_usuario() síncrona: lee 2 JSONs + enumera SAPI5
+Bloqueo en cada cambio de pestaña	227	Misma función llamada de nuevo sin caché
+pestana_ajustes.py (PanelVoces)
+Problema	Línea	Causa
+Bloqueo en init del panel	563	cargar_datos_y_llenar() lee 3 JSONs y rellena ListCtrl
+Bloqueo en cada clic a la subpestaña	1178	Repite la carga completa sin verificar si ya está cargado
+Congelado por teclado	525	Cada carácter en búsqueda dispara reconstrucción O(n) del ListCtrl
+Plan resumido
+Dos archivos, misma técnica:
+
+threading.Thread(daemon=True) para la I/O de disco (JSONs + SAPI5).
+wx.CallAfter(...) para tocar controles wx desde el worker.
+Bandera _cargando para evitar hilos duplicados si el usuario salta de pestaña rápido.
+Controles deshabilitados mientras carga → NVDA los anuncia como no disponibles (feedback implícito).
+wx.CallLater(300ms) como debounce en el cuadro de búsqueda de voces.
+wx.CallAfter(control.SetFocus) al final del llenado → NVDA anuncia el primer elemento inmediatamente.
+
+Plan finalizado
+Plan finalizado
+Revisar el plan de Claude
+
+
+Contexto
+Al entrar en la Pestaña Lectura y al hacer clic en la subpestaña Voces e Idiomas (Ajustes), wxPython congela la interfaz ~2 segundos porque carga JSONs pesados y reconstruye listas completas en el hilo principal (main thread). NVDA pierde el foco durante ese bloqueo.
+
+La solución es desplazar toda la I/O de disco y el llenado inicial de controles a un threading.Thread, y usar wx.CallAfter para actualizar los controles de vuelta en el hilo principal de forma segura.
+
+Archivos a modificar
+Archivo	Sección afectada
+app/interfaz/pestana_lectura.py	__init__ (línea 197), al_cambiar_pestana_padre (líneas 225-231), cargar_voces_usuario (líneas 235-293)
+app/interfaz/pestana_ajustes.py	PanelVoces.__init__ (línea 563), al_cambiar_cat (línea 1178), cargar_datos_y_llenar (líneas 625-665), filtrar_y_mostrar (líneas 752-822)
+Estrategia general
+Hilo principal                  Hilo worker
+──────────────                  ─────────────
+Tab visible al instante         Lee JSONs del disco
+Foco en primer control          Enumera voces SAPI5
+Spinner/estado "Cargando…"  ←── wx.CallAfter → llena combos/lista
+                                Activa controles
+threading.Thread(daemon=True) para que el worker muera si se cierra la app.
+wx.CallAfter(funcion, args) es el único mecanismo para tocar controles wx desde un hilo secundario.
+_cargando bandera booleana para evitar dobles cargas si el usuario cambia de pestaña rápidamente.
+Debounce en el cuadro de búsqueda de voces: wx.CallLater(300ms) antes de llamar filtrar_y_mostrar.
+Cambios detallados
+A · pestana_lectura.py
+1. Añadir al bloque de imports (arriba del todo)
+python
+import threading
+2. Ancla: # ANCLAJE_INICIO: init_lectura_post_ui → # ANCLAJE_FIN: init_lectura_post_ui
+En __init__, donde hoy se llama self.cargar_voces_usuario() (línea 197), sustituirlo por:
+
+python
+# Deshabilitar controles hasta que las voces estén cargadas
+self._cargando_voces = False
+self._deshabilitar_controles_voz()
+# Lanzar carga en segundo plano para no bloquear el foco
+threading.Thread(target=self._cargar_voces_hilo, daemon=True).start()
+3. Ancla: # ANCLAJE_INICIO: al_cambiar_pestana_padre → # ANCLAJE_FIN: al_cambiar_pestana_padre
+En al_cambiar_pestana_padre, donde hoy llama sincrónicamente a cargar_voces_usuario():
+
+Sólo relanzar el hilo si _cargando_voces es False.
+python
+def al_cambiar_pestana_padre(self, event):
+    if event.GetSelection() == 0 and not self._cargando_voces:
+        self._deshabilitar_controles_voz()
+        threading.Thread(target=self._cargar_voces_hilo, daemon=True).start()
+    self.cargar_config_salto()
+    event.Skip()
+4. Ancla: # ANCLAJE_INICIO: cargar_voces_usuario → # ANCLAJE_FIN: cargar_voces_usuario
+Renombrar la función actual a _cargar_voces_hilo (worker) y añadir al final:
+
+python
+def _cargar_voces_hilo(self):
+    """Carga JSONs de voces fuera del hilo principal para evitar bloqueo de foco."""
+    self._cargando_voces = True
+    # --- toda la lógica actual de lectura de JSON y construcción de lista ---
+    # Al final, en lugar de poblar el combo directamente:
+    wx.CallAfter(self._aplicar_voces_en_ui, voces_formateadas, seleccion_previa)
+    self._cargando_voces = False
+
+def _aplicar_voces_en_ui(self, voces_formateadas, seleccion_previa):
+    """Llena el combo de voces y reactiva controles. Siempre en hilo principal."""
+    self.combo_voz.Clear()
+    for nombre, datos in voces_formateadas:
+        idx = self.combo_voz.Append(nombre)
+        self.combo_voz.SetClientData(idx, datos)
+    self.combo_voz.SetSelection(seleccion_previa)
+    self.al_cambiar_voz(None)
+    self._habilitar_controles_voz()
+    # Situar foco en el combo para que NVDA lo anuncie inmediatamente
+    wx.CallAfter(self.combo_voz.SetFocus)
+
+def _deshabilitar_controles_voz(self):
+    self.combo_voz.Disable()
+
+def _habilitar_controles_voz(self):
+    self.combo_voz.Enable()
+B · pestana_ajustes.py — PanelVoces
+1. Añadir import threading al bloque de imports
+2. Ancla: # ANCLAJE_INICIO: panel_voces_init_carga → # ANCLAJE_FIN: panel_voces_init_carga
+En __init__ de PanelVoces, sustituir la llamada directa a cargar_datos_y_llenar() (línea 563):
+
+python
+self._cargando = False
+self._timer_busqueda = None          # para debounce del cuadro de texto
+self._deshabilitar_filtros()
+threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
+3. Ancla: # ANCLAJE_INICIO: al_cambiar_cat → # ANCLAJE_FIN: al_cambiar_cat
+En al_cambiar_cat (línea 1167-1178), sustituir la llamada a cargar_datos_y_llenar():
+
+python
+if not self._cargando:
+    self._deshabilitar_filtros()
+    threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
+4. Ancla: # ANCLAJE_INICIO: cargar_datos_y_llenar → # ANCLAJE_FIN: cargar_datos_y_llenar
+Renombrar a _cargar_datos_hilo (worker) y separar en dos partes:
+
+python
+def _cargar_datos_hilo(self):
+    """Lee los JSON de voces en segundo plano."""
+    self._cargando = True
+    # --- lógica actual de lectura de voces_disponibles.json,
+    #     voces_conocidas.json, voces_favoritas.json ---
+    # Guardar resultados en self.voces_todas
+    wx.CallAfter(self._poblar_filtros_y_lista)
+    self._cargando = False
+
+def _poblar_filtros_y_lista(self):
+    """Llena combos de filtro y lista. Siempre en hilo principal."""
+    # --- lógica actual de llenado de combo_proveedor, combo_idioma ---
+    self.filtrar_y_mostrar()
+    self._habilitar_filtros()
+    wx.CallAfter(self.lista_voces.SetFocus)
+5. Ancla: # ANCLAJE_INICIO: al_filtrar_texto → # ANCLAJE_FIN: al_filtrar_texto
+Añadir debounce de 300 ms al binding del cuadro de búsqueda para evitar reconstruir la lista
+en cada pulsación de tecla:
+
+python
+def al_filtrar_texto(self, event):
+    """Espera 300 ms tras la última pulsación antes de filtrar."""
+    if self._timer_busqueda:
+        self._timer_busqueda.Stop()
+    self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
+    event.Skip()
+Cambiar el binding en __init__:
+
+python
+self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)   # antes: al_filtrar
+6. Helpers de habilitación
+python
+def _deshabilitar_filtros(self):
+    for ctrl in (self.combo_proveedor, self.combo_idioma,
+                 self.combo_tipo, self.chk_favoritos,
+                 self.chk_nuevas, self.txt_buscar):
+        ctrl.Disable()
+
+def _habilitar_filtros(self):
+    for ctrl in (self.combo_proveedor, self.combo_idioma,
+                 self.combo_tipo, self.chk_favoritos,
+                 self.chk_nuevas, self.txt_buscar):
+        ctrl.Enable()
+```
+
+---
+
+## Flujo final de eventos
+```
+Pestaña Lectura abre
+  → __init__ lanza _cargar_voces_hilo en Thread daemon
+  → combo_voz deshabilitado (NVDA lo anuncia como no disponible)
+  → hilo lee JSONs + SAPI5
+  → wx.CallAfter(_aplicar_voces_en_ui)
+  → combo habilitado, foco colocado → NVDA anuncia la voz seleccionada
+
+Subpestaña Voces e Idiomas abre
+  → al_cambiar_cat lanza _cargar_datos_hilo en Thread daemon
+  → filtros deshabilitados
+  → hilo lee JSON
+  → wx.CallAfter(_poblar_filtros_y_lista)
+  → lista rellena, foco en lista_voces → NVDA anuncia primer elemento
+Verificación
+Ejecutar la app y cambiar a Pestaña Lectura con Ctrl+Tab: el foco debe llegar en <200 ms.
+NVDA debe anunciar "Cargando" implícitamente (control deshabilitado) y luego la voz al habilitarse.
+Abrir Ajustes → Voces e Idiomas: el foco en los filtros debe ser inmediato.
+Escribir en el cuadro de búsqueda rápidamente: la lista solo debe reconstruirse 300 ms después de la última pulsación, sin congelar.
+Cambiar de pestaña mientras carga y volver: la bandera _cargando debe evitar hilo duplicado.
+Aprobar el plan de Claude y empezar a programar
+Indica a Claude qué hacer en su lugar
+
+Empezamos la implementación. Primero leo los archivos completos para hacer los cambios exactos.
+Read EPUB reading tab interface file
+Read EPUB reading tab interface file
+Update Todos
+☐ Leyendo pestana_lectura.py☐ Leer pestana_ajustes.py completo☐ Implementar threading en pestana_lectura.py☐ Implementar threading en pestana_ajustes.py☐ Commit y push a la rama claude/optimize-focus-latency-q7Sq3
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py
+Leer 817 líneas
+Copiar mensaje
+Ahora leo las secciones relevantes de pestana_ajustes.py.
+Reviewed language configuration mappings in settings tab module
+Reviewed language configuration mappings in settings tab module
+Update Todos
+☐ Leer pestana_lectura.py completo☐ Leyendo pestana_ajustes.py☐ Implementar threading en pestana_lectura.py☐ Implementar threading en pestana_ajustes.py☐ Commit y push a la rama claude/optimize-focus-latency-q7Sq3
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 100 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 250 líneas
+Mostrar 1 más
+Copiar mensaje
+Ahora busco al_cambiar_cat en pestana_ajustes.py.
+Read settings tab event handler in Python UI file
+Read settings tab event handler in Python UI file
+Grepal_cambiar_cat|PestanaAjustes|class PestanaAjustes
+Grepal_cambiar_cat|class PestanaAjustes
+1098-        self.btn_github.Bind(
+1099-            wx.EVT_BUTTON,
+1100-            lambda e: webbrowser.open("https://github.com/Dayanna-Parson/epub-tts-accesible")
+Mostrar más
+1101-        )
+1102-        sizer.Add(self.btn_github, 0, wx.ALL, 12)
+1103-        self.SetSizer(sizer)
+1104-
+1105-
+1106:class PestanaAjustes(wx.Panel):
+1107-    def __init__(self, padre):
+1108-        super().__init__(padre)
+1109-        self.ruta_config = ruta_config("ajustes.json")
+1110-        self.config = self.cargar_config()
+1111-
+1112-        self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
+1113-
+1114-        self.lista_cat = wx.ListBox(self.splitter, style=wx.LB_SINGLE)
+--1117-        self.lista_cat.Append("Voces e Idiomas")
+1118-        self.lista_cat.Append("Atajos de teclado")
+1119-        self.lista_cat.Append("Acerca de")
+1120-        self.lista_cat.SetSelection(0)
+1121-        self.lista_cat.SetHelpText(
+1122-            "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "
+1123-            "Pulsa Intro o Espacio para abrir la categoría seleccionada en el panel de la derecha."
+1124-        )
+1125:        self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
+1126-
+1127-        self.panel_derecho = wx.Simplebook(self.splitter)
+1128-        self.pag_general = PanelGeneral(self.panel_derecho, self.config)
+1129-        self.pag_claves = PanelClaves(self.panel_derecho, self.config)
+1130-        self.pag_voces = PanelVoces(self.panel_derecho, self.config)
+1131-        self.pag_atajos = PanelAtajos(self.panel_derecho)
+1132-        self.pag_acerca = PanelAcercaDe(self.panel_derecho)
+1133-
+--1159-            return self.pag_claves.btn_save
+1160-        elif idx == 2:
+1161-            return self.pag_voces.btn_escuchar
+1162-        elif idx == 3:
+1163-            return self.pag_atajos.btn_restablecer
+1164-        else:
+1165-            return self.pag_acerca.btn_github
+1166-
+1167:    def al_cambiar_cat(self, event):
+1168-        idx = self.lista_cat.GetSelection()
+1169-        if idx != wx.NOT_FOUND:
+1170-            self.panel_derecho.ChangeSelection(idx)
+1171-            # wx.CallAfter garantiza que el foco vuelve a la lista DESPUÉS de que
+1172-            # ChangeSelection termine, evitando que NVDA anuncie dos veces el mismo ítem.
+1173-            # Sin este SetFocus, al cambiar de página el panel derecho roba el foco
+1174-            # y NVDA deja de leer las flechas de navegación en la lista de categorías.
+1175-            wx.CallAfter(self.lista_cat.SetFocus)
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 40 líneas
+Copiar mensaje
+Tengo todo lo que necesito. Empiezo la implementación.
+Read and analyzed pestana_lectura.py and pestana_ajustes.py files
+Read and analyzed pestana_lectura.py and pestana_ajustes.py files
+Update Todos
+☐ Leer pestana_lectura.py completo☐ Leer pestana_ajustes.py completo☐ Implementando threading en pestana_lectura.py☐ Implementar threading en pestana_ajustes.py☐ Commit y push a la rama claude/optimize-focus-latency-q7Sq3
+Copiar mensaje
+Bloque 1/4 — pestana_lectura.py: añadir import threading
+Updated EPUB reader tab with improved dependencies and imports
+Updated EPUB reader tab with improved dependencies and imports
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+11-10
+33
+import os
+44
+import json
+55
+import time
+6+
+import threading
+67
+from app.interfaz.dialogos import DialogoMarcadores
+78
+from app.config_rutas import ruta_config, CONFIG_DIR
+89
+# ANCLAJE_FIN: DEPENDENCIAS_LECTURA
+Copiar mensaje
+Bloque 2/4 — pestana_lectura.py: lanzar hilo en __init__ en lugar de la llamada síncrona
+Updated reading tab initialization code in pestana_lectura.py
+Updated reading tab initialization code in pestana_lectura.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+15-8
+196196
+        self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
+197-
+        self.cargar_voces_usuario()
+197+
+198+
+        # La carga de voces se hace en un hilo secundario para que la pestaña
+199+
+        # reciba el foco de forma inmediata sin bloqueo del hilo principal.
+200+
+        self._cargando_voces = True
+201+
+        self._deshabilitar_controles_voz()
+202+
+        threading.Thread(
+203+
+            target=self._cargar_voces_hilo, args=("",), daemon=True
+204+
+        ).start()
+198205
+        self.primer_control = self.arbol_indice
+199206
+        self.ultimo_control = self.deslizador_volumen
+200207
+    # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ
+Copiar mensaje
+Bloque 3/4 — pestana_lectura.py: al_cambiar_pestana_padre con protección de doble carga + anclas de CARGA_Y_CAMBIO_VOCES
+Updated reading tab event handler in pestana_lectura.py
+Updated reading tab event handler in pestana_lectura.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+18-8
+225225
+    def al_cambiar_pestana_padre(self, event):
+226226
+        if event.GetSelection() == 0:
+227-
+            self.cargar_voces_usuario()
+228-
+            self.cargar_config_salto()
+229-
+            self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
+230-
+            self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+227+
+            self.cargar_config_salto()
+228+
+            self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
+229+
+            self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+230+
+            # Recargar voces en segundo plano; la bandera evita hilos duplicados
+231+
+            # si el usuario cambia de pestaña antes de que termine la carga anterior.
+232+
+            if not self._cargando_voces:
+233+
+                seleccion_previa = self.combo_voz.GetStringSelection()
+234+
+                self._cargando_voces = True
+235+
+                self._deshabilitar_controles_voz()
+236+
+                threading.Thread(
+237+
+                    target=self._cargar_voces_hilo,
+238+
+                    args=(seleccion_previa,),
+239+
+                    daemon=True,
+240+
+                ).start()
+Show full diff (2 more lines)
+Copiar mensaje
+Bloque 4/4 — pestana_lectura.py: reemplazar cargar_voces_usuario con _cargar_voces_hilo + helpers
+Updated voice selection logic in reading tab component
+Updated voice selection logic in reading tab component
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+84-62
+234234
+    # ANCLAJE_INICIO: CARGA_Y_CAMBIO_VOCES
+235-
+    def cargar_voces_usuario(self):
+236-
+        seleccion_previa = self.combo_voz.GetStringSelection()
+237-
+        self.combo_voz.Clear()
+238-
+        voces_para_combo = []
+239-
+240-
+        # Carga de voces locales SAPI5
+241-
+        try:
+242-
+            if hasattr(self.reproductor, 'cliente_local'):
+243-
+                voces_locales = self.reproductor.cliente_local.obtener_voces()
+244-
+                for v in voces_locales:
+245-
+                    nombre_mostrar = f"[Local] {v['nombre']}"
+246-
+                    voces_para_combo.append((nombre_mostrar, v))
+247-
+        except Exception as e:
+248-
+            print(f"[Aviso] No se pudieron cargar las voces locales SAPI5: {e}")
+249-
+250-
+        # Carga de voces neuronales favoritas
+251-
+        ruta_favs = ruta_config("voces_favoritas.json")
+252-
+        ruta_todas = ruta_config("voces_disponibles.json")
+253-
+Show full diff (123 more lines)
+Copiar mensaje
+pestana_lectura.py listo. Ahora pestana_ajustes.py.
+Read two Python modules and started threading implementation
+Read two Python modules and started threading implementation
+Update Todos
+☐ Leer pestana_lectura.py completo☐ Leer pestana_ajustes.py completo☐ Implementar threading en pestana_lectura.py☐ Implementando threading en pestana_ajustes.py☐ Commit y push a la rama claude/optimize-focus-latency-q7Sq3
+Copiar mensaje
+Bloque 1/5 — pestana_ajustes.py: añadir import threading
+Added threading import to settings panel module
+Added threading import to settings panel module
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+6-5
+11
+import wx
+22
+import os
+33
+import json
+4+
+import threading
+45
+import webbrowser
+56
+import wx.lib.mixins.listctrl as listmix
+Copiar mensaje
+Bloque 2/5 — pestana_ajustes.py: PanelVoces.__init__ — inicializar flags, cambiar binding de búsqueda, lanzar hilo
+Modified search filter UI layout in settings panel
+Modified search filter UI layout in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+4-3
+1-
+        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar)
+1+
+        # El binding usa debounce para no reconstruir la lista en cada pulsación de tecla
+2+
+        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)
+23
+        hbox3.Add(self.txt_buscar, 1, wx.EXPAND)
+34
+        sz_filtros.Add(hbox3, 0, wx.EXPAND|wx.ALL, 5)
+Copiar mensaje
+Bloque 3/5 — pestana_ajustes.py: en el __init__ final, sustituir la llamada síncrona por hilo
+Added flag initialization to settings panel component
+Added flag initialization to settings panel component
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+13-4
+11
+        self.SetSizer(sizer)
+2-
+        self.cargar_datos_y_llenar()
+2+
+3+
+        # Bandera para evitar hilos duplicados si el usuario navega rápido entre categorías
+4+
+        self._cargando = False
+5+
+        # Temporizador para debounce del cuadro de búsqueda (se reemplaza en cada pulsación)
+6+
+        self._timer_busqueda = None
+7+
+8+
+        # Deshabilitar filtros y lanzar la carga pesada en segundo plano
+9+
+        self._deshabilitar_filtros()
+10+
+        self._cargando = True
+11+
+        threading.Thread(target=self._cargar_datos_hilo, daemon=True).start()
+312
+413
+    def al_cambiar_idioma_libro(self, event):
+Copiar mensaje
+Bloque 4/5 — pestana_ajustes.py: reemplazar cargar_datos_y_llenar y añadir al_filtrar_texto + helpers
+Fixed voice loading logic in settings panel component
+Fixed voice loading logic in settings panel component
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+77-41
+1-
+    def cargar_datos_y_llenar(self):
+2-
+        ruta = ruta_config("voces_disponibles.json")
+3-
+        ruta_conocidas = ruta_config("voces_conocidas.json")
+4-
+        self.voces_todas = []
+5-
+6-
+        # Cargar IDs de voces conocidas (para detectar novedades)
+7-
+        voces_conocidas = set()
+8-
+        try:
+9-
+            if os.path.exists(ruta_conocidas):
+10-
+                with open(ruta_conocidas, 'r', encoding='utf-8') as f:
+11-
+                    voces_conocidas = set(json.load(f))
+12-
+        except Exception:
+13-
+            pass
+14-
+15-
+        if os.path.exists(ruta):
+16-
+            try:
+17-
+                with open(ruta, 'r', encoding='utf-8') as f:
+18-
+                    datos = json.load(f)
+19-
+                    for prov, lista in datos.items():
+20-
+                        for v in lista:
+Show full diff (98 more lines)
+Copiar mensaje
+Bloque 5/5 — pestana_ajustes.py: al_cambiar_cat — sustituir la llamada síncrona por hilo con protección
+Fixed voice page loading condition in settings tab
+Fixed voice page loading condition in settings tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+7-2
+1177-
+            if idx == 2:
+1178-
+                self.pag_voces.cargar_datos_y_llenar()
+1177+
+            if idx == 2 and not self.pag_voces._cargando:
+1178+
+                # Recargar voces en segundo plano para que el foco llegue sin bloqueo
+1179+
+                self.pag_voces._cargando = True
+1180+
+                self.pag_voces._deshabilitar_filtros()
+1181+
+                threading.Thread(
+1182+
+                    target=self.pag_voces._cargar_datos_hilo, daemon=True
+1183+
+                ).start()
+Copiar mensaje
+Ahora verifico que los cambios quedaron bien antes del commit.
+Verified syntax validity of two Python interface modules
+Verified syntax validity of two Python interface modules
+Bash
+python -c " import ast, sys errores = [] for f in ['app/interfaz/pestana_lectura.py', 'app/interfaz/pestana_ajustes.py']: try: with open(f) as fh: src = fh.read() ast.parse(src) print(f'OK {f}') except SyntaxError as e: print(f'ERR {f}: {e}') errores.append(f) sys.exit(1 if errores else 0) "
+OK  app/interfaz/pestana_lectura.pyOK  app/interfaz/pestana_ajustes.py
+Copiar mensaje
+Sin errores de sintaxis. Paso al commit.
+Read pestana_lectura.py and pestana_ajustes.py files completely
+Read pestana_lectura.py and pestana_ajustes.py files completely
+Update Todos
+☐ Leer pestana_lectura.py completo☐ Leer pestana_ajustes.py completo☐ Implementar threading en pestana_lectura.py☐ Implementar threading en pestana_ajustes.py☐ Realizando commit y push
+Bash
+git checkout -b claude/optimize-focus-latency-q7Sq3 2>/dev/null || git checkout claude/optimize-focus-latency-q7Sq3 2>/dev/null; echo "Rama activa: $(git branch --show-current)"
+M	app/interfaz/pestana_ajustes.pyM	app/interfaz/pestana_lectura.pyRama activa: claude/optimize-focus-latency-q7Sq3
+Bash
+git add app/interfaz/pestana_lectura.py app/interfaz/pestana_ajustes.py && git commit -m "$(cat <<'EOF' feat(latencia): carga de voces en hilo secundario para foco instantáneo - pestana_lectura.py: sustituye la llamada síncrona a cargar_voces_usuario() por _cargar_voces_hilo() (threading.Thread daemon) + _aplicar_voces_en_ui() via wx.CallAfter. El combo se deshabilita durante la carga y recupera el foco automáticamente al terminar para que NVDA anuncie la voz activa. La bandera _cargando_voces evita hilos duplicados al cambiar de pestaña. - pestana_ajustes.py (PanelVoces): sustituye cargar_datos_y_llenar() por _cargar_datos_hilo() + _poblar_filtros_y_lista() via wx.CallAfter. Los filtros se deshabilitan durante la carga y el foco pasa a lista_voces al terminar. al_cambiar_cat lanza el hilo solo si _cargando es False para evitar dobles cargas. - Debounce de 300 ms en el cuadro de búsqueda de voces (al_filtrar_texto + wx.CallLater): la lista se reconstruye una sola vez, 300 ms después de la última pulsación, eliminando el congelado por teclado. Resolve: Tarea 1 Fase 4 — latencia de foco en Pestaña Lectura y Voces e Idiomas. EOF )"
+[claude/optimize-focus-latency-q7Sq3 9864cae] feat(latencia): carga de voces en hilo secundario para foco instantáneo 2 files changed, 117 insertions(+), 25 deletions(-)
+Mostrar 2 más
+Copiar mensaje
+Tarea 1 completada y subida. Resumen de lo implementado:
+ 
+Resumen — Tarea 1 implementada
+pestana_lectura.py
+Ancla
+Cambio
+DEPENDENCIAS_LECTURA
+import threading añadido
+CONSTRUCCION_INTERFAZ
+self._cargando_voces = True + _deshabilitar_controles_voz() + Thread(daemon=True).start() en lugar de cargar_voces_usuario()
+GESTION_CONFIGURACION_Y_PESTANAS
+al_cambiar_pestana_padre comprueba _cargando_voces antes de lanzar un nuevo hilo
+CARGA_Y_CAMBIO_VOCES
+cargar_voces_usuario → _cargar_voces_hilo (worker) + _aplicar_voces_en_ui (UI via wx.CallAfter) + _deshabilitar/habilitar_controles_voz
+pestana_ajustes.py
+Ancla
+Cambio
+imports
+import threading añadido
+PanelVoces.__init__ final
+self._cargando = False, self._timer_busqueda = None, binding txt_buscar → al_filtrar_texto, hilo en lugar de cargar_datos_y_llenar()
+cargar_datos_y_llenar
+→ _cargar_datos_hilo (worker) + _poblar_filtros_y_lista (UI via wx.CallAfter) + _deshabilitar/habilitar_filtros
+nuevo
+al_filtrar_texto con debounce de 300 ms via wx.CallLater
+al_cambiar_cat
+Comprueba _cargando y lanza hilo en lugar de llamada directa
+Flujo verificado: sintaxis Python OK, commit 9864cae en claude/optimize-focus-latency-q7Sq3, push exitoso.
+¿Confirmamos y pasamos a la Tarea 2 — Multicategoría de Proyectos con CheckListCtrl?

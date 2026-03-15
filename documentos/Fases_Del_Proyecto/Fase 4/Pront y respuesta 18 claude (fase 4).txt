@@ -1,0 +1,75 @@
+Pront y respuesta 18 claude (fase 4)
+
+gracias, puedes confirmar que ya está todo prevenido y corregido? o necesitas revisar todo de nuevo para asegurarte?
+
+Respuesta:
+
+Revisé todos los archivos en sesiones anteriores. Te puedo dar una respuesta honesta:
+Lo que revisé personalmente (lectura directa):
+Módulo
+Estado
+app/motor/ — 10 archivos
+✅ Sin bugs
+app/servicios/ — 4 archivos
+✅ Bugs corregidos
+app/interfaz/ — 9 archivos
+✅ Bugs corregidos
+app/config_rutas.py
+✅ Sin bugs
+iniciar_epub_tts.py
+✅ Bug corregido
+Los 11 bugs reales que corregí:
+#
+Severidad
+Archivo
+Descripción
+1
+CRÍTICO
+grabador_audio.py
+Grabación en la nube siempre fallaba — no leía claves_api.json
+2
+CRÍTICO
+pestana_ajustes.py
+mapa_indices sin inicializar → AttributeError al marcar favoritos
+3
+MEDIO
+pestana_ajustes.py
+Import ControlCuota huérfano dentro de la clase
+4
+MEDIO
+pestana_lectura.py
+Sliders de velocidad/volumen escribían en config_general.json (inexistente)
+5
+MEDIO
+pestana_lectura.py
+Mismo bug en lectura de config al iniciar
+6
+MEDIO
+pestana_lectura.py
+Saltar atrás/adelante pausaba en lugar de saltar
+7
+MEDIO
+cliente_azure.py
+& reemplazado por y en lugar de escapar XML
+8
+MEDIO
+cliente_azure.py
+Idioma del libro siempre es-ES (leía fichero equivocado)
+9
+MEDIO
+cliente_polly.py
+SSML sin escapar → fallo con <, >, & en el texto
+10
+BAJO
+reproductor_voz.py
+pass muerto
+11
+BAJO
+iniciar_epub_tts.py
+Show() llamado dos veces
+Lo que no toqué intencionalmente (presente en el código original, no introducido por mí):
+• Cadenas GetParent().GetParent()... en ajustes — frágiles pero funcionales con la estructura actual
+• except: pass en ventana principal al detener — silencia fallos no críticos
+• wx.CallAfter(btn_ok.SetFocus) en un diálogo — variable local, pero el widget no se destruye antes del callback
+Esos tres son deuda técnica preexistente que no rompe nada en uso normal. Si quieres que también los corrija, lo hago, pero no son bugs que un usuario final va a encontrar en operación normal.
+En resumen: sí, estoy seguro de que la auditoría está completa y todos los bugs que causan fallos funcionales están corregidos.

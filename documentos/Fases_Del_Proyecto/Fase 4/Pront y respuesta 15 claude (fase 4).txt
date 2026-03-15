@@ -1,0 +1,88 @@
+Pront y respuesta 15 claude (fase 4)
+
+vale. Pues necesito que me hagas un favor. Puedes hacer que el log solo valla mostrando los errores que vallan surgiendo? no quiero que a lo largo del tiempo acumule miles de líneas, y se haga pesado. Sobre todo, necesito que sea eficiente y rápido, así solo me tengo que preocupar de los que encuentre yo, o me reporten los usuarios
+
+
+Respuesta:
+
+Read main application entry point iniciar_epub_tts.py
+Read main application entry point iniciar_epub_tts.py
+Read/home/user/epub-tts-accesible/iniciar_epub_tts.py
+Leer 114 líneas
+Copiar mensaje
+El problema principal son dos cosas: el nivel INFO escribe demasiado (arranques, comtypes, etc.) y comtypes solo añade ruido. La solución: el archivo solo recibe WARNING en adelante, la consola sigue en INFO para desarrollo, y se silencia comtypes en el archivo.
+Updated logging configuration in iniciar_epub_tts.py file
+Updated logging configuration in iniciar_epub_tts.py file
+Edit/home/user/epub-tts-accesible/iniciar_epub_tts.py+24-18
+1919
+_handler_archivo = logging.handlers.RotatingFileHandler(
+2020
+    _RUTA_LOG,
+21-
+    maxBytes=5 * 1024 * 1024,   # 5 MB
+22-
+    backupCount=3,
+23-
+    encoding="utf-8",
+24-
+)
+25-
+_handler_archivo.setFormatter(
+26-
+    logging.Formatter("%(asctime)s  %(levelname)-8s  %(name)s  %(message)s")
+27-
+)
+28-
+_handler_consola = logging.StreamHandler()
+29-
+_handler_consola.setFormatter(
+30-
+    logging.Formatter("%(levelname)-8s  %(name)s  %(message)s")
+31-
+)
+32-
+33-
+logging.basicConfig(
+34-
+    level=logging.INFO,
+35-
+    handlers=[_handler_archivo, _handler_consola],
+36-
+)
+21+
+    maxBytes=512 * 1024,   # 512 KB — solo errores, no se llena nunca
+22+
+    backupCount=1,         # un único archivo de respaldo
+Show full diff (20 more lines)
+Copiar mensaje
+También hay que quitar el mensaje INFO de arranque del archivo (ya que ahora el archivo es solo errores) y ajustar el mensaje de cierre:
+Committed log filtering improvements to reduce noise output
+Committed log filtering improvements to reduce noise output
+Edit/home/user/epub-tts-accesible/iniciar_epub_tts.py+2-2
+3737
+logger = logging.getLogger(__name__)
+38-
+logger.info("Epub-TTS arrancando. Log: %s", _RUTA_LOG)
+38+
+logger.info("Epub-TTS arrancando. Errores → %s", _RUTA_LOG)
+Edit/home/user/epub-tts-accesible/iniciar_epub_tts.py+2-2
+112112
+    finally:
+113-
+        logger.info("Epub-TTS cerrado")
+113+
+        logger.info("Epub-TTS cerrado")   # solo consola, no llega al archivo
+Bash
+git add iniciar_epub_tts.py && git commit -m "$(cat <<'EOF' Log: archivo solo recibe WARNING+ para evitar acumulación de ruido - _handler_archivo.setLevel(WARNING): solo WARNING / ERROR / CRITICAL van al archivo. Los INFO de arranque, sonidos, ffmpeg, etc. ya no se escriben en disco. - maxBytes reducido a 512 KB (antes 5 MB): con solo errores, 512 KB equivale a cientos de crashtraces antes de rotar. - backupCount=1: un solo archivo de respaldo es suficiente. - comtypes silenciado a ERROR: sus mensajes INFO sobre la caché ya no aparecen ni en el archivo ni en la consola durante producción. - Consola sigue en INFO para facilitar el desarrollo local. https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )" && git push
+[claude/optimize-focus-latency-q7Sq3 cc5b41c] Log: archivo solo recibe WARNING+ para evitar acumulación de ruido 1 file changed, 10 insertions(+), 4 deletions(-)To http://127.0.0.1:45449/git/Dayanna-Parson/epub-tts-accesible
+Mostrar más
+   a040b75..cc5b41c  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3
+Copiar mensaje
+Listo. El comportamiento ahora es:
+Archivo app.log (lo que lees tú y los usuarios):
+• Solo WARNING, ERROR y CRITICAL — es decir, solo cuando algo va mal
+• Máximo 512 KB + 1 copia de respaldo: prácticamente nunca se llena con solo errores
+• El ruido de comtypes desaparece completamente
+Consola (lo que ves al ejecutar desde terminal):
+• Sigue mostrando INFO — útil para ti cuando estás desarrollando
+El archivo anterior podía llegar a acumular cientos de líneas por sesión sin que hubiera ningún error. Ahora solo crecerá cuando haya problemas reales.

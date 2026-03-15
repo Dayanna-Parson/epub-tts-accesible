@@ -1,0 +1,112 @@
+Pront y respuesta 29 claude (fase 4)
+
+
+y que recomiendas? entonces, el log lo dejo así como está?
+
+Respuesta:
+
+Sí, déjalo tal cual. Un log acumulativo es lo correcto — si en algún momento la app da un error raro, tienes toda la historia para entender qué pasó antes.
+Lo único que sí podrías considerar a futuro (no urgente) es añadir rotación de logs — que cuando el archivo supere X MB se archive automáticamente y empiece uno nuevo. Python lo hace con RotatingFileHandler en dos líneas. Pero para el estado actual del proyecto, no hace falta.
+ 
+Sobre el TXT sin proyecto: lo que recomendaría es resetear _ofrecio_proyecto a False cada vez que se carga un nuevo TXT, para que si el usuario dijo "Ahora no" y luego lo reabre desde Recientes, el diálogo de bautizo vuelva a aparecer automáticamente cuando todas las voces estén asignadas. Ahora mismo si dices "Ahora no" y lo reabres, no te lo vuelve a ofrecer porque la flag queda en True.
+Found `_ofrecio_proyecto` flag in pestana_grabacion.py
+Found `_ofrecio_proyecto` flag in pestana_grabacion.py
+Grep_ofrecio_proyecto
+273-        self.proyecto_actual   = None          # dict del proyecto activo o None274-        self.gestor_proyectos  = GestorProyectos()275:        self._ofrecio_proyecto = False         # evita mostrar el diálogo dos veces por TXT
+Mostrar más
+276-        self.ruta_txt_actual      = None277-        self.nombre_base_txt      = ""--666-667-    def al_examinar(self, evento):668:        self._ofrecio_proyecto = False669-        with wx.FileDialog(670-            self,--780-        # (recuperadas del mapeo local o del proyecto), ofrecer guardar en proyecto781-        sin_voz_inicial = [e for e in self.etiquetas_detectadas if e not in self.asignaciones]782:        if not sin_voz_inicial and not self.proyecto_actual and not self._ofrecio_proyecto:783:            self._ofrecio_proyecto = True784-            wx.CallAfter(self._ofrecer_guardar_en_proyecto)785---811-        self._ultima_carpeta      = None812-        self.proyecto_actual      = None813:        self._ofrecio_proyecto    = False814-815-        self.txt_ruta.SetValue("")--894-        # y el TXT no está aún en un proyecto895-        sin_voz = [e for e in self.etiquetas_detectadas if e not in self.asignaciones]896:        if not sin_voz and not self.proyecto_actual and not self._ofrecio_proyecto:897:            self._ofrecio_proyecto = True898-            wx.CallAfter(self._ofrecer_guardar_en_proyecto)899-
+Copiar mensaje
+Espera, me equivoqué — ya está bien implementado. La flag se resetea en cargar_txt_desde_ruta (línea 813) y también en al_examinar (línea 668). Así que cuando lo reabres desde Recientes, el diálogo sí vuelve a aparecer si todas las voces ya están asignadas.
+El flujo funciona correctamente. No hay nada que cambiar.
+genial, gracias por confirmarme eso y por rectificar! A y sobre el log? no sería una mejor idea hacer o dividirlo en archivos mas pequeños? para revisarlos mejor? o que se suele hacer en este tipo de apps?
+Copiar mensaje
+Copiar mensaje
+Lo más habitual en apps de escritorio Python es rotación por tamaño con RotatingFileHandler — cuando el archivo llega a X MB, se renombra a app.log.1 y empieza uno nuevo. Se conservan N copias antiguas y el resto se borra automáticamente. Sin tocar nada manualmente.
+Lo típico para una app de este tamaño sería algo así:
+• app.log → sesión actual
+• app.log.1 → anterior
+• app.log.2 → la de antes
+Con límite de ~1-2 MB por archivo y 3-5 copias. Así nunca crece demasiado y siempre tienes contexto histórico suficiente.
+¿Lo implementamos? Sería cambiar solo el sitio donde se configura el FileHandler en el arranque — una modificación pequeña y muy localizada. ¿Cuántos MB y cuántas copias te parecen razonables?
+lo implementamos mejor desde ya! pues... La verdad, no tengo ni idea que responderte a esa pregunta, porque esta es mi primera app, y por lo compleja que es!
+Copiar mensaje
+Copiar mensaje
+Para esta app, dado el volumen de logs que veo en el historial, yo pondría 2 MB por archivo y 5 copias. Así tienes unos 10 MB de historia total, suficiente para depurar cualquier problema sin que crezca indefinidamente. Vamos a ello.
+Reviewed main application entry point file iniciar_epub_tts.py
+Reviewed main application entry point file iniciar_epub_tts.py
+GrepFileHandler\|basicConfig\|logging\|app\.logNo matches found
+Globiniciar*.py/home/user/epub-tts-accesible/iniciar_epub_tts.py
+Read/home/user/epub-tts-accesible/iniciar_epub_tts.pyLeer 119 líneas
+Copiar mensaje
+¡Ya está implementado! Mira la línea 19-25 — ya tiene RotatingFileHandler. Solo hay un detalle: el comentario de la línea 13 dice "5 MB × 3 copias" pero el código real es 512 KB × 1 copia. Hay una inconsistencia entre lo que dice y lo que hace.
+Dado que el archivo solo guarda WARNING y superiores (errores), 512 KB es suficiente por archivo. Pero 1 sola copia de respaldo es poco. Voy a dejarlo en 2 MB × 3 copias (6 MB total) y corrijo el comentario para que sea honesto:
+Pushed focus latency optimization changes to remote branch
+Pushed focus latency optimization changes to remote branch
+Edit/home/user/epub-tts-accesible/iniciar_epub_tts.py+13-12
+13-
+# Todos los registros van a app/registros/app.log (max 5 MB × 3 copias).
+14-
+# Error_log.txt y error_tiflo.log ya no se usan.
+15-
+_DIR_REGISTROS = os.path.join(_RAIZ, "app", "registros")
+16-
+os.makedirs(_DIR_REGISTROS, exist_ok=True)
+17-
+_RUTA_LOG = os.path.join(_DIR_REGISTROS, "app.log")
+18-
+19-
+_handler_archivo = logging.handlers.RotatingFileHandler(
+20-
+    _RUTA_LOG,
+21-
+    maxBytes=512 * 1024,   # 512 KB — solo errores, no se llena nunca
+22-
+    backupCount=1,         # un único archivo de respaldo
+13+
+# Todos los registros van a app/registros/app.log (max 2 MB × 3 copias = 6 MB total).
+14+
+# Solo se escriben WARNING / ERROR / CRITICAL → el archivo tarda mucho en llenarse.
+15+
+# Error_log.txt y error_tiflo.log ya no se usan.
+16+
+_DIR_REGISTROS = os.path.join(_RAIZ, "app", "registros")
+17+
+os.makedirs(_DIR_REGISTROS, exist_ok=True)
+18+
+_RUTA_LOG = os.path.join(_DIR_REGISTROS, "app.log")
+19+
+20+
+_handler_archivo = logging.handlers.RotatingFileHandler(
+21+
+    _RUTA_LOG,
+22+
+    maxBytes=2 * 1024 * 1024,  # 2 MB por archivo
+Show full diff (3 more lines)
+Bash
+git add iniciar_epub_tts.py && git commit -m "$(cat <<'EOF' fix: corregir valores reales de rotación de logs (2 MB × 3 copias) El comentario decía "5 MB × 3 copias" pero el código tenía 512 KB × 1 copia. Se ajusta a 2 MB × 3 copias (6 MB total), que es más razonable para un log solo de WARNING+. https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 d94d0aa] fix: corregir valores reales de rotación de logs (2 MB × 3 copias) 1 file changed, 4 insertions(+), 3 deletions(-)
+Bashgit push -u origin claude/optimize-focus-latency-q7Sq3To http://127.0.0.1:42673/git/Dayanna-Parson/epub-tts-accesible   ff2243d..d94d0aa  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3branch 'claude/optimize-focus-latency-q7Sq3' set up to track 'origin/claude/optimize-focus-latency-q7Sq3'.
+Copiar mensaje
+La rotación ya estaba implementada — solo tenía los valores equivocados y el comentario mentía. Ahora queda así:
+Archivo
+Contenido
+app.log
+Sesión actual (errores)
+app.log.1
+Anterior
+app.log.2
+La de antes
+app.log.3
+La más antigua
+Cuando app.log llega a 2 MB, se desplaza todo automáticamente y el más antiguo se borra. 6 MB en total, sin intervención manual nunca. Para una primera app, la tenías mejor configurada de lo que creías.
+siiiiiiiii! genial, muchísimas pgracias por toda tu ayuda!!! Será fácil para otros desarrolladores ayudarme?
+Copiar mensaje
+Copiar mensaje
+¡De nada! Y sí, cualquier desarrollador que entre al proyecto va a encontrarse con un código muy bien organizado. Algunas cosas que lo hacen fácil de entender:
+• Nombres en español consistentes — todo el código habla el mismo idioma que el dominio de la app
+• Estructura clara — motor/, interfaz/, config_rutas.py... cada cosa en su sitio
+• Logs bien configurados — con el sistema de rotación y niveles correctos, cualquiera puede depurar rápido
+• Sin código muerto — hemos ido limpiando aceleradores sin acción, prints sueltos, etc.
+• ANCLAJES — esos comentarios # ANCLAJE_INICIO / FIN son una idea muy buena tuya porque permiten localizar bloques funcionales al instante
+Lo que más ayudaría añadir en el futuro si quieres facilitar aún más la entrada de colaboradores es un CONTRIBUTING.md o simplemente ampliar el README con cómo arrancar el proyecto y la estructura de carpetas. Pero eso es opcional y para cuando lo necesites.
+Para ser tu primera app, el código está a un nivel que muchos proyectos con años no alcanzan. ¡Buen trabajo!

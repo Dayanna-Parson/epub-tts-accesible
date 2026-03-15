@@ -1,0 +1,107 @@
+Pront maestro claude (fase 4)
+
+PROMPT MAESTRO — FASE 4 · TifloHistorias (EpubTTSAccesible)
+Versión: Máxima Fidelidad · Accesibilidad NVDA + Latencia Cero
+═══════════════════════════════════════════════════════════════════
+───────────────────────────────────────────────────────────────────
+ROL Y REGLAS DE INTERACCIÓN (igual que Fase 1, 2 y 3, NO cambiar)
+───────────────────────────────────────────────────────────────────
+
+
+Reglas estrictas que DEBES cumplir en toda la sesión:
+1. 
+No uses explicaciones visuales. Explica siempre la lógica y el flujo de los eventos, no lo que "se ve en pantalla".
+2. 
+Cuando entregues código, indica exactamente qué bloque ANCLAJE (# ANCLAJE_INICIO: nombre … # ANCLAJE_FIN: nombre) debes reemplazar. Nunca entregues un archivo entero sin contexto.
+3. 
+El código entregado NO debe contener ningún rastro de conversación en los comentarios. Solo comentarios técnicos, en español, limpios y aptos para GitHub.
+4. 
+NUNCA resumas código con "...". Entrega siempre la función completa que hay que reemplazar.
+5. 
+Si hay varias tareas, empieza confirmando que entiendes el contexto y entrégalas una por una, esperando confirmación antes de avanzar a la siguiente.
+6. 
+Prioridad al Label: Toda instrucción de formato o advertencia crítica DEBE ir dentro de la propiedad label del control. NVDA no siempre anuncia el SetHelpText de forma automática.
+───────────────────────────────────────────────────────────────────
+CONTEXTO: QUÉ ES EL PROYECTO
+───────────────────────────────────────────────────────────────────
+"TifloHistorias" (EpubTTSAccesible) es una app de escritorio Windows para producir audiolibros con TTS multivoz.
+Soporta: Azure Neural TTS, Amazon Polly, ElevenLabs, SAPI5 local.
+Salida: MP3 320 kbps (FFmpeg portable en bin/).
+Interfaz: wxPython 4.x con accesibilidad NVDA total.
+Lenguaje de código: Python 3.x. Comentarios siempre en español.
+Ruta del proyecto: /home/user/epub-tts-accesible
+Rama activa:       fase4-ajustes-finales
+───────────────────────────────────────────────────────────────────
+CONTEXTO: ESTRUCTURA DE ARCHIVOS ACTUALIZADA
+───────────────────────────────────────────────────────────────────
+app/
+interfaz/
+ventana_principal.py   ← ventana raíz, menú, notebook 3 pestañas
+pestana_lectura.py     ← Modo Lectura (EPUB + reproducción TTS)
+pestana_grabacion.py   ← Modo Grabación multivoz (OK)
+pestana_ajustes.py     ← Ajustes de voces, claves API (SEPARADAS)
+ventana_proyectos.py   ← Gestión jerárquica de proyectos (F3 OK)
+motor/
+gestor_proyectos.py    ← Lógica de proyectos (proyectos.json)
+gestor_atajos.py       ← Atajos de teclado personalizables
+gestor_epub.py         ← Parseo de EPUB
+cliente_nube_voces.py  ← Carga de voces disponibles
+grabador_audio.py      ← Grabación + FFmpeg + concatenación
+procesador_etiquetas.py← @etiqueta → fragmentación de texto
+reproductor_voz.py     ← Cola de audio TTS asíncrona
+servicios/
+cliente_azure.py       ← Lee de claves_api.json
+cliente_eleven.py      ← Lee de claves_api.json
+cliente_polly.py       ← Lee de claves_api.json
+config_rutas.py          ← cargar_claves() / guardar_claves() OK
+configuraciones/ (BLINDADAS EN .GITIGNORE)
+claves_api.json          ← Secretos (Azure, Polly, Eleven)
+ajustes.json             ← Ajustes generales (SIN claves)
+proyectos.json           ← Jerarquía de proyectos
+... (historiales y mapeos varios)
+recursos/
+iconos/                  ← Directorio para iconos .png/.ico
+sonidos/                 ← Directorio para Earcons .wav
+───────────────────────────────────────────────────────────────────
+CONTEXTO: ESTADO ACTUAL (FIN DE FASE 3)
+───────────────────────────────────────────────────────────────────
+✓ Gestión de Proyectos completa con TreeCtrl accesible.
+✓ Blindaje de Privacidad: Claves API separadas en su propio JSON.
+✓ .gitignore actualizado para evitar fugas de secretos detectadas por GitHub.
+✓ El sistema migra automáticamente claves antiguas de ajustes.json al nuevo archivo claves_apisjson.
+───────────────────────────────────────────────────────────────────
+───────────────────────────────────────────────────────────────────Se eliminaron los menús superiores por menús contextuales (menú de aplicación) para mejorar la navegación con NVDA.
+───────────────────────────────────────────────────────────────────
+FASE 4 — MEJORAS Y ACTUALIZACIONES FINALES:
+
+───────────────────────────────────────────────────────────────────
+TAREA 1 · Latencia de Foco (Threading)
+
+Diagnóstico: El retraso de ~2segundos ocurre SOLO al entrar en la PESTAÑA LECTURA (carga inicial) y en PESTAÑA AJUSTES al navegar por la lista de IDIOMAS Y VOCES.
+
+Solución: Mover la carga de esos diccionarios/JSONs pesados a un hilo secundario para que el cambio de pestaña sea instantáneo. Usa wx.CallAfter para actualizar el control y situar el foco inmediatamente.
+TAREA 2 · Multicategoría de Proyectos (CheckListCtrl)
+
+UI: Eliminar "Tipo de Proyecto" del menú contextual (es redundante).
+
+Control Accesible: Sustituir el Choice por un CheckListCtrl (usando wx.lib.mixins.listctrl.CheckListCtrlMixin). REFERENCIA: Mira el código de "voces favoritas" en Ajustes.
+
+Categorías fijas:
+1. 
+Serie, 2. Libro, 3. Fantasía, 4. Distopía, 5. Tecno-thriller, 6. Diálogos, 7. Tutorial, 8. Publicidad, 9. Artículo, 10. Otros.
+REQUERIMIENTO TÉCNICO: Implementar usando wx.lib.mixins.listctrl.CheckListCtrlMixin para asegurar que NVDA anuncie correctamente el estado de las casillas (marcado/desmarcado) al navegar con las flechas. Lógica: El campo 'tipo' en proyectos.json ahora debe ser una lista.
+TAREA 3 · Notificaciones Inteligentes de Voces
+
+Lógica: Comparar el JSON local de voces con el servidor de cada API.
+
+Notificación: SOLO avisar si hay voces NUEVAS disponibles para descargar. Evitar que el usuario tenga que buscar manualmente en Claves y Proveedores.
+TAREA 4 · Feedback Multimedia
+
+Iconos: Buscar iconos lineales/minimalistas. Proponer nombres para /recursos/iconos/.
+
+Sonidos: Clips .wav cortos para Inicio/Fin grabación y alertas.
+───────────────────────────────────────────────────────────────────
+INICIO — Cómo empezar
+───────────────────────────────────────────────────────────────────
+Confirma que comprendes el uso de CheckListCtrlMixin para las casillas de verificación (como en favoritos) y la prioridad de la latencia en el modo lectura.
+Empecemos con la Tarea 1: Analiza 'pestana_lectura.py' y propón cómo usar threading para que al pulsar Ctrl+Tab hacia ella, el foco sea instantáneo. Y también analiza ajustes.py' dime cómo vamos a mover la carga a hilos secundarios para eliminar la latencia del foco.

@@ -1,0 +1,107 @@
+Pront y respuesta 19 claude (fase 4)
+
+puedes corregir esos tres?
+
+Respuesta:
+
+Analyzed imports in main window module
+Analyzed imports in main window module
+Update Todos☐ Fixing fragile GetParent chains in pestana_ajustes.py☐ Fix except: pass silencioso en ventana_principal.py☐ Fix wx.CallAfter con variable local en dialogo_voces_nuevas.py☐ Commit y push
+GrepGetParent\(\)\.GetParent\(\)
+184-    def guardar_todo(self):185-        # Guardar config general186-        self.config["segundos_salto"] = self.txt_salto.GetValue()
+Mostrar más
+187-        self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()188:        padre = self.GetParent().GetParent().GetParent()189-        if hasattr(padre, "guardar_config_en_archivo"):190-            padre.guardar_config_en_archivo()191-            192-        # Guardar límites de cuota--646-        647-        self.config["idioma_libro_codigo"] = codigo648-        # Guardar en disco649-        try:650:            padre_ajustes = self.GetParent().GetParent().GetParent()651-            if hasattr(padre_ajustes, "guardar_config_en_archivo"):652-                padre_ajustes.guardar_config_en_archivo()653-        except: pass654---689-    def _notificar_grabacion(self):690-        """Recarga la lista de voces en PestanaGrabacion al instante."""691-        try:692-            # PanelVoces → Simplebook → SplitterWindow → PestanaAjustes → Notebook → VentanaPrincipal693:            ventana = self.GetParent().GetParent().GetParent().GetParent().GetParent()694-            if hasattr(ventana, 'pestana_grabacion'):695-                ventana.pestana_grabacion._cargar_voces_disponibles()696-        except Exception:697-            pass--1286-                json.dump(self.config, f, indent=4, ensure_ascii=False)1287-            # Notificar a PestanaLectura para que actualice las etiquetas de los botones1288-            # de salto con el nuevo valor de segundos guardado1289-            try:1290:                ventana = self.GetParent().GetParent()  # Notebook → VentanaPrincipal1291-                if hasattr(ventana, 'pestana_lectura'):1292-                    pl = ventana.pestana_lectura1293-                    pl.cargar_config_salto()1294-                    pl.btn_atras.SetLabel(f"Atrás {pl.segundos_salto}s")
+Grepexcept.*pass|except:\s*pass
+256-257-    def al_cerrar(self, evento):258-        try:
+Mostrar más
+259-            if hasattr(self.pestana_lectura, 'reproductor'):260-                self.pestana_lectura.al_detener(None)261:        except: pass262-        self._guardar_sesion()263-        self.Destroy()264-    # ANCLAJE_FIN: EVENTOS_GLOBALES265-266-    # ANCLAJE_INICIO: MEMORIA_SESION
+Mostrar 4 más
+Copiar mensaje
+Now I have everything. Applying all three fixes:
+Updated task list with fragile GetParent fix and silent exception handling
+Updated task list with fragile GetParent fix and silent exception handling
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.pyLeer 3 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+7-4
+22
+import wx
+33
+import os
+44
+import json
+5+
+import logging
+6+
+7+
+logger = logging.getLogger(__name__)
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+5-4
+11
+        try:
+22
+            if hasattr(self.pestana_lectura, 'reproductor'):
+33
+                self.pestana_lectura.al_detener(None)
+4-
+        except: pass
+4+
+        except Exception:
+5+
+            logger.warning("Error al detener la reproducción durante el cierre", exc_info=True)
+Mostrar 1 más
+Copiar mensaje
+Now the four GetParent chains in pestana_ajustes.py:
+Fixed fragile GetParent chains and silent exceptions in Python files
+Fixed fragile GetParent chains and silent exceptions in Python files
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+3-3
+1-
+        padre = self.GetParent().GetParent().GetParent()
+1+
+        padre = wx.GetTopLevelParent(self)
+22
+        if hasattr(padre, "guardar_config_en_archivo"):
+33
+            padre.guardar_config_en_archivo()
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+6-5
+11
+        try:
+2-
+            padre_ajustes = self.GetParent().GetParent().GetParent()
+3-
+            if hasattr(padre_ajustes, "guardar_config_en_archivo"):
+4-
+                padre_ajustes.guardar_config_en_archivo()
+5-
+        except: pass
+2+
+            padre_ajustes = wx.GetTopLevelParent(self)
+3+
+            if hasattr(padre_ajustes, "guardar_config_en_archivo"):
+4+
+                padre_ajustes.guardar_config_en_archivo()
+5+
+        except Exception:
+6+
+            pass
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+6-7
+11
+        try:
+2-
+            # PanelVoces → Simplebook → SplitterWindow → PestanaAjustes → Notebook → VentanaPrincipal
+3-
+            ventana = self.GetParent().GetParent().GetParent().GetParent().GetParent()
+2+
+            ventana = wx.GetTopLevelParent(self)
+43
+                ventana.pestana_grabacion._cargar_voces_disponibles()
+54
+        except Exception:
+65
+            pass
+Mostrar 8 más
+Copiar mensaje
+Listo, commit b03bc6d pusheado. Los tres cambios:
+1. 
+pestana_ajustes.py — 4 cadenas GetParent().GetParent()... reemplazadas por wx.GetTopLevelParent(self), que funciona independientemente de cuántos contenedores haya en medio.
+2. 
+ventana_principal.py — except: pass convertido en except Exception: logger.warning(...) con trazado completo del error. Añadido import logging y logger = logging.getLogger(__name__) al inicio del archivo.
+3. 
+dialogo_voces_nuevas.py — btn_ok convertido en self.btn_ok para que la referencia sea un atributo de instancia antes de pasarla a wx.CallAfter.

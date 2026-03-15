@@ -1,0 +1,1423 @@
+Pront y respuesta 13 claude (fase 4)
+
+mira, ahora si reproduce algunos sonidos, menos el de las listas y el de abrir las carpetas. Solo me lo reproduce cuando pulso control enter en el gestor de proyectos. A, y otra pregunta, porqué ahora no me abre la ventana para dividir los epubs? Y puedes mover toda esa ventana, justo antes del botón examinar? Aquí primero te pego el log de la consola, y justo debajo el de la carpeta registro: ---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+INFO      __main__  Epub-TTS arrancando. Log: C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\registros\app.log
+INFO      comtypes.client._code_cache  Could not import comtypes.gen, trying to create it.
+INFO      comtypes.client._code_cache  Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+INFO      comtypes.client._code_cache  Created a memory-only package.
+INFO      comtypes.client._code_cache  Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+INFO      app.motor.grabador_audio  [GrabadorAudio] ffmpeg local detectado: C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\bin\ffmpeg.exe
+INFO      app.motor.reproductor_sonidos  [Sonidos] 12 archivos disponibles en C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\recursos\sonidos
+INFO      __main__  Iniciando ventana principal
+INFO      app.motor.reproductor_sonidos  [Sonidos] 12/12 sonidos listos en wx.adv.Sound
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+--> [Local] Buscando voz: Microsoft Helena Desktop - Spanish (Spain)
+--> [Local] Voz cambiada a: Microsoft Helena Desktop - Spanish (Spain)
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 48, in <module>
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+                     ^^^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_RECORD'. Segundo log: 2025-12-18 17:44:10,020 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-18 17:44:10,020 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-18 17:44:10,071 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-18 17:44:10,071 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "D:\TifloHistorias\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, title="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: VentanaPrincipal.__init__() got an unexpected keyword argument 'title'
+2025-12-18 17:44:39,293 - __main__ - INFO - Aplicación cerrada
+2025-12-18 17:53:53,575 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-18 17:53:53,576 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-18 17:53:53,589 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-18 18:42:54,472 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-18 18:42:54,473 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-18 18:42:54,488 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-19 18:46:39,181 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-19 18:46:39,185 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-19 18:46:39,241 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-19 19:14:46,339 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-19 19:14:46,341 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-19 19:14:46,361 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-19 19:16:34,036 - __main__ - INFO - Aplicación cerrada
+2025-12-19 19:19:22,421 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-19 19:19:22,421 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-19 19:19:22,438 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-19 19:36:58,344 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-19 19:36:58,344 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-19 19:36:58,365 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-19 19:42:17,260 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-19 19:42:17,260 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-19 19:42:17,273 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-19 20:34:05,101 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-19 20:34:05,106 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-19 20:34:05,124 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-19 20:43:24,046 - __main__ - INFO - Aplicación cerrada
+2025-12-19 22:11:23,923 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-19 22:11:23,924 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-19 22:11:23,949 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-20 00:52:08,546 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-20 00:52:08,547 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-20 00:52:08,667 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-20 21:44:29,514 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-20 21:44:29,529 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-20 21:44:29,572 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-21 01:38:42,837 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-21 01:38:42,839 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-21 01:38:42,912 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-21 01:51:06,377 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-21 01:51:06,378 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-21 01:51:06,946 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-21 22:42:40,626 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-21 22:42:40,630 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-21 22:42:41,600 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-21 22:50:32,039 - __main__ - INFO - Aplicación cerrada
+2025-12-21 23:04:40,571 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-21 23:04:40,572 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-21 23:04:41,147 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-24 01:51:14,001 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-24 01:51:14,004 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-24 01:51:14,908 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-24 02:00:40,270 - __main__ - INFO - Aplicación cerrada
+2025-12-24 16:30:18,192 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-24 16:30:18,193 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-24 16:30:19,207 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-24 16:37:33,705 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-24 16:37:33,706 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-24 16:37:34,209 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-24 16:56:47,516 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-24 16:56:47,518 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-24 16:56:47,892 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-25 20:57:25,925 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-25 20:57:25,927 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-25 20:57:27,002 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-26 00:17:17,238 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-26 00:17:17,242 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-26 00:17:17,783 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-26 01:04:18,304 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-26 01:04:18,305 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-26 01:04:18,855 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-26 01:44:50,949 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-26 01:44:50,950 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-26 01:44:51,387 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-26 01:44:51,891 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\ventana_principal.py", line 24, in __init__
+    self.pestana_ajustes = PestanaAjustes(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_ajustes.py", line 482, in __init__
+    self.pag_voces = PanelVoces(self.panel_derecho, self.config)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_ajustes.py", line 328, in __init__
+    self.cargar_datos_y_llenar()
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_ajustes.py", line 392, in cargar_datos_y_llenar
+    self.filtrar_y_mostrar()
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_ajustes.py", line 403, in filtrar_y_mostrar
+    solo_multi = self.chk_multi.IsChecked()
+                 ^^^^^^^^^^^^^^
+AttributeError: 'PanelVoces' object has no attribute 'chk_multi'
+2025-12-26 01:45:15,754 - __main__ - INFO - Aplicación cerrada
+2025-12-26 18:30:25,597 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-26 18:30:25,598 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-26 18:30:26,542 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-26 18:30:27,088 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\ventana_principal.py", line 24, in __init__
+    self.pestana_ajustes = PestanaAjustes(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_ajustes.py", line 507, in __init__
+    self.pag_voces = PanelVoces(self.panel_derecho, self.config)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_ajustes.py", line 265, in __init__
+    self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
+                                            ^^^^^^^^^^^^^^^
+AttributeError: 'PanelVoces' object has no attribute 'al_filtrar'
+2025-12-26 18:30:47,068 - __main__ - INFO - Aplicación cerrada
+2025-12-26 20:31:57,032 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-26 20:31:57,033 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-26 20:31:57,634 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-26 20:31:58,579 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\ventana_principal.py", line 24, in __init__
+    self.pestana_ajustes = PestanaAjustes(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_ajustes.py", line 492, in __init__
+    self.pag_atajos = PanelAtajos(self.panel_derecho)
+                      ^^^^^^^^^^^
+NameError: name 'PanelAtajos' is not defined. Did you mean: 'PanelClaves'?
+2025-12-26 20:32:21,756 - __main__ - INFO - Aplicación cerrada
+2025-12-26 20:40:15,308 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-26 20:40:15,309 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-26 20:40:15,837 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 00:12:22,610 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 00:12:22,611 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 00:12:56,164 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 00:12:56,164 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 00:13:39,348 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 00:13:39,349 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 00:45:10,656 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 00:45:10,658 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 00:45:11,180 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 00:58:27,270 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 00:58:27,271 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 00:58:27,847 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 15:13:39,142 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 15:13:39,144 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 15:13:40,130 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 15:30:48,207 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 15:30:48,208 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 15:30:48,703 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 15:37:28,574 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 15:37:28,576 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 15:37:29,086 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 17:50:41,505 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 17:50:41,506 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 17:50:41,946 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 18:07:08,980 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 18:07:08,981 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 18:07:09,404 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 18:19:15,580 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 18:19:15,581 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 18:19:16,226 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 18:26:01,670 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 18:26:01,672 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 18:26:02,195 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 18:38:29,982 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 18:38:29,983 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 18:38:30,483 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 18:41:30,068 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 18:41:30,070 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 18:41:30,557 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 18:55:17,611 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 18:55:17,613 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 18:55:18,129 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 19:05:27,355 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 19:05:27,356 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 19:05:27,876 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 19:18:09,147 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 19:18:09,149 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 19:18:09,365 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 19:23:12,654 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 19:23:12,656 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 19:23:12,912 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 20:10:56,380 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 20:10:56,380 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 20:10:56,948 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 21:22:01,792 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 21:22:01,805 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\ventana_principal.py", line 16, in __init__
+    self.pestana_lectura = PestanaLectura(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_lectura.py", line 15, in __init__
+    self.reproductor = ReproductorVoz()
+                       ^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\motor\reproductor_voz.py", line 10, in __init__
+    from app.motor.cliente_sapi5 import ClienteSapi5
+ModuleNotFoundError: No module named 'app.motor.cliente_sapi5'
+2025-12-27 21:22:20,315 - __main__ - INFO - Aplicación cerrada
+2025-12-27 21:50:17,549 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 21:50:17,550 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 21:50:18,472 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-27 23:30:08,687 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 23:30:08,688 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-27 23:30:35,969 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-27 23:30:35,970 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 00:15:35,611 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 00:15:35,612 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 00:15:36,158 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 00:15:36,259 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\ventana_principal.py", line 16, in __init__
+    self.pestana_lectura = PestanaLectura(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_lectura.py", line 36, in __init__
+    self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PestanaLectura' object has no attribute 'al_activar_capitulo'
+2025-12-28 00:15:57,626 - __main__ - INFO - Aplicación cerrada
+2025-12-28 00:58:11,760 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 00:58:11,761 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 00:58:12,280 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 15:40:13,589 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 15:40:13,590 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 15:40:14,638 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 17:20:34,637 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 17:20:34,638 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 17:20:35,056 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 18:47:22,283 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 18:47:22,285 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 18:47:23,313 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 19:21:53,143 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 19:21:53,144 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 19:21:53,661 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 19:46:37,142 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 19:46:37,143 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 19:46:37,546 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 20:09:35,832 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 20:09:35,834 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 20:09:36,383 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 20:11:11,565 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 20:11:11,567 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 20:11:12,076 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-28 21:00:39,925 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-28 21:00:39,926 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-28 21:00:40,370 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 00:43:23,888 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 00:43:23,890 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 00:43:24,832 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 00:52:12,568 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 00:52:12,568 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 00:52:13,118 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 00:52:13,289 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\ventana_principal.py", line 16, in __init__
+    self.pestana_lectura = PestanaLectura(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\PC\iCloudDrive\Documents\mi proyecto TifloHistorias\tiflohistorias (v3)\TifloHistorias\app\interfaz\pestana_lectura.py", line 102, in __init__
+    self.Bind(wx.EVT_TIMER, self.al_actualizar_ui, self.temporizador_ui)
+                            ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PestanaLectura' object has no attribute 'al_actualizar_ui'
+2025-12-29 00:53:18,437 - __main__ - INFO - Aplicación cerrada
+2025-12-29 01:00:29,610 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 01:00:29,611 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 01:00:30,146 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 01:31:23,328 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 01:31:23,329 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 01:31:23,862 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 01:53:59,295 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 01:53:59,296 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 01:53:59,906 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 14:00:37,435 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 14:00:37,436 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 14:00:37,793 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 14:27:58,549 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 14:27:58,550 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 14:27:59,592 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 15:00:02,452 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 15:00:02,453 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 15:00:02,965 - __main__ - INFO - Iniciando TifloHistorias
+2025-12-29 15:09:12,597 - comtypes.client._code_cache - INFO - Imported existing <module 'comtypes.gen' from 'C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\comtypes\\gen\\__init__.py'>
+2025-12-29 15:09:12,599 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\PC\AppData\Local\Programs\Python\Python312\Lib\site-packages\comtypes\gen'
+2025-12-29 15:09:13,103 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-03 17:41:31,540 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-03 17:41:31,541 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-03 17:41:31,543 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-03 17:41:31,547 - comtypes.client._code_cache - INFO - Creating writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-03 17:41:31,549 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-03 17:41:32,509 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-03 17:41:32,551 - comtypes.client._generate - INFO - Could not import comtypes.gen._C866CA3A_32F7_11D2_9602_00C04F8EE628_0_5_4: No module named 'comtypes.gen._C866CA3A_32F7_11D2_9602_00C04F8EE628_0_5_4'
+2026-01-03 17:41:32,559 - comtypes.client._generate - INFO - # Generating comtypes.gen._C866CA3A_32F7_11D2_9602_00C04F8EE628_0_5_4
+2026-01-03 17:41:32,653 - comtypes.client._generate - INFO - # Generating comtypes.gen.SpeechLib
+2026-01-03 17:41:32,664 - comtypes.client._generate - INFO - Could not import comtypes.gen._00020430_0000_0000_C000_000000000046_0_2_0: No module named 'comtypes.gen._00020430_0000_0000_C000_000000000046_0_2_0'
+2026-01-03 17:41:32,665 - comtypes.client._generate - INFO - # Generating comtypes.gen._00020430_0000_0000_C000_000000000046_0_2_0
+2026-01-03 17:41:32,674 - comtypes.client._generate - INFO - # Generating comtypes.gen.stdole
+2026-01-03 18:44:01,046 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-03 18:44:01,047 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-03 18:44:01,048 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-03 18:44:01,052 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-03 18:44:01,562 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-08 18:23:50,287 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-08 18:23:50,287 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-08 18:23:50,289 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-08 18:23:50,292 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-08 18:23:50,833 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-08 18:27:46,184 - __main__ - INFO - Aplicación cerrada
+2026-01-09 21:23:40,169 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-09 21:23:40,171 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-09 21:23:40,171 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-09 21:23:40,174 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-09 23:35:30,752 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-09 23:35:30,753 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-09 23:35:30,753 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-09 23:35:30,757 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-09 23:35:31,032 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-09 23:35:31,401 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 16, in __init__
+    self.pestana_lectura = PestanaLectura(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 110, in __init__
+    self.Bind(wx.EVT_CHAR_HOOK, self.al_navegacion_tab)
+                                ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PestanaLectura' object has no attribute 'al_navegacion_tab'
+2026-01-09 23:35:52,843 - __main__ - INFO - Aplicación cerrada
+2026-01-09 23:56:55,615 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-09 23:56:55,615 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-09 23:56:55,615 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-09 23:56:55,622 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-09 23:56:56,053 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-09 23:56:56,184 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 16, in __init__
+    self.pestana_lectura = PestanaLectura(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 34, in __init__
+    self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PestanaLectura' object has no attribute 'al_activar_capitulo'
+2026-01-09 23:57:20,215 - __main__ - INFO - Aplicación cerrada
+2026-01-09 23:59:35,423 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-09 23:59:35,423 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-09 23:59:35,424 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-09 23:59:35,430 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-09 23:59:35,795 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-09 23:59:35,895 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 16, in __init__
+    self.pestana_lectura = PestanaLectura(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 34, in __init__
+    self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PestanaLectura' object has no attribute 'al_activar_capitulo'
+2026-01-09 23:59:51,642 - __main__ - INFO - Aplicación cerrada
+2026-01-10 01:01:43,852 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-10 01:01:43,853 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-10 01:01:43,853 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-10 01:01:43,859 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-10 01:01:44,317 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-10 01:01:46,827 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 28, in __init__
+    self._configurar_menu()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 74, in _configurar_menu
+    self.Bind(wx.EVT_MENU, self.al_abrir_archivo, self.item_abrir)
+                           ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'VentanaPrincipal' object has no attribute 'al_abrir_archivo'
+2026-01-10 01:02:25,789 - __main__ - INFO - Aplicación cerrada
+2026-01-10 01:46:06,765 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-10 01:46:06,765 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-10 01:46:06,766 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-10 01:46:06,773 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-10 01:46:07,156 - __main__ - INFO - Iniciando TifloHistorias
+2026-01-10 01:49:52,887 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-01-10 01:49:52,888 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-01-10 01:49:52,888 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-01-10 01:49:52,893 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-01-10 01:49:53,263 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-26 19:59:30,400 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-26 19:59:30,401 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-26 19:59:30,402 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-26 19:59:30,408 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-26 19:59:31,542 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-26 19:59:31,746 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\iniciar_tiflohistorias.py", line 38, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Tiflo Historias")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 16, in __init__
+    self.pestana_lectura = PestanaLectura(self.notebook)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 109, in __init__
+    self.configurar_aceleradores()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 492, in configurar_aceleradores
+    self.Bind(wx.EVT_MENU, self.al_cargar_libro, id=ids[0])
+                           ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'PestanaLectura' object has no attribute 'al_cargar_libro'
+2026-02-26 20:03:30,990 - __main__ - INFO - Aplicación cerrada
+2026-02-26 20:08:14,207 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-26 20:08:14,208 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-26 20:08:14,209 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-26 20:08:14,215 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-26 20:08:14,763 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-26 20:17:53,343 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-26 20:17:53,344 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-26 20:17:53,345 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-26 20:17:53,352 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-26 20:17:53,786 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-26 21:39:29,821 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-26 21:39:29,821 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-26 21:39:29,821 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-26 21:39:29,824 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-26 21:39:30,552 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-26 23:42:32,037 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-26 23:42:32,037 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-26 23:42:32,038 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-26 23:42:32,041 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-26 23:42:32,323 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-27 00:11:07,437 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-27 00:11:07,442 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-27 00:11:07,443 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-27 00:11:07,446 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-27 00:11:08,153 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-27 18:28:33,202 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-27 18:28:33,203 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-27 18:28:33,204 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-27 18:28:33,211 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-27 18:28:34,270 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-27 19:27:01,935 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-27 19:27:01,935 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-27 19:27:01,936 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-27 19:27:01,941 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-27 19:27:02,472 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-27 20:37:56,836 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-27 20:37:56,836 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-27 20:37:56,837 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-27 20:37:56,842 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-27 20:37:57,139 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-28 01:21:39,577 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-28 01:21:39,578 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-28 01:21:39,578 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-28 01:21:39,583 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-28 01:21:40,728 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-28 14:09:57,597 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-28 14:09:57,598 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-28 14:09:57,599 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-28 14:09:57,603 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-28 14:09:58,273 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-28 14:16:08,191 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-28 14:16:08,191 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-28 14:16:08,191 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-28 14:16:08,196 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-28 14:16:09,179 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-28 23:12:19,520 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-28 23:12:19,521 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-28 23:12:19,521 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-28 23:12:19,526 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-28 23:12:20,253 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-28 23:29:45,785 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-28 23:29:45,786 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-28 23:29:45,787 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-28 23:29:45,792 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-28 23:29:46,330 - __main__ - INFO - Iniciando TifloHistorias
+2026-02-28 23:41:34,092 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-02-28 23:41:34,093 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-02-28 23:41:34,093 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-02-28 23:41:34,098 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-02-28 23:41:34,534 - __main__ - INFO - Iniciando TifloHistorias
+2026-03-01 01:22:57,763 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 01:22:57,763 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 01:22:57,764 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 01:22:57,769 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 01:22:58,593 - __main__ - INFO - Iniciando TifloHistorias
+2026-03-01 01:31:57,932 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 01:31:57,932 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 01:31:57,934 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 01:31:57,937 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 01:31:58,202 - __main__ - INFO - Iniciando TifloHistorias
+2026-03-01 14:27:17,013 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 14:27:17,013 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 14:27:17,014 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 14:27:17,018 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 14:27:17,779 - __main__ - INFO - Iniciando TifloHistorias
+2026-03-01 16:32:31,392 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 16:32:31,393 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 16:32:31,393 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 16:32:31,400 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 16:32:31,984 - __main__ - INFO - Iniciando TifloHistorias
+2026-03-01 19:50:05,858 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 19:50:05,859 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 19:50:05,860 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 19:50:05,862 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 19:50:06,159 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-01 21:45:53,503 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 21:45:53,504 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 21:45:53,507 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 21:45:53,511 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 21:45:54,672 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-01 21:51:16,529 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 21:51:16,531 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 21:51:16,532 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 21:51:16,537 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 21:51:17,090 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-01 22:03:43,580 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-01 22:03:43,581 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-01 22:03:43,582 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-01 22:03:43,588 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-01 22:03:44,047 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-02 00:21:53,273 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-02 00:21:53,274 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-02 00:21:53,275 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-02 00:21:53,281 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-02 00:21:54,122 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-02 01:08:25,600 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-02 01:08:25,601 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-02 01:08:25,602 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-02 01:08:25,608 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-02 01:08:27,109 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-02 20:21:39,380 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-02 20:21:39,382 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-02 20:21:39,382 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-02 20:21:39,388 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-02 20:21:40,647 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-02 20:58:00,489 - __main__ - INFO - Aplicación cerrada
+2026-03-02 23:10:06,178 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-02 23:10:06,178 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-02 23:10:06,179 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-02 23:10:06,183 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-02 23:10:07,085 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-03 00:34:30,353 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-03 00:34:30,354 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-03 00:34:30,354 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-03 00:34:30,357 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-03 00:34:31,522 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-03 00:39:02,587 - __main__ - INFO - Aplicación cerrada
+2026-03-03 13:38:12,356 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-03 13:38:12,358 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-03 13:38:12,358 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-03 13:38:12,363 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-03 13:38:13,937 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-03 16:11:19,464 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-03 16:11:19,464 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-03 16:11:19,464 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-03 16:11:19,467 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-03 16:11:20,063 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-03 19:06:08,506 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-03 19:06:08,507 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-03 19:06:08,507 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-03 19:06:08,512 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-03 19:06:09,449 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-04 12:56:10,055 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-04 12:56:10,056 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-04 12:56:10,056 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-04 12:56:10,058 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-04 12:56:10,922 - __main__ - INFO - Iniciando TifloHistorias
+2026-03-04 13:38:51,194 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo cargar mapeo: Expecting value: line 1 column 1 (char 0)
+2026-03-04 13:39:08,155 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo guardar mapeo: Expecting value: line 1 column 1 (char 0)
+2026-03-04 13:39:23,507 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo guardar mapeo: Expecting value: line 1 column 1 (char 0)
+2026-03-04 13:39:42,957 - app.interfaz.pestana_grabacion - WARNING - [PestanaGrabacion] No se pudo guardar mapeo: Expecting value: line 1 column 1 (char 0)
+2026-03-04 13:40:18,241 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,242 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,243 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,243 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,244 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,244 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,244 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,245 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:40:18,245 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,482 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,484 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,485 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 1, @nar): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,487 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,487 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,487 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 2, @pj1): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,488 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 1/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,488 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 2/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-04 13:42:15,488 - app.motor.grabador_audio - WARNING - [GrabadorAudio] Intento 3/3 fallido (fragmento 3, @pj3): Amazon Polly aún no está implementado. Configura Azure o ElevenLabs como alternativa.
+2026-03-05 00:23:45,217 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-05 00:23:45,218 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-05 00:23:45,220 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-05 00:23:45,226 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-05 00:23:47,300 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-05 00:30:04,955 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:04,958 - app.motor.grabador_audio - INFO - [Azure] tfh_000_z5y8jc98.mp3 (48kHz→320k)
+2026-03-05 00:30:06,215 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:06,218 - app.motor.grabador_audio - INFO - [Azure] tfh_001_2djwuyyb.mp3 (48kHz→320k)
+2026-03-05 00:30:09,103 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:09,106 - app.motor.grabador_audio - INFO - [Polly] tfh_002_a79vf907.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 00:30:09,134 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_000_z5y8jc98.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:09,156 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_001_2djwuyyb.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 00:30:09,177 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_002_a79vf907.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:53,162 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:53,166 - app.motor.grabador_audio - INFO - [Azure] tfh_000_qwxwdvvg.mp3 (48kHz→320k)
+2026-03-05 01:33:54,384 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:54,388 - app.motor.grabador_audio - INFO - [Azure] tfh_001_hlp2lxbe.mp3 (48kHz→320k)
+2026-03-05 01:33:57,133 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo re-codificar a 320k: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:57,136 - app.motor.grabador_audio - INFO - [Polly] tfh_002_pqewk2l2.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 01:33:57,161 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_000_qwxwdvvg.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:57,185 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_001_hlp2lxbe.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 01:33:57,207 - app.motor.grabador_audio - WARNING - [GrabadorAudio] No se pudo añadir C:\Users\JACQUE~1\AppData\Local\Temp\tfh_002_pqewk2l2.mp3: [WinError 2] El sistema no puede encontrar el archivo especificado
+2026-03-05 15:03:42,949 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-05 15:03:42,956 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-05 15:03:42,956 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-05 15:03:42,963 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-05 15:03:44,481 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-05 15:08:12,490 - app.motor.grabador_audio - INFO - [Azure] tfh_000_6rv1xvnh.mp3 (48kHz→320k)
+2026-03-05 15:08:13,851 - app.motor.grabador_audio - INFO - [Azure] tfh_001_dm33wxqv.mp3 (48kHz→320k)
+2026-03-05 15:08:15,281 - app.motor.grabador_audio - INFO - [Azure] tfh_002_tu70aatj.mp3 (48kHz→320k)
+2026-03-05 15:08:15,975 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: {{@nar}}Hola, esto es una pruebaa para probar como suena el modo por etiquetas.mp3
+2026-03-05 15:09:26,710 - app.motor.grabador_audio - INFO - [Azure] 001_nar.mp3 (48kHz→320k)
+2026-03-05 15:09:28,425 - app.motor.grabador_audio - INFO - [Azure] 002_pj1.mp3 (48kHz→320k)
+2026-03-05 15:09:30,179 - app.motor.grabador_audio - INFO - [Azure] 003_pj3.mp3 (48kHz→320k)
+2026-03-05 20:28:19,470 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-05 20:28:19,471 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-05 20:28:19,473 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-05 20:28:19,476 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-05 20:28:20,788 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-05 20:40:45,636 - app.motor.grabador_audio - INFO - [Azure] tfh_000_zykaxrre.mp3 (48kHz→320k)
+2026-03-05 20:40:47,240 - app.motor.grabador_audio - INFO - [Azure] tfh_001_0hmgobql.mp3 (48kHz→320k)
+2026-03-05 20:40:49,344 - app.motor.grabador_audio - INFO - [Azure] tfh_002_vlz1tg59.mp3 (48kHz→320k)
+2026-03-05 20:40:52,883 - app.motor.grabador_audio - INFO - [Polly] tfh_003_spx81yux.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:40:54,652 - app.motor.grabador_audio - INFO - [Azure] tfh_004_pgzpydg1.mp3 (48kHz→320k)
+2026-03-05 20:40:56,402 - app.motor.grabador_audio - INFO - [Azure] tfh_005_o6h16mta.mp3 (48kHz→320k)
+2026-03-05 20:40:57,891 - app.motor.grabador_audio - INFO - [Azure] tfh_006_387ba6ft.mp3 (48kHz→320k)
+2026-03-05 20:40:59,530 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: prueba_grabacion.mp3
+2026-03-05 20:48:23,627 - app.motor.grabador_audio - INFO - [Polly] tfh_000_c7tz6y43.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:27,312 - app.motor.grabador_audio - INFO - [Polly] tfh_001_qb3pl5tf.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:30,585 - app.motor.grabador_audio - INFO - [Polly] tfh_002_9eiy1pn1.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-05 20:48:39,299 - app.motor.grabador_audio - INFO - [Polly] tfh_003_hgvtftee.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:40,754 - app.motor.grabador_audio - INFO - [Polly] tfh_004_cvhpmvbe.mp3 (motor=standard, voice=Conchita, 24kHz→320k)
+2026-03-05 20:48:45,524 - app.motor.grabador_audio - INFO - [Polly] tfh_005_kn23h0yq.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:48:47,009 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: Prueba de testo mas larga.mp3
+2026-03-05 20:50:39,666 - app.motor.grabador_audio - INFO - [Polly] 001_narrador.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:50:43,229 - app.motor.grabador_audio - INFO - [Polly] 002_nar.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:50:46,508 - app.motor.grabador_audio - INFO - [Polly] 003_pj1.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-05 20:50:55,289 - app.motor.grabador_audio - INFO - [Polly] 004_nar.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 20:50:56,644 - app.motor.grabador_audio - INFO - [Polly] 005_pj2.mp3 (motor=standard, voice=Conchita, 24kHz→320k)
+2026-03-05 20:51:01,435 - app.motor.grabador_audio - INFO - [Polly] 006_nar.mp3 (motor=long-form, voice=Raul, 24kHz→320k)
+2026-03-05 21:49:03,404 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-05 21:49:03,405 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-05 21:49:03,405 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-05 21:49:03,412 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-05 21:49:04,159 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-05 22:04:55,385 - app.motor.grabador_audio - INFO - [Azure] tfh_000_x677repg.mp3 (48kHz→320k)
+2026-03-05 22:05:05,468 - app.motor.grabador_audio - INFO - [Azure] tfh_001_1anxck9k.mp3 (48kHz→320k)
+2026-03-05 22:05:07,655 - app.motor.grabador_audio - INFO - [Azure] tfh_002_fs4i0dnn.mp3 (48kHz→320k)
+2026-03-05 22:05:10,024 - app.motor.grabador_audio - INFO - [Azure] tfh_003_5d8df7xz.mp3 (48kHz→320k)
+2026-03-05 22:05:14,439 - app.motor.grabador_audio - INFO - [Azure] tfh_004_ebeuar0v.mp3 (48kHz→320k)
+2026-03-05 22:05:21,492 - app.motor.grabador_audio - INFO - [Azure] tfh_005_q87vxshk.mp3 (48kHz→320k)
+2026-03-05 22:05:23,520 - app.motor.grabador_audio - INFO - [Azure] tfh_006_m7dmfnju.mp3 (48kHz→320k)
+2026-03-05 22:05:26,092 - app.motor.grabador_audio - INFO - [Azure] tfh_007_rwwiv691.mp3 (48kHz→320k)
+2026-03-05 22:05:28,801 - app.motor.grabador_audio - INFO - [Azure] tfh_008_gq26e8ah.mp3 (48kHz→320k)
+2026-03-05 22:05:36,963 - app.motor.grabador_audio - INFO - [Azure] tfh_009_uox5vj39.mp3 (48kHz→320k)
+2026-03-05 22:05:39,863 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: Texto de prueba mas largo.mp3
+2026-03-05 22:09:27,342 - app.motor.grabador_audio - INFO - [Azure] 001_nar.mp3 (48kHz→320k)
+2026-03-05 22:09:36,507 - app.motor.grabador_audio - INFO - [Azure] 002_nar.mp3 (48kHz→320k)
+2026-03-05 22:09:38,997 - app.motor.grabador_audio - INFO - [Azure] 003_ingeniero.mp3 (48kHz→320k)
+2026-03-05 22:09:41,593 - app.motor.grabador_audio - INFO - [Azure] 004_asistente.mp3 (48kHz→320k)
+2026-03-05 22:09:43,745 - app.motor.grabador_audio - INFO - [Azure] 005_ia_voz.mp3 (48kHz→320k)
+2026-03-05 22:09:50,276 - app.motor.grabador_audio - INFO - [Azure] 006_nar.mp3 (48kHz→320k)
+2026-03-05 22:09:52,966 - app.motor.grabador_audio - INFO - [Azure] 007_villano.mp3 (48kHz→320k)
+2026-03-05 22:09:55,001 - app.motor.grabador_audio - INFO - [Azure] 008_ingeniero.mp3 (48kHz→320k)
+2026-03-05 22:09:56,767 - app.motor.grabador_audio - INFO - [Azure] 009_asistente.mp3 (48kHz→320k)
+2026-03-05 22:10:04,843 - app.motor.grabador_audio - INFO - [Azure] 010_nar.mp3 (48kHz→320k)
+2026-03-06 01:03:52,988 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 01:03:52,989 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 01:03:52,990 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 01:03:52,996 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 01:03:53,790 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-06 01:07:18,634 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 01:07:18,635 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 01:07:18,636 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 01:07:18,641 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 01:07:19,252 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-06 17:29:50,816 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 17:29:50,817 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 17:29:50,818 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 17:29:50,823 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 17:29:52,542 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-06 17:30:42,821 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+2026-03-06 17:33:20,669 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+2026-03-06 17:39:07,800 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 262, in al_abrir_gestor_proyectos
+    self._ventana_proyectos = VentanaProyectos(parent=self)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 40, in __init__
+    self._construir_interfaz()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 189, in _construir_interfaz
+    self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1475, in _EvtHandler_Bind
+    event.Bind(self, id, id2, handler)
+  File "C:\Program Files\Python312\Lib\site-packages\wx\core.py", line 1546, in Bind
+    target.Connect(id1, id2, et, function)
+wx._core.wxAssertionError: C++ assertion ""HasFlag(0x0400)"" failed at ..\..\src\common\textcmn.cpp(1210) in wxTextCtrlBase::OnDynamicBind(): Must have wxTE_PROCESS_ENTER for wxEVT_TEXT_ENTER to work
+2026-03-06 17:51:07,822 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 17:51:07,823 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 17:51:07,823 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 17:51:07,828 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 17:51:08,364 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-06 18:30:56,864 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 18:30:56,864 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 18:30:56,864 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 18:30:56,868 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 18:30:57,910 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-06 18:52:05,266 - app.motor.grabador_audio - INFO - [Polly] tfh_000_mz0i0672.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:52:08,396 - app.motor.grabador_audio - INFO - [Polly] tfh_001_ndpu5m3n.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:52:10,307 - app.motor.grabador_audio - INFO - [Azure] tfh_002_i2q1ceoy.mp3 (48kHz→320k)
+2026-03-06 18:52:12,179 - app.motor.grabador_audio - INFO - [Azure] tfh_003_pd0dvhjq.mp3 (48kHz→320k)
+2026-03-06 18:52:14,714 - app.motor.grabador_audio - INFO - [Polly] tfh_004_0npnreha.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:52:16,481 - app.motor.grabador_audio - INFO - [Azure] tfh_005_ifrbskhc.mp3 (48kHz→320k)
+2026-03-06 18:52:19,329 - app.motor.grabador_audio - INFO - [Polly] tfh_006_1_rxgted.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:52:22,154 - app.motor.grabador_audio - INFO - [Polly] tfh_007_l0hwr_jn.mp3 (motor=generative, voice=Sergio, 24kHz→320k)
+2026-03-06 18:52:23,659 - app.motor.grabador_audio - INFO - [Azure] tfh_008_on3hlx_0.mp3 (48kHz→320k)
+2026-03-06 18:52:25,108 - app.motor.grabador_audio - INFO - [Azure] tfh_009_4f2koqsd.mp3 (48kHz→320k)
+2026-03-06 18:52:27,950 - app.motor.grabador_audio - INFO - [Polly] tfh_010_1p5je4o4.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:52:29,781 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: Infiltración en la Ciudad de Cristal  El Protocolo TifloHistorias.mp3
+2026-03-06 18:56:18,440 - app.motor.grabador_audio - INFO - [Polly] 001_nar.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:56:21,439 - app.motor.grabador_audio - INFO - [Polly] 002_nar.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:56:23,063 - app.motor.grabador_audio - INFO - [Azure] 003_jacqui.mp3 (48kHz→320k)
+2026-03-06 18:56:24,474 - app.motor.grabador_audio - INFO - [Azure] 004_marco.mp3 (48kHz→320k)
+2026-03-06 18:56:26,963 - app.motor.grabador_audio - INFO - [Polly] 005_nar.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:56:28,368 - app.motor.grabador_audio - INFO - [Azure] 006_jacqui.mp3 (48kHz→320k)
+2026-03-06 18:56:31,068 - app.motor.grabador_audio - INFO - [Polly] 007_nar.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 18:56:34,042 - app.motor.grabador_audio - INFO - [Polly] 008_sistema.mp3 (motor=generative, voice=Sergio, 24kHz→320k)
+2026-03-06 18:56:35,656 - app.motor.grabador_audio - INFO - [Azure] 009_marco.mp3 (48kHz→320k)
+2026-03-06 18:56:36,899 - app.motor.grabador_audio - INFO - [Azure] 010_jacqui.mp3 (48kHz→320k)
+2026-03-06 18:56:39,753 - app.motor.grabador_audio - INFO - [Polly] 011_nar.mp3 (motor=generative, voice=Lucia, 24kHz→320k)
+2026-03-06 20:21:43,178 - __main__ - INFO - Aplicación cerrada
+2026-03-06 20:22:03,189 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-06 20:22:03,190 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-06 20:22:03,191 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-06 20:22:03,196 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-06 20:22:03,652 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-07 01:11:06,506 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-07 01:11:06,507 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-07 01:11:06,507 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-07 01:11:06,514 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-07 01:11:07,937 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-07 01:32:23,652 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-07 01:32:23,653 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-07 01:32:23,654 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-07 01:32:23,660 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-07 01:32:24,380 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-07 02:14:40,852 - app.motor.grabador_audio - INFO - [Azure] 001_nar.mp3 (48kHz→320k)
+2026-03-07 02:14:43,042 - app.motor.grabador_audio - INFO - [Azure] 002_nar.mp3 (48kHz→320k)
+2026-03-07 02:14:45,125 - app.motor.grabador_audio - INFO - [Azure] 003_jacqui.mp3 (48kHz→320k)
+2026-03-07 02:14:46,943 - app.motor.grabador_audio - INFO - [Azure] 004_marco.mp3 (48kHz→320k)
+2026-03-07 02:14:49,015 - app.motor.grabador_audio - INFO - [Azure] 005_nar.mp3 (48kHz→320k)
+2026-03-07 02:14:51,699 - app.motor.grabador_audio - INFO - [Azure] 006_sistema.mp3 (48kHz→320k)
+2026-03-07 02:14:53,338 - app.motor.grabador_audio - INFO - [Azure] 007_jacqui.mp3 (48kHz→320k)
+2026-03-07 02:14:55,245 - app.motor.grabador_audio - INFO - [Azure] 008_marco.mp3 (48kHz→320k)
+2026-03-07 02:14:57,332 - app.motor.grabador_audio - INFO - [Azure] 009_nar.mp3 (48kHz→320k)
+2026-03-07 02:14:59,826 - app.motor.grabador_audio - INFO - [Azure] 010_sistema.mp3 (48kHz→320k)
+2026-03-07 02:15:01,808 - app.motor.grabador_audio - INFO - [Azure] 011_jacqui.mp3 (48kHz→320k)
+2026-03-07 02:16:27,813 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 283, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 241, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-07 02:16:40,342 - app.motor.grabador_audio - INFO - [Azure] tfh_000_9_tr3y6v.mp3 (48kHz→320k)
+2026-03-07 02:16:42,292 - app.motor.grabador_audio - INFO - [Azure] tfh_001_rfsvc1qj.mp3 (48kHz→320k)
+2026-03-07 02:16:44,352 - app.motor.grabador_audio - INFO - [Azure] tfh_002_6hzfhdq7.mp3 (48kHz→320k)
+2026-03-07 02:16:46,272 - app.motor.grabador_audio - INFO - [Azure] tfh_003_wivd_ced.mp3 (48kHz→320k)
+2026-03-07 02:16:48,490 - app.motor.grabador_audio - INFO - [Azure] tfh_004_22vdnon3.mp3 (48kHz→320k)
+2026-03-07 02:16:50,440 - app.motor.grabador_audio - INFO - [Azure] tfh_005_3zohhc1s.mp3 (48kHz→320k)
+2026-03-07 02:16:52,035 - app.motor.grabador_audio - INFO - [Azure] tfh_006_e85pe783.mp3 (48kHz→320k)
+2026-03-07 02:16:53,832 - app.motor.grabador_audio - INFO - [Azure] tfh_007_uiqukgoi.mp3 (48kHz→320k)
+2026-03-07 02:16:56,175 - app.motor.grabador_audio - INFO - [Azure] tfh_008_yode8av5.mp3 (48kHz→320k)
+2026-03-07 02:16:58,145 - app.motor.grabador_audio - INFO - [Azure] tfh_009_i9vz2u32.mp3 (48kHz→320k)
+2026-03-07 02:17:00,133 - app.motor.grabador_audio - INFO - [Azure] tfh_010_rn9dtrb8.mp3 (48kHz→320k)
+2026-03-07 02:17:04,643 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: Fragmento de suspense.mp3
+2026-03-07 13:05:36,940 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-07 13:05:36,941 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-07 13:05:36,941 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-07 13:05:36,945 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-07 13:05:37,974 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-07 13:05:39,290 - __main__ - ERROR - Error fatal en OnInit
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\iniciar_tiflohistorias.py", line 92, in OnInit
+    self.frame = VentanaPrincipal(None, titulo="Epub TTS Accesible")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 96, in __init__
+    self.cargar_historial_recientes()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 387, in cargar_historial_recientes
+    self.actualizar_menu_recientes()
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 413, in actualizar_menu_recientes
+    for item in self.menu_recientes.GetMenuItems():
+                ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'VentanaPrincipal' object has no attribute 'menu_recientes'. Did you mean: 'ruta_recientes'?
+2026-03-07 13:22:47,929 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-07 13:22:47,930 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-07 13:22:47,930 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-07 13:22:47,934 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-07 13:22:48,343 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-07 14:21:09,360 - app.motor.grabador_audio - INFO - [Azure] tfh_000_89lqzy12.mp3 (48kHz→320k)
+2026-03-07 14:21:11,094 - app.motor.grabador_audio - INFO - [Azure] tfh_001_jv8kwiuo.mp3 (48kHz→320k)
+2026-03-07 14:21:12,610 - app.motor.grabador_audio - INFO - [Azure] tfh_002_l6ahkfzc.mp3 (48kHz→320k)
+2026-03-07 14:21:14,068 - app.motor.grabador_audio - INFO - [Azure] tfh_003_d21924zh.mp3 (48kHz→320k)
+2026-03-07 14:21:15,357 - app.motor.grabador_audio - INFO - [Azure] tfh_004_dx5193ca.mp3 (48kHz→320k)
+2026-03-07 14:21:17,225 - app.motor.grabador_audio - INFO - [Azure] tfh_005_npla9mzb.mp3 (48kHz→320k)
+2026-03-07 14:21:18,745 - app.motor.grabador_audio - INFO - [Azure] tfh_006_3wb6lnp3.mp3 (48kHz→320k)
+2026-03-07 14:21:20,290 - app.motor.grabador_audio - INFO - [Azure] tfh_007_zk09wyqq.mp3 (48kHz→320k)
+2026-03-07 14:21:21,405 - app.motor.grabador_audio - INFO - [Azure] tfh_008_se66i1gu.mp3 (48kHz→320k)
+2026-03-07 14:21:22,612 - app.motor.grabador_audio - INFO - [Azure] tfh_009_hjyiyq4l.mp3 (48kHz→320k)
+2026-03-07 14:21:23,905 - app.motor.grabador_audio - INFO - [Azure] tfh_010_0czleha6.mp3 (48kHz→320k)
+2026-03-07 14:21:24,921 - app.motor.grabador_audio - INFO - [Polly] tfh_011_09n014gw.mp3 (motor=standard, voice=Enrique, 24kHz→320k)
+2026-03-07 14:21:26,372 - app.motor.grabador_audio - INFO - [Azure] tfh_012_m8f9dvp7.mp3 (48kHz→320k)
+2026-03-07 14:21:28,093 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: prueba de texto 2 (fase 3).mp3
+2026-03-07 14:23:55,543 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-07 14:23:55,544 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-07 14:23:55,544 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-07 14:23:55,551 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-07 14:23:56,049 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-07 17:37:33,114 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-07 17:37:33,114 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-07 17:37:33,116 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-07 17:37:33,120 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-07 17:37:34,036 - __main__ - INFO - Iniciando Epub TTS Accesible
+2026-03-07 17:52:18,112 - app.motor.grabador_audio - INFO - [GrabadorAudio] Texto largo (6960 chars) dividido en 2 trozos para azure.
+2026-03-07 17:52:26,893 - app.motor.grabador_audio - INFO - [Azure] tfh_trozo000_6k6nypmp.mp3 (48kHz→320k)
+2026-03-07 17:52:34,368 - app.motor.grabador_audio - INFO - [Azure] tfh_trozo001_tmh1atb5.mp3 (48kHz→320k)
+2026-03-07 17:52:40,845 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: tfh_000_apfs0lx1.mp3
+2026-03-07 17:52:47,101 - app.motor.grabador_audio - INFO - [GrabadorAudio] Concatenado 320k: Ideas para fase 3 4 y 5.mp3
+2026-03-08 14:35:12,002 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-08 14:35:12,005 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-08 14:35:12,007 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-08 14:35:12,011 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-08 14:35:13,039 - __main__ - INFO - Iniciando Epub TTS
+2026-03-08 14:41:04,910 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-08 14:41:04,914 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-08 14:43:12,719 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-08 14:49:30,350 - __main__ - INFO - Aplicación cerrada
+2026-03-08 15:24:15,975 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-08 15:24:15,975 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-08 15:24:15,976 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-08 15:24:15,978 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-08 15:24:16,586 - __main__ - INFO - Iniciando Epub TTS
+2026-03-08 15:34:22,007 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-08 15:34:22,017 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 287, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 239, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-08 20:44:48,217 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-08 20:44:48,217 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-08 20:44:48,220 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-08 20:44:48,228 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-08 20:44:49,959 - __main__ - INFO - Iniciando Epub TTS
+2026-03-08 20:51:37,458 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 289, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 241, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-08 20:51:37,463 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 289, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 241, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-08 21:31:36,702 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-08 21:31:36,703 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-08 21:31:36,704 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-08 21:31:36,711 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-08 21:31:37,793 - __main__ - INFO - Iniciando Epub TTS
+2026-03-08 21:32:36,494 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-08 21:32:36,495 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-08 21:32:36,496 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-08 21:32:36,500 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-08 21:32:37,227 - __main__ - INFO - Iniciando Epub TTS
+2026-03-10 00:09:34,410 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-10 00:09:34,411 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-10 00:09:34,412 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-10 00:09:34,416 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-10 00:09:35,985 - __main__ - INFO - Iniciando Epub TTS
+2026-03-10 19:38:51,177 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-10 19:38:51,180 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-10 19:38:51,183 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-10 19:38:51,187 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-10 19:38:52,545 - __main__ - INFO - Iniciando Epub TTS
+2026-03-10 19:49:29,492 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-10 19:49:29,492 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-10 19:49:29,493 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-10 19:49:29,495 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-10 19:49:30,131 - __main__ - INFO - Iniciando Epub TTS
+2026-03-10 20:19:26,945 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-10 20:19:26,945 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-10 20:19:26,946 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-10 20:19:26,949 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-10 20:19:27,604 - __main__ - INFO - Iniciando Epub TTS
+2026-03-10 21:37:20,288 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-10 21:37:20,289 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-10 21:37:20,289 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-10 21:37:20,292 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-10 21:37:21,352 - __main__ - INFO - Iniciando Epub TTS
+2026-03-10 21:40:11,361 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 358, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 310, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-10 21:40:11,369 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 358, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 310, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-12 19:39:14,843 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-12 19:39:14,844 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-12 19:39:14,844 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-12 19:39:14,847 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-12 19:39:16,197 - __main__ - INFO - Iniciando Epub TTS
+2026-03-12 21:28:05,974 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 366, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 318, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-12 21:28:05,982 - __main__ - CRITICAL - CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 366, in _al_seleccionar_nodo
+    proyecto = self._proyecto_seleccionado()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ventana_proyectos.py", line 318, in _proyecto_seleccionado
+    nodo = self.arbol.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+2026-03-12 21:50:23,172 - comtypes.client._code_cache - INFO - Could not import comtypes.gen, trying to create it.
+2026-03-12 21:50:23,173 - comtypes.client._code_cache - INFO - Creating comtypes.gen package failed: [WinError 5] Acceso denegado: 'C:\\Program Files\\Python312\\Lib\\site-packages\\comtypes\\gen'
+2026-03-12 21:50:23,175 - comtypes.client._code_cache - INFO - Created a memory-only package.
+2026-03-12 21:50:23,181 - comtypes.client._code_cache - INFO - Using writeable comtypes cache directory: 'C:\Users\Jacqueline\AppData\Roaming\Python\Python312\comtypes_cache'
+2026-03-12 21:50:24,263 - __main__ - INFO - Iniciando Epub TTS
+2026-03-13 00:48:06,606 - __main__ - INFO - Aplicación cerrada
+
+Respuesta:
+
+Hay tres bugs críticos en los logs y dos tareas de UI. Voy a leer los archivos afectados para hacer todos los arreglos.
+Searched codebase for reproducir function usage across modules
+Searched codebase for reproducir function usage across modules
+Read/home/user/epub-tts-accesible/app/interfaz/ui_recursos.py
+Leer 119 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 60 líneas
+Greptxt_nombre.*TextCtrl|TextCtrl.*txt_nombre
+132-        sz_detalle = wx.BoxSizer(wx.VERTICAL)133-134-        lbl_nombre = wx.StaticText(panel_raiz, label="Nombre del proyecto (Intro para guardar):")
+Mostrar más
+135:        self.txt_nombre = wx.TextCtrl(panel_raiz, style=wx.TE_PROCESS_ENTER)136-        self.txt_nombre.SetHelpText(137-            "Nombre del proyecto seleccionado. Edítalo y pulsa Intro para guardar."138-        )
+Mostrar 11 más
+Copiar mensaje
+Good, the calls exist. Now let me see the exact _al_tecla_arbol handler to understand why LIST_NAV might not fire:
+Reviewed dialog truncation code and identified sound event constants
+Reviewed dialog truncation code and identified sound event constants
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 40 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py
+Leer 25 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py
+Leer 30 líneas
+Mostrar 1 más
+Copiar mensaje
+Tengo todo claro. Problemas encontrados:
+1. wx.ART_RECORD no existe en esta versión de wxPython → crash en import → dialogo_troceador nunca abre
+2. PROCESO no está importado en dialogo_troceador.py
+3. _al_seleccionar_nodo RuntimeError: la guardia IsBeingDeleted() también lanza RuntimeError cuando el C++ ya está eliminado
+4. Mover btn_dividir_epub antes de btn_examinar
+Fixed wx.ART_RECORD error and added PROCESO import
+Fixed wx.ART_RECORD error and added PROCESO import
+Update Todos
+☐ Fixing wx.ART_RECORD crash☐ Add PROCESO to dialogo_troceador.py imports☐ Fix _al_seleccionar_nodo RuntimeError with try/except☐ Move btn_dividir_epub before btn_examinar☐ Commit and push all fixes
+Edit/home/user/epub-tts-accesible/app/interfaz/ui_recursos.py+1-1
+48-
+    "grabar":        wx.ART_RECORD,    # puede no existir en todas las versiones
+48+
+    "grabar":        getattr(wx, "ART_RECORD", wx.ART_EXECUTABLE_FILE),  # ART_RECORD no existe en wxPython < 4.2
+Update Todos
+☐ Fix wx.ART_RECORD AttributeError in ui_recursos.py☐ Adding PROCESO import☐ Fix _al_seleccionar_nodo RuntimeError with try/except☐ Move btn_dividir_epub before btn_examinar☐ Commit and push all fixes
+Mostrar 2 más
+Copiar mensaje
+Ahora el fix del RuntimeError. Hay que proteger tanto _al_seleccionar_nodo como _proyecto_seleccionado:
+Fixed event handling guard in project window tree view
+Fixed event handling guard in project window tree view
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 20 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-4
+361-
+        # Guardia: el árbol puede haberse destruido antes de que el evento llegue
+362-
+        if not self.arbol or self.arbol.IsBeingDeleted():
+361+
+        # Guardia: el árbol puede haberse destruido antes de que el evento llegue.
+362+
+        # IsBeingDeleted() también puede lanzar RuntimeError si el objeto C++ ya no existe.
+363+
+        try:
+364+
+            if self.arbol.IsBeingDeleted():
+365+
+                evento.Skip()
+366+
+                return
+367+
+        except RuntimeError:
+363368
+            evento.Skip()
+364369
+            return
+Copiar mensaje
+Ahora proteger también _proyecto_seleccionado que es llamada desde múltiples sitios:
+Fixed wx.ART_RECORD error and added PROCESO import
+Fixed wx.ART_RECORD error and added PROCESO import
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 12 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+7-4
+312312
+    def _proyecto_seleccionado(self) -> dict | None:
+313-
+        nodo = self.arbol.GetSelection()
+313+
+        try:
+314+
+            nodo = self.arbol.GetSelection()
+315+
+        except RuntimeError:
+316+
+            return None
+314317
+        if not nodo or not nodo.IsOk():
+315318
+            return None
+Update Todos
+☐ Fix wx.ART_RECORD AttributeError in ui_recursos.py☐ Add PROCESO to dialogo_troceador.py imports☐ Fix _al_seleccionar_nodo RuntimeError with try/except☐ Moving button in layout☐ Commit and push all fixes
+Copiar mensaje
+Ahora mover el botón dividir EPUB antes del examinar:
+Committed and pushed all fixes to repository
+Committed and pushed all fixes to repository
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+5-5
+11
+        sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+22
+        sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)
+3-
+        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
+4-
+        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)
+5-
+        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
+3+
+        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
+4+
+        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
+5+
+        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Leer 5 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+5-5
+339339
+        sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+340340
+        sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)
+341-
+        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
+342-
+        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)
+343-
+        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
+341+
+        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
+342+
+        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
+343+
+        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)
+Mostrar 5 más
+Copiar mensaje
+Commit y push completados. Resumen de los 4 arreglos:
+1. ui_recursos.py — wx.ART_RECORD no existe en wxPython < 4.2
+Era un AttributeError al nivel de módulo (en la definición del dict _ART_FALLBACK), lo que impedía importar ui_recursos, y por tanto dialogo_troceador, y por tanto abrir el diálogo de dividir EPUB. Ahora usa getattr(wx, 'ART_RECORD', wx.ART_EXECUTABLE_FILE).
+2. dialogo_troceador.py — PROCESO no importado
+reproducir(PROCESO) se llamaba en _al_dividir_seleccionados pero PROCESO no estaba en el import. Habría lanzado NameError al pulsar "Dividir". Añadido al import.
+3. ventana_proyectos.py — RuntimeError al cerrar la ventana
+La guardia self.arbol.IsBeingDeleted() también lanza RuntimeError cuando el objeto C++ ya está destruido. Y _proyecto_seleccionado() llamaba a self.arbol.GetSelection() directamente. Ambos están ahora dentro de try/except RuntimeError.
+4. pestana_grabacion.py — Botón "Dividir EPUB" antes de "Examinar"
+En el sizer el orden de Tab ahora es: Dividir EPUB → Examinar → Limpiar (en lugar de Examinar → Limpiar → Dividir EPUB).
