@@ -1211,6 +1211,27 @@ class PanelAcercaDe(wx.ScrolledWindow):
             lambda e: webbrowser.open("https://github.com/Dayanna-Parson/epub-tts-accesible")
         )
         sizer.Add(self.btn_github, 0, wx.ALL, 12)
+
+        lbl_tiflo = wx.StaticText(
+            self,
+            label="¿Te gustó la app? Descubre Tiflohistorias:",
+        )
+        sizer.Add(lbl_tiflo, 0, wx.LEFT | wx.TOP, 10)
+
+        self.btn_tiflo = wx.Button(
+            self,
+            label="Escuchar audiolibros en Tiflohistorias",
+        )
+        self.btn_tiflo.SetHelpText(
+            "Abre Tiflohistorias, la sección de audiolibros de tiflotutos.com. "
+            "Historias narradas especialmente pensadas para personas con discapacidad visual."
+        )
+        self.btn_tiflo.Bind(
+            wx.EVT_BUTTON,
+            lambda e: webbrowser.open("https://tiflotutos.com/tiflohistorias"),
+        )
+        sizer.Add(self.btn_tiflo, 0, wx.LEFT | wx.BOTTOM, 12)
+
         self.SetSizer(sizer)
 
 
