@@ -940,6 +940,7 @@ class PanelVoces(wx.Panel):
     def al_escuchar(self, event):
         idx = self.lista_voces.GetFirstSelected()
         if idx == -1:
+            reproducir(ERROR)
             wx.MessageBox("Selecciona una voz.", "Info")
             return
         
@@ -1139,6 +1140,7 @@ class PanelAtajos(wx.Panel):
         from app.motor.gestor_atajos import guardar_atajo_usuario
         idx = self.lista.GetFirstSelected()
         if idx == -1:
+            reproducir(ERROR)
             wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
             return
 
@@ -1159,6 +1161,7 @@ class PanelAtajos(wx.Panel):
         from app.motor.gestor_atajos import eliminar_atajo_usuario
         idx = self.lista.GetFirstSelected()
         if idx == -1:
+            reproducir(ERROR)
             wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
             return
         clave = self._claves[idx]
