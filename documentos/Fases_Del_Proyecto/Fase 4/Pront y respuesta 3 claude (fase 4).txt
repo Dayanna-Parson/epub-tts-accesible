@@ -1,0 +1,487 @@
+Pront y respuesta 3 claude (fase 4)
+
+ahora si funciona mejor! pasemos a la siguiente tarea. "La optimización de latencia funciona genial. Procede con la Tarea 2. Implementa el CheckListCtrl con las 10 categorías en el orden exacto que te di (Serie y Libro primero). Recuerda eliminar la opción 'Tipo de proyecto' del menú contextual".
+Copiar mensaje
+Copiar mensaje
+Confirmado. Antes de tocar código, analizo ventana_proyectos.py para ver exactamente dónde está el "Tipo de proyecto" en el menú y cómo se guarda el campo tipo actualmente.
+Read and analyzed project window module structure
+Read and analyzed project window module structure
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Leer 982 líneas
+Copiar mensaje
+Ahora leo gestor_proyectos.py para ver TIPOS_PROYECTO y los métodos que guardan el campo tipo.
+Read project manager module for TifloHistorias hierarchy structure
+Read project manager module for TifloHistorias hierarchy structure
+Read/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py
+Leer 433 líneas
+Copiar mensaje
+Tengo todo el contexto. Los puntos clave del análisis:
+• TIPOS_PROYECTO actual tiene 4 categorías genéricas → hay que reemplazar por las 10 pedidas
+• El campo tipo en proyectos.json es hoy un str → debe migrar a list
+• combo_tipo es wx.Choice (selección única) en el panel de detalle Y en el diálogo de creación
+• El menú contextual tiene "Cambiar tipo…" (línea 539) → eliminar
+• _etiqueta_nodo usa proyecto['tipo'] directamente → hay que joinear la lista
+Implemento archivo por archivo.
+ 
+gestor_proyectos.py — 4 cambios
+1 — Nueva lista de categorías
+Updated project manager file with simplified project type mappings
+Updated project manager file with simplified project type mappings
+Edit/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py+15-10
+37-
+# ── Tipos de proyecto disponibles ────────────────────────────────────────────
+38-
+# Mapeo interno simplificado (4 categorías legibles por NVDA).
+39-
+# Proyectos creados con los tipos anteriores (saga, libro, capitulo…) conservan
+40-
+# su valor almacenado; el combo no los preselecciona pero no los sobreescribe.
+41-
+TIPOS_PROYECTO = [
+42-
+    "Obra Mayor",       # Sagas, series, colecciones de varios volúmenes
+43-
+    "Obra Única",       # Libros, relatos, YouTube, autoconclusivos
+44-
+    "Podcast/Canal",    # Podcasts, episodios, series periódicas
+45-
+    "Otros",            # Guiones, diálogos, miscelánea
+37+
+# ── Categorías de proyecto disponibles ───────────────────────────────────────
+38+
+# Lista fija de 10 categorías. El campo 'tipo' en proyectos.json es ahora
+39+
+# una lista, por lo que un proyecto puede pertenecer a varias a la vez.
+40+
+TIPOS_PROYECTO = [
+41+
+    "Serie",
+42+
+    "Libro",
+43+
+    "Fantasía",
+44+
+    "Distopía",
+45+
+    "Tecno-thriller",
+46+
+    "Diálogos",
+47+
+    "Tutorial",
+Show full diff (4 more lines)
+Copiar mensaje
+2 — Migración automática de str a list al cargar el JSON
+Fixed file encoding and formatting in project manager module
+Fixed file encoding and formatting in project manager module
+Edit/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py+16-10
+9494
+                with open(RUTA_PROYECTOS, "r", encoding="utf-8") as f:
+9595
+                    contenido = f.read().strip()
+9696
+                if contenido:
+97-
+                    return json.loads(contenido)
+97+
+                    datos = json.loads(contenido)
+98+
+                    # Migración: convierte el campo 'tipo' de str a list
+99+
+                    for p in datos.get("proyectos", {}).values():
+100+
+                        if isinstance(p.get("tipo"), str):
+101+
+                            t = p["tipo"]
+102+
+                            p["tipo"] = [t] if t else []
+103+
+                    return datos
+98104
+        except Exception:
+99105
+            pass
+100106
+        return {"version": 1, "proyectos": {}}
+Copiar mensaje
+3 — crear_proyecto: acepta lista de categorías
+Updated project manager to initialize new projects with empty book list
+Updated project manager to initialize new projects with empty book list
+Edit/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py+10-8
+124-
+        if tipo not in TIPOS_PROYECTO:
+125-
+            tipo = "Otros"
+124+
+        # Normalizar tipo a lista y filtrar solo categorías válidas
+125+
+        if isinstance(tipo, str):
+126+
+            tipo = [tipo] if tipo else []
+127+
+        tipo = [t for t in tipo if t in TIPOS_PROYECTO]
+126128
+            "id":       nuevo_id,
+127129
+            "nombre":   nombre,
+128130
+            "tipo":     tipo,
+Copiar mensaje
+4 — cambiar_tipo: acepta lista
+Updated project type change method in gestor_proyectos.py
+Updated project type change method in gestor_proyectos.py
+Edit/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py+7-5
+191-
+    def cambiar_tipo(self, proyecto_id: str, nuevo_tipo: str):
+192-
+        """Cambia el tipo de un proyecto."""
+193-
+        if proyecto_id in self._datos["proyectos"]:
+194-
+            self._datos["proyectos"][proyecto_id]["tipo"] = nuevo_tipo
+191+
+    def cambiar_tipo(self, proyecto_id: str, nuevo_tipo):
+192+
+        """Cambia las categorías de un proyecto. nuevo_tipo es una lista de strings."""
+193+
+        if isinstance(nuevo_tipo, str):
+194+
+            nuevo_tipo = [nuevo_tipo] if nuevo_tipo else []
+195+
+        if proyecto_id in self._datos["proyectos"]:
+196+
+            self._datos["proyectos"][proyecto_id]["tipo"] = list(nuevo_tipo)
+195197
+            self.guardar()
+Copiar mensaje
+ 
+ventana_proyectos.py — 9 cambios
+1 — Añadir import wx.lib.mixins.listctrl as listmix
+Updated project window imports and dependencies in ventana_proyectos.py
+Updated project window imports and dependencies in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+41-11
+44
+import json
+55
+import logging
+66
+import threading
+7-
+8-
+from app.motor.gestor_proyectos import GestorProyectos, TIPOS_PROYECTO
+9-
+10-
+logger = logging.getLogger(__name__)
+11-
+# ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
+7+
+import wx.lib.mixins.listctrl as listmix
+8+
+9+
+from app.motor.gestor_proyectos import GestorProyectos, TIPOS_PROYECTO
+10+
+11+
+logger = logging.getLogger(__name__)
+12+
+# ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
+13+
+14+
+15+
+# ANCLAJE_INICIO: LISTA_CATEGORIAS
+16+
+class ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
+17+
+    """
+18+
+    ListCtrl con casillas de verificación para seleccionar múltiples categorías.
+Show full diff (23 more lines)
+Copiar mensaje
+2 — Reemplazar lbl_tipo + combo_tipo (wx.Choice) por lbl_tipo + lista_cats en el panel de detalle
+Updated project type selection UI in ventana_proyectos.py
+Updated project type selection UI in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+10-6
+107-
+        lbl_tipo = wx.StaticText(panel_raiz, label="Tipo de proyecto:")
+108-
+        self.combo_tipo = wx.Choice(panel_raiz, choices=TIPOS_PROYECTO)
+109-
+        self.combo_tipo.SetHelpText(
+110-
+            "Tipo de proyecto: saga, libro, capitulo, autoconclusivo, podcast, episodio, "
+111-
+            "video_youtube, guion, dialogo u otro. Cambia el tipo del proyecto seleccionado."
+107+
+        lbl_tipo = wx.StaticText(
+108+
+            panel_raiz,
+109+
+            label="Categorías del proyecto (Espacio para marcar o desmarcar):",
+110+
+        )
+111+
+        self.lista_cats = ListaCategorias(panel_raiz)
+112+
+        self.lista_cats.SetMinSize((-1, 170))
+113+
+        self.lista_cats.SetHelpText(
+114+
+            "Lista de categorías del proyecto. Flechas Arriba y Abajo para navegar. "
+115+
+            "Espacio para marcar o desmarcar. Puedes asignar varias categorías a la vez."
+112116
+        )
+Copiar mensaje
+3 — Actualizar el sizer del detalle y los bindings
+Updated project window UI layout in ventana_proyectos.py
+Updated project window UI layout in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+5-5
+151151
+        sz_detalle.Add(lbl_nombre,          0, wx.BOTTOM, 2)
+152152
+        sz_detalle.Add(self.txt_nombre,     0, wx.EXPAND | wx.BOTTOM, 8)
+153153
+        sz_detalle.Add(lbl_tipo,            0, wx.BOTTOM, 2)
+154-
+        sz_detalle.Add(self.combo_tipo,     0, wx.EXPAND | wx.BOTTOM, 8)
+154+
+        sz_detalle.Add(self.lista_cats,     0, wx.EXPAND | wx.BOTTOM, 8)
+155155
+        sz_detalle.Add(lbl_archivos,        0, wx.BOTTOM, 2)
+Copiar mensaje
+4 — Reemplazar el binding EVT_CHOICE por EVT_LIST_ITEM_CHECKED / UNCHECKED
+Updated event bindings in project window interface
+Updated event bindings in project window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+3-2
+204204
+        self.txt_nombre.Bind(wx.EVT_TEXT_ENTER, self._al_guardar_nombre)
+205-
+        self.combo_tipo.Bind(wx.EVT_CHOICE,     self._al_cambiar_tipo)
+205+
+        self.lista_cats.Bind(wx.EVT_LIST_ITEM_CHECKED,   self._al_marcar_categoria)
+206+
+        self.lista_cats.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_categoria)
+Copiar mensaje
+5 — _al_seleccionar_nodo: marcar las casillas del proyecto activo
+Fixed project initialization in ventana_proyectos.py
+Fixed project initialization in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+7-6
+328328
+        self.txt_nombre.ChangeValue(proyecto.get("nombre", ""))
+329-
+        tipo = proyecto.get("tipo", "otro")
+330-
+        idx_tipo = TIPOS_PROYECTO.index(tipo) if tipo in TIPOS_PROYECTO else -1
+331-
+        if idx_tipo >= 0:
+332-
+            self.combo_tipo.SetSelection(idx_tipo)
+329+
+        tipos_activos = proyecto.get("tipo", [])
+330+
+        if isinstance(tipos_activos, str):
+331+
+            tipos_activos = [tipos_activos]
+332+
+        for i in range(self.lista_cats.GetItemCount()):
+333+
+            self.lista_cats.CheckItem(i, self.lista_cats.GetItemText(i) in tipos_activos)
+333334
+        self._actualizar_lista_archivos(proyecto)
+Copiar mensaje
+6 — _limpiar_detalle: desmarcar todas las casillas
+Modified project details cleanup method in ventana_proyectos.py
+Modified project details cleanup method in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+6-5
+338338
+    def _limpiar_detalle(self):
+339339
+        self.txt_nombre.ChangeValue("")
+340-
+        self.combo_tipo.SetSelection(wx.NOT_FOUND)
+340+
+        for i in range(self.lista_cats.GetItemCount()):
+341+
+            self.lista_cats.CheckItem(i, False)
+341342
+        self.lista_archivos.DeleteAllItems()
+342343
+        self.lista_voces.DeleteAllItems()
+Copiar mensaje
+7 — Reemplazar _al_cambiar_tipo por los nuevos handlers de casillas
+Fixed project type change handler in ventana_proyectos.py
+Fixed project type change handler in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+24-12
+644-
+    def _al_cambiar_tipo(self, evento):
+645-
+        proyecto = self._proyecto_seleccionado()
+646-
+        if proyecto is None:
+647-
+            return
+648-
+        idx = self.combo_tipo.GetSelection()
+649-
+        if idx == wx.NOT_FOUND:
+650-
+            return
+651-
+        nuevo_tipo = TIPOS_PROYECTO[idx]
+652-
+        self._gestor.cambiar_tipo(proyecto["id"], nuevo_tipo)
+653-
+        nodo = self.arbol.GetSelection()
+654-
+        proyecto["tipo"] = nuevo_tipo
+655-
+        self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
+644+
+    def _al_marcar_categoria(self, evento):
+645+
+        """Actualiza las categorías del proyecto al marcar una casilla."""
+646+
+        proyecto = self._proyecto_seleccionado()
+647+
+        if proyecto:
+648+
+            self._guardar_categorias_actuales(proyecto)
+649+
+650+
+    def _al_desmarcar_categoria(self, evento):
+651+
+        """Actualiza las categorías del proyecto al desmarcar una casilla."""
+Show full diff (16 more lines)
+Copiar mensaje
+8 — Menú contextual: eliminar "Cambiar tipo…"
+Fixed rename project menu item binding in UI
+Fixed rename project menu item binding in UI
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-13
+536536
+            item_renombrar,
+537537
+        )
+538538
+539-
+        item_tipo = menu.Append(wx.ID_ANY, "Cambiar tipo…")
+540-
+        item_tipo.Enable(bool(proyecto))
+541-
+        self.Bind(wx.EVT_MENU, lambda e: self.combo_tipo.SetFocus(), item_tipo)
+542-
+543539
+        menu.AppendSeparator()
+Copiar mensaje
+9 — _etiqueta_nodo: mostrar lista de categorías como texto legible
+Updated accessibility label generation in ventana_proyectos.py
+Updated accessibility label generation in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+8-4
+892892
+    def _etiqueta_nodo(self, proyecto: dict, nivel: int) -> str:
+893893
+        """Devuelve el texto del nodo tal como NVDA lo leerá al navegar."""
+894894
+        estado = self._estado_proyecto(proyecto)
+895-
+        return f"{proyecto['nombre']} [{proyecto['tipo']}] — {estado} — Nivel {nivel}"
+895+
+        tipos = proyecto.get("tipo", [])
+896+
+        if isinstance(tipos, str):
+897+
+            tipos = [tipos]
+898+
+        tipo_str = ", ".join(tipos) if tipos else "Sin categoría"
+899+
+        return f"{proyecto['nombre']} [{tipo_str}] — {estado} — Nivel {nivel}"
+Copiar mensaje
+10 — _pedir_nombre_y_tipo: reemplazar wx.Choice por wx.CheckListBox
+Updated project window UI with improved text controls and help text
+Updated project window UI with improved text controls and help text
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+40-38
+709709
+        lbl_n = wx.StaticText(panel, label="Nombre del proyecto (obligatorio):")
+710710
+        txt_n = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
+711711
+        txt_n.SetHelpText("Escribe el nombre del nuevo proyecto.")
+712-
+        lbl_t = wx.StaticText(panel, label="Tipo de proyecto:")
+713-
+        combo_t = wx.Choice(panel, choices=TIPOS_PROYECTO)
+714-
+        combo_t.SetSelection(0)
+715-
+        combo_t.SetHelpText(
+716-
+            "Elige el tipo: saga, libro, capitulo, autoconclusivo, podcast, "
+717-
+            "episodio, video_youtube, guion, dialogo u otro."
+718-
+        )
+719-
+        btn_ok     = wx.Button(panel, wx.ID_OK,     label="Crear proyecto")
+720-
+        btn_cancel = wx.Button(panel, wx.ID_CANCEL, label="Cancelar")
+721-
+        sz_btn = wx.BoxSizer(wx.HORIZONTAL)
+722-
+        sz_btn.Add(btn_ok, 0, wx.RIGHT, 8)
+723-
+        sz_btn.Add(btn_cancel, 0)
+724-
+725-
+        sz.Add(lbl_n,   0, wx.ALL, 6)
+726-
+        sz.Add(txt_n,   0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
+727-
+        sz.Add(lbl_t,   0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
+728-
+        sz.Add(combo_t, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)
+Show full diff (55 more lines)
+Copiar mensaje
+Verifico sintaxis de los tres archivos y hago commit.
+Pushed focus latency optimization branch to remote
+Pushed focus latency optimization branch to remote
+Bash
+python -c " import ast for f in [ 'app/motor/gestor_proyectos.py', 'app/interfaz/ventana_proyectos.py', ]: try: ast.parse(open(f).read()) print(f'OK {f}') except SyntaxError as e: print(f'ERR {f}: {e}') "
+OK  app/motor/gestor_proyectos.pyOK  app/interfaz/ventana_proyectos.py
+Bash
+git add app/motor/gestor_proyectos.py app/interfaz/ventana_proyectos.py && git commit -m "$(cat <<'EOF' feat(proyectos): multicategoría con CheckListCtrl + migración tipo str→list gestor_proyectos.py: - TIPOS_PROYECTO reemplazado por 10 categorías temáticas en el orden solicitado: Serie, Libro, Fantasía, Distopía, Tecno-thriller, Diálogos, Tutorial, Publicidad, Artículo, Otros. - _cargar: migración automática del campo 'tipo' de str a list al leer proyectos.json; transparente para proyectos existentes. - crear_proyecto: acepta tipo como list o str; filtra solo categorías válidas. - cambiar_tipo: acepta list o str; guarda siempre como lista. ventana_proyectos.py: - Nueva clase ListaCategorias (CheckListCtrlMixin + ListCtrlAutoWidthMixin) con EnableCheckBoxes(True) para que NVDA anuncie marcado/desmarcado. - Panel de detalle: combo_tipo (wx.Choice) sustituido por lista_cats (ListaCategorias, MinSize 170px); bindings EVT_CHOICE eliminado, añadidos EVT_LIST_ITEM_CHECKED / UNCHECKED. - _al_marcar_categoria / _al_desmarcar_categoria / _guardar_categorias_actuales: leen todas las casillas y persisten la lista vía gestor.cambiar_tipo. - _al_seleccionar_nodo: marca las casillas correspondientes al proyecto activo. - _limpiar_detalle: desmarca todas las casillas. - Menú contextual: eliminado el ítem "Cambiar tipo…" (redundante). - _etiqueta_nodo: tipo es ahora lista; se presenta como "Serie, Fantasía". - _pedir_nombre_y_tipo: wx.Choice sustituido por wx.CheckListBox accesible (mismo patrón, GetCheckedItems devuelve la lista de categorías marcadas). Resolve: Tarea 2 Fase 4 — multicategoría de proyectos accesible con NVDA. EOF )"
+[claude/optimize-focus-latency-q7Sq3 c06ba18] feat(proyectos): multicategoría con CheckListCtrl + migración tipo str→list 2 files changed, 118 insertions(+), 52 deletions(-)
+Bashgit push -u origin claude/optimize-focus-latency-q7Sq3
+To http://127.0.0.1:37741/git/Dayanna-Parson/epub-tts-accesible   da86e51..c06ba18  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3branch 'claude/optimize-focus-latency-q7Sq3' set up to track 'origin/claude/optimize-focus-latency-q7Sq3'.
+Copiar mensaje
+Tarea 2 completada. Commit c06ba18 subido. Resumen de lo implementado:
+ 
+Resumen — Tarea 2
+gestor_proyectos.py
+Cambio
+Detalle
+TIPOS_PROYECTO
+10 categorías en el orden exacto pedido
+_cargar
+Migración automática tipo: "str" → tipo: ["str"] al leer el JSON
+crear_proyecto
+Acepta tipo como list o str
+cambiar_tipo
+Acepta list o str; siempre guarda lista
+ventana_proyectos.py
+Cambio
+Detalle
+ListaCategorias
+Nueva clase con CheckListCtrlMixin + EnableCheckBoxes(True)
+Panel detalle
+wx.Choice → ListaCategorias; NVDA anuncia "marcado/desmarcado" con flechas + Espacio
+Handlers
+_al_marcar_categoria / _al_desmarcar_categoria → _guardar_categorias_actuales
+Menú contextual
+Eliminado "Cambiar tipo…"
+_etiqueta_nodo
+Muestra [Serie, Fantasía] en lugar de un string suelto
+Diálogo creación
+wx.Choice → wx.CheckListBox (accesible, sin necesidad de MixIn)
+¿Seguimos con la Tarea 3 (Notificaciones de voces nuevas)?
+ 
+fase4-ajustes-finales
+claude/optimize-focus-latency-q7Sq3
++151-58
+Crear PR

@@ -1,0 +1,220 @@
+Pront y respuesta 4 claude (fase 4)
+
+¡Gracias! Me alegra que funcione exactamente como lo diseñamos.
+Para continuar, cuéntame en qué consiste la Tarea 3 — descríbela con el mismo detalle que la anterior y la implemento de inmediato.
+la que te puse en el pront maestro del principio...
+Copiar mensaje
+Copiar mensaje
+No tengo ese prompt maestro en mi contexto — la conversación arrancó directamente con la Tarea 1 de latencia. ¿Puedes pegarme de nuevo el enunciado de la Tarea 3? Con eso la implemento de inmediato.
+
+Objetivo: Crear un sistema que automatice la revisión de nuevas voces para que yo no tenga que buscar manualmente en el apartado de claves y proveedores.
+Lógica de implementación:
+Comparación: La app debe comparar el archivo JSON local de voces (voces_disponibles.json) con la lista que devuelva el servidor de cada API (Azure, Polly, ElevenLabs).
+Notificación Selectiva: SOLO debe avisar mediante un diálogo o mensaje accesible si detecta que hay una o más voces NUEVAS disponibles que no estaban registradas localmente.
+Accesibilidad: El aviso debe ser un diálogo que NVDA pueda leer inmediatamente al aparecer, indicando qué proveedor tiene novedades.
+recuerda que ya tenemos el cliente_nube_voces.py y los clientes específicos en /servicios/. Usa esos módulos para hacer la consulta y no dupliques código".
+
+Respuesta:
+Perfecto, lo tengo. Antes de escribir nada, exploro los módulos existentes que debo reutilizar.
+Explored voice client architecture and analyzed voice service structure in epub-tts-accesible project
+Explored voice client architecture and analyzed voice service structure in epub-tts-accesible project
+AgentExplorar clientes de voz y estructura de voces_disponibles
+Perfecto. Ahora tengo suficiente información. Voy a crear un reporte completo:---
+Mostrar más
+## ANÁLISIS COMPLETO DE LA ESTRUCTURA DE ARCHIVOSHe explorado la estructura del proyecto y aquí te presento un resumen detallado de cada componente:---### 1. **CLIENTE NUBE DE VOCES (Gestor maestro)****Ruta completa:** `/home/user/epub-tts-accesible/app/motor/cliente_nube_voces.py`**Propósito:**Clase `GestorVoces` que actúa como orquestador central para conectar con las APIs de Azure, Amazon Polly y ElevenLabs. Descarga la lista de voces disponibles y las guarda localmente en `voces_disponibles.json` para que la interfaz no tenga que conectarse a internet cada vez.**Métodos/funciones públicas:**| Método | Parámetros | Descripción ||--------|-----------|-------------|| `__init__()` | - | Inicializa rutas y estructura base de caché || `cargar_configuracion()` | - | Lee las claves API desde `configuraciones/claves_api.json` || `actualizar_voces_desde_internet()` | - | **Método maestro**: llama a todas las APIs (Azure, Polly, ElevenLabs) y actualiza el archivo local. Retorna string resumen || `actualizar_proveedor(proveedor)` | `proveedor: str` ("azure", "polly", "elevenlabs") | Descarga y guarda las voces de un único proveedor sin tocar los demás. Retorna string con resultado || `obtener_todas_las_voces()` | - | Devuelve el diccionario completo de voces guardado. Si no existe, devuelve estructura vacía || `_descargar_azure(key, region)` | `key: str, region: str` | Conecta vía REST API a Azure y retorna lista de voces procesadas || `_descargar_polly(access_key, secret_key, region)` | 3 strings | Conecta vía boto3 a Amazon Polly, gestiona paginación, retorna lista con soporte de motores || `_descargar_elevenlabs(api_key)` | `api_key: str` | Conecta vía REST API a ElevenLabs, retorna lista de voces || `_guardar_cache()` | - | Guarda el diccionario de voces en disco |**Estructura de datos que devuelve:**El archivo `voces_disponibles.json` contiene esta estructura:```json{  "azure": [    {      "nombre": "Aria (Neutral)",      "id": "es-ES-AriaNeural",      "idioma": "es-ES",      "genero": "Female",      "proveedor": "Azure"    }  ],  "polly": [    {      "nombre": "Lucia",      "id": "Lucia",      "idioma": "es-ES",      "genero": "Female",      "proveedor": "Amazon Polly",      "motores": ["neural", "standard"],      "es_nueva": true    }  ],  "elevenlabs": [    {      "nombre": "Rachel",      "id": "21m00Tcm4TlvDq8ikWAM",      "idioma": "Multilingüe (v2)",      "proveedor": "ElevenLabs",      "etiquetas": {"accent": "american"}    }  ]}```---### 2. **CLIENTES ESPECÍFICOS DE CADA PROVEEDOR**#### A. **ClienteAzure****Ruta:** `/home/user/epub-tts-accesible/app/servicios/cliente_azure.py`**Propósito:** Sintetiza y reproduce audio usando Azure Cognitive Services TTS (API REST).**Métodos públicos:**- `hablar(texto, datos_voz)` - Sintetiza y reproduce el texto inmediatamente- `preparar(texto, datos_voz)` - Pre-descarga audio en segundo plano (buffer proactivo)- `detener()` - Detiene reproducción y cancela peticiones HTTP- `pausar()` / `reanudar()` - Control de pausa- `fijar_velocidad(v)` - Velocidad 0-100 (lineal → SSML)- `fijar_volumen(v)` - Volumen 0-100 (mapea a niveles SSML: silent, x-soft, soft, medium, loud, x-loud)- `obtener_voces()` - Retorna [] (las voces vienen de GestorVoces)**Datos usados:**- Lee de `claves_api.json`: `azure.key`, `azure.region`, `idioma_libro_codigo`- Envía SSML al endpoint `https://{region}.tts.speech.microsoft.com/cognitiveservices/v1`- Retorna tuple `(audio_data, sample_rate)` desde `soundfile.read()`**Caché interno:**- Máximo 5 fragmentos LRU (Least Recently Used)- Se limpia si velocidad/volumen cambian---#### B. **ClientePolly** **Ruta:** `/home/user/epub-tts-accesible/app/servicios/cliente_polly.py`**Propósito:** Sintetiza y reproduce audio usando Amazon Polly (boto3 SDK).**Métodos públicos:**- `hablar(texto, datos_voz)` - Sintetiza y reproduce- `preparar(texto, datos_voz)` - Pre-descarga en segundo plano- `detener()` / `pausar()` / `reanudar()` - Control de reproducción- `fijar_velocidad(v)` - Velocidad 0-100- `fijar_volumen(v)` - Volumen 0-100 (amplificación directa del array de audio)- `obtener_voces()` - Retorna []**Características especiales:**- Selecciona automáticamente el mejor motor según disponibilidad: `generative > long-form > neural > standard`- Maneja paginación de voces con `NextToken`- Requiere `boto3` (se verifica al importar, muestra advertencia si no está)**Datos usados:**- Lee de `claves_api.json`: `polly.access_key`, `polly.secret_key`, `polly.region`- Normaliza región de descriptivas ("US East (North Virginia)") a códigos AWS ("us-east-1")- Formato salida: OGG Vorbis a 24kHz- Caché máximo 5 fragmentos LRU---#### C. **ClienteEleven****Ruta:** `/home/user/epub-tts-accesible/app/servicios/cliente_eleven.py`**Propósito:** Sintetiza y reproduce audio usando ElevenLabs API (REST).**Métodos públicos:**- `hablar(texto, datos_voz)` - Sintetiza y reproduce- `preparar(texto, datos_voz)` - Pre-descarga en segundo plano- `detener()` / `pausar()` / `reanudar()` - Control- `fijar_velocidad(v)` - Velocidad 0-100 (ajusta sample rate: `fs_efectiva = fs * (0.5 + velocidad/100)`)- `fijar_volumen(v)` - Volumen 0-100 (amplificación directa)- `obtener_voces()` - Retorna []**Datos usados:**- Lee de `claves_api.json`: `elevenlabs.api_key`- Usa modelo fijo `eleven_multilingual_v2`- Endpoint: `https://api.elevenlabs.io/v1/text-to-speech/{voice_id}`- Caché máximo 5 fragmentos LRU- Interpreta velocidad como factor de sample rate (multilingüe, no pausas SSML)---#### D. **ClienteSapi5** (Voces locales, solo Windows)**Ruta:** `/home/user/epub-tts-accesible/app/servicios/cliente_sapi5.py`**Propósito:** Sintetiza con voces locales del sistema Windows vía COM/SAPI5.**Métodos públicos:**- `hablar(texto)` - Sintetiza y reproduce con flags SPF_ASYNC | SPF_IS_NOT_XML- `obtener_voces()` - Retorna lista de voces locales con estructura `{"id", "nombre", "proveedor_id": "local", "objeto_real"}`- `cambiar_voz_por_nombre(nombre_objetivo)` - Busca voz localmente (búsqueda difusa)- `detener()` / `pausar()` / `reanudar()` - Control directo de motor SAPI- `fijar_velocidad(v)` - Rate SAPI (-10 a +10)- `fijar_volumen(v)` - Volumen SAPI (0-100)**Particularidad:** No requiere API keys, solo funciona en Windows con SAPI5 disponible.---### 3. **REPRODUCTOR VOZ (Orquestador de síntesis)****Ruta:** `/home/user/epub-tts-accesible/app/motor/reproductor_voz.py`**Propósito:** Clase que gestiona la conmutación entre motores (local/azure/polly/eleven) y maneja lógica de cuota.**Métodos públicos clave:**- `fijar_voz(datos_voz)` - Selecciona motor según `proveedor_id` de la voz- `cargar_texto(texto, callback_completado=None)` - Inicia síntesis con control de cuota- `detener()` / `pausar()` / `reanudar()` - Control de reproducción- `fijar_velocidad(v)` / `fijar_volumen(v)` - Delegados al motor activo**Lógica importante:**- Verifica cuota antes de sintetizar voces neuronales: `_elegir_motor_con_cuota(texto)`- Usa contador de generación (`self._generacion`) para invalidar hilos anteriores- Ejecuta síntesis de voces neuronales en thread aparte (no bloquea UI)- Implementa control de cuota con fallback: Azure → Polly → ElevenLabs → Local---### 4. **INTEGRACIÓN EN INTERFAZ (pestana_ajustes.py)****Ruta:** `/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py`**Secciones clave:****a) Descargar voces desde internet (líneas ~407-434):**```pythondef al_comprobar(self, event, proveedor=None):    gestor = GestorVoces()    if proveedor:        res = gestor.actualizar_proveedor(proveedor)  # Azure, Polly o ElevenLabs    else:        res = gestor.actualizar_voces_desde_internet()  # Todos    # Retorna: "Azure: 50 voces encontradas." o error```**b) Cargar y filtrar voces (líneas ~630-670):**```pythondef cargar_datos_y_llenar(self):    ruta = ruta_config("voces_disponibles.json")    datos = json.load(f)  # Estructura: {"azure": [...], "polly": [...], "elevenlabs": [...]}    for prov, lista in datos.items():        for v in lista:            v["proveedor_id"] = prov  # Inyecta "azure", "polly", "eleven"            v["es_nueva"] = ...  # Detecta nuevas voces            self.voces_todas.append(v)```**c) Filtros visuales:**- **Proveedor**: Todos, Azure, Amazon Polly, ElevenLabs- **Idioma**: Se rellena dinámicamente según proveedor- **Tipo**: Todos, Femenino, Masculino, Multilingüe, Dragon- **Búsqueda de texto**: Con debounce de 300ms**d) Reproducción de prueba:**```pythondef al_escuchar(self, event):    self.reproductor = ReproductorVoz()    self.reproductor.fijar_voz(datos_voz)  # {"id", "nombre", "proveedor_id", ...}    self.reproductor.cargar_texto("Texto de prueba")```---### 5. **CONFIGURACIÓN DE RUTAS****Ruta:** `/home/user/epub-tts-accesible/app/config_rutas.py`**Función `ruta_config(nombre_archivo)`:**```pythondef ruta_config(nombre_archivo: str) -> str:    """    Devuelve ruta absoluta dentro de configuraciones/    Ej: ruta_config("voces_disponibles.json")        → /home/user/epub-tts-accesible/configuraciones/voces_disponibles.json    """    return os.path.join(CONFIG_DIR, nombre_archivo)```**Archivos de configuración gestionados:**- `claves_api.json` - Claves de Azure, Polly, ElevenLabs (NO versionado)- `voces_disponibles.json` - Caché de voces descargadas- `voces_conocidas.json` - IDs previos para detectar nuevas voces- `voces_favoritas.json` - Voces marcadas como favoritas- `ajustes.json` - Configuración general (idioma, velocidad, etc.)**Función `cargar_claves()`:**```pythondef cargar_claves() -> dict:    """Retorna dict con estructura:    {        "azure": {"key": "", "region": ""},        "polly": {"access_key": "", "secret_key": "", "region": ""},        "elevenlabs": {"api_key": ""}    }    Si no existe, devuelve estructura vacía (fail-safe).    """```---## FLUJO GENERAL DE DATOS```PestanaAjustes.al_comprobar()    ↓GestorVoces.actualizar_voces_desde_internet()    ├─ _descargar_azure(key, region) → API REST    ├─ _descargar_polly(creds, region) → boto3 SDK    └─ _descargar_elevenlabs(api_key) → API REST    ↓_guardar_cache() → voces_disponibles.json    ↓PestanaVoces.cargar_datos_y_llenar()    ├─ Lee voces_disponibles.json    ├─ Inyecta proveedor_id    └─ Llena combos (Proveedor, Idioma, Tipo)    ↓ReproductorVoz.fijar_voz(datos_voz)    ├─ Identifica proveedor_id    └─ Asigna ClienteAzure / ClientePolly / ClienteEleven / ClienteSapi5    ↓ReproductorVoz.cargar_texto(texto)    ├─ Verifica cuota    └─ Llama al motor.hablar(texto, datos_voz)```---## RESUMEN EJECUTIVO| Componente | Responsabilidad | Métodos clave ||------------|-----------------|---------------|| **GestorVoces** | Descargar voces de APIs y guardar en caché local | `actualizar_voces_desde_internet()`, `actualizar_proveedor()` || **ClienteAzure** | Síntesis TTS vía Azure REST API | `hablar()`, `preparar()`, `fijar_velocidad()`, `fijar_volumen()` || **ClientePolly** | Síntesis TTS vía Amazon Polly (boto3) | Igual que Azure, pero con soporte de motores || **ClienteEleven** | Síntesis TTS vía ElevenLabs API | Igual que Azure, con factor de velocidad en sample rate || **ClienteSapi5** | Síntesis TTS local Windows SAPI5 | `hablar()`, `cambiar_voz_por_nombre()` || **ReproductorVoz** | Orquestador de motores y control de cuota | `fijar_voz()`, `cargar_texto()` || **PestanaAjustes** | Interfaz de gestión de claves y actualización | `al_comprobar()` (GestorVoces) || **config_rutas.py** | Rutas absolutas y gestión de configuración | `ruta_config()`, `cargar_claves()` |agentId: aef2a049412521e65 (for resuming to continue this agent's work if needed)<usage>total_tokens: 45723tool_uses: 22duration_ms: 64959</usage>
+Copiar mensaje
+Tengo todo el contexto. Conozco la estructura exacta: GestorVoces, los clientes, voces_disponibles.json y la pestaña de ajustes. Implemento los 3 componentes.
+Read main window constructor code in ventana_principal.py
+Read main window constructor code in ventana_principal.py
+Globapp/interfaz/pestana_ajustes.py
+/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Globapp/interfaz/marco_principal.py
+No files found
+Globapp/interfaz/*.py
+/home/user/epub-tts-accesible/app/interfaz/__init__.py/home/user/epub-tts-accesible/app/interfaz/dialogos.py/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py
+Mostrar más
+/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Mostrar 5 más
+Copiar mensaje
+Tengo todo. Arquitectura clara:
+• app/motor/verificador_voces_nuevas.py — lógica pura (sin wx), cooldown 24h
+• app/interfaz/dialogo_voces_nuevas.py — diálogo accesible para NVDA
+• Hook en ventana_principal.py — lanza el verificador en hilo de fondo tras Show()
+Created voice verification system with backend and UI components
+Created voice verification system with backend and UI components
+Update Todos
+☐ Creando verificador_voces_nuevas.py☐ Crear dialogo_voces_nuevas.py (interfaz)☐ Hookear verificador en ventana_principal.py
+Write/home/user/epub-tts-accesible/app/motor/verificador_voces_nuevas.py
+1+
+# ANCLAJE_INICIO: VERIFICADOR_VOCES_NUEVAS
+2+
+"""
+3+
+verificador_voces_nuevas.py
+4+
+───────────────────────────
+5+
+Detecta automáticamente voces nuevas comparando el estado local
+6+
+(voces_disponibles.json) con la respuesta fresca de cada API.
+7+
+8+
+Flujo:
+9+
+  1. Lee los IDs de voces_disponibles.json  →  snapshot "conocidas".
+10+
+  2. Llama a GestorVoces.actualizar_voces_desde_internet() (reutiliza clientes existentes).
+11+
+  3. Compara IDs descargados vs snapshot: las que faltan en el snapshot son "nuevas".
+12+
+  4. Invoca callback({"nuevas": {proveedor: [nombres]}, "error": str|None}).
+13+
+  5. Actualiza voces_conocidas.json con los IDs actuales.
+14+
+15+
+Cooldown: una sola comprobación cada 24 horas (evita llamadas innecesarias a las APIs).
+16+
+El timestamp se persiste en configuraciones/voces_ultima_comprobacion.json.
+17+
+18+
+Primera ejecución (sin historial previo): guarda el snapshot sin notificar.
+19+
+"""
+20+
+Show full diff (170 more lines)
+Update Todos
+☐ Crear verificador_voces_nuevas.py (motor)☐ Creando dialogo_voces_nuevas.py☐ Hookear verificador en ventana_principal.py
+Mostrar 2 más
+Copiar mensaje
+Ahora engancho el verificador en ventana_principal.py, justo después de self.Show():
+Read main window interface file dependencies
+Read main window interface file dependencies
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 15 líneas
+Copiar mensaje
+1 — Añadir importación de lazy (dentro del método, sin tocar las importaciones globales para no retrasar el arranque):
+El verificador y el diálogo se importan dentro de los métodos (import lazy) para no ralentizar el arranque. Solo necesito añadir el hook en __init__ y los tres métodos al final de VentanaPrincipal.
+Updated ventana_principal.py to restore previous session on startup
+Updated ventana_principal.py to restore previous session on startup
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+9-6
+33
+        self._restaurar_sesion()
+44
+55
+        self.Show()
+6+
+7+
+        # Verificación automática de voces nuevas (una vez al día, hilo de fondo)
+8+
+        wx.CallAfter(self._iniciar_verificacion_voces)
+69
+    # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
+Copiar mensaje
+Ahora busco el final del archivo para añadir los tres métodos nuevos antes del cierre del anclaje:
+Updated GitHub repository link in main window
+Updated GitHub repository link in main window
+Bash
+grep -n "ANCLAJE_FIN\|def al_cerrar\|# ─────" /home/user/epub-tts-accesible/app/interfaz/ventana_principal.py | tail -20
+10:# ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
+51:# ─────────────────────────────────────────────────────────────────────────────
+115:    # ANCLAJE_FIN: CONSTRUCCION_INTERFAZ_PRINCIPAL
+Mostrar más
+121:    # ANCLAJE_FIN: CONFIGURACION_MENUS
+242:    def al_cerrar(self, evento):
+249:    # ANCLAJE_FIN: EVENTOS_GLOBALES
+310:    # ANCLAJE_FIN: MEMORIA_SESION
+354:    # ANCLAJE_FIN: TXT_RECIENTES
+405:    # ANCLAJE_FIN: HISTORIAL_RECIENTES
+505:    # ANCLAJE_FIN: MENUS_CONTEXTUALES
+582:    # ANCLAJE_FIN: ACELERADORES_GLOBALES
+621:    # ANCLAJE_FIN: AYUDA
+622:# ANCLAJE_FIN: DEFINICION_VENTANA
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+Leer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+36-6
+619619
+        import webbrowser
+620620
+        webbrowser.open(_URL_GITHUB)
+621621
+    # ANCLAJE_FIN: AYUDA
+622+
+623+
+    # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS
+624+
+    def _iniciar_verificacion_voces(self):
+625+
+        """
+626+
+        Comprueba si hay voces nuevas en las APIs (Azure, Polly, ElevenLabs).
+627+
+        Solo se ejecuta si han pasado más de 24 horas desde la última comprobación.
+628+
+        Corre en hilo de fondo para no bloquear la UI al arrancar.
+629+
+        """
+630+
+        from app.motor.verificador_voces_nuevas import VerificadorVocesNuevas
+631+
+        verificador = VerificadorVocesNuevas()
+632+
+        if not verificador.puede_verificar():
+633+
+            return
+634+
+        verificador.verificar_en_hilo(self._al_resultado_voces)
+635+
+636+
+    def _al_resultado_voces(self, resultado: dict):
+637+
+        """
+638+
+        Recibe el dict del hilo de fondo.
+Show full diff (14 more lines)
+Copiar mensaje
+Verifico sintaxis de los tres archivos y hago commit:
+Pushed focus latency optimization changes to remote branch
+Pushed focus latency optimization changes to remote branch
+Bash
+python -c " import ast for f in [ 'app/motor/verificador_voces_nuevas.py', 'app/interfaz/dialogo_voces_nuevas.py', 'app/interfaz/ventana_principal.py', ]: try: ast.parse(open(f).read()) print(f'OK {f}') except SyntaxError as e: print(f'ERR {f}: {e}') "
+OK  app/motor/verificador_voces_nuevas.pyOK  app/interfaz/dialogo_voces_nuevas.pyOK  app/interfaz/ventana_principal.py
+Update Todos
+☐ Crear verificador_voces_nuevas.py (motor)☐ Crear dialogo_voces_nuevas.py (interfaz)☐ Hookear verificador en ventana_principal.py
+Bash
+git add app/motor/verificador_voces_nuevas.py app/interfaz/dialogo_voces_nuevas.py app/interfaz/ventana_principal.py && git commit -m "$(cat <<'EOF' feat(voces): verificación automática de voces nuevas al arrancar Tarea 3 — Sistema de notificación de voces nuevas: app/motor/verificador_voces_nuevas.py (nuevo): - VerificadorVocesNuevas: motor puro (sin wx) para detectar novedades. - puede_verificar(): cooldown de 24 h (evita llamadas innecesarias a APIs). - verificar_en_hilo(callback): lanza el trabajo en hilo daemon (no bloquea UI). - Lógica: lee IDs de voces_disponibles.json → llama GestorVoces.actualizar_voces_desde_internet() → compara → devuelve {proveedor: [nombres nuevos]}. - Primera ejecución: guarda baseline sin notificar. - Actualiza voces_conocidas.json (compatible con el filtro "Solo nuevas" del PanelVoces). app/interfaz/dialogo_voces_nuevas.py (nuevo): - DialogoVocesNuevas(wx.Dialog): diálogo STAY_ON_TOP con NVDA-accessible. - Línea por proveedor con número de voces nuevas y SetHelpText. - Foco automático en btn_ok al abrirse (NVDA lo lee inmediatamente). app/interfaz/ventana_principal.py: - _iniciar_verificacion_voces(): hook en __init__ vía wx.CallAfter (no retrasa Show). - _al_resultado_voces(): callback del hilo de fondo; usa wx.CallAfter para UI. - _mostrar_dialogo_voces_nuevas(): muestra el diálogo en el hilo principal. - Imports lazy (dentro de métodos) para no impactar el tiempo de arranque. https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 db3c0c3] feat(voces): verificación automática de voces nuevas al arrancar 3 files changed, 329 insertions(+) create mode 100644 app/interfaz/dialogo_voces_nuevas.py
+Mostrar más
+ create mode 100644 app/motor/verificador_voces_nuevas.py
+Mostrar 1 más
+Copiar mensaje
+Commit db3c0c3 subido. Tarea 3 completada.
+ 
+Resumen — Tarea 3
+Componentes nuevos
+Archivo
+Rol
+app/motor/verificador_voces_nuevas.py
+Motor puro (sin wx). Compara IDs locales vs. descarga fresca. Cooldown 24 h en voces_ultima_comprobacion.json
+app/interfaz/dialogo_voces_nuevas.py
+Diálogo STAY_ON_TOP. Una línea por proveedor con novedades. NVDA lo lee al abrirse
+Flujo completo al arrancar
+VentanaPrincipal.__init__
+  └─ Show()
+  └─ wx.CallAfter(_iniciar_verificacion_voces)
+       └─ VerificadorVocesNuevas.puede_verificar()  ← rápido, solo lee JSON
+            └─ verificar_en_hilo(callback)
+                 ├─ Lee voces_disponibles.json   ← snapshot "antes"
+                 ├─ GestorVoces.actualizar_voces_desde_internet()  ← reutiliza clientes existentes
+                 ├─ Compara IDs → {proveedor: [nombres nuevos]}
+                 └─ wx.CallAfter → DialogoVocesNuevas.ShowModal()
+Copy code
+Comportamiento inteligente
+• Primera vez (sin historial): guarda baseline, no molesta
+• Sin novedades: no aparece ningún diálogo
+• Cooldown 24 h: no llama a las APIs en cada inicio
+• voces_conocidas.json se actualiza tras cada comprobación → compatible con el filtro "Solo nuevas voces" del PanelVoces ya existente
+ 
+fase4-ajustes-finales
+claude/optimize-focus-latency-q7Sq3
++480-58
+Crear PR

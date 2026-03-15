@@ -1,0 +1,173 @@
+Pront y respuesta claude 23 (fase 4)
+
+vale. y puedes verificar dos cosas? primero, que en ajustes, cuando pulse el botón correspondiente a borrar clabe y el de guardar todas las claves, que funcionen ccorrectamente, y que ovbiamente se modifique ese claves_api.json. Y la otra cosa es la siguiente. Como aunque este código lo suba a git, y ahí no se van a poner visibles mis json personales, Me preguntaba, si cuando creemos el instalable, podremos excluir todas las configuraciones de usuario para que no se filtre nada...
+
+
+Respuesta:
+
+
+Searched for TTS deletion handlers and reviewed gitignore configuration file
+Searched for TTS deletion handlers and reviewed gitignore configuration file
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 80 líneas
+Glob**/.gitignore/home/user/epub-tts-accesible/.gitignore
+Grepal_borrar_polly|al_borrar_el|borrar.*polly|borrar.*elevenNo matches found
+Mostrar 1 más
+Copiar mensaje
+No hay al_borrar_polly ni al_borrar_elevenlabs. Veamos qué botones están definidos en el panel de claves:
+Searched for save button references in settings panel file
+Searched for save button references in settings panel file
+Grepbtn.*borrar|btn.*limpiar|al_borrar|Borrar.*clave|Limpiar.*clave|EVT_BUTTON.*borrar
+153-        self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())154-        sizer.Add(self.btn_guardar, 0, wx.ALL, 10)155-
+Mostrar más
+156:        self.btn_limpiar = wx.Button(self, label="Limpiar caché")157:        self.btn_limpiar.SetHelpText(158-            "Elimina carpetas __pycache__, archivos .tmp y audio temporal generado "159-            "por la aplicación. Al terminar muestra cuántos archivos se borraron y "160-            "cuánto espacio se liberó."161-        )162:        self.btn_limpiar.Bind(wx.EVT_BUTTON, self._limpiar_cache)163:        sizer.Add(self.btn_limpiar, 0, wx.ALL, 10)164-165-        self.SetSizer(sizer)166---351-        btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")352-        btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")353-        btn_az_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "azure"))354:        btn_az_del = wx.Button(self, label="Borrar clave Azure")355-        btn_az_del.SetHelpText("Borra los datos de acceso de Azure guardados en la aplicación.")356:        btn_az_del.Bind(wx.EVT_BUTTON, self.al_borrar_azure)357-        358-        hb_az.Add(btn_az_web, 0, wx.RIGHT, 5)359-        hb_az.Add(btn_az_check, 0, wx.RIGHT, 5)--470-        if event:471-            wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")472-473:    def al_borrar_azure(self, event):474-        self.txt_az_key.Clear()475-        self.txt_az_region.Clear()476-        self.al_guardar(None)--1250-        """1251-        idx = self.panel_derecho.GetSelection()1252-        if idx == 0:1253:            return self.pag_general.btn_limpiar1254-        elif idx == 1:1255-            return self.pag_claves.btn_save1256-        elif idx == 2:
+Grepbtn_po_|btn_el_|Borrar clave Polly|Borrar clave ElevenLabs|Borrar.*Polly|Borrar.*Eleven
+390-        sz_po.Add(self.txt_po_region, 0, wx.EXPAND|wx.ALL, 5)391-        392-        hb_po = wx.BoxSizer(wx.HORIZONTAL)
+Mostrar más
+393:        btn_po_web = wx.Button(self, label="Conseguir clave Amazon Polly")394:        btn_po_web.SetHelpText("Abre el navegador en la página de Amazon Polly para crear o gestionar tus credenciales AWS.")395:        btn_po_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aws.amazon.com/polly/"))396:        btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")397:        btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")398:        btn_po_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "polly"))399-        400:        hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)401:        hb_po.Add(btn_po_check, 0)402-        sz_po.Add(hb_po, 0, wx.ALL, 5)403-        sizer.Add(sz_po, 0, wx.EXPAND|wx.ALL, 10)404---415-        sz_el.Add(self.txt_el_key, 0, wx.EXPAND|wx.ALL, 5)416-        417-        hb_el = wx.BoxSizer(wx.HORIZONTAL)418:        btn_el_web = wx.Button(self, label="Conseguir clave ElevenLabs")419:        btn_el_web.SetHelpText("Abre el navegador en la página de ElevenLabs para crear una cuenta o consultar tu clave API.")420:        btn_el_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://elevenlabs.io/"))421:        btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")422:        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")423:        btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))424-        425:        hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)426:        hb_el.Add(btn_el_check, 0)427-        sz_el.Add(hb_el, 0, wx.ALL, 5)428-        sizer.Add(sz_el, 0, wx.EXPAND|wx.ALL, 10)429-
+Grepbtn_save|Guardar todas|Guardar claves
+426-        hb_el.Add(btn_el_check, 0)427-        sz_el.Add(hb_el, 0, wx.ALL, 5)428-        sizer.Add(sz_el, 0, wx.EXPAND|wx.ALL, 10)
+Mostrar más
+429-430-        # --- GUARDAR — atributo de instancia para el bucle de tabulación accesible ---431:        self.btn_save = wx.Button(self, label="Guardar Todas las Claves")432:        self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)433:        sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER|wx.ALL, 15)434-        435-        self.SetSizer(sizer)436-        self.cargar_datos_visuales()437-438-    def cargar_datos_visuales(self):--1250-        """1251-        idx = self.panel_derecho.GetSelection()1252-        if idx == 0:1253-            return self.pag_general.btn_limpiar1254-        elif idx == 1:1255:            return self.pag_claves.btn_save1256-        elif idx == 2:1257-            return self.pag_voces.btn_escuchar1258-        elif idx == 3:1259-            return self.pag_atajos.btn_restablecer1260-        else:
+Copiar mensaje
+Tengo el diagnóstico completo:
+Botón "Guardar Todas las Claves" — funciona bien, llama a al_guardar() que escribe claves_api.json.
+"Borrar clave Azure" — funciona bien.
+"Borrar clave Polly" y "Borrar clave ElevenLabs" — no existen. Solo tienen el botón "Comprobar", pero no tienen botón "Borrar". Lo añado ahora:
+Updated ElevenLabs API key button configuration in settings tab
+Updated ElevenLabs API key button configuration in settings tab
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 45 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+14-10
+396396
+        btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
+397397
+        btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
+398398
+        btn_po_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "polly"))
+399-
+400-
+        hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
+401-
+        hb_po.Add(btn_po_check, 0)
+399+
+        btn_po_del = wx.Button(self, label="Borrar clave Polly")
+400+
+        btn_po_del.SetHelpText("Borra los datos de acceso de Amazon Polly guardados en la aplicación.")
+401+
+        btn_po_del.Bind(wx.EVT_BUTTON, self.al_borrar_polly)
+402+
+403+
+        hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
+404+
+        hb_po.Add(btn_po_check, 0, wx.RIGHT, 5)
+405+
+        hb_po.Add(btn_po_del, 0)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+14-10
+421421
+        btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
+422422
+        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")
+423423
+        btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))
+424-
+425-
+        hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
+426-
+        hb_el.Add(btn_el_check, 0)
+424+
+        btn_el_del = wx.Button(self, label="Borrar clave ElevenLabs")
+425+
+        btn_el_del.SetHelpText("Borra la API Key de ElevenLabs guardada en la aplicación.")
+426+
+        btn_el_del.Bind(wx.EVT_BUTTON, self.al_borrar_elevenlabs)
+427+
+428+
+        hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
+429+
+        hb_el.Add(btn_el_check, 0, wx.RIGHT, 5)
+430+
+        hb_el.Add(btn_el_del, 0)
+Copiar mensaje
+Ahora añado los métodos al_borrar_polly y al_borrar_elevenlabs justo después de al_borrar_azure:
+Updated settings panel to clear Azure credentials and verify provider configuration
+Updated settings panel to clear Azure credentials and verify provider configuration
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+16-6
+33
+        self.txt_az_region.Clear()
+44
+        self.al_guardar(None)
+55
+6+
+    def al_borrar_polly(self, event):
+7+
+        self.txt_po_key.Clear()
+8+
+        self.txt_po_secret.Clear()
+9+
+        self.txt_po_region.Clear()
+10+
+        self.al_guardar(None)
+11+
+12+
+    def al_borrar_elevenlabs(self, event):
+13+
+        self.txt_el_key.Clear()
+14+
+        self.al_guardar(None)
+15+
+616
+    def al_comprobar(self, event, proveedor=None):
+Copiar mensaje
+Ahora verifico el .gitignore para la pregunta del instalable y compruebo si hay archivos de config en el repo que no deberían estar:
+Identified and listed four configuration JSON files in project directory
+Identified and listed four configuration JSON files in project directory
+Bashgit ls-files configuraciones/
+configuraciones/mapeo_etiquetas.jsonconfiguraciones/teclas_predeterminadas.jsonconfiguraciones/voces_conocidas.json
+Mostrar más
+configuraciones/voces_ultima_comprobacion.json
+Globconfiguraciones/**
+/home/user/epub-tts-accesible/configuraciones/teclas_predeterminadas.json/home/user/epub-tts-accesible/configuraciones/mapeo_etiquetas.json/home/user/epub-tts-accesible/configuraciones/voces_conocidas.json
+Mostrar más
+/home/user/epub-tts-accesible/configuraciones/voces_ultima_comprobacion.json
+Copiar mensaje
+mapeo_etiquetas.json está trackeado pero está en el .gitignore (se subió antes de que existiera la regla). voces_conocidas.json y voces_ultima_comprobacion.json también son datos de usuario. Veamos su contenido para confirmar:
+Read default keyboard shortcuts configuration file
+Read default keyboard shortcuts configuration file
+Read/home/user/epub-tts-accesible/configuraciones/mapeo_etiquetas.jsonLeer 5 líneas
+Read/home/user/epub-tts-accesible/configuraciones/voces_ultima_comprobacion.jsonLeer 1 línea
+Read/home/user/epub-tts-accesible/configuraciones/voces_conocidas.jsonLeer 5 líneas
+Mostrar 1 más
+Copiar mensaje
+Ahora tengo todo claro. Necesito:
+1. Sacar mapeo_etiquetas.json del tracking de git (está en .gitignore pero fue subido antes)
+2. Añadir voces_conocidas.json y voces_ultima_comprobacion.json al .gitignore y sacarlos del tracking
+3. teclas_predeterminadas.json sí debe quedar (es la configuración de teclas de fábrica)
+Pushed focus latency optimization changes to remote branch
+Pushed focus latency optimization changes to remote branch
+Edit/home/user/epub-tts-accesible/.gitignore+4-2
+2929
+configuraciones/voces_disponibles.json
+30+
+configuraciones/voces_conocidas.json
+31+
+configuraciones/voces_ultima_comprobacion.json
+3032
+# Nombres legacy (anterior al esquema de migración)
+Bash
+git rm --cached configuraciones/mapeo_etiquetas.json configuraciones/voces_conocidas.json configuraciones/voces_ultima_comprobacion.json
+rm 'configuraciones/mapeo_etiquetas.json'rm 'configuraciones/voces_conocidas.json'rm 'configuraciones/voces_ultima_comprobacion.json'
+Bash
+git add .gitignore app/interfaz/pestana_ajustes.py && git commit -m "$(cat <<'EOF' fix: añadir botones 'Borrar clave' para Polly y ElevenLabs; limpiar datos de usuario del repo Ajustes > Claves API: - Añadidos botones 'Borrar clave Polly' y 'Borrar clave ElevenLabs', con sus handlers al_borrar_polly() y al_borrar_elevenlabs(). Funcionan igual que 'Borrar clave Azure': limpian los campos de texto y guardan al momento en claves_api.json via guardar_claves(). Git / seguridad: - Sacar del tracking tres archivos de datos de usuario que no deben estar en el repositorio: mapeo_etiquetas.json (ya estaba en .gitignore pero se subió antes de la regla), voces_conocidas.json y voces_ultima_comprobacion.json. - Añadir voces_conocidas.json y voces_ultima_comprobacion.json al .gitignore. - teclas_predeterminadas.json se mantiene en git (configuración de fábrica). https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 d7b3489] fix: añadir botones 'Borrar clave' para Polly y ElevenLabs; limpiar datos de usuario del repo 5 files changed, 24 insertions(+), 166 deletions(-) delete mode 100644 configuraciones/mapeo_etiquetas.json
+Mostrar más
+ delete mode 100644 configuraciones/voces_conocidas.json delete mode 100644 configuraciones/voces_ultima_comprobacion.json
+Mostrar 1 más
+Copiar mensaje
+Commit d7b3489 pusheado. Resumen de todo:
+ 
+Botones de borrar claves — arreglado:
+• Azure ya tenía "Borrar clave". Polly y ElevenLabs no la tenían — ahora sí.
+• Los tres funcionan igual: limpian los campos y guardan en claves_api.json inmediatamente.
+Git y seguridad — limpiado:
+• Quitados del historial activo (siguen en máquina local, solo dejan de trackearse): mapeo_etiquetas.json, voces_conocidas.json, voces_ultima_comprobacion.json
+• Se mantiene en git: teclas_predeterminadas.json (atajos de fábrica, necesario distribuir)
+Para el instalable — lo que necesitas saber: el .gitignore ya protege todo lo que importa. Cuando hagamos el instalable con PyInstaller o similar, la carpeta configuraciones/ solo debería incluir teclas_predeterminadas.json. Todo lo demás (ajustes, claves, proyectos, historial) la app lo crea sola al primer arranque. Así el instalable queda limpio sin ningún dato tuyo. Cuando lleguemos a esa fase te explico cómo configurarlo en el .spec de PyInstaller.

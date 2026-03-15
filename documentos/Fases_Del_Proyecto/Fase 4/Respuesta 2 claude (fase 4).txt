@@ -1,0 +1,229 @@
+Respuesta 2 claude (fase 4)
+
+Pushed focus latency optimization branch to remote repository
+Pushed focus latency optimization branch to remote repository
+Bashgit log --oneline -5
+9864cae feat(latencia): carga de voces en hilo secundario para foco instantáneo15fb825 Documentación: Agregada respuesta final de Claude Fase 37dcbda5 feat: separación de secretos en claves_api.json + .gitignore blindado
+Mostrar más
+3b60062 Documentación: Registro de prompts y respuestas Fase 382cbd04 fix: corrige persistencia de eliminaciones y añade papelera con Restaurar
+Bashgit revert 9864cae --no-edit[claude/optimize-focus-latency-q7Sq3 5f18ef4] Revert "feat(latencia): carga de voces en hilo secundario para foco instantáneo" Date: Tue Mar 10 18:43:05 2026 +0000 2 files changed, 25 insertions(+), 117 deletions(-)
+Bashgit push -u origin claude/optimize-focus-latency-q7Sq3To http://127.0.0.1:37741/git/Dayanna-Parson/epub-tts-accesible   9864cae..5f18ef4  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3branch 'claude/optimize-focus-latency-q7Sq3' set up to track 'origin/claude/optimize-focus-latency-q7Sq3'.
+Copiar mensaje
+Revertido. Los dos archivos están exactamente como estaban antes de la Tarea 1.
+Lo que ocurrió es que threading en wxPython tiene restricciones estrictas: cualquier acceso a un control wx desde un hilo secundario —incluso leer propiedades— puede corromper el estado del marco de mensajes de wx y romper la navegación por teclado de NVDA. El enfoque de hilo fue demasiado agresivo para esta situación.
+Para la latencia hay una alternativa más segura que no toca hilos: usar wx.CallAfter diferido sin hilo, procesando la carga en pequeños bloques con wx.Yield() intercalado para que el bucle de eventos no se bloquee. ¿Quieres que explore esa vía antes de intentar cualquier cambio?
+siii por favor
+Copiar mensaje
+Copiar mensaje
+Antes de escribir una sola línea, leo el estado actual de los dos archivos para asegurarme de que el revert quedó limpio.
+Searched codebase for threading and event handling patterns
+Searched codebase for threading and event handling patterns
+Bash
+grep -n "cargar_voces_usuario\|cargar_datos_y_llenar\|threading\|CallAfter\|al_cambiar_pestana_padre\|al_cambiar_cat\|txt_buscar" \ app/interfaz/pestana_lectura.py app/interfaz/pestana_ajustes.py
+app/interfaz/pestana_lectura.py:196:        self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
+app/interfaz/pestana_lectura.py:197:        self.cargar_voces_usuario()
+app/interfaz/pestana_lectura.py:225:    def al_cambiar_pestana_padre(self, event):
+Mostrar más
+app/interfaz/pestana_lectura.py:227:            self.cargar_voces_usuario()
+app/interfaz/pestana_lectura.py:235:    def cargar_voces_usuario(self):
+app/interfaz/pestana_lectura.py:615:            wx.CallAfter(self.txt_contenido.SetFocus)
+app/interfaz/pestana_ajustes.py:520:        self.txt_buscar = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
+app/interfaz/pestana_ajustes.py:521:        self.txt_buscar.SetHelpText(
+app/interfaz/pestana_ajustes.py:525:        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar)
+app/interfaz/pestana_ajustes.py:526:        hbox3.Add(self.txt_buscar, 1, wx.EXPAND)
+app/interfaz/pestana_ajustes.py:563:        self.cargar_datos_y_llenar()
+app/interfaz/pestana_ajustes.py:625:    def cargar_datos_y_llenar(self):
+app/interfaz/pestana_ajustes.py:758:        f_texto = self.txt_buscar.GetValue().lower()
+app/interfaz/pestana_ajustes.py:1125:        self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
+app/interfaz/pestana_ajustes.py:1167:    def al_cambiar_cat(self, event):
+app/interfaz/pestana_ajustes.py:1171:            # wx.CallAfter garantiza que el foco vuelve a la lista DESPUÉS de que
+app/interfaz/pestana_ajustes.py:1175:            wx.CallAfter(self.lista_cat.SetFocus)
+app/interfaz/pestana_ajustes.py:1178:                self.pag_voces.cargar_datos_y_llenar()
+Copiar mensaje
+El revert está limpio. Ahora sí voy con la solución correcta y segura.
+Diagnóstico revisado:
+• threading con wxPython rompe el bucle de mensajes de wx → el comportamiento que describes (pestañas mal leídas) era previsible.
+• La solución correcta es wx.CallAfter puro (sin hilos): programa la carga pesada para que ocurra después de que wxPython haya procesado el cambio de pestaña y colocado el foco. NVDA anuncia la pestaña al instante. La carga llega fracción de segundo después, ya sin bloquear el foco.
+• Además: Freeze()/Thaw() en el ListCtrl para evitar redibujos item a item, y wx.CallLater(300ms) como debounce en el cuadro de búsqueda.
+Implemento los cambios uno a uno.
+ 
+Cambio 1 — pestana_lectura.py __init__: diferir la carga con wx.CallAfter
+Fixed voice initialization in reading tab component
+Fixed voice initialization in reading tab component
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+4-2
+11
+        self.padre_notebook.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_pestana_padre)
+2-
+        self.cargar_voces_usuario()
+2+
+        # Diferir la carga de voces para que el panel reciba el foco antes de que
+3+
+        # comience la lectura de JSONs y la enumeración de voces SAPI5.
+4+
+        wx.CallAfter(self.cargar_voces_usuario)
+Copiar mensaje
+Cambio 2 — pestana_lectura.py al_cambiar_pestana_padre: mismo patrón
+Updated reading tab event handler in pestana_lectura.py
+Updated reading tab event handler in pestana_lectura.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+9-7
+11
+    def al_cambiar_pestana_padre(self, event):
+22
+        if event.GetSelection() == 0:
+3-
+            self.cargar_voces_usuario()
+4-
+            self.cargar_config_salto()
+5-
+            self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
+6-
+            self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+3+
+            self.cargar_config_salto()
+4+
+            self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
+5+
+            self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+6+
+            # Diferir la carga de voces para que el foco llegue al panel antes
+7+
+            # de que comience la lectura de JSONs. El combo se llena tras el cambio de pestaña.
+8+
+            wx.CallAfter(self.cargar_voces_usuario)
+79
+        event.Skip()
+Copiar mensaje
+Ahora pestana_ajustes.py. Necesito leer la zona de __init__ de PanelVoces donde están los atributos de instancia para añadir _timer_busqueda en el lugar correcto.
+Cambio 3 — pestana_ajustes.py PanelVoces.__init__: añadir _timer_busqueda junto al resto de atributos
+Updated settings tab initialization in pestana_ajustes.py
+Updated settings tab initialization in pestana_ajustes.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+6-4
+1-
+        self.voces_todas = [] 
+2-
+        self.reproductor = ReproductorVoz()
+3-
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+4-
+        self.favoritos = self.cargar_favoritos()
+1+
+        self.voces_todas = []
+2+
+        self.reproductor = ReproductorVoz()
+3+
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+4+
+        self.favoritos = self.cargar_favoritos()
+5+
+        # Temporizador para debounce del cuadro de búsqueda (300 ms)
+6+
+        self._timer_busqueda = None
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+6-4
+440-
+        self.voces_todas = [] 
+441-
+        self.reproductor = ReproductorVoz()
+442-
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+443-
+        self.favoritos = self.cargar_favoritos()
+440+
+        self.voces_todas = []
+441+
+        self.reproductor = ReproductorVoz()
+442+
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+443+
+        self.favoritos = self.cargar_favoritos()
+444+
+        # Temporizador para debounce del cuadro de búsqueda (300 ms)
+445+
+        self._timer_busqueda = None
+Copiar mensaje
+Cambio 4 — pestana_ajustes.py: cambiar binding txt_buscar a al_filtrar_texto
+Added debounce functionality to search filter in settings tab
+Added debounce functionality to search filter in settings tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-1
+1-
+        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar)
+1+
+        # Debounce: reconstruye la lista 300 ms después de la última pulsación
+2+
+        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)
+Copiar mensaje
+Cambio 5 — pestana_ajustes.py PanelVoces.__init__ final: diferir la carga pesada
+Deferred heavy voice loading to improve panel responsiveness
+Deferred heavy voice loading to improve panel responsiveness
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+4-2
+11
+        self.SetSizer(sizer)
+2-
+        self.cargar_datos_y_llenar()
+2+
+        # Diferir la carga pesada de voces para que el panel se muestre antes
+3+
+        # de leer los JSONs. El foco llega al control antes de que empiece la carga.
+4+
+        wx.CallAfter(self.cargar_datos_y_llenar)
+Copiar mensaje
+Cambio 6 — pestana_ajustes.py al_filtrar: añadir al_filtrar_texto con debounce justo debajo
+Updated settings panel filter methods in pestana_ajustes.py
+Updated settings panel filter methods in pestana_ajustes.py
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 8 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+14-4
+754754
+    def al_filtrar(self, event):
+755755
+        self.filtrar_y_mostrar()
+756756
+757+
+    def al_filtrar_texto(self, event):
+758+
+        """
+759+
+        Filtro con debounce: espera 300 ms tras la última pulsación antes de
+760+
+        reconstruir la lista. Evita congelar la UI en cada carácter tecleado.
+761+
+        """
+762+
+        if self._timer_busqueda:
+763+
+            self._timer_busqueda.Stop()
+764+
+        self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
+765+
+        event.Skip()
+766+
+757767
+    def filtrar_y_mostrar(self):
+Copiar mensaje
+Cambio 7 — pestana_ajustes.py filtrar_y_mostrar: añadir Freeze()/Thaw() para eliminar redibujo item a item
+Read voice configuration code in settings panel
+Read voice configuration code in settings panel
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 15 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 10 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 20 líneas
+Mostrar 1 más
+Copiar mensaje
+Listo. Commit da86e51 subido. Resumen de la solución:
+ 
+Qué se hizo y por qué funciona
+Técnica
+Dónde
+Efecto
+wx.CallAfter(cargar_voces_usuario)
+pestana_lectura.__init__ y al_cambiar_pestana_padre
+wxPython procesa primero el cambio de pestaña y coloca el foco; NVDA anuncia la pestaña al instante. La carga de JSONs+SAPI5 ocurre justo después, ya sin bloquear
+wx.CallAfter(cargar_datos_y_llenar)
+PanelVoces.__init__ y al_cambiar_cat
+Mismo principio: el panel y el foco llegan antes de la carga pesada
+Freeze() / Thaw()
+filtrar_y_mostrar()
+Suspende el redibujado del ListCtrl durante la inserción masiva. El pintado pasa de N veces (una por item) a 1 sola vez al soltar el Thaw
+wx.CallLater(300ms) debounce
+al_filtrar_texto → txt_buscar
+La lista se reconstruye 300 ms después de la última tecla, nunca en cada pulsación
+Por qué esto es seguro y el threading no lo era: wx.CallAfter ejecuta la función en el hilo principal de wx, dentro de su bucle de eventos. Nunca hay dos hilos tocando controles wx a la vez, así que NVDA no pierde el hilo de mensajes.
+¿Probamos y confirmamos que el foco va bien, o pasamos a la Tarea 2?

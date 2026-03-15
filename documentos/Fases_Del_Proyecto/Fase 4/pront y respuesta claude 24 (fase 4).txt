@@ -1,0 +1,51 @@
+pront y respuesta claude 24 (fase 4)
+
+
+vale, ve haciendo la preparación para subirlo a la rama main, pero todavía no lo subas, que solo quedan muy poquitas cosas por arreglar. Vale. Antes de descargar los cambios a mi carpeta local necesito que compruebes y hagas un cambio. esto en la pestaña modo grabación. Verifica que ya se muestra perfectamente la ventana di división de epub. Y si es así, muévela antes del botón examinar. Que eso te lo pedí antes, pero no lo hiciste
+
+Respuesta:
+
+Searched codebase for recording tab division and examination functionality
+Searched codebase for recording tab division and examination functionality
+Agent
+Grep
+examinar|Examinar|btn_exam|divisor.*epub|epub.*divis|VentanaDivision|panel.*divis|divis.*panel|dividir.*epub|epub.*dividir
+2-pestana_grabacion.py3----------------------4-Pestaña de grabación multivoz para producción de audiolibros accesibles.
+Mostrar más
+5-6-Flujo de uso (diseñado para NVDA + teclado):7:  1. Pulsa "Examinar…" → selecciona un TXT → el escaneo es automático.8-  2. En el combo "Etiqueta activa" selecciona la primera etiqueta.9-  3. Marca una voz en la lista de favoritos → se auto-asigna y el combo avanza.10-  4. Repite hasta cubrir todas las etiquetas.11-  5. Pulsa "Iniciar Grabación".12-  6. "Limpiar" restablece la pestaña para cargar otro fragmento sin reiniciar.--299-    # Propiedades para Tab cíclico (usadas por ventana_principal.py)300-    # ================================================================== #301-302-    @property303-    def primer_control(self):304:        return self.btn_examinar305-306-    @property307-    def ultimo_control(self):308-        return self.btn_abrir_carpeta309---322-        lbl_ruta = wx.StaticText(self, label="Archivo TXT:")323-        self.txt_ruta = wx.TextCtrl(self, style=wx.TE_READONLY)324-        self.txt_ruta.SetHelpText("Ruta del archivo de texto actualmente cargado.")325-326-        # Etiqueta descriptiva en el botón — NVDA la lee directamente al recibir foco327:        self.btn_examinar = wx.Button(328:            self, label="&Examinar… — Selecciona un TXT con etiquetas de personaje"329-        )330-        self.btn_limpiar = wx.Button(331-            self, label="&Limpiar — Restablece la pestaña para cargar otro fragmento"332-        )333:        self.btn_dividir_epub = wx.Button(334-            self, label="&Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"335-        )336:        self.btn_dividir_epub.SetHelpText(337-            "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "338-            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."339-        )340-341-        sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)342-        sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)343:        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)344:        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)345-        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)346-347-        sz_titulo = wx.BoxSizer(wx.HORIZONTAL)348-        lbl_titulo = wx.StaticText(self, label="Título (opcional):")349-        self.txt_titulo = wx.TextCtrl(self)--487-        sizer_raiz.Add(sz_botones, 0, wx.ALL, 10)488-489-        self.SetSizer(sizer_raiz)490-491-        # ── Eventos ───────────────────────────────────────────────────────492:        self.btn_examinar.Bind(wx.EVT_BUTTON,        self.al_examinar)493-        self.btn_limpiar.Bind(wx.EVT_BUTTON,         self.al_limpiar)494:        self.btn_dividir_epub.Bind(wx.EVT_BUTTON,    self._al_dividir_epub)495-        self.txt_titulo.Bind(wx.EVT_KILL_FOCUS,     self._al_perder_foco_titulo)496-        self.btn_probar.Bind(wx.EVT_BUTTON,         self.al_probar_voz)497-        self.btn_preescucha.Bind(wx.EVT_BUTTON,     self.al_preescucha_general)498-        self.chk_dividir.Bind(wx.EVT_CHECKBOX,      self.al_cambiar_division)499-        self.btn_iniciar.Bind(wx.EVT_BUTTON,        self.al_iniciar_grabacion)--661-                    self.lbl_progreso.SetLabel(662-                        f"Archivo asociado al proyecto «{self.proyecto_actual['nombre']}»."663-                    )664-        dlg.Destroy()665-666:    def al_examinar(self, evento):667-        self._ofrecio_proyecto = False668-        with wx.FileDialog(669-            self,670-            "Seleccionar archivo de texto con etiquetas",671-            wildcard="Archivos de texto (*.txt)|*.txt|Todos (*.*)|*.*",--826-        )827-        self.gauge.SetValue(0)828-        self.btn_iniciar.Enable(False)829-        self.btn_abortar.Enable(False)830-831:        self.btn_examinar.SetFocus()832-833-    # ================================================================== #834-    # División de EPUB835-    # ================================================================== #836-837:    def _al_dividir_epub(self, evento=None):838-        """Abre el diálogo de división de EPUB en capítulos TXT."""839-        from app.interfaz.dialogo_troceador import DialogoTroceador840-        from app.interfaz.ui_recursos import aplicar_icono_boton841:        aplicar_icono_boton(self.btn_dividir_epub, "trocear", "Dividir EPUB en capítulos TXT")842-        dlg = DialogoTroceador(self)843-        dlg.ShowModal()844-        dlg.Destroy()845-846-    # ================================================================== #
+Copiar mensaje
+El botón "Dividir EPUB" ya aparece antes de "Examinar" en la fila (sz_ruta). Pero el primer_control de la pestaña apunta a btn_examinar, no a btn_dividir_epub. Voy a verificar el diálogo troceador y el orden de tab:
+Read dialogo_troceador.py file for EPUB chapter splitting dialog
+Read dialogo_troceador.py file for EPUB chapter splitting dialog
+Glob**/dialogo_troceador*/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py
+Read/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.pyLeer 382 líneas
+Copiar mensaje
+El diálogo DialogoTroceador está completo y bien implementado. Y mirando el código actual, btn_dividir_epub ya está antes de btn_examinar en el sizer:
+sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)   # ← ya está aquí
+sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
+Copy code
+Pero hay un detalle pendiente: el primer_control de la pestaña sigue apuntando a btn_examinar, cuando ahora el primer botón interactivo es btn_dividir_epub. Lo corrijo:
+Pushed focus latency optimization branch to remote repository
+Pushed focus latency optimization branch to remote repository
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+3-3
+302302
+    @property
+303303
+    def primer_control(self):
+304-
+        return self.btn_examinar
+304+
+        return self.btn_dividir_epub
+Bash
+git add app/interfaz/pestana_grabacion.py && git commit -m "$(cat <<'EOF' fix: corregir primer_control de PestanaGrabacion a btn_dividir_epub El botón 'Dividir EPUB' ya estaba colocado antes de 'Examinar' en el sizer (btn_dividir_epub → btn_examinar → btn_limpiar), pero la propiedad primer_control seguía apuntando a btn_examinar. Esto hacía que al ciclar entre pestañas con Tab, el foco saltase directamente a Examinar saltándose el botón de división de EPUB. https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 6519cac] fix: corregir primer_control de PestanaGrabacion a btn_dividir_epub 1 file changed, 1 insertion(+), 1 deletion(-)
+Mostrar 1 más
+Copiar mensaje
+Commit 6519cac pusheado.
+Resumen de lo que encontré:
+• 
+El botón "Dividir EPUB" ya estaba antes de "Examinar" en el layout visual (se debió hacer en algún commit anterior que no recuerdas). Lo que faltaba era actualizar primer_control para que el Tab cíclico también empezara por ese botón — eso sí estaba sin hacer y ahora está corregido.
+• 
+El diálogo DialogoTroceador está completo: selector de EPUB, lista de capítulos con casillas, "Seleccionar todo / Deseleccionar todo / Limpiar lista", botón "Dividir seleccionados" con progreso, "Abrir carpeta capitulos" al finalizar, y soporte completo para Escape y NVDA.
+Dime qué queda por arreglar y cuando esté listo preparo el merge a main.

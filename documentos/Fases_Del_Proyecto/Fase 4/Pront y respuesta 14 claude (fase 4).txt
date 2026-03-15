@@ -1,0 +1,38 @@
+Pront y respuesta 14 claude (fase 4)
+
+en los logs que te pase, hay antiguos que mostraban errores que estaban ya corregidos? o esos son recientes?
+Copiar mensaje
+Copiar mensaje
+
+respuesta:
+
+El segundo log (app/registros/app.log) mezcla entradas muy antiguas con entradas recientes. Te lo desgloso:
+Errores ANTIGUOS — ya estaban corregidos antes de hoy:
+Fecha
+Error
+Estado
+Dic 2025 – Ene 2026
+TypeError: VentanaPrincipal.__init__() got unexpected keyword argument 'title'
+Corregido en fases anteriores
+Dic 2025 – Ene 2026
+AttributeError: 'PanelVoces' has no attribute 'chk_multi'
+Corregido en fases anteriores
+Ene 2026
+AttributeError: 'PestanaLectura' has no attribute 'al_activar_capitulo'
+Corregido
+Ene 2026
+AttributeError: 'VentanaPrincipal' has no attribute 'al_abrir_archivo'
+Corregido
+6 Mar 2026
+wxAssertionError: Must have wxTE_PROCESS_ENTER
+Ya estaba corregido (el TextCtrl ya tiene ese flag)
+Todos estos son de cuando la app se llamaba TifloHistorias y están en rutas como iniciar_tiflohistorias.py o iCloudDrive/... — código de antes de la Fase 4.
+ 
+Errores RECIENTES — los que acabamos de corregir hoy:
+Fecha
+Error
+6–13 Mar 2026
+AttributeError: module 'wx' has no attribute 'ART_RECORD' → crash al abrir "Dividir EPUB"
+7–12 Mar 2026
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted → crash en ventana de proyectos al cerrarla
+Esos sí eran bugs activos en el código actual. El log más reciente del registro termina en 2026-03-13 00:48:06 - Aplicación cerrada — esa es tu última sesión, y todos los crashes de ART_RECORD y TreeCtrl son de esa semana.

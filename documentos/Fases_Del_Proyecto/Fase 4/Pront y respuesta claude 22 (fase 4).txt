@@ -1,0 +1,104 @@
+Pront y respuesta claude 22 (fase 4)
+
+mira, me dice esto: Iniciar Grabación — Comienza el proceso de grabación multivoz  botón  Alt+  i
+pulsado
+Credenciales no configuradas  diálogo  No se puede iniciar la grabación:
+Amazon Polly: credenciales no configuradas (Access Key / Secret Key vacíos).
+Configúralas en Ajustes → Amazon Polly.
+Revisa la configuración antes de continuar.
+OK  botón. Pero como ya te dije, tengo configurada correctamente las claves, y me deja descargar voces... Esto empezó a pasar, cuando pusimos los sonidos y fuimos haciendo todas las correcciones.
+
+Respuesta:
+
+Vamos a ver dónde se validan las credenciales antes de iniciar la grabación:
+Searched codebase for AWS Polly credential handling implementation
+Searched codebase for AWS Polly credential handling implementation
+Grep
+credenciales no configuradas|Credenciales no configuradas|Access Key.*Secret Key|credenciales.*Polly
+Grep
+credenciales no configuradas|Credenciales no configuradas|Access Key.*vacío|_validar_credenciales|_verificar_credenciales|No se puede iniciar
+1123-            engine.stop()1124-        except Exception:1125-            pass
+Mostrar más
+1126-1127-    # ================================================================== #1128-    # Proceso de grabación1129-    # ================================================================== #1130-1131:    def _verificar_credenciales_previas(self) -> list:1132-        """1133-        Comprueba que cada proveedor de voz en uso tenga credenciales configuradas.1134-        Retorna lista de mensajes de error; vacía = todo OK.1135-        """1136-        errores = []1137-        try:1138-            ruta = ruta_config("ajustes.json")1139-            config = {}--1149-            if isinstance(datos, dict):1150-                proveedores.add(datos.get("proveedor_id", "local").lower())1151-1152-        for prov in proveedores:1153-            if "azure" in prov:1154-                az = config.get("azure", {})1155-                if not az.get("key") or not az.get("region"):1156-                    errores.append(1157:                        "Azure TTS: credenciales no configuradas "1158-                        "(clave de suscripción o región vacías).\n"1159-                        "Configúralas en Ajustes → Azure."1160-                    )1161-            elif "eleven" in prov:1162-                el = config.get("elevenlabs", {})1163-                if not el.get("api_key"):1164-                    errores.append(1165-                        "ElevenLabs: API Key no configurada.\n"1166-                        "Configúrala en Ajustes → ElevenLabs."1167-                    )1168-            elif "polly" in prov:1169-                po = config.get("polly", {})1170-                if not po.get("access_key") or not po.get("secret_key"):1171-                    errores.append(1172:                        "Amazon Polly: credenciales no configuradas "1173:                        "(Access Key / Secret Key vacíos).\n"1174-                        "Configúralas en Ajustes → Amazon Polly."1175-                    )1176-            # 'local' (SAPI5): no requiere credenciales1177-        return errores1178-1179-    def al_iniciar_grabacion(self, evento):1180-        if not self.fragmentos:1181-            wx.MessageBox(--1194-                f"Las siguientes etiquetas no tienen voz asignada:\n{nombres}\n\n"1195-                "Los fragmentos sin voz se omitirán.\n"1196-                "¿Continuar de todas formas?",1197-                "Etiquetas sin voz", wx.YES_NO | wx.ICON_WARNING,1198-            ) != wx.YES:1199-                return1200-1201-        # ── Pre-chequeo preventivo de credenciales ────────────────────────────1202:        fallos_cred = self._verificar_credenciales_previas()1203-        if fallos_cred:1204-            detalle = "\n\n".join(fallos_cred)1205-            reproducir(SND_ERROR)1206-            wx.MessageBox(1207:                f"No se puede iniciar la grabación:\n\n{detalle}\n\n"1208-                "Revisa la configuración antes de continuar.",1209:                "Credenciales no configuradas",1210-                wx.OK | wx.ICON_ERROR,1211-            )1212-            return1213-1214-        modo_dividido = self.chk_dividir.IsChecked()1215-        self._modo_dividido = modo_dividido   # accesible desde _callback_progreso1216-1217-        self.btn_iniciar.Enable(False)
+Grepaccess_key|secret_key|polly.*save|guardar.*polly
+441-        d_az = claves.get("azure", {})442-        self.txt_az_key.SetValue(d_az.get("key", ""))443-        self.txt_az_region.SetValue(d_az.get("region", ""))
+Mostrar más
+444-445-        d_po = claves.get("polly", {})446:        self.txt_po_key.SetValue(d_po.get("access_key", ""))447:        self.txt_po_secret.SetValue(d_po.get("secret_key", ""))448-        self.txt_po_region.SetValue(d_po.get("region", ""))449-450-        d_el = claves.get("elevenlabs", {})451-        self.txt_el_key.SetValue(d_el.get("api_key", ""))452---456-            "azure": {457-                "key": self.txt_az_key.GetValue().strip(),458-                "region": self.txt_az_region.GetValue().strip(),459-            },460-            "polly": {461:                "access_key": self.txt_po_key.GetValue().strip(),462:                "secret_key": self.txt_po_secret.GetValue().strip(),463-                "region": self.txt_po_region.GetValue().strip(),464-            },465-            "elevenlabs": {466-                "api_key": self.txt_el_key.GetValue().strip(),467-            },
+Mostrar 1 más
+Copiar mensaje
+Los nombres de las claves son consistentes. El problema debe estar en el archivo que se lee. Veamos dónde se guarda el config de credenciales vs dónde lo lee _verificar_credenciales_previas:
+Searched for credential saving functions and examined credential verification logic
+Searched for credential saving functions and examined credential verification logic
+Grepguardar.*clave|_guardar_claves|json.dump|ruta_config.*json|claves.*json|ajustes\.json
+3-import json4-import webbrowser5-import wx.lib.mixins.listctrl as listmix
+Mostrar más
+6-from app.motor.cliente_nube_voces import GestorVoces7-from app.motor.reproductor_voz import ReproductorVoz8:from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves9-from app.motor.control_cuota import ControlCuota10-from app.motor.reproductor_sonidos import reproducir, LIST_NAV11-12-# --- CLASE ESPECIAL PARA LA LISTA CON CASILLAS ---13-class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):--434-        435-        self.SetSizer(sizer)436-        self.cargar_datos_visuales()437-438-    def cargar_datos_visuales(self):439:        """Carga las claves desde configuraciones/claves_api.json (separado de ajustes)."""440-        claves = cargar_claves()441-        d_az = claves.get("azure", {})442-        self.txt_az_key.SetValue(d_az.get("key", ""))443-        self.txt_az_region.SetValue(d_az.get("region", ""))444---449-450-        d_el = claves.get("elevenlabs", {})451-        self.txt_el_key.SetValue(d_el.get("api_key", ""))452-453-    def al_guardar(self, event):454:        """Guarda las claves en configuraciones/claves_api.json (nunca en ajustes.json)."""455-        claves = {456-            "azure": {457-                "key": self.txt_az_key.GetValue().strip(),458-                "region": self.txt_az_region.GetValue().strip(),459-            },--464-            },465-            "elevenlabs": {466-                "api_key": self.txt_el_key.GetValue().strip(),467-            },468-        }469:        guardar_claves(claves)470-        if event:471:            wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")472-473-    def al_borrar_azure(self, event):474-        self.txt_az_key.Clear()475-        self.txt_az_region.Clear()476-        self.al_guardar(None)--478-    def al_comprobar(self, event, proveedor=None):479-        self.al_guardar(None)480-        # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces481-        # Así el filtro "Solo nuevas voces" detectará solo las recién llegadas482-        try:483:            ruta_voces = ruta_config("voces_disponibles.json")484:            ruta_conocidas = ruta_config("voces_conocidas.json")485-            if os.path.exists(ruta_voces):486-                with open(ruta_voces, 'r', encoding='utf-8') as f:487-                    datos = json.load(f)488-                ids_actuales = [v.get("id","") for lista in datos.values() for v in lista if v.get("id")]489-                os.makedirs(os.path.dirname(ruta_conocidas), exist_ok=True)490-                with open(ruta_conocidas, 'w', encoding='utf-8') as f:491:                    json.dump(ids_actuales, f)492-        except Exception:493-            pass494-        wx.BeginBusyCursor()495-        try:496-            gestor = GestorVoces()--509-        super().__init__(padre)510-        self.config = config511-        self.voces_todas = []512-        self.mapa_indices = {}   # índice de fila → datos_voz; se rellena en filtrar_y_mostrar513-        self.reproductor = ReproductorVoz()514:        self.ruta_favs = ruta_config("voces_favoritas.json")515-        self.favoritos = self.cargar_favoritos()516-        # Temporizador para debounce del cuadro de búsqueda (300 ms)517-        self._timer_busqueda = None518-        519-        sizer = wx.BoxSizer(wx.VERTICAL)--665-            print(f"[Error] No se pudo leer voces_favoritas.json: {e}")666-        return []667-668-    def guardar_favoritos(self):669-        try:670:            with open(self.ruta_favs, 'w', encoding='utf-8') as f: json.dump(self.favoritos, f, indent=4)671-        except Exception as e: print(f"Error guardando favs: {e}")672-673-    def al_marcar_favorito(self, event):674-        idx = event.GetIndex()675-        voz = self.mapa_indices.get(idx)--698-                ventana.pestana_grabacion._cargar_voces_disponibles()699-        except Exception:700-            pass701-702-    def cargar_datos_y_llenar(self):703:        ruta = ruta_config("voces_disponibles.json")704:        ruta_conocidas = ruta_config("voces_conocidas.json")705-        self.voces_todas = []706-707-        # Cargar IDs de voces conocidas (para detectar novedades)708-        voces_conocidas = set()709-        try:--1121-        clave = self._claves[idx]1122-        desc = self._atajos[clave].get("descripcion", clave)1123-        dlg = _DialogoCapturaTecla(self, desc)1124-        if dlg.ShowModal() == wx.ID_OK and dlg.resultado:1125-            mod, tecla = dlg.resultado1126:            guardar_atajo_usuario(clave, mod, tecla)1127-            self._rellenar_lista()1128-            self._refrescar_aceleradores_frame()1129-            if idx < self.lista.GetItemCount():1130-                self.lista.Select(idx)1131-                self.lista.EnsureVisible(idx)--1200-1201-1202-class PestanaAjustes(wx.Panel):1203-    def __init__(self, padre):1204-        super().__init__(padre)1205:        self.ruta_config = ruta_config("ajustes.json")1206-        self.config = self.cargar_config()1207-1208-        self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)1209-1210-        self.lista_cat = wx.ListBox(self.splitter, style=wx.LB_SINGLE)--1280-            with open(self.ruta_config, "r", encoding='utf-8') as f:1281-                return json.load(f)1282-        except FileNotFoundError:1283-            return {}1284-        except Exception as e:1285:            print(f"[Error] No se pudo leer ajustes.json: {e}")1286-            return {}1287-1288-    def guardar_config_en_archivo(self):1289-        try:1290-            os.makedirs(CONFIG_DIR, exist_ok=True)1291-            with open(self.ruta_config, "w", encoding='utf-8') as f:1292:                json.dump(self.config, f, indent=4, ensure_ascii=False)1293-            # Notificar a PestanaLectura para que actualice las etiquetas de los botones1294-            # de salto con el nuevo valor de segundos guardado1295-            try:1296-                ventana = wx.GetTopLevelParent(self)1297-                if hasattr(ventana, 'pestana_lectura'):
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 20 líneas
+Copiar mensaje
+¡Encontré el bug! Las credenciales se guardan en claves_api.json (mediante guardar_claves()), pero _verificar_credenciales_previas las busca en ajustes.json. Archivos distintos:
+Searched for API key management functions in config file
+Searched for API key management functions in config file
+Grepcargar_claves|guardar_claves|claves_api
+1-import os2-import json3-
+Mostrar más
+4-# Directorio raíz del proyecto: un nivel por encima del paquete app/5-RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))6-CONFIG_DIR = os.path.join(RAIZ, "configuraciones")7-8:# Valores por defecto neutros para claves_api.json (sin secretos reales)9-_CLAVES_DEFAULT = {10-    "azure":       {"key": "", "region": ""},11-    "polly":       {"access_key": "", "secret_key": "", "region": ""},12-    "elevenlabs":  {"api_key": ""},13-}14-15-16-def ruta_config(nombre_archivo):17-    """18-    Devuelve la ruta absoluta a un archivo dentro de la carpeta configuraciones.19-    Garantiza que la ruta es correcta independientemente del directorio de trabajo20-    desde el que se lanza la aplicación.21-    """22-    return os.path.join(CONFIG_DIR, nombre_archivo)23-24-25:def cargar_claves() -> dict:26-    """27:    Lee configuraciones/claves_api.json y devuelve el dict con las claves.28-    Si el archivo no existe o está vacío, devuelve la estructura vacía por defecto.29-    Nunca lanza excepción — fallo seguro para primer arranque o repo recién clonado.30-    """31:    ruta = ruta_config("claves_api.json")32-    try:33-        if os.path.exists(ruta):34-            with open(ruta, "r", encoding="utf-8") as f:35-                contenido = f.read().strip()36-            if contenido:37-                return json.loads(contenido)38-    except Exception:39-        pass40-    return {k: dict(v) for k, v in _CLAVES_DEFAULT.items()}41-42-43:def guardar_claves(claves: dict) -> None:44-    """45:    Escribe el dict de claves en configuraciones/claves_api.json.46-    Crea la carpeta si no existe.47-    """48-    os.makedirs(CONFIG_DIR, exist_ok=True)49:    ruta = ruta_config("claves_api.json")50-    with open(ruta, "w", encoding="utf-8") as f:51-        json.dump(claves, f, ensure_ascii=False, indent=2)52-53-54-def migrar_archivos_config():55-    """56-    Renombra archivos de configuración viejos al nuevo esquema de nombres.57-    Se llama una sola vez al arranque; es seguro llamarla siempre.--105-            if "txt_recientes" in datos:106-                with open(ruta_hist_grab, "w", encoding="utf-8") as f:107-                    json.dump(datos.pop("txt_recientes"), f, ensure_ascii=False)108-                with open(ruta_ajustes, "w", encoding="utf-8") as f:109-                    json.dump(datos, f, ensure_ascii=False, indent=2)110-        except Exception:111-            pass112-113:    # ── Migrar claves API de ajustes.json → claves_api.json ──────────────────114:    # Si ajustes.json contenía azure/polly/elevenlabs y claves_api.json aún no115-    # existe, moverlas allí para separar secretos del resto de ajustes.116:    ruta_claves = ruta_config("claves_api.json")117-    if not os.path.exists(ruta_claves):118-        claves = {k: dict(v) for k, v in _CLAVES_DEFAULT.items()}119-        if os.path.exists(ruta_ajustes):120-            try:121-                with open(ruta_ajustes, encoding="utf-8") as f:122-                    datos_aj = json.load(f)123-                for proveedor in ("azure", "polly", "elevenlabs"):124-                    if proveedor in datos_aj:125-                        claves[proveedor] = datos_aj.pop(proveedor)126-                # Guardar ajustes.json sin las claves (si hubo cambio)127-                with open(ruta_ajustes, "w", encoding="utf-8") as f:128-                    json.dump(datos_aj, f, ensure_ascii=False, indent=2)129-            except Exception:130-                pass131:        # Crear claves_api.json (vacío estructurado o con las claves migradas)132-        try:133:            guardar_claves(claves)134-        except Exception:135-            pass
+Copiar mensaje
+Claro. El grabador de audio (grabador_audio.py) también lee Polly de self.config que viene de ajustes.json. Déjame ver cómo se pasa la config al grabador:
+Read configuration loading method in audio recorder module
+Read configuration loading method in audio recorder module
+GrepGrabadorAudio|grabador_audio|self\.config
+35-    escanear_etiquetas,36-    fragmentar_texto,37-    normalizar_etiqueta,
+Mostrar más
+38-    limpiar_nombre_archivo,39-)40:from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES41-from app.motor.reproductor_sonidos import (42-    reproducir, REC_START, REC_END, PROGRESS, SUCCESS,43-    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV,44-)45---941-            )942-            return943-944-        def _probar():945-            try:946:                GrabadorAudio().probar_voz(datos_voz)947-            except Exception as e:948-                wx.CallAfter(949-                    wx.MessageBox,950-                    f"Error al reproducir la muestra:\n{e}",951-                    "Error de previsualización", wx.OK | wx.ICON_ERROR,--978-                "Sin asignaciones", wx.OK | wx.ICON_WARNING,979-            )980-            return981-982-        def _preescucha():983:            grabador = GrabadorAudio()[Showing results with pagination = limit: 30, offset: 0]
+Grepdef __init__|cargar_claves|claves_api|ajustes\.json|self\.config\s*=
+75-    callback_progreso: callable(actual, total, etiqueta, nombre_voz)76-                       Siempre se llama desde el hilo de grabación;77-                       usa wx.CallAfter para actualizar la UI.
+Mostrar más
+78-    """79-80:    def __init__(self, callback_progreso=None):81-        self.callback_progreso = callback_progreso82-        self._abortar = False83:        self.config = {}84-        self._ultima_carpeta = None85-86-    # ------------------------------------------------------------------ #87-    # Configuración88-    # ------------------------------------------------------------------ #89-90-    def _cargar_config(self):91-        try:92:            ruta = ruta_config("ajustes.json")93-            if os.path.exists(ruta):94-                with open(ruta, 'r', encoding='utf-8') as f:[Showing results with pagination = limit: 20, offset: 0]
+Read/home/user/epub-tts-accesible/app/motor/grabador_audio.pyLeer 25 líneas
+Copiar mensaje
+El GrabadorAudio ya fusiona correctamente claves_api.json en su config. El bug está solo en _verificar_credenciales_previas(): lee únicamente ajustes.json y nunca claves_api.json, por lo que siempre ve las credenciales de Polly/Azure/ElevenLabs vacías aunque estén bien configuradas.
+La solución: usar cargar_claves() directamente:
+Pushed focus latency optimization changes to remote branch
+Pushed focus latency optimization changes to remote branch
+Grepfrom app.config_rutas import
+30-import logging31-32:from app.config_rutas import ruta_config
+Mostrar más
+33-from app.motor.gestor_proyectos import TIPOS_PROYECTO34-from app.motor.procesador_etiquetas import (
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+1-1
+1-
+from app.config_rutas import ruta_config
+1+
+from app.config_rutas import ruta_config, cargar_claves
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+8-15
+11341134
+        Retorna lista de mensajes de error; vacía = todo OK.
+11351135
+        """
+11361136
+        errores = []
+1137-
+        try:
+1138-
+            ruta = ruta_config("ajustes.json")
+1139-
+            config = {}
+1140-
+            if os.path.exists(ruta):
+1141-
+                with open(ruta, "r", encoding="utf-8") as f:
+1142-
+                    config = json.load(f)
+1143-
+        except Exception as e:
+1144-
+            errores.append(f"No se pudo leer ajustes.json: {e}")
+1145-
+            return errores
+1137+
+        # Las credenciales se guardan en claves_api.json (nunca en ajustes.json).
+1138+
+        config = cargar_claves()
+Mostrar 2 más
+Copiar mensaje
+Commit d27bf41 pusheado. El bug era exactamente lo que sospechaste: algo cambió cuando separamos las credenciales API a su propio archivo (claves_api.json) para que los secretos no estuvieran en ajustes.json. El GrabadorAudio se actualizó correctamente para fusionar ambos archivos, pero _verificar_credenciales_previas — el chequeo previo que bloquea la grabación — seguía mirando solo ajustes.json, donde las claves ya no están.
+Ahora usa cargar_claves() igual que el resto del código, así que el pre-chequeo encontrará tus credenciales de Polly/Azure/ElevenLabs correctamente y ya no bloqueará la grabación.

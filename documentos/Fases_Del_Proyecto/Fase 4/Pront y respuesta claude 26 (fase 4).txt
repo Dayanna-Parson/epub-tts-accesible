@@ -1,0 +1,16 @@
+Pront y respuesta claude 26 (fase 4)
+
+vale. Y puedes revisar que en el resto de la app por si están esos atajos que se crean? pero recuerda solo eliminar los que no tienen acción asignada. Ya que son inútiles de tener para esta app
+
+Respuesta:
+
+Searched codebase for keyboard accelerator implementation patterns
+Searched codebase for keyboard accelerator implementation patterns
+Bash
+grep -rn '&[A-Za-z]' /home/user/epub-tts-accesible/app/ --include="*.py" | grep -E '"[^"]*&[A-Za-zÁ-ú]' | grep -v "SetHelpText\|#"
+(Bash completed with no output)
+Bash
+grep -rn '&[A-Za-z]' /home/user/epub-tts-accesible/ --include="*.py" | grep -E 'label=|wx\.Button|wx\.CheckBox|wx\.MenuItem|AppendItem|Append\(' | grep -v "SetHelpText\|#\|test\|__pycache__"
+(Bash completed with no output)
+Copiar mensaje
+No quedan más. Todos los & aceleradores ya fueron eliminados en el commit anterior — no hay ninguno pendiente en toda la app.

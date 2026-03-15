@@ -1,0 +1,268 @@
+Pront y respuesta 20 claude (fase 4)
+
+gracias, la verdad es que funciona un poco mejor! Aunque me siguen saliendo estos errores, y sigo sin poder abrir la ventana para dividir epub. Y hay sonidos que no se reproducen. De momento, los que si funcionan son los siguientes. El de inicio de la app, el de error, el de navegación, pero ese solo funciona en el árbol en el gestor de proyectos. En el resto de las listas no funciona. y también solo funciona al pulsar control enter en la ventana gestor de proyectos, el sonido de abrir carpeta, pero en el resto de abrir carpetas no se reproduce. Además, aunque tengo correctamente configuradas las claves api en ajustes, y de hecho si busca correctamente las voces, y me las muestra bien, a la hora de grabar me dice este mensaje. Pero, primero el log de la consola. Necesitas que te pase el otro? ---------------------------------------------------
+
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+INFO      __main__  Epub-TTS arrancando. Errores → C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\registros\app.log
+INFO      app.motor.grabador_audio  [GrabadorAudio] ffmpeg local detectado: C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\bin\ffmpeg.exe
+INFO      app.motor.reproductor_sonidos  [Sonidos] 12 archivos disponibles en C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\recursos\sonidos
+INFO      __main__  Iniciando ventana principal
+INFO      app.motor.reproductor_sonidos  [Sonidos] 12/12 sonidos listos en wx.adv.Sound
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_grabacion.py", line 837, in _al_dividir_epub
+    from app.interfaz.dialogo_troceador import DialogoTroceador
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\dialogo_troceador.py", line 33, in <module>
+    from app.interfaz.ui_recursos import aplicar_icono_boton
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\ui_recursos.py", line 49, in <module>
+    "detener":       wx.ART_STOP,
+                     ^^^^^^^^^^^
+AttributeError: module 'wx' has no attribute 'ART_STOP'
+
+Sí, pasa el otro log también. Pero mientras, déjame revisar los archivos relevantes para entender los problemas.
+Read UI resources helper file for icon management
+Read UI resources helper file for icon management
+Read/home/user/epub-tts-accesible/app/interfaz/ui_recursos.pyLeer 119 líneas
+Copiar mensaje
+El error del wx.ART_STOP es claro. Déjame también revisar los sonidos para entender ambos problemas a la vez.
+Read dialog box file for chapter list implementation details
+Read dialog box file for chapter list implementation details
+Copiar mensaje
+Ahora tengo el panorama completo. Necesito ver los handlers de teclado en las listas para saber cuáles no tienen LIST_NAV:
+Searched codebase for import statements in UI files
+Searched codebase for import statements in UI files
+Copiar mensaje
+Tengo el panorama completo. Son tres categorías de problemas:
+1. Crash wx.ART_STOP/wx.ART_PLUS — constantes que no existen en la versión de wxPython usada
+2. LIST_NAV no suena en listas — ninguna lista salvo el árbol del gestor tiene el handler UP/DOWN con el sonido
+3. OPEN_FOLDER no suena en pestana_grabacion ni en dialogos.py
+Fixed wx.ART_STOP and wx.ART_PLUS icon issues
+Fixed wx.ART_STOP and wx.ART_PLUS icon issues
+Update Todos☐ Fixing wx.ART_STOP y wx.ART_PLUS☐ Añadir LIST_NAV a todas las listas sin handler (pestana_ajustes, pestana_grabacion, ventana_proyectos, dialogos)☐ Añadir OPEN_FOLDER sound a pestana_grabacion y dialogos☐ Commit y push
+Edit/home/user/epub-tts-accesible/app/interfaz/ui_recursos.py+2-2
+49-
+    "detener":       wx.ART_STOP,
+50-
+    "añadir":        wx.ART_PLUS,
+49+
+    "detener":       getattr(wx, "ART_STOP", wx.ART_DELETE),
+50+
+    "añadir":        getattr(wx, "ART_PLUS", wx.ART_NEW),
+Update Todos☐ Fix wx.ART_STOP y wx.ART_PLUS en ui_recursos.py☐ Adding LIST_NAV to all lists☐ Añadir OPEN_FOLDER sound a pestana_grabacion y dialogos☐ Commit y push
+Copiar mensaje
+Ahora añado el import de LIST_NAV a pestana_ajustes.py y los handlers:
+Fixed keyboard event handling in settings panel
+Fixed keyboard event handling in settings panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-1
+11
+from app.motor.control_cuota import ControlCuota
+2+
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-1
+99
+from app.motor.control_cuota import ControlCuota
+10+
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+Mostrar 4 más
+Copiar mensaje
+Ahora pestana_grabacion.py:
+Fixed spacebar event handling in recording panel interface
+Fixed spacebar event handling in recording panel interface
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 6 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+2-2
+4242
+    reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
+43-
+    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR,
+43+
+    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV,
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 10 líneas
+Mostrar 1 más
+Copiar mensaje
+Ahora ventana_proyectos.py — ListaCategorias y las dos listas del panel de detalle:
+Fixed space key handling in project window list control
+Fixed space key handling in project window list control
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.pyLeer 12 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+10-7
+3838
+    def _al_tecla(self, event):
+39-
+        if event.GetKeyCode() == wx.WXK_SPACE:
+40-
+            idx = self.GetFirstSelected()
+41-
+            if idx != -1:
+42-
+                self.ToggleItem(idx)
+39+
+        key = event.GetKeyCode()
+40+
+        if key == wx.WXK_SPACE:
+41+
+            idx = self.GetFirstSelected()
+42+
+            if idx != -1:
+43+
+                self.ToggleItem(idx)
+44+
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+45+
+            reproducir(LIST_NAV)
+4346
+        event.Skip()
+4447
+# ANCLAJE_FIN: LISTA_CATEGORIAS
+Copiar mensaje
+Ahora añado los bindings para lista_archivos y lista_voces y su handler:
+Fixed event binding for text file add/remove buttons
+Fixed event binding for text file add/remove buttons
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+5-2
+11
+        self.btn_añadir_txt.Bind(wx.EVT_BUTTON, self._al_añadir_txt)
+22
+        self.btn_quitar_txt.Bind(wx.EVT_BUTTON, self._al_quitar_txt)
+3+
+4+
+        self.lista_archivos.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla_lista_detalle)
+5+
+        self.lista_voces.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla_lista_detalle)
+Copiar mensaje
+Ahora añado el método handler. Necesito encontrar un lugar apropiado para insertarlo:
+Updated project window file with keyboard shortcut handling
+Updated project window file with keyboard shortcut handling
+Grepdef _al_tecla_arbol\b
+466-    # ================================================================== #467-468:    def _al_tecla_arbol(self, evento):
+Mostrar más
+469-        """Gestiona F2 (renombrar) y Supr (eliminar) — EVT_TREE_KEY_DOWN."""470-        keycode = evento.GetKeyCode()
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.pyLeer 5 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-3
+464+
+    def _al_tecla_lista_detalle(self, evento):
+465+
+        """Sonido de navegación en lista_archivos y lista_voces."""
+466+
+        if evento.GetKeyCode() in (wx.WXK_UP, wx.WXK_DOWN):
+467+
+            reproducir(LIST_NAV)
+468+
+        evento.Skip()
+469+
+464470
+    # ================================================================== #
+465471
+    # Teclas en el árbol: F2, Supr (via EVT_TREE_KEY_DOWN)
+466472
+    # ================================================================== #
+Copiar mensaje
+Ahora dialogos.py — import y LIST_NAV:
+Fixed wx.ART_STOP and wx.ART_PLUS in ui_recursos.py
+Fixed wx.ART_STOP and wx.ART_PLUS in ui_recursos.py
+Read/home/user/epub-tts-accesible/app/interfaz/dialogos.pyLeer 5 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/dialogos.py+4-3
+11
+import wx
+22
+import os
+33
+import sys
+4+
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, OPEN_FOLDER
+Read/home/user/epub-tts-accesible/app/interfaz/dialogos.pyLeer 10 líneas
+Mostrar 2 más
+Copiar mensaje
+Ahora el sonido OPEN_FOLDER en los lugares que lo omiten:
+Fixed wx.ART icons and added LIST_NAV handlers
+Fixed wx.ART icons and added LIST_NAV handlers
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+4-3
+13751375
+    def _abrir_carpeta_en_explorador(self, ruta):
+1376+
+        reproducir(OPEN_FOLDER)
+13761377
+        ruta_abs = os.path.abspath(ruta)
+13771378
+        try:
+Read/home/user/epub-tts-accesible/app/interfaz/dialogos.pyLeer 10 líneas
+Mostrar 5 más
+Copiar mensaje
+Commit e8c07a5 pusheado. Resumen de lo corregido:
+Crash al abrir "Dividir EPUB":
+• ui_recursos.py: wx.ART_STOP y wx.ART_PLUS no existen en tu versión de wxPython. Reemplazados por getattr(wx, "ART_STOP", wx.ART_DELETE) y getattr(wx, "ART_PLUS", wx.ART_NEW). El diálogo debería abrirse ya.
+Sonido LIST_NAV en listas (flechas UP/DOWN):
+• pestana_ajustes.py — ListaVocesCheck y lista de atajos de teclado
+• pestana_grabacion.py — ListaVocesCheck
+• ventana_proyectos.py — ListaCategorias, lista_archivos y lista_voces
+• dialogos.py — lista de marcadores
+Sonido OPEN_FOLDER al abrir carpetas:
+• pestana_grabacion.py — botón "Abrir carpeta" y el diálogo post-grabación
+• dialogos.py — botón "Abrir carpeta de destino"
+Sobre el error de grabación con las claves API: si puedes pasar el otro log o el mensaje de error exacto, lo investigo.

@@ -1,0 +1,320 @@
+Pront y respuesta 31 claude (fase 4)
+
+pero recuerdas que el sonido de navegación se tiene que reproducir en todas las listas? menos en los cuadros de solo lectura. y sobre las casillas de verificación, pues que estén igual de implementadas como lo hicimos con el resto de listas con casillas
+
+Respuesta:
+
+Perfecto. Voy a revisar qué listas aún no tienen sonido para cubrirlas todas, y a verificar el estado actual del diálogo de creación.
+Searched codebase for ListCtrl bindings and checkbox implementations
+Searched codebase for ListCtrl bindings and checkbox implementations
+Greplista_cat\.Bind|EVT_KEY_DOWN.*lista_cat|_al_tecla_lista_cat
+1233-            "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "1234-            "Pulsa Intro o Espacio para abrir la categoría seleccionada en el panel de la derecha."1235-        )
+Mostrar más
+1236:        self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)1237-1238-        self.panel_derecho = wx.Simplebook(self.splitter)1239-        self.pag_general = PanelGeneral(self.panel_derecho, self.config)
+GrepListaCategorias|CheckListBox|GetCheckedItems|IsItemChecked
+16-17-18-# ANCLAJE_INICIO: LISTA_CATEGORIAS
+Mostrar más
+19:class ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):20-    """21-    ListCtrl con casillas de verificación para seleccionar múltiples categorías.22-    NVDA anuncia el estado (marcado/desmarcado) al navegar con las flechas.--144-            panel_raiz,145-            label="Categorías del proyecto (Espacio para marcar o desmarcar):",146-        )147:        self.lista_cats = ListaCategorias(panel_raiz)148-        self.lista_cats.SetMinSize((-1, 170))149-        self.lista_cats.SetHelpText(150-            "Lista de categorías del proyecto. Flechas Arriba y Abajo para navegar. "--721-        categorias = [722-            self.lista_cats.GetItemText(i)723-            for i in range(self.lista_cats.GetItemCount())724:            if self.lista_cats.IsItemChecked(i)725-        ]726-        self._gestor.cambiar_tipo(proyecto["id"], categorias)727-        proyecto["tipo"] = categorias--789-            panel,790-            label="Categorías (Espacio para marcar o desmarcar, puede elegir varias):",791-        )792:        lista_t = ListaCategorias(panel)793-        lista_t.SetMinSize((-1, 180))794-        lista_t.SetHelpText(795-            "Categorías del proyecto. Usa las flechas para moverte y Espacio para marcar "--819-        tipos  = [820-            lista_t.GetItemText(i)821-            for i in range(lista_t.GetItemCount())822:            if lista_t.IsItemChecked(i)823-        ]824-        dlg.Destroy()825-
+Copiar mensaje
+La casilla de verificación del diálogo ya está correcta usando ListaCategorias. Solo falta el sonido de navegación en lista_cat (el listbox lateral de categorías de ajustes). Pero antes verifico si hay alguna otra lista sin cubrir:
+Searched for ListBox event bindings in dialogos.py
+Searched for ListBox event bindings in dialogos.py
+Grepwx\.ListBox\(|wx\.ListCtrl\(|wx\.TreeCtrl\(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-110-        sz_arbol = wx.BoxSizer(wx.VERTICAL)app/interfaz/ventana_proyectos.py-111-        lbl_arbol = wx.StaticText(panel_raiz, label="Jerarquía de proyectos:")app/interfaz/ventana_proyectos.py:112:        self.arbol = wx.TreeCtrl(
+Mostrar más
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-113-            panel_raiz,/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-114-            style=(--/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-153-app/interfaz/ventana_proyectos.py-154-        lbl_archivos = wx.StaticText(panel_raiz, label="Archivos TXT asociados a este proyecto:")app/interfaz/ventana_proyectos.py:155:        self.lista_archivos = wx.ListCtrl(/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-156-            panel_raiz,/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-157-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,--/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-178-app/interfaz/ventana_proyectos.py-179-        lbl_voces = wx.StaticText(panel_raiz, label="Voces del proyecto (heredadas del padre si no hay propias):")app/interfaz/ventana_proyectos.py:180:        self.lista_voces = wx.ListCtrl(/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-181-            panel_raiz,/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py-182-            style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,--/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1029-        )), 0, wx.ALL, 10)/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1030-app/interfaz/pestana_ajustes.py:1031:        self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1032-        self.lista.InsertColumn(0, "Acción (tecla predeterminada entre paréntesis)", width=340)/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1033-        self.lista.InsertColumn(1, "Tecla asignada actualmente", width=200)--/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1223-        self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1224-app/interfaz/pestana_ajustes.py:1225:        self.lista_cat = wx.ListBox(self.splitter, style=wx.LB_SINGLE)/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1226-        self.lista_cat.Append("General")/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py-1227-        self.lista_cat.Append("Claves y Proveedores")--/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py-94-        self.divisor = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py-95-        app/interfaz/pestana_lectura.py:96:        self.arbol_indice = wx.TreeCtrl(self.divisor, style=wx.TR_DEFAULT_STYLE | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_HIDE_ROOT)/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py-97-        self.arbol_indice.SetName("Índice")/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py-98-        self.arbol_indice.SetHelpText(--/home/user/epub-tts-accesible/app/interfaz/dialogos.py-26-        /home/user/epub-tts-accesible/app/interfaz/dialogos.py-27-        # Listaapp/interfaz/dialogos.py:28:        self.lista_marcadores = wx.ListBox(self, style=wx.LB_SINGLE)/home/user/epub-tts-accesible/app/interfaz/dialogos.py-29-        /home/user/epub-tts-accesible/app/interfaz/dialogos.py-30-        # El doble clic activa la navegación directamente
+Greplista_marcadores.*Bind|EVT_KEY|al_tecla
+27-        # Lista28-        self.lista_marcadores = wx.ListBox(self, style=wx.LB_SINGLE)29-        
+Mostrar más
+30-        # El doble clic activa la navegación directamente31:        self.lista_marcadores.Bind(wx.EVT_LISTBOX_DCLICK, self.al_activar_item)32-33:        # EVT_KEY_DOWN sobre ListBox en diálogos modales puede ser interceptado34-        # por el botón por defecto del diálogo antes de llegar al control.35-        # EVT_CHAR_HOOK a nivel de diálogo garantiza la captura sin importar el foco.36:        self.lista_marcadores.Bind(wx.EVT_KEY_DOWN, self.al_tecla_lista)37-        self.Bind(wx.EVT_CHAR_HOOK, self.al_char_hook_dialogo)38-        39-        sizer_principal.Add(self.lista_marcadores, 1, wx.EXPAND | wx.ALL, 5)40-        --99-            self.al_activar_item(None)100-            return101-        evento.Skip()102-103:    def al_tecla_lista(self, evento):104-        """Gestiona teclas de acceso rápido directamente sobre la lista de marcadores."""105-        tecla = evento.GetKeyCode()106-        if tecla == wx.WXK_DELETE:107-            self.al_eliminar_marcador(None)
+Copiar mensaje
+Solo falta lista_cat en pestana_ajustes.py. Todos los demás ya tienen el sonido. Añado la vinculación y el método:
+Renamed and added documentation to settings category navigation method
+Renamed and added documentation to settings category navigation method
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 15 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 15 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-1
+11
+        self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
+2+
+        self.lista_cat.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista_cat)
+Mostrar 1 más
+Copiar mensaje
+Ahora verifico que el diálogo de creación tiene el ListaCategorias correcto (ya con sonido y casillas nativas):
+Read dialog creation method in ventana_proyectos.py file
+Read dialog creation method in ventana_proyectos.py file
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.pyLeer 55 líneas
+Copiar mensaje
+Todo correcto. El diálogo usa ListaCategorias con EnableCheckBoxes(True), EVT_LIST_KEY_DOWN, sonido de navegación y Space para marcar — exactamente igual al panel lateral exterior.
+Hago commit y push:
+Pushed optimized focus latency branch to remote repository
+Pushed optimized focus latency branch to remote repository
+Bash
+git add app/interfaz/pestana_ajustes.py && git commit -m "$(cat <<'EOF' Añade sonido de navegación a lista_cat en ajustes lista_cat (el listbox lateral de categorías en PestanaAjustes) carecía de handler EVT_KEY_DOWN, por lo que las flechas arriba/abajo no reproducían LIST_NAV. Se añade _al_tecla_lista_cat que lo reproduce y llama Skip() para no interrumpir el comportamiento nativo de selección. Con este cambio todas las listas y árboles de la aplicación tienen sonido de navegación coherente (excepto los cuadros de solo lectura de texto). https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 fc9c0e7] Añade sonido de navegación a lista_cat en ajustes 1 file changed, 7 insertions(+)
+Bashgit push -u origin claude/optimize-focus-latency-q7Sq3To http://127.0.0.1:39207/git/Dayanna-Parson/epub-tts-accesible   6d1169b..fc9c0e7  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3branch 'claude/optimize-focus-latency-q7Sq3' set up to track 'origin/claude/optimize-focus-latency-q7Sq3'.
+Copiar mensaje
+Hecho. Resumen de los cambios de esta iteración:
+Sonido de navegación — cobertura completa:
+Control
+Archivo
+Estado
+arbol (proyectos)
+ventana_proyectos.py
+✓ ya tenía
+lista_cats, lista_archivos, lista_voces
+ventana_proyectos.py
+✓ ya tenían
+lista_voces (ListaVocesCheck)
+pestana_ajustes.py
+✓ ya tenía
+lista (atajos)
+pestana_ajustes.py
+✓ ya tenía
+lista_cat (ListBox de categorías)
+pestana_ajustes.py
+añadido ahora
+check_voces (ListaVocesCheck)
+pestana_grabacion.py
+✓ ya tenía
+lista_marcadores (ListBox)
+dialogos.py
+✓ ya tenía
+ListaCapitulos
+dialogo_troceador.py
+✓ ya tenía
+arbol_indice (lectura)
+pestana_lectura.py
+✓ añadido antes
+Casillas de verificación en el diálogo de creación: usa ListaCategorias (wx.ListCtrl + EnableCheckBoxes(True) + EVT_LIST_KEY_DOWN) — idéntico al panel exterior. Las casillas son nativas y NVDA anuncia el estado al navegar y al marcar con Espacio.
+Claude, revisa todas las clases que heredan de CheckListCtrlMixin (como ListaCapitulos y la lista de proyectos). Asegúrate de que:
+1. Al usar las flechas para navegar, suene siempre reproducir(LIST_NAV) como primera instrucción. 2. Al usar la barra espaciadora para marcar/desmarcar (ToggleItem), el feedback de voz de NVDA sea la prioridad y no se disparen sonidos extra que ensucien la navegación. 3. Verifica que en pestana_grabacion.py, la casilla self.chk_dividir (que es un wx.CheckBox estándar) dispare el sonido de CLICK instantáneo con la nueva lógica de RAM. Además, me e dado cuenta que en los botones como limpiar, no dan ningún tipo de confirmación
+Copiar mensaje
+Copiar mensaje
+Necesito leer los handlers actuales de todos los CheckListCtrlMixin y encontrar chk_dividir:
+Fixed LIST_NAV/Space order in CheckListCtrlMixin classes
+Fixed LIST_NAV/Space order in CheckListCtrlMixin classes
+Grepchk_dividir|chk_.*Bind|CLICK|btn_limpiar
+332-            "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "333-            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."334-        )
+Mostrar más
+335-        self.btn_examinar = wx.Button(336-            self, label="Examinar… — Selecciona un TXT con etiquetas de personaje"337-        )338:        self.btn_limpiar = wx.Button(339-            self, label="Limpiar — Restablece la pestaña para cargar otro fragmento"340-        )341-342-        sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)343-        sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)344-        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)345-        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)346:        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)347-348-        sz_titulo = wx.BoxSizer(wx.HORIZONTAL)349-        lbl_titulo = wx.StaticText(self, label="Título (opcional):")350-        self.txt_titulo = wx.TextCtrl(self)351-        self.txt_titulo.SetHelpText(352-            "Título del libro o proyecto. Si se deja vacío se usa el nombre del "--434-435-        # ── Opciones de salida ────────────────────────────────────────────436-        box_opc = wx.StaticBox(self, label="Opciones de salida")437-        sz_opc  = wx.StaticBoxSizer(box_opc, wx.VERTICAL)438-439-        # Label dinámico: al cambiar el estado NVDA anuncia el nuevo texto del label440:        self.chk_dividir = wx.CheckBox(441-            self,442-            label="Dividir por etiquetas: archivos numerados (001_nar.mp3, 002_pj1.mp3…)",443-        )444:        self.chk_dividir.SetValue(True)445:        sz_opc.Add(self.chk_dividir, 0, wx.ALL, 5)446-447-        # ── Progreso ──────────────────────────────────────────────────────448-        box_prog = wx.StaticBox(self, label="Progreso")449-        sz_prog  = wx.StaticBoxSizer(box_prog, wx.VERTICAL)450-451-        self.lbl_progreso = wx.StaticText(--488-        sizer_raiz.Add(sz_botones, 0, wx.ALL, 10)489-490-        self.SetSizer(sizer_raiz)491-492-        # ── Eventos ───────────────────────────────────────────────────────493-        self.btn_examinar.Bind(wx.EVT_BUTTON,        self.al_examinar)494:        self.btn_limpiar.Bind(wx.EVT_BUTTON,         self.al_limpiar)495-        self.btn_dividir_epub.Bind(wx.EVT_BUTTON,    self._al_dividir_epub)496-        self.txt_titulo.Bind(wx.EVT_KILL_FOCUS,     self._al_perder_foco_titulo)497-        self.btn_probar.Bind(wx.EVT_BUTTON,         self.al_probar_voz)498-        self.btn_preescucha.Bind(wx.EVT_BUTTON,     self.al_preescucha_general)499:        self.chk_dividir.Bind(wx.EVT_CHECKBOX,      self.al_cambiar_division)500-        self.btn_iniciar.Bind(wx.EVT_BUTTON,        self.al_iniciar_grabacion)501-        self.btn_abortar.Bind(wx.EVT_BUTTON,        self.al_abortar)502-        self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON,  self.al_abrir_carpeta)503-        self.check_voces.Bind(wx.EVT_LIST_ITEM_CHECKED,   self.al_marcar_voz)504-        self.check_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self.al_desmarcar_voz)505---1067-    def al_cambiar_division(self, evento):1068-        """1069-        Actualiza el label del propio checkbox — cuando NVDA anuncia1070-        una casilla verbaliza su label + estado (marcada/desmarcada),1071-        por lo que el nuevo texto queda inmediatamente accesible.1072-        """1073:        if self.chk_dividir.IsChecked():1074:            self.chk_dividir.SetLabel(1075-                "Dividir por etiquetas: archivos numerados (001_nar.mp3, 002_pj1.mp3…)"1076-            )1077-        else:1078:            self.chk_dividir.SetLabel(1079-                "Dividir por etiquetas: un único archivo MP3 unificado"1080-            )1081-1082-    # ================================================================== #1083-    # Persistencia del mapeo etiqueta → voz1084-    # ================================================================== #--1202-                "Revisa la configuración antes de continuar.",1203-                "Credenciales no configuradas",1204-                wx.OK | wx.ICON_ERROR,1205-            )1206-            return1207-1208:        modo_dividido = self.chk_dividir.IsChecked()1209-        self._modo_dividido = modo_dividido   # accesible desde _callback_progreso1210-1211-        self.btn_iniciar.Enable(False)1212-        self.btn_abortar.Enable(True)1213-        self.gauge.SetValue(0)1214-        self.lbl_progreso.SetLabel("Iniciando grabación…")
+Grep_al_tecla|CLICK|btn.*Bind
+54-            "Espacio para marcar o desmarcar el capítulo enfocado. "55-            "Los capítulos marcados se exportarán como archivos TXT individuales. "56-            "El número de cada capítulo coincide con el número del archivo TXT generado."
+Mostrar más
+57-        )58:        self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)59-60:    def _al_tecla(self, event):61-        keycode = event.GetKeyCode()62-        # Navegar con flechas → sonido de navegación (no al marcar/desmarcar)63-        if keycode in (wx.WXK_UP, wx.WXK_DOWN):64-            reproducir(LIST_NAV)--87-        self._troceador      = TroceadorEpub()88-        self._carpeta_salida = ""89-        self._construir()90-        self.CentreOnScreen()91:        self.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_global)92-93-    # ── Construcción de la interfaz ───────────────────────────────────────────94-95-    def _construir(self):--187-        outer.Add(panel, 1, wx.EXPAND)188-        self.SetSizer(outer)189-190-        # ── Eventos ───────────────────────────────────────────────────────────191:        self.btn_examinar.Bind(   wx.EVT_BUTTON, self._al_examinar)192:        self.btn_sel_todo.Bind(   wx.EVT_BUTTON, lambda e: self._seleccionar_todo(True))193:        self.btn_desel_todo.Bind( wx.EVT_BUTTON, lambda e: self._seleccionar_todo(False))194:        self.btn_limpiar.Bind(    wx.EVT_BUTTON, self._al_limpiar)195:        self.btn_dividir.Bind(    wx.EVT_BUTTON, self._al_dividir)196:        self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON, self._al_abrir_carpeta)197:        btn_cerrar.Bind(          wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))198-199-    # ── Selección y carga de archivo EPUB ────────────────────────────────────200-201-    def _al_examinar(self, evento=None):--372-        self._abrir_carpeta_capitulos()373-374-    # ── Teclado global ────────────────────────────────────────────────────────375-376:    def _al_tecla_global(self, evento):377-        if evento.GetKeyCode() == wx.WXK_ESCAPE:378-            self.EndModal(wx.ID_CLOSE)379-            return380-        evento.Skip()
+Grepdef al_limpiar|def _al_limpiar|btn_limpiar|btn_examinar.*al_exam
+326-        # Etiqueta descriptiva en el botón — NVDA la lee directamente al recibir foco327-        # btn_dividir_epub se crea primero para que sea el primero en el orden de tabulación328-        self.btn_dividir_epub = wx.Button(
+Mostrar más
+329-            self, label="Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"330-        )331-        self.btn_dividir_epub.SetHelpText(332-            "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "333-            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."334-        )335-        self.btn_examinar = wx.Button(336-            self, label="Examinar… — Selecciona un TXT con etiquetas de personaje"337-        )338:        self.btn_limpiar = wx.Button(339-            self, label="Limpiar — Restablece la pestaña para cargar otro fragmento"340-        )341-342-        sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)343-        sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)344-        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)345-        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)346:        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)347-348-        sz_titulo = wx.BoxSizer(wx.HORIZONTAL)349-        lbl_titulo = wx.StaticText(self, label="Título (opcional):")350-        self.txt_titulo = wx.TextCtrl(self)351-        self.txt_titulo.SetHelpText(352-            "Título del libro o proyecto. Si se deja vacío se usa el nombre del "353-            "archivo TXT. Define la subcarpeta de grabaciones. "354-            "Si el archivo está asociado a un proyecto, el título sincroniza el nombre del proyecto al salir del campo."355-        )356-        sz_titulo.Add(lbl_titulo,      0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)357-        sz_titulo.Add(self.txt_titulo, 1, wx.EXPAND)358---481-        sz_botones.Add(self.btn_abrir_carpeta, 0)482-483-        # ── Ensamblado ────────────────────────────────────────────────────484-        sizer_raiz.Add(sz_carga,   0, wx.EXPAND | wx.ALL, 6)485-        sizer_raiz.Add(sz_cast,    1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)486-        sizer_raiz.Add(sz_opc,     0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)487-        sizer_raiz.Add(sz_prog,    0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 6)488-        sizer_raiz.Add(sz_botones, 0, wx.ALL, 10)489-490-        self.SetSizer(sizer_raiz)491-492-        # ── Eventos ───────────────────────────────────────────────────────493:        self.btn_examinar.Bind(wx.EVT_BUTTON,        self.al_examinar)494:        self.btn_limpiar.Bind(wx.EVT_BUTTON,         self.al_limpiar)495-        self.btn_dividir_epub.Bind(wx.EVT_BUTTON,    self._al_dividir_epub)496-        self.txt_titulo.Bind(wx.EVT_KILL_FOCUS,     self._al_perder_foco_titulo)497-        self.btn_probar.Bind(wx.EVT_BUTTON,         self.al_probar_voz)498-        self.btn_preescucha.Bind(wx.EVT_BUTTON,     self.al_preescucha_general)499-        self.chk_dividir.Bind(wx.EVT_CHECKBOX,      self.al_cambiar_division)500-        self.btn_iniciar.Bind(wx.EVT_BUTTON,        self.al_iniciar_grabacion)501-        self.btn_abortar.Bind(wx.EVT_BUTTON,        self.al_abortar)502-        self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON,  self.al_abrir_carpeta)503-        self.check_voces.Bind(wx.EVT_LIST_ITEM_CHECKED,   self.al_marcar_voz)504-        self.check_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self.al_desmarcar_voz)505-506-    # ================================================================== #--791-        )792-        self.btn_iniciar.Enable(True)793-794-        wx.MessageBox(795-            f"Texto cargado.\nFragmentos: {total}\nEtiquetas: {etiq_str}",796-            "Escaneo completado", wx.OK | wx.ICON_INFORMATION,797-        )798-799-    # ================================================================== #800-    # Limpiar801-    # ================================================================== #802-803:    def al_limpiar(self, evento):804-        self.ruta_txt_actual      = None805-        self.nombre_base_txt      = ""806-        self.texto_cargado        = ""807-        self.fragmentos           = []808-        self.etiquetas_detectadas = []809-        self.asignaciones         = {}810-        self.titulo_libro         = ""811-        self._ultima_carpeta      = None812-        self.proyecto_actual      = None813-        self._ofrecio_proyecto    = False814-815-        self.txt_ruta.SetValue("")
+Mostrar 3 más
+Copiar mensaje
+Fix 1a: ListaCategorias en ventana_proyectos.py — LIST_NAV primero:
+Fixed keyboard navigation in projects window interface
+Fixed keyboard navigation in projects window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-9
+11
+    def _al_tecla(self, event):
+22
+        key = event.GetKeyCode()
+3-
+        if key == wx.WXK_SPACE:
+4-
+            idx = self.GetFirstSelected()
+5-
+            if idx != -1:
+6-
+                self.ToggleItem(idx)
+7-
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+8-
+            reproducir(LIST_NAV)
+3+
+        if key in (wx.WXK_UP, wx.WXK_DOWN):
+4+
+            reproducir(LIST_NAV)
+5+
+        elif key == wx.WXK_SPACE:
+6+
+            idx = self.GetFirstSelected()
+7+
+            if idx != -1:
+8+
+                self.ToggleItem(idx)
+99
+        event.Skip()
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.pyLeer 10 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-9
+11
+    def _al_tecla(self, event):
+22
+        key = event.GetKeyCode()
+3-
+        if key == wx.WXK_SPACE:
+4-
+            idx = self.GetFirstSelected()
+5-
+            if idx != -1:
+6-
+                self.ToggleItem(idx)
+7-
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+8-
+            reproducir(LIST_NAV)
+3+
+        if key in (wx.WXK_UP, wx.WXK_DOWN):
+4+
+            reproducir(LIST_NAV)
+5+
+        elif key == wx.WXK_SPACE:
+6+
+            idx = self.GetFirstSelected()
+7+
+            if idx != -1:
+8+
+                self.ToggleItem(idx)
+99
+        event.Skip()
+Copiar mensaje
+Fix 1b: ListaVocesCheck.al_tecla en pestana_ajustes.py — ya está en sistema como modificado, verifico líneas exactas:
+Fixed keyboard navigation in settings panel
+Fixed keyboard navigation in settings panel
+Grepdef al_tecla
+16-        listmix.CheckListCtrlMixin.__init__(self)17-        listmix.ListCtrlAutoWidthMixin.__init__(self)18-        # ESTO ES CRUCIAL PARA QUE SE VEAN LAS CASILLAS
+Mostrar más
+19-        self.EnableCheckBoxes(True) 20-        21-        # Evento para que NVDA anuncie el cambio al pulsar espacio22-        self.Bind(wx.EVT_LIST_KEY_DOWN, self.al_tecla)23-24:    def al_tecla(self, event):25-        key = event.GetKeyCode()26-        if key == wx.WXK_SPACE:27-            self.ToggleItem(self.GetFirstSelected())28-        elif key in (wx.WXK_UP, wx.WXK_DOWN):29-            reproducir(LIST_NAV)30-        event.Skip()31-32-
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+7-7
+11
+    def al_tecla(self, event):
+22
+        key = event.GetKeyCode()
+3-
+        if key == wx.WXK_SPACE:
+4-
+            self.ToggleItem(self.GetFirstSelected())
+5-
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+6-
+            reproducir(LIST_NAV)
+3+
+        if key in (wx.WXK_UP, wx.WXK_DOWN):
+4+
+            reproducir(LIST_NAV)
+5+
+        elif key == wx.WXK_SPACE:
+6+
+            self.ToggleItem(self.GetFirstSelected())
+77
+        event.Skip()
+Copiar mensaje
+Fix 1c: ListaVocesCheck._al_tecla en pestana_grabacion.py:
+Fixed LIST_NAV/Space order in CheckListCtrlMixin classes
+Fixed LIST_NAV/Space order in CheckListCtrlMixin classes
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 20 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 20 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+9-9
+225225
+    def _al_tecla(self, event):
+226226
+        key = event.GetKeyCode()
+227-
+        if key == wx.WXK_SPACE:
+228-
+            idx = self.GetFirstSelected()
+229-
+            if idx != -1:
+230-
+                self.ToggleItem(idx)
+231-
+        elif key in (wx.WXK_UP, wx.WXK_DOWN):
+232-
+            reproducir(LIST_NAV)
+227+
+        if key in (wx.WXK_UP, wx.WXK_DOWN):
+228+
+            reproducir(LIST_NAV)
+229+
+        elif key == wx.WXK_SPACE:
+230+
+            idx = self.GetFirstSelected()
+231+
+            if idx != -1:
+232+
+                self.ToggleItem(idx)
+233233
+        event.Skip()
+Mostrar 1 más
+Copiar mensaje
+Fix 2: chk_dividir y al_limpiar en pestana_grabacion.py:
+Fixed LIST_NAV/Space order in CheckListCtrlMixin classes
+Fixed LIST_NAV/Space order in CheckListCtrlMixin classes
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+3-3
+11
+    reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
+2-
+    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV,
+2+
+    ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV, CLICK,
+33
+)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+8-7
+44
+        una casilla verbaliza su label + estado (marcada/desmarcada),
+55
+        por lo que el nuevo texto queda inmediatamente accesible.
+66
+        """
+7+
+        reproducir(CLICK)
+78
+        if self.chk_dividir.IsChecked():
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+3-2
+11
+    def al_limpiar(self, evento):
+2+
+        reproducir(CLEAR)
+23
+        self.ruta_txt_actual      = None
+Mostrar 1 más
+Copiar mensaje
+Fix 3: dialogo_troceador.py — corregir PROCESO→PROGRESS, añadir CLEAR:
+Committed fixes for navigation priority, button sounds, and process bug
+Committed fixes for navigation priority, button sounds, and process bug
+Read/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.pyLeer 5 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py+1-1
+32-
+from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS, PROCESO
+32+
+from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS, PROGRESS, CLEAR
+Edit/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py+1-1
+1-
+        reproducir(PROCESO)
+1+
+        reproducir(PROGRESS)
+Mostrar 3 más
+Copiar mensaje
+Hecho. Resumen de todos los cambios:
+ 
+1. Orden correcto en todas las clases CheckListCtrlMixin
+El patrón unificado ahora es:
+if key in (wx.WXK_UP, wx.WXK_DOWN):
+    reproducir(LIST_NAV)        # ← PRIMERO, siempre
+elif key == wx.WXK_SPACE:
+    self.ToggleItem(idx)        # ← sin sonido extra; NVDA anuncia el estado
+event.Skip()
+Copy code
+Afecta a ListaCategorias (proyectos), ListaVocesCheck (ajustes) y ListaVocesCheck (grabación). ListaCapitulos del troceador ya tenía el orden correcto.
+2. chk_dividir → CLICK instantáneo desde RAM
+al_cambiar_division llama reproducir(CLICK) como primera línea, antes de actualizar el label. Al ser un sonido precargado en memoria, el feedback es inmediato.
+3. Botón "Limpiar" → sonido CLEAR de confirmación
+• al_limpiar en pestana_grabacion.py: reproducir(CLEAR) al inicio.
+• _al_limpiar en dialogo_troceador.py: reproducir(CLEAR) al inicio.
+No se necesita MessageBox: el sonido es la confirmación.
+4. Bug de importación corregido en dialogo_troceador.py
+PROCESO no existe en reproductor_sonidos — habría lanzado ImportError al cargar el módulo. Corregido a PROGRESS (la constante real), y se añadió CLEAR al mismo import.
+genial, ¿ya está subido?
+Copiar mensaje
+Copiar mensaje
+Sí, todo está subido al branch claude/optimize-focus-latency-q7Sq3. El último push fue exitoso:
+fc9c0e7..623620b  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3
+ 
+Copy code

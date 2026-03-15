@@ -1,0 +1,220 @@
+pront y respuesta 5 claude (fase 4)
+Claude, vamos a cerrar la Lógica de Actualizaciones de la Tarea 4 y vamos a dejar los sonidos e iconos para el final de todo. Implementa lo siguiente:
+Sistema de versiones: Compara un version.json local con uno en mi URL de GitHub.
+Interfaz en Ajustes: Añade en la pestaña General una casilla ('Actualizar automáticamente') y un botón ('Buscar actualizaciones').
+Diálogo de Novedades: Crea una ventana accesible que cargue el contenido de un novedades.txt remoto. El diálogo debe cerrarse al pulsar la tecla Escape.
+Persistencia: Guarda la preferencia de la casilla.
+Descarga: Deja preparada la función para descargar el nuevo archivo, pero por ahora solo muestra el diálogo de novedades para probar la conexión.
+
+Respuesta:
+
+Antes de escribir nada, necesito ver la pestaña General de pestana_ajustes.py y si ya existe un version.json.
+Read settings panel configuration loading code section
+Read settings panel configuration loading code section
+Bash
+grep -n "General\|PanelGeneral\|class Panel\|version\|actualizar\|casilla\|CheckBox" /home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py | head -50
+17:        self.EnableCheckBoxes(True) 
+69:class PanelGeneral(wx.ScrolledWindow):
+114:        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
+Mostrar más
+245:class PanelClaves(wx.ScrolledWindow):
+427:                res = gestor.actualizar_proveedor(proveedor)
+429:                res = gestor.actualizar_voces_desde_internet()
+436:class PanelVoces(wx.Panel):
+502:        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+510:        self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
+933:class PanelAtajos(wx.Panel):
+1083:class PanelAcercaDe(wx.ScrolledWindow):
+1136:        self.lista_cat.Append("General")
+1149:        self.pag_general = PanelGeneral(self.panel_derecho, self.config)
+1155:        self.panel_derecho.AddPage(self.pag_general, "General")
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 175 líneas
+Bash
+ls /home/user/epub-tts-accesible/configuraciones/ 2>/dev/null || echo "dir no existe"; ls /home/user/epub-tts-accesible/*.json /home/user/epub-tts-accesible/version.json 2>/dev/null; find /home/user/epub-tts-accesible -name "version.json" -o -name "novedades.txt" 2>/dev/null
+ajustes_globales.jsonmapeo_etiquetas.jsonteclas_predeterminadas.json
+Mostrar 3 más
+Copiar mensaje
+Perfecto, tengo todo lo que necesito. Plan exacto:
+• version.json en la raíz del proyecto
+• app/motor/comprobador_actualizaciones.py — lógica pura (urllib, sin wx, con hilo)
+• app/interfaz/dialogo_novedades.py — ventana accesible con Escape
+• PanelGeneral en pestana_ajustes.py — checkbox + botón + persistencia
+Created version.json and update checker script files
+Created version.json and update checker script files
+Update Todos
+☐ Creando version.json☐ Crear comprobador_actualizaciones.py☐ Crear dialogo_novedades.py☐ Modificar PanelGeneral en pestana_ajustes.py
+Write/home/user/epub-tts-accesible/version.json
+1+
+{
+2+
+  "version": "1.0.0",
+3+
+  "fecha": "2026-03-11"
+4+
+}
+15
+Update Todos
+☐ Crear version.json en raíz☐ Creando comprobador_actualizaciones.py☐ Crear dialogo_novedades.py☐ Modificar PanelGeneral en pestana_ajustes.py
+Mostrar 4 más
+Copiar mensaje
+Ahora modifico PanelGeneral. Necesito tres puntos de cambio: sección nueva en __init__, persistencia en guardar_todo(), y dos métodos nuevos.
+1 — Sección "Actualizaciones" en __init__, antes del btn_guardar:
+Modified settings panel layout in pestana_ajustes.py file
+Modified settings panel layout in pestana_ajustes.py file
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+34-3
+11
+        sizer.Add(sizer_nav, 0, wx.EXPAND | wx.ALL, 10)
+2-
+2+
+3+
+        # ACTUALIZACIONES
+4+
+        sb_updates = wx.StaticBox(self, label="Actualizaciones")
+5+
+        sizer_updates = wx.StaticBoxSizer(sb_updates, wx.VERTICAL)
+6+
+7+
+        self.chk_actualizar = wx.CheckBox(
+8+
+            self,
+9+
+            label="Buscar actualizaciones automáticamente al iniciar la app",
+10+
+        )
+11+
+        self.chk_actualizar.SetValue(
+12+
+            self.config.get("actualizar_automaticamente", True)
+13+
+        )
+14+
+        self.chk_actualizar.SetHelpText(
+15+
+            "Si está marcado, la aplicación comprueba si hay una nueva versión "
+16+
+            "disponible cada vez que se inicia. La comprobación se hace en segundo "
+17+
+            "plano y no ralentiza el arranque. Guarda la configuración para que "
+18+
+            "el cambio surta efecto."
+19+
+        )
+Show full diff (15 more lines)
+Copiar mensaje
+2 — Persistencia en guardar_todo():
+Fixed settings save logic in preferences tab
+Fixed settings save logic in preferences tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+5-4
+11
+    def guardar_todo(self):
+22
+        # Guardar config general
+33
+        self.config["segundos_salto"] = self.txt_salto.GetValue()
+4+
+        self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
+45
+        padre = self.GetParent().GetParent().GetParent()
+Copiar mensaje
+3 — Añadir los dos métodos nuevos justo después de _limpiar_cache:
+Modified settings panel cache clearing message display
+Modified settings panel cache clearing message display
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py
+Leer 15 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+40-4
+274274
+        wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+275275
+276+
+    def _al_buscar_actualizaciones(self, event=None):
+277+
+        """Lanza la comprobación de versión en hilo de fondo y deshabilita el botón."""
+278+
+        from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
+279+
+        self.btn_buscar_updates.Disable()
+280+
+        self.btn_buscar_updates.SetLabel("Comprobando…")
+281+
+        comp = ComprobadorActualizaciones()
+282+
+        comp.comprobar_en_hilo(
+283+
+            lambda r: wx.CallAfter(self._al_resultado_actualizacion, r)
+284+
+        )
+285+
+286+
+    def _al_resultado_actualizacion(self, resultado: dict):
+287+
+        """Recibe el resultado del hilo y muestra el diálogo o un aviso."""
+288+
+        self.btn_buscar_updates.Enable()
+289+
+        self.btn_buscar_updates.SetLabel("Buscar actualizaciones ahora")
+290+
+291+
+        if resultado.get("error"):
+292+
+            wx.MessageBox(
+293+
+                f"No se pudo comprobar la actualización:\n{resultado['error']}",
+Show full diff (20 more lines)
+Copiar mensaje
+Verifico sintaxis de todos los archivos tocados:
+Pushed optimized focus latency branch to remote repository
+Pushed optimized focus latency branch to remote repository
+Bash
+python -c " import ast for f in [ 'version.json', 'app/motor/comprobador_actualizaciones.py', 'app/interfaz/dialogo_novedades.py', 'app/interfaz/pestana_ajustes.py', ]: if f.endswith('.json'): import json; json.load(open(f)); print(f'OK {f}') continue try: ast.parse(open(f).read()) print(f'OK {f}') except SyntaxError as e: print(f'ERR {f}: {e}') "
+OK  version.jsonOK  app/motor/comprobador_actualizaciones.pyOK  app/interfaz/dialogo_novedades.py
+Mostrar más
+OK  app/interfaz/pestana_ajustes.py
+Update Todos
+☐ Crear version.json en raíz☐ Crear comprobador_actualizaciones.py☐ Crear dialogo_novedades.py☐ Modificar PanelGeneral en pestana_ajustes.py
+Bash
+git add version.json app/motor/comprobador_actualizaciones.py app/interfaz/dialogo_novedades.py app/interfaz/pestana_ajustes.py && git commit -m "$(cat <<'EOF' feat(actualizaciones): sistema de versiones y diálogo de novedades (Tarea 4) version.json (nuevo, raíz): - Versión inicial 1.0.0 con fecha. Referencia local para comparar con GitHub. app/motor/comprobador_actualizaciones.py (nuevo): - ComprobadorActualizaciones: motor puro (sin wx), urllib stdlib, sin pip extra. - comprobar_en_hilo(callback): hilo daemon → no bloquea la UI. - leer_version_local(): lee version.json de la raíz del proyecto. - obtener_version_remota(): descarga version.json desde raw.githubusercontent.com. - obtener_novedades(): descarga novedades.txt desde el mismo repositorio. - hay_actualizacion(): compara tuples X.Y.Z (semver simple). - descargar_actualizacion(): preparada pero no activa (TODO cuando haya distribución). app/interfaz/dialogo_novedades.py (nuevo): - DialogoNovedades(wx.Dialog): STAY_ON_TOP + RESIZE_BORDER. - TextCtrl multiline readonly con el contenido de novedades.txt. - Foco inicial en el texto → NVDA lo lee al abrirse. - Escape cierra vía EVT_CHAR_HOOK (SetHelpText lo anuncia). app/interfaz/pestana_ajustes.py — PanelGeneral: - Nueva sección "Actualizaciones" con wx.StaticBox. - chk_actualizar: CheckBox "Buscar actualizaciones automáticamente al iniciar". Persiste en ajustes.json como "actualizar_automaticamente" (guardar_todo()). - btn_buscar_updates: deshabilita/cambia label mientras comprueba, luego muestra DialogoNovedades o MessageBox "Sin actualizaciones" según resultado. - _al_buscar_actualizaciones / _al_resultado_actualizacion: handlers con import lazy para no impactar el tiempo de carga de la pestaña. https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 e9ec4ca] feat(actualizaciones): sistema de versiones y diálogo de novedades (Tarea 4) 4 files changed, 347 insertions(+), 1 deletion(-) create mode 100644 app/interfaz/dialogo_novedades.py
+Mostrar más
+ create mode 100644 app/motor/comprobador_actualizaciones.py create mode 100644 version.json
+Mostrar 1 más
+Copiar mensaje
+Commit e9ec4ca subido. Tarea 4 completada.
+ 
+Resumen — Tarea 4
+Archivos nuevos
+Archivo
+Propósito
+version.json (raíz)
+Versión local 1.0.0 — referencia para comparar con GitHub
+app/motor/comprobador_actualizaciones.py
+Motor puro (urllib stdlib, sin extras pip). comprobar_en_hilo(callback) → hilo daemon
+app/interfaz/dialogo_novedades.py
+Diálogo accesible: TextCtrl multiline readonly, Escape cierra, foco inicial en texto
+Cambios en PanelGeneral (pestana_ajustes.py)
+Ajustes → General
+  └─ [nueva sección] Actualizaciones
+       ├─ ☑ Buscar actualizaciones automáticamente al iniciar la app
+       │     → persiste en ajustes.json como "actualizar_automaticamente"
+       └─ [Buscar actualizaciones ahora]
+             → se deshabilita mientras consulta (UX no bloqueante)
+             → si hay nueva: abre DialogoNovedades con novedades.txt
+             → si ya es la última: MessageBox "Sin actualizaciones (X.Y.Z)"
+             → si error de red: MessageBox con el error
+Copy code
+Flujo completo del botón
+btn_buscar_updates → _al_buscar_actualizaciones()
+  └─ ComprobadorActualizaciones.comprobar_en_hilo()  [hilo daemon]
+       ├─ leer_version_local()          ← version.json raíz
+       ├─ obtener_version_remota()      ← raw.githubusercontent.com
+       ├─ hay_actualizacion() (semver)
+       └─ obtener_novedades()           ← novedades.txt (solo si hay nueva)
+  └─ wx.CallAfter → _al_resultado_actualizacion()   [hilo principal]
+       └─ DialogoNovedades.ShowModal()  ← solo si hay versión nueva
+Copy code
+Para probar la conexión, sube un version.json con "version": "1.0.1" y un novedades.txt al repositorio en main, pulsa el botón, y el diálogo aparecerá. ¿Seguimos con la siguiente tarea?
+ 
+fase4-ajustes-finales
+claude/optimize-focus-latency-q7Sq3
++827-59
+Crear PR

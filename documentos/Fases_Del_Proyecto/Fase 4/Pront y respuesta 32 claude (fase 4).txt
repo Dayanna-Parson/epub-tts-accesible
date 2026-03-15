@@ -1,0 +1,724 @@
+Pront y respuesta 32 claude (fase 4)
+
+lo estaba probando, y ahora si que funciona todo bien. Y estaba pensando... Se podría implementar que por ej: imagina que equeremos crear un subproyecto, pero por error, pulsamos en la opción de crear proyecto. Y en vez de eliminar lo que ya hicimos, te doy dos opciones, a ver cual es mejor o mas viable y mas eficiente con lector de pantalla por supuesto. la primera es por ej. poner el foco sobre un proyecto, y ponerse encima o debajo del último, o mas bien, ponerse en el último elemento, y pegar ese proyecto para que se convierta en subproyecto. O la otra opción que se me ocurre es que en el diálogo de creación de proyectos poner o bien una casilla o un cuadro combinado, pues para marcar si lo que queremos es un proyecto o subproyecto. Pero, ahora que lo pienso mejor, si lo hacemos así, abría que eliminar lo de crear subproyectos no? no se que me recomiendas, estoy hecha un lío jaja. Además, no se si todos los cuadros de diálogos que no son de errores, les asignamos sonido. Me suena que si... Pues si no es así, esos no tienen sonido asignado
+
+Respuesta:
+
+Déjame explorar el código actual para darte una recomendación bien fundamentada.
+Explored codebase and documented projects/subprojects creation architecture
+Explored codebase and documented projects/subprojects creation architecture
+AgentExplore project/subproject creation and dialog sounds
+Perfect! Now I have all the information needed. Let me compile a comprehensive report:## Epub-TTS-Accessible: Projects & Subprojects Architecture Report
+Mostrar más
+### 1. HOW PROJECTS AND SUBPROJECTS ARE CREATED#### **Dialog-Based Creation (via `_pedir_nombre_y_tipo`)****File:** `/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py` (lines 780-828)Projects are created through a modal dialog that collects:- **Project name** (text input)- **Categories** (multi-select checklist)```pythondef _pedir_nombre_y_tipo(self, titulo_dialogo: str) -> tuple[str, str] | None:    dlg = wx.Dialog(self, title=titulo_dialogo)    # ... text control for name ...    lista_t = ListaCategorias(panel)  # Multi-select checklist    btn_ok = wx.Button(panel, wx.ID_OK, label="Crear proyecto")```#### **Two Creation Paths****Path 1: Root Projects (via context menu)**- **Trigger:** Menu > "Nuevo proyecto" or Ctrl+Shift+P to open Projects window- **Function:** `_al_nuevo_raiz()` (line 830)- **Creates with:** `padre_id=None`- **Code:**```pythondef _al_nuevo_raiz(self, evento):    resultado = self._pedir_nombre_y_tipo("Nuevo proyecto raíz")    if resultado is None:        return    nombre, tipo = resultado    self._gestor.crear_proyecto(nombre, tipo, padre_id=None)    self._cargar_arbol()```**Path 2: Subprojects (nested within parent)**- **Trigger:** Select a parent project in tree, then Menu > "Nuevo subproyecto dentro del seleccionado"- **Function:** `_al_nuevo_hijo()` (line 838)- **Creates with:** `padre_id=proyecto_padre["id"]`- **Code:**```pythondef _al_nuevo_hijo(self, evento):    proyecto_padre = self._proyecto_seleccionado()    if proyecto_padre is None:        # ... show warning dialog ...        return    resultado = self._pedir_nombre_y_tipo(        f"Nuevo hijo de «{proyecto_padre['nombre']}»"    )    if resultado is None:        return    nombre, tipo = resultado    self._gestor.crear_proyecto(nombre, tipo, padre_id=proyecto_padre["id"])```#### **Project Window Access****File:** `/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py` (line 568)- **Keyboard Shortcut:** `Ctrl+Shift+P`- **Menu Option:** "Abrir Gestor de Proyectos" (available in contextual menus)- **Handler:** `al_abrir_gestor_proyectos()` (line 214)```python("ctrl_sp", wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('P'), self.al_abrir_gestor_proyectos)```---### 2. HOW SUBPROJECTS DIFFER FROM PROJECTS IN THE DATA MODEL**File:** `/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py` (lines 58-89)#### **JSON Structure (proyectos.json)**```json{  "version": 1,  "proyectos": {    "<uuid>": {      "id":       "uuid-string",      "nombre":   "Project Name",      "tipo":     ["Category1", "Category2"],  // List of categories      "padre":    "uuid-of-parent OR null",   // NULL = root project      "hijos":    ["uuid1", "uuid2", ...],    // Child project IDs      "voces":    {                           // Voice profiles        "@label": { voice_data }      },      "archivos": ["/path/to/file.txt", ...]    }  },  "papelera": [...]  // Soft-deleted projects}```#### **Key Differences**| Aspect | Root Project | Subproject ||--------|--------------|-----------|| **`padre` field** | `null` | UUID string of parent || **`hijos` array** | May contain child UUIDs | May contain child UUIDs || **Reordering** | NOT reorderable (alphabetical) | Reorderable via Ctrl+Up/Down || **UI Display** | Top-level in tree | Nested under parent in tree || **Voice Inheritance** | None (defines baseline) | Inherits from all ancestors || **Deletion** | Can delete if no children OR with `recursivo=True` | Same rules as parent |#### **Voice Inheritance (Hierarchical)**```pythondef obtener_voces_heredadas(self, proyecto_id: str) -> dict:    """    Saga  defines: nar→vozA, jon→vozB    Libro adds:    ned→vozC    Capítulo:      (no own voices)    → Result:      nar→vozA, jon→vozB, ned→vozC  (child inherits all)    """```**Files:** `/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py` (lines 378-408)---### 3. SOUND/AUDIO FEEDBACK ASSIGNED TO DIALOGS**File:** `/home/user/epub-tts-accesible/app/motor/reproductor_sonidos.py`#### **Sound Constants Available (WAV files in `/recursos/sonidos/`)**| Constant | Sound File | Purpose ||----------|-----------|---------|| `APP_READY` | app_ready.wav | App startup completion || `CLICK` | click.wav | Button/menu activation || `LIST_NAV` | list_nav.wav | Navigating up/down in lists || `MOVE_UP` | move_up.wav | Moving project up in hierarchy || `MOVE_DOWN` | move_down.wav | Moving project down in hierarchy || `OPEN_FOLDER` | open_folder.wav | Opening folder/file dialog || `CLEAR` | clear.wav | Removing/clearing items || `ERROR` | error.wav | Error conditions || `SUCCESS` | success.wav | Successful completion || `REC_START` | rec_start.wav | Recording start || `REC_END` | rec_end.wav | Recording stop || `PROGRESS` | progress.wav | Progress indicator |#### **Dialog-Associated Sounds in VentanaProyectos****File:** `/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py`| Event | Sound | Lines | Code ||-------|-------|-------|------|| **Opening Projects window** | `OPEN_FOLDER` | 220 | `reproducir(OPEN_FOLDER)` in `al_abrir_gestor_proyectos()` || **Navigating tree/lists** | `LIST_NAV` | 41, 466, 478 | `reproducir(LIST_NAV)` on arrow key press || **Moving projects** | `MOVE_UP`/`MOVE_DOWN` | 671 | `reproducir(MOVE_UP if delta < 0 else MOVE_DOWN)` || **Removing file association** | `CLEAR` | 771 | `reproducir(CLEAR)` when disassociating TXT || **Deleting project** | `CLEAR` then `ERROR` | 920-922 | `reproducir(CLEAR)` on success, `reproducir(ERROR)` on failure |#### **Sound Implementation****File:** `/home/user/epub-tts-accesible/app/motor/reproductor_sonidos.py` (lines 117-144)Uses **wxPython's `wx.adv.Sound`** with fallback to **winsound** on Windows:```pythondef reproducir(nombre_sonido: str) -> None:    """    Reproduce the sound asynchronously (SOUND_ASYNC).    Must call from main wx thread.    For background threads: wx.CallAfter(reproducir, NOMBRE_SONIDO)    """    sound = _CACHE_SONIDOS.get(nombre_sonido)    if sound is not None:        try:            import wx.adv            sound.Play(wx.adv.SOUND_ASYNC)            return        except Exception:            # Fallback to winsound in daemon thread            _play_winsound(ruta, nombre_sonido)```---### 4. TREE/LIST STRUCTURE FOR PROJECTS AND SUBPROJECTS**File:** `/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py` (lines 101-256)#### **Main UI Layout**```VentanaProyectos (Frame)├─ Left Panel (40%)│  └─ wx.TreeCtrl "Jerarquía de proyectos"│     ├─ Root (hidden)│     │  ├─ Project 1 [Type] — Status — Level 1│     │  │  ├─ Subproject 1.1 [Type] — Status — Level 2│     │  │  │  └─ Subproject 1.1.1 [Type] — Status — Level 3│     │  │  └─ Subproject 1.2 [Type] — Status — Level 2│     │  └─ Project 2 [Type] — Status — Level 1│     │     └─ Subproject 2.1 [Type] — Status — Level 2│├─ Right Panel (60%) - Detail View│  ├─ Project Name (editable text)│  ├─ Categories (ListaCategorias - checklist)│  ├─ Associated TXT Files (ListCtrl with columns: Name, Path)│  │  └─ Buttons: [Add TXT] [Remove TXT]│  └─ Voice Profiles (ListCtrl with columns: Label, Voice Name)│└─ Bottom Bar   ├─ [Delete Project] Button   ├─ Status Message Label   └─ [Close] Button```#### **TreeCtrl Configuration****Lines 112-121:**```pythonself.arbol = wx.TreeCtrl(    panel_raiz,    style=(        wx.TR_HAS_BUTTONS      # Expand/collapse +/- buttons        | wx.TR_LINES_AT_ROOT  # Visual hierarchy lines        | wx.TR_SINGLE         # Single selection        | wx.TR_HIDE_ROOT      # Root node (projects) hidden        | wx.TR_EDIT_LABELS    # Allow F2 rename    ),)```#### **Node Label Format****Lines 976-989:**```pythondef _etiqueta_nodo(self, proyecto: dict, nivel: int) -> str:    estado = self._estado_proyecto(proyecto)  # "Grabado" or "Pendiente"    tipos = proyecto.get("tipo", [])    tipo_str = ", ".join(tipos) if tipos else "Sin categoría"    etiqueta = f"{proyecto['nombre']} [{tipo_str}] — {estado} — Nivel {nivel}"    if padre_id:        padre = self._gestor.obtener_proyecto(padre_id)        etiqueta += f" — Hijo de: {padre['nombre']}"    return etiqueta    # Example output:    # "Capítulo 01 [Serie, Tutorial] — Grabado — Nivel 3 — Hijo de: Libro 1"```#### **Categories ListCtrl (ListaCategorias)****File:** `/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py` (lines 18-47)```pythonclass ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):    """Multi-select checkbox list for project categories."""    def __init__(self, parent):        # Columns: "Categoría"         # Rows: ["Serie", "Libro", "Fantasía", "Distopía", "Tecno-thriller",         #        "Diálogos", "Tutorial", "Publicidad", "Artículo", "Otros"]        # Features: Checkboxes, Up/Down navigation with LIST_NAV sound```#### **File Association List****Lines 154-165:**```pythonself.lista_archivos = wx.ListCtrl(    panel_raiz,    style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,)self.lista_archivos.InsertColumn(0, "Nombre del archivo", width=160)self.lista_archivos.InsertColumn(1, "Ruta completa",      width=280)```#### **Voice Profile List****Lines 180-189:**```pythonself.lista_voces = wx.ListCtrl(    panel_raiz,    style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,)self.lista_voces.InsertColumn(0, "Etiqueta",     width=120)self.lista_voces.InsertColumn(1, "Voz asignada", width=200)# Shows: @label → voice_name# Includes inherited voices from parent projects```#### **Tree Navigation & Interaction**| Action | Handler | Sound | Result ||--------|---------|-------|--------|| Up/Down arrows | EVT_TREE_KEY_DOWN | LIST_NAV | Navigate between nodes || Left arrow | `_al_tecla_arbol()` | LIST_NAV | Collapse parent (if expanded) || Right arrow | `_al_tecla_arbol()` | LIST_NAV | Expand children (if any) || F2 | `_al_tecla_arbol()` | — | Enter inline edit mode || Delete | `_al_tecla_arbol()` → `_al_eliminar()` | CLEAR/ERROR | Soft-delete to trash || Ctrl+Up | `_mover_nodo(-1)` | MOVE_UP | Reorder subproject up || Ctrl+Down | `_mover_nodo(+1)` | MOVE_DOWN | Reorder subproject down || Ctrl+Return | `_abrir_carpeta_proyecto()` | OPEN_FOLDER | Open in file explorer || Right-click / Menu key | `_mostrar_menu_contextual()` | — | Show context menu |#### **Context Menu Options****Lines 555-637:**```├─ Nuevo proyecto                              [Always available]├─ Nuevo subproyecto dentro del seleccionado   [Only if project selected]├─────────────├─ Asociar TXT actual de Grabación              [If project + TXT loaded]├─────────────├─ Mover arriba (Ctrl+Arriba)                  [Only for subprojects]├─ Mover abajo (Ctrl+Abajo)                    [Only for subprojects]├─────────────├─ Renombrar (F2)                              [If project selected]├─────────────├─ Eliminar... (Supr)                          [If project selected]├─ Restaurar eliminado...                      [Submenu with trash entries]│  ├─ [Deleted Project Names with dates]│  ├─ Vaciar papelera└─ [Empty if no trash]```---### KEY FILES REFERENCE| File | Lines | Purpose ||------|-------|---------|| `/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py` | 1-1087 | Main Projects window UI, tree, dialogs, creation logic || `/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py` | 1-448 | Data model, CRUD, hierarchy, voice inheritance, soft-delete || `/home/user/epub-tts-accesible/app/motor/reproductor_sonidos.py` | 1-154 | Sound system, WAV playback, fallback to winsound || `/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py` | 214-237, 568 | Project window launcher, keyboard shortcuts || `/home/user/epub-tts-accesible/app/config_rutas.py` | 1-50+ | Configuration paths, projects.json location || `/home/user/epub-tts-accesible/recursos/sonidos/` | 12 WAV files | Audio assets for UI feedback |---### SUMMARY TABLE| Feature | Details ||---------|---------|| **Creation Methods** | Root: Menu/"Nuevo proyecto"; Subproject: Menu/"Nuevo subproyecto dentro del seleccionado" (parent must be selected) || **Dialog Type** | Modal wx.Dialog with name input + multi-select categories || **Data Persistence** | JSON file: `configuraciones/proyectos.json` (UUID-based structure) || **Hierarchy** | Tree structure via `padre` (UUID) and `hijos` (list of UUIDs); supports unlimited nesting || **Voice Inheritance** | Child projects inherit all parent voices; can override at any level || **Tree Widget** | wx.TreeCtrl with hidden root, collapsible nodes, inline editing (F2), multi-level labels || **Sounds Used** | LIST_NAV (navigation), MOVE_UP/DOWN (reordering), OPEN_FOLDER (window open), CLEAR (removal), ERROR (failure) || **Access Shortcut** | Ctrl+Shift+P from main window || **Soft Delete** | Projects go to trash, can be restored from context menu (until "Vaciar papelera") |agentId: aeef00452ce103713 (for resuming to continue this agent's work if needed)<usage>total_tokens: 63635tool_uses: 32duration_ms: 84264</usage>
+Copiar mensaje
+Bien, ya tengo todo el contexto. Te doy mi análisis:
+ 
+Sobre las dos opciones
+Opción A: Cortar y pegar (mover jerarquía)
+Implementar Ctrl+X sobre un proyecto para "cortarlo" y Ctrl+V sobre otro para "pegarlo" como subproyecto suyo. Si se pega sobre el árbol vacío o la raíz, vuelve a ser proyecto raíz.
+Ventajas:
+• No requiere tocar el diálogo de creación (queda simple)
+• Sirve no solo para corregir errores, sino para reorganizar la jerarquía en general (más potente)
+• Patrón universal que los lectores de pantalla manejan bien
+• Se pueden asignar sonidos claros: uno al "cortar" y SUCCESS al pegar correctamente
+Inconveniente: Requiere dos pasos (cortar + navegar + pegar)
+ 
+Opción B: Selector en el diálogo de creación
+Agregar un combobox con "Proyecto raíz / Subproyecto del seleccionado".
+Problema: Tienes razón — si lo hacemos así, la opción "Nuevo subproyecto dentro del seleccionado" del menú contextual quedaría redundante o habría que eliminarla. Además complica el diálogo, y si no hay ningún proyecto seleccionado y se elige "subproyecto", habría que manejar ese caso extra.
+ 
+Mi recomendación
+Opción A es la mejor. Es más limpia, más potente, no toca lo que ya funciona bien, y añade funcionalidad de reorganización general. Lo implementaría así:
+• Ctrl+X en árbol: marca el proyecto como "en portapapeles" + sonido CLICK
+• Ctrl+V sobre otro proyecto: lo convierte en subproyecto + sonido SUCCESS
+• Ctrl+V sobre el árbol sin selección / en proyecto raíz: lo sube a raíz + sonido SUCCESS
+• Escape: cancela la operación + sonido CLEAR
+ 
+Sobre los sonidos en diálogos no de error
+Revisando el código, el diálogo de creación de proyectos (_pedir_nombre_y_tipo) no tiene sonido asignado. Al abrirse no se reproduce nada. Los únicos sonidos en ese flujo son:
+• OPEN_FOLDER al abrir la ventana de proyectos
+• CLEAR/ERROR al eliminar
+Los diálogos de confirmación (wx.MessageDialog) tampoco tienen sonido propio. Si quieres consistencia, podríamos asignar:
+• CLICK o SUCCESS al abrir cualquier diálogo no de error
+• ERROR ya está en los de error
+¿Quieres que implemente la Opción A (cortar/pegar para mover proyectos) y también añada sonidos a los diálogos que les falten?
+si, y también implementa todos los sonidos que creas adecuados. Estaba pensando que para el de cortar, no se que es mejor. Si dejar el sonido de click, o el sonido de eliminar. Ya que lo estamos eliminando temporalmente del árbol para pegarlo en otro sitio. Y además esta opción es mejor, porque como los podemos mover dentro de un proyecto, pues así es mas versátil y potente. Ofrece muchas mas posibilidades a largo plazo, a medida de que se va expandiendo los proyectos. Necesitas que busque mas sonidos? o con los que tenemos son suficientes? ¿se me ocurren buenas ideas no?
+Copiar mensaje
+Copiar mensaje
+¡Muy buenas ideas! El cut/paste es exactamente lo correcto — versátil y extensible. Para el sonido de cortar, yo usaría CLEAR — tiene sentido semántico: estás "vaciando" el nodo de su posición actual temporalmente.
+Con los sonidos disponibles tenemos suficiente para todo esto. Déjame leer el archivo completo antes de implementar.
+Read ventana_proyectos.py file to review menu event handlers
+Read ventana_proyectos.py file to review menu event handlers
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Read
+/root/.claude/projects/-home-user-epub-tts-accesible/5cbc3b02-4d79-4012-941f-62345980ba31/tool-results/toolu_01Vp8eMeesvELZas86nG323K.txt
+Bashcat -n /home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py
+Mostrar 4 más
+Copiar mensaje
+Ahora necesito ver gestor_proyectos.py para implementar la lógica de reparentado:
+Read gestor_proyectos.py module documentation and structure
+Read gestor_proyectos.py module documentation and structure
+Read/home/user/epub-tts-accesible/app/motor/gestor_proyectos.pyLeer 448 líneas
+Copiar mensaje
+Ahora tengo todo lo que necesito. Voy a verificar los nombres exactos de las constantes de sonido:
+Found event constant definitions in reproductor_sonidos.py
+Found event constant definitions in reproductor_sonidos.py
+Grep
+^(SUCCESS|APP_READY|CLICK|LIST_NAV|MOVE_UP|MOVE_DOWN|OPEN_FOLDER|CLEAR|ERROR|REC_START|REC_END|PROGRESS)\s*="
+No matches found
+Grep^[A-Z_]+ = "51:OPEN_FOLDER = "open_folder"
+Grep= "[a-z_]+"
+44:APP_READY   = "app_ready"45:REC_START   = "rec_start"46:REC_END     = "rec_end"
+Mostrar más
+47:PROGRESS    = "progress"48:LIST_NAV    = "list_nav"49:MOVE_UP     = "move_up"50:MOVE_DOWN   = "move_down"51:OPEN_FOLDER = "open_folder"52:SUCCESS     = "success"53:CLICK       = "click"54:ERROR       = "error"55:CLEAR       = "clear"
+Copiar mensaje
+Perfecto, ahora tengo todo claro. Voy a implementarlo todo de una vez.
+Added reparentar_proyecto method to GestorProyectos
+Added reparentar_proyecto method to GestorProyectos
+Update Todos☐ Añadiendo reparentar_proyecto al motor☐ Implementar cortar/pegar (Ctrl+X/V) en VentanaProyectos☐ Añadir sonidos a todos los diálogos y acciones que los necesitan☐ Commit y push
+Edit/home/user/epub-tts-accesible/app/motor/gestor_proyectos.py+58-6
+439+
+    def reparentar_proyecto(
+440+
+        self, proyecto_id: str, nuevo_padre_id: Optional[str]
+441+
+    ) -> bool:
+442+
+        """
+443+
+        Mueve un proyecto a un nuevo padre (o a raíz si nuevo_padre_id es None).
+444+
+445+
+        Previene ciclos: no se puede hacer un proyecto hijo de sí mismo ni de
+446+
+        alguno de sus propios descendientes.
+447+
+        Devuelve True si el movimiento se realizó, False si no es posible.
+448+
+        """
+449+
+        proyecto = self.obtener_proyecto(proyecto_id)
+450+
+        if not proyecto:
+451+
+            return False
+452+
+453+
+        # Sin cambio real
+454+
+        if proyecto.get("padre") == nuevo_padre_id:
+455+
+            return False
+456+
+457+
+        # No puede ser hijo de sí mismo
+458+
+        if nuevo_padre_id == proyecto_id:
+Show full diff (35 more lines)
+Update Todos☐ Añadir método reparentar_proyecto a GestorProyectos☐ Implementando cortar/pegar en la ventana☐ Añadir sonidos a todos los diálogos y acciones que los necesitan☐ Commit y push
+Copiar mensaje
+Ahora actualizo las importaciones de ventana_proyectos.py para incluir SUCCESS:
+Updated sound reproduction imports in ventana_proyectos.py
+Updated sound reproduction imports in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+3-3
+11
+from app.motor.reproductor_sonidos import (
+2-
+    reproducir, LIST_NAV, MOVE_UP, MOVE_DOWN, OPEN_FOLDER, CLEAR, CLICK, ERROR,
+2+
+    reproducir, LIST_NAV, MOVE_UP, MOVE_DOWN, OPEN_FOLDER, CLEAR, CLICK, ERROR, SUCCESS,
+33
+)
+Copiar mensaje
+Añadir _proyecto_en_portapapeles en __init__ y actualizar el HelpText del árbol:
+Fixed singleton pattern in project window manager initialization
+Fixed singleton pattern in project window manager initialization
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+8-7
+55
+        self._mapa_nodos = {}           # {TreeItemId → proyecto_id (str uuid)}
+66
+        self._ruta_txt_activo = ruta_txt_activo
+77
+        self._foco_previo = foco_previo
+8+
+        self._proyecto_en_portapapeles: str | None = None  # id del proyecto cortado con Ctrl+X
+Copiar mensaje
+Actualizar el HelpText del árbol para mencionar Ctrl+X/V:
+Updated accessibility help text in projects window interface
+Updated accessibility help text in projects window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+12-9
+33
+            "Cada nodo anuncia nombre, estado (Grabado o Pendiente) y nivel. "
+44
+            "Tab: pasar al panel de detalle para editar nombre o tipo. "
+55
+            "Ctrl+Arriba o Ctrl+Abajo: reordenar el nodo dentro de sus hermanos. "
+6+
+            "Ctrl+X: cortar el proyecto seleccionado para moverlo. "
+7+
+            "Ctrl+V: pegar el proyecto cortado como subproyecto del seleccionado, "
+8+
+            "o como proyecto raíz si no hay nada seleccionado. Escape cancela el corte. "
+69
+            "F2: renombrar inline. Supr: eliminar. "
+710
+            "Tecla Menú o Shift+F10: más opciones (nuevo hijo, asociar TXT, cambiar tipo, restaurar eliminados)."
+811
+        )
+Copiar mensaje
+Ahora añadir los IDs y aceleradores para Ctrl+X/V en _configurar_aceleradores:
+Updated event binding structure in project window interface
+Updated event binding structure in project window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+20-14
+11
+        self._id_mover_arriba  = wx.NewIdRef()
+22
+        self._id_mover_abajo   = wx.NewIdRef()
+33
+        self._id_abrir_carpeta = wx.NewIdRef()
+4-
+5-
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo(-1),          id=self._id_mover_arriba)
+6-
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo(+1),          id=self._id_mover_abajo)
+7-
+        self.Bind(wx.EVT_MENU, lambda e: self._abrir_carpeta_proyecto(), id=self._id_abrir_carpeta)
+8-
+9-
+        self.SetAcceleratorTable(wx.AcceleratorTable([
+10-
+            (wx.ACCEL_CTRL, wx.WXK_UP,           self._id_mover_arriba),
+11-
+            (wx.ACCEL_CTRL, wx.WXK_DOWN,         self._id_mover_abajo),
+12-
+            (wx.ACCEL_CTRL, wx.WXK_RETURN,       self._id_abrir_carpeta),
+13-
+            (wx.ACCEL_CTRL, wx.WXK_NUMPAD_ENTER, self._id_abrir_carpeta),
+4+
+        self._id_cortar        = wx.NewIdRef()
+5+
+        self._id_pegar         = wx.NewIdRef()
+6+
+7+
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo(-1),           id=self._id_mover_arriba)
+8+
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_nodo(+1),           id=self._id_mover_abajo)
+9+
+        self.Bind(wx.EVT_MENU, lambda e: self._abrir_carpeta_proyecto(),  id=self._id_abrir_carpeta)
+10+
+        self.Bind(wx.EVT_MENU, lambda e: self._al_cortar_proyecto(),      id=self._id_cortar)
+Show full diff (10 more lines)
+Copiar mensaje
+Ahora actualizar _al_tecla_global para que Escape cancele el corte antes de cerrar la ventana:
+Fixed escape key handler in project window interface
+Fixed escape key handler in project window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+12-5
+11
+    def _al_tecla_global(self, evento):
+22
+        keycode = evento.GetKeyCode()
+33
+        if keycode == wx.WXK_ESCAPE:
+4+
+            if self._proyecto_en_portapapeles:
+5+
+                proyecto = self._gestor.obtener_proyecto(self._proyecto_en_portapapeles)
+6+
+                self._proyecto_en_portapapeles = None
+7+
+                reproducir(CLICK)
+8+
+                nombre = proyecto["nombre"] if proyecto else "proyecto"
+9+
+                self._anunciar_estado(f"Corte cancelado. «{nombre}» permanece en su sitio.")
+10+
+                return
+411
+            self.Close()
+512
+            return
+Copiar mensaje
+Añadir cortar/pegar al menú contextual — justo después del separador de "Asociar TXT":
+Updated project window menu logic for parent project handling
+Updated project window menu logic for parent project handling
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+17-4
+11
+        menu.AppendSeparator()
+22
+3+
+        # Cortar / Pegar para mover en la jerarquía
+4+
+        etiq_pegar = (
+5+
+            "Pegar aquí como subproyecto (Ctrl+V)"
+6+
+            if proyecto else
+7+
+            "Pegar como proyecto raíz (Ctrl+V)"
+8+
+        )
+9+
+        item_cortar = menu.Append(self._id_cortar, "Cortar para mover (Ctrl+X)")
+10+
+        item_cortar.Enable(bool(proyecto))
+11+
+        item_pegar = menu.Append(self._id_pegar, etiq_pegar)
+12+
+        item_pegar.Enable(bool(self._proyecto_en_portapapeles))
+13+
+14+
+        menu.AppendSeparator()
+15+
+316
+        # Reordenar — solo disponible para proyectos con padre (no raíz)
+417
+        puede_mover = bool(proyecto and proyecto.get("padre"))
+Copiar mensaje
+Ahora añado los métodos _al_cortar_proyecto y _al_pegar_proyecto. Los inserto justo antes de _mover_nodo:
+Added reparent_project method and cut/paste functionality implemented
+Added reparent_project method and cut/paste functionality implemented
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+62-5
+657657
+    # ================================================================== #
+658+
+    # Cortar / Pegar para mover proyectos en la jerarquía (Ctrl+X / Ctrl+V)
+659+
+    # ================================================================== #
+660+
+661+
+    def _al_cortar_proyecto(self):
+662+
+        """Ctrl+X: marca el proyecto seleccionado como «en portapapeles» para moverlo."""
+663+
+        proyecto = self._proyecto_seleccionado()
+664+
+        if proyecto is None:
+665+
+            return
+666+
+        self._proyecto_en_portapapeles = proyecto["id"]
+667+
+        reproducir(CLEAR)
+668+
+        nombre = proyecto["nombre"]
+669+
+        self._anunciar_estado(
+670+
+            f"«{nombre}» cortado. Navega al destino y pulsa Ctrl+V para pegar, "
+671+
+            "o Escape para cancelar."
+672+
+        )
+673+
+        self._hablar(f"{nombre} cortado")
+674+
+675+
+    def _al_pegar_proyecto(self):
+676+
+        """
+Show full diff (41 more lines)
+Update Todos☐ Añadir método reparentar_proyecto a GestorProyectos☐ Implementar cortar/pegar (Ctrl+X/V) en VentanaProyectos☐ Añadiendo sonidos a diálogos☐ Commit y push
+Copiar mensaje
+Ahora los sonidos. Empiezo por el diálogo de creación (_pedir_nombre_y_tipo — sonido CLICK al abrir):
+Updated project window dialog with audio reproduction functionality
+Updated project window dialog with audio reproduction functionality
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+5-4
+814814
+        dlg.Fit()
+815815
+        wx.CallAfter(txt_n.SetFocus)
+816+
+        reproducir(CLICK)
+816817
+817818
+        resultado = dlg.ShowModal()
+Copiar mensaje
+SUCCESS al crear proyecto raíz o hijo con éxito:
+Fixed new child project creation validation logic
+Fixed new child project creation validation logic
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-7
+832832
+        if resultado is None:
+833833
+            return
+834834
+        nombre, tipo = resultado
+835-
+        self._gestor.crear_proyecto(nombre, tipo, padre_id=None)
+836-
+        self._cargar_arbol()
+835+
+        nuevo_id = self._gestor.crear_proyecto(nombre, tipo, padre_id=None)
+836+
+        reproducir(SUCCESS)
+837+
+        self._cargar_arbol(seleccionar_id=nuevo_id)
+838+
+        self._anunciar_estado(f"Proyecto «{nombre}» creado.")
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+19-16
+838838
+    def _al_nuevo_hijo(self, evento):
+839839
+        proyecto_padre = self._proyecto_seleccionado()
+840840
+        if proyecto_padre is None:
+841-
+            wx.MessageBox(
+842-
+                "Selecciona primero el proyecto padre en el árbol.",
+843-
+                "Sin proyecto seleccionado", wx.OK | wx.ICON_WARNING
+844-
+            )
+845-
+            return
+846-
+        resultado = self._pedir_nombre_y_tipo(
+847-
+            f"Nuevo hijo de «{proyecto_padre['nombre']}»"
+848-
+        )
+849-
+        if resultado is None:
+850-
+            return
+851-
+        nombre, tipo = resultado
+852-
+        self._gestor.crear_proyecto(nombre, tipo, padre_id=proyecto_padre["id"])
+853-
+        self._cargar_arbol()
+841+
+            reproducir(ERROR)
+842+
+            wx.MessageBox(
+843+
+                "Selecciona primero el proyecto padre en el árbol.",
+844+
+                "Sin proyecto seleccionado", wx.OK | wx.ICON_WARNING
+Show full diff (12 more lines)
+Copiar mensaje
+SUCCESS al renombrar inline (F2) con éxito:
+Fixed project name validation in ventana_proyectos.py
+Fixed project name validation in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+21-19
+11
+        nuevo_nombre = evento.GetLabel().strip()
+22
+        if not nuevo_nombre:
+33
+            evento.Veto()
+4-
+            wx.MessageBox(
+5-
+                "El nombre del proyecto no puede estar vacío.",
+6-
+                "Nombre inválido", wx.OK | wx.ICON_WARNING
+7-
+            )
+8-
+            return
+9-
+        nodo = evento.GetItem()
+10-
+        proyecto_id = self._mapa_nodos.get(nodo)
+11-
+        if proyecto_id:
+12-
+            proyecto = self._gestor.obtener_proyecto(proyecto_id)
+13-
+            if proyecto:
+14-
+                self._gestor.renombrar_proyecto(proyecto_id, nuevo_nombre)
+15-
+                proyecto["nombre"] = nuevo_nombre
+16-
+                nivel = self._nivel_nodo(nodo)
+17-
+                wx.CallAfter(self.arbol.SetItemText, nodo, self._etiqueta_nodo(proyecto, nivel))
+18-
+                wx.CallAfter(self.txt_nombre.ChangeValue, nuevo_nombre)
+4+
+            reproducir(ERROR)
+5+
+            wx.MessageBox(
+Show full diff (16 more lines)
+Copiar mensaje
+SUCCESS y ERROR al guardar nombre desde el panel de detalle:
+Fixed project name saving functionality in ventana_proyectos.py
+Fixed project name saving functionality in ventana_proyectos.py
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+18-16
+693693
+            return
+694694
+        nuevo_nombre = self.txt_nombre.GetValue().strip()
+695695
+        if not nuevo_nombre:
+696-
+            wx.MessageBox(
+697-
+                "El nombre del proyecto no puede estar vacío.",
+698-
+                "Nombre inválido", wx.OK | wx.ICON_WARNING
+699-
+            )
+700-
+            return
+701-
+        self._gestor.renombrar_proyecto(proyecto["id"], nuevo_nombre)
+702-
+        nodo = self.arbol.GetSelection()
+703-
+        proyecto["nombre"] = nuevo_nombre
+704-
+        self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
+696+
+            reproducir(ERROR)
+697+
+            wx.MessageBox(
+698+
+                "El nombre del proyecto no puede estar vacío.",
+699+
+                "Nombre inválido", wx.OK | wx.ICON_WARNING
+700+
+            )
+701+
+            return
+702+
+        self._gestor.renombrar_proyecto(proyecto["id"], nuevo_nombre)
+703+
+        nodo = self.arbol.GetSelection()
+Show full diff (4 more lines)
+Copiar mensaje
+OPEN_FOLDER al abrir el diálogo de añadir TXT, y ERROR antes del aviso si no hay proyecto:
+Updated project window file to handle text addition
+Updated project window file to handle text addition
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+11-9
+736736
+    def _al_añadir_txt(self, evento):
+737737
+        proyecto = self._proyecto_seleccionado()
+738738
+        if proyecto is None:
+739-
+            wx.MessageBox(
+740-
+                "Selecciona primero un proyecto en el árbol.",
+741-
+                "Sin proyecto seleccionado", wx.OK | wx.ICON_WARNING
+742-
+            )
+743-
+            return
+739+
+            reproducir(ERROR)
+740+
+            wx.MessageBox(
+741+
+                "Selecciona primero un proyecto en el árbol.",
+742+
+                "Sin proyecto seleccionado", wx.OK | wx.ICON_WARNING
+743+
+            )
+744+
+            return
+745+
+        reproducir(OPEN_FOLDER)
+744746
+        with wx.FileDialog(
+Copiar mensaje
+ERROR antes del aviso "Sin selección" al quitar TXT:
+Fixed file removal validation in project window interface
+Fixed file removal validation in project window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+8-7
+762762
+        idx = self.lista_archivos.GetFirstSelected()
+763763
+        if idx == -1:
+764+
+            reproducir(ERROR)
+764765
+                "Sin selección", wx.OK | wx.ICON_WARNING
+765766
+            )
+766767
+            return
+Copiar mensaje
+SUCCESS al restaurar proyecto desde papelera, ERROR si falla; CLICK al abrir el diálogo de vaciar papelera, CLEAR al confirmar:
+Updated trash deletion method in project window interface
+Updated trash deletion method in project window interface
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+13-11
+860860
+        """Restaura un proyecto desde la papelera al árbol."""
+861861
+        ok = self._gestor.restaurar_proyecto(raiz_id)
+862862
+        if ok:
+863-
+            self._cargar_arbol(seleccionar_id=raiz_id)
+864-
+            self._anunciar_estado("Proyecto restaurado correctamente.")
+865-
+        else:
+863+
+            reproducir(SUCCESS)
+864+
+            self._cargar_arbol(seleccionar_id=raiz_id)
+865+
+            self._anunciar_estado("Proyecto restaurado correctamente.")
+866+
+        else:
+867+
+            reproducir(ERROR)
+866868
+                "No se encontró el proyecto en la papelera.",
+867869
+                "Error al restaurar", wx.OK | wx.ICON_WARNING
+868870
+            )
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+20-18
+874874
+        n = len(papelera)
+875875
+        if n == 0:
+876876
+            return
+877-
+        dlg = wx.MessageDialog(
+878-
+            self,
+879-
+            f"¿Eliminar definitivamente {n} proyecto(s) de la papelera?\n\n"
+880-
+            "Esta acción NO se puede deshacer.",
+881-
+            "Vaciar papelera",
+882-
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING,
+883-
+        )
+884-
+        resp = dlg.ShowModal()
+885-
+        dlg.Destroy()
+886-
+        if resp == wx.ID_YES:
+887-
+            self._gestor.vaciar_papelera()
+877+
+        reproducir(CLICK)
+878+
+        dlg = wx.MessageDialog(
+879+
+            self,
+880+
+            f"¿Eliminar definitivamente {n} proyecto(s) de la papelera?\n\n"
+881+
+            "Esta acción NO se puede deshacer.",
+882+
+            "Vaciar papelera",
+Show full diff (8 more lines)
+Copiar mensaje
+ERROR antes del aviso "Sin proyecto seleccionado" al eliminar:
+Fixed project deletion confirmation dialog in project window
+Fixed project deletion confirmation dialog in project window
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+9-8
+894894
+    def _al_eliminar(self, evento):
+895895
+        proyecto = self._proyecto_seleccionado()
+896896
+        if proyecto is None:
+897+
+            reproducir(ERROR)
+897898
+                "Sin proyecto seleccionado", wx.OK | wx.ICON_WARNING
+898899
+            )
+899900
+            return
+Copiar mensaje
+CLICK al abrir el diálogo de confirmación de eliminación:
+Fixed dialog box display issue in project window
+Fixed dialog box display issue in project window
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py+6-5
+910+
+        reproducir(CLICK)
+910911
+            wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING
+911912
+        )
+912913
+        respuesta = dlg.ShowModal()
+Copiar mensaje
+Ahora verifico que todo compile correctamente:
+Verified Python syntax in project management modules
+Verified Python syntax in project management modules
+Bash
+python -c "from app.interfaz.ventana_proyectos import VentanaProyectos; from app.motor.gestor_proyectos import GestorProyectos; print('OK')"
+Exit code 1Traceback (most recent call last):  File "<string>", line 1, in <module>
+Mostrar más
+  File "/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py", line 2, in <module>    import wxModuleNotFoundError: No module named 'wx'
+Bash
+python -c "import ast; ast.parse(open('app/interfaz/ventana_proyectos.py').read()); ast.parse(open('app/motor/gestor_proyectos.py').read()); print('Sintaxis OK')"
+Sintaxis OK
+Copiar mensaje
+Perfecto. Sintaxis correcta. Ahora commit y push:
+Marked commit and push task completed
+Marked commit and push task completed
+Update Todos☐ Añadir método reparentar_proyecto a GestorProyectos☐ Implementar cortar/pegar (Ctrl+X/V) en VentanaProyectos☐ Añadir sonidos a todos los diálogos y acciones que los necesitan☐ Haciendo commit y push
+Bashgit diff --statapp/interfaz/ventana_proyectos.py | 122 +++++++++++++++++++++++++++++++++++--- app/motor/gestor_proyectos.py     |  52 ++++++++++++++++ 2 files changed, 166 insertions(+), 8 deletions(-)
+Bash
+git add app/interfaz/ventana_proyectos.py app/motor/gestor_proyectos.py && git commit -m "$(cat <<'EOF' Añadir cortar/pegar (Ctrl+X/V) para mover proyectos en la jerarquía y sonidos en diálogos - GestorProyectos: nuevo método reparentar_proyecto() que mueve un proyecto a cualquier padre (o a raíz), con detección de ciclos para evitar jerarquías rotas. - VentanaProyectos: Ctrl+X corta el proyecto seleccionado (sonido CLEAR + anuncio), Ctrl+V lo pega como subproyecto del seleccionado o como raíz si no hay selección (sonido SUCCESS/ERROR), Escape cancela la operación (sonido CLICK). Opciones equivalentes añadidas al menú contextual. HelpText del árbol actualizado para documentar los nuevos atajos. - Sonidos añadidos a acciones que carecían de feedback auditivo: CLICK → apertura del diálogo de creación y de confirmaciones (eliminar, vaciar papelera) SUCCESS → crear proyecto/subproyecto, renombrar (inline y panel detalle), restaurar ERROR → avisos de validación (nombre vacío, sin selección, etc.) OPEN_FOLDER → diálogo de añadir TXT al proyecto CLEAR → confirmar vaciado de papelera https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 b9c8f47] Añadir cortar/pegar (Ctrl+X/V) para mover proyectos en la jerarquía y sonidos en diálogos 2 files changed, 166 insertions(+), 8 deletions(-)
+Mostrar 2 más
+Copiar mensaje
+¡Subido! Aquí tienes el resumen de todo lo implementado:
+ 
+Cortar/Pegar para mover proyectos
+Acción
+Atajo
+Sonido
+Cortar proyecto
+Ctrl+X
+CLEAR
+Pegar como subproyecto del seleccionado
+Ctrl+V
+SUCCESS
+Pegar como proyecto raíz (sin nada seleccionado)
+Ctrl+V
+SUCCESS
+Cancelar operación de corte
+Escape
+CLICK
+Error (ciclo, mismo proyecto...)
+Ctrl+V
+ERROR
+El motor previene ciclos (no puedes hacer un proyecto hijo de sí mismo ni de sus descendientes).
+ 
+Sonidos añadidos a diálogos
+Acción
+Sonido
+Abrir diálogo de creación de proyecto
+CLICK
+Crear proyecto o subproyecto con éxito
+SUCCESS
+Renombrar (F2 o panel de detalle) con éxito
+SUCCESS
+Restaurar proyecto desde papelera
+SUCCESS
+Abrir diálogo "¿Eliminar?" / "¿Vaciar papelera?"
+CLICK
+Vaciar papelera confirmado
+CLEAR
+Abrir diálogo de añadir TXT
+OPEN_FOLDER
+Avisos de validación (nombre vacío, sin selección...)
+ERROR
+ 
+Y tu idea es muy buena — cortar/pegar es mucho más versátil que un simple selector en el diálogo. Con esto puedes reorganizar toda la jerarquía libremente, no solo corregir errores de creación.
+ 
+fase4-ajustes-finales
+claude/optimize-focus-latency-q7Sq3
++2528-550

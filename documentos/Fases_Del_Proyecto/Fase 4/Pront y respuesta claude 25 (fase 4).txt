@@ -1,0 +1,243 @@
+Pront y respuesta claude 25 (fase 4)
+
+vale. ya estoy probando de nuevo la app, y aunque ya se han solucionado todos esos problemas, he encontrado algunos detalles que hay que arreglar, y son los siguientes: (a, una advertencia. Si ves cosas duplicadas no es porque lo estén ni que NVDA lea dos veces. Si no porque te estoy enseñando el comportamiento para que lo veas mas claro) Bueno. en el modo grabación: El botón de división de epub sigue apareciendo después del botón examinar, y quiero que sea el primero, que esté antes de ese botón. Y al pulsar me dice lo siguiente: Examinar… — Selecciona un TXT con etiquetas de personaje  botón  Alt+  e
+Limpiar — Restablece la pestaña para cargar otro fragmento  botón  Alt+  l
+Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo  botón  Alt+  d
+Dividir EPUB en capítulos TXT  diálogo
+Archivo EPUB de origen  agrupación
+Examinar EPUB…  botón  Alt+  e
+Iniciar_epub_tts Error  diálogo  Failed to load image from file "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\recursos\iconos\cerrar.png".
+OK  botón
+¿Deseas abrir la carpeta de destino?
+Sí  botón  ALT+  S
+No  botón  ALT+  N
+Epub-TTS
+lista de pestañas
+Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador  botón  Alt+  b
+Fragmentos_03_El bestiario de Axlin - Explorador de archivos
+Vista Elementos  lista
+001_narrador.mp3  sin seleccionar
+Número de pista  edición  sólo lectura  en blanco
+001_narrador.mp3
+Número de pista  edición  sólo lectura  en blanco
+001_narrador.mp3
+Epub-TTS
+lista de pestañas
+Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador  botón  Alt+  b
+panel
+Aplicaciones en ejecución  lista
+epub-tts-accesible - Explorador de archivos
+epub-tts-accesible - Explorador de archivos
+Vista Elementos  lista
+INICIAR_APP.bat
+Y un detalle que me acabo de dar cuenta, en toda la app salen estos atajos de teclado que ves aquí en estos ejemplos. De verdad están ahí? o porqué los vervaliza NVDA si no realizan ninguna acción? puedes revisar todos los botones, cuadros combinados etc donde estén este tipo de atajos y eliminarlos todos?. Y la otra cosa que te quería comentar es la siguiente. Quiero que asignes los atajos control 1 a control 3 para movernos a cualquiera de las pestañas rápidamente desde cualquier parte de la interfaz, escepto ovbiamente en ventanas como diálogos, gestor de marcadores, listas, gestor de proyectos, o el divisor de epub.
+
+Respuesta:
+
+Updated task list with EPUB button tab order and icon fixes
+Updated task list with EPUB button tab order and icon fixes
+Update Todos☐ Fixing tab order of Dividir EPUB button☐ Fix missing 'cerrar.png' icon error in DialogoTroceador☐ Remove all & accelerators from button/widget labels across the entire app☐ Add Ctrl+1/2/3 global shortcuts to switch tabs in ventana_principal
+Copiar mensaje
+Voy a explorar todo lo necesario en paralelo:
+Searched codebase for keyboard shortcut formatting issues
+Searched codebase for keyboard shortcut formatting issues
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 35 líneas
+Bashls /home/user/epub-tts-accesible/recursos/iconos/(Bash completed with no output)
+Bash
+grep -rn "&" /home/user/epub-tts-accesible/app/interfaz/ --include="*.py" | grep -E "label=|title=|wx\.Button|wx\.CheckBox|wx\.ComboBox|wx\.StaticText|wx\.MenuItem" | grep "&[A-Za-z]" | head -80
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:167:        self.btn_añadir_txt = wx.Button(panel_raiz, label="&Añadir TXT al proyecto…")
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:171:        self.btn_quitar_txt = wx.Button(panel_raiz, label="&Quitar TXT seleccionado")
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:209:        self.btn_eliminar = wx.Button(panel_raiz, label="&Eliminar proyecto seleccionado")
+Mostrar más
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:214:        self.btn_cerrar = wx.Button(panel_raiz, label="&Cerrar")
+/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:328:            self, label="&Examinar… — Selecciona un TXT con etiquetas de personaje"/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:331:            self, label="&Limpiar — Restablece la pestaña para cargar otro fragmento"/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:334:            self, label="&Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:411:            self, label="&Probar voz — Escucha una muestra de la voz marcada"/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:414:            self, label="Pre-escucha &General — Oye todas las voces asignadas en secuencia"/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:464:            self, label="&Iniciar Grabación — Comienza el proceso de grabación multivoz"/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:470:            label="A&bortar — Detiene la grabación; los archivos ya generados se conservan",/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:475:            self, label="A&brir Carpeta — Abre la carpeta de grabaciones en el Explorador"/home/user/epub-tts-accesible/app/interfaz/dialogos.py:44:        self.btn_anadir = wx.Button(self, label="&Nuevo")
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:47:        self.btn_renombrar = wx.Button(self, label="&Renombrar")
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:50:        self.btn_eliminar = wx.Button(self, label="&Eliminar")
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:53:        self.btn_cerrar = wx.Button(self, wx.ID_CANCEL, "&Cerrar")
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:108:        self.btn_examinar = wx.Button(panel, label="&Examinar EPUB…")
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:130:        self.btn_sel_todo   = wx.Button(panel, label="Seleccionar &todo")
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:131:        self.btn_desel_todo = wx.Button(panel, label="&Deseleccionar todo")
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:132:        self.btn_limpiar    = wx.Button(panel, label="&Limpiar lista")
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:152:        self.btn_dividir = wx.Button(panel, label="&Dividir seleccionados")
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:166:        self.btn_abrir_carpeta = wx.Button(panel, label="Abrir carpeta &capitulos")
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:180:        btn_cerrar = wx.Button(panel, wx.ID_CLOSE, label="&Cerrar (Escape)")
+Mostrar 5 más
+Copiar mensaje
+Perfecto. Ahora tengo todo lo que necesito. Cambios a hacer:
+1. Tab order: crear btn_dividir_epub ANTES que btn_examinar (en wx el orden de tabulación sigue el orden de creación, no el del sizer)
+2. Error cerrar.png: añadir check os.path.isfile() antes de cargar PNG en ui_recursos.py
+3. Eliminar todos los & aceleradores de 4 archivos
+4. Ctrl+1/2/3 para cambiar de pestaña en ventana_principal.py
+Examined UI button and layout code across three wxPython interface files
+Examined UI button and layout code across three wxPython interface files
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 75 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/dialogos.pyLeer 20 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.pyLeer 55 líneas
+Copiar mensaje
+Ahora hago todos los cambios en paralelo:
+Removed ampersand from Cerrar button label
+Removed ampersand from Cerrar button label
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+15-14
+11
+        # Etiqueta descriptiva en el botón — NVDA la lee directamente al recibir foco
+2-
+        self.btn_examinar = wx.Button(
+3-
+            self, label="&Examinar… — Selecciona un TXT con etiquetas de personaje"
+4-
+        )
+5-
+        self.btn_limpiar = wx.Button(
+6-
+            self, label="&Limpiar — Restablece la pestaña para cargar otro fragmento"
+7-
+        )
+8-
+        self.btn_dividir_epub = wx.Button(
+9-
+            self, label="&Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"
+10-
+        )
+11-
+        self.btn_dividir_epub.SetHelpText(
+12-
+            "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "
+13-
+            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
+2+
+        # btn_dividir_epub se crea primero para que sea el primero en el orden de tabulación
+3+
+        self.btn_dividir_epub = wx.Button(
+4+
+            self, label="Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"
+5+
+        )
+6+
+        self.btn_dividir_epub.SetHelpText(
+7+
+            "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. "
+8+
+            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
+Show full diff (7 more lines)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+6-6
+410410
+        self.btn_probar = wx.Button(
+411-
+            self, label="&Probar voz — Escucha una muestra de la voz marcada"
+412-
+        )
+413-
+        self.btn_preescucha = wx.Button(
+414-
+            self, label="Pre-escucha &General — Oye todas las voces asignadas en secuencia"
+411+
+            self, label="Probar voz — Escucha una muestra de la voz marcada"
+412+
+        )
+413+
+        self.btn_preescucha = wx.Button(
+414+
+            self, label="Pre-escucha General — Oye todas las voces asignadas en secuencia"
+415415
+        )
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+14-14
+463463
+        self.btn_iniciar = wx.Button(
+464-
+            self, label="&Iniciar Grabación — Comienza el proceso de grabación multivoz"
+465-
+        )
+466-
+        self.btn_iniciar.Enable(False)
+467-
+468-
+        self.btn_abortar = wx.Button(
+469-
+            self,
+470-
+            label="A&bortar — Detiene la grabación; los archivos ya generados se conservan",
+471-
+        )
+472-
+        self.btn_abortar.Enable(False)
+473-
+474-
+        self.btn_abrir_carpeta = wx.Button(
+475-
+            self, label="A&brir Carpeta — Abre la carpeta de grabaciones en el Explorador"
+464+
+            self, label="Iniciar Grabación — Comienza el proceso de grabación multivoz"
+465+
+        )
+466+
+        self.btn_iniciar.Enable(False)
+467+
+468+
+        self.btn_abortar = wx.Button(
+469+
+            self,
+470+
+            label="Abortar — Detiene la grabación; los archivos ya generados se conservan",
+Show full diff (6 more lines)
+Mostrar 10 más
+Copiar mensaje
+Ahora arreglo el error del PNG (añado check de existencia antes de llamar a wx.Image):
+Fixed tab order and missing icon in Dividir EPUB dialog
+Fixed tab order and missing icon in Dividir EPUB dialog
+Edit/home/user/epub-tts-accesible/app/interfaz/ui_recursos.py+13-11
+9595
+def _cargar_bmp_png(nombre: str, size: tuple):
+9696
+    """Intenta cargar un PNG propio; devuelve Bitmap o None."""
+9797
+    ruta = os.path.join(_RUTA_ICONOS, f"{nombre}.png")
+98+
+    if not os.path.isfile(ruta):
+99+
+        return None
+98100
+    except Exception:
+99101
+        pass
+100102
+    return None
+Update Todos☐ Fix tab order: btn_dividir_epub before btn_examinar☐ Fix missing 'cerrar.png' icon error in DialogoTroceador☐ Remove all & accelerators from button/widget labels across the entire app☐ Adding Ctrl+1/2/3 tab shortcuts
+Copiar mensaje
+Ahora añado Ctrl+1/2/3 en ventana_principal.py. Los añado en al_navegacion_tab_global porque así solo se activan cuando el foco está dentro de la ventana principal (no en diálogos separados):
+Pushed focus latency optimization changes to remote branch
+Pushed focus latency optimization changes to remote branch
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+10-3
+160+
+        # Ctrl+1 / Ctrl+2 / Ctrl+3 → cambiar de pestaña directamente
+161+
+        # Solo cuando el foco está dentro de la ventana principal (no en diálogos externos)
+162+
+        if evento.ControlDown() and keycode in (ord('1'), ord('2'), ord('3')):
+163+
+            idx = keycode - ord('1')   # 0, 1 ó 2
+164+
+            self.notebook.SetSelection(idx)
+165+
+            return
+166+
+160167
+        if keycode != wx.WXK_TAB:
+161168
+            evento.Skip()
+162169
+            return
+Update Todos☐ Fix tab order: btn_dividir_epub before btn_examinar☐ Fix missing 'cerrar.png' icon error in DialogoTroceador☐ Remove all & accelerators from button/widget labels across the entire app☐ Add Ctrl+1/2/3 global shortcuts to switch tabs in ventana_principal
+Bash
+git add app/interfaz/pestana_grabacion.py app/interfaz/dialogo_troceador.py app/interfaz/dialogos.py app/interfaz/ventana_proyectos.py app/interfaz/ui_recursos.py app/interfaz/ventana_principal.py && git commit -m "$(cat <<'EOF' fix: corregir orden tab, eliminar aceleradores Alt y añadir Ctrl+1/2/3 - pestana_grabacion: btn_dividir_epub se crea antes que btn_examinar para que el orden de tabulación sea Dividir EPUB → Examinar → Limpiar. También se eliminan todos los aceleradores Alt (&) de sus botones. - dialogo_troceador, dialogos, ventana_proyectos: eliminados todos los aceleradores Alt (&) de labels de botones en toda la app. NVDA los verbalizaba como "Alt+ e / Alt+ d" generando confusión al usuario. - ui_recursos: añadido check os.path.isfile() antes de wx.Image() para evitar el error "Failed to load image from file cerrar.png" que wx imprimía antes de lanzar la excepción. - ventana_principal: Ctrl+1/2/3 cambia a la pestaña 1/2/3 directamente desde cualquier parte de la ventana principal. No se activa en diálogos externos (modal o modeless) ya que EVT_CHAR_HOOK solo captura eventos de controles hijos del Frame. https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 c070240] fix: corregir orden tab, eliminar aceleradores Alt y añadir Ctrl+1/2/3 6 files changed, 40 insertions(+), 30 deletions(-)
+Mostrar 1 más
+Copiar mensaje
+Commit c070240 pusheado. Resumen de todo lo que se ha hecho:
+1. Orden de tabulación del botón Dividir EPUB (pestana_grabacion.py)
+El problema era que en wx el orden de tabulación sigue el orden de creación de los widgets, no el del sizer. btn_examinar se creaba primero, por eso NVDA lo leía primero. Ahora btn_dividir_epub se crea el primero de los tres, así el orden Tab es: Dividir EPUB → Examinar → Limpiar.
+2. Error cerrar.png (ui_recursos.py)
+wx.Image() imprimía el error antes de que Python pudiera capturar la excepción. Añadido os.path.isfile() antes de llamar a wx para silenciarlo completamente.
+3. Eliminados todos los & aceleradores Alt en la app entera
+Los & en los labels de wx crean atajos Alt+Letra reales del sistema operativo. NVDA los verbalizaba porque existen de verdad, aunque no hacen ninguna acción útil en esta app. Eliminados de: pestana_grabacion, dialogo_troceador, dialogos, y ventana_proyectos.
+4. Atajos Ctrl+1/2/3 para cambiar de pestaña (ventana_principal.py)
+Añadidos en al_navegacion_tab_global (que usa EVT_CHAR_HOOK del Frame). Como este evento solo captura teclas de controles hijos del Frame principal, no se activa en diálogos externos (divisor EPUB, gestor de proyectos, gestor de marcadores, etc.) — exactamente lo que pedías.
