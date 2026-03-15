@@ -12,6 +12,7 @@ from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
 from app.motor.control_cuota import ControlCuota
+from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
 from app.config_rutas import ruta_config
 # ANCLAJE_FIN: IMPORTACIONES
 
@@ -126,11 +127,14 @@ class ReproductorVoz:
                 return tipo
 
         # Ningún proveedor tiene cuota: caer a voz local
-        wx.MessageBox(
-            "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\n"
-            "Se usará la voz local para continuar sin generar costes adicionales.",
-            "Límite de cuota alcanzado"
-        )
+        def _aviso_cuota_total():
+            reproducir(SND_ERROR)
+            wx.MessageBox(
+                "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\n"
+                "Se usará la voz local para continuar sin generar costes adicionales.",
+                "Límite de cuota alcanzado"
+            )
+        wx.CallAfter(_aviso_cuota_total)
         self.motor_activo = self.cliente_local
         self.tipo_motor_actual = "local"
         return "local"
@@ -244,6 +248,7 @@ class ReproductorVoz:
         Aviso único por proveedor. Se llama desde el hilo principal via wx.CallAfter.
         Al ser único por proveedor por sesión, no se repite en cada fragmento.
         """
+        reproducir(SND_ERROR)
         wx.MessageBox(
             f"El proveedor {proveedor.upper()} ha alcanzado el límite de su plan/cuota.\n\n"
             "• Este proveedor queda desactivado automáticamente para esta sesión.\n"
@@ -259,6 +264,7 @@ class ReproductorVoz:
         """
         Activa automáticamente una voz local si el servicio de la voz neuronal falla o pierde conexión.
         """
+        reproducir(SND_ERROR)
         wx.MessageBox(
             f"No se ha podido conectar con el servicio de voz con IA ({self.tipo_motor_actual.upper()}).\n\n"
             f"Detalle: {error_msg}\n\n"
