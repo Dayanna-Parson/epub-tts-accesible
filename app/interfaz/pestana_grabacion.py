@@ -178,6 +178,7 @@ class DialogoBautizo(wx.Dialog):
         if self.radio_nuevo.GetValue():
             nombre = self.txt_nombre.GetValue().strip()
             if not nombre:
+                reproducir(SND_ERROR)
                 wx.MessageBox(
                     "Escribe un nombre para el proyecto.",
                     "Nombre requerido", wx.OK | wx.ICON_WARNING
@@ -190,6 +191,7 @@ class DialogoBautizo(wx.Dialog):
         else:
             idx = self.choice_existente.GetSelection()
             if idx == wx.NOT_FOUND or not self._proyectos_lista:
+                reproducir(SND_ERROR)
                 wx.MessageBox(
                     "Selecciona un proyecto de la lista.",
                     "Sin selección", wx.OK | wx.ICON_WARNING
@@ -725,6 +727,7 @@ class PestanaGrabacion(wx.Panel):
             with open(self.ruta_txt_actual, 'r', encoding='utf-8') as f:
                 self.texto_cargado = f.read()
         except Exception as e:
+            reproducir(SND_ERROR)
             wx.MessageBox(
                 f"No se pudo leer el archivo:\n{e}",
                 "Error de lectura", wx.OK | wx.ICON_ERROR,
@@ -732,11 +735,13 @@ class PestanaGrabacion(wx.Panel):
             return
 
         if not self.texto_cargado.strip():
+            reproducir(SND_ERROR)
             wx.MessageBox("El archivo está vacío.", "Sin contenido", wx.OK | wx.ICON_WARNING)
             return
 
         self.fragmentos = fragmentar_texto(self.texto_cargado)
         if not self.fragmentos:
+            reproducir(SND_ERROR)
             wx.MessageBox(
                 "El archivo no contiene texto aprovechable.",
                 "Sin fragmentos", wx.OK | wx.ICON_WARNING,
@@ -791,6 +796,7 @@ class PestanaGrabacion(wx.Panel):
         )
         self.btn_iniciar.Enable(True)
 
+        reproducir(SUCCESS)
         wx.MessageBox(
             f"Texto cargado.\nFragmentos: {total}\nEtiquetas: {etiq_str}",
             "Escaneo completado", wx.OK | wx.ICON_INFORMATION,
@@ -937,6 +943,7 @@ class PestanaGrabacion(wx.Panel):
                 datos_voz = self._mapa_indices[idx]
 
         if datos_voz is None:
+            reproducir(SND_ERROR)
             wx.MessageBox(
                 "Marca primero una voz en la lista.",
                 "Sin selección", wx.OK | wx.ICON_WARNING,
@@ -947,6 +954,7 @@ class PestanaGrabacion(wx.Panel):
             try:
                 GrabadorAudio().probar_voz(datos_voz)
             except Exception as e:
+                wx.CallAfter(reproducir, SND_ERROR)
                 wx.CallAfter(
                     wx.MessageBox,
                     f"Error al reproducir la muestra:\n{e}",
@@ -961,6 +969,7 @@ class PestanaGrabacion(wx.Panel):
         de etiquetas. Útil para verificar el casting completo antes de grabar.
         """
         if not self.asignaciones:
+            reproducir(SND_ERROR)
             wx.MessageBox(
                 "No hay voces asignadas aún. Asigna al menos una voz antes "
                 "de la pre-escucha.",
@@ -975,6 +984,7 @@ class PestanaGrabacion(wx.Panel):
                 voces_a_probar.append((etiq, datos_voz))
 
         if not voces_a_probar:
+            reproducir(SND_ERROR)
             wx.MessageBox(
                 "Ninguna de las etiquetas detectadas tiene voz asignada.",
                 "Sin asignaciones", wx.OK | wx.ICON_WARNING,
@@ -1174,6 +1184,7 @@ class PestanaGrabacion(wx.Panel):
 
     def al_iniciar_grabacion(self, evento):
         if not self.fragmentos:
+            reproducir(SND_ERROR)
             wx.MessageBox(
                 "No hay texto cargado. Selecciona primero un archivo TXT.",
                 "Error", wx.OK | wx.ICON_ERROR,
@@ -1186,6 +1197,7 @@ class PestanaGrabacion(wx.Panel):
         sin_voz = [e for e in self.etiquetas_detectadas if e not in self.asignaciones]
         if sin_voz:
             nombres = ', '.join('@' + e for e in sin_voz)
+            reproducir(SND_ERROR)
             if wx.MessageBox(
                 f"Las siguientes etiquetas no tienen voz asignada:\n{nombres}\n\n"
                 "Los fragmentos sin voz se omitirán.\n"
@@ -1377,6 +1389,7 @@ class PestanaGrabacion(wx.Panel):
             try:
                 os.startfile(ruta_abs)
             except Exception as e:
+                reproducir(SND_ERROR)
                 wx.MessageBox(
                     f"No se pudo abrir la carpeta:\n{e}",
                     "Error", wx.OK | wx.ICON_WARNING,
