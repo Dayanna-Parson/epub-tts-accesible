@@ -28,18 +28,17 @@ import logging
 import tempfile
 import requests
 
-from app.config_rutas import ruta_config
+from app.config_rutas import ruta_config, CARPETA_BIN, CARPETA_GRABACIONES
 from app.motor.procesador_etiquetas import limpiar_nombre_archivo
 
 logger = logging.getLogger(__name__)
 
-# ── ffmpeg portable (bin/ffmpeg.exe junto a la raíz del proyecto) ─────────────
+# ── ffmpeg portable (bin/ffmpeg.exe junto al ejecutable / raíz del proyecto) ──
 # Si existe bin/ffmpeg.exe, se configura pydub para usarlo automáticamente.
 # El usuario solo necesita copiar ffmpeg.exe en esa carpeta; no hace falta
 # instalarlo ni añadirlo al PATH del sistema.
-_RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-_FFMPEG_LOCAL  = os.path.join(_RAIZ, 'bin', 'ffmpeg.exe')
-_FFPROBE_LOCAL = os.path.join(_RAIZ, 'bin', 'ffprobe.exe')
+_FFMPEG_LOCAL  = os.path.join(CARPETA_BIN, 'ffmpeg.exe')
+_FFPROBE_LOCAL = os.path.join(CARPETA_BIN, 'ffprobe.exe')
 
 try:
     from pydub import AudioSegment as _AS
@@ -53,7 +52,7 @@ except ImportError:
     pass  # pydub no instalado — los métodos individuales manejan el fallback
 
 # Ruta absoluta → funciona independientemente del directorio de trabajo actual
-CARPETA_RAIZ_GRABACIONES = os.path.join(_RAIZ, "Grabaciones_Epub-TTS")
+CARPETA_RAIZ_GRABACIONES = CARPETA_GRABACIONES
 
 # ── Máximo de caracteres por petición a cada proveedor ────────────────────────
 _MAX_CHARS = {

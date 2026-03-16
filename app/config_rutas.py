@@ -2,29 +2,54 @@ import os
 import sys
 import json
 
-# ── Detección de entorno PyInstaller ─────────────────────────────────────────
-# En un .exe generado con --onefile:
-#   sys.frozen = True
-#   sys._MEIPASS = directorio temporal donde se extraen los recursos del bundle
-#   sys.executable = ruta al propio .exe
+# ── Brújula de rutas ──────────────────────────────────────────────────────────
 #
-# RAIZ_RECURSOS → donde están sonidos, iconos y otros archivos del bundle.
-#   · Frozen: sys._MEIPASS  (extracción temporal)
-#   · Normal: raíz del proyecto (donde está app/)
+# La app puede ejecutarse de tres formas:
 #
-# RAIZ → directorio donde guardar configuraciones del usuario.
-#   · Frozen: carpeta del .exe  (persistente entre ejecuciones)
-#   · Normal: raíz del proyecto
+#   1. Script Python normal  (python iniciar_epub_tts.py)
+#      __file__ es conocido → RUTA_BASE = carpeta que contiene app/
+#
+#   2. Ejecutable PyInstaller --onedir  (EpubTTS.exe en su carpeta)
+#      sys.frozen = True
+#      sys.executable  = C:\...\EpubTTS\EpubTTS.exe
+#      sys._MEIPASS    = C:\...\EpubTTS\_internal\   ← aquí van sonidos/iconos
+#      RUTA_BASE       = C:\...\EpubTTS\             ← aquí van configs/grabaciones
+#
+#   3. Ejecutable PyInstaller --onefile  (archivo único, desaconsejado)
+#      sys.frozen = True
+#      sys.executable  = C:\...\EpubTTS.exe
+#      sys._MEIPASS    = C:\Temp\_MEIxxxxx\          ← carpeta temporal efímera
+#      RUTA_BASE       = C:\...\                     ← carpeta del .exe
+#
+# RUTA_BASE    → raíz permanente del usuario (configs, grabaciones, bin).
+#                Nunca es una carpeta temporal.
+# RUTA_RECURSOS → donde están los archivos del bundle (sonidos, iconos, version.json).
+#                Frozen: sys._MEIPASS  |  Normal: igual que RUTA_BASE
+
 if getattr(sys, "frozen", False):
-    RAIZ_RECURSOS = sys._MEIPASS
-    RAIZ = os.path.dirname(sys.executable)
+    RUTA_BASE     = os.path.dirname(sys.executable)
+    RUTA_RECURSOS = sys._MEIPASS
 else:
-    RAIZ_RECURSOS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    RAIZ = RAIZ_RECURSOS
+    RUTA_BASE     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    RUTA_RECURSOS = RUTA_BASE
 
-CONFIG_DIR = os.path.join(RAIZ, "configuraciones")
+# ── Carpetas principales ──────────────────────────────────────────────────────
+# Todas construidas desde RUTA_BASE o RUTA_RECURSOS; no hay rutas fijas.
 
-# Valores por defecto neutros para claves_api.json (sin secretos reales)
+CARPETA_CONFIG      = os.path.join(RUTA_BASE,     "configuraciones")
+CARPETA_GRABACIONES = os.path.join(RUTA_BASE,     "Grabaciones_Epub-TTS")
+CARPETA_BIN         = os.path.join(RUTA_BASE,     "bin")
+CARPETA_SONIDOS     = os.path.join(RUTA_RECURSOS, "recursos", "sonidos")
+CARPETA_ICONOS      = os.path.join(RUTA_RECURSOS, "recursos", "iconos")
+
+# ── Aliases de compatibilidad ─────────────────────────────────────────────────
+# Los módulos existentes importan RAIZ, RAIZ_RECURSOS y CONFIG_DIR directamente.
+# Se mantienen para no tener que cambiar cada import; apuntan a las mismas rutas.
+RAIZ         = RUTA_BASE
+RAIZ_RECURSOS = RUTA_RECURSOS
+CONFIG_DIR   = CARPETA_CONFIG
+
+# ── Valores por defecto para claves_api.json (sin secretos reales) ────────────
 _CLAVES_DEFAULT = {
     "azure":       {"key": "", "region": ""},
     "polly":       {"access_key": "", "secret_key": "", "region": ""},
@@ -32,20 +57,19 @@ _CLAVES_DEFAULT = {
 }
 
 
-def ruta_config(nombre_archivo):
-    """
-    Devuelve la ruta absoluta a un archivo dentro de la carpeta configuraciones.
-    Garantiza que la ruta es correcta independientemente del directorio de trabajo
-    desde el que se lanza la aplicación.
-    """
-    return os.path.join(CONFIG_DIR, nombre_archivo)
+# ── Helpers de rutas ──────────────────────────────────────────────────────────
 
+def ruta_config(nombre_archivo: str) -> str:
+    """Ruta absoluta a un archivo dentro de configuraciones/."""
+    return os.path.join(CARPETA_CONFIG, nombre_archivo)
+
+
+# ── Claves API ────────────────────────────────────────────────────────────────
 
 def cargar_claves() -> dict:
     """
-    Lee configuraciones/claves_api.json y devuelve el dict con las claves.
-    Si el archivo no existe o está vacío, devuelve la estructura vacía por defecto.
-    Nunca lanza excepción — fallo seguro para primer arranque o repo recién clonado.
+    Lee configuraciones/claves_api.json.
+    Devuelve estructura vacía si el archivo no existe o está corrupto.
     """
     ruta = ruta_config("claves_api.json")
     try:
@@ -60,15 +84,13 @@ def cargar_claves() -> dict:
 
 
 def guardar_claves(claves: dict) -> None:
-    """
-    Escribe el dict de claves en configuraciones/claves_api.json.
-    Crea la carpeta si no existe.
-    """
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    ruta = ruta_config("claves_api.json")
-    with open(ruta, "w", encoding="utf-8") as f:
+    """Escribe claves en configuraciones/claves_api.json. Crea la carpeta si falta."""
+    os.makedirs(CARPETA_CONFIG, exist_ok=True)
+    with open(ruta_config("claves_api.json"), "w", encoding="utf-8") as f:
         json.dump(claves, f, ensure_ascii=False, indent=2)
 
+
+# ── Migración de archivos heredados ──────────────────────────────────────────
 
 def migrar_archivos_config():
     """
@@ -76,20 +98,20 @@ def migrar_archivos_config():
     Se llama una sola vez al arranque; es seguro llamarla siempre.
 
     Mapa de migración:
-      config_general.json  → ajustes.json
+      config_general.json   → ajustes.json
       libros_recientes.json → historial_epub.json
-      datos_lectura.json   → estado_lectura.json
+      datos_lectura.json    → estado_lectura.json
       ajustes_globales.json (vacío) → se elimina
 
     Además extrae txt_recientes de ajustes.json a historial_grabacion.json
-    si todavía estuviera mezclado allí.
+    si todavía estuviera mezclado allí, y migra claves API al archivo separado.
     """
-    os.makedirs(CONFIG_DIR, exist_ok=True)
+    os.makedirs(CARPETA_CONFIG, exist_ok=True)
 
     _renombrar = [
-        ("config_general.json", "ajustes.json"),
+        ("config_general.json",   "ajustes.json"),
         ("libros_recientes.json", "historial_epub.json"),
-        ("datos_lectura.json", "estado_lectura.json"),
+        ("datos_lectura.json",    "estado_lectura.json"),
     ]
     for viejo, nuevo in _renombrar:
         ruta_vieja = ruta_config(viejo)
@@ -100,7 +122,7 @@ def migrar_archivos_config():
             except Exception:
                 pass
 
-    # Eliminar ajustes_globales.json si está vacío o no existe
+    # Eliminar ajustes_globales.json si está vacío
     ruta_global = ruta_config("ajustes_globales.json")
     if os.path.exists(ruta_global):
         try:
@@ -115,7 +137,7 @@ def migrar_archivos_config():
             pass
 
     # Extraer txt_recientes de ajustes.json → historial_grabacion.json
-    ruta_ajustes = ruta_config("ajustes.json")
+    ruta_ajustes   = ruta_config("ajustes.json")
     ruta_hist_grab = ruta_config("historial_grabacion.json")
     if os.path.exists(ruta_ajustes) and not os.path.exists(ruta_hist_grab):
         try:
@@ -129,9 +151,7 @@ def migrar_archivos_config():
         except Exception:
             pass
 
-    # ── Migrar claves API de ajustes.json → claves_api.json ──────────────────
-    # Si ajustes.json contenía azure/polly/elevenlabs y claves_api.json aún no
-    # existe, moverlas allí para separar secretos del resto de ajustes.
+    # Migrar claves API de ajustes.json → claves_api.json
     ruta_claves = ruta_config("claves_api.json")
     if not os.path.exists(ruta_claves):
         claves = {k: dict(v) for k, v in _CLAVES_DEFAULT.items()}
@@ -142,12 +162,10 @@ def migrar_archivos_config():
                 for proveedor in ("azure", "polly", "elevenlabs"):
                     if proveedor in datos_aj:
                         claves[proveedor] = datos_aj.pop(proveedor)
-                # Guardar ajustes.json sin las claves (si hubo cambio)
                 with open(ruta_ajustes, "w", encoding="utf-8") as f:
                     json.dump(datos_aj, f, ensure_ascii=False, indent=2)
             except Exception:
                 pass
-        # Crear claves_api.json (vacío estructurado o con las claves migradas)
         try:
             guardar_claves(claves)
         except Exception:
