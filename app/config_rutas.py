@@ -48,10 +48,13 @@ CARPETA_BIN         = os.path.join(RUTA_BASE,     "bin")
 CARPETA_SONIDOS     = os.path.join(RUTA_RECURSOS, "recursos", "sonidos")
 CARPETA_ICONOS      = os.path.join(RUTA_RECURSOS, "recursos", "iconos")
 
+CARPETA_REGISTROS   = os.path.join(RUTA_BASE,     "registros")
+
 # ── Autocreación de carpetas de usuario ───────────────────────────────────────
 # Se ejecuta una sola vez al importar el módulo. Garantiza que las carpetas
 # existan en la raíz del ejecutable incluso en la primera ejecución.
-for _carpeta in (CARPETA_CONFIG, CARPETA_PROYECTOS, CARPETA_GRABACIONES, CARPETA_CACHE):
+for _carpeta in (CARPETA_CONFIG, CARPETA_PROYECTOS, CARPETA_GRABACIONES,
+                 CARPETA_CACHE, CARPETA_REGISTROS):
     os.makedirs(_carpeta, exist_ok=True)
 
 # ── Aliases de compatibilidad ─────────────────────────────────────────────────

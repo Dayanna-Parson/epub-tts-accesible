@@ -7,13 +7,18 @@ import threading
 import wx
 
 # ── Directorio raíz del proyecto ─────────────────────────────────────────────
-_RAIZ = os.path.dirname(os.path.abspath(__file__))
+# En modo frozen (--onedir) __file__ apunta a _internal/; sys.executable apunta
+# a la carpeta real del .exe. Se usa sys.executable para que los logs queden
+# al lado del ejecutable, no dentro del bundle.
+if getattr(sys, "frozen", False):
+    _RAIZ = os.path.dirname(sys.executable)
+else:
+    _RAIZ = os.path.dirname(os.path.abspath(__file__))
 
 # ── Sistema de logs centralizado ─────────────────────────────────────────────
-# Todos los registros van a app/registros/app.log (max 2 MB × 3 copias = 6 MB total).
+# Todos los registros van a registros/app.log (max 2 MB × 3 copias = 6 MB total).
 # Solo se escriben WARNING / ERROR / CRITICAL → el archivo tarda mucho en llenarse.
-# Error_log.txt y error_tiflo.log ya no se usan.
-_DIR_REGISTROS = os.path.join(_RAIZ, "app", "registros")
+_DIR_REGISTROS = os.path.join(_RAIZ, "registros")
 os.makedirs(_DIR_REGISTROS, exist_ok=True)
 _RUTA_LOG = os.path.join(_DIR_REGISTROS, "app.log")
 
@@ -54,7 +59,7 @@ except Exception as _e:
 
 # ── Hooks de pánico ──────────────────────────────────────────────────────────
 # Capturan cualquier excepción no controlada (hilo principal y threads de fondo)
-# y escriben el traceback completo en app/registros/app.log.
+# y escriben el traceback completo en registros/app.log.
 
 def _manejador_excepcion_global(tipo, valor, traza):
     """Excepción no capturada en el hilo principal."""
