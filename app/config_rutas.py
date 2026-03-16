@@ -27,27 +27,38 @@ import json
 #                Frozen: sys._MEIPASS  |  Normal: igual que RUTA_BASE
 
 if getattr(sys, "frozen", False):
-    RUTA_BASE     = os.path.dirname(sys.executable)
-    RUTA_RECURSOS = sys._MEIPASS
+    # --onedir: EpubTTS.exe está en la raíz de instalación; _internal/ contiene
+    # los recursos empaquetados (iconos, sonidos). Los datos del usuario nunca
+    # van dentro de _internal/ para que el directorio sea completamente portable.
+    RUTA_BASE     = os.path.dirname(sys.executable)   # .../EpubTTS/
+    RUTA_RECURSOS = sys._MEIPASS                       # .../EpubTTS/_internal/
 else:
     RUTA_BASE     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     RUTA_RECURSOS = RUTA_BASE
 
 # ── Carpetas principales ──────────────────────────────────────────────────────
-# Todas construidas desde RUTA_BASE o RUTA_RECURSOS; no hay rutas fijas.
-
+# Datos de usuario: cuelgan de RUTA_BASE (al lado del .exe, nunca en _internal)
 CARPETA_CONFIG      = os.path.join(RUTA_BASE,     "configuraciones")
+CARPETA_PROYECTOS   = os.path.join(RUTA_BASE,     "proyectos")
 CARPETA_GRABACIONES = os.path.join(RUTA_BASE,     "Grabaciones_Epub-TTS")
+CARPETA_CACHE       = os.path.join(RUTA_BASE,     "cache")
 CARPETA_BIN         = os.path.join(RUTA_BASE,     "bin")
+
+# Recursos del bundle: cuelgan de RUTA_RECURSOS (_internal/ en modo frozen)
 CARPETA_SONIDOS     = os.path.join(RUTA_RECURSOS, "recursos", "sonidos")
 CARPETA_ICONOS      = os.path.join(RUTA_RECURSOS, "recursos", "iconos")
 
+# ── Autocreación de carpetas de usuario ───────────────────────────────────────
+# Se ejecuta una sola vez al importar el módulo. Garantiza que las carpetas
+# existan en la raíz del ejecutable incluso en la primera ejecución.
+for _carpeta in (CARPETA_CONFIG, CARPETA_PROYECTOS, CARPETA_GRABACIONES, CARPETA_CACHE):
+    os.makedirs(_carpeta, exist_ok=True)
+
 # ── Aliases de compatibilidad ─────────────────────────────────────────────────
 # Los módulos existentes importan RAIZ, RAIZ_RECURSOS y CONFIG_DIR directamente.
-# Se mantienen para no tener que cambiar cada import; apuntan a las mismas rutas.
-RAIZ         = RUTA_BASE
+RAIZ          = RUTA_BASE
 RAIZ_RECURSOS = RUTA_RECURSOS
-CONFIG_DIR   = CARPETA_CONFIG
+CONFIG_DIR    = CARPETA_CONFIG
 
 # ── Valores por defecto para claves_api.json (sin secretos reales) ────────────
 _CLAVES_DEFAULT = {
