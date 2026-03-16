@@ -1,0 +1,6 @@
+para pensar
+
+n) Diálogo de coherencia de voces en saga
+Excelente idea conceptualmente, pero es el cambio más complejo de todos: hay que detectar el cambio de voz en tiempo real, verificar si el TXT tiene proyecto, buscar todos los archivos de la saga y preguntar. Demasiado para ahora.
+l) Exportar proyecto
+Feature nuevo, fuera del alcance actual.

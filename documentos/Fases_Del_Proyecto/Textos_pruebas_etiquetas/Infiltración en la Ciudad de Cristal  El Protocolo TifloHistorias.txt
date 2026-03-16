@@ -1,0 +1,20 @@
+Infiltración en la Ciudad de Cristal: El Protocolo TifloHistorias
+{{@nar}} La noche caía sobre la ciudad de cristal, y el silencio solo era interrumpido por el zumbido de los drones de vigilancia. Jacqui se ajustó los auriculares, sintiendo el frío del metal contra su piel.
+
+{{@jacqui}} No tenemos mucho tiempo. Si los sensores térmicos se activan, la puerta de seguridad se sellará para siempre. ¿Estás listo, Marco?
+
+{{@marco}} Siempre lo estoy. Pero sigo pensando que entrar por el conducto de ventilación es una idea pésima. Mis hombros apenas caben por ahí.
+
+{{@nar}} Marco revisó su tableta táctil, donde un mapa holográfico parpadeaba en rojo. Un error de cálculo y quedarían atrapados en el vacío.
+
+{{@jacqui}} Deja de quejarte. La accesibilidad de este edificio es nula para intrusos, así que el conducto es nuestra mejor opción. ¡Muévete!
+
+{{@nar}} De repente, una luz roja iluminó el pasillo. Una voz sintética y gélida retumbó en las paredes de grafeno, haciendo que ambos contuvieran la respiración.
+
+{{@sistema}} Intrusión detectada en el sector siete. Iniciando protocolo de contención de oxígeno. Tienen sesenta segundos para identificarse o la purga comenzará.
+
+{{@marco}} ¡Genial! Ahora el edificio quiere asfixiarnos. Jacqui, si no salimos de esta, quiero que sepas que me comí tu última barrita energética.
+
+{{@jacqui}} ¡Lo sabía! Ahora corre, antes de que use mi bastón para dejarte atrás.
+
+{{@nar}} Los dos corrieron hacia la rejilla, mientras el aire empezaba a silbar, escapando por las rendijas del techo. La misión TifloHistorias dependía de los próximos diez segundos.

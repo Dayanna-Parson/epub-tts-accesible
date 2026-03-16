@@ -1,0 +1,4 @@
+Cosas que falta por implementar y arreglar en mi app
+La barra de progreso, no se desplaza junto a la voz ni al texto, y NVDA la lee así: barra de progreso 0, 10.
+En la ventana marcadores no se porqué si no tocamos el archivo diálogos.py, no aparecen ni el listado, ni los botones nada. solo, nuevo y cerrar.
+implementar presupuesto y caché.

@@ -1,0 +1,18 @@
+Funciones y mejoras que quedan para finalizar mi app
+Pedirle a claude que revise mi .gitignore para que no incluya elementos sensibles, o que puedan incluir mis configuraciones como mis voces favoritas. Y que verifique si todos esos archivos secrean vacíos.
+Multicategoría: Cambiar el selector de tipo de proyecto por una lista de casillas de verificación (Serie, Ficción, Podcast, etc.).
+Mejora de Carga (Latencia del foco en Ajustes y Lectura)
+Si NVDA tarda un par de segundos en anunciar dónde estás al cambiar de pestaña, suele ser por un bloqueo en el "hilo principal" (Main Thread) de wxPython.
+Causa probable: Al seleccionar la pestaña, el código posiblemente esté leyendo archivos JSON pesados (como la lista de voces de Azure/ElevenLabs) o escaneando la carpeta de caché antes de pintar la interfaz.
+La solución: Mover esa carga de datos a un "hilo secundario" (threading) o usar wx.CallAfter para que la ventana se dibuje primero y los datos se rellenen un milisegundo después. Así el foco es instantáneo.
+Sistema de Notificaciones
+Para que sea accesible y no intrusivo para un lector de pantalla:
+Nuevas voces: Podríamos hacer que, al iniciar, la app compare tu archivo voces_locales.json con un pequeño archivo en tu GitHub y esté periódicamente mirando en las 3 apis a ver si se han añadido nuevas voces. Pero, el problema es que no se cuando suelen agregar y en qué periodos de tiempo.. Si hay diferencias, que aparezca un aviso en la barra de estado o un diálogo .sencillo. (A, y este aviso de actualización o no se como llamarolo... ¿elemento quizás? pues meterlo en el apartado voces o idiomas?
+Actualizaciones: Un chequeo de versión simple. Lo ideal aquí es usar un wx.MessageDialog que solo salte una vez para no molestar. (Y que al terminar la actualización, que salga un cuadro de solo lectura navegable por el usuario que cuente las novedades de esta versión... Y meter en general la casilla para que se actualice automáticamente sin acción por parte del usuario...
+
+Y lo último que haríamos sería el portable.Y esto implementarlo en una actualización posterior.
+Integración de Piper (Voces locales de alta calidad)
+Esta es la mejora más potente para el usuario. Piper es un motor de TTS neuronal que suena increíblemente bien y funciona 100% offline.
+El reto: No basta con clonar el repo. Piper funciona mediante archivos .onnx (el modelo de voz) y archivos .json (la configuración).
+Implementación: Tendríamos que incluir el ejecutable de Piper en tu carpeta de la app, descargar los archivos de voz que quieras y usar la librería subprocess de Python para enviarle el texto y recibir el audio.
+Ventaja: Ofrecerás una alternativa gratuita que suena casi como Azure, ideal para cuando no hay internet o se acaba la cuota.

@@ -1,0 +1,26 @@
+Pront maestro dos claude fase 4
+
+Claude, hoy no solo vas a redactar archivos .md. Hoy vas a ser el cronista de un proyecto que estuvo a punto de morir y que hoy es una herramienta de autonomía para personas ciegas. Tienes los documentos en /documents/ y el código actual.
+TU NORMA SUPREMA:
+La Fase 4 es la verdad absoluta. Los documentos de Word (1, 2, 3 e Ideas) son el pasado. Si el Word dice que Polly falta, ignóralo: Polly ya funciona. Si el Word menciona OpenVoice, bórralo: el futuro es Piper TTS.
+LO QUE NADIE SABE (Y DEBES CONTAR):
+1. 
+La Era de la Oscuridad (Gemini): Antes de llegar a ti, viví un infierno técnico. Gemini me daba archivos que borraban funciones que ya servían. La indentación de Python se rompía constantemente. Pasé semanas con un reproductor que no se callaba al pausar (librería pyttsx3), con voces SAPI que tardaban siglos en hablar y una barra de progreso que se volvía loca. El foco de NVDA desaparecía y me dejaba a ciegas. Fue tan frustrante que paré el proyecto dos meses.
+2. 
+El Renacimiento (Fase 1 a 4): A finales de enero retomé el proyecto contigo. En dos semanas arreglaste lo que a Gemini le llevó meses romper. Hemos reconstruido todo desde los cimientos (Fase 1) hasta lograr una arquitectura profesional.
+3. 
+El 'Porqué' de las Funciones Estrella: - Gestor de Proyectos: No es solo una lista. Lo creamos porque el de Calibre es pesado y poco accesible. Ahora, con Control + Enter, voy directa a mi carpeta. Es eficiencia real.
+• 
+Divisor de EPUB: Integrado para no depender de herramientas externas.
+• 
+Foco e Inteligencia: La app ahora recuerda el volumen, la velocidad y dónde te quedaste. No es magia, es diseño de accesibilidad rítmica.
+• 
+Robustez Sonora: Tenemos un sistema de triple seguridad para los sonidos (RAM, hilo secundario y disco). Si uno falla, el otro responde.
+TAREAS OBLIGATORIAS (DETALLE MÁXIMO):
+1. 
+README.md: Presentación profesional. Que se note que es una app INUSUAL hecha por una usuaria de NVDA para resolver problemas que el software comercial ignora.
+2. 
+DEVELOPMENT.md: Guía técnica para que otro desarrollador vea cómo manejamos la caché en RAM, la prevención de ciclos en el árbol y la arquitectura portable (FFmpeg en /bin/).
+3. 
+BITACORA_DE_DESARROLLO.md: Esta es la joya. Usa el Documento de Ideas para contar cómo nació mi flujo de trabajo (el lío entre móvil, Word y Reaper) y cómo la frustración con Gemini me hizo madurar como programadora hasta llegar a esta versión que es mucho más de lo que imaginé.
+TONO: Mantén mi voz. Una voz que conoce la frustración del código roto pero que hoy habla desde la victoria de una Fase 4 estable. No te dejes ningún detalle, por pequeño que sea.

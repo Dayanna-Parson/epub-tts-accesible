@@ -1,0 +1,16 @@
+para arreglar polly
+
+"Claude, el log no muestra los prints de diagnóstico de Polly. Esto indica que el error ocurre antes de llamar a hablar().
+1. 
+Crea un pequeño script independiente llamado test_polly_directo.py que intente leer config_general.json y hacer una síntesis de 1 segundo. Si falla, que imprima el error exacto de Python.
+2. 
+Revisa en pestana_ajustes.py si hay alguna validación que esté impidiendo que las claves de Polly se guarden correctamente en el JSON.
+3. 
+Asegúrate de que el error_tiflo.log capture también los errores de importación de librerías."
+Claude, Polly es VITAL para la Fase 2 (etiquetas y Mi sección TifloHistorias. ). Azure funciona, pero Polly sigue diciendo 'Falta configuración'. Hagamos esto:
+1. 
+Crea un script test_polly_debug.py que intente una conexión directa usando config_general.json e imprima el error exacto de la librería boto3.
+2. 
+En cliente_polly.py, añade un bloque try/except que nos diga si la librería boto3 está realmente instalada.
+3. 
+En pestana_ajustes.py, asegúrate de que al guardar las claves de Amazon, se aplique un .strip() antes de escribir el JSON para que no haya espacios invisibles."

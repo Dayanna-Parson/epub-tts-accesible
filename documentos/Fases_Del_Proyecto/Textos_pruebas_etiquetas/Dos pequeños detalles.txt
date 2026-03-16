@@ -1,0 +1,6 @@
+Dos pequeños detalles:
+Elimina la etiqueta, o mas bien la palabra “nueva” de las voces. Ya que ese error que daba antes, que no mostraba correctamente las voces nuevas que se agregaban ya se corrigió. Por eso ya no tiene sendido que tengan esa etiqueta.
+Y ahora el sonido de navegación solo se reproduce solamente en el árbol de gestión de proyectos. Cuando antes si se reproducía bien en esta y el resto de listas.
+Y con respecto al árbol, he encontrado dos pequeños bugs:
+el primero es: que ahora cuando tengo varios subproyectos, pues creo que sería buena idea que al final, después de que NVDA verbalice la categoría que diga a qué padre pertenece cada uno. Así si hay varios expandidos, pues se sabe de una oída lo que es.
+El segundo es: en la ventana de creación de proyectos o subproyectos, no salen las casillas de verificación, como si sale en las categorías de fuera.

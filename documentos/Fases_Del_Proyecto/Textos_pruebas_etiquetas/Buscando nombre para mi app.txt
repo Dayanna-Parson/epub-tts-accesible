@@ -1,0 +1,8 @@
+Buscando nombre para mi app
+
+@Voice Aloud Reader
+
+Palabras clave:
+Voice, Book, Neural, TTS.
+Descripción corta (inglés):
+An accessible AI audiobook studio for blind creators to produce high-quality multi-voice narration from EPUB files.
