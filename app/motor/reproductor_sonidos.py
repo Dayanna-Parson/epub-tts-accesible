@@ -34,11 +34,11 @@ import os
 import logging
 import threading
 
-from app.config_rutas import RAIZ
+from app.config_rutas import RAIZ_RECURSOS
 
 logger = logging.getLogger(__name__)
 
-_RUTA_SONIDOS = os.path.join(RAIZ, "recursos", "sonidos")
+_RUTA_SONIDOS = os.path.join(RAIZ_RECURSOS, "recursos", "sonidos")
 
 # ── Constantes canónicas ──────────────────────────────────────────────────────
 APP_READY   = "app_ready"

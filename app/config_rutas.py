@@ -1,8 +1,27 @@
 import os
+import sys
 import json
 
-# Directorio raíz del proyecto: un nivel por encima del paquete app/
-RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# ── Detección de entorno PyInstaller ─────────────────────────────────────────
+# En un .exe generado con --onefile:
+#   sys.frozen = True
+#   sys._MEIPASS = directorio temporal donde se extraen los recursos del bundle
+#   sys.executable = ruta al propio .exe
+#
+# RAIZ_RECURSOS → donde están sonidos, iconos y otros archivos del bundle.
+#   · Frozen: sys._MEIPASS  (extracción temporal)
+#   · Normal: raíz del proyecto (donde está app/)
+#
+# RAIZ → directorio donde guardar configuraciones del usuario.
+#   · Frozen: carpeta del .exe  (persistente entre ejecuciones)
+#   · Normal: raíz del proyecto
+if getattr(sys, "frozen", False):
+    RAIZ_RECURSOS = sys._MEIPASS
+    RAIZ = os.path.dirname(sys.executable)
+else:
+    RAIZ_RECURSOS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    RAIZ = RAIZ_RECURSOS
+
 CONFIG_DIR = os.path.join(RAIZ, "configuraciones")
 
 # Valores por defecto neutros para claves_api.json (sin secretos reales)
