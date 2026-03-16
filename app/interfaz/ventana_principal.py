@@ -626,9 +626,9 @@ class VentanaPrincipal(wx.Frame):
     def al_abrir_readme(self, evento):
         """Abre el README del proyecto con el visor de texto predeterminado del sistema."""
         import subprocess
-        raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from app.config_rutas import RUTA_RECURSOS
         for nombre in ("README.md", "README.txt", "README"):
-            ruta = os.path.join(raiz, nombre)
+            ruta = os.path.join(RUTA_RECURSOS, nombre)
             if os.path.exists(ruta):
                 try:
                     os.startfile(ruta)

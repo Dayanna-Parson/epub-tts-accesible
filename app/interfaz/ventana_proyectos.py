@@ -1064,13 +1064,13 @@ class VentanaProyectos(wx.Frame):
           2. Archivos .mp3/.wav hermanos de cualquier TXT asociado.
         """
         import re
-        from app.config_rutas import RAIZ
+        from app.config_rutas import CARPETA_GRABACIONES
 
         def _limpiar(nombre):
             return re.sub(r'[<>:"/\\|?*\n\r]', '_', nombre).strip() or "_"
 
         nombre = proyecto.get("nombre", "")
-        carpeta_audio = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre), "grabaciones")
+        carpeta_audio = os.path.join(CARPETA_GRABACIONES, _limpiar(nombre), "grabaciones")
         if os.path.isdir(carpeta_audio):
             for _, _, archivos in os.walk(carpeta_audio):
                 if any(f.endswith(('.mp3', '.wav')) for f in archivos):
@@ -1101,7 +1101,7 @@ class VentanaProyectos(wx.Frame):
     def _abrir_carpeta_proyecto(self):
         """Ctrl+Intro: abre en el Explorador la carpeta de audio o TXT del proyecto."""
         import re
-        from app.config_rutas import RAIZ
+        from app.config_rutas import CARPETA_GRABACIONES
 
         proyecto = self._proyecto_seleccionado()
         if proyecto is None:
@@ -1114,7 +1114,7 @@ class VentanaProyectos(wx.Frame):
 
         nombre = proyecto.get("nombre", "")
         # Intenta abrir /grabaciones/ si existe; si no, la raíz del proyecto
-        carpeta_libro = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre))
+        carpeta_libro = os.path.join(CARPETA_GRABACIONES, _limpiar(nombre))
         carpeta_audio = os.path.join(carpeta_libro, "grabaciones")
         if os.path.isdir(carpeta_audio):
             carpeta = carpeta_audio

@@ -37,11 +37,11 @@ import ebooklib
 from ebooklib import epub
 from bs4 import BeautifulSoup
 
-from app.config_rutas import RAIZ
+from app.config_rutas import CARPETA_GRABACIONES
 from app.motor.limpiador_lectura import limpiar_para_lectura
 
 # Carpeta raíz donde se generan los proyectos de grabación
-CARPETA_RAIZ = os.path.join(RAIZ, "Grabaciones_Epub-TTS")
+CARPETA_RAIZ = CARPETA_GRABACIONES
 
 warnings.filterwarnings("ignore", category=UserWarning, module="bs4")
 
