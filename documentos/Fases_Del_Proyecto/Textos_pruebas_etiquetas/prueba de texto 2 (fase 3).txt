@@ -1,0 +1,14 @@
+prueba de texto 2 (fase 3)
+{{@nar}} La sala de reuniones estaba en silencio. Jacqui miró a sus compañeros.
+{{@jacqui}} Tenemos el código final. Pero necesitamos un servidor seguro.
+{{@marco}} Yo puedo encargarme de la encriptación, pero necesito tiempo.
+{{@lucia}} No tenemos tiempo. El sistema se reiniciará en diez minutos.
+{{@sistema}} Advertencia: Energía de reserva al cinco por ciento.
+
+{{@nar}} Este es un test para comprobar si la app me reconoce al abrir el archivo.
+{{@nar}} Si el diálogo de proyecto aparece ahora mismo, es que Claude ha arreglado el bug del escaneo inicial.
+{{@nar}} Este es un test para comprobar si la app me reconoce al abrir el archivo.
+{{@nar}} Si el diálogo de proyecto aparece ahora mismo, es que Claude ha arreglado el bug del escaneo inicial.
+{{@nar}} Capítulo 1: El inicio del fin.
+{{@personaje_misterioso}} Nadie debería tener tanto poder sobre la voz de los demás.
+{{@nar}} Jacqui cerró su laptop y sonrió. Sabía que la Fase 3 estaba completa.

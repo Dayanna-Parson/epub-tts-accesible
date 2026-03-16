@@ -1,0 +1,12 @@
+prueba_grabacion
+{{@nar}} Bienvenidos a la prueba oficial de Tiflo Historias. En este fragmento comprobaremos si el casting de voces funciona correctamente.
+
+{{@pj1}} Hola Jacqui. Yo soy el primer personaje. Si todo va bien, deberías estar escuchando una voz distinta a la del narrador.
+
+{{@pj2}} Y yo soy la antagonista de esta historia. He sido asignada a una voz diferente para crear contraste en el diálogo.
+
+{{@nar}} Como han podido observar, el cambio entre etiquetas es atómico y no debería haber cortes en las palabras. 
+
+{{@pj1}} ¡Exacto! Ahora, prueba a darle al botón de Iniciar Grabación.
+
+{{@nar}} Fin de la prueba de audio.

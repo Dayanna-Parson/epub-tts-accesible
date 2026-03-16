@@ -1,0 +1,21 @@
+Fragmento de suspense
+
+{{@nar}} El sótano olía a humedad y a tecnología antigua. Jacqui avanzó con cuidado, guiándose por el eco de sus pasos sobre el hormigón.
+
+{{@jacqui}} El servidor central debería estar tras esa puerta reforzada. Si mis cálculos no fallan, es el único lugar de la ciudad que no ha sido infectado por el virus.
+
+{{@marco}} ¿Y si fallan? No me apetece quedarme encerrado aquí abajo con esos robots de seguridad patrullando.
+
+{{@nar}} Un pitido agudo rompió el silencio. No venía de la puerta, sino del dispositivo que Jacqui llevaba en la muñeca.
+
+{{@sistema}} Alerta: Intento de acceso no autorizado detectado. Iniciando escaneo de retina en tres, dos... uno.
+
+{{@jacqui}} ¡Marco, el inhibidor! ¡Ahora!
+
+{{@marco}} ¡No funciona! La señal está bloqueada. Jacqui, tenemos que salir de aquí. ¡Ya!
+
+{{@nar}} Las luces del pasillo se tornaron de un azul gélido. Los engranajes de la puerta empezaron a girar, pero no para abrirse, sino para sellar la habitación por completo.
+
+{{@sistema}} Acceso denegado. Los intrusos serán procesados para su reciclaje de biomasa. Tengan un buen día.
+
+{{@jacqui}} Al menos el sistema es educado. Marco, busca el panel manual, ¡voy a intentar hackear el sistema desde aquí!

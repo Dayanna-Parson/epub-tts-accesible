@@ -1,0 +1,64 @@
+Ideas para fase 3 4 y 5
+
+e) Ventana como organizador, no formulario duplicado
+Es el cambio más importante conceptualmente. La ventana actual comete el error de reeditar datos que ya están en Grabación. El árbol debe mostrar lo que ya existe, no pedir que se rellene de nuevo. (implementado y corregido)
+o) Abrir en nodo correcto (Ctrl+Shift+P con TXT cargado)
+Esencial para que la ventana sea útil. Sin esto, el usuario abre la ventana y tiene que buscar manualmente su archivo en el árbol — anula el propósito. (implementado y corregido)
+b) Escape cierra + foco de retorno
+Comportamiento estándar en cualquier ventana auxiliar de Windows. Fácil de implementar: guardar wx.Window.FindFocus() antes de abrir, restaurar en al_cerrar(). Crítico para NVDA. (implementado y corregido)
+d) Diálogo post-asignación no intrusivo
+Muy bien pensado. La clave es el "solo cuando todas las etiquetas tienen voz" — evita interrupciones prematuras. Hay que implementarlo con un wx.MessageDialog simple, no una ventana nueva. (implementado y corregido)
+i) Menú de contexto con tecla Aplicaciones
+Imprescindible para accesibilidad. Sin menú contextual, las acciones sobre nodos (asociar, cambiar tipo, eliminar) son inaccesibles para usuarios de NVDA que no conocen los botones de la barra. (implementado y corregido)
+Buenas ideas, prioridad media
+a) "Cerrar" en vez de "Cerrar ventana"
+Trivial, correcto. Cambio de 2 segundos. (implementado y corregido)
+f) Sincronización Grabación → Proyectos
+Bien pensado, pero hay que tener cuidado: la sincronización debe ser unidireccional (Grabación → Proyectos, no al revés) para no sobrescribir ediciones hechas en la ventana de proyectos. Implementar en al_cambiar_pestana o con EVT_TEXT 
+g) Volcado de voces desde mapeo_etiquetas.json
+Correcto. La ventana ya puede leer ese JSON — es solo mostrar la info que ya existe. (implementado y corregido)
+h) Alt+Arriba / Alt+Abajo para reordenar
+Útil para usuarios avanzados. wx.TreeCtrl no tiene reordenación nativa — hay que implementar: quitar nodo, reinsertar en nueva posición, actualizar proyectos.json. No es complejo pero requiere cuidado. (Atajos modificados en control flecha arriba o abajo. Implementado y funcionando)
+c) TXT Recientes como submenú
+Consistente con EPUB recientes. La lista debe leer de config_general.json y mostrar nombre del proyecto entre paréntesis si está asociado. (implementado y corregido)
+Ideas válidas pero para una fase posterior
+k) Relocalización de archivo
+Importante para robustez, pero compleja de hacer bien (hay que decidir si buscar automáticamente o solo avisar). Dejarlo para Fase 4. (creo que es mejor que primero implementemos que sea automático. Y si no lo encuentra, pues avisar al usuario, dándole la opcion de buscarlo de forma manual o eliminarlo)
+j) Árbol colapsable por niveles / m) Buscador en el árbol
+Útiles solo cuando haya colecciones grandes. El wx.TreeCtrl ya soporta colapso nativo — lo que falta es un atajo "colapsar todo" (p.ej. Ctrl+Menos del numpad). El buscador es complejo, para después. (por implementar)
+El estado de grabación por nodo en el árbol — un indicador visual/textual de si un archivo asociado ya tiene audio generado, está en proceso o no se ha grabado todavía. Sin eso, el árbol muestra la estructura pero no el progreso real del proyecto. Para un usuario de NVDA sería: leer el nodo y escuchar "Capítulo 3 — Sin grabar" o "Capítulo 3 — Grabado". (Implementado y funcionando)
+
+
+Sistema de Actualizaciones: Implementar ese aviso automático para que tus seguidores siempre tengan la última versión sin esfuerzo.
+Creación del .exe: Empaquetar todo en un solo archivo fácil de instalar.
+
+
+A, no se si es normal pero, cuando abro la app, pues tarda un poco en abrir, no se. como mucho un par de segundos o así... Y cuando enfoco los ajustes, al bajar a la pestaña de idiomas y voces, pues tarda un poco en cargar. No es instantaneo como el resto de apartados. Y no se si se puede mejorar eso... Mas que nada es para a la hora de crear el .exe, pues Al usuario final le valla igual de rápido en todas partes de la app. Aunque sean un par de segunditos, pues se agradece... A, y al cambiar  a la pestaña lectura, pues también tarda un poco en cargar. Pero, ya no se si es el foco o NVDA o simplemente que la ventana necesita esperar un poco para cargar.
+A, y hay que arreglar también una cosa en el apartado de las claves apis. que independientemente en qué botón para descargar voces pulse, se descargan de las tres. Y en realidad, los botones solo tendrían que descargar las voces correspondientes a cada api por separado... No los tres botones para las 3 a la vez. (corregido)
+
+cambiar el selector (de cuadro combinado, a casillas de verificación). 
+Serie / Saga: Para todo lo que tiene "continuará" (libros de una saga, temporadas de podcast, capítulos de YouTube). 
+Libro / Relato: Para obras que son una sola pieza, aunque sean largas. 
+Podcast / Programa: Para contenido más dinámico, entrevistas o tutoriales rápidos. 
+Ficción / Teatro: Para cuando el peso está en los personajes y las muchas voces. 
+Otros: El cajón de sastre que no puede faltar para pruebas o cosas raras. 
+ 
+¿Cómo funcionaría la "Multicategoría"?
+Para que no sea un lío con el NVDA, en lugar de un cuadro combinado (donde solo eliges una), le pediríamos a Claude que pusiera una Lista de Casillas de Verificación.
+Cómo lo escucharías: Al tabular, entrarías en una lista donde NVDA diría: "Serie, casilla de verificación, marcado. Ficción, casilla de verificación, sin marcar".
+La ventaja: Podrías marcar "Serie" y "Ficción" a la vez. Así, tu proyecto queda clasificado de forma mucho más real. 
+efectivamente, usamos wx.adv.EditableListBox o controles tipo CheckListBox (y en ocasiones los CheckListCtrl de wx.lib.mixins.listctrl si queremos algo más complejo) para que la experiencia con el lector de pantalla sea más fluida que con las casillas estándar.
+
+Diálogo emergente que notifique las nuevas voces que añaden los proovedores, de forma periódica, y que pregunte al usuario si quiere descargarlas o no
+Sería configurable como el de actualización buscar actualizaciones casilla desactivada o activada. y ya sabes, lo típico. Ambas irían en pestaña ajustes en general, antes del botón guardar.
+Y otra mejora que se me acaba de ocurrir es la siguiente:
+Cuando estamos leyendo en el modo lectura, pues hay una pausa de unos segundos pues para poder así cargar el bloque siguiente. Creo que le pusimos unas 100 caracteres por bloque, pero no me hagas mucho caso porque no me acuerdo exactamente cuales pusimos en realidad. Y me acabo de dar cuenta que a veces hace la pausa donde no debe, y muchas veces la hace en mitad de una frase, y no queda bien.. En cambio, cuando estamos grabando, pues las pausas si las hace bien y no hay esos silencios de cuando estamos leyendo.
+Y me preguntaba si podemos aplicar lo que hicimos en el modo grabación creo que lo llamaste chunking o algo así.. para que respete eso, y a la vez no me gaste tantos caracteres? Recuerdas que en el modo lectura pusimos ese número de caracteres, por dos cosas. Para que no se tardara tanto en empezar a leer, y para que no me llegaran sorpresas en las facturas al siguiente mes jajajaja. (corregido y funcionando mas fluido)
+
+A. y esto es para alguna actualización muy posterior pero.. no se si saves que gracias al complemento para NVDA Sonata Neural Voices, se pueden utilizar las voces que tengamos de piper descargadas? y de vedad que son una maravilla? y hay muchas que suenan muy bien.. e incluso, puedes entrenar las voces que quieras, eso si, no es fácil por tres motivos. tienes que trocear las voces, y buscarte tu todas las voces, y que suenen lo mas limpias que se puedan.. y además tienes que saber algo de programación, o al menos, saber como usar el cuaderno que hay para entrenar estas voces. y encima, no se suele actualizar. Porque solo se ocupa la comunidad del mantenimiento de todo este proyecto..
+y me preguntaba, si me descargo el repo de GitHub, y lo clono y lo subo como está a mi app, pues se podrá implementar en mi app, como otra alternativa para leer en local si no se quiere usar ni las apis ni las sapi 5?
+Poner sonidos e iconos a la app
+notificar cuando hay una nueva voz de los proovedores configurados disponible s para descargar
+añadido atajo control enter en el árbol para visualizar el item en su carpeta
+Y también se a añadido que si eliminamos del árbol un subproyecto  (a, y se me olvidó decirte que comprobaras y lo implementaras si no lo está ya. Que cuando pulsemos sobre un subproyecto la tecla suprimir, efectivamente se elimine del árbol como del json porque. lo e probado, y me a saltado el diálogo preguntando si quería eliminarlos, y si. Se han eliminado todos correctamente, pero al cerrar y al volver a abrir la app, han regresado todos los elementos que había eliminado. A, Y otra cosa más que se me ocurre, además de que si pulsamos suprimir en el padre, se elimine ovbiamente preguntándonos primero si queremos que se eliminen todos los subproyectos de una vez, añade también al menú contextual para recuperar o mejor dicho, restaurar uno o todos los elementos eliminados por si lo borramos accidentalmente. Y añade también al menú la misma acción que con suprimir, haciendo esas diferencias que te e comentado antes.)
+

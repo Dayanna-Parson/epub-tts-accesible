@@ -1,0 +1,16 @@
+Prueba de testo mas larga
+
+{{@nar}}
+Este es el inicio de una prueba de larga duración. Aquí el motor debería estar utilizando la voz del narrador por defecto. 
+
+{{@pj1}}
+¡Espera! Yo también quiero participar. Al ser un párrafo un poco más extenso, el programa no debería tener problemas en mantener la coherencia de mi voz a lo largo de toda la frase.
+
+{{@nar}}
+Exactamente. Además, Jacqui, si este párrafo fuera extremadamente largo, Claude ha programado un sistema de "chunking" o troceado inteligente. Esto significa que dividirá el texto por los puntos y seguidos para no saturar la conexión con Azure o Polly, y luego lo unirá todo en un solo archivo MP3 de 320 kbps.
+
+{{@pj2}}
+Yo soy la tercera voz. Mi etiqueta es pj2. Si me has asignado una voz de ElevenLabs, notarás que la calidad es muy alta.
+
+{{@nar}}
+Fin de la prueba de integración. Recuerda verificar que al terminar, el diálogo de Windows te pregunte si quieres abrir la carpeta con el resultado.

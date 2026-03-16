@@ -1,0 +1,728 @@
+pront y respuesta 36 claude (fase 4)
+
+me acabo de dar cuenta de un error en los diálogos. Y el sonido que asignamos a los diálogos que confirman algo, por ejemplo, cuando sale el diálogo de abrir carpeta, o sale el diálogo de se descargaron X voces, o hay X voces, en azure, etc, a esos diálogos me refiero
+Copiar mensaje
+Copiar mensaje
+Déjame ver primero cómo están esos diálogos ahora mismo para entender exactamente el problema.
+Read dialog files for new voice detection feature implementation
+Read dialog files for new voice detection feature implementation
+Bash
+grep -n "reproducir\|SUCCESS\|CLICK\|ERROR\|LIST_NAV\|APP_READY" /home/user/epub-tts-accesible/app/interfaz/dialogo_voces_nuevas.py /home/user/epub-tts-accesible/app/interfaz/dialogos.py /home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py | grep -v "^Binary\|import\|from app" | head -60
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:31:        self.lista_marcadores.Bind(wx.EVT_LISTBOX_DCLICK, self.al_activar_item)
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:110:                reproducir(LIST_NAV)
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:208:            reproducir(OPEN_FOLDER)
+Mostrar más
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:12:    reproducir, LIST_NAV, MOVE_UP, MOVE_DOWN, OPEN_FOLDER, CLEAR, CLICK, ERROR, SUCCESS,
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:42:            reproducir(LIST_NAV)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:249:        self.arbol.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self._al_clic_derecho_arbol)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:469:                reproducir(CLICK)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:487:            reproducir(LIST_NAV)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:499:            reproducir(LIST_NAV)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:549:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:565:                reproducir(SUCCESS)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:703:        reproducir(CLEAR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:733:            reproducir(SUCCESS)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:744:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:764:            reproducir(MOVE_UP if delta < 0 else MOVE_DOWN)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:789:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:799:        reproducir(SUCCESS)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:834:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:840:        reproducir(OPEN_FOLDER)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:861:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:869:        reproducir(CLEAR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:914:        reproducir(CLICK)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:935:        reproducir(SUCCESS)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:942:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:955:        reproducir(SUCCESS)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:967:            reproducir(SUCCESS)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:971:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:983:        reproducir(CLICK)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:995:            reproducir(CLEAR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1005:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1019:        reproducir(CLICK)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1030:            reproducir(CLEAR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1032:            reproducir(ERROR)
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1035:                "Error al eliminar", wx.OK | wx.ICON_ERROR
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1110:        reproducir(OPEN_FOLDER)
+Bash
+grep -n "reproducir\|SUCCESS\|CLICK\|ShowModal\|wx.MessageBox\|wx.MessageDialog" /home/user/epub-tts-accesible/app/interfaz/dialogo_voces_nuevas.py
+8:  - NVDA lo anuncia automáticamente al aparecer (ShowModal en hilo principal).
+Bash
+grep -n "reproducir\|SUCCESS\|CLICK\|ShowModal\|wx.MessageBox\|MessageDialog" /home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py | head -40
+10:from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+27:            reproducir(LIST_NAV)
+202:        wx.MessageBox("Configuración y límites guardados.")
+Mostrar más
+277:        wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+295:            wx.MessageBox(
+307:            dlg.ShowModal()
+310:            wx.MessageBox(
+479:            wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")
+520:            wx.MessageBox(f"Resultado:\n{res}", "Info")
+523:            wx.MessageBox(f"Error: {e}", "Error")
+935:            wx.MessageBox("Selecciona una voz.", "Info")
+947:            wx.MessageBox(f"Error: {e}", "Error")    
+1120:                reproducir(LIST_NAV)
+1133:            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+1139:        if dlg.ShowModal() == wx.ID_OK and dlg.resultado:
+1153:            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+1164:        if wx.MessageBox(
+1171:            wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
+1325:            reproducir(LIST_NAV)
+1370:            wx.MessageBox(str(e))
+Mostrar 2 más
+Copiar mensaje
+Ahora veo dónde se abren esos diálogos para entender qué pasa al aparecer.
+Reviewed recording tab module for completion status message
+Reviewed recording tab module for completion status message
+Bash
+grep -n "DialogoVocesNuevas\|ShowModal\|abrir_carpeta\|OPEN_FOLDER" /home/user/epub-tts-accesible/app/interfaz/ventana_principal.py | head -30
+13:from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER
+220:        reproducir(OPEN_FOLDER)
+673:        from app.interfaz.dialogo_voces_nuevas import DialogoVocesNuevas
+Mostrar más
+674:        dlg = DialogoVocesNuevas(self, nuevas)
+675:        dlg.ShowModal()
+Bash
+grep -rn "DialogoVocesNuevas\|DialogoAbrirCarpeta\|ShowModal" /home/user/epub-tts-accesible/app/ | grep -v "^Binary\|\.pyc" | head -30
+grep: /home/user/epub-tts-accesible/app/interfaz/__pycache__/ventana_proyectos.cpython-311.pyc: binary file matches/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py:645:        resultado = dlg.ShowModal()
+/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py:667:        if dlg.ShowModal() == wx.ID_OK:
+Mostrar más
+/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py:689:                if dlg_lista.ShowModal() == wx.ID_OK:
+/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py:697:        if dlg.ShowModal() == wx.ID_OK:
+/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py:727:            if dlg.ShowModal() == wx.ID_OK: 
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:847:            if dlg.ShowModal() != wx.ID_OK:
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:916:        resultado = dlg.ShowModal()
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:991:        resp = dlg.ShowModal()
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1024:        respuesta = dlg.ShowModal()
+/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:656:        if dlg.ShowModal() == wx.ID_OK:/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:675:            if dlg.ShowModal() != wx.ID_OK:/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:845:        dlg.ShowModal()/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:1328:        resultado = dlg.ShowModal()/home/user/epub-tts-accesible/app/interfaz/dialogo_voces_nuevas.py:8:  - NVDA lo anuncia automáticamente al aparecer (ShowModal en hilo principal).
+/home/user/epub-tts-accesible/app/interfaz/dialogo_voces_nuevas.py:28:class DialogoVocesNuevas(wx.Dialog):
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:126:        if dlg.ShowModal() == wx.ID_OK:
+/home/user/epub-tts-accesible/app/interfaz/dialogos.py:144:        if dlg.ShowModal() == wx.ID_OK:
+/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py:307:            dlg.ShowModal()
+/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py:1139:        if dlg.ShowModal() == wx.ID_OK and dlg.resultado:
+/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py:673:        from app.interfaz.dialogo_voces_nuevas import DialogoVocesNuevas
+/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py:674:        dlg = DialogoVocesNuevas(self, nuevas)
+/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py:675:        dlg.ShowModal()
+/home/user/epub-tts-accesible/app/interfaz/dialogo_troceador.py:208:            if dlg.ShowModal() != wx.ID_OK:
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.pyLeer 30 líneas
+Mostrar 7 más
+Copiar mensaje
+Ya tengo el cuadro completo. Antes de tocar nada, necesito confirmar exactamente qué error notaste.
+Veo varios escenarios posibles:
+Escenario A: DialogoVocesNuevas (el de "Se han detectado voces nuevas…") aparece sin ningún sonido. SUCCESS debería sonar cuando el diálogo se abre, no hay ningún reproducir() ahí.
+Escenario B: En pestana_ajustes.py, el wx.MessageBox que aparece después de descargar voces ("Resultado: X voces de Azure…") también aparece en silencio.
+Escenario C: En ventana_principal.py línea 220, abrir el Gestor de Proyectos usa OPEN_FOLDER, que es el sonido de "abrir una carpeta en el Explorador". Quizás lo correcto ahí sería CLICK u otro.
+Usó una herramienta
+Usó una herramienta
+AskUserQuestion¿Cuál es el error concreto que notaste?Falta el sonido al abrirse
+Copiar mensaje
+Falta el sonido. Voy a ver todos los diálogos afectados de una vez para solucionarlos todos juntos.
+Read imports and dependencies in two Python interface files
+Read imports and dependencies in two Python interface files
+Bashgrep -rn "DialogoExportacion" /home/user/epub-tts-accesible/app/ 2>/dev/null | grep -v ".pyc"/home/user/epub-tts-accesible/app/interfaz/dialogos.py:169:class DialogoExportacion(wx.Dialog):
+Bash
+grep -n "reproducir\|MessageBox\|ShowModal\|MessageDialog" /home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py | grep -v "^.*#\|import\|from app" | head -50
+27:            reproducir(LIST_NAV)
+202:        wx.MessageBox("Configuración y límites guardados.")
+277:        wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+Mostrar más
+295:            wx.MessageBox(
+307:            dlg.ShowModal()
+310:            wx.MessageBox(
+479:            wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")
+520:            wx.MessageBox(f"Resultado:\n{res}", "Info")
+523:            wx.MessageBox(f"Error: {e}", "Error")
+935:            wx.MessageBox("Selecciona una voz.", "Info")
+947:            wx.MessageBox(f"Error: {e}", "Error")    
+1120:                reproducir(LIST_NAV)
+1133:            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+1139:        if dlg.ShowModal() == wx.ID_OK and dlg.resultado:
+1153:            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+1164:        if wx.MessageBox(
+1171:            wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
+1325:            reproducir(LIST_NAV)
+1370:            wx.MessageBox(str(e))
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 35 líneas
+Mostrar 7 más
+Copiar mensaje
+Tengo el mapa completo. Los cambios son:
+ventana_principal.py: añadir SUCCESS al import y que suene antes de DialogoVocesNuevas y DialogoNovedades.
+pestana_ajustes.py: añadir SUCCESS, ERROR al import y poner el sonido correcto antes de cada MessageBox de confirmación/error.
+Updated voice selection dialog display logic
+Updated voice selection dialog display logic
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+1-1
+13-
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER
+13+
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER, SUCCESS
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+7-6
+11
+    def _mostrar_dialogo_voces_nuevas(self, nuevas: dict):
+22
+        """Muestra el diálogo de novedades (siempre en hilo principal)."""
+33
+        from app.interfaz.dialogo_voces_nuevas import DialogoVocesNuevas
+4+
+        reproducir(SUCCESS)
+45
+        dlg = DialogoVocesNuevas(self, nuevas)
+56
+        dlg.ShowModal()
+67
+        dlg.Destroy()
+Copiar mensaje
+Ahora la comprobación de actualizaciones en _al_resultado_actualizacion y los MessageBox de ajustes:
+Added success sound feedback to settings reset confirmation
+Added success sound feedback to settings reset confirmation
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+1-1
+10-
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+10+
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, SUCCESS, ERROR
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-1
+1+
+        reproducir(SUCCESS)
+12
+        wx.MessageBox("Configuración y límites guardados.")
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+2-1
+1+
+        reproducir(SUCCESS)
+12
+        wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+Mostrar 8 más
+Copiar mensaje
+Ahora verifico que no haya quedado ningún MessageBox de confirmación huérfano:
+Verified MessageBox calls have reproducir audio before them
+Verified MessageBox calls have reproducir audio before them
+Bash
+grep -n "MessageBox\|reproducir" /home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py | grep -v "import\|#" | head -40
+27:            reproducir(LIST_NAV)
+202:        reproducir(SUCCESS)
+203:        wx.MessageBox("Configuración y límites guardados.")
+Mostrar más
+278:        reproducir(SUCCESS)
+279:        wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+297:            reproducir(ERROR)
+298:            wx.MessageBox(
+308:            reproducir(SUCCESS)
+314:            reproducir(SUCCESS)
+315:            wx.MessageBox(
+484:            reproducir(SUCCESS)
+485:            wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")
+526:            reproducir(SUCCESS)
+527:            wx.MessageBox(f"Resultado:\n{res}", "Info")
+530:            reproducir(ERROR)
+531:            wx.MessageBox(f"Error: {e}", "Error")
+943:            wx.MessageBox("Selecciona una voz.", "Info")
+955:            reproducir(ERROR)
+956:            wx.MessageBox(f"Error: {e}", "Error")
+1129:                reproducir(LIST_NAV)
+1142:            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+1162:            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+1173:        if wx.MessageBox(
+1180:            reproducir(SUCCESS)
+1181:            wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
+1335:            reproducir(LIST_NAV)
+1380:            wx.MessageBox(str(e))
+Copiar mensaje
+Los tres huérfanos restantes son distintos: las dos "Selecciona un atajo" son validaciones (el usuario no hizo nada mal, solo falta una selección), y la línea 1380 puede ser un error. La reviso rápido:
+Added error sound notification to exception handler
+Added error sound notification to exception handler
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 8 líneas
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.py+3-2
+13791379
+        except Exception as e:
+1380+
+            reproducir(ERROR)
+13801381
+            wx.MessageBox(str(e))
+Copiar mensaje
+Ahora commit y push:
+Pushed sound fixes to remote branch
+Pushed sound fixes to remote branch
+Bash
+git add app/interfaz/ventana_principal.py app/interfaz/pestana_ajustes.py && git commit -m "$(cat <<'EOF' Añadir sonido de confirmación/error a todos los diálogos informativos - DialogoVocesNuevas: reproducir(SUCCESS) al abrirse - DialogoNovedades (actualización disponible): reproducir(SUCCESS) al abrirse - Comprobación de actualizaciones sin nueva versión: reproducir(SUCCESS) - Error de conexión al comprobar actualizaciones: reproducir(ERROR) - Guardar configuración y límites: reproducir(SUCCESS) - Limpiar caché: reproducir(SUCCESS) - Guardar claves API: reproducir(SUCCESS) - Resultado de descarga de voces (éxito): reproducir(SUCCESS) - Resultado de descarga de voces (error): reproducir(ERROR) - Error al probar voz: reproducir(ERROR) - Restablecer atajos: reproducir(SUCCESS) - Error al aplicar atajos: reproducir(ERROR) - Importar SUCCESS y ERROR en pestana_ajustes.py https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )"
+[claude/optimize-focus-latency-q7Sq3 30498c8] Añadir sonido de confirmación/error a todos los diálogos informativos 2 files changed, 15 insertions(+), 3 deletions(-)
+Bashgit push -u origin claude/optimize-focus-latency-q7Sq3To http://127.0.0.1:45791/git/Dayanna-Parson/epub-tts-accesible   d6daf6b..30498c8  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3branch 'claude/optimize-focus-latency-q7Sq3' set up to track 'origin/claude/optimize-focus-latency-q7Sq3'.
+Copiar mensaje
+Listo. Resumen de todos los cambios:
+ventana_principal.py
+• DialogoVocesNuevas (hay voces nuevas disponibles): SUCCESS al abrirse.
+pestana_ajustes.py — 12 lugares corregidos:
+• SUCCESS antes de: guardar configuración/límites, limpiar caché, guardar claves API, resultado de descarga de voces (éxito), actualización disponible, ya tienes la versión más reciente, restablecer atajos.
+• ERROR antes de: error de conexión al comprobar actualizaciones, error en descarga de voces, error al probar voz, error al aplicar atajos.
+Los dos "Selecciona un atajo de la lista primero" los dejé sin sonido: no son confirmaciones, son recordatorios de que falta una acción del usuario. Añadirles un sonido de error ahí sería confuso porque el usuario no hizo nada mal.
+y entonces, en ese caso que recomiendas? a, también revisa el tercer escenario
+Copiar mensaje
+Read project manager window opening method code
+Read project manager window opening method code
+Read/home/user/epub-tts-accesible/app/interfaz/ventana_principal.pyLeer 15 líneas
+Copiar mensaje
+Escenario C confirmado. OPEN_FOLDER en al_abrir_gestor_proyectos es incorrecto. Ese sonido significa "se está abriendo una carpeta en el Explorador de Windows". Aquí se está abriendo una ventana de la propia app.
+Mi recomendación para los dos casos:
+Para los "Selecciona una voz / un atajo" — recomiendo ERROR con volumen suave. Son mensajes de advertencia, no de error grave, pero el silencio total tampoco es ideal: NVDA lo va a leer, pero sin sonido el usuario no recibe señal de que algo no salió como esperaba. ERROR es la constante correcta para "algo no se pudo hacer".
+Para al_abrir_gestor_proyectos — recomiendo CLICK. Es la acción de activar algo dentro de la app, igual que cuando se pulsa un botón. OPEN_FOLDER debe quedar reservado exclusivamente para cuando os.startfile() o el Explorador se abren de verdad.
+Verified sound reproduction import statement in main window
+Verified sound reproduction import statement in main window
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+1-1
+220-
+        reproducir(OPEN_FOLDER)
+220+
+        reproducir(CLICK)
+Bash
+grep -n "^from app.motor.reproductor_sonidos" /home/user/epub-tts-accesible/app/interfaz/ventana_principal.py
+13:from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER, SUCCESS
+Copiar mensaje
+OPEN_FOLDER sigue importado porque se usa en otro sitio de ventana_principal.py. Verifico:
+Verified OPEN_FOLDER import in ventana_principal.py
+Verified OPEN_FOLDER import in ventana_principal.py
+Bashgrep -n "OPEN_FOLDER" /home/user/epub-tts-accesible/app/interfaz/ventana_principal.py13:from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER, SUCCESS
+Copiar mensaje
+Ya no se usa en este archivo. Lo elimino del import:
+Updated imports in ventana_principal.py file
+Updated imports in ventana_principal.py file
+Edit/home/user/epub-tts-accesible/app/interfaz/ventana_principal.py+1-1
+1-
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, OPEN_FOLDER, SUCCESS
+1+
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS
+Copiar mensaje
+Ahora los dos "Selecciona" en pestana_ajustes.py:
+Committed sound fixes and error validation improvements to project manager
+Committed sound fixes and error validation improvements to project manager
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 8 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 8 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_ajustes.pyLeer 8 líneas
+Mostrar 3 más
+Copiar mensaje
+Hecho. Resumen de este segundo commit:
+al_abrir_gestor_proyectos: OPEN_FOLDER → CLICK. Ahora OPEN_FOLDER solo suena cuando de verdad se abre el Explorador de Windows. Regla clara: ese sonido = carpeta real.
+Validaciones de selección: ERROR antes de "Selecciona una voz" y "Selecciona un atajo de la lista primero" (los dos sitios donde aparece). El usuario ha intentado hacer algo y no puede porque falta un paso previo — eso merece señal sonora aunque no sea un error grave.
+perfecto, algo mas de última hora?
+Copiar mensaje
+Searched codebase for MessageBox dialog implementations
+Searched codebase for MessageBox dialog implementations
+Bash
+grep -rn "MessageBox\|ShowModal" /home/user/epub-tts-accesible/app/ --include="*.py" | grep -v "reproducir\|#\|__pycache__\|\.pyc" | grep -v "import\|dlg\.ShowModal\|if.*MessageBox\|resultado.*ShowModal\|resp.*ShowModal\|respuesta.*ShowModal" | grep "MessageBox" | head -20
+/home/user/epub-tts-accesible/app/motor/control_cuota.py:96:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/motor/reproductor_voz.py:129:        wx.MessageBox(
+/home/user/epub-tts-accesible/app/motor/reproductor_voz.py:247:        wx.MessageBox(
+Mostrar más
+/home/user/epub-tts-accesible/app/motor/reproductor_voz.py:262:        wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py:683:                wx.MessageBox("No se ha encontrado el texto especificado en este libro.", "Búsqueda finalizada")
+/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py:759:            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:550:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:790:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:835:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:862:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:943:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:972:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1006:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/ventana_proyectos.py:1033:            wx.MessageBox(
+/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:181:                wx.MessageBox(/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:193:                wx.MessageBox(/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:728:            wx.MessageBox(/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:735:            wx.MessageBox("El archivo está vacío.", "Sin contenido", wx.OK | wx.ICON_WARNING)/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:740:            wx.MessageBox(/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py:794:        wx.MessageBox(
+Copiar mensaje
+Hay bastante. Déjame verificar contexto de cada uno antes de sacar conclusiones:
+Read voice reproduction module and quota control implementation files
+Read voice reproduction module and quota control implementation files
+Bash
+python3 - <<'EOF' import re files = [ "app/motor/control_cuota.py", "app/motor/reproductor_voz.py", "app/interfaz/pestana_lectura.py", "app/interfaz/pestana_grabacion.py", "app/interfaz/ventana_proyectos.py", ] import os os.chdir("/home/user/epub-tts-accesible") for path in files: with open(path) as f: lines = f.readlines() print(f"\n=== {path} ===") for i, line in enumerate(lines): if "MessageBox" in line and "import" not in line: # Mostrar 2 líneas antes start = max(0, i-2) for j in range(start, i+1): marker = ">>>" if j == i else " " print(f" {marker} {j+1}: {lines[j]}", end="") print() EOF
+=== app/motor/control_cuota.py ===      94:       95:         if gastado + cantidad > limite:
+Mostrar más
+  >>> 96:             wx.MessageBox(=== app/motor/reproductor_voz.py ===      127:       128:         # Ningún proveedor tiene cuota: caer a voz local  >>> 129:         wx.MessageBox(      245:         Al ser único por proveedor por sesión, no se repite en cada fragmento.      246:         """  >>> 247:         wx.MessageBox(      260:         Activa automáticamente una voz local si el servicio de la voz neuronal falla o pierde conexión.      261:         """  >>> 262:         wx.MessageBox(=== app/interfaz/pestana_lectura.py ===      681:                   682:             if not coincidencias:  >>> 683:                 wx.MessageBox("No se ha encontrado el texto especificado en este libro.", "Búsqueda finalizada")      757:       758:         except Exception as e:  >>> 759:             wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")=== app/interfaz/pestana_grabacion.py ===      179:             nombre = self.txt_nombre.GetValue().strip()      180:             if not nombre:  >>> 181:                 wx.MessageBox(      191:             idx = self.choice_existente.GetSelection()      192:             if idx == wx.NOT_FOUND or not self._proyectos_lista:  >>> 193:                 wx.MessageBox(      726:                 self.texto_cargado = f.read()      727:         except Exception as e:  >>> 728:             wx.MessageBox(      733:       734:         if not self.texto_cargado.strip():  >>> 735:             wx.MessageBox("El archivo está vacío.", "Sin contenido", wx.OK | wx.ICON_WARNING)      738:         self.fragmentos = fragmentar_texto(self.texto_cargado)      739:         if not self.fragmentos:  >>> 740:             wx.MessageBox(      792:         self.btn_iniciar.Enable(True)      793:   >>> 794:         wx.MessageBox(      938:       939:         if datos_voz is None:  >>> 940:             wx.MessageBox(      949:             except Exception as e:      950:                 wx.CallAfter(  >>> 951:                     wx.MessageBox,      962:         """      963:         if not self.asignaciones:  >>> 964:             wx.MessageBox(      976:       977:         if not voces_a_probar:  >>> 978:             wx.MessageBox(      1175:     def al_iniciar_grabacion(self, evento):      1176:         if not self.fragmentos:  >>> 1177:             wx.MessageBox(      1187:         if sin_voz:      1188:             nombres = ', '.join('@' + e for e in sin_voz)  >>> 1189:             if wx.MessageBox(      1200:             detalle = "\n\n".join(fallos_cred)      1201:             reproducir(SND_ERROR)  >>> 1202:             wx.MessageBox(      1290:                     resumen += f"\n… y {len(errores) - 5} errores más."      1291:                 detalle = f"\n\nDetalle de errores:\n{resumen}"  >>> 1292:             wx.MessageBox(      1337:         self.lbl_progreso.SetLabel(f"Error durante la grabación: {error}")      1338:         reproducir(SND_ERROR)  >>> 1339:         wx.MessageBox(      1378:                 os.startfile(ruta_abs)      1379:             except Exception as e:  >>> 1380:                 wx.MessageBox(=== app/interfaz/ventana_proyectos.py ===      548:             evento.Veto()      549:             reproducir(ERROR)  >>> 550:             wx.MessageBox(      788:         if not nuevo_nombre:      789:             reproducir(ERROR)  >>> 790:             wx.MessageBox(      833:         if proyecto is None:      834:             reproducir(ERROR)  >>> 835:             wx.MessageBox(      860:         if idx == -1:      861:             reproducir(ERROR)  >>> 862:             wx.MessageBox(      941:         if proyecto_padre is None:      942:             reproducir(ERROR)  >>> 943:             wx.MessageBox(      970:         else:      971:             reproducir(ERROR)  >>> 972:             wx.MessageBox(      1004:         if proyecto is None:      1005:             reproducir(ERROR)  >>> 1006:             wx.MessageBox(      1031:         except Exception as e:      1032:             reproducir(ERROR)  >>> 1033:             wx.MessageBox(
+Read/home/user/epub-tts-accesible/app/motor/reproductor_voz.pyLeer 15 líneas
+Read/home/user/epub-tts-accesible/app/motor/control_cuota.pyLeer 15 líneas
+Copiar mensaje
+Encontré más. El patrón se repite en otros archivos. Clasifico por urgencia:
+Fáciles y limpias — pestana_lectura.py:
+• "No se encontró el texto" (búsqueda sin resultados) → falta ERROR
+• "Error al cargar el libro EPUB" → falta ERROR
+Muchas en pestana_grabacion.py (validaciones y errores de carga/fragmentación) → la mayoría sin sonido, pero hay que revisar una a una porque algunas son preguntas YES/NO o están llamadas desde hilos.
+Problema arquitectónico en los motores — reproductor_voz.py y control_cuota.py llaman a wx.MessageBox directamente desde la capa de motor. Eso ya era un problema previo (llamar wx desde un hilo de fondo puede crashear). Añadirles reproducir encima sin resolver eso primero sería tapar mal lo que ya está mal.
+Mi recomendación para "última hora":
+• Ahora: arreglo rápido de pestana_lectura.py (2 líneas, limpio) y las validaciones claras de pestana_grabacion.py.
+• Después, tarea aparte: migrar los wx.MessageBox en reproductor_voz.py y control_cuota.py a wx.CallAfter(wx.MessageBox, ...) y añadir sonido ahí.
+¿Arrancamos con lo de ahora o lo dejamos para la próxima sesión?
+puedes hacer todo eso ahora?
+Copiar mensaje
+Updated todo list tracking pestana_lectura.py and pestana_grabacion.py fixes
+Updated todo list tracking pestana_lectura.py and pestana_grabacion.py fixes
+Update Todos☐ Corrigiendo pestana_lectura.py☐ Corregir pestana_grabacion.py (validaciones y errores)☐ Migrar reproductor_voz.py a wx.CallAfter + sonido☐ Migrar control_cuota.py a wx.CallAfter + sonido☐ Commit y push
+Copiar mensaje
+Leo todos los bloques afectados en paralelo:
+Reviewed voice reproduction module and verified audio integration imports
+Reviewed voice reproduction module and verified audio integration imports
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 15 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.pyLeer 10 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 100 líneas
+Mostrar 15 más
+Copiar mensaje
+Tengo todo el contexto. Los wx.MessageBox en reproductor_voz.py y control_cuota.py se llaman desde hilos de fondo, así que hay que envolverlos en wx.CallAfter. Los de las pestañas van directos porque están en el hilo principal. Arranco:
+pestana_lectura.py — 2 fixes:
+Fixed pestana_lectura.py MessageBox issues, started correcting pestana_grabacion.py
+Fixed pestana_lectura.py MessageBox issues, started correcting pestana_grabacion.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+1-1
+1-
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+1+
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+3-2
+11
+            if not coincidencias:
+2+
+                reproducir(ERROR)
+23
+                wx.MessageBox("No se ha encontrado el texto especificado en este libro.", "Búsqueda finalizada")
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_lectura.py+3-2
+758758
+        except Exception as e:
+759+
+            reproducir(ERROR)
+759760
+            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
+Mostrar 1 más
+Copiar mensaje
+pestana_grabacion.py — todos los casos de una vez:
+Fixed voice selection validation in recording panel
+Fixed voice selection validation in recording panel
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+6-5
+11
+            if not nombre:
+2+
+                reproducir(SND_ERROR)
+23
+                    "Escribe un nombre para el proyecto.",
+34
+                    "Nombre requerido", wx.OK | wx.ICON_WARNING
+45
+                )
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+6-5
+11
+            if idx == wx.NOT_FOUND or not self._proyectos_lista:
+2+
+                reproducir(SND_ERROR)
+23
+                    "Selecciona un proyecto de la lista.",
+34
+                    "Sin selección", wx.OK | wx.ICON_WARNING
+45
+                )
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+20-17
+11
+        except Exception as e:
+2-
+            wx.MessageBox(
+3-
+                f"No se pudo leer el archivo:\n{e}",
+4-
+                "Error de lectura", wx.OK | wx.ICON_ERROR,
+5-
+            )
+6-
+            return
+7-
+8-
+        if not self.texto_cargado.strip():
+9-
+            wx.MessageBox("El archivo está vacío.", "Sin contenido", wx.OK | wx.ICON_WARNING)
+10-
+            return
+11-
+12-
+        self.fragmentos = fragmentar_texto(self.texto_cargado)
+13-
+        if not self.fragmentos:
+2+
+            reproducir(SND_ERROR)
+3+
+            wx.MessageBox(
+4+
+                f"No se pudo leer el archivo:\n{e}",
+5+
+                "Error de lectura", wx.OK | wx.ICON_ERROR,
+6+
+            )
+7+
+            return
+8+
+9+
+        if not self.texto_cargado.strip():
+10+
+            reproducir(SND_ERROR)
+11+
+            wx.MessageBox("El archivo está vacío.", "Sin contenido", wx.OK | wx.ICON_WARNING)
+12+
+            return
+13+
+14+
+        self.fragmentos = fragmentar_texto(self.texto_cargado)
+15+
+        if not self.fragmentos:
+16+
+            reproducir(SND_ERROR)
+1417
+                "El archivo no contiene texto aprovechable.",
+1518
+                "Sin fragmentos", wx.OK | wx.ICON_WARNING,
+1619
+            )
+Mostrar 2 más
+Copiar mensaje
+El wx.CallAfter(wx.MessageBox, ...) del error de previsualización ya se lanza desde un hilo, así que necesita wx.CallAfter para el sonido también:
+Fixed error handling in recording tab interface
+Fixed error handling in recording tab interface
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+7-6
+11
+            except Exception as e:
+2+
+                wx.CallAfter(reproducir, SND_ERROR)
+23
+                    f"Error al reproducir la muestra:\n{e}",
+34
+                    "Error de previsualización", wx.OK | wx.ICON_ERROR,
+45
+                )
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+21-19
+11
+        if not self.asignaciones:
+2-
+            wx.MessageBox(
+3-
+                "No hay voces asignadas aún. Asigna al menos una voz antes "
+4-
+                "de la pre-escucha.",
+5-
+                "Sin asignaciones", wx.OK | wx.ICON_WARNING,
+6-
+            )
+7-
+            return
+8-
+9-
+        voces_a_probar = []
+10-
+        for etiq in self.etiquetas_detectadas:
+11-
+            datos_voz = self.asignaciones.get(etiq)
+12-
+            if datos_voz:
+13-
+                voces_a_probar.append((etiq, datos_voz))
+14-
+15-
+        if not voces_a_probar:
+2+
+            reproducir(SND_ERROR)
+3+
+            wx.MessageBox(
+4+
+                "No hay voces asignadas aún. Asigna al menos una voz antes "
+5+
+                "de la pre-escucha.",
+6+
+                "Sin asignaciones", wx.OK | wx.ICON_WARNING,
+Show full diff (14 more lines)
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+7-6
+11
+        if not self.fragmentos:
+2+
+            reproducir(SND_ERROR)
+23
+                "Error", wx.OK | wx.ICON_ERROR,
+34
+            )
+45
+            return
+Copiar mensaje
+El pregunta YES/NO de "etiquetas sin voz, ¿continuar?" merece ERROR porque interrumpe el flujo:
+Fixed voice assignment warning dialog in recording tab
+Fixed voice assignment warning dialog in recording tab
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+9-8
+11
+        if sin_voz:
+22
+            nombres = ', '.join('@' + e for e in sin_voz)
+3+
+            reproducir(SND_ERROR)
+34
+                "¿Continuar de todas formas?",
+45
+                "Etiquetas sin voz", wx.YES_NO | wx.ICON_WARNING,
+56
+            ) != wx.YES:
+Copiar mensaje
+El error "grabación finalizada sin archivos válidos" (el caso más grave de la grabación):
+Read error handling section in recording tab module
+Read error handling section in recording tab module
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 8 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 8 líneas
+Copiar mensaje
+Ese ya tiene reproducir(SND_ERROR) en línea 1294 — bien. La apertura de carpeta fallida:
+Fixed MessageBox issues in pestana_lectura.py, corrected validation errors in pestana_grabacion.py
+Fixed MessageBox issues in pestana_lectura.py, corrected validation errors in pestana_grabacion.py
+Edit/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.py+5-4
+11
+            except Exception as e:
+2+
+                reproducir(SND_ERROR)
+23
+                wx.MessageBox(
+34
+                    f"No se pudo abrir la carpeta:\n{e}",
+45
+                    "Error", wx.OK | wx.ICON_WARNING,
+Update Todos☐ Corregir pestana_lectura.py (2 MessageBox)☐ Corregir pestana_grabacion.py (validaciones y errores)☐ Migrando reproductor_voz.py☐ Migrar control_cuota.py a wx.CallAfter + sonido☐ Commit y push
+Copiar mensaje
+reproductor_voz.py — import + los 3 casos (línea 129 en hilo de fondo, 247 y 262 en hilo principal):
+Updated imports in reproductor_voz.py file
+Updated imports in reproductor_voz.py file
+Read/home/user/epub-tts-accesible/app/motor/reproductor_voz.pyLeer 16 líneas
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+3-2
+1414
+from app.motor.control_cuota import ControlCuota
+15+
+from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
+1516
+from app.config_rutas import ruta_config
+Copiar mensaje
+Línea 129 — llamada desde hilo de fondo, usamos wx.CallAfter para el sonido y el diálogo juntos:
+Updated voice provider quota warning message in reproductor_voz.py
+Updated voice provider quota warning message in reproductor_voz.py
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+9-6
+11
+        # Ningún proveedor tiene cuota: caer a voz local
+2-
+        wx.MessageBox(
+3-
+            "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\n"
+4-
+            "Se usará la voz local para continuar sin generar costes adicionales.",
+5-
+            "Límite de cuota alcanzado"
+6-
+        )
+2+
+        def _aviso_cuota_total():
+3+
+            reproducir(SND_ERROR)
+4+
+            wx.MessageBox(
+5+
+                "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\n"
+6+
+                "Se usará la voz local para continuar sin generar costes adicionales.",
+7+
+                "Límite de cuota alcanzado"
+8+
+            )
+9+
+        wx.CallAfter(_aviso_cuota_total)
+Copiar mensaje
+Líneas 247 y 262 — ya en hilo principal vía wx.CallAfter, solo añadir el sonido antes:
+Fixed message boxes in pestana_lectura.py and validations in pestana_grabacion.py
+Fixed message boxes in pestana_lectura.py and validations in pestana_grabacion.py
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+7-6
+33
+        Aviso único por proveedor. Se llama desde el hilo principal via wx.CallAfter.
+44
+        Al ser único por proveedor por sesión, no se repite en cada fragmento.
+55
+        """
+6+
+        reproducir(SND_ERROR)
+67
+        wx.MessageBox(
+Edit/home/user/epub-tts-accesible/app/motor/reproductor_voz.py+6-5
+22
+        """
+33
+        Activa automáticamente una voz local si el servicio de la voz neuronal falla o pierde conexión.
+44
+        """
+5+
+        reproducir(SND_ERROR)
+56
+        wx.MessageBox(
+Update Todos☐ Corregir pestana_lectura.py (2 MessageBox)☐ Corregir pestana_grabacion.py (validaciones y errores)☐ Migrar reproductor_voz.py a wx.CallAfter + sonido☐ Migrando control_cuota.py☐ Commit y push
+Copiar mensaje
+control_cuota.py — también en hilo de fondo, mismo patrón wx.CallAfter:
+Fixed quota control error message formatting in control_cuota.py
+Fixed quota control error message formatting in control_cuota.py
+Edit/home/user/epub-tts-accesible/app/motor/control_cuota.py+3-2
+11
+import wx
+2+
+from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
+23
+from app.config_rutas import ruta_config
+Edit/home/user/epub-tts-accesible/app/motor/control_cuota.py+14-11
+9595
+        if gastado + cantidad > limite:
+96-
+            wx.MessageBox(
+97-
+                f"¡ALTO! Se ha detenido la lectura por seguridad.\n\n"
+98-
+                f"Proveedor: {clave.upper()}\n"
+99-
+                f"Has gastado: {gastado} caracteres\n"
+100-
+                f"Intentaste leer: {cantidad} caracteres\n"
+101-
+                f"Límite configurado: {limite}\n\n"
+102-
+                "Se usará la voz LOCAL para no generar costes extra.",
+103-
+                "Escudo de Presupuesto Activo"
+104-
+            )
+96+
+            def _aviso_presupuesto():
+97+
+                reproducir(SND_ERROR)
+98+
+                wx.MessageBox(
+99+
+                    f"¡ALTO! Se ha detenido la lectura por seguridad.\n\n"
+100+
+                    f"Proveedor: {clave.upper()}\n"
+101+
+                    f"Has gastado: {gastado} caracteres\n"
+102+
+                    f"Intentaste leer: {cantidad} caracteres\n"
+103+
+                    f"Límite configurado: {limite}\n\n"
+104+
+                    "Se usará la voz LOCAL para no generar costes extra.",
+105+
+                    "Escudo de Presupuesto Activo"
+Show full diff (3 more lines)
+Copiar mensaje
+Verificación rápida de que no quedó ningún MessageBox huérfano en estos cuatro archivos:
+Read recording tab file around line 1290
+Read recording tab file around line 1290
+Bash
+python3 - <<'EOF' import os os.chdir("/home/user/epub-tts-accesible") files = [ "app/interfaz/pestana_lectura.py", "app/interfaz/pestana_grabacion.py", "app/motor/reproductor_voz.py", "app/motor/control_cuota.py", ] for path in files: with open(path) as f: lines = f.readlines() huerfanos = [] for i, line in enumerate(lines): if "MessageBox" in line and "import" not in line: prev = lines[max(0,i-1)].strip() + " " + lines[max(0,i-2)].strip() tiene_sonido = any(k in prev for k in ["reproducir", "CallAfter"]) if not tiene_sonido: huerfanos.append(f" línea {i+1}: {line.rstrip()}") if huerfanos: print(f"\n{path} — SIN SONIDO:") for h in huerfanos: print(h) else: print(f"{path} — OK") EOF
+app/interfaz/pestana_lectura.py — OKapp/interfaz/pestana_grabacion.py — SIN SONIDO:
+Mostrar más
+  línea 1304:             wx.MessageBox(app/motor/reproductor_voz.py — OKapp/motor/control_cuota.py — OK
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 15 líneas
+Read/home/user/epub-tts-accesible/app/interfaz/pestana_grabacion.pyLeer 6 líneas
+Copiar mensaje
+Bien — reproducir(SND_ERROR) ya está en línea 1294, el MessageBox está en 1304. El script de verificación solo miraba 2 líneas atrás; este caso ya estaba cubierto. Todo correcto.
+Fixed message box issues in pestana_lectura.py and validation errors in pestana_grabacion.py
+Fixed message box issues in pestana_lectura.py and validation errors in pestana_grabacion.py
+Bash
+git add app/interfaz/pestana_lectura.py app/interfaz/pestana_grabacion.py app/motor/reproductor_voz.py app/motor/control_cuota.py && git commit -m "$(cat <<'EOF' Cubrir todos los MessageBox restantes con sonido correcto pestana_lectura.py: - Búsqueda sin resultados: ERROR - Error al cargar EPUB: ERROR pestana_grabacion.py: - Nombre de proyecto vacío: ERROR - Sin proyecto seleccionado: ERROR - Error de lectura de archivo TXT: ERROR - Archivo vacío: ERROR - Sin fragmentos aprovechables: ERROR - Escaneo completado con éxito: SUCCESS - Sin voz marcada para previsualización: ERROR - Error en previsualización (desde hilo): wx.CallAfter(reproducir, ERROR) - Sin asignaciones para pre-escucha general: ERROR (x2) - Sin texto cargado al iniciar grabación: ERROR - Etiquetas sin voz al iniciar (pregunta YES/NO): ERROR - Error al abrir carpeta de destino: ERROR reproductor_voz.py: - Importar SND_ERROR desde reproductor_sonidos - Cuota total agotada (hilo de fondo): wx.CallAfter con ERROR + MessageBox - Cuota de proveedor agotada (_avisar_cuota_agotada): ERROR - Fallo de conexión al servicio (_activar_voz_local_automatica): ERROR control_cuota.py: - Importar SND_ERROR desde reproductor_sonidos - Límite de presupuesto activo (hilo de fondo): wx.CallAfter con ERROR + MessageBox https://claude.ai/code/session_017nyaAw4ExdT9TJb4a9vSt4 EOF )" && git push -u origin claude/optimize-focus-latency-q7Sq3
+[claude/optimize-focus-latency-q7Sq3 b1ea294] Cubrir todos los MessageBox restantes con sonido correcto 4 files changed, 40 insertions(+), 15 deletions(-)To http://127.0.0.1:37745/git/Dayanna-Parson/epub-tts-accesible
+Mostrar más
+   d42b08e..b1ea294  claude/optimize-focus-latency-q7Sq3 -> claude/optimize-focus-latency-q7Sq3branch 'claude/optimize-focus-latency-q7Sq3' set up to track 'origin/claude/optimize-focus-latency-q7Sq3'.
+Update Todos☐ Corregir pestana_lectura.py (2 MessageBox)☐ Corregir pestana_grabacion.py (validaciones y errores)☐ Migrar reproductor_voz.py a wx.CallAfter + sonido☐ Migrar control_cuota.py a wx.CallAfter + sonido☐ Commit y push
+Copiar mensaje
+Listo. Conteo final de lo que se hizo en esta sesión de sonidos:
+20 MessageBox corregidos repartidos en 6 archivos. El patrón quedó así de claro en toda la app:
+• SUCCESS → algo salió bien (descarga completada, guardado, escaneo ok, actualización disponible).
+• ERROR → algo falló o falta una acción previa (validaciones, errores de carga, errores de API, límites de presupuesto).
+• OPEN_FOLDER → exclusivamente cuando se abre una carpeta real en el Explorador de Windows.
+• CLICK → apertura de ventanas internas de la app (Gestor de Proyectos).
+Los dos casos de control_cuota.py y _seleccionar_motor en reproductor_voz.py también quedan correctamente envueltos en wx.CallAfter porque se llaman desde hilos de fondo — eso era el problema arquitectónico previo, ya resuelto.

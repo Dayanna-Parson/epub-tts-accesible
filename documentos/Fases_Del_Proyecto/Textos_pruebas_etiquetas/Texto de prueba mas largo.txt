@@ -1,0 +1,27 @@
+Texto de prueba mas largo
+{{@nar}}
+El sol se ponía tras las montañas de Tiflo Historias, tiñendo el cielo de un rojo intenso. Era el momento de la gran prueba técnica. El ingeniero jefe se acercó a la consola con paso firme, mientras los demás contenían el aliento. Este era un momento decisivo para el proyecto de accesibilidad.
+
+{{@ingeniero}}
+¿Están todos los módulos listos? Necesito confirmación de que el procesador de etiquetas está detectando las variantes de narrador correctamente. ¡No quiero etiquetas duplicadas en mi lista de casting!
+
+{{@asistente}}
+Todo en orden, jefe. El sistema está reconociendo @nar como la voz principal. Además, la lista de voces favoritas ahora muestra el nombre, el género y el proveedor de forma impecable para los lectores de pantalla.
+
+{{@ia_voz}}
+Confirmado. Mi núcleo de procesamiento está listo para convertir cada fragmento a trescientos veinte kbps. No importa cuán largo sea el párrafo, el sistema de troceado inteligente mantendrá mi voz estable y sin cortes.
+
+{{@nar}}
+De repente, una alarma sonó en el laboratorio. Era una señal de que el proceso de grabación había comenzado. La voz del sistema empezó a informar del progreso en tiempo real.
+
+{{@villano}}
+¡Ja! Creen que pueden hacer una app tan accesible sin errores. ¡Intentaré lanzar un WinError dos para detener la recodificación!
+
+{{@ingeniero}}
+¡No tan rápido! Hemos incluido FFmpeg directamente en la carpeta bin del proyecto. El programa es ahora totalmente autónomo y portable. ¡Inicia la pre-escucha general ahora mismo!
+
+{{@asistente}}
+Entendido. Procesando pre-escucha de las cinco voces asignadas. Todo suena sincronizado y profesional.
+
+{{@nar}}
+La habitación se llenó de un sonido nítido y cristalino. El experimento había sido un éxito rotundo. Jacqui sonrió al escuchar cómo su creación cobraba vida, fragmento a fragmento, etiqueta a etiqueta, en una armonía perfecta de tecnología y accesibilidad.

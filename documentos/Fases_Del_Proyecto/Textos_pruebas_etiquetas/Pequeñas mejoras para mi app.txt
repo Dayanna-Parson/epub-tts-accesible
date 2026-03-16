@@ -1,0 +1,17 @@
+Pequeñas mejoras para mi app
+
+Añade también esto: En cliente_polly.py, configura la frecuencia de muestreo (SampleRate) a 24000. Queremos la máxima calidad de audio para las voces de Amazon.
+
+Y estos ajustes de eficiencia:
+1. 
+Asegúrate de que el audio se descargue en un formato comprimido (como MP3) para que la transferencia sea más rápida, y que se procese en memoria sin escribir archivos temporales en el disco si es posible.
+2. 
+Implementa un pequeño sistema de 'caché' para que si salto hacia atrás en el mismo fragmento, no se consuman caracteres de la API de nuevo.
+3. 
+Confirma que el control_cuota.py está bloqueando las peticiones si el usuario supera el límite establecido en los JSON.A, y se me olvidó mencionarte esto:
+Que no se actualizó el cuadro combinado de la pestaña lectura, ese donde elegimos las voces, pues no está igual que en las voces disponibles ni en las voces favoritas, aquí a lo que me refiero.
+
+Y además, en el menú de la app, ya sabes en el de arriba, archivos ir y ayuda, pues añade un apartado para ver la ayuda de la app en GitHub, así pueden venr que hace la app, como funciona, vamos, el readme.
+y en ajustes tenemos que llenar el apartado atajos, que ahí van a ir todos los atajos de la app, y tenemos que poner ona opción, para si quieren cambiar los mismos... y obviamente que se guarden esos cambios en un json en...
+Pero eso lo haremos al final, después de aver hecho por completo el panel de grabación y lo que quede.
+
