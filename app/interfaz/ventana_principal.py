@@ -438,7 +438,38 @@ class VentanaPrincipal(wx.Frame):
             self._menu_contextual_lectura()
         elif indice == 1:
             self._menu_contextual_grabacion()
-        # Pestaña Ajustes (2): no tiene menú contextual propio
+        else:
+            self._menu_contextual_ajustes()
+
+    def _menu_contextual_ajustes(self):
+        """Menú contextual de la pestaña Ajustes: solo Ayuda y Salir."""
+        menu = wx.Menu()
+        self._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+        self.pestana_ajustes.PopupMenu(menu)
+        menu.Destroy()
+
+    def _submenu_ayuda(self, menu):
+        """Añade el submenú Ayuda al menú contextual recibido (compartido por todas las pestañas)."""
+        sub = wx.Menu()
+
+        item_atajos = sub.Append(wx.ID_ANY, "Ver atajos de teclado")
+        self.Bind(wx.EVT_MENU, self.al_ver_atajos, item_atajos)
+
+        item_readme = sub.Append(wx.ID_ANY, "Abrir README")
+        self.Bind(wx.EVT_MENU, self.al_abrir_readme, item_readme)
+
+        item_github = sub.Append(wx.ID_ANY, "Abrir repositorio en GitHub")
+        self.Bind(wx.EVT_MENU, self.al_abrir_github, item_github)
+
+        sub.AppendSeparator()
+
+        item_log = sub.Append(wx.ID_ANY, "Abrir carpeta de registros")
+        self.Bind(wx.EVT_MENU, self.al_abrir_registros, item_log)
+
+        menu.AppendSubMenu(sub, "Ayuda")
 
     def _menu_contextual_lectura(self):
         """Menú contextual de la pestaña Lectura: abrir, recientes, navegación."""
@@ -477,6 +508,9 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, item_g)
         item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores")
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
+
+        menu.AppendSeparator()
+        self._submenu_ayuda(menu)
 
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
@@ -521,6 +555,9 @@ class VentanaPrincipal(wx.Frame):
 
         item_proy = menu.Append(wx.ID_ANY, "Abrir Gestor de Proyectos")
         self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, item_proy)
+
+        menu.AppendSeparator()
+        self._submenu_ayuda(menu)
 
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
@@ -644,6 +681,32 @@ class VentanaPrincipal(wx.Frame):
         """Abre el repositorio del proyecto en el navegador predeterminado."""
         import webbrowser
         webbrowser.open(_URL_GITHUB)
+
+    def al_abrir_registros(self, evento):
+        """Abre la carpeta de registros en el explorador para facilitar el soporte."""
+        import subprocess
+        from app.config_rutas import CARPETA_REGISTROS
+        if not os.path.isdir(CARPETA_REGISTROS):
+            wx.MessageBox(
+                "La carpeta de registros aún no existe.\n"
+                "Se crea automáticamente cuando ocurre el primer error.",
+                "Sin registros",
+                wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+        try:
+            os.startfile(CARPETA_REGISTROS)
+        except Exception:
+            try:
+                subprocess.Popen(["xdg-open", CARPETA_REGISTROS])
+            except Exception:
+                wx.MessageBox(
+                    f"Carpeta de registros:\n{CARPETA_REGISTROS}\n\n"
+                    "Adjunta el archivo app.log al reportar un problema.\n"
+                    "Si el problema ocurrió hace tiempo, incluye también app.log.1",
+                    "Registros",
+                    wx.OK | wx.ICON_INFORMATION,
+                )
     # ANCLAJE_FIN: AYUDA
 
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS
