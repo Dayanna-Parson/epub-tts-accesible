@@ -7,7 +7,7 @@ from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
-from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
 
 # ── Tablas de traducción para etiquetas del combo de voz ─────────────────────
@@ -680,6 +680,7 @@ class PestanaLectura(wx.Panel):
                 inicio = idx + 1
             
             if not coincidencias:
+                reproducir(ERROR)
                 wx.MessageBox("No se ha encontrado el texto especificado en este libro.", "Búsqueda finalizada")
             elif len(coincidencias) == 1:
                 self._ir_a_posicion(coincidencias[0][0])
@@ -756,6 +757,7 @@ class PestanaLectura(wx.Panel):
                 pass
 
         except Exception as e:
+            reproducir(ERROR)
             wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
 
     def _construir_arbol_indice(self, padre, nodos):

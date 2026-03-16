@@ -3,6 +3,7 @@ import json
 import logging
 from datetime import datetime
 import wx
+from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
 from app.config_rutas import ruta_config
 
 logger = logging.getLogger(__name__)
@@ -93,15 +94,18 @@ class ControlCuota:
         limite = self.datos["limites"].get(clave, 0)
 
         if gastado + cantidad > limite:
-            wx.MessageBox(
-                f"¡ALTO! Se ha detenido la lectura por seguridad.\n\n"
-                f"Proveedor: {clave.upper()}\n"
-                f"Has gastado: {gastado} caracteres\n"
-                f"Intentaste leer: {cantidad} caracteres\n"
-                f"Límite configurado: {limite}\n\n"
-                "Se usará la voz LOCAL para no generar costes extra.",
-                "Escudo de Presupuesto Activo"
-            )
+            def _aviso_presupuesto():
+                reproducir(SND_ERROR)
+                wx.MessageBox(
+                    f"¡ALTO! Se ha detenido la lectura por seguridad.\n\n"
+                    f"Proveedor: {clave.upper()}\n"
+                    f"Has gastado: {gastado} caracteres\n"
+                    f"Intentaste leer: {cantidad} caracteres\n"
+                    f"Límite configurado: {limite}\n\n"
+                    "Se usará la voz LOCAL para no generar costes extra.",
+                    "Escudo de Presupuesto Activo"
+                )
+            wx.CallAfter(_aviso_presupuesto)
             return False
 
         # Registrar el gasto y guardar inmediatamente

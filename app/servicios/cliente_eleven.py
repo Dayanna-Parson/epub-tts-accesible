@@ -51,7 +51,7 @@ class ClienteEleven:
         headers = {"xi-api-key": key, "Content-Type": "application/json"}
         payload = {"text": texto, "model_id": "eleven_multilingual_v2"}
 
-        response = self._sesion.post(url, json=payload, headers=headers)
+        response = self._sesion.post(url, json=payload, headers=headers, timeout=30)
 
         if response.status_code != 200:
             raise Exception(f"Error ElevenLabs: {response.status_code}")

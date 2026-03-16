@@ -7,7 +7,7 @@ from app.motor.cliente_nube_voces import GestorVoces
 from app.motor.reproductor_voz import ReproductorVoz
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 from app.motor.control_cuota import ControlCuota
-from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, SUCCESS, ERROR
 
 # --- CLASE ESPECIAL PARA LA LISTA CON CASILLAS ---
 class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
@@ -199,6 +199,7 @@ class PanelGeneral(wx.ScrolledWindow):
                 if val.isdigit():
                     self.cuota.set_limite(clave, int(val))
         
+        reproducir(SUCCESS)
         wx.MessageBox("Configuración y límites guardados.")
 
     def _limpiar_cache(self, event=None):
@@ -274,6 +275,7 @@ class PanelGeneral(wx.ScrolledWindow):
         if errores:
             msg += f"\n({errores} archivo(s) no pudieron borrarse por estar en uso.)"
 
+        reproducir(SUCCESS)
         wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
 
     def _al_buscar_actualizaciones(self, event=None):
@@ -292,6 +294,7 @@ class PanelGeneral(wx.ScrolledWindow):
         self.btn_buscar_updates.SetLabel("Buscar actualizaciones ahora")
 
         if resultado.get("error"):
+            reproducir(ERROR)
             wx.MessageBox(
                 f"No se pudo comprobar la actualización:\n{resultado['error']}",
                 "Error de conexión", wx.OK | wx.ICON_WARNING,
@@ -302,11 +305,13 @@ class PanelGeneral(wx.ScrolledWindow):
         v_remota = resultado.get("version_remota", "—")
 
         if resultado.get("hay_nueva"):
+            reproducir(SUCCESS)
             from app.interfaz.dialogo_novedades import DialogoNovedades
             dlg = DialogoNovedades(self, v_remota, resultado.get("novedades", ""))
             dlg.ShowModal()
             dlg.Destroy()
         else:
+            reproducir(SUCCESS)
             wx.MessageBox(
                 f"Ya tienes la versión más reciente ({v_local}).",
                 "Sin actualizaciones", wx.OK | wx.ICON_INFORMATION,
@@ -476,6 +481,7 @@ class PanelClaves(wx.ScrolledWindow):
         }
         guardar_claves(claves)
         if event:
+            reproducir(SUCCESS)
             wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")
 
     def al_borrar_azure(self, event):
@@ -517,9 +523,11 @@ class PanelClaves(wx.ScrolledWindow):
             else:
                 res = gestor.actualizar_voces_desde_internet()
             wx.EndBusyCursor()
+            reproducir(SUCCESS)
             wx.MessageBox(f"Resultado:\n{res}", "Info")
         except Exception as e:
             wx.EndBusyCursor()
+            reproducir(ERROR)
             wx.MessageBox(f"Error: {e}", "Error")
 
 class PanelVoces(wx.Panel):
@@ -932,6 +940,7 @@ class PanelVoces(wx.Panel):
     def al_escuchar(self, event):
         idx = self.lista_voces.GetFirstSelected()
         if idx == -1:
+            reproducir(ERROR)
             wx.MessageBox("Selecciona una voz.", "Info")
             return
         
@@ -944,7 +953,8 @@ class PanelVoces(wx.Panel):
                      "¿Qué te parece como sueno?")
             self.reproductor.cargar_texto(texto)
         except Exception as e:
-            wx.MessageBox(f"Error: {e}", "Error")    
+            reproducir(ERROR)
+            wx.MessageBox(f"Error: {e}", "Error")
 class _DialogoCapturaTecla(wx.Dialog):
     """
     Diálogo modal que espera una pulsación de tecla y la almacena.
@@ -1130,6 +1140,7 @@ class PanelAtajos(wx.Panel):
         from app.motor.gestor_atajos import guardar_atajo_usuario
         idx = self.lista.GetFirstSelected()
         if idx == -1:
+            reproducir(ERROR)
             wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
             return
 
@@ -1150,6 +1161,7 @@ class PanelAtajos(wx.Panel):
         from app.motor.gestor_atajos import eliminar_atajo_usuario
         idx = self.lista.GetFirstSelected()
         if idx == -1:
+            reproducir(ERROR)
             wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
             return
         clave = self._claves[idx]
@@ -1168,6 +1180,7 @@ class PanelAtajos(wx.Panel):
             restablecer_todos()
             self._rellenar_lista()
             self._refrescar_aceleradores_frame()
+            reproducir(SUCCESS)
             wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
 
 class PanelAcercaDe(wx.ScrolledWindow):
@@ -1367,4 +1380,5 @@ class PestanaAjustes(wx.Panel):
             except Exception:
                 pass
         except Exception as e:
+            reproducir(ERROR)
             wx.MessageBox(str(e))
