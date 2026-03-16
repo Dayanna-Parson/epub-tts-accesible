@@ -25,11 +25,11 @@ import os
 import threading
 import urllib.request
 
-from app.config_rutas import RAIZ
+from app.config_rutas import RAIZ_RECURSOS
 
 # ── Rutas y URLs ──────────────────────────────────────────────────────────────
 
-_RUTA_VERSION_LOCAL = os.path.join(RAIZ, "version.json")
+_RUTA_VERSION_LOCAL = os.path.join(RAIZ_RECURSOS, "version.json")
 
 _URL_BASE = (
     "https://raw.githubusercontent.com"

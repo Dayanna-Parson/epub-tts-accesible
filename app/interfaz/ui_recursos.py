@@ -29,9 +29,9 @@ Uso:
 import os
 import wx
 
-from app.config_rutas import RAIZ
+from app.config_rutas import RAIZ_RECURSOS
 
-_RUTA_ICONOS = os.path.join(RAIZ, "recursos", "iconos")
+_RUTA_ICONOS = os.path.join(RAIZ_RECURSOS, "recursos", "iconos")
 
 # ── Mapa de nombre interno → wx.ArtProvider ID  ──────────────────────────────
 # Usado como fallback cuando no existe el PNG propio.
