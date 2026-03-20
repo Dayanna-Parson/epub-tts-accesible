@@ -525,6 +525,13 @@ class PanelClaves(wx.ScrolledWindow):
             wx.EndBusyCursor()
             reproducir(SUCCESS)
             wx.MessageBox(f"Resultado:\n{res}", "Info")
+            # Recargar PanelVoces para que "Solo nuevas voces" detecte las recién llegadas
+            try:
+                ventana = wx.GetTopLevelParent(self)
+                if hasattr(ventana, 'pestana_ajustes'):
+                    wx.CallAfter(ventana.pestana_ajustes.pag_voces.cargar_datos_y_llenar)
+            except Exception:
+                pass
         except Exception as e:
             wx.EndBusyCursor()
             reproducir(ERROR)
@@ -755,7 +762,7 @@ class PanelVoces(wx.Panel):
 
         # Proveedor con opciones fijas; idioma se rellena según proveedor seleccionado
         self.combo_proveedor.Clear()
-        self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "ElevenLabs"])
+        self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "ElevenLabs", "SAPI 5"])
         self.combo_proveedor.SetSelection(0)
 
         # Con proveedor=Todos, poblar idioma con todos los disponibles
@@ -824,14 +831,14 @@ class PanelVoces(wx.Panel):
     def al_cambiar_proveedor(self, event):
         """Actualiza el combo de idioma para mostrar solo los del proveedor seleccionado."""
         f_prov = self.combo_proveedor.GetValue()
-        if f_prov == "Todos":
-            voces_prov = self.voces_todas
-        elif f_prov == "Amazon Polly":
+        if f_prov == "Amazon Polly":
             voces_prov = [v for v in self.voces_todas if "polly" in v.get("proveedor_id","").lower()]
         elif f_prov == "Azure":
             voces_prov = [v for v in self.voces_todas if "azure" in v.get("proveedor_id","").lower()]
         elif f_prov == "ElevenLabs":
             voces_prov = [v for v in self.voces_todas if "eleven" in v.get("proveedor_id","").lower()]
+        elif f_prov == "SAPI 5":
+            voces_prov = [v for v in self.voces_todas if v.get("proveedor_id","").lower() == "local"]
         else:
             voces_prov = self.voces_todas
 
@@ -895,6 +902,7 @@ class PanelVoces(wx.Panel):
                     if f_prov == "Amazon Polly" and "polly" not in prov_raw: continue
                     elif f_prov == "Azure" and "azure" not in prov_raw: continue
                     elif f_prov == "ElevenLabs" and "eleven" not in prov_raw: continue
+                    elif f_prov == "SAPI 5" and prov_raw != "local": continue
 
                 if f_tipo != "Todos":
                     genero_raw = voz.get("genero", "")
@@ -948,9 +956,11 @@ class PanelVoces(wx.Panel):
         nombre = voz.get('nombre')
         try:
             self.reproductor.fijar_voz(voz)
-            texto = (f"Hola, soy {nombre}. "
-                     "Esta es una prueba de lectura para comprobar la calidad y el acento de mi voz. "
-                     "¿Qué te parece como sueno?")
+            texto = (
+                f"Hola, mi nombre es {nombre}. "
+                "El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar. "
+                "Una brisa suave movía las hojas de los árboles en el parque."
+            )
             self.reproductor.cargar_texto(texto)
         except Exception as e:
             reproducir(ERROR)
@@ -1375,8 +1385,8 @@ class PestanaAjustes(wx.Panel):
                 if hasattr(ventana, 'pestana_lectura'):
                     pl = ventana.pestana_lectura
                     pl.cargar_config_salto()
-                    pl.btn_atras.SetLabel(f"Atrás {pl.segundos_salto}s")
-                    pl.btn_adelante.SetLabel(f"Adelante {pl.segundos_salto}s")
+                    pl.btn_atras.SetLabel(f"Retroceder {pl.segundos_salto}s")
+                    pl.btn_adelante.SetLabel(f"Avanzar {pl.segundos_salto}s")
             except Exception:
                 pass
         except Exception as e:

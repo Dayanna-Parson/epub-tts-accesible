@@ -1,6 +1,6 @@
 import ebooklib
 from ebooklib import epub
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 import warnings
 import re
 import os
@@ -8,6 +8,63 @@ from app.motor.limpiador_lectura import limpiar_para_lectura
 
 # Filtramos advertencias de bs4 para mantener la salida limpia en la consola
 warnings.filterwarnings("ignore", category=UserWarning, module='bs4')
+
+# Elementos de bloque que generan párrafo propio
+_BLOQUES = {
+    'p', 'div', 'section', 'article', 'aside',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'li', 'dt', 'dd', 'blockquote',
+    'td', 'th', 'caption',
+    'pre', 'figure', 'figcaption',
+}
+# Elementos de formateo que normalmente no tienen salto pero sí espacio
+_INLINE_FORMATEO = {'br'}
+
+
+def _extraer_texto_bloque(elemento) -> str:
+    """
+    Extrae el texto de un elemento BeautifulSoup respetando la estructura semántica.
+
+    - Los elementos de bloque anidados producen párrafos separados por \\n\\n.
+    - Los <br> producen un único salto de línea.
+    - Los nodos de texto inline se unen con espacio para evitar palabras cortadas
+      cuando el HTML tiene saltos de línea arbitrarios entre etiquetas inline.
+    """
+    partes = []
+
+    for nodo in elemento.children:
+        if isinstance(nodo, NavigableString):
+            txt = str(nodo)
+            if txt.strip():
+                partes.append(txt)
+            elif txt and partes and not partes[-1].endswith(' '):
+                # Espacio entre nodos inline (ej. "<b>hola</b> mundo")
+                partes.append(' ')
+        elif isinstance(nodo, Tag):
+            nombre = nodo.name.lower() if nodo.name else ''
+            if nombre in ('script', 'style', 'head', 'meta', 'link',
+                          'noscript', 'template'):
+                continue
+            if nombre == 'br':
+                if partes and not partes[-1].endswith('\n'):
+                    partes.append('\n')
+            elif nombre in _BLOQUES:
+                subtexto = _extraer_texto_bloque(nodo).strip()
+                if subtexto:
+                    if partes and not partes[-1].endswith('\n\n'):
+                        partes.append('\n\n')
+                    partes.append(subtexto)
+                    partes.append('\n\n')
+            else:
+                # Elemento inline (span, em, strong, a, …): unir con espacio
+                subtexto = _extraer_texto_bloque(nodo)
+                if subtexto:
+                    if (partes and not partes[-1].endswith(' ')
+                            and not subtexto.startswith(' ')):
+                        partes.append(' ')
+                    partes.append(subtexto)
+
+    return ''.join(partes)
 
 def extraer_datos_epub(ruta_epub):
     """
@@ -39,24 +96,18 @@ def extraer_datos_epub(ruta_epub):
             
         if item.get_type() == ebooklib.ITEM_DOCUMENT:
             posiciones_inicio_archivo[item.file_name] = len(texto_completo)
-            
-            # Corrección de indentación aquí:
+
             sopa = BeautifulSoup(item.get_content(), 'html.parser')
-            
-            for script in sopa(["script", "style", "head", "title", "meta"]): 
-                script.extract()
-            
-            texto_crudo = sopa.get_text(separator='\n')
-            
-            lines = []
-            for line in texto_crudo.splitlines():
-                stripped = line.strip()
-                if stripped:
-                    lines.append(stripped)
-            
-            fragmento_limpio = "\n\n".join(lines)
-            
-            texto_completo += fragmento_limpio + "\n\n"
+
+            # Extraer texto desde el body (o todo el documento si no hay body)
+            cuerpo = sopa.find('body') or sopa
+            fragmento = _extraer_texto_bloque(cuerpo)
+
+            # Normalizar múltiples saltos consecutivos en un máximo de dos
+            fragmento = re.sub(r'\n{3,}', '\n\n', fragmento).strip()
+
+            if fragmento:
+                texto_completo += fragmento + "\n\n"
 
     # --- 2. PROCESAR EL ÍNDICE (TOC Jerárquico) ---
     datos_indice = []

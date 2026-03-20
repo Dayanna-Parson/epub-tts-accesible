@@ -438,7 +438,41 @@ class VentanaPrincipal(wx.Frame):
             self._menu_contextual_lectura()
         elif indice == 1:
             self._menu_contextual_grabacion()
-        # Pestaña Ajustes (2): no tiene menú contextual propio
+        else:
+            self._menu_contextual_ajustes()
+
+    def _menu_contextual_ajustes(self):
+        """Menú contextual de la pestaña Ajustes: solo Ayuda y Salir."""
+        menu = wx.Menu()
+        self._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+        self.pestana_ajustes.PopupMenu(menu)
+        menu.Destroy()
+
+    def _submenu_ayuda(self, menu):
+        """Añade el submenú Ayuda al menú contextual recibido (compartido por todas las pestañas)."""
+        sub = wx.Menu()
+
+        item_ayuda = sub.Append(wx.ID_ANY, "Abrir ayuda (F1)")
+        self.Bind(wx.EVT_MENU, self._al_abrir_ayuda_global, item_ayuda)
+
+        item_atajos = sub.Append(wx.ID_ANY, "Ver atajos de teclado")
+        self.Bind(wx.EVT_MENU, self.al_ver_atajos, item_atajos)
+
+        item_readme = sub.Append(wx.ID_ANY, "Abrir README")
+        self.Bind(wx.EVT_MENU, self.al_abrir_readme, item_readme)
+
+        item_github = sub.Append(wx.ID_ANY, "Abrir repositorio en GitHub")
+        self.Bind(wx.EVT_MENU, self.al_abrir_github, item_github)
+
+        sub.AppendSeparator()
+
+        item_log = sub.Append(wx.ID_ANY, "Abrir carpeta de registros")
+        self.Bind(wx.EVT_MENU, self.al_abrir_registros, item_log)
+
+        menu.AppendSubMenu(sub, "Ayuda")
 
     def _menu_contextual_lectura(self):
         """Menú contextual de la pestaña Lectura: abrir, recientes, navegación."""
@@ -471,11 +505,11 @@ class VentanaPrincipal(wx.Frame):
         menu.AppendSeparator()
 
         # Navegación por el texto
-        item_b = menu.Append(wx.ID_ANY, "Buscar en el texto")
+        item_b = menu.Append(wx.ID_ANY, "Buscar en el texto\tCtrl+F")
         self.Bind(wx.EVT_MENU, self.al_buscar, item_b)
-        item_g = menu.Append(wx.ID_ANY, "Ir a porcentaje")
+        item_g = menu.Append(wx.ID_ANY, "Ir a porcentaje\tCtrl+G")
         self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, item_g)
-        item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores")
+        item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores\tCtrl+M")
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
 
         menu.AppendSeparator()
@@ -562,10 +596,12 @@ class VentanaPrincipal(wx.Frame):
                       lambda e, c=clave: self._ejecutar_atajo_global(c),
                       id=id_atajo)
 
-        # Atajos fijos adicionales (Ctrl+T y Ctrl+Shift+P, antes en el menú)
+        # Atajos fijos adicionales (Ctrl+T, Ctrl+Shift+P, Ctrl+O, F1)
         _FIJOS_EXTRA = [
             ("ctrl_t",  wx.ACCEL_CTRL,              ord('T'), self.al_abrir_txt_grabacion),
             ("ctrl_sp", wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('P'), self.al_abrir_gestor_proyectos),
+            ("ctrl_o",  wx.ACCEL_CTRL,              ord('O'), self._al_ctrl_o_contextual),
+            ("f1",      wx.ACCEL_NORMAL,            wx.WXK_F1, self._al_abrir_ayuda_global),
         ]
         for clave, flag, keycode, handler in _FIJOS_EXTRA:
             if clave not in self._ids_atajos_global:
@@ -582,6 +618,8 @@ class VentanaPrincipal(wx.Frame):
 
         Si el atajo es de tecla simple sin modificador (ej. Espacio) y el foco está
         en un botón, el espacio activa el botón en lugar de disparar nuestra acción.
+        Atajos contextuales de Lectura (buscar, marcadores, ir_porcentaje) solo
+        ejecutan cuando la pestaña Lectura está activa.
         """
         ctrl_foco = self.FindFocus()
         if (clave in getattr(self, '_atajos_sin_modificador', set())
@@ -590,6 +628,9 @@ class VentanaPrincipal(wx.Frame):
                 wx.CommandEvent(wx.EVT_BUTTON.typeId, ctrl_foco.GetId())
             )
             return
+
+        en_lectura = self.notebook.GetSelection() == 0
+        _ATAJOS_SOLO_LECTURA = {"buscar", "marcadores", "ir_porcentaje"}
 
         _ACCIONES = {
             "abrir_libro":       lambda: (self.notebook.SetSelection(0),
@@ -601,6 +642,8 @@ class VentanaPrincipal(wx.Frame):
             "ir_porcentaje":     lambda: self.pestana_lectura.iniciar_ir_a_porcentaje(),
         }
         if clave in _ACCIONES:
+            if clave in _ATAJOS_SOLO_LECTURA and not en_lectura:
+                return
             try:
                 _ACCIONES[clave]()
             except Exception:
@@ -608,6 +651,33 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: ACELERADORES_GLOBALES
 
     # ANCLAJE_INICIO: AYUDA
+    def _al_ctrl_o_contextual(self, evento=None):
+        """Ctrl+O: abre libro en Lectura o carpeta de grabaciones en Grabación."""
+        indice = self.notebook.GetSelection()
+        if indice == 0:
+            self.pestana_lectura.al_cargar_libro(None)
+        elif indice == 1:
+            self.pestana_grabacion.al_examinar(None)
+
+    def _al_abrir_ayuda_global(self, evento=None):
+        """F1: abre ayuda.html con el visor predeterminado del sistema."""
+        import subprocess
+        from app.config_rutas import RAIZ_RECURSOS
+        ruta_ayuda = os.path.join(RAIZ_RECURSOS, "ayuda.html")
+        if not os.path.exists(ruta_ayuda):
+            wx.MessageBox(
+                f"No se encontró el archivo de ayuda en:\n{ruta_ayuda}",
+                "Ayuda no encontrada", wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+        try:
+            os.startfile(ruta_ayuda)
+        except Exception:
+            try:
+                subprocess.Popen(["xdg-open", ruta_ayuda])
+            except Exception as e:
+                wx.MessageBox(str(e), "Error al abrir ayuda")
+
     def al_ver_atajos(self, evento):
         """Muestra un diálogo con todos los atajos actuales (defaults + personalizados)."""
         from app.motor.gestor_atajos import cargar_atajos, texto_atajo
@@ -644,6 +714,20 @@ class VentanaPrincipal(wx.Frame):
         """Abre el repositorio del proyecto en el navegador predeterminado."""
         import webbrowser
         webbrowser.open(_URL_GITHUB)
+
+    def al_abrir_registros(self, evento=None):
+        """Abre la carpeta de registros con el explorador de archivos."""
+        import subprocess
+        from app.config_rutas import RAIZ
+        carpeta = os.path.join(RAIZ, "app", "registros")
+        os.makedirs(carpeta, exist_ok=True)
+        try:
+            os.startfile(carpeta)
+        except Exception:
+            try:
+                subprocess.Popen(["xdg-open", carpeta])
+            except Exception as e:
+                wx.MessageBox(str(e), "Error al abrir carpeta de registros")
     # ANCLAJE_FIN: AYUDA
 
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS

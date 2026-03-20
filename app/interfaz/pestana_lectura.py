@@ -144,9 +144,9 @@ class PestanaLectura(wx.Panel):
         )
         self.combo_voz.Bind(wx.EVT_COMBOBOX, self.al_cambiar_voz)
 
-        self.btn_atras = wx.Button(self, label=f"Atrás {self.segundos_salto}s")
+        self.btn_atras = wx.Button(self, label=f"Retroceder {self.segundos_salto}s")
         self.btn_reproducir = wx.Button(self, label="Reproducir (Ctrl+P)")
-        self.btn_adelante = wx.Button(self, label=f"Adelante {self.segundos_salto}s")
+        self.btn_adelante = wx.Button(self, label=f"Avanzar {self.segundos_salto}s")
         self.btn_detener = wx.Button(self, label="Detener (Ctrl+D)")
         
         self.btn_reproducir.Bind(wx.EVT_BUTTON, self.al_alternar_reproduccion)
@@ -159,19 +159,20 @@ class PestanaLectura(wx.Panel):
         self.deslizador_velocidad.SetName("Velocidad de lectura")
         self.deslizador_velocidad.SetHelpText(
             "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
-            "Usa las flechas Izquierda y Derecha para ajustar."
+            "Flechas: ±1. RePág/AvPág: ±10."
         )
         self.deslizador_velocidad.Bind(wx.EVT_SLIDER, self.al_cambiar_velocidad)
+        self.deslizador_velocidad.Bind(wx.EVT_KEY_DOWN, self._al_tecla_slider_velocidad)
 
         self.lbl_volumen = wx.StaticText(self, label="Volumen:")
         self.deslizador_volumen = wx.Slider(self, value=100, minValue=0, maxValue=100)
         self.deslizador_volumen.SetName("Volumen de lectura")
         self.deslizador_volumen.SetHelpText(
             "Volumen del audio de lectura. 0 es silencio, 100 es volumen máximo. "
-            "Usa las flechas Izquierda y Derecha para ajustar."
+            "Flechas: ±1. RePág/AvPág: ±10."
         )
         self.deslizador_volumen.Bind(wx.EVT_SLIDER, self.al_cambiar_volumen)
-        self.deslizador_volumen.Bind(wx.EVT_KEY_DOWN, self.al_tecla_volumen)
+        self.deslizador_volumen.Bind(wx.EVT_KEY_DOWN, self._al_tecla_slider_volumen)
 
         sizer_inferior.Add(self.lbl_voz, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 5)
         sizer_inferior.Add(self.combo_voz, 1, wx.LEFT, 5)
@@ -227,8 +228,8 @@ class PestanaLectura(wx.Panel):
     def al_cambiar_pestana_padre(self, event):
         if event.GetSelection() == 0:
             self.cargar_config_salto()
-            self.btn_atras.SetLabel(f"Atrás {self.segundos_salto}s")
-            self.btn_adelante.SetLabel(f"Adelante {self.segundos_salto}s")
+            self.btn_atras.SetLabel(f"Retroceder {self.segundos_salto}s")
+            self.btn_adelante.SetLabel(f"Avanzar {self.segundos_salto}s")
             # Diferir la carga de voces para que el foco llegue al panel antes
             # de que comience la lectura de JSONs. El combo se llena tras el cambio de pestaña.
             wx.CallAfter(self.cargar_voces_usuario)
@@ -506,9 +507,6 @@ class PestanaLectura(wx.Panel):
         if estado == 'reproduciendo':
             if self.btn_reproducir.GetLabel() != "Pausar (Ctrl+P)":
                 self.btn_reproducir.SetLabel("Pausar (Ctrl+P)")
-        elif estado == 'pausado':
-            if self.btn_reproducir.GetLabel() != "Reanudar (Ctrl+P)":
-                self.btn_reproducir.SetLabel("Reanudar (Ctrl+P)")
         else:
             if self.btn_reproducir.GetLabel() != "Reproducir (Ctrl+P)":
                 self.btn_reproducir.SetLabel("Reproducir (Ctrl+P)")
@@ -765,7 +763,27 @@ class PestanaLectura(wx.Panel):
             item = self.arbol_indice.AppendItem(padre, n['title'])
             if n['children']: self._construir_arbol_indice(item, n['children'])
 
-    def al_tecla_volumen(self, e): e.Skip()
+    def _al_tecla_slider_velocidad(self, e):
+        """PageUp/AvPág cambian la velocidad en ±10; el resto se delega al widget."""
+        self._aplicar_salto_slider(e, self.deslizador_velocidad, self.al_cambiar_velocidad)
+
+    def _al_tecla_slider_volumen(self, e):
+        """PageUp/AvPág cambian el volumen en ±10; el resto se delega al widget."""
+        self._aplicar_salto_slider(e, self.deslizador_volumen, self.al_cambiar_volumen)
+
+    def _aplicar_salto_slider(self, e, slider, callback_cambio):
+        """
+        Intercepta RePág/AvPág para mover el slider ±10 anunciando solo el valor
+        actual (sin leer la lista de números). Las flechas (±1) se delegan al widget.
+        """
+        key = e.GetKeyCode()
+        if key in (wx.WXK_PAGEUP, wx.WXK_PAGEDOWN):
+            delta = -10 if key == wx.WXK_PAGEUP else 10
+            nuevo = max(slider.GetMin(), min(slider.GetMax(), slider.GetValue() + delta))
+            slider.SetValue(nuevo)
+            callback_cambio(None)
+        else:
+            e.Skip()
         
     def guardar_datos_libro(self):
         if not self.ruta_libro_actual: return
@@ -822,16 +840,42 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(6)]
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro, id=ids[0])
-        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, id=ids[1])
-        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion, id=ids[2])
-        self.Bind(wx.EVT_MENU, self.al_detener, id=ids[3])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(), id=ids[4])
+        ids = [wx.NewIdRef() for _ in range(8)]
+        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[0])
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,              id=ids[1])
+        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,         id=ids[2])
+        self.Bind(wx.EVT_MENU, self.al_detener,                       id=ids[3])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),     id=ids[4])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_porcentaje(), id=ids[5])
+        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[6])
+        self.Bind(wx.EVT_MENU, self._al_abrir_ayuda,                  id=ids[7])
         self.SetAcceleratorTable(wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord('A'), ids[0]), (wx.ACCEL_CTRL, ord('M'), ids[1]),
-            (wx.ACCEL_CTRL, ord('P'), ids[2]), (wx.ACCEL_CTRL, ord('D'), ids[3]),
-            (wx.ACCEL_CTRL, ord('B'), ids[4]), (wx.ACCEL_CTRL, ord('G'), ids[5])
+            (wx.ACCEL_CTRL, ord('A'), ids[0]),
+            (wx.ACCEL_CTRL, ord('M'), ids[1]),
+            (wx.ACCEL_CTRL, ord('P'), ids[2]),
+            (wx.ACCEL_CTRL, ord('D'), ids[3]),
+            (wx.ACCEL_CTRL, ord('F'), ids[4]),
+            (wx.ACCEL_CTRL, ord('G'), ids[5]),
+            (wx.ACCEL_CTRL, ord('O'), ids[6]),
+            (wx.ACCEL_NORMAL, wx.WXK_F1,   ids[7]),
         ]))
+
+    def _al_abrir_ayuda(self, evento=None):
+        """Abre ayuda.html con el visor predeterminado del sistema."""
+        import subprocess
+        from app.config_rutas import RUTA_BASE
+        ruta_ayuda = os.path.join(RUTA_BASE, "ayuda.html")
+        if not os.path.exists(ruta_ayuda):
+            wx.MessageBox(
+                f"No se encontró el archivo de ayuda en:\n{ruta_ayuda}",
+                "Ayuda no encontrada", wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+        try:
+            os.startfile(ruta_ayuda)
+        except Exception:
+            try:
+                subprocess.Popen(["xdg-open", ruta_ayuda])
+            except Exception as e:
+                wx.MessageBox(str(e), "Error al abrir ayuda")
     # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO
