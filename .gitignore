@@ -26,6 +26,8 @@ configuraciones/estado_lectura.json
 configuraciones/proyectos.json
 configuraciones/mapeo_etiquetas.json
 configuraciones/uso_cuota.json
+configuraciones/teclas_predeterminadas.json
+configuraciones/teclas_usuario.json
 configuraciones/voces_disponibles.json
 configuraciones/voces_conocidas.json
 configuraciones/voces_ultima_comprobacion.json
