@@ -15,17 +15,69 @@ from app.config_rutas import ruta_config
 _RUTA_DEFAULTS = ruta_config("teclas_predeterminadas.json")
 _RUTA_USUARIO = ruta_config("teclas_usuario.json")
 
+# Atajos de fábrica embebidos en el código.
+# Se escriben a teclas_predeterminadas.json si el archivo no existe o está vacío,
+# garantizando que PanelAtajos siempre tenga la tabla poblada.
+_DEFAULTS_EMBEBIDOS = {
+    "reproducir_pausar": {
+        "descripcion": "Reproducir / Pausar",
+        "modificador": "Ctrl",
+        "tecla": "P",
+    },
+    "detener": {
+        "descripcion": "Detener lectura",
+        "modificador": "Ctrl",
+        "tecla": "D",
+    },
+    "buscar": {
+        "descripcion": "Buscar en el texto",
+        "modificador": "Ctrl",
+        "tecla": "F",
+    },
+    "marcadores": {
+        "descripcion": "Gestor de marcadores",
+        "modificador": "Ctrl",
+        "tecla": "M",
+    },
+    "ir_porcentaje": {
+        "descripcion": "Ir a porcentaje del libro",
+        "modificador": "Ctrl",
+        "tecla": "G",
+    },
+    "abrir_libro": {
+        "descripcion": "Abrir libro EPUB",
+        "modificador": "Ctrl",
+        "tecla": "A",
+    },
+}
+
+
+def _asegurar_defaults():
+    """Escribe _DEFAULTS_EMBEBIDOS en disco si el archivo no existe o está vacío."""
+    if os.path.exists(_RUTA_DEFAULTS):
+        try:
+            with open(_RUTA_DEFAULTS, 'r', encoding='utf-8') as f:
+                contenido = f.read().strip()
+            if contenido and json.loads(contenido):
+                return
+        except Exception:
+            pass
+    os.makedirs(os.path.dirname(_RUTA_DEFAULTS), exist_ok=True)
+    with open(_RUTA_DEFAULTS, 'w', encoding='utf-8') as f:
+        json.dump(_DEFAULTS_EMBEBIDOS, f, ensure_ascii=False, indent=4)
+
 
 def cargar_atajos():
     """
     Devuelve el diccionario fusionado: defaults + overrides del usuario.
     Cada entrada tiene: descripcion, modificador, tecla.
     """
+    _asegurar_defaults()
     try:
         with open(_RUTA_DEFAULTS, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
     except Exception:
-        defaults = {}
+        defaults = dict(_DEFAULTS_EMBEBIDOS)
 
     usuario = {}
     if os.path.exists(_RUTA_USUARIO):
@@ -48,11 +100,12 @@ def cargar_atajos():
 
 def cargar_defaults():
     """Devuelve solo los atajos predeterminados de fábrica."""
+    _asegurar_defaults()
     try:
         with open(_RUTA_DEFAULTS, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception:
-        return {}
+        return dict(_DEFAULTS_EMBEBIDOS)
 
 
 def guardar_atajo_usuario(clave, modificador, tecla):
