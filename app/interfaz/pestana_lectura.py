@@ -109,7 +109,7 @@ class PestanaLectura(wx.Panel):
             "Área de texto de solo lectura con el contenido del capítulo activo. "
             "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
         )
-        self.txt_contenido.SetValue("Bienvenida a Epub TTS Accesible. Pulsa Ctrl+A para abrir un libro EPUB.")
+        self.txt_contenido.SetValue("¡Bienvenido a Epub TTS! Tu lector de EPUB con soporte para voces de alta calidad (Azure, Polly y ElevenLabs) y voces locales SAPI 5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1, 2 y 3 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
         
         self.divisor.SetMinimumPaneSize(200)

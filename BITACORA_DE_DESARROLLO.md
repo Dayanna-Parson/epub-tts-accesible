@@ -198,3 +198,15 @@ La Era de la Oscuridad con Gemini fue frustrante. Pero también fue necesaria. M
 La Fase 4 es el resultado de todo eso. Una versión estable, accesible y lista para ser usada. Una herramienta que hace exactamente lo que imaginé aquel día en que decidí que si nadie la iba a construir, la construiría yo.
 
 — Dayanna Parson, marzo de 2026
+
+## Fase 5: La Consolidación y el Motor Local (Marzo 2026)
+
+Esta fase marca el paso de "prototipo funcional" a "herramienta profesional". Tras meses de uso, identifiqué que depender exclusivamente de la nube era un riesgo para proyectos largos.
+
+**Hitos de esta fase:**
+1. **Integración de SAPI 5:** Logramos que las voces locales de Windows funcionen con la misma lógica de etiquetas que las voces de pago. Esto permite grabar audiolibros enteros de forma gratuita y offline.
+2. **El Manual Integrado:** Creamos `ayuda.html` para que cualquier usuario pueda dominar la app sin salir de ella.
+3. **Refinamiento de Accesibilidad:** Optimizamos los deslizadores de volumen y velocidad para que no saturen al lector de pantalla, implementando saltos lógicos de 1 y 10 unidades.
+4. **Inspiración en Bookworm:** Mejoramos el motor de extracción de EPUB para que la lectura sea fluida y profesional, sin los errores de salto de línea de las primeras versiones.
+
+Epub TTS es ahora la herramienta que siempre soñé tener en mi escritorio.

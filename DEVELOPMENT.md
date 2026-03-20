@@ -1,6 +1,6 @@
 # Guía técnica para desarrolladores
 
-Este documento describe la arquitectura interna de TifloHistorias, las convenciones del proyecto y las decisiones técnicas que hay detrás de cada pieza. Está pensado para que cualquier desarrollador que llegue al código pueda entender el sistema sin tener que reconstruirlo a base de pruebas.
+Este documento describe la arquitectura interna de Epub TTS, las convenciones del proyecto y las decisiones técnicas que hay detrás de cada pieza. Está pensado para que cualquier desarrollador que llegue al código pueda entender el sistema sin tener que reconstruirlo a base de pruebas.
 
 Léelo antes de tocar nada.
 
@@ -313,3 +313,13 @@ No hay suite de tests automatizados todavía. Antes de hacer commit de cambios e
 - No hagas llamadas a APIs desde el hilo principal. El hilo principal es para la UI.
 - No añadas dependencias sin justificación. Cada nueva librería es un punto de rotura potencial en la portabilidad.
 - No rompas los bloques ANCLAJE sin documentar el cambio en el mensaje de commit.
+
+## Decisiones Técnicas Recientes (Fase 5)
+
+### Gestión de Audio y SAPI 5
+- Se ha implementado la grabación SAPI 5 usando `SAPI.SpFileStream` para volcado directo a archivo, evitando la reproducción por altavoz durante el renderizado.
+- El estándar de exportación se fija en **MP3 320 kbps** para asegurar compatibilidad total con proyectos de edición profesional en Reaper.
+### Reglas de Interfaz (UX Accesible)
+- **Slidrs:** No deben exponer la escala completa a la API de accesibilidad. Solo el valor actual.
+- **Atajos:** `Control + P` es el comando universal de reproducción. Se prohíbe el uso de la tecla `Espacio` para evitar conflictos de foco con NVDA.
+- **Navegación:** Se sustituyen los términos "Atrás/Adelante" por **"Retroceder/Avanzar"** para mayor claridad semántica.
