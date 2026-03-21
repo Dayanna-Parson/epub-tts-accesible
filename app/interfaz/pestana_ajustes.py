@@ -102,14 +102,27 @@ class PanelGeneral(wx.ScrolledWindow):
         sb_nav = wx.StaticBox(self, label="Navegación")
         sizer_nav = wx.StaticBoxSizer(sb_nav, wx.VERTICAL)
         hbox_salto = wx.BoxSizer(wx.HORIZONTAL)
-        hbox_salto.Add(wx.StaticText(self, label="Segundos de salto (botones Atrás y Adelante en Lectura):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
+        hbox_salto.Add(wx.StaticText(self, label="Segundos de salto (botones Retroceder y Avanzar en Lectura):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
         self.txt_salto = wx.TextCtrl(self, value=str(self.config.get("segundos_salto", "10")), size=(50, -1))
         self.txt_salto.SetHelpText(
             "Número de segundos que avanza o retrocede el audio al pulsar los botones "
-            "Atrás y Adelante en la pestaña Lectura. Introduce un número entero. Valor recomendado: 10."
+            "Retroceder y Avanzar en la pestaña Lectura. Introduce un número entero. Valor recomendado: 10."
         )
         hbox_salto.Add(self.txt_salto, 0)
         sizer_nav.Add(hbox_salto, 0, wx.ALL, 5)
+
+        hbox_pausa = wx.BoxSizer(wx.HORIZONTAL)
+        hbox_pausa.Add(wx.StaticText(self, label="Pausa entre párrafos en voces de IA (milisegundos):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
+        self.spin_pausa = wx.SpinCtrl(self, value=str(self.config.get("pausa_entre_fragmentos_ms", 0)),
+                                      min=0, max=3000, size=(70, -1))
+        self.spin_pausa.SetHelpText(
+            "Tiempo de espera entre fragmentos consecutivos cuando se usan voces de IA (Azure, Polly, ElevenLabs). "
+            "0 = sin pausa adicional. Ejemplo: 300 añade 0,3 segundos de silencio entre párrafos. "
+            "No afecta a las voces SAPI5 locales."
+        )
+        hbox_pausa.Add(self.spin_pausa, 0)
+        sizer_nav.Add(hbox_pausa, 0, wx.ALL, 5)
+
         sizer.Add(sizer_nav, 0, wx.EXPAND | wx.ALL, 10)
 
         # ACTUALIZACIONES
@@ -187,6 +200,7 @@ class PanelGeneral(wx.ScrolledWindow):
     def guardar_todo(self):
         # Guardar config general
         self.config["segundos_salto"] = self.txt_salto.GetValue()
+        self.config["pausa_entre_fragmentos_ms"] = self.spin_pausa.GetValue()
         self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
         padre = wx.GetTopLevelParent(self)
         if hasattr(padre, "guardar_config_en_archivo"):

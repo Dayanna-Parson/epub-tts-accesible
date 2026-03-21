@@ -68,9 +68,11 @@ class PestanaLectura(wx.Panel):
         
         self.reproductor = ReproductorVoz()
         
-        self.posiciones_capitulos = {} 
-        self.marcadores = {}       
+        self.posiciones_capitulos = {}
+        self.posiciones_encabezados = []  # [{nivel, texto, pos}] para H/Shift+H
+        self.marcadores = {}
         self.longitud_texto = 0
+        self._pausa_entre_fragmentos_ms = 0  # ms de pausa entre fragmentos TTS
         
         self.segundos_salto = 10
         self.cargar_config_salto()
@@ -111,6 +113,7 @@ class PestanaLectura(wx.Panel):
         )
         self.txt_contenido.SetValue("¡Bienvenido a Epub TTS! Tu lector de EPUB con soporte para voces de alta calidad (Azure, Polly y ElevenLabs) y voces locales SAPI 5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1, 2 y 3 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
+        self.txt_contenido.Bind(wx.EVT_KEY_DOWN, self._al_tecla_contenido)
         
         self.divisor.SetMinimumPaneSize(200)
         self.divisor.SplitVertically(self.arbol_indice, self.txt_contenido, 280)
@@ -213,6 +216,7 @@ class PestanaLectura(wx.Panel):
                 with open(ruta, 'r', encoding='utf-8') as f:
                     conf = json.load(f)
                     self.segundos_salto = int(conf.get("segundos_salto", 10))
+                    self._pausa_entre_fragmentos_ms = int(conf.get("pausa_entre_fragmentos_ms", 0))
                     # Restaurar sliders solo si los widgets ya están inicializados
                     if hasattr(self, 'deslizador_velocidad'):
                         vel = int(conf.get("velocidad_lectura", 50))
@@ -480,7 +484,11 @@ class PestanaLectura(wx.Panel):
         """Callback invocado por ReproductorVoz cuando termina un fragmento neuronal."""
         self._idx_fragmento_actual += 1
         if self._cola_lectura and self._idx_fragmento_actual < len(self._cola_lectura):
-            self._reproducir_siguiente_fragmento()
+            pausa = getattr(self, '_pausa_entre_fragmentos_ms', 0)
+            if pausa > 0:
+                wx.CallLater(pausa, self._reproducir_siguiente_fragmento)
+            else:
+                self._reproducir_siguiente_fragmento()
 
     def al_detener(self, evento):
         # Cancelar la cola de lectura continua antes de detener el motor
@@ -730,7 +738,7 @@ class PestanaLectura(wx.Panel):
     def cargar_epub_desde_ruta(self, ruta):
         self.guardar_datos_libro()
         try:
-            texto, datos_arbol, self.posiciones_capitulos = extraer_datos_epub(ruta)
+            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados = extraer_datos_epub(ruta)
 
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
@@ -840,31 +848,29 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(8)]
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[0])
-        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,              id=ids[1])
-        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,         id=ids[2])
-        self.Bind(wx.EVT_MENU, self.al_detener,                       id=ids[3])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),     id=ids[4])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_porcentaje(), id=ids[5])
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[6])
-        self.Bind(wx.EVT_MENU, self._al_abrir_ayuda,                  id=ids[7])
+        ids = [wx.NewIdRef() for _ in range(7)]
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,              id=ids[0])
+        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,         id=ids[1])
+        self.Bind(wx.EVT_MENU, self.al_detener,                       id=ids[2])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),     id=ids[3])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_porcentaje(), id=ids[4])
+        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[5])
+        self.Bind(wx.EVT_MENU, self._al_abrir_ayuda,                  id=ids[6])
         self.SetAcceleratorTable(wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord('A'), ids[0]),
-            (wx.ACCEL_CTRL, ord('M'), ids[1]),
-            (wx.ACCEL_CTRL, ord('P'), ids[2]),
-            (wx.ACCEL_CTRL, ord('D'), ids[3]),
-            (wx.ACCEL_CTRL, ord('F'), ids[4]),
-            (wx.ACCEL_CTRL, ord('G'), ids[5]),
-            (wx.ACCEL_CTRL, ord('O'), ids[6]),
-            (wx.ACCEL_NORMAL, wx.WXK_F1,   ids[7]),
+            (wx.ACCEL_CTRL, ord('M'), ids[0]),
+            (wx.ACCEL_CTRL, ord('P'), ids[1]),
+            (wx.ACCEL_CTRL, ord('D'), ids[2]),
+            (wx.ACCEL_CTRL, ord('F'), ids[3]),
+            (wx.ACCEL_CTRL, ord('G'), ids[4]),
+            (wx.ACCEL_CTRL, ord('O'), ids[5]),
+            (wx.ACCEL_NORMAL, wx.WXK_F1,   ids[6]),
         ]))
 
     def _al_abrir_ayuda(self, evento=None):
         """Abre ayuda.html con el visor predeterminado del sistema."""
         import subprocess
-        from app.config_rutas import RUTA_BASE
-        ruta_ayuda = os.path.join(RUTA_BASE, "ayuda.html")
+        from app.config_rutas import RAIZ_RECURSOS
+        ruta_ayuda = os.path.join(RAIZ_RECURSOS, "ayuda.html")
         if not os.path.exists(ruta_ayuda):
             wx.MessageBox(
                 f"No se encontró el archivo de ayuda en:\n{ruta_ayuda}",
@@ -878,4 +884,40 @@ class PestanaLectura(wx.Panel):
                 subprocess.Popen(["xdg-open", ruta_ayuda])
             except Exception as e:
                 wx.MessageBox(str(e), "Error al abrir ayuda")
+
+    def _al_tecla_contenido(self, evento):
+        """
+        Intercepta teclas en el área de texto.
+        H → siguiente encabezado, Shift+H → encabezado anterior (estilo Bookworm/NVDA).
+        """
+        key = evento.GetKeyCode()
+        if key == ord('H') and not evento.ControlDown() and not evento.AltDown():
+            if evento.ShiftDown():
+                self._al_encabezado_anterior()
+            else:
+                self._al_encabezado_siguiente()
+            return  # consumir el evento, no escribir 'H' en el control
+        evento.Skip()
+
+    def _al_encabezado_siguiente(self):
+        """Salta al siguiente encabezado (h1–h6) en el texto."""
+        if not self.posiciones_encabezados:
+            return
+        pos_actual = self.txt_contenido.GetInsertionPoint()
+        for enc in self.posiciones_encabezados:
+            if enc['pos'] > pos_actual:
+                self._ir_a_posicion(enc['pos'])
+                reproducir(LIST_NAV)
+                return
+
+    def _al_encabezado_anterior(self):
+        """Salta al encabezado anterior (h1–h6) en el texto."""
+        if not self.posiciones_encabezados:
+            return
+        pos_actual = self.txt_contenido.GetInsertionPoint()
+        for enc in reversed(self.posiciones_encabezados):
+            if enc['pos'] < pos_actual:
+                self._ir_a_posicion(enc['pos'])
+                reproducir(LIST_NAV)
+                return
     # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO

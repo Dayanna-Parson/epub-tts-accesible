@@ -73,6 +73,7 @@ def extraer_datos_epub(ruta_epub):
         - texto_completo (str): El texto del libro limpio.
         - datos_indice (list): Estructura jerárquica para el árbol de navegación.
         - posiciones_capitulos (dict): Diccionario {titulo_capitulo: posicion_caracter}.
+        - posiciones_encabezados (list): [{nivel, texto, pos}] para navegación H/Shift+H.
     """
     if not os.path.exists(ruta_epub):
         raise FileNotFoundError(f"No se encontró el archivo: {ruta_epub}")
@@ -83,19 +84,24 @@ def extraer_datos_epub(ruta_epub):
         raise Exception(f"Error al leer el formato EPUB: {e}")
 
     texto_completo = ""
-    posiciones_capitulos = {} 
+    posiciones_capitulos = {}
     # Mapeo para saber en qué carácter del texto global empieza cada archivo interno
     posiciones_inicio_archivo = {}
-    
+    # Mapa {nombre_archivo#anchor_id: pos_global} para TOC con fragmentos (#section1)
+    posiciones_anchors = {}
+    # Lista de encabezados [{nivel, texto, pos}] para navegación semántica
+    posiciones_encabezados = []
+
     # --- 1. PROCESAR LA COLUMNA VERTEBRAL (Orden de lectura lineal) ---
     for id_item in libro.spine:
         item = libro.get_item_with_id(id_item[0])
-        
+
         if not item:
             continue
-            
+
         if item.get_type() == ebooklib.ITEM_DOCUMENT:
-            posiciones_inicio_archivo[item.file_name] = len(texto_completo)
+            offset_archivo = len(texto_completo)
+            posiciones_inicio_archivo[item.file_name] = offset_archivo
 
             sopa = BeautifulSoup(item.get_content(), 'html.parser')
 
@@ -107,11 +113,39 @@ def extraer_datos_epub(ruta_epub):
             fragmento = re.sub(r'\n{3,}', '\n\n', fragmento).strip()
 
             if fragmento:
+                # Registrar posiciones de anchors (id=) para soporte de TOC con #fragmento
+                for elem in cuerpo.find_all(id=True):
+                    anchor_id = elem.get('id', '').strip()
+                    if not anchor_id:
+                        continue
+                    # Buscar el texto del elemento para localizarlo en el fragmento
+                    elem_texto = elem.get_text(separator=' ', strip=True)
+                    if elem_texto:
+                        aguja = elem_texto[:30]
+                        pos_en_frag = fragmento.find(aguja)
+                        pos_global = offset_archivo + (pos_en_frag if pos_en_frag >= 0 else 0)
+                    else:
+                        pos_global = offset_archivo
+                    posiciones_anchors[f"{item.file_name}#{anchor_id}"] = pos_global
+
+                # Registrar posiciones de encabezados h1–h6
+                for hx in cuerpo.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+                    nivel = int(hx.name[1])
+                    texto_h = hx.get_text(separator=' ', strip=True)
+                    if texto_h:
+                        pos_en_frag = fragmento.find(texto_h[:50])
+                        if pos_en_frag >= 0:
+                            posiciones_encabezados.append({
+                                'nivel': nivel,
+                                'texto': texto_h,
+                                'pos': offset_archivo + pos_en_frag,
+                            })
+
                 texto_completo += fragmento + "\n\n"
 
     # --- 2. PROCESAR EL ÍNDICE (TOC Jerárquico) ---
     datos_indice = []
-    
+
     def procesar_nodo_indice(nodo):
         titulo = ""
         enlace = ""
@@ -130,16 +164,27 @@ def extraer_datos_epub(ruta_epub):
                     datos_hijo = procesar_nodo_indice(hijo)
                     if datos_hijo:
                         hijos.append(datos_hijo)
-        
-        if not titulo: return None
 
+        if not titulo:
+            return None
+
+        # Soporte de TOC con anclas: "cap1.html#seccion2"
         nombre_archivo = enlace.split('#')[0]
-        pos_inicio = posiciones_inicio_archivo.get(nombre_archivo, 0)
+        fragmento_id = enlace.split('#')[1] if '#' in enlace else ''
+        if fragmento_id:
+            clave_anchor = f"{nombre_archivo}#{fragmento_id}"
+            pos_inicio = posiciones_anchors.get(
+                clave_anchor,
+                posiciones_inicio_archivo.get(nombre_archivo, 0)
+            )
+        else:
+            pos_inicio = posiciones_inicio_archivo.get(nombre_archivo, 0)
+
         posiciones_capitulos[titulo] = pos_inicio
-        
+
         return {
-            'title': titulo,   
-            'offset': pos_inicio, 
+            'title': titulo,
+            'offset': pos_inicio,
             'children': hijos
         }
 
@@ -151,4 +196,4 @@ def extraer_datos_epub(ruta_epub):
     # Limpieza final: eliminar artefactos de formato y líneas vacías para NVDA
     texto_completo = limpiar_para_lectura(texto_completo)
 
-    return texto_completo, datos_indice, posiciones_capitulos
+    return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados
