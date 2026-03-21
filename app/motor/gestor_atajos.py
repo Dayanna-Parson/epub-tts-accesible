@@ -44,11 +44,6 @@ _DEFAULTS_EMBEBIDOS = {
         "modificador": "Ctrl",
         "tecla": "G",
     },
-    "abrir_libro": {
-        "descripcion": "Abrir libro EPUB",
-        "modificador": "Ctrl",
-        "tecla": "A",
-    },
 }
 
 

@@ -633,8 +633,6 @@ class VentanaPrincipal(wx.Frame):
         _ATAJOS_SOLO_LECTURA = {"buscar", "marcadores", "ir_porcentaje"}
 
         _ACCIONES = {
-            "abrir_libro":       lambda: (self.notebook.SetSelection(0),
-                                          self.pestana_lectura.al_cargar_libro(None)),
             "reproducir_pausar": lambda: self.pestana_lectura.al_alternar_reproduccion(None),
             "detener":           lambda: self.pestana_lectura.al_detener(None),
             "marcadores":        lambda: self.pestana_lectura.al_abrir_marcadores(None),
