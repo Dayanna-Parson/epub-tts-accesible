@@ -20,6 +20,11 @@ _BLOQUES = {
 # Elementos de formateo que normalmente no tienen salto pero sí espacio
 _INLINE_FORMATEO = {'br'}
 
+# Etiquetas HTML semánticas de estilo inline
+_INLINE_NEGRITA   = {'strong', 'b'}
+_INLINE_CURSIVA   = {'em', 'i', 'cite', 'dfn', 'var'}
+_INLINE_SUBRAYADO = {'u', 'ins'}
+
 
 def _extraer_texto_bloque(elemento) -> str:
     """
@@ -66,6 +71,59 @@ def _extraer_texto_bloque(elemento) -> str:
 
     return ''.join(partes)
 
+def _recopilar_spans_estilo(cuerpo, offset_archivo):
+    """
+    Recorre el árbol BeautifulSoup de un documento y devuelve la lista de spans
+    con estilo semántico (negrita, cursiva, subrayado):
+        [{'texto': str, 'estilos': frozenset, 'cerca_de': int}, ...]
+
+    'cerca_de' es el offset global del archivo en el texto completo, usado como
+    punto de partida para la búsqueda posicional en pestana_lectura.
+
+    Solo registra el elemento donde se INTRODUCE un estilo nuevo respecto al padre
+    (evita duplicar spans cuando un padre ya aplica el mismo estilo).
+    Los estilos se acumulan en la recursión para manejar anidaciones:
+        <strong>muy <em>importante</em></strong>
+        → "muy importante" negrita
+        → "importante"     negrita + cursiva
+    """
+    resultado = []
+
+    def _recorrer(nodo, estilos_padres):
+        if not isinstance(nodo, Tag):
+            return
+        nombre = nodo.name.lower() if nodo.name else ''
+        if nombre in ('script', 'style', 'head', 'meta', 'link', 'noscript', 'template'):
+            return
+
+        estilos = set(estilos_padres)
+        if nombre in _INLINE_NEGRITA:
+            estilos.add('negrita')
+        if nombre in _INLINE_CURSIVA:
+            estilos.add('cursiva')
+        if nombre in _INLINE_SUBRAYADO:
+            estilos.add('subrayado')
+        estilos_fs = frozenset(estilos)
+
+        # Solo registrar si este elemento aporta estilos nuevos
+        if estilos_fs - estilos_padres:
+            texto_nodo = nodo.get_text(separator=' ', strip=True)
+            if len(texto_nodo) >= 3:
+                resultado.append({
+                    'texto': texto_nodo,
+                    'estilos': estilos_fs,
+                    'cerca_de': offset_archivo,
+                })
+
+        for hijo in nodo.children:
+            _recorrer(hijo, estilos_fs)
+
+    for nodo in cuerpo.children:
+        _recorrer(nodo, frozenset())
+
+    return resultado
+
+
 def extraer_datos_epub(ruta_epub):
     """
     Extrae el texto completo y la estructura del índice (TOC) de un archivo EPUB.
@@ -91,6 +149,8 @@ def extraer_datos_epub(ruta_epub):
     posiciones_anchors = {}
     # Lista de encabezados [{nivel, texto, pos}] para navegación semántica
     posiciones_encabezados = []
+    # Lista de spans con estilo [{texto, estilos, cerca_de}] para rich-text en TextCtrl
+    spans_estilo = []
 
     # --- 1. PROCESAR LA COLUMNA VERTEBRAL (Orden de lectura lineal) ---
     for id_item in libro.spine:
@@ -140,6 +200,9 @@ def extraer_datos_epub(ruta_epub):
                                 'texto': texto_h,
                                 'pos': offset_archivo + pos_en_frag,
                             })
+
+                # Recopilar spans con estilo inline (negrita, cursiva, subrayado)
+                spans_estilo.extend(_recopilar_spans_estilo(cuerpo, offset_archivo))
 
                 texto_completo += fragmento + "\n\n"
 
@@ -196,4 +259,4 @@ def extraer_datos_epub(ruta_epub):
     # Limpieza final: eliminar artefactos de formato y líneas vacías para NVDA
     texto_completo = limpiar_para_lectura(texto_completo)
 
-    return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados
+    return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados, spans_estilo

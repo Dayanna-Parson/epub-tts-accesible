@@ -3,6 +3,7 @@ import wx
 import os
 import json
 import time
+import threading
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
@@ -70,6 +71,7 @@ class PestanaLectura(wx.Panel):
         
         self.posiciones_capitulos = {}
         self.posiciones_encabezados = []  # [{nivel, texto, pos}] para H/Shift+H
+        self.spans_estilo = []            # [{texto, estilos, cerca_de}] para rich-text
         self.marcadores = {}
         self.longitud_texto = 0
         self._pausa_entre_fragmentos_ms = 0  # ms de pausa entre fragmentos TTS
@@ -764,7 +766,7 @@ class PestanaLectura(wx.Panel):
     def cargar_epub_desde_ruta(self, ruta):
         self.guardar_datos_libro()
         try:
-            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados = extraer_datos_epub(ruta)
+            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados, self.spans_estilo = extraer_datos_epub(ruta)
 
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
@@ -773,6 +775,8 @@ class PestanaLectura(wx.Panel):
             self.pos_inicio_fragmento = 0
             self.txt_contenido.SetValue(texto)
             self.longitud_texto = len(texto)
+            # Aplicar negrita/cursiva/subrayado en diferido (no bloquea la carga)
+            wx.CallAfter(self._aplicar_estilos_ricos)
             self.arbol_indice.DeleteAllItems()
             self.raiz_id = self.arbol_indice.AddRoot(os.path.basename(ruta))
             self._construir_arbol_indice(self.raiz_id, datos_arbol)
@@ -910,6 +914,103 @@ class PestanaLectura(wx.Panel):
                 subprocess.Popen(["xdg-open", ruta_ayuda])
             except Exception as e:
                 wx.MessageBox(str(e), "Error al abrir ayuda")
+
+    def _aplicar_estilos_ricos(self):
+        """
+        Aplica negrita, cursiva y subrayado al TextCtrl según los spans del EPUB,
+        más negrita exacta en los encabezados h1-h6.
+        Se ejecuta en un hilo de fondo para no bloquear la UI; las llamadas a
+        SetStyle() se envían al hilo principal con wx.CallAfter al final.
+        """
+        if not self.spans_estilo and not self.posiciones_encabezados:
+            return
+        # Capturar datos en el hilo principal antes de lanzar el hilo
+        texto = self.txt_contenido.GetValue()
+        spans = list(self.spans_estilo)
+        encabezados = list(self.posiciones_encabezados)
+        longitud = len(texto)
+        if not texto:
+            return
+        threading.Thread(
+            target=self._calcular_operaciones_estilo,
+            args=(texto, spans, encabezados, longitud),
+            daemon=True,
+        ).start()
+
+    def _calcular_operaciones_estilo(self, texto, spans, encabezados, longitud):
+        """
+        Hilo de fondo: calcula los rangos exactos de cada span buscando su texto
+        en el contenido final del TextCtrl, luego delega la aplicación al hilo UI.
+
+        Búsqueda secuencial: como los spans están en orden de documento y el texto
+        también, avanzamos 'pos_busqueda' solo hacia delante para ser O(n) en total.
+        Se usa solo los primeros 40 caracteres del span como aguja para robustez
+        frente a ligeras diferencias de normalización (espacios, guiones, etc.).
+        """
+        operaciones = []  # [(inicio, fin, frozenset_estilos)]
+        pos_busqueda = 0
+
+        for span in spans:
+            texto_span = span['texto']
+            cerca_de   = span.get('cerca_de', 0)
+            estilos    = span['estilos']
+            if len(texto_span) < 3:
+                continue
+
+            aguja = texto_span[:40]
+            # Buscar desde max(pos_busqueda, cerca_de-100) para manejar
+            # pequeños desfases de normalización sin retroceder mucho
+            desde = max(pos_busqueda, cerca_de - 100)
+            pos = texto.find(aguja, desde)
+            if pos == -1:
+                # Reintento con ventana más amplia (por si limpiar_lectura desplazó)
+                pos = texto.find(aguja, max(0, cerca_de - 500))
+            if pos >= 0:
+                fin = min(pos + len(texto_span), longitud)
+                operaciones.append((pos, fin, estilos))
+                pos_busqueda = pos  # avanzar sin saltar
+
+        # Encabezados: posición exacta conocida → negrita sin búsqueda
+        for enc in encabezados:
+            pos = enc['pos']
+            fin = min(pos + len(enc['texto']), longitud)
+            if fin > pos:
+                operaciones.append((pos, fin, frozenset({'negrita'})))
+
+        if operaciones:
+            wx.CallAfter(self._aplicar_operaciones_estilo, operaciones)
+
+    def _aplicar_operaciones_estilo(self, operaciones):
+        """
+        Hilo principal: aplica SetStyle() para todos los rangos calculados.
+        Freeze/Thaw agrupa los redraws en una sola pasada, igual que Bookworm.
+        """
+        _cache = {}
+
+        def _attr(estilos):
+            if estilos not in _cache:
+                font = wx.Font(
+                    wx.NORMAL_FONT.GetPointSize(),
+                    wx.FONTFAMILY_DEFAULT,
+                    wx.FONTSTYLE_ITALIC if 'cursiva' in estilos else wx.FONTSTYLE_NORMAL,
+                    wx.FONTWEIGHT_BOLD  if 'negrita' in estilos else wx.FONTWEIGHT_NORMAL,
+                )
+                a = wx.TextAttr()
+                a.SetFont(font)
+                if 'subrayado' in estilos:
+                    a.SetFontUnderlined(True)
+                _cache[estilos] = a
+            return _cache[estilos]
+
+        self.txt_contenido.Freeze()
+        try:
+            for inicio, fin, estilos in operaciones:
+                try:
+                    self.txt_contenido.SetStyle(inicio, fin, _attr(estilos))
+                except Exception:
+                    pass
+        finally:
+            self.txt_contenido.Thaw()
 
     def _al_tecla_contenido(self, evento):
         """
