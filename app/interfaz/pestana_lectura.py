@@ -382,11 +382,17 @@ class PestanaLectura(wx.Panel):
                 self._idx_fragmento_actual = 0
                 self._reproducir_siguiente_fragmento()
             else:
-                # Voz local SAPI5: gestiona su propia cola internamente, enviar todo el texto
+                # Voz local SAPI5: lectura párrafo a párrafo con sincronización de cursor.
+                # _longitud_frag_actual = 0 → el timer usa GetInsertionPoint() (posición real)
+                # en lugar de la estimación temporal usada para voces neuronales.
                 self._cola_lectura = []
-                self._tiempo_inicio_frag = time.time()
-                self._longitud_frag_actual = len(fragmento_total)
-                self.reproductor.cargar_texto(fragmento_total)
+                self._longitud_frag_actual = 0
+                self.reproductor.cargar_texto(
+                    fragmento_total,
+                    pos_offset=pos_actual,
+                    callback_progreso=self._al_progreso_sapi,
+                    callback_completado=self._al_sapi_completado,
+                )
 
     def _dividir_en_fragmentos(self, texto, pos_base):
         """
@@ -489,6 +495,26 @@ class PestanaLectura(wx.Panel):
                 wx.CallLater(pausa, self._reproducir_siguiente_fragmento)
             else:
                 self._reproducir_siguiente_fragmento()
+
+    def _al_progreso_sapi(self, pos):
+        """
+        Llamado por ClienteSapi5 al inicio de cada párrafo.
+        Mueve el cursor exactamente al párrafo que SAPI5 acaba de empezar a leer,
+        igual que el mecanismo de bookmarks de Bookworm.
+        """
+        self.pos_inicio_fragmento = pos
+        self.txt_contenido.SetInsertionPoint(pos)
+        self.txt_contenido.ShowPosition(pos)
+        if self.longitud_texto > 0:
+            pct = max(0, min(100, int(pos / self.longitud_texto * 100)))
+            if self.deslizador_progreso.GetValue() != pct:
+                self.deslizador_progreso.SetValue(pct)
+                self.lbl_progreso.SetLabel(f"Progreso: {pct}%")
+
+    def _al_sapi_completado(self):
+        """Llamado por ClienteSapi5 cuando termina de leer todos los párrafos."""
+        self.reproductor.estado = 'detenido'
+        self.guardar_datos_libro()
 
     def al_detener(self, evento):
         # Cancelar la cola de lectura continua antes de detener el motor

@@ -1,4 +1,6 @@
 import logging
+import threading
+import wx
 import comtypes.client
 
 logger = logging.getLogger(__name__)
@@ -12,6 +14,9 @@ class ClienteSapi5:
     def __init__(self):
         self.motor = None
         self.conectado = False
+        # Control de hilo de lectura párrafo a párrafo
+        self._detener_flag = False
+        self._generacion_sapi = 0
         self._inicializar_motor()
 
     def _inicializar_motor(self):
@@ -35,31 +40,81 @@ class ClienteSapi5:
                     lista.append({
                         "id": item.Id,
                         "nombre": desc,
-                        "proveedor_id": "local", 
+                        "proveedor_id": "local",
                         "objeto_real": item
                     })
             except: pass
         return lista
 
     def hablar(self, texto):
+        """Habla el texto completo de una vez (sin sincronización de cursor)."""
         if self.conectado:
+            self._detener_flag = False
             try:
-                # SOLUCIÓN DEL SILENCIO:
-                # 1. Aseguramos volumen al 100 por si acaso
                 self.motor.Volume = 100
-                
-                # 2. NO paramos aquí. Ya lo hizo el reproductor antes.
-                # 3. Usamos SPF_IS_NOT_XML para que si el libro tiene símbolos < o >
-                #    SAPI no se crea que son comandos y falle.
                 self.motor.Speak(texto, SPF_ASYNC | SPF_IS_NOT_XML)
             except Exception as e:
                 logger.warning("[SAPI5] Error al hablar: %s", e)
                 self._inicializar_motor()
 
+    def hablar_con_callback(self, texto, pos_offset, callback_progreso, callback_completado):
+        """
+        Habla el texto párrafo a párrafo (igual que Bookworm).
+        - callback_progreso(pos): llamado en el hilo principal al iniciar cada párrafo.
+          Recibe la posición del párrafo en el texto global → mueve el cursor exacto.
+        - callback_completado(): llamado en el hilo principal cuando termina todo.
+
+        Pausa/reanudación funciona vía motor.Pause() / motor.Resume() sin
+        interrumpir el hilo. Stop limpio mediante _detener_flag + purge de SAPI.
+        """
+        if not self.conectado:
+            return
+        # Incrementar generación invalida el hilo anterior (si lo hubiera)
+        self._detener_flag = False
+        self._generacion_sapi += 1
+        gen = self._generacion_sapi
+        threading.Thread(
+            target=self._hilo_parrafos,
+            args=(texto, pos_offset, callback_progreso, callback_completado, gen),
+            daemon=True,
+        ).start()
+
+    def _hilo_parrafos(self, texto, pos_offset, callback_progreso, callback_completado, gen):
+        """
+        Hilo de fondo: habla cada párrafo sincrónicamente y dispara callbacks.
+        WaitUntilDone(100) permite verificar _detener_flag cada 100 ms sin
+        consumir CPU, y se comporta bien durante una pausa (motor.Pause() pausa
+        el audio pero WaitUntilDone sigue esperando hasta motor.Resume()).
+        """
+        pos = pos_offset
+        for linea in texto.split('\n'):
+            # Comprobar cancelación antes de cada párrafo
+            if self._detener_flag or self._generacion_sapi != gen:
+                return
+            if linea.strip():
+                # Notificar posición al hilo principal (mueve cursor al párrafo)
+                wx.CallAfter(callback_progreso, pos)
+                try:
+                    self.motor.Volume = 100
+                    self.motor.Speak(linea, SPF_ASYNC | SPF_IS_NOT_XML)
+                    # Esperar fin de párrafo en intervalos de 100 ms
+                    while not self._detener_flag and self._generacion_sapi == gen:
+                        if self.motor.WaitUntilDone(100):
+                            break  # párrafo completado
+                except Exception as e:
+                    logger.warning("[SAPI5] Error en párrafo: %s", e)
+                    if not self.conectado:
+                        return
+            pos += len(linea) + 1  # +1 por el \n eliminado al hacer split
+
+        if not self._detener_flag and self._generacion_sapi == gen:
+            wx.CallAfter(callback_completado)
+
     def detener(self):
         if self.conectado:
+            # Señalizar al hilo de párrafos que debe detenerse
+            self._detener_flag = True
             try:
-                # Aquí sí paramos y purgamos la cola
                 self.motor.Speak("", SPF_ASYNC | SPF_PURGEBEFORESPEAK)
             except: pass
 
