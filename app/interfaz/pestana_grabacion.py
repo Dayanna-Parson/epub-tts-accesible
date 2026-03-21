@@ -594,14 +594,9 @@ class PestanaGrabacion(wx.Panel):
 
         # ── Voces SAPI5 locales ───────────────────────────────────────────
         try:
-            import comtypes.client
-            sapi  = comtypes.client.CreateObject("SAPI.SpVoice")
-            voces = sapi.GetVoices()
-            for i in range(voces.Count):
-                v    = voces.Item(i)
-                desc = v.GetDescription()
-                datos = {"id": v.Id, "nombre": desc, "proveedor_id": "local"}
-
+            from app.servicios.cliente_sapi5 import ClienteSapi5
+            for datos in ClienteSapi5().obtener_voces():
+                desc = datos["nombre"]
                 pos = self.check_voces.InsertItem(idx, desc)
                 self.check_voces.SetItem(pos, 1, "")
                 self.check_voces.SetItem(pos, 2, "")
@@ -609,8 +604,9 @@ class PestanaGrabacion(wx.Panel):
                 self._mapa_indices[pos] = datos
                 self.voces_disponibles.append((desc, datos))
                 idx += 1
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("[SAPI5] No se pudieron cargar voces locales: %s", e)
 
         if idx == 0:
             pos = self.check_voces.InsertItem(

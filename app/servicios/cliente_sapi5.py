@@ -30,20 +30,73 @@ class ClienteSapi5:
             self.conectado = False
 
     def obtener_voces(self):
+        """
+        Enumera todas las voces SAPI5 del sistema, incluyendo las voces OneCore
+        (Windows 10/11) que no aparecen con GetVoices() estándar.
+        """
         lista = []
-        if self.conectado:
+        ids_vistos = set()
+
+        def _leer_categoria(categoria_id):
+            """Devuelve una lista de voces de una categoría de token SAPI5."""
+            resultado = []
             try:
-                voces = self.motor.GetVoices()
-                for i in range(voces.Count):
+                sp_cat = comtypes.client.CreateObject("SAPI.SpObjectTokenCategory")
+                sp_cat.SetId(categoria_id, False)
+                tokens = sp_cat.EnumTokens()
+                for i in range(tokens.Count):
+                    try:
+                        item = tokens.Item(i)
+                        vid = item.Id
+                        if vid in ids_vistos:
+                            continue
+                        desc = item.GetDescription()
+                        ids_vistos.add(vid)
+                        resultado.append({
+                            "id": vid,
+                            "nombre": desc,
+                            "proveedor_id": "local",
+                        })
+                    except Exception as e:
+                        logger.debug("[SAPI5] Error leyendo token de voz: %s", e)
+            except Exception as e:
+                logger.debug("[SAPI5] Categoría '%s' no disponible: %s", categoria_id, e)
+            return resultado
+
+        if not self.conectado:
+            logger.warning("[SAPI5] Motor no inicializado; no se pueden listar voces.")
+            return lista
+
+        # 1. Voces SAPI5 clásicas (HKLM\...\Speech\Voices)
+        try:
+            voces = self.motor.GetVoices()
+            for i in range(voces.Count):
+                try:
                     item = voces.Item(i)
+                    vid  = item.Id
                     desc = item.GetDescription()
+                    ids_vistos.add(vid)
                     lista.append({
-                        "id": item.Id,
+                        "id": vid,
                         "nombre": desc,
                         "proveedor_id": "local",
-                        "objeto_real": item
                     })
-            except: pass
+                except Exception as e:
+                    logger.debug("[SAPI5] Error leyendo voz estándar: %s", e)
+        except Exception as e:
+            logger.warning("[SAPI5] GetVoices() falló: %s", e)
+
+        # 2. Voces OneCore — Windows 10/11 (suelen ser voces de alta calidad)
+        lista += _leer_categoria(
+            r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices"
+        )
+
+        # 3. Voces modernas por usuario — Windows 11
+        lista += _leer_categoria(
+            r"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Speech_ModernVoices"
+        )
+
+        logger.debug("[SAPI5] Total voces encontradas: %d", len(lista))
         return lista
 
     def hablar(self, texto):
@@ -141,18 +194,42 @@ class ClienteSapi5:
             except: pass
 
     def cambiar_voz_por_nombre(self, nombre_objetivo):
-        """Busca y activa una voz local de forma inteligente."""
-        if not self.motor: return
+        """
+        Busca y activa una voz SAPI5 por nombre, incluyendo voces OneCore y modernas
+        (Windows 10/11) que no aparecen en la categoría estándar.
+        """
+        if not self.motor:
+            return
         logger.debug("[SAPI5] Buscando voz: %s", nombre_objetivo)
-        try:
-            voces = self.motor.GetVoices()
-            for i in range(voces.Count):
-                voz = voces.Item(i)
-                desc = voz.GetDescription()
-                if nombre_objetivo.lower() in desc.lower():
-                    self.motor.Voice = voz
-                    logger.debug("[SAPI5] Voz cambiada a: %s", desc)
-                    return
-            logger.debug("[SAPI5] No se encontró voz: %s", nombre_objetivo)
-        except Exception as e:
-            logger.warning("[SAPI5] Error al cambiar voz: %s", e)
+
+        _CATEGORIAS = [
+            None,  # GetVoices() estándar
+            r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices",
+            r"HKEY_CURRENT_USER\SOFTWARE\Microsoft\Speech_ModernVoices",
+        ]
+
+        nombre_lower = nombre_objetivo.lower()
+
+        for cat_id in _CATEGORIAS:
+            try:
+                if cat_id is None:
+                    tokens = self.motor.GetVoices()
+                else:
+                    sp_cat = comtypes.client.CreateObject("SAPI.SpObjectTokenCategory")
+                    sp_cat.SetId(cat_id, False)
+                    tokens = sp_cat.EnumTokens()
+
+                for i in range(tokens.Count):
+                    try:
+                        tok  = tokens.Item(i)
+                        desc = tok.GetDescription()
+                        if nombre_lower in desc.lower():
+                            self.motor.Voice = tok
+                            logger.debug("[SAPI5] Voz cambiada a: %s", desc)
+                            return
+                    except Exception as e:
+                        logger.debug("[SAPI5] Error leyendo token: %s", e)
+            except Exception as e:
+                logger.debug("[SAPI5] Categoría '%s' no disponible: %s", cat_id, e)
+
+        logger.warning("[SAPI5] No se encontró voz con nombre: %s", nombre_objetivo)

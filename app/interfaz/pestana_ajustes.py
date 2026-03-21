@@ -774,6 +774,15 @@ class PanelVoces(wx.Panel):
                 print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
                 self.voces_todas = []
 
+        # Voces SAPI5 locales (no están en voces_disponibles.json; se enumeran en tiempo real)
+        try:
+            from app.servicios.cliente_sapi5 import ClienteSapi5
+            for v in ClienteSapi5().obtener_voces():
+                v["es_nueva"] = False
+                self.voces_todas.append(v)
+        except Exception as e:
+            print(f"[Aviso] No se pudieron cargar las voces SAPI5 locales: {e}")
+
         # Proveedor con opciones fijas; idioma se rellena según proveedor seleccionado
         self.combo_proveedor.Clear()
         self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "ElevenLabs", "SAPI 5"])
@@ -944,6 +953,8 @@ class PanelVoces(wx.Panel):
                 prov_mostrar = "Amazon Polly"
             elif prov_raw == "elevenlabs":
                 prov_mostrar = "ElevenLabs"
+            elif prov_raw == "local":
+                prov_mostrar = "SAPI5 (Local)"
 
             pos = self.lista_voces.InsertItem(idx, nombre_mostrar)
             self.lista_voces.SetItem(pos, 1, genero_mostrar)
