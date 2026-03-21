@@ -139,19 +139,22 @@ class ReproductorVoz:
         self.tipo_motor_actual = "local"
         return "local"
 
-    def cargar_texto(self, texto, callback_completado=None):
+    def cargar_texto(self, texto, callback_completado=None,
+                     pos_offset=0, callback_progreso=None):
         """
         Inicia la lectura del texto.
         Aplica el método adecuado según si se usa una voz local o una voz neuronal.
-        Incrementa el contador de generación para invalidar cualquier hilo anterior
-        que pudiera estar esperando respuesta de la API.
+        Incrementa el contador de generación para invalidar cualquier hilo anterior.
 
         Para voces neuronales, verifica la cuota antes de iniciar y salta al siguiente
         proveedor disponible si el actual ha agotado su límite mensual.
 
-        callback_completado: función sin argumentos que se llamará en el hilo principal
-        cuando termine de reproducirse el fragmento. Usado por PestanaLectura para
-        encadenar la cola de audio de lectura continua.
+        callback_completado : función sin argumentos llamada en el hilo principal cuando
+            termina el fragmento. Usada por PestanaLectura para encadenar la cola de audio.
+        pos_offset          : posición global del inicio del texto en el TextCtrl.
+            Solo se usa con voces SAPI5 para la sincronización de cursor.
+        callback_progreso   : función(pos) llamada al iniciar cada párrafo en SAPI5.
+            Permite mover el cursor exactamente al párrafo que se está leyendo.
         """
         if not texto: return
 
@@ -176,13 +179,20 @@ class ReproductorVoz:
         self.estado = "reproduciendo"
 
         if self.tipo_motor_actual == "local":
-            # Ejecución directa para voces locales SAPI5 (SPF_ASYNC, no bloquea)
             try:
-                self.cliente_local.hablar(texto)
+                if callback_progreso and hasattr(self.cliente_local, 'hablar_con_callback'):
+                    # Lectura párrafo a párrafo con sincronización de cursor (estilo Bookworm)
+                    self.cliente_local.hablar_con_callback(
+                        texto,
+                        pos_offset,
+                        callback_progreso,
+                        callback_completado or (lambda: None),
+                    )
+                else:
+                    self.cliente_local.hablar(texto)
             except Exception as e:
                 logger.warning("[ReproductorVoz] Error en voz local SAPI5: %s", e)
                 self.estado = "detenido"
-            # Las voces locales gestionan su propia cola internamente; no se usa callback
         else:
             # Voces neuronales: se ejecutan en segundo plano para no bloquear la interfaz
             self._hilo_reproduccion = threading.Thread(
