@@ -1,4 +1,4 @@
-# Bitácora de desarrollo — TifloHistorias
+# Bitácora de desarrollo — Epub TTS
 
 *Historia completa del proyecto: de dónde viene, por qué casi muere y cómo llegó hasta aquí.*
 
@@ -199,14 +199,14 @@ La Fase 4 es el resultado de todo eso. Una versión estable, accesible y lista p
 
 — Dayanna Parson, marzo de 2026
 
-## Fase 5: La Consolidación y el Motor Local (Marzo 2026)
+## Fase 5: La Consolidación y el Motor de Alta Fidelidad (Marzo 2026)
 
-Esta fase marca el paso de "prototipo funcional" a "herramienta profesional". Tras meses de uso, identifiqué que depender exclusivamente de la nube era un riesgo para proyectos largos.
+Esta fase marca la transformación de Epub TTS en una herramienta profesional, integrando lógicas avanzadas de navegación y sincronización inspiradas en referentes como Bookworm.
 
-**Hitos de esta fase:**
-1. **Integración de SAPI 5:** Logramos que las voces locales de Windows funcionen con la misma lógica de etiquetas que las voces de pago. Esto permite grabar audiolibros enteros de forma gratuita y offline.
-2. **El Manual Integrado:** Creamos `ayuda.html` para que cualquier usuario pueda dominar la app sin salir de ella.
-3. **Refinamiento de Accesibilidad:** Optimizamos los deslizadores de volumen y velocidad para que no saturen al lector de pantalla, implementando saltos lógicos de 1 y 10 unidades.
-4. **Inspiración en Bookworm:** Mejoramos el motor de extracción de EPUB para que la lectura sea fluida y profesional, sin los errores de salto de línea de las primeras versiones.
+**Hitos alcanzados:**
+1. **Sincronización Exacta SAPI 5:** Implementamos una cola de párrafos con callbacks de progreso. El cursor se mueve en tiempo real con la voz local, permitiendo pausas quirúrgicas y una reanudación perfecta sin pérdida de posición.
+2. **Navegación Semántica:** Incorporamos los atajos `H` y `Shift+H` para saltar entre encabezados (h1-h6) con respuesta sonora, mejorando drásticamente la navegación estructural.
+3. **Soporte de Rich Text:** El motor ahora preserva visualmente negritas, cursivas y subrayados, permitiendo que el lector de pantalla brinde una lectura mucho más rica en matices.
+4. **Optimización de Interfaz:** Unificamos atajos en `Control + O` (contextual) y refinamos los deslizadores de precisión (saltos de 1 y 10 unidades) para un control total sin fatiga auditiva.
 
-Epub TTS es ahora la herramienta que siempre soñé tener en mi escritorio.
+Epub TTS es ahora la estación de trabajo que siempre soñé para mis audiolibros con multivoces.

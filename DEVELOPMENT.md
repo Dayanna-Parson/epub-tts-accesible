@@ -323,3 +323,17 @@ No hay suite de tests automatizados todavía. Antes de hacer commit de cambios e
 - **Slidrs:** No deben exponer la escala completa a la API de accesibilidad. Solo el valor actual.
 - **Atajos:** `Control + P` es el comando universal de reproducción. Se prohíbe el uso de la tecla `Espacio` para evitar conflictos de foco con NVDA.
 - **Navegación:** Se sustituyen los términos "Atrás/Adelante" por **"Retroceder/Avanzar"** para mayor claridad semántica.
+
+## Decisiones Técnicas Recientes (Fase 5)
+
+### Sincronización de Audio y Foco
+- **Motor SAPI 5:** Se procesa mediante una cola de párrafos en un hilo secundario utilizando `WaitUntilDone()` y callbacks de progreso. El cursor debe seguir a la voz en tiempo real. Prohibido usar estimaciones temporales.
+- **Pausa Neuronal:** Para voces de API, se mantiene la lógica de reenvío desde la posición del cursor, con un tiempo de pausa configurable (ms) en Ajustes para evitar solapamientos.
+
+### Procesamiento de EPUB y Estilos
+- **Extracción Estilo Bookworm:** Uso de un patrón de bloques para separar contenido inline de estructural, asegurando que no existan palabras cortadas.
+- **Renderizado de Estilos:** El formateo de texto rico se aplica asíncronamente tras la carga del texto. Se utiliza `Freeze/Thaw` en el `TextCtrl` para realizar todas las operaciones de estilo de una sola vez sin afectar el rendimiento.
+
+### UX y Atajos
+- **Slidrs:** Solo exponen el valor actual a la API de accesibilidad. Pasos de 1 (flechas) y 10 (RePág/AvPág).
+- **Atajos:** `Control + O` es el comando universal de apertura. `H / Shift+H` para navegación por encabezados. Se prohíbe el uso de la tecla `Espacio` para evitar conflictos de foco.
