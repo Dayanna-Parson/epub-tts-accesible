@@ -42,8 +42,10 @@ def _extraer_texto_bloque(elemento) -> str:
             txt = str(nodo)
             if txt.strip():
                 partes.append(txt)
-            elif txt and partes and not partes[-1].endswith(' '):
-                # Espacio entre nodos inline (ej. "<b>hola</b> mundo")
+            elif txt and partes and not partes[-1].endswith(' ') and not partes[-1].endswith('\n'):
+                # Espacio entre nodos inline (ej. "<b>hola</b> mundo").
+                # No se añade si el último elemento termina en \n: sería
+                # whitespace HTML de indentación entre elementos de bloque.
                 partes.append(' ')
         elif isinstance(nodo, Tag):
             nombre = nodo.name.lower() if nodo.name else ''
@@ -258,5 +260,23 @@ def extraer_datos_epub(ruta_epub):
 
     # Limpieza final: eliminar artefactos de formato y líneas vacías para NVDA
     texto_completo = limpiar_para_lectura(texto_completo)
+
+    # Recalcular posiciones de encabezados en el texto ya limpiado.
+    # limpiar_para_lectura colapsa \n\n → \n, desplazando todas las posiciones
+    # que se calcularon sobre el texto en bruto; hay que buscarlos de nuevo.
+    if posiciones_encabezados:
+        pos_busqueda = 0
+        nuevos_encabezados = []
+        for enc in posiciones_encabezados:
+            aguja = enc['texto'][:50]
+            pos = texto_completo.find(aguja, pos_busqueda)
+            if pos >= 0:
+                nuevos_encabezados.append({
+                    'nivel': enc['nivel'],
+                    'texto': enc['texto'],
+                    'pos': pos,
+                })
+                pos_busqueda = pos + 1
+        posiciones_encabezados = nuevos_encabezados
 
     return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados, spans_estilo

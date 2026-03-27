@@ -86,26 +86,25 @@ class ClienteEleven:
             sd.wait()
 
     def preparar(self, texto, datos_voz):
-        """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe."""
+        """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe.
+        El resultado se guarda siempre: detener() no debe invalidarlo porque el
+        audio descargado es para el SIGUIENTE fragmento, no para el actual."""
         if texto in self._cache_frags:
-            if not self._parado:
-                self._audio_preparado = self._cache_frags[texto]
-                self._texto_preparado = texto
+            self._audio_preparado = self._cache_frags[texto]
+            self._texto_preparado = texto
             return
         try:
             data, fs_efectiva = self._llamar_api(texto, datos_voz)
-            if not self._parado:
-                self._guardar_en_cache(texto, data, fs_efectiva)
-                self._audio_preparado = (data, fs_efectiva)
-                self._texto_preparado = texto
+            self._guardar_en_cache(texto, data, fs_efectiva)
+            self._audio_preparado = (data, fs_efectiva)
+            self._texto_preparado = texto
         except Exception:
             self._audio_preparado = None
             self._texto_preparado = None
 
     def detener(self):
         self._parado = True
-        self._audio_preparado = None
-        self._texto_preparado = None
+        # Caché y buffer proactivo se conservan para el siguiente fragmento.
         try:
             self._sesion.close()
             self._sesion = requests.Session()
