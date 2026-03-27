@@ -115,7 +115,7 @@ class PestanaLectura(wx.Panel):
         )
         self.txt_contenido.SetValue("¡Bienvenido a Epub TTS! Tu lector de EPUB con soporte para voces de alta calidad (Azure, Polly y ElevenLabs) y voces locales SAPI 5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1, 2 y 3 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
-        self.txt_contenido.Bind(wx.EVT_KEY_DOWN, self._al_tecla_contenido)
+        self.txt_contenido.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_contenido)
         
         self.divisor.SetMinimumPaneSize(200)
         self.divisor.SplitVertically(self.arbol_indice, self.txt_contenido, 280)
@@ -471,7 +471,6 @@ class PestanaLectura(wx.Panel):
         texto_frag, pos_inicio = self._cola_lectura[self._idx_fragmento_actual]
 
         if not texto_frag.strip():
-            # Saltar fragmento vacío y continuar con el siguiente
             self._idx_fragmento_actual += 1
             self._reproducir_siguiente_fragmento()
             return
@@ -479,10 +478,19 @@ class PestanaLectura(wx.Panel):
         self.pos_inicio_fragmento = pos_inicio
         self._tiempo_inicio_frag = time.time()
         self._longitud_frag_actual = len(texto_frag)
-        # Resetear flag de precarga para este nuevo fragmento
-        self._precarga_solicitada = False
 
-        # Mover el cursor al inicio del fragmento para que NVDA sepa dónde empieza
+        # Disparar precarga del fragmento siguiente de forma inmediata,
+        # sin esperar al 70% del timer. Así APIs lentas como Polly tienen
+        # tiempo suficiente para responder antes de que termine el fragmento.
+        idx_siguiente = self._idx_fragmento_actual + 1
+        if (not self._precarga_solicitada and
+                self._cola_lectura and idx_siguiente < len(self._cola_lectura)):
+            texto_sig, _ = self._cola_lectura[idx_siguiente]
+            if texto_sig.strip():
+                self._precarga_solicitada = True
+                voz = self.combo_voz.GetClientData(self.combo_voz.GetSelection())
+                self.reproductor.precargar_fragmento(texto_sig, voz)
+
         self.txt_contenido.SetInsertionPoint(pos_inicio)
         self.txt_contenido.ShowPosition(pos_inicio)
 
