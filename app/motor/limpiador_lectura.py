@@ -46,8 +46,12 @@ def limpiar_para_lectura(texto):
     # 6. Restaurar los marcadores de párrafo como salto de línea simple
     texto = texto.replace('\x01', '\n')
 
-    # 7. Limpiar residuos: espacios múltiples y espacios adyacentes a saltos de línea
+    # 7. Limpiar residuos: espacios múltiples, espacios junto a saltos y saltos múltiples
     texto = re.sub(r'  +', ' ', texto)
     texto = re.sub(r' *\n *', '\n', texto)
+    # Un '\n \n' producido cuando dos bloques consecutivos tenían solo whitespace
+    # entre ellos resulta en '\n\n' tras el paso anterior (línea en blanco visible).
+    # Colapsamos cualquier secuencia de saltos en uno solo.
+    texto = re.sub(r'\n+', '\n', texto)
 
     return texto.strip()

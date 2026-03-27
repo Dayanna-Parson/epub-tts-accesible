@@ -515,18 +515,21 @@ class PanelClaves(wx.ScrolledWindow):
 
     def al_comprobar(self, event, proveedor=None):
         self.al_guardar(None)
-        # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces
-        # Así el filtro "Solo nuevas voces" detectará solo las recién llegadas
+        # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces.
+        # Se escribe SIEMPRE (aunque no haya voces previas) para que después de
+        # la descarga cargar_datos_y_llenar() pueda detectar las voces nuevas.
+        # Con lista vacía [] todas las voces descargadas aparecerán como nuevas.
         try:
             ruta_voces = ruta_config("voces_disponibles.json")
             ruta_conocidas = ruta_config("voces_conocidas.json")
+            ids_actuales = []
             if os.path.exists(ruta_voces):
                 with open(ruta_voces, 'r', encoding='utf-8') as f:
                     datos = json.load(f)
                 ids_actuales = [v.get("id","") for lista in datos.values() for v in lista if v.get("id")]
-                os.makedirs(os.path.dirname(ruta_conocidas), exist_ok=True)
-                with open(ruta_conocidas, 'w', encoding='utf-8') as f:
-                    json.dump(ids_actuales, f)
+            os.makedirs(os.path.dirname(ruta_conocidas), exist_ok=True)
+            with open(ruta_conocidas, 'w', encoding='utf-8') as f:
+                json.dump(ids_actuales, f)
         except Exception:
             pass
         wx.BeginBusyCursor()
@@ -751,8 +754,10 @@ class PanelVoces(wx.Panel):
         ruta_conocidas = ruta_config("voces_conocidas.json")
         self.voces_todas = []
 
-        # Cargar IDs de voces conocidas (para detectar novedades)
-        voces_conocidas = set()
+        # Cargar IDs de voces conocidas (para detectar novedades).
+        # None = nunca se descargó antes (no hay base de comparación).
+        # set() vacío = primera descarga; todas las voces serán "nuevas".
+        voces_conocidas = None
         try:
             if os.path.exists(ruta_conocidas):
                 with open(ruta_conocidas, 'r', encoding='utf-8') as f:
@@ -767,8 +772,8 @@ class PanelVoces(wx.Panel):
                     for prov, lista in datos.items():
                         for v in lista:
                             v["proveedor_id"] = prov
-                            # Es nueva si hay conocidas previas y esta no estaba
-                            v["es_nueva"] = bool(voces_conocidas) and v.get("id","") not in voces_conocidas
+                            # Nueva si existía snapshot previo y el ID no estaba en él
+                            v["es_nueva"] = voces_conocidas is not None and v.get("id","") not in voces_conocidas
                             self.voces_todas.append(v)
             except Exception as e:
                 print(f"[Error] No se pudo leer voces_disponibles.json: {e}")

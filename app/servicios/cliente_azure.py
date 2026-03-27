@@ -156,18 +156,18 @@ class ClienteAzure:
         """
         Pre-descarga el audio en segundo plano. Si ya está en caché, lo reutiliza.
         Llamado desde ReproductorVoz.precargar_fragmento() en un hilo aparte.
+        El resultado se guarda siempre: detener() no debe invalidarlo porque el
+        audio descargado es para el SIGUIENTE fragmento, no para el actual.
         """
         if texto in self._cache_frags:
-            if not self._parado:
-                self._audio_preparado = self._cache_frags[texto]
-                self._texto_preparado = texto
+            self._audio_preparado = self._cache_frags[texto]
+            self._texto_preparado = texto
             return
         try:
             data, fs = self._llamar_api(texto, datos_voz)
-            if not self._parado:
-                self._guardar_en_cache(texto, data, fs)
-                self._audio_preparado = (data, fs)
-                self._texto_preparado = texto
+            self._guardar_en_cache(texto, data, fs)
+            self._audio_preparado = (data, fs)
+            self._texto_preparado = texto
         except Exception:
             self._audio_preparado = None
             self._texto_preparado = None
@@ -175,11 +175,10 @@ class ClienteAzure:
     def detener(self):
         """
         Detiene el audio y cancela peticiones HTTP activas.
-        El caché de fragmentos NO se borra para que el salto-atrás pueda reutilizarlo.
+        El caché de fragmentos y el buffer proactivo NO se borran: el siguiente
+        fragmento ya descargado debe poder reproducirse sin nueva llamada a la API.
         """
         self._parado = True
-        self._audio_preparado = None
-        self._texto_preparado = None
         try:
             self._sesion.close()
             self._sesion = requests.Session()
