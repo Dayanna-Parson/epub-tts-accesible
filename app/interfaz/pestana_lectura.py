@@ -886,14 +886,13 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(7)]
+        ids = [wx.NewIdRef() for _ in range(6)]
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,              id=ids[0])
         self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,         id=ids[1])
         self.Bind(wx.EVT_MENU, self.al_detener,                       id=ids[2])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),     id=ids[3])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_porcentaje(), id=ids[4])
         self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[5])
-        self.Bind(wx.EVT_MENU, self._al_abrir_ayuda,                  id=ids[6])
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('M'), ids[0]),
             (wx.ACCEL_CTRL, ord('P'), ids[1]),
@@ -901,27 +900,7 @@ class PestanaLectura(wx.Panel):
             (wx.ACCEL_CTRL, ord('F'), ids[3]),
             (wx.ACCEL_CTRL, ord('G'), ids[4]),
             (wx.ACCEL_CTRL, ord('O'), ids[5]),
-            (wx.ACCEL_NORMAL, wx.WXK_F1,   ids[6]),
         ]))
-
-    def _al_abrir_ayuda(self, evento=None):
-        """Abre ayuda.html con el visor predeterminado del sistema."""
-        import subprocess
-        from app.config_rutas import RAIZ_RECURSOS
-        ruta_ayuda = os.path.join(RAIZ_RECURSOS, "ayuda.html")
-        if not os.path.exists(ruta_ayuda):
-            wx.MessageBox(
-                f"No se encontró el archivo de ayuda en:\n{ruta_ayuda}",
-                "Ayuda no encontrada", wx.OK | wx.ICON_INFORMATION,
-            )
-            return
-        try:
-            os.startfile(ruta_ayuda)
-        except Exception:
-            try:
-                subprocess.Popen(["xdg-open", ruta_ayuda])
-            except Exception as e:
-                wx.MessageBox(str(e), "Error al abrir ayuda")
 
     def _aplicar_estilos_ricos(self):
         """
