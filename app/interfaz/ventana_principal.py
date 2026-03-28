@@ -461,11 +461,26 @@ class VentanaPrincipal(wx.Frame):
         item_atajos = sub.Append(wx.ID_ANY, "Ver atajos de teclado")
         self.Bind(wx.EVT_MENU, self.al_ver_atajos, item_atajos)
 
-        item_readme = sub.Append(wx.ID_ANY, "Abrir README")
-        self.Bind(wx.EVT_MENU, self.al_abrir_readme, item_readme)
+        sub.AppendSeparator()
+
+        item_acerca = sub.Append(wx.ID_ANY, "Acerca de")
+        self.Bind(wx.EVT_MENU, self.al_abrir_acerca_de, item_acerca)
+
+        sub.AppendSeparator()
 
         item_github = sub.Append(wx.ID_ANY, "Abrir repositorio en GitHub")
         self.Bind(wx.EVT_MENU, self.al_abrir_github, item_github)
+
+        item_releases = sub.Append(wx.ID_ANY, "Ver todas las versiones en Releases")
+        self.Bind(wx.EVT_MENU, self.al_abrir_releases, item_releases)
+
+        sub.AppendSeparator()
+
+        item_tiflohistorias = sub.Append(wx.ID_ANY, "Escuchar audiolibros en Tiflohistorias")
+        self.Bind(wx.EVT_MENU, self.al_abrir_tiflohistorias, item_tiflohistorias)
+
+        item_tiflotutos = sub.Append(wx.ID_ANY, "Visitar tiflotutos.com")
+        self.Bind(wx.EVT_MENU, self.al_visitar_tiflotutos, item_tiflotutos)
 
         sub.AppendSeparator()
 
@@ -712,6 +727,41 @@ class VentanaPrincipal(wx.Frame):
         """Abre el repositorio del proyecto en el navegador predeterminado."""
         import webbrowser
         webbrowser.open(_URL_GITHUB)
+
+    def al_abrir_acerca_de(self, evento):
+        """Muestra el diálogo Acerca de con información y créditos de la aplicación."""
+        import webbrowser
+        texto = (
+            "Epub TTS Accesible\n"
+            "Versión: Fase 3 (2026)\n\n"
+            "Aplicación de texto a voz accesible para libros EPUB y archivos TXT.\n"
+            "Diseñada para usuarios de lectores de pantalla como NVDA.\n\n"
+            "Créditos\n"
+            "Desarrollo: Dayanna Parson\n"
+            "Asistencia IA: Claude (Anthropic)\n\n"
+            "Proveedores de voz:\n"
+            "  Microsoft Azure Text to Speech\n"
+            "  Amazon Polly (AWS)\n"
+            "  ElevenLabs\n"
+            "  Microsoft SAPI5 (voces del sistema, sin coste)\n\n"
+            "Repositorio: github.com/Dayanna-Parson/epub-tts-accesible"
+        )
+        wx.MessageBox(texto, "Acerca de Epub TTS Accesible", wx.OK | wx.ICON_INFORMATION)
+
+    def al_abrir_releases(self, evento):
+        """Abre la sección de Releases en GitHub."""
+        import webbrowser
+        webbrowser.open(f"{_URL_GITHUB}/releases")
+
+    def al_abrir_tiflohistorias(self, evento):
+        """Abre Tiflohistorias en el navegador predeterminado."""
+        import webbrowser
+        webbrowser.open("https://tiflotutos.com/tiflohistorias")
+
+    def al_visitar_tiflotutos(self, evento):
+        """Abre tiflotutos.com en el navegador predeterminado."""
+        import webbrowser
+        webbrowser.open("https://tiflotutos.com")
 
     def al_abrir_registros(self, evento=None):
         """Abre la carpeta de registros con el explorador de archivos."""

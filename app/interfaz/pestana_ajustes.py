@@ -1223,93 +1223,6 @@ class PanelAtajos(wx.Panel):
             reproducir(SUCCESS)
             wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
 
-class PanelAcercaDe(wx.ScrolledWindow):
-    def __init__(self, padre):
-        super().__init__(padre, style=wx.VSCROLL)
-        self.SetScrollRate(0, 20)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        lineas = [
-            ("Epub TTS Accesible", True),
-            ("Versión: Fase 3 (2026)", False),
-            ("", False),
-            ("Aplicación de texto a voz accesible para libros EPUB y archivos TXT.", False),
-            ("Diseñada para usuarios de lectores de pantalla como NVDA.", False),
-            ("", False),
-            ("Créditos", True),
-            ("Desarrollo: Dayanna Parson", False),
-            ("Asistencia IA: Claude (Anthropic)", False),
-            ("", False),
-            ("Proveedores de voz:", True),
-            ("  Microsoft Azure Text to Speech", False),
-            ("  Amazon Polly (AWS)", False),
-            ("  ElevenLabs", False),
-            ("  Microsoft SAPI5 (voces del sistema, sin coste)", False),
-        ]
-        for texto, negrita in lineas:
-            if not texto:
-                sizer.Add((0, 6))
-                continue
-            lbl = wx.StaticText(self, label=texto)
-            if negrita:
-                f = lbl.GetFont()
-                f.SetWeight(wx.FONTWEIGHT_BOLD)
-                lbl.SetFont(f)
-            sizer.Add(lbl, 0, wx.LEFT | wx.TOP, 10 if negrita else 4)
-
-        lbl_repo = wx.StaticText(
-            self,
-            label="Repositorio: github.com/Dayanna-Parson/epub-tts-accesible",
-        )
-        sizer.Add(lbl_repo, 0, wx.LEFT | wx.TOP, 10)
-
-        self.btn_github = wx.Button(self, label="Abrir repositorio en GitHub")
-        self.btn_github.SetHelpText(
-            "Abre el repositorio del proyecto en GitHub: "
-            "github.com/Dayanna-Parson/epub-tts-accesible"
-        )
-        self.btn_github.Bind(
-            wx.EVT_BUTTON,
-            lambda e: webbrowser.open("https://github.com/Dayanna-Parson/epub-tts-accesible")
-        )
-        sizer.Add(self.btn_github, 0, wx.LEFT, 10)
-
-        self.btn_releases = wx.Button(self, label="Ver todas las versiones en Releases")
-        self.btn_releases.SetHelpText(
-            "Abre la sección de Releases en GitHub, "
-            "donde puedes descargar versiones anteriores y la más reciente."
-        )
-        self.btn_releases.Bind(
-            wx.EVT_BUTTON,
-            lambda e: webbrowser.open(
-                "https://github.com/Dayanna-Parson/epub-tts-accesible/releases"
-            ),
-        )
-        sizer.Add(self.btn_releases, 0, wx.LEFT | wx.TOP | wx.BOTTOM, 10)
-
-        lbl_tiflo = wx.StaticText(
-            self,
-            label="¿Te gustó la app? Descubre Tiflohistorias:",
-        )
-        sizer.Add(lbl_tiflo, 0, wx.LEFT | wx.TOP, 10)
-
-        self.btn_tiflo = wx.Button(
-            self,
-            label="Escuchar audiolibros en Tiflohistorias",
-        )
-        self.btn_tiflo.SetHelpText(
-            "Abre Tiflohistorias, la sección de audiolibros de tiflotutos.com. "
-            "Historias narradas especialmente pensadas para personas con discapacidad visual."
-        )
-        self.btn_tiflo.Bind(
-            wx.EVT_BUTTON,
-            lambda e: webbrowser.open("https://tiflotutos.com/tiflohistorias"),
-        )
-        sizer.Add(self.btn_tiflo, 0, wx.LEFT | wx.BOTTOM, 12)
-
-        self.SetSizer(sizer)
-
-
 class PestanaAjustes(wx.Panel):
     def __init__(self, padre):
         super().__init__(padre)
@@ -1323,7 +1236,6 @@ class PestanaAjustes(wx.Panel):
         self.lista_cat.Append("Claves y Proveedores")
         self.lista_cat.Append("Voces e Idiomas")
         self.lista_cat.Append("Atajos de teclado")
-        self.lista_cat.Append("Acerca de")
         self.lista_cat.SetSelection(0)
         self.lista_cat.SetHelpText(
             "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "
@@ -1337,13 +1249,11 @@ class PestanaAjustes(wx.Panel):
         self.pag_claves = PanelClaves(self.panel_derecho, self.config)
         self.pag_voces = PanelVoces(self.panel_derecho, self.config)
         self.pag_atajos = PanelAtajos(self.panel_derecho)
-        self.pag_acerca = PanelAcercaDe(self.panel_derecho)
 
         self.panel_derecho.AddPage(self.pag_general, "General")
         self.panel_derecho.AddPage(self.pag_claves, "Claves")
         self.panel_derecho.AddPage(self.pag_voces, "Voces")
         self.panel_derecho.AddPage(self.pag_atajos, "Atajos")
-        self.panel_derecho.AddPage(self.pag_acerca, "Acerca de")
 
         self.splitter.SetMinimumPaneSize(150)
         self.splitter.SplitVertically(self.lista_cat, self.panel_derecho, 200)
@@ -1369,8 +1279,6 @@ class PestanaAjustes(wx.Panel):
             return self.pag_voces.btn_escuchar
         elif idx == 3:
             return self.pag_atajos.btn_restablecer
-        else:
-            return self.pag_acerca.btn_github
 
     def _al_tecla_lista_cat(self, evento):
         """Sonido de navegación al moverse por la lista de categorías de ajustes."""
