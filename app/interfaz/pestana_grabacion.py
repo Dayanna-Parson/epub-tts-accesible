@@ -29,7 +29,7 @@ import threading
 import subprocess
 import logging
 
-from app.config_rutas import ruta_config, cargar_claves
+from app.config_rutas import ruta_config, cargar_claves, CONFIG_DIR
 from app.motor.gestor_proyectos import TIPOS_PROYECTO
 from app.motor.procesador_etiquetas import (
     escanear_etiquetas,
@@ -296,6 +296,7 @@ class PestanaGrabacion(wx.Panel):
 
         self._construir_interfaz()
         self._cargar_voces_disponibles()
+        self._restaurar_sliders_grabacion()
 
     # ================================================================== #
     # Propiedades para Tab cíclico (usadas por ventana_principal.py)
@@ -441,10 +442,40 @@ class PestanaGrabacion(wx.Panel):
         # Label dinámico: al cambiar el estado NVDA anuncia el nuevo texto del label
         self.chk_dividir = wx.CheckBox(
             self,
-            label="Dividir por etiquetas: archivos numerados (001_nar.mp3, 002_pj1.mp3…)",
+            label="Dividir por etiquetas: archivos numerados (1. Nar.mp3, 2. Pj1.mp3…)",
         )
         self.chk_dividir.SetValue(True)
         sz_opc.Add(self.chk_dividir, 0, wx.ALL, 5)
+
+        # ── Velocidad de grabación ────────────────────────────────────────
+        sz_vel = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_vel = wx.StaticText(self, label="Velocidad de grabación:")
+        self.deslizador_velocidad_grab = wx.Slider(self, value=50, minValue=0, maxValue=100)
+        self.deslizador_velocidad_grab.SetName("Velocidad de grabación")
+        self.deslizador_velocidad_grab.SetHelpText(
+            "Velocidad de locución de la voz. 0 es la más lenta, 100 la más rápida. "
+            "Flechas: ±1. RePág/AvPág: ±5."
+        )
+        self.deslizador_velocidad_grab.Bind(wx.EVT_SLIDER,   self._al_cambiar_velocidad_grab)
+        self.deslizador_velocidad_grab.Bind(wx.EVT_KEY_DOWN, self._al_tecla_vel_grab)
+        sz_vel.Add(lbl_vel,                        0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_vel.Add(self.deslizador_velocidad_grab, 1)
+        sz_opc.Add(sz_vel, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+
+        # ── Volumen de grabación ──────────────────────────────────────────
+        sz_vol = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_vol = wx.StaticText(self, label="Volumen de grabación:")
+        self.deslizador_volumen_grab = wx.Slider(self, value=100, minValue=0, maxValue=100)
+        self.deslizador_volumen_grab.SetName("Volumen de grabación")
+        self.deslizador_volumen_grab.SetHelpText(
+            "Volumen del audio generado. 0 es silencio, 100 es volumen máximo. "
+            "Flechas: ±1. RePág/AvPág: ±5."
+        )
+        self.deslizador_volumen_grab.Bind(wx.EVT_SLIDER,   self._al_cambiar_volumen_grab)
+        self.deslizador_volumen_grab.Bind(wx.EVT_KEY_DOWN, self._al_tecla_vol_grab)
+        sz_vol.Add(lbl_vol,                       0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_vol.Add(self.deslizador_volumen_grab,  1)
+        sz_opc.Add(sz_vol, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         # ── Progreso ──────────────────────────────────────────────────────
         box_prog = wx.StaticBox(self, label="Progreso")
@@ -1068,6 +1099,63 @@ class PestanaGrabacion(wx.Panel):
         self.txt_asignaciones.SetValue('\n'.join(lineas))
 
     # ================================================================== #
+    # Sliders velocidad / volumen de grabación
+    # ================================================================== #
+
+    def _al_cambiar_velocidad_grab(self, evento):
+        v = self.deslizador_velocidad_grab.GetValue()
+        self._guardar_ajuste_slider_grab("velocidad_grabacion", v)
+
+    def _al_cambiar_volumen_grab(self, evento):
+        v = self.deslizador_volumen_grab.GetValue()
+        self._guardar_ajuste_slider_grab("volumen_grabacion", v)
+
+    def _al_tecla_vel_grab(self, e):
+        self._aplicar_salto_slider_grab(e, self.deslizador_velocidad_grab,
+                                        self._al_cambiar_velocidad_grab)
+
+    def _al_tecla_vol_grab(self, e):
+        self._aplicar_salto_slider_grab(e, self.deslizador_volumen_grab,
+                                        self._al_cambiar_volumen_grab)
+
+    def _aplicar_salto_slider_grab(self, e, slider, callback):
+        key = e.GetKeyCode()
+        if key in (wx.WXK_PAGEUP, wx.WXK_PAGEDOWN):
+            delta = -5 if key == wx.WXK_PAGEUP else 5
+            nuevo = max(slider.GetMin(), min(slider.GetMax(), slider.GetValue() + delta))
+            slider.SetValue(nuevo)
+            callback(None)
+        else:
+            e.Skip()
+
+    def _guardar_ajuste_slider_grab(self, clave, valor):
+        try:
+            ruta = ruta_config("ajustes.json")
+            datos = {}
+            if os.path.exists(ruta):
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+            datos[clave] = valor
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            with open(ruta, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            logger.warning(f"[PestanaGrabacion] No se pudo guardar '{clave}': {e}")
+
+    def _restaurar_sliders_grabacion(self):
+        try:
+            ruta = ruta_config("ajustes.json")
+            if os.path.exists(ruta):
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                vel = int(datos.get("velocidad_grabacion", 50))
+                vol = int(datos.get("volumen_grabacion", 100))
+                self.deslizador_velocidad_grab.SetValue(vel)
+                self.deslizador_volumen_grab.SetValue(vol)
+        except Exception:
+            pass
+
+    # ================================================================== #
     # Opciones de salida
     # ================================================================== #
 
@@ -1080,7 +1168,7 @@ class PestanaGrabacion(wx.Panel):
         reproducir(CLICK)
         if self.chk_dividir.IsChecked():
             self.chk_dividir.SetLabel(
-                "Dividir por etiquetas: archivos numerados (001_nar.mp3, 002_pj1.mp3…)"
+                "Dividir por etiquetas: archivos numerados (1. Nar.mp3, 2. Pj1.mp3…)"
             )
         else:
             self.chk_dividir.SetLabel(
@@ -1217,6 +1305,8 @@ class PestanaGrabacion(wx.Panel):
 
         modo_dividido = self.chk_dividir.IsChecked()
         self._modo_dividido = modo_dividido   # accesible desde _callback_progreso
+        velocidad_grab = self.deslizador_velocidad_grab.GetValue()
+        volumen_grab   = self.deslizador_volumen_grab.GetValue()
 
         self.btn_iniciar.Enable(False)
         self.btn_abortar.Enable(True)
@@ -1230,7 +1320,7 @@ class PestanaGrabacion(wx.Panel):
 
         self._hilo_grabacion = threading.Thread(
             target=self._ejecutar_grabacion,
-            args=(titulo, capitulo, modo_dividido),
+            args=(titulo, capitulo, modo_dividido, velocidad_grab, volumen_grab),
             daemon=True,
         )
         self._hilo_grabacion.start()
@@ -1258,7 +1348,7 @@ class PestanaGrabacion(wx.Panel):
         self.gauge.SetValue(pct)
         self.lbl_progreso.SetLabel(msg)
 
-    def _ejecutar_grabacion(self, titulo, capitulo, modo_dividido):
+    def _ejecutar_grabacion(self, titulo, capitulo, modo_dividido, velocidad=50, volumen=100):
         try:
             archivos, errores, carpeta = self.grabador.grabar_fragmentos(
                 fragmentos=self.fragmentos,
@@ -1266,6 +1356,8 @@ class PestanaGrabacion(wx.Panel):
                 titulo_libro=titulo,
                 nombre_capitulo=capitulo,
                 modo_dividido=modo_dividido,
+                velocidad=velocidad,
+                volumen=volumen,
             )
             wx.CallAfter(self._al_terminar_grabacion, archivos, errores, carpeta)
         except Exception as e:
