@@ -12,8 +12,8 @@ Calidad de audio:
   - Polly:       OGG Vorbis / 24000 Hz → MP3 320k  (evita el «efecto teléfono»)
   - SAPI5 local: WAV 22 kHz → MP3 320 kbps vía pydub
 
-  Todos los archivos de salida se re-codifican a MP3 320 kbps respetando
-  la frecuencia de muestreo nativa del proveedor (sin re-muestreos).
+  Todos los archivos de salida se re-codifican a MP3 320 kbps
+  normalizados a 44100 Hz mono.
 
 Chunking inteligente para textos largos:
   Cuando un fragmento supera el límite del proveedor, se divide
@@ -28,7 +28,7 @@ import logging
 import tempfile
 import requests
 
-from app.config_rutas import ruta_config
+from app.config_rutas import ruta_config, RAIZ as _RAIZ
 from app.motor.procesador_etiquetas import limpiar_nombre_archivo
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,6 @@ logger = logging.getLogger(__name__)
 # Si existe bin/ffmpeg.exe, se configura pydub para usarlo automáticamente.
 # El usuario solo necesita copiar ffmpeg.exe en esa carpeta; no hace falta
 # instalarlo ni añadirlo al PATH del sistema.
-_RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _FFMPEG_LOCAL  = os.path.join(_RAIZ, 'bin', 'ffmpeg.exe')
 _FFPROBE_LOCAL = os.path.join(_RAIZ, 'bin', 'ffprobe.exe')
 
@@ -82,6 +81,8 @@ class GrabadorAudio:
         self._abortar = False
         self.config = {}
         self._ultima_carpeta = None
+        self._velocidad = 50
+        self._volumen = 100
 
     # ------------------------------------------------------------------ #
     # Configuración
@@ -130,6 +131,8 @@ class GrabadorAudio:
         titulo_libro: str,
         nombre_capitulo: str,
         modo_dividido: bool,
+        velocidad: int = 50,
+        volumen: int = 100,
     ) -> tuple:
         """
         Graba todos los fragmentos y los guarda como archivos de audio.
@@ -138,6 +141,8 @@ class GrabadorAudio:
             (archivos_generados, errores, carpeta_destino)
         """
         self._abortar = False
+        self._velocidad = max(0, min(100, int(velocidad)))
+        self._volumen = max(0, min(100, int(volumen)))
         self._cargar_config()
 
         carpeta_libro   = self.obtener_carpeta_libro(titulo_libro)
@@ -185,7 +190,8 @@ class GrabadorAudio:
             if self.callback_progreso:
                 self.callback_progreso(i + 1, total, etiqueta, nombre_voz)
 
-            nombre_arch = f"{i + 1:03d}_{limpiar_nombre_archivo(etiqueta)}.mp3"
+            nombre_limpio = limpiar_nombre_archivo(etiqueta).capitalize()
+            nombre_arch = f"{i + 1}. {nombre_limpio}.mp3"
             ruta_arch   = os.path.join(subcarpeta, nombre_arch)
 
             for intento in range(3):
@@ -378,6 +384,7 @@ class GrabadorAudio:
         try:
             from pydub import AudioSegment
             audio = AudioSegment.from_file(ruta_origen)
+            audio = audio.set_frame_rate(44100).set_channels(1)
             audio.export(ruta_destino, format='mp3', bitrate='320k')
         except ImportError:
             import shutil
@@ -416,19 +423,22 @@ class GrabadorAudio:
         try:
             from pydub import AudioSegment
 
-            combined = AudioSegment.empty()
-            fallos   = 0
+            segmentos = []
             for arch in archivos_validos:
                 try:
-                    combined += AudioSegment.from_file(arch, format='mp3')
+                    segmentos.append(AudioSegment.from_file(arch, format='mp3'))
                 except Exception as e:
-                    fallos += 1
                     logger.debug(
                         f"[GrabadorAudio] pydub no leyó {os.path.basename(arch)}: {e}"
                     )
 
-            if fallos < len(archivos_validos):
-                # Al menos un archivo se decodificó correctamente
+            if segmentos:
+                # Usar el primer segmento real como base evita que AudioSegment.empty()
+                # (44100 Hz / 2 ch por defecto) contamine los metadatos del resultado.
+                combined = segmentos[0]
+                for seg in segmentos[1:]:
+                    combined += seg
+                combined = combined.set_frame_rate(44100).set_channels(1)
                 combined.export(ruta_salida, format='mp3', bitrate='320k')
                 logger.info(
                     f"[GrabadorAudio] Concatenado 320k: {os.path.basename(ruta_salida)}"
@@ -469,6 +479,23 @@ class GrabadorAudio:
         )
 
     # ------------------------------------------------------------------ #
+    # Helpers SSML: velocidad y volumen para Azure y Polly
+    # ------------------------------------------------------------------ #
+
+    def _velocidad_a_tasa_ssml(self, v: int) -> str:
+        pct = int((v - 50) * 1.6)
+        pct = max(-80, min(80, pct))
+        return f"+{pct}%" if pct >= 0 else f"{pct}%"
+
+    def _volumen_a_nivel_ssml(self, v: int) -> str:
+        if v == 0:    return "silent"
+        elif v < 20:  return "x-soft"
+        elif v < 40:  return "soft"
+        elif v < 70:  return "medium"
+        elif v < 90:  return "loud"
+        else:         return "x-loud"
+
+    # ------------------------------------------------------------------ #
     # Motor: Azure
     # ------------------------------------------------------------------ #
 
@@ -489,6 +516,8 @@ class GrabadorAudio:
 
         id_voz = datos_voz.get('id') if isinstance(datos_voz, dict) else str(datos_voz)
         texto_limpio = self._limpiar_xml(texto)
+        tasa      = self._velocidad_a_tasa_ssml(self._velocidad)
+        nivel_vol = self._volumen_a_nivel_ssml(self._volumen)
 
         url = f"https://{region}.tts.speech.microsoft.com/cognitiveservices/v1"
         headers = {
@@ -501,7 +530,11 @@ class GrabadorAudio:
             f"xmlns='http://www.w3.org/2001/10/synthesis' "
             f"xml:lang='{idioma}'>"
             f"<voice name='{id_voz}'>"
-            f"<lang xml:lang='{idioma}'>{texto_limpio}</lang>"
+            f"<lang xml:lang='{idioma}'>"
+            f"<prosody rate='{tasa}' volume='{nivel_vol}'>"
+            f"{texto_limpio}"
+            f"</prosody>"
+            f"</lang>"
             f"</voice></speak>"
         )
 
@@ -550,12 +583,27 @@ class GrabadorAudio:
         try:
             with open(ruta_tmp, 'wb') as f:
                 f.write(response.content)
-            self._recodificar_mp3_320k(ruta_tmp, ruta_salida)
+            # Aplicar velocidad/volumen con pydub y normalizar a 44100 Hz mono
+            try:
+                import math
+                from pydub import AudioSegment
+                audio = AudioSegment.from_file(ruta_tmp, format='mp3')
+                if self._velocidad != 50:
+                    fs_efectiva = max(1, int(audio.frame_rate * (0.5 + self._velocidad / 100)))
+                    audio = audio._spawn(audio.raw_data, overrides={"frame_rate": fs_efectiva})
+                if self._volumen == 0:
+                    audio = audio.apply_gain(-120)
+                elif self._volumen != 100:
+                    audio = audio.apply_gain(20 * math.log10(self._volumen / 100))
+                audio = audio.set_frame_rate(44100).set_channels(1)
+                audio.export(ruta_salida, format='mp3', bitrate='320k')
+            except Exception:
+                self._recodificar_mp3_320k(ruta_tmp, ruta_salida)
         finally:
             if os.path.exists(ruta_tmp):
                 os.remove(ruta_tmp)
 
-        logger.info(f"[ElevenLabs] {os.path.basename(ruta_salida)} (44.1kHz→320k)")
+        logger.info(f"[ElevenLabs] {os.path.basename(ruta_salida)} (44.1kHz→44.1kHz 320k)")
 
     # ------------------------------------------------------------------ #
     # Motor: Amazon Polly (MP3 nativo via boto3)
@@ -606,11 +654,20 @@ class GrabadorAudio:
             aws_secret_access_key=secret_key,
         )
 
+        texto_limpio = self._limpiar_xml(texto)
+        tasa      = self._velocidad_a_tasa_ssml(self._velocidad)
+        nivel_vol = self._volumen_a_nivel_ssml(self._volumen)
+        ssml_text = (
+            f"<speak><prosody rate='{tasa}' volume='{nivel_vol}'>"
+            f"{texto_limpio}"
+            f"</prosody></speak>"
+        )
+
         # OGG Vorbis / 24000 Hz → sin «efecto teléfono»
         respuesta = cliente.synthesize_speech(
             Engine=motor,
-            Text=texto,
-            TextType='text',
+            Text=ssml_text,
+            TextType='ssml',
             OutputFormat='ogg_vorbis',
             SampleRate='24000',
             VoiceId=voice_id,
@@ -666,6 +723,8 @@ class GrabadorAudio:
         ruta_wav = base + '_tmp.wav'
 
         try:
+            sapi.Rate   = int((self._velocidad / 5) - 10)   # −10..+10
+            sapi.Volume = self._volumen                      # 0..100
             stream = comtypes.client.CreateObject("SAPI.SpFileStream")
             stream.Open(ruta_wav, 3)          # SSFMCreateForWrite = 3
             sapi.AudioOutputStream = stream
@@ -681,6 +740,7 @@ class GrabadorAudio:
         try:
             from pydub import AudioSegment
             audio = AudioSegment.from_wav(ruta_wav)
+            audio = audio.set_frame_rate(44100).set_channels(1)
             audio.export(ruta_salida, format='mp3', bitrate='320k')
             convertido = True
             logger.info(f"[SAPI5] MP3 320k: {os.path.basename(ruta_salida)}")

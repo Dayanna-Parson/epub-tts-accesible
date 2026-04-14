@@ -675,8 +675,8 @@ class VentanaPrincipal(wx.Frame):
     def _al_abrir_ayuda_global(self, evento=None):
         """F1: abre ayuda.html con el visor predeterminado del sistema."""
         import subprocess
-        from app.config_rutas import RAIZ_RECURSOS
-        ruta_ayuda = os.path.join(RAIZ_RECURSOS, "ayuda.html")
+        from app.config_rutas import RAIZ
+        ruta_ayuda = os.path.join(RAIZ, "ayuda.html")
         if not os.path.exists(ruta_ayuda):
             wx.MessageBox(
                 f"No se encontró el archivo de ayuda en:\n{ruta_ayuda}",
