@@ -33,6 +33,7 @@
         <ul>
             <li>La pestaña de grabación ahora tiene <strong>deslizadores de velocidad y volumen</strong>, igual que la pestaña de lectura. Funcionan con todas las voces: Azure, Amazon Polly, ElevenLabs y SAPI5 local. Los valores se guardan entre sesiones. RePág/AvPág mueven el deslizador en pasos de ±5.</li>
             <li>Los archivos exportados en modo «Dividir por etiquetas» tienen ahora un formato más legible: <code>1. Narr.mp3</code>, <code>2. James.mp3</code> en lugar de <code>001_narr.mp3</code>.</li>
+            <li><strong>Descarga automática de actualizaciones</strong>: el diálogo de novedades incluye el botón «Actualizar automáticamente» con barra de progreso. Instala la nueva versión sin abrir el navegador y sin borrar tus datos. Al terminar ofrece «Reiniciar ahora».</li>
         </ul>
         <strong>Correcciones:</strong>
         <ul>
@@ -143,6 +144,14 @@
 
     <h3>Actualizaciones automáticas</h3>
     <p>La aplicación puede comprobar al arranque si existe una versión nueva comparando tu <code>version.json</code> local con el del repositorio. Si hay novedades, se muestra un diálogo con el resumen de cambios. También puedes comprobarlo manualmente desde el botón <strong>«Buscar actualizaciones ahora»</strong> en la pestaña Ajustes.</p>
+    <p>En el diálogo de novedades encontrarás el botón <strong>«Actualizar automáticamente»</strong>. Al pulsarlo la aplicación:</p>
+    <ol>
+        <li>Descarga el ZIP de la versión más reciente desde GitHub (se muestra el progreso en KB).</li>
+        <li>Extrae el contenido en un directorio temporal.</li>
+        <li>Copia los archivos nuevos a la carpeta de instalación sin borrar tus datos: <code>configuraciones/</code>, <code>Grabaciones_Epub-TTS/</code> y <code>bin/</code> se conservan intactos.</li>
+        <li>Muestra el botón <strong>«Reiniciar ahora»</strong> para relanzar la aplicación con la versión actualizada.</li>
+    </ol>
+    <p>Si la descarga falla (sin conexión, corte de red…) el botón cambia a <strong>«Reintentar actualización»</strong> para volver a intentarlo.</p>
 </section>
 
 <section id="contacto">

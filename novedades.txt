@@ -11,6 +11,14 @@ Nuevas funciones
 - Nuevo formato de nombres de archivo en modo «Dividir por etiquetas»:
   antes: 001_narr.mp3 · ahora: 1. Narr.mp3
 
+- Descarga automática de actualizaciones: el diálogo de novedades
+  incluye ahora el botón «Actualizar automáticamente». Al pulsarlo se
+  descarga el ZIP de la rama main desde GitHub, se extrae en un
+  directorio temporal y se instala sobre la carpeta actual sin borrar
+  configuraciones/, Grabaciones_Epub-TTS/ ni bin/. Una barra de
+  progreso informa del avance. Al terminar aparece el botón
+  «Reiniciar ahora» para aplicar la actualización de inmediato.
+
 Correcciones
 ────────────
 - [Reaper / importación por lotes] Todos los MP3 generados se normalizan
