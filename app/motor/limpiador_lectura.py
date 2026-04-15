@@ -23,6 +23,10 @@ def limpiar_para_lectura(texto):
     if not texto:
         return texto
 
+    # 0. Normalizar espacios de no separación (no-break space \xa0 / &nbsp;)
+    #    a espacio regular para que los pasos siguientes los traten correctamente
+    texto = texto.replace('\xa0', ' ')
+
     # 1. Unir palabras cortadas con guion al final de línea
     texto = re.sub(r'-\n(\w)', r'\1', texto)
 

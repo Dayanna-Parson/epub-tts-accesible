@@ -95,7 +95,13 @@ def _html_a_texto(html_data: str) -> str:
     sopa = BeautifulSoup(html_data, "html.parser")
     for tag in sopa(["script", "style", "head", "title", "meta"]):
         tag.extract()
-    lineas = [l.strip() for l in sopa.get_text(separator="\n").splitlines() if l.strip()]
+    lineas = []
+    for l in sopa.get_text(separator="\n").splitlines():
+        # re.sub r'\s+' normaliza también \xa0 (no-break space de &nbsp;)
+        # evitando que líneas solo con &nbsp; pasen el filtro y generen líneas en blanco
+        l = re.sub(r'\s+', ' ', l).strip()
+        if l:
+            lineas.append(l)
     return "\n\n".join(lineas)
 
 
