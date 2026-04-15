@@ -18,6 +18,27 @@ _PATRON_ETIQUETA = re.compile(r'\{\{@(\w+)\}\}', re.IGNORECASE)
 _VARIANTES_NARRADOR = {'nar', 'narrador', 'narradora', 'narrator', 'narr', 'narracion'}
 
 
+def _limpiar_contenido_fragmento(texto: str) -> str:
+    """
+    Limpia el texto de un fragmento antes de enviarlo a las voces TTS.
+
+    Elimina:
+    - Tabuladores (\\t) — se convierten en espacio para no crear silencios.
+    - Doble guion bajo __ al inicio de cualquier línea (marcador tipográfico de
+      diálogos / énfasis en Markdown). La voz TTS los leería como «guión guión».
+    - Espacios múltiples residuales.
+
+    No afecta al formato de las etiquetas (se llama DESPUÉS de extraer el contenido).
+    """
+    # Tabuladores → espacio
+    texto = texto.replace('\t', ' ')
+    # __ (dos o más guiones bajos) al inicio de una línea → eliminar
+    texto = re.sub(r'^_{2,}', '', texto, flags=re.MULTILINE)
+    # Espacios múltiples residuales → uno solo
+    texto = re.sub(r'  +', ' ', texto)
+    return texto.strip()
+
+
 def _detectar_variante_narrador(texto: str) -> str:
     """
     Devuelve la primera variante de narrador encontrada en el texto,
@@ -91,15 +112,16 @@ def fragmentar_texto(texto: str) -> list:
     # partes[0] → texto anterior a la primera etiqueta.
     # Reutilizamos la variante de narrador que el autor ya usa en el texto
     # para no generar una etiqueta duplicada (ej. 'narrador' + 'nar').
-    if partes[0].strip():
+    pre = _limpiar_contenido_fragmento(partes[0])
+    if pre:
         etiq_nar = _detectar_variante_narrador(texto)
-        fragmentos.append((etiq_nar, partes[0].strip()))
+        fragmentos.append((etiq_nar, pre))
 
     # Procesar pares (nombre_etiqueta, contenido)
     i = 1
     while i < len(partes) - 1:
         etiqueta = normalizar_etiqueta(partes[i])
-        contenido = partes[i + 1].strip()
+        contenido = _limpiar_contenido_fragmento(partes[i + 1])
         if contenido:
             fragmentos.append((etiqueta, contenido))
         i += 2

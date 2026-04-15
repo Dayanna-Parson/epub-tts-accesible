@@ -51,6 +51,27 @@ try:
 except ImportError:
     pass  # pydub no instalado — los métodos individuales manejan el fallback
 
+# ── Suprimir ventanas de consola en Windows (ffmpeg/ffprobe) ──────────────────
+# Sin este parche, pydub crea un subproceso visible por cada llamada a ffmpeg;
+# lectores de pantalla como NVDA anuncian cada ventana que aparece/desaparece.
+try:
+    import sys as _sys
+    if _sys.platform == 'win32':
+        import subprocess as _subprocess
+        _si = _subprocess.STARTUPINFO()
+        _si.dwFlags |= _subprocess.STARTF_USESHOWWINDOW
+        _si.wShowWindow = 0                        # SW_HIDE
+        _orig_Popen = _subprocess.Popen
+        class _SilentPopen(_orig_Popen):
+            def __init__(self, *args, **kwargs):
+                if 'startupinfo' not in kwargs:
+                    kwargs['startupinfo'] = _si
+                _orig_Popen.__init__(self, *args, **kwargs)
+        _subprocess.Popen = _SilentPopen
+    del _sys
+except Exception:
+    pass
+
 # Ruta absoluta → funciona independientemente del directorio de trabajo actual
 CARPETA_RAIZ_GRABACIONES = os.path.join(_RAIZ, "Grabaciones_Epub-TTS")
 
