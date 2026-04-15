@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual de Usuario - Epub TTS</title>
+    <title>Manual de Usuario - Epub TTS Accesible</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }
         header { background: #2c3e50; color: #fff; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        header p { margin: 4px 0; }
         h1, h2, h3 { color: #2c3e50; border-bottom: 2px solid #bdc3c7; padding-bottom: 10px; }
         .info-box { background: #e8f4fd; border-left: 5px solid #3498db; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .novedad-box { background: #eafaf1; border-left: 5px solid #27ae60; padding: 15px; margin: 20px 0; border-radius: 4px; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #3498db; color: white; }
@@ -19,16 +21,36 @@
 <body>
 
 <header>
-    <h1>MANUAL DE USUARIO: EPUB TTS</h1>
+    <h1>MANUAL DE USUARIO: EPUB TTS ACCESIBLE</h1>
     <p>Desarrolladora: Dayanna Parson (TifloTutos) | tiflotutos.com</p>
+    <p>Versión 1.1.0</p>
 </header>
+
+<section id="novedades">
+    <h2>Novedades de la versión 1.1.0</h2>
+    <div class="novedad-box">
+        <strong>Nuevas funciones:</strong>
+        <ul>
+            <li>La pestaña de grabación ahora tiene <strong>deslizadores de velocidad y volumen</strong>, igual que la pestaña de lectura. Funcionan con todas las voces: Azure, Amazon Polly, ElevenLabs y SAPI5 local. Los valores se guardan entre sesiones. RePág/AvPág mueven el deslizador en pasos de ±5.</li>
+            <li>Los archivos exportados en modo «Dividir por etiquetas» tienen ahora un formato más legible: <code>1. Narr.mp3</code>, <code>2. James.mp3</code> en lugar de <code>001_narr.mp3</code>.</li>
+        </ul>
+        <strong>Correcciones:</strong>
+        <ul>
+            <li><strong>NVDA ya no verbaliza rutas de ffmpeg</strong> durante la grabación. Las ventanas de consola de los procesos de audio quedan ocultas en Windows.</li>
+            <li><strong>Compatibilidad con Reaper y DAW</strong>: todos los MP3 generados se normalizan ahora a 44 100 Hz mono. Se elimina el bug que producía metadatos de frecuencia incorrectos al concatenar fragmentos largos.</li>
+            <li><strong>TXT exportados sin líneas en blanco</strong>: al dividir un EPUB en capítulos, los archivos TXT ya no tienen una línea en blanco entre cada línea de texto.</li>
+            <li><strong>Símbolo __ (doble guión bajo)</strong> al inicio de una línea de diálogo y los tabuladores se eliminan antes de enviarlo a las voces, evitando que sean verbalizados.</li>
+            <li><strong>Rutas correctas en el ejecutable</strong>: la carpeta <code>Grabaciones_Epub-TTS</code> y el archivo <code>ayuda.html</code> se crean y buscan junto al <code>.exe</code>, no dentro de la carpeta temporal interna.</li>
+        </ul>
+    </div>
+</section>
 
 <section id="introduccion">
     <h2>1. Introducción</h2>
-    <p>Epub TTS es una herramienta única diseñada para unificar la lectura de alta calidad y la producción de audiolibros multivoz en una sola aplicación portable para Windows.</p>
-    
+    <p>Epub TTS Accesible es una herramienta única diseñada para unificar la lectura de alta calidad y la producción de audiolibros multivoz en una sola aplicación portable para Windows.</p>
+
     <div class="info-box">
-        <strong>Propósito:</strong> Leer libros con voces neuronales, crear audiolibros con etiquetas de personajes y exportar en MP3 a 320 kbps.
+        <strong>Propósito:</strong> Leer libros con voces neuronales, crear audiolibros con etiquetas de personajes y exportar en MP3 a 320 kbps, normalizados a 44 100 Hz para máxima compatibilidad.
     </div>
 </section>
 
@@ -54,21 +76,38 @@
         <li><strong>Navegación:</strong> Usa los botones <strong>Retroceder</strong> y <strong>Avanzar</strong> (configurables en Ajustes).</li>
     </ul>
     <h3>Controles de Voz</h3>
-    <p>Puedes ajustar la <strong>Velocidad</strong> y el <strong>Volumen</strong>. Los deslizadores se mueven de 1 en 1 con las flechas y de 10 en 10 con RePág/AvPág para mayor comodidad con lectores de pantalla.</p>
+    <p>Puedes ajustar la <strong>Velocidad</strong> y el <strong>Volumen</strong>. Los deslizadores se mueven de 1 en 1 con las flechas del teclado y de 5 en 5 con RePág/AvPág, para mayor comodidad con lectores de pantalla.</p>
 </section>
 
 <section id="grabacion">
     <h2>4. Modo Grabación (SAPI 5 y Nube)</h2>
-    <p>Epub TTS permite asignar voces a etiquetas como <code>{{@narrador}}</code> o <code>{{@personaje1}}</code>.</p>
+    <p>Epub TTS Accesible permite asignar voces a etiquetas como <code>{{@narrador}}</code> o <code>{{@personaje1}}</code> dentro de un archivo TXT.</p>
+
+    <h3>Etiquetas de personaje</h3>
+    <p>El formato es <code>{{@nombre}}</code> (con doble llave de apertura y cierre). El texto que sigue a cada etiqueta se envía a la voz asignada a ese nombre. Ejemplo:</p>
+    <p><code>{{@nar}}Había una vez...{{@james}}¡Buenos días!</code></p>
+
+    <h3>Velocidad y volumen en grabación</h3>
+    <p>La sección «Opciones de salida» incluye ahora dos deslizadores: <strong>Velocidad de grabación</strong> y <strong>Volumen de grabación</strong>. Funcionan igual que los de la pestaña de lectura (flechas ±1, RePág/AvPág ±5) y sus valores se recuerdan entre sesiones.</p>
+
+    <h3>Modos de salida</h3>
+    <ul>
+        <li><strong>Dividir por etiquetas (casilla marcada):</strong> genera un archivo MP3 por cada etiqueta del TXT, con el formato <code>1. Narr.mp3</code>, <code>2. James.mp3</code>, etc. Ideal para importar por pistas en un DAW.</li>
+        <li><strong>Archivo único (casilla desmarcada):</strong> une todos los fragmentos en un solo MP3 con el nombre del capítulo.</li>
+    </ul>
+
     <div class="info-box">
-        <strong>¡Novedad! SAPI 5 Local:</strong> Ahora puedes usar tus voces instaladas en Windows como un proveedor más. Es ideal para grabaciones offline sin coste de caracteres.
+        <strong>SAPI 5 Local:</strong> Puedes usar las voces instaladas en Windows sin coste de caracteres. Ideal para pruebas o grabaciones offline.
     </div>
+
+    <h3>Dividir EPUB en capítulos TXT</h3>
+    <p>El botón <strong>«Dividir EPUB…»</strong> extrae cada capítulo del libro en un archivo TXT independiente, listo para etiquetar y grabar. Los archivos se guardan en <code>Grabaciones_Epub-TTS/&lt;Título&gt;/capitulos/</code>.</p>
 </section>
 
 <section id="ajustes">
     <h2>5. Ajustes y Presupuesto</h2>
     <p>Controla tu consumo de APIs de forma inteligente. La app viene configurada con límites por defecto para cuentas gratuitas:</p>
-    
+
     <table>
         <thead>
             <tr>
@@ -80,22 +119,30 @@
         <tbody>
             <tr>
                 <td><strong>Azure</strong></td>
-                <td>500.000 caracteres</td>
-                <td>~200 páginas (Libro medio)</td>
+                <td>500 000 caracteres</td>
+                <td>~200 páginas (libro medio)</td>
             </tr>
             <tr>
-                <td><strong>Polly</strong></td>
-                <td>1.000.000 caracteres</td>
-                <td>~400 páginas (Novela larga)</td>
+                <td><strong>Amazon Polly</strong></td>
+                <td>1 000 000 caracteres</td>
+                <td>~400 páginas (novela larga)</td>
             </tr>
             <tr>
                 <td><strong>ElevenLabs</strong></td>
-                <td>10.000 caracteres</td>
-                <td>~4 páginas (Pruebas cortas)</td>
+                <td>10 000 caracteres</td>
+                <td>~4 páginas (pruebas cortas)</td>
+            </tr>
+            <tr>
+                <td><strong>SAPI5 local</strong></td>
+                <td>Sin límite</td>
+                <td>Uso libre, sin conexión</td>
             </tr>
         </tbody>
     </table>
     <p><em>Nota: 1 millón de caracteres equivale a unas 15-18 horas de audio.</em></p>
+
+    <h3>Actualizaciones automáticas</h3>
+    <p>La aplicación puede comprobar al arranque si existe una versión nueva comparando tu <code>version.json</code> local con el del repositorio. Si hay novedades, se muestra un diálogo con el resumen de cambios. También puedes comprobarlo manualmente desde el botón <strong>«Buscar actualizaciones ahora»</strong> en la pestaña Ajustes.</p>
 </section>
 
 <section id="contacto">
@@ -104,7 +151,7 @@
 </section>
 
 <div class="footer">
-    <p>&copy; 2026 TifloTutos - Desarrollado por Dayanna Parson</p>
+    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 1.1.0</p>
 </div>
 
 </body>
