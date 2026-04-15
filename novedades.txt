@@ -1,4 +1,51 @@
-Versión 1.0.0 — Lanzamiento inicial
+Versión 1.1.0 — 2026-04-15
+
+Nuevas funciones
+────────────────
+- Deslizadores de velocidad y volumen en la pestaña de grabación.
+  Funcionan con todas las voces: Azure (SSML), Amazon Polly (SSML),
+  ElevenLabs (ajuste con pydub) y SAPI5 local.
+  Los valores se guardan en ajustes.json y se restauran entre sesiones.
+  RePág/AvPág mueven el deslizador en pasos de ±5.
+
+- Nuevo formato de nombres de archivo en modo «Dividir por etiquetas»:
+  antes: 001_narr.mp3 · ahora: 1. Narr.mp3
+
+Correcciones
+────────────
+- [Reaper / importación por lotes] Todos los MP3 generados se normalizan
+  ahora a 44 100 Hz mono. Se elimina el bug de AudioSegment.empty() que
+  producía metadatos de frecuencia incorrectos al concatenar fragmentos,
+  lo que hacía que algunos archivos fallaran al importarlos en lotes en DAW
+  como Reaper o en reproductores estrictos.
+
+- [NVDA] Las ventanas de consola de ffmpeg/ffprobe ya no aparecen durante
+  la grabación. NVDA dejará de verbalizar las rutas de los ejecutables
+  de audio entre fragmento y fragmento.
+
+- [TXT exportados] Los capítulos generados al dividir un EPUB ya no
+  contienen líneas en blanco entre cada línea de texto. El problema era
+  causado por espacios de no separación (&nbsp;) en EPUBs creados con
+  Word o LibreOffice.
+
+- [Voces TTS] Los dobles guiones bajos (__) al inicio de una línea de
+  diálogo y los tabuladores ya no se envían a las voces; se eliminan
+  antes de la síntesis para evitar que sean verbalizados como «guión».
+
+- [Ejecutable .exe] Las carpetas Grabaciones_Epub-TTS y ayuda.html se
+  buscan ahora junto al .exe en lugar de dentro de la carpeta temporal
+  de extracción de PyInstaller. Los archivos ya no desaparecen al cerrar
+  la aplicación.
+
+Dependencias
+────────────
+Versiones mínimas actualizadas: wxPython 4.2.2, requests 2.32, httpx 0.28,
+sounddevice 0.5, numpy 2.0, beautifulsoup4 4.12.3, boto3 1.35.
+
+
+───────────────────────────────────────────────────────────────────────────
+
+Versión 1.0.0 — 2026-03-11
 
 Esta es la primera versión pública de Epub TTS Accesible.
 
