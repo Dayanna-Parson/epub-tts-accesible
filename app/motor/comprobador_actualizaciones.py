@@ -16,16 +16,21 @@ URLs remotas (raw.githubusercontent.com):
   novedades.txt → texto libre que se muestra en el diálogo de novedades
 
 Función de descarga:
-  descargar_actualizacion() está preparada para el día en que el sistema de
-  distribución esté definido; por ahora devuelve un aviso informativo.
+  descargar_actualizacion() descarga el ZIP de la rama main desde GitHub,
+  lo extrae en un directorio temporal y copia los archivos al directorio de
+  instalación, preservando configuraciones/, Grabaciones_Epub-TTS/ y bin/.
 """
 
+import io
 import json
 import os
+import shutil
+import tempfile
 import threading
 import urllib.request
+import zipfile
 
-from app.config_rutas import RAIZ_RECURSOS
+from app.config_rutas import RAIZ, RAIZ_RECURSOS
 
 # ── Rutas y URLs ──────────────────────────────────────────────────────────────
 
@@ -37,14 +42,21 @@ _URL_BASE = (
 )
 _URL_VERSION   = f"{_URL_BASE}/version.json"
 _URL_NOVEDADES = f"{_URL_BASE}/novedades.txt"
+_URL_ZIP = (
+    "https://github.com/Dayanna-Parson/epub-tts-accesible"
+    "/archive/refs/heads/main.zip"
+)
 
 _TIMEOUT = 10   # segundos de espera por petición HTTP
+
+# Carpetas de usuario que no se sobreescriben durante la actualización
+_PRESERVAR = {"configuraciones", "Grabaciones_Epub-TTS", "bin"}
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 class ComprobadorActualizaciones:
     """
-    Motor de comprobación de actualizaciones. Sin dependencias wx.
+    Motor de comprobación y descarga de actualizaciones. Sin dependencias wx.
 
     Uso típico desde la UI (hilo principal):
         comp = ComprobadorActualizaciones()
@@ -52,7 +64,7 @@ class ComprobadorActualizaciones:
             lambda r: wx.CallAfter(mi_handler, r)
         )
 
-    El dict de resultado tiene la forma:
+    El dict de resultado de comprobar tiene la forma:
         {
           "hay_nueva":       bool,
           "version_local":   str,   # ej. "1.0.0"
@@ -122,22 +134,126 @@ class ComprobadorActualizaciones:
         except Exception:
             return False
 
-    def descargar_actualizacion(self, url_descarga: str, ruta_destino: str) -> dict:
+    def descargar_actualizacion(self, callback_progreso=None) -> dict:
         """
-        [PREPARADA — pendiente de implementar]
-        Descargará el instalador/zip de la nueva versión a ruta_destino.
-        Se activará cuando el sistema de distribución esté definido.
+        Descarga la versión más reciente desde GitHub y la instala sobre la
+        instalación actual, preservando los datos de usuario.
+
+        Las carpetas 'configuraciones/', 'Grabaciones_Epub-TTS/' y 'bin/' no
+        se tocan; el resto de archivos se sobreescriben con la versión nueva.
+
+        callback_progreso(mensaje: str, porcentaje: int) — opcional, se invoca
+        durante el proceso para informar del avance. Si actualiza la UI, debe
+        hacerse mediante wx.CallAfter desde el hilo llamante.
 
         Devuelve {"ok": bool, "error": str|None}.
         """
-        # TODO: implementar cuando la URL de distribución esté disponible.
-        return {
-            "ok": False,
-            "error": (
-                "La descarga automática no está disponible aún en esta versión. "
-                "Visita el repositorio de GitHub para descargar la actualización."
+        def progreso(msg, pct):
+            if callback_progreso:
+                callback_progreso(msg, pct)
+
+        try:
+            progreso("Conectando con GitHub…", 2)
+
+            req = urllib.request.Request(
+                _URL_ZIP,
+                headers={"User-Agent": "epub-tts-accesible/updater"},
+            )
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                longitud = int(resp.headers.get("Content-Length") or 0)
+                datos = io.BytesIO()
+                descargado = 0
+                bloque = 65536
+                while True:
+                    chunk = resp.read(bloque)
+                    if not chunk:
+                        break
+                    datos.write(chunk)
+                    descargado += len(chunk)
+                    if longitud:
+                        pct = int(5 + 45 * descargado / longitud)
+                        progreso(
+                            f"Descargando… {descargado // 1024} KB"
+                            f" de {longitud // 1024} KB",
+                            pct,
+                        )
+                    else:
+                        progreso(f"Descargando… {descargado // 1024} KB", 25)
+
+            progreso("Descomprimiendo…", 52)
+
+            dir_tmp = tempfile.mkdtemp(prefix="epub_tts_upd_")
+            try:
+                datos.seek(0)
+                with zipfile.ZipFile(datos) as zf:
+                    zf.extractall(dir_tmp)
+
+                # La carpeta raíz del ZIP (ej. "epub-tts-accesible-main")
+                entradas = [
+                    e for e in os.listdir(dir_tmp)
+                    if os.path.isdir(os.path.join(dir_tmp, e))
+                ]
+                if len(entradas) != 1:
+                    return {"ok": False, "error": "Estructura del ZIP inesperada."}
+
+                raiz_zip = os.path.join(dir_tmp, entradas[0])
+
+                # Contar archivos totales para el progreso
+                total = sum(len(archs) for _, _, archs in os.walk(raiz_zip))
+                copiados = 0
+
+                progreso("Instalando archivos…", 55)
+
+                for carpeta, subcarpetas, archivos in os.walk(raiz_zip):
+                    rel = os.path.relpath(carpeta, raiz_zip)
+
+                    # En el nivel raíz del ZIP excluir carpetas de usuario
+                    if rel == ".":
+                        subcarpetas[:] = [
+                            d for d in subcarpetas if d not in _PRESERVAR
+                        ]
+                        destino = RAIZ
+                    else:
+                        destino = os.path.join(RAIZ, rel)
+
+                    os.makedirs(destino, exist_ok=True)
+
+                    for archivo in archivos:
+                        shutil.copy2(
+                            os.path.join(carpeta, archivo),
+                            os.path.join(destino, archivo),
+                        )
+                        copiados += 1
+                        if total:
+                            pct = int(55 + 40 * copiados / total)
+                            progreso(
+                                f"Instalando archivos… {copiados}/{total}",
+                                pct,
+                            )
+
+                progreso("¡Actualización completada!", 100)
+                return {"ok": True, "error": None}
+
+            finally:
+                shutil.rmtree(dir_tmp, ignore_errors=True)
+
+        except Exception as exc:
+            return {"ok": False, "error": str(exc)}
+
+    def descargar_en_hilo(self, callback_resultado, callback_progreso=None):
+        """
+        Lanza descargar_actualizacion() en un hilo daemon.
+        callback_resultado(dict) se invoca al terminar.
+        callback_progreso(msg, pct) se invoca durante la descarga.
+        Si los callbacks tocan la UI, deben envolverse con wx.CallAfter.
+        """
+        t = threading.Thread(
+            target=lambda: callback_resultado(
+                self.descargar_actualizacion(callback_progreso)
             ),
-        }
+            daemon=True,
+        )
+        t.start()
 
     # ── Lógica interna ────────────────────────────────────────────────────────
 
