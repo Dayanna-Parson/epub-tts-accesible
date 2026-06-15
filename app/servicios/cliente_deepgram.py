@@ -97,9 +97,11 @@ class ClienteDeepgram:
 
     def _sintetizar_fragmentos(self, texto: str, datos_voz):
         """
-        Llama a la API por cada fragmento del texto dividido y concatena
-        los arrays de audio resultantes en un único bloque reproducible.
-        Si se detecta una parada intencional entre fragmentos, devuelve None.
+        Divide el texto (si supera el límite), llama a la API por cada fragmento
+        y une los arrays de audio en un único bloque reproducible.
+        Si se detecta una parada intencional entre fragmentos, devuelve (None, None).
+        Un texto corto produce un único fragmento: se devuelve su audio directamente
+        sin pasar por numpy.concatenate.
         """
         fragmentos = self._dividir_texto(texto)
         partes = []
@@ -113,6 +115,8 @@ class ClienteDeepgram:
             partes.append(data)
         if not partes:
             return None, None
+        if len(partes) == 1:
+            return partes[0], fs_comun
         return np.concatenate(partes, axis=0), fs_comun
     # ANCLAJE_FIN: DIVISOR_TEXTO_DEEPGRAM
 
@@ -176,28 +180,38 @@ class ClienteDeepgram:
 
     def hablar(self, texto: str, datos_voz):
         """
-        Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API.
-        Si el texto supera el límite de la API (2000 caracteres), se divide
-        automáticamente en fragmentos, se sintetiza cada uno por separado y los
-        arrays de audio se concatenan antes de reproducir.
+        Sintetiza y reproduce el texto.
+        Prioridad: caché exacto → buffer proactivo → síntesis HTTP.
+        Toda síntesis HTTP pasa por _sintetizar_fragmentos, que a su vez llama
+        a _dividir_texto antes de cualquier petición POST. De este modo es
+        imposible enviar a la API un bloque que supere el límite de 2000 caracteres,
+        independientemente de la longitud del texto de entrada.
         """
         self._parado = False
 
+        # Caché exacto: el texto completo ya fue sintetizado en esta sesión
         if texto in self._cache_frags:
             data, fs = self._cache_frags[texto]
-        elif self._audio_preparado is not None and self._texto_preparado == texto:
+            if not self._parado:
+                sd.play(data, fs)
+                sd.wait()
+            return
+
+        # Buffer proactivo: audio pre-descargado en segundo plano para el texto exacto
+        if self._audio_preparado is not None and self._texto_preparado == texto:
             data, fs = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
             self._guardar_en_cache(texto, data, fs)
-        elif len(texto) > self._LIMITE_API:
-            data, fs = self._sintetizar_fragmentos(texto, datos_voz)
-            if data is not None:
-                self._guardar_en_cache(texto, data, fs)
-        else:
-            data, fs = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs)
+            if not self._parado:
+                sd.play(data, fs)
+                sd.wait()
+            return
 
+        # Síntesis: dividir si es necesario, llamar a la API y reunir el audio
+        data, fs = self._sintetizar_fragmentos(texto, datos_voz)
+        if data is not None:
+            self._guardar_en_cache(texto, data, fs)
         if not self._parado and data is not None:
             sd.play(data, fs)
             sd.wait()
