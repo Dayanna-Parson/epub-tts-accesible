@@ -14,17 +14,18 @@ class ControlCuota:
         self.ruta_uso = ruta_config("uso_cuota.json")
         # Límites mensuales por defecto (basados en las capas gratuitas de cada proveedor)
         self.limites_defecto = {
-            "azure": 500000,      # 500 000 caracteres (Capa gratuita)
-            "polly": 1000000,     # 1 000 000 (Capa gratuita estándar, primer año)
-            "elevenlabs": 10000,  # 10 000 (Plan gratuito)
-            "local": 999999999    # SAPI5 es gratuito e ilimitado
+            "azure":       500000,     # 500 000 caracteres (Capa gratuita)
+            "polly":       1000000,    # 1 000 000 (Capa gratuita estándar, primer año)
+            "elevenlabs":  10000,      # 10 000 (Plan gratuito)
+            "deepgram":    500000,     # 500 000 (estimación capa gratuita)
+            "local":       999999999   # SAPI5 es gratuito e ilimitado
         }
         self.datos = self.cargar_datos()
 
     def cargar_datos(self):
         datos_base = {
             "mes_actual": datetime.now().month,
-            "gastado": {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0},
+            "gastado": {"azure": 0, "polly": 0, "elevenlabs": 0, "deepgram": 0, "local": 0},
             "limites": self.limites_defecto.copy()
         }
 
@@ -69,7 +70,7 @@ class ControlCuota:
         if mes_hoy != self.datos.get("mes_actual"):
             logger.info("[ControlCuota] Nuevo mes detectado. Reiniciando contadores.")
             self.datos["mes_actual"] = mes_hoy
-            self.datos["gastado"] = {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0}
+            self.datos["gastado"] = {"azure": 0, "polly": 0, "elevenlabs": 0, "deepgram": 0, "local": 0}
             self.guardar_datos()
 
     def verificar_y_registrar(self, texto, proveedor):
@@ -86,6 +87,8 @@ class ControlCuota:
             clave = "polly"
         elif "eleven" in prov_key:
             clave = "elevenlabs"
+        elif "deepgram" in prov_key:
+            clave = "deepgram"
         else:
             return True  # Voz local: gratuita e ilimitada
 
@@ -137,6 +140,8 @@ class ControlCuota:
             clave = "polly"
         elif "eleven" in prov_key:
             clave = "elevenlabs"
+        elif "deepgram" in prov_key:
+            clave = "deepgram"
         else:
             return True  # Voz local: siempre disponible
 
@@ -156,6 +161,8 @@ class ControlCuota:
             clave = "polly"
         elif "eleven" in prov_key:
             clave = "elevenlabs"
+        elif "deepgram" in prov_key:
+            clave = "deepgram"
         else:
             return  # Voz local: no se registra
         self.datos["gastado"][clave] = self.datos["gastado"].get(clave, 0) + len(texto)
