@@ -31,6 +31,59 @@ class GestorVoces:
         """Lee las claves API desde configuraciones/claves_api.json."""
         return cargar_claves()
 
+    # ANCLAJE_INICIO: HISTORIAL_VOCES_CONOCIDAS
+    def _cargar_ids_conocidos(self) -> set:
+        """Lee voces_conocidas.json y devuelve el conjunto de IDs ya vistos."""
+        ruta = ruta_config("voces_conocidas.json")
+        try:
+            if os.path.exists(ruta):
+                with open(ruta, "r", encoding="utf-8") as f:
+                    return {str(x).strip() for x in json.load(f) if x}
+        except Exception:
+            pass
+        return set()
+
+    def _guardar_ids_conocidos(self, ids: set):
+        """Persiste el historial de IDs conocidos de forma atómica."""
+        ruta = ruta_config("voces_conocidas.json")
+        ruta_tmp = ruta + ".tmp"
+        try:
+            os.makedirs(os.path.dirname(ruta), exist_ok=True)
+            with open(ruta_tmp, "w", encoding="utf-8") as f:
+                json.dump(sorted(ids), f, ensure_ascii=False)
+            os.replace(ruta_tmp, ruta)
+        except Exception as e:
+            print(f"[GestorVoces] Error guardando voces_conocidas.json: {e}")
+
+    def _aplicar_marca_nuevas(self, primera_vez: bool, ids_conocidos: set) -> set:
+        """
+        Recorre voces_cache, inyecta 'es_nueva' en cada voz y devuelve el
+        conjunto de todos los IDs actuales para actualizar el historial.
+        Si primera_vez=True, ninguna voz se marca como nueva (línea base inicial).
+        """
+        todos_ids = set()
+        for lista in self.voces_cache.values():
+            for v in lista:
+                id_voz = str(v.get("id") or "").strip()
+                if not id_voz:
+                    continue
+                v["es_nueva"] = not primera_vez and id_voz not in ids_conocidos
+                todos_ids.add(id_voz)
+        return todos_ids
+
+    def _marcar_y_guardar(self):
+        """
+        Aplica el historial de voces conocidas a voces_cache, inyecta 'es_nueva'
+        y guarda voces_disponibles.json y voces_conocidas.json en disco.
+        Centraliza toda la lógica de persistencia post-descarga.
+        """
+        ids_conocidos = self._cargar_ids_conocidos()
+        primera_vez = len(ids_conocidos) == 0
+        todos_ids = self._aplicar_marca_nuevas(primera_vez, ids_conocidos)
+        self._guardar_ids_conocidos(ids_conocidos | todos_ids)
+        self._guardar_cache()
+    # ANCLAJE_FIN: HISTORIAL_VOCES_CONOCIDAS
+
     def actualizar_voces_desde_internet(self):
         """
         Método maestro que llama a todas las APIs y actualiza el archivo local.
@@ -100,8 +153,8 @@ class GestorVoces:
         else:
             resumen.append("Deepgram: Falta API Key.")
 
-        # GUARDAR EN DISCO
-        self._guardar_cache()
+        # MARCAR VOCES NUEVAS Y GUARDAR EN DISCO
+        self._marcar_y_guardar()
         return "\n".join(resumen)
 
     def _descargar_azure(self, key, region):
@@ -370,7 +423,7 @@ class GestorVoces:
             try:
                 voces = self._descargar_azure(key, region)
                 self.voces_cache["azure"] = voces
-                self._guardar_cache()
+                self._marcar_y_guardar()
                 return f"Azure: {len(voces)} voces descargadas."
             except Exception as e:
                 return f"Azure Error: {e}"
@@ -385,7 +438,7 @@ class GestorVoces:
             try:
                 voces = self._descargar_polly(access_key, secret_key, region)
                 self.voces_cache["polly"] = voces
-                self._guardar_cache()
+                self._marcar_y_guardar()
                 return f"Amazon Polly: {len(voces)} voces descargadas."
             except ImportError:
                 return "Amazon Polly Error: boto3 no instalado (pip install boto3)."
@@ -400,7 +453,7 @@ class GestorVoces:
             try:
                 voces = self._descargar_elevenlabs(key)
                 self.voces_cache["elevenlabs"] = voces
-                self._guardar_cache()
+                self._marcar_y_guardar()
                 return f"ElevenLabs: {len(voces)} voces descargadas."
             except Exception as e:
                 return f"ElevenLabs Error: {e}"
@@ -413,7 +466,7 @@ class GestorVoces:
             try:
                 voces = self._descargar_deepgram(key)
                 self.voces_cache["deepgram"] = voces
-                self._guardar_cache()
+                self._marcar_y_guardar()
                 return f"Deepgram: {len(voces)} voces descargadas."
             except Exception as e:
                 return f"Deepgram Error: {e}"

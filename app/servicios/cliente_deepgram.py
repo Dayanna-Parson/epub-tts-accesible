@@ -69,8 +69,7 @@ class ClienteDeepgram:
     def _dividir_texto(self, texto: str) -> list:
         """
         Divide el texto en fragmentos que no superen _LIMITE_API caracteres.
-        Respeta los finales de frase (punto, interrogación, exclamación, punto y coma)
-        para que cada fragmento sea fonéticamente coherente.
+        Respeta los finales de frase para mantener la cohesión fonética.
         """
         if len(texto) <= self._LIMITE_API:
             return [texto]
@@ -79,7 +78,6 @@ class ClienteDeepgram:
             if len(texto) <= self._LIMITE_API:
                 fragmentos.append(texto.strip())
                 break
-            # Buscar el final de frase más tardío dentro del límite
             corte = -1
             for sep in ('. ', '! ', '? ', '; ', '\n'):
                 pos = texto.rfind(sep, 0, self._LIMITE_API)
@@ -88,42 +86,41 @@ class ClienteDeepgram:
                     if candidato > corte:
                         corte = candidato
             if corte <= 0:
-                corte = self._LIMITE_API  # sin separador: cortar en el límite
+                corte = self._LIMITE_API
             fragmento = texto[:corte].strip()
             if fragmento:
                 fragmentos.append(fragmento)
             texto = texto[corte:].strip()
         return fragmentos
-
-    def _sintetizar_fragmentos(self, texto: str, datos_voz):
-        """
-        Divide el texto (si supera el límite), llama a la API por cada fragmento
-        y une los arrays de audio en un único bloque reproducible.
-        Si se detecta una parada intencional entre fragmentos, devuelve (None, None).
-        Un texto corto produce un único fragmento: se devuelve su audio directamente
-        sin pasar por numpy.concatenate.
-        """
-        fragmentos = self._dividir_texto(texto)
-        partes = []
-        fs_comun = None
-        for frag in fragmentos:
-            if self._parado:
-                return None, None
-            data, fs = self._llamar_api(frag, datos_voz)
-            if fs_comun is None:
-                fs_comun = fs
-            partes.append(data)
-        if not partes:
-            return None, None
-        if len(partes) == 1:
-            return partes[0], fs_comun
-        return np.concatenate(partes, axis=0), fs_comun
     # ANCLAJE_FIN: DIVISOR_TEXTO_DEEPGRAM
 
     # ── Llamada HTTP ──────────────────────────────────────────────────────────
 
+    # ANCLAJE_INICIO: LLAMAR_API_DEEPGRAM
     def _llamar_api(self, texto: str, datos_voz):
-        """Envía texto a la API de Deepgram y devuelve (data_numpy, sample_rate)."""
+        """
+        Punto de entrada para toda síntesis HTTP de Deepgram.
+        Divide el texto si supera el límite de la API, realiza las peticiones
+        de forma secuencial y concatena el audio antes de devolverlo.
+        Tanto hablar() como preparar() pasan por aquí, garantizando que ningún
+        bloque superior a _LIMITE_API llegue nunca a _peticion_http().
+        """
+        fragmentos = self._dividir_texto(texto)
+        if len(fragmentos) == 1:
+            return self._peticion_http(fragmentos[0], datos_voz)
+        partes = []
+        fs_comun = None
+        for frag in fragmentos:
+            if self._parado:
+                raise Exception("Síntesis cancelada.")
+            data, fs = self._peticion_http(frag, datos_voz)
+            if fs_comun is None:
+                fs_comun = fs
+            partes.append(data)
+        return np.concatenate(partes, axis=0), fs_comun
+
+    def _peticion_http(self, texto: str, datos_voz):
+        """Realiza una única petición POST a la API. El texto siempre es <= _LIMITE_API chars."""
         config  = self._cargar_config()
         api_key = config.get("deepgram", {}).get("api_key", "").strip()
         if not api_key:
@@ -138,8 +135,6 @@ class ClienteDeepgram:
             "Authorization": f"Token {api_key}",
             "Content-Type": "application/json",
         }
-        # encoding=mp3 es el predeterminado de Deepgram; lo indicamos explícitamente
-        # para que la respuesta pueda ser leída por soundfile sin conversión adicional.
         params = {"model": modelo, "encoding": "mp3"}
         cuerpo = {"text": texto}
 
@@ -175,44 +170,26 @@ class ClienteDeepgram:
 
         data, fs = sf.read(io.BytesIO(respuesta.content))
         return data, fs
+    # ANCLAJE_FIN: LLAMAR_API_DEEPGRAM
 
     # ── Reproducción ──────────────────────────────────────────────────────────
 
     def hablar(self, texto: str, datos_voz):
-        """
-        Sintetiza y reproduce el texto.
-        Prioridad: caché exacto → buffer proactivo → síntesis HTTP.
-        Toda síntesis HTTP pasa por _sintetizar_fragmentos, que a su vez llama
-        a _dividir_texto antes de cualquier petición POST. De este modo es
-        imposible enviar a la API un bloque que supere el límite de 2000 caracteres,
-        independientemente de la longitud del texto de entrada.
-        """
+        """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
 
-        # Caché exacto: el texto completo ya fue sintetizado en esta sesión
         if texto in self._cache_frags:
             data, fs = self._cache_frags[texto]
-            if not self._parado:
-                sd.play(data, fs)
-                sd.wait()
-            return
-
-        # Buffer proactivo: audio pre-descargado en segundo plano para el texto exacto
-        if self._audio_preparado is not None and self._texto_preparado == texto:
+        elif self._audio_preparado is not None and self._texto_preparado == texto:
             data, fs = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
             self._guardar_en_cache(texto, data, fs)
-            if not self._parado:
-                sd.play(data, fs)
-                sd.wait()
-            return
-
-        # Síntesis: dividir si es necesario, llamar a la API y reunir el audio
-        data, fs = self._sintetizar_fragmentos(texto, datos_voz)
-        if data is not None:
+        else:
+            data, fs = self._llamar_api(texto, datos_voz)
             self._guardar_en_cache(texto, data, fs)
-        if not self._parado and data is not None:
+
+        if not self._parado:
             sd.play(data, fs)
             sd.wait()
 
