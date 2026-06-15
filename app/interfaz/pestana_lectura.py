@@ -26,7 +26,7 @@ _LOCALES_ES = {
     "Multilingüe (v2)": "Multilingüe",
 }
 _GENEROS_ES = {"Female": "Femenino", "Male": "Masculino", "Neutral": "Neutro"}
-_PROVEEDORES = {"polly": "Amazon Polly", "elevenlabs": "ElevenLabs", "azure": "Azure"}
+_PROVEEDORES = {"polly": "Amazon Polly", "elevenlabs": "ElevenLabs", "azure": "Azure", "deepgram": "Deepgram"}
 
 
 def _nombre_combo_neuronal(voz, prov_id):
@@ -375,7 +375,7 @@ class PestanaLectura(wx.Panel):
             es_voz_neuronal = False
             if voz_data:
                 prov = voz_data.get('proveedor_id', 'local').lower()
-                if 'azure' in prov or 'eleven' in prov or 'polly' in prov:
+                if 'azure' in prov or 'eleven' in prov or 'polly' in prov or 'deepgram' in prov:
                     es_voz_neuronal = True
 
             if es_voz_neuronal:
