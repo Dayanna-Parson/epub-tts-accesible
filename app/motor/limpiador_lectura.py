@@ -1,5 +1,22 @@
 import re
 
+# Singleton del diccionario de pronunciación — se crea la primera vez que se necesita
+_dic_pronunciacion = None
+
+
+def _obtener_diccionario():
+    global _dic_pronunciacion
+    if _dic_pronunciacion is None:
+        from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
+        _dic_pronunciacion = DiccionarioPronunciacion()
+    return _dic_pronunciacion
+
+
+def recargar_diccionario_pronunciacion():
+    """Invalida la caché del diccionario para que el siguiente texto use el JSON actualizado."""
+    global _dic_pronunciacion
+    _dic_pronunciacion = None
+
 
 def limpiar_para_lectura(texto):
     """
@@ -58,4 +75,9 @@ def limpiar_para_lectura(texto):
     # Colapsamos cualquier secuencia de saltos en uno solo.
     texto = re.sub(r'\n+', '\n', texto)
 
-    return texto.strip()
+    texto = texto.strip()
+
+    # Aplicar sustituciones de pronunciación definidas por el usuario
+    texto = _obtener_diccionario().aplicar(texto)
+
+    return texto
