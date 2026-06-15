@@ -1454,7 +1454,7 @@ class PestanaAjustes(wx.Panel):
         elif idx == 1:
             return self.pag_claves.btn_save
         elif idx == 2:
-            return self.pag_voces.btn_escuchar
+            return self.pag_voces.btn_diccionario
         elif idx == 3:
             return self.pag_atajos.btn_restablecer
 
