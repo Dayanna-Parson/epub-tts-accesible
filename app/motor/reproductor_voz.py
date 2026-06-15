@@ -146,7 +146,7 @@ class ReproductorVoz:
         return "local"
 
     def cargar_texto(self, texto, callback_completado=None,
-                     pos_offset=0, callback_progreso=None):
+                     pos_offset=0, callback_progreso=None, modo_cola=False):
         """
         Inicia la lectura del texto.
         Aplica el método adecuado según si se usa una voz local o una voz neuronal.
@@ -161,12 +161,18 @@ class ReproductorVoz:
             Solo se usa con voces SAPI5 para la sincronización de cursor.
         callback_progreso   : función(pos) llamada al iniciar cada párrafo en SAPI5.
             Permite mover el cursor exactamente al párrafo que se está leyendo.
+        modo_cola           : True cuando el fragmento llega desde la cola de lectura
+            continua. El audio anterior ya terminó de sonar (sd.wait() completó antes
+            del callback), por lo que no hay nada que detener ni sesiones que cerrar.
+            Saltar detener() y el sleep elimina la pausa entre fragmentos y preserva
+            la sesión HTTP activa, permitiendo que el audio predesargado se use.
         """
         if not texto: return
 
-        # Detener cualquier lectura en curso antes de iniciar una nueva
-        self.detener()
-        time.sleep(0.05)
+        if not modo_cola:
+            # Detener cualquier lectura en curso antes de iniciar una nueva
+            self.detener()
+            time.sleep(0.05)
 
         # Nueva síntesis: restablecer el flag de detención intencional
         self._detenido_intencionalmente = False
