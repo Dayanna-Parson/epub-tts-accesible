@@ -3,6 +3,7 @@ import io
 import logging
 import time
 
+import numpy as np
 import requests
 import sounddevice as sd
 import soundfile as sf
@@ -59,6 +60,61 @@ class ClienteDeepgram:
                 self._cache_frags.pop(clave_antigua, None)
             self._cache_lru.append(texto)
         self._cache_frags[texto] = (data, fs)
+
+    # ── División de texto largo ────────────────────────────────────────────────
+
+    # ANCLAJE_INICIO: DIVISOR_TEXTO_DEEPGRAM
+    _LIMITE_API = 1900  # margen de seguridad sobre el límite oficial de 2000 chars
+
+    def _dividir_texto(self, texto: str) -> list:
+        """
+        Divide el texto en fragmentos que no superen _LIMITE_API caracteres.
+        Respeta los finales de frase (punto, interrogación, exclamación, punto y coma)
+        para que cada fragmento sea fonéticamente coherente.
+        """
+        if len(texto) <= self._LIMITE_API:
+            return [texto]
+        fragmentos = []
+        while texto:
+            if len(texto) <= self._LIMITE_API:
+                fragmentos.append(texto.strip())
+                break
+            # Buscar el final de frase más tardío dentro del límite
+            corte = -1
+            for sep in ('. ', '! ', '? ', '; ', '\n'):
+                pos = texto.rfind(sep, 0, self._LIMITE_API)
+                if pos != -1:
+                    candidato = pos + len(sep)
+                    if candidato > corte:
+                        corte = candidato
+            if corte <= 0:
+                corte = self._LIMITE_API  # sin separador: cortar en el límite
+            fragmento = texto[:corte].strip()
+            if fragmento:
+                fragmentos.append(fragmento)
+            texto = texto[corte:].strip()
+        return fragmentos
+
+    def _sintetizar_fragmentos(self, texto: str, datos_voz):
+        """
+        Llama a la API por cada fragmento del texto dividido y concatena
+        los arrays de audio resultantes en un único bloque reproducible.
+        Si se detecta una parada intencional entre fragmentos, devuelve None.
+        """
+        fragmentos = self._dividir_texto(texto)
+        partes = []
+        fs_comun = None
+        for frag in fragmentos:
+            if self._parado:
+                return None, None
+            data, fs = self._llamar_api(frag, datos_voz)
+            if fs_comun is None:
+                fs_comun = fs
+            partes.append(data)
+        if not partes:
+            return None, None
+        return np.concatenate(partes, axis=0), fs_comun
+    # ANCLAJE_FIN: DIVISOR_TEXTO_DEEPGRAM
 
     # ── Llamada HTTP ──────────────────────────────────────────────────────────
 
@@ -119,7 +175,12 @@ class ClienteDeepgram:
     # ── Reproducción ──────────────────────────────────────────────────────────
 
     def hablar(self, texto: str, datos_voz):
-        """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
+        """
+        Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API.
+        Si el texto supera el límite de la API (2000 caracteres), se divide
+        automáticamente en fragmentos, se sintetiza cada uno por separado y los
+        arrays de audio se concatenan antes de reproducir.
+        """
         self._parado = False
 
         if texto in self._cache_frags:
@@ -129,11 +190,15 @@ class ClienteDeepgram:
             self._audio_preparado = None
             self._texto_preparado = None
             self._guardar_en_cache(texto, data, fs)
+        elif len(texto) > self._LIMITE_API:
+            data, fs = self._sintetizar_fragmentos(texto, datos_voz)
+            if data is not None:
+                self._guardar_en_cache(texto, data, fs)
         else:
             data, fs = self._llamar_api(texto, datos_voz)
             self._guardar_en_cache(texto, data, fs)
 
-        if not self._parado:
+        if not self._parado and data is not None:
             sd.play(data, fs)
             sd.wait()
 

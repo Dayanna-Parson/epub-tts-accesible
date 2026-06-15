@@ -711,16 +711,15 @@ class PanelVoces(wx.Panel):
         
         sizer.Add(self.lista_voces, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
         
-        # 4. BOTONERA — atributo de instancia para el bucle de tabulación accesible
-        sz_botones = wx.BoxSizer(wx.HORIZONTAL)
-
+        # 4. BOTONERA — cada botón se añade directamente al sizer principal para que
+        # NVDA los alcance con Tabulador sin necesidad de navegar con flechas de cursor.
         self.btn_escuchar = wx.Button(self, label="Escuchar muestra de la voz seleccionada (Alt+P)")
         self.btn_escuchar.SetHelpText(
             "Reproduce una muestra de texto con la voz seleccionada en la lista. "
             "Púlsalo de nuevo para detener la reproducción."
         )
         self.btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
-        sz_botones.Add(self.btn_escuchar, 0, wx.RIGHT, 10)
+        sizer.Add(self.btn_escuchar, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.TOP, 10)
 
         self.btn_diccionario = wx.Button(self, label="Diccionario de pronunciación")
         self.btn_diccionario.SetHelpText(
@@ -729,11 +728,7 @@ class PanelVoces(wx.Panel):
             "siglas, nombres propios, tecnicismos, etc."
         )
         self.btn_diccionario.Bind(wx.EVT_BUTTON, self.al_abrir_diccionario)
-        sz_botones.Add(self.btn_diccionario, 0)
-        # Garantizar que NVDA llegue al botón de diccionario al pulsar Tab tras el de escucha
-        self.btn_diccionario.MoveAfterInTabOrder(self.btn_escuchar)
-
-        sizer.Add(sz_botones, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
+        sizer.Add(self.btn_diccionario, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
         
         id_play = wx.NewIdRef()
         self.Bind(wx.EVT_MENU, self.al_escuchar, id=id_play)
