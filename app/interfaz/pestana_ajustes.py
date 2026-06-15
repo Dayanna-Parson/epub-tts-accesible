@@ -66,6 +66,14 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
             f"Restante: {restante} caracteres, aprox {libros} libros. "
             f"Suscripcion sugerida: {plan}."
         )
+    elif proveedor == "deepgram":
+        coste_gas = round(gas * 15 / 1_000_000, 2)
+        coste_lim = round(lim * 15 / 1_000_000, 2)
+        return (
+            f"Gasto: {gas} caracteres, unos {coste_gas} dolares. "
+            f"Restante: {restante} caracteres, aprox {libros} libros. "
+            f"Coste total al limite: {coste_lim} dolares al mes."
+        )
     return ""
 
 
@@ -95,6 +103,10 @@ class PanelGeneral(wx.ScrolledWindow):
         # Controles Eleven
         g_el, l_el = self.cuota.get_info_uso("elevenlabs")
         sizer_cuota.Add(self._crear_fila_limite("ElevenLabs", g_el, l_el, "elevenlabs"), 0, wx.EXPAND|wx.ALL, 2)
+
+        # Controles Deepgram
+        g_dg, l_dg = self.cuota.get_info_uso("deepgram")
+        sizer_cuota.Add(self._crear_fila_limite("Deepgram", g_dg, l_dg, "deepgram"), 0, wx.EXPAND|wx.ALL, 2)
 
         sizer.Add(sizer_cuota, 0, wx.EXPAND | wx.ALL, 10)
 
