@@ -243,52 +243,85 @@ class GestorVoces:
 
         return voces_procesadas
 
+    # ANCLAJE_INICIO: VOCES_DEEPGRAM_HARDCODED
+    _VOCES_DEEPGRAM_BASE = [
+        {"nombre": "Asteria",   "id": "aura-2-asteria-en",   "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Luna",      "id": "aura-2-luna-en",      "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Stella",    "id": "aura-2-stella-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Athena",    "id": "aura-2-athena-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Hera",      "id": "aura-2-hera-en",      "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Helena",    "id": "aura-2-helena-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Thalia",    "id": "aura-2-thalia-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Andromeda", "id": "aura-2-andromeda-en", "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Orion",     "id": "aura-2-orion-en",     "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Arcas",     "id": "aura-2-arcas-en",     "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Perseus",   "id": "aura-2-perseus-en",   "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Angus",     "id": "aura-2-angus-en",     "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Orpheus",   "id": "aura-2-orpheus-en",   "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Helios",    "id": "aura-2-helios-en",    "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Zeus",      "id": "aura-2-zeus-en",      "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Celeste",   "id": "aura-2-celeste-es",   "idioma": "es-ES", "genero": "Female"},
+        {"nombre": "Cora",      "id": "aura-2-cora-es",      "idioma": "es-ES", "genero": "Female"},
+    ]
+    # ANCLAJE_FIN: VOCES_DEEPGRAM_HARDCODED
+
     def _descargar_deepgram(self, api_key: str) -> list:
         """
         Obtiene la lista de modelos TTS de Deepgram consultando /v1/models.
-        Filtra únicamente los modelos de tipo TTS (arquitectura aura-2).
+        Si la petición falla o devuelve resultados vacíos, usa la lista base integrada.
         """
-        url = "https://api.deepgram.com/v1/models"
-        cabeceras = {"Authorization": f"Token {api_key}"}
-        respuesta = requests.get(url, headers=cabeceras, timeout=15)
+        idioma_map = {
+            "en": "en-US", "es": "es-ES", "de": "de-DE",
+            "fr": "fr-FR", "nl": "nl-NL", "it": "it-IT", "ja": "ja-JP",
+        }
 
-        if respuesta.status_code == 401:
-            raise Exception("API Key de Deepgram incorrecta o sin permisos.")
-        if respuesta.status_code != 200:
-            raise Exception(f"Error de conexión con Deepgram: {respuesta.status_code}")
+        def _parsear_modelos(modelos_tts):
+            voces = []
+            for m in modelos_tts:
+                nombre_id = m.get("name", "")
+                if not nombre_id:
+                    continue
+                partes = nombre_id.split("-")
+                if len(partes) < 4:
+                    continue
+                lang_code  = partes[-1]
+                nombre_voz = "-".join(partes[2:-1]).capitalize()
+                meta       = m.get("metadata", {})
+                genero_raw = meta.get("gender", "").lower()
+                genero     = "Female" if genero_raw == "female" else "Male"
+                voces.append({
+                    "nombre":    nombre_voz,
+                    "id":        nombre_id,
+                    "idioma":    idioma_map.get(lang_code, lang_code),
+                    "genero":    genero,
+                    "proveedor": "Deepgram",
+                })
+            return voces
 
-        datos = respuesta.json()
-        modelos_tts = datos.get("tts", [])
+        try:
+            url = "https://api.deepgram.com/v1/models"
+            cabeceras = {"Authorization": f"Token {api_key}"}
+            respuesta = requests.get(url, headers=cabeceras, timeout=15)
 
-        voces = []
-        for m in modelos_tts:
-            nombre_id = m.get("name", "")
-            if not nombre_id:
-                continue
-            partes = nombre_id.split("-")
-            # Formato esperado: aura-2-voicename-lang (mínimo 4 segmentos)
-            if len(partes) < 4:
-                continue
-            lang_code  = partes[-1]
-            nombre_voz = "-".join(partes[2:-1]).capitalize()
-            meta       = m.get("metadata", {})
-            genero_raw = meta.get("gender", "").lower()
-            genero     = "Female" if genero_raw == "female" else "Male"
-            idioma_map = {
-                "en": "en-US", "es": "es-ES", "de": "de-DE",
-                "fr": "fr-FR", "nl": "nl-NL", "it": "it-IT", "ja": "ja-JP",
-            }
-            idioma = idioma_map.get(lang_code, lang_code)
+            if respuesta.status_code == 401:
+                raise Exception("API Key de Deepgram incorrecta o sin permisos.")
+            if respuesta.status_code == 200:
+                datos = respuesta.json()
+                # La API puede devolver {"tts": [...]} o {"models": [...]} según la versión
+                modelos_tts = datos.get("tts") or datos.get("models") or []
+                voces = _parsear_modelos(modelos_tts)
+                if voces:
+                    return voces
+        except Exception as e:
+            if "incorrecta" in str(e):
+                raise
+            # Cualquier otro error: caer a la lista base integrada
 
-            voces.append({
-                "nombre":    nombre_voz,
-                "id":        nombre_id,
-                "idioma":    idioma,
-                "genero":    genero,
-                "proveedor": "Deepgram",
-            })
-
-        return voces
+        # Fallback: lista base con voces Aura-2 confirmadas
+        return [
+            dict(v, proveedor="Deepgram")
+            for v in self._VOCES_DEEPGRAM_BASE
+        ]
 
     def actualizar_proveedor(self, proveedor: str) -> str:
         """

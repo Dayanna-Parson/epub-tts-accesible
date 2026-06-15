@@ -722,14 +722,14 @@ class PanelVoces(wx.Panel):
         self.btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
         sz_botones.Add(self.btn_escuchar, 0, wx.RIGHT, 10)
 
-        btn_diccionario = wx.Button(self, label="Diccionario de pronunciación")
-        btn_diccionario.SetHelpText(
+        self.btn_diccionario = wx.Button(self, label="Diccionario de pronunciación")
+        self.btn_diccionario.SetHelpText(
             "Abre el editor del diccionario de pronunciación local. "
             "Permite corregir cómo la voz pronuncia palabras concretas: "
             "siglas, nombres propios, tecnicismos, etc."
         )
-        btn_diccionario.Bind(wx.EVT_BUTTON, self.al_abrir_diccionario)
-        sz_botones.Add(btn_diccionario, 0)
+        self.btn_diccionario.Bind(wx.EVT_BUTTON, self.al_abrir_diccionario)
+        sz_botones.Add(self.btn_diccionario, 0)
 
         sizer.Add(sz_botones, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
         
@@ -814,7 +814,7 @@ class PanelVoces(wx.Panel):
         try:
             if os.path.exists(ruta_conocidas):
                 with open(ruta_conocidas, 'r', encoding='utf-8') as f:
-                    voces_conocidas = set(json.load(f))
+                    voces_conocidas = {str(x).strip() for x in json.load(f) if x}
         except Exception:
             pass
 
@@ -825,8 +825,9 @@ class PanelVoces(wx.Panel):
                     for prov, lista in datos.items():
                         for v in lista:
                             v["proveedor_id"] = prov
+                            id_voz = str(v.get("id") or "").strip()
                             # Nueva si existía snapshot previo y el ID no estaba en él
-                            v["es_nueva"] = voces_conocidas is not None and v.get("id","") not in voces_conocidas
+                            v["es_nueva"] = voces_conocidas is not None and id_voz not in voces_conocidas
                             self.voces_todas.append(v)
             except Exception as e:
                 print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
