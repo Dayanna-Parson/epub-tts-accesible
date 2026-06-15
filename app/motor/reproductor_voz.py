@@ -11,6 +11,7 @@ from app.servicios.cliente_sapi5 import ClienteSapi5
 from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
+from app.servicios.cliente_deepgram import ClienteDeepgram
 from app.motor.control_cuota import ControlCuota
 from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
 from app.config_rutas import ruta_config
@@ -26,10 +27,11 @@ class ReproductorVoz:
         self.config = self._cargar_config()
         
         # Inicialización de motores de síntesis
-        self.cliente_local = ClienteSapi5()
-        self.cliente_azure = ClienteAzure()
-        self.cliente_eleven = ClienteEleven()
-        self.cliente_polly = ClientePolly()
+        self.cliente_local   = ClienteSapi5()
+        self.cliente_azure   = ClienteAzure()
+        self.cliente_eleven  = ClienteEleven()
+        self.cliente_polly   = ClientePolly()
+        self.cliente_deepgram = ClienteDeepgram()
         
         # Estado inicial del sistema
         self.motor_activo = self.cliente_local
@@ -81,6 +83,9 @@ class ReproductorVoz:
         elif "polly" in proveedor:
             self.motor_activo = self.cliente_polly
             self.tipo_motor_actual = "polly"
+        elif "deepgram" in proveedor:
+            self.motor_activo = self.cliente_deepgram
+            self.tipo_motor_actual = "deepgram"
         else:
 
             # ANCLAJE_INICIO: CONFIGURACION_VOZ_ACTIVA
@@ -106,9 +111,10 @@ class ReproductorVoz:
         Retorna el tipo de motor elegido ("azure", "polly", "eleven" o "local").
         """
         todos = [
-            ("azure", self.cliente_azure),
-            ("polly", self.cliente_polly),
-            ("eleven", self.cliente_eleven),
+            ("azure",    self.cliente_azure),
+            ("polly",    self.cliente_polly),
+            ("deepgram", self.cliente_deepgram),
+            ("eleven",   self.cliente_eleven),
         ]
         # El proveedor actual va primero
         prioridad = [(t, m) for t, m in todos if t == self.tipo_motor_actual] + \
@@ -180,12 +186,12 @@ class ReproductorVoz:
 
         if self.tipo_motor_actual == "local":
             try:
-                if callback_progreso and hasattr(self.cliente_local, 'hablar_con_callback'):
-                    # Lectura párrafo a párrafo con sincronización de cursor (estilo Bookworm)
+                usa_callback = (callback_progreso or callback_completado) and hasattr(self.cliente_local, 'hablar_con_callback')
+                if usa_callback:
                     self.cliente_local.hablar_con_callback(
                         texto,
                         pos_offset,
-                        callback_progreso,
+                        callback_progreso or (lambda pos: None),
                         callback_completado or (lambda: None),
                     )
                 else:
@@ -326,6 +332,8 @@ class ReproductorVoz:
         try: self.cliente_eleven.detener()
         except: pass
         try: self.cliente_polly.detener()
+        except: pass
+        try: self.cliente_deepgram.detener()
         except: pass
         self.estado = "detenido"
 
