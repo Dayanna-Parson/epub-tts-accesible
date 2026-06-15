@@ -53,3 +53,4 @@ Grabaciones_Epub-TTS/
 # ── Binarios externos portables ──────────────────────────────────────────────
 bin/*.exe
 bin/*.dll
+Epub-TTS.spec
