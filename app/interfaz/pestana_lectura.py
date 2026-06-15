@@ -497,7 +497,7 @@ class PestanaLectura(wx.Panel):
         self.txt_contenido.SetInsertionPoint(pos_inicio)
         self.txt_contenido.ShowPosition(pos_inicio)
 
-        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado)
+        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado, modo_cola=True)
 
     def _al_fragmento_completado(self):
         """Callback invocado por ReproductorVoz cuando termina un fragmento neuronal."""
