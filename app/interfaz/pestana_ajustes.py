@@ -730,6 +730,8 @@ class PanelVoces(wx.Panel):
         )
         self.btn_diccionario.Bind(wx.EVT_BUTTON, self.al_abrir_diccionario)
         sz_botones.Add(self.btn_diccionario, 0)
+        # Garantizar que NVDA llegue al botón de diccionario al pulsar Tab tras el de escucha
+        self.btn_diccionario.MoveAfterInTabOrder(self.btn_escuchar)
 
         sizer.Add(sz_botones, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
         
@@ -1131,8 +1133,8 @@ class _DialogoPronunciacion(wx.Dialog):
         btn_eliminar = wx.Button(self, label="Eliminar seleccionada")
         btn_eliminar.SetHelpText("Elimina la entrada seleccionada en la lista.")
         btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar)
-        btn_cerrar = wx.Button(self, label="Cerrar")
-        btn_cerrar.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
+        # wx.ID_CANCEL hace que wx gestione el cierre con ESC automáticamente
+        btn_cerrar = wx.Button(self, wx.ID_CANCEL, label="Cerrar")
         sz_btn.Add(btn_anadir,   0, wx.RIGHT, 8)
         sz_btn.Add(btn_eliminar, 0, wx.RIGHT, 8)
         sz_btn.Add(btn_cerrar,   0)

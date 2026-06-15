@@ -244,7 +244,10 @@ class GestorVoces:
         return voces_procesadas
 
     # ANCLAJE_INICIO: VOCES_DEEPGRAM_HARDCODED
+    # Lista de voces Aura-2 verificada contra el SDK oficial de Deepgram.
+    # Se usa como fallback cuando /v1/models falla o devuelve lista vacía.
     _VOCES_DEEPGRAM_BASE = [
+        # Voces femeninas en inglés
         {"nombre": "Asteria",   "id": "aura-2-asteria-en",   "idioma": "en-US", "genero": "Female"},
         {"nombre": "Luna",      "id": "aura-2-luna-en",      "idioma": "en-US", "genero": "Female"},
         {"nombre": "Stella",    "id": "aura-2-stella-en",    "idioma": "en-US", "genero": "Female"},
@@ -253,6 +256,7 @@ class GestorVoces:
         {"nombre": "Helena",    "id": "aura-2-helena-en",    "idioma": "en-US", "genero": "Female"},
         {"nombre": "Thalia",    "id": "aura-2-thalia-en",    "idioma": "en-US", "genero": "Female"},
         {"nombre": "Andromeda", "id": "aura-2-andromeda-en", "idioma": "en-US", "genero": "Female"},
+        # Voces masculinas en inglés
         {"nombre": "Orion",     "id": "aura-2-orion-en",     "idioma": "en-US", "genero": "Male"},
         {"nombre": "Arcas",     "id": "aura-2-arcas-en",     "idioma": "en-US", "genero": "Male"},
         {"nombre": "Perseus",   "id": "aura-2-perseus-en",   "idioma": "en-US", "genero": "Male"},
@@ -260,6 +264,10 @@ class GestorVoces:
         {"nombre": "Orpheus",   "id": "aura-2-orpheus-en",   "idioma": "en-US", "genero": "Male"},
         {"nombre": "Helios",    "id": "aura-2-helios-en",    "idioma": "en-US", "genero": "Male"},
         {"nombre": "Zeus",      "id": "aura-2-zeus-en",      "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Apollo",    "id": "aura-2-apollo-en",    "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Jupiter",   "id": "aura-2-jupiter-en",   "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Mars",      "id": "aura-2-mars-en",      "idioma": "en-US", "genero": "Male"},
+        # Voces en español
         {"nombre": "Celeste",   "id": "aura-2-celeste-es",   "idioma": "es-ES", "genero": "Female"},
         {"nombre": "Cora",      "id": "aura-2-cora-es",      "idioma": "es-ES", "genero": "Female"},
     ]
@@ -268,7 +276,9 @@ class GestorVoces:
     def _descargar_deepgram(self, api_key: str) -> list:
         """
         Obtiene la lista de modelos TTS de Deepgram consultando /v1/models.
-        Si la petición falla o devuelve resultados vacíos, usa la lista base integrada.
+        La respuesta real de la API usa 'canonical_name' para el ID completo
+        (ej. 'aura-2-zeus-en') y 'name' para el nombre corto ('zeus').
+        Si la petición falla o devuelve lista vacía, usa la lista base integrada.
         """
         idioma_map = {
             "en": "en-US", "es": "es-ES", "de": "de-DE",
@@ -278,21 +288,39 @@ class GestorVoces:
         def _parsear_modelos(modelos_tts):
             voces = []
             for m in modelos_tts:
-                nombre_id = m.get("name", "")
-                if not nombre_id:
+                # 'canonical_name' contiene el ID completo (aura-2-zeus-en);
+                # 'name' es el nombre corto ('zeus'). Priorizar canonical_name.
+                id_voz = m.get("canonical_name") or m.get("name", "")
+                if not id_voz:
                     continue
-                partes = nombre_id.split("-")
-                if len(partes) < 4:
-                    continue
-                lang_code  = partes[-1]
-                nombre_voz = "-".join(partes[2:-1]).capitalize()
-                meta       = m.get("metadata", {})
+                nombre_voz = m.get("name", id_voz).capitalize()
+
+                # El array 'languages' puede incluir código regional ('en-US').
+                # Buscar el primero con guión; si no hay, mapear el código base.
+                idioma = ""
+                for lang in m.get("languages", []):
+                    if "-" in lang:
+                        idioma = lang
+                        break
+                if not idioma:
+                    idiomas = m.get("languages", [])
+                    idioma = idioma_map.get(idiomas[0], idiomas[0]) if idiomas else ""
+
+                # Género: campo metadata.gender o inferencia por tags
+                meta = m.get("metadata", {})
                 genero_raw = meta.get("gender", "").lower()
-                genero     = "Female" if genero_raw == "female" else "Male"
+                if not genero_raw:
+                    tags = [t.lower() for t in meta.get("tags", [])]
+                    if any(t in tags for t in ("feminine", "female")):
+                        genero_raw = "female"
+                    elif any(t in tags for t in ("masculine", "male")):
+                        genero_raw = "male"
+                genero = "Female" if genero_raw == "female" else "Male"
+
                 voces.append({
                     "nombre":    nombre_voz,
-                    "id":        nombre_id,
-                    "idioma":    idioma_map.get(lang_code, lang_code),
+                    "id":        id_voz,
+                    "idioma":    idioma,
                     "genero":    genero,
                     "proveedor": "Deepgram",
                 })
@@ -307,7 +335,6 @@ class GestorVoces:
                 raise Exception("API Key de Deepgram incorrecta o sin permisos.")
             if respuesta.status_code == 200:
                 datos = respuesta.json()
-                # La API puede devolver {"tts": [...]} o {"models": [...]} según la versión
                 modelos_tts = datos.get("tts") or datos.get("models") or []
                 voces = _parsear_modelos(modelos_tts)
                 if voces:
@@ -315,13 +342,9 @@ class GestorVoces:
         except Exception as e:
             if "incorrecta" in str(e):
                 raise
-            # Cualquier otro error: caer a la lista base integrada
 
-        # Fallback: lista base con voces Aura-2 confirmadas
-        return [
-            dict(v, proveedor="Deepgram")
-            for v in self._VOCES_DEEPGRAM_BASE
-        ]
+        # Fallback: lista base con voces Aura-2 verificadas
+        return [dict(v, proveedor="Deepgram") for v in self._VOCES_DEEPGRAM_BASE]
 
     def actualizar_proveedor(self, proveedor: str) -> str:
         """
