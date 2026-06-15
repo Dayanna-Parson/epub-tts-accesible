@@ -23,7 +23,8 @@ class GestorVoces:
         self.voces_cache = {
             "azure": [],
             "polly": [],
-            "elevenlabs": []
+            "elevenlabs": [],
+            "deepgram": [],
         }
 
     def cargar_configuracion(self):
@@ -84,6 +85,20 @@ class GestorVoces:
                 resumen.append(f"Amazon Polly Error: {str(e)}")
         else:
             resumen.append("Amazon Polly: Faltan credenciales (Access Key / Secret Key).")
+
+        # 4. ACTUALIZAR DEEPGRAM (Vía REST API)
+        datos_dg = config.get("deepgram", {})
+        key_dg = datos_dg.get("api_key", "").strip()
+
+        if key_dg:
+            try:
+                voces = self._descargar_deepgram(key_dg)
+                self.voces_cache["deepgram"] = voces
+                resumen.append(f"Deepgram: {len(voces)} voces encontradas.")
+            except Exception as e:
+                resumen.append(f"Deepgram Error: {str(e)}")
+        else:
+            resumen.append("Deepgram: Falta API Key.")
 
         # GUARDAR EN DISCO
         self._guardar_cache()
@@ -228,6 +243,53 @@ class GestorVoces:
 
         return voces_procesadas
 
+    def _descargar_deepgram(self, api_key: str) -> list:
+        """
+        Obtiene la lista de modelos TTS de Deepgram consultando /v1/models.
+        Filtra únicamente los modelos de tipo TTS (arquitectura aura-2).
+        """
+        url = "https://api.deepgram.com/v1/models"
+        cabeceras = {"Authorization": f"Token {api_key}"}
+        respuesta = requests.get(url, headers=cabeceras, timeout=15)
+
+        if respuesta.status_code == 401:
+            raise Exception("API Key de Deepgram incorrecta o sin permisos.")
+        if respuesta.status_code != 200:
+            raise Exception(f"Error de conexión con Deepgram: {respuesta.status_code}")
+
+        datos = respuesta.json()
+        modelos_tts = datos.get("tts", [])
+
+        voces = []
+        for m in modelos_tts:
+            nombre_id = m.get("name", "")
+            if not nombre_id:
+                continue
+            partes = nombre_id.split("-")
+            # Formato esperado: aura-2-voicename-lang (mínimo 4 segmentos)
+            if len(partes) < 4:
+                continue
+            lang_code  = partes[-1]
+            nombre_voz = "-".join(partes[2:-1]).capitalize()
+            meta       = m.get("metadata", {})
+            genero_raw = meta.get("gender", "").lower()
+            genero     = "Female" if genero_raw == "female" else "Male"
+            idioma_map = {
+                "en": "en-US", "es": "es-ES", "de": "de-DE",
+                "fr": "fr-FR", "nl": "nl-NL", "it": "it-IT", "ja": "ja-JP",
+            }
+            idioma = idioma_map.get(lang_code, lang_code)
+
+            voces.append({
+                "nombre":    nombre_voz,
+                "id":        nombre_id,
+                "idioma":    idioma,
+                "genero":    genero,
+                "proveedor": "Deepgram",
+            })
+
+        return voces
+
     def actualizar_proveedor(self, proveedor: str) -> str:
         """
         Descarga y guarda las voces de un único proveedor sin tocar los demás.
@@ -286,6 +348,19 @@ class GestorVoces:
                 return f"ElevenLabs: {len(voces)} voces descargadas."
             except Exception as e:
                 return f"ElevenLabs Error: {e}"
+
+        elif proveedor == "deepgram":
+            datos = config.get("deepgram", {})
+            key = datos.get("api_key", "").strip()
+            if not key:
+                return "Deepgram: Falta API Key."
+            try:
+                voces = self._descargar_deepgram(key)
+                self.voces_cache["deepgram"] = voces
+                self._guardar_cache()
+                return f"Deepgram: {len(voces)} voces descargadas."
+            except Exception as e:
+                return f"Deepgram Error: {e}"
 
         return f"Proveedor desconocido: {proveedor}"
 
