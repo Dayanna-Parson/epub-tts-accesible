@@ -479,12 +479,15 @@ class PestanaLectura(wx.Panel):
         self._tiempo_inicio_frag = time.time()
         self._longitud_frag_actual = len(texto_frag)
 
+        # Resetear flag para que la precarga del fragmento N+1 se dispare
+        # en cada nuevo fragmento, no solo en el primero.
+        self._precarga_solicitada = False
+
         # Disparar precarga del fragmento siguiente de forma inmediata,
         # sin esperar al 70% del timer. Así APIs lentas como Polly tienen
         # tiempo suficiente para responder antes de que termine el fragmento.
         idx_siguiente = self._idx_fragmento_actual + 1
-        if (not self._precarga_solicitada and
-                self._cola_lectura and idx_siguiente < len(self._cola_lectura)):
+        if self._cola_lectura and idx_siguiente < len(self._cola_lectura):
             texto_sig, _ = self._cola_lectura[idx_siguiente]
             if texto_sig.strip():
                 self._precarga_solicitada = True
