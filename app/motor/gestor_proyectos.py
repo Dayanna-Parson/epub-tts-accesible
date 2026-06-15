@@ -111,13 +111,19 @@ class GestorProyectos:
         return {"version": 1, "proyectos": {}}
 
     def guardar(self):
-        """Persiste el estado actual en proyectos.json."""
+        """Persiste el estado actual en proyectos.json y crea copia de seguridad."""
         try:
             os.makedirs(os.path.dirname(RUTA_PROYECTOS), exist_ok=True)
             with open(RUTA_PROYECTOS, "w", encoding="utf-8") as f:
                 json.dump(self._datos, f, ensure_ascii=False, indent=2)
         except Exception as e:
             raise RuntimeError(f"No se pudo guardar proyectos.json: {e}")
+
+        try:
+            from app.motor.gestor_backups import crear_backup_proyectos
+            crear_backup_proyectos()
+        except Exception:
+            pass
 
     def recargar(self):
         """Recarga desde disco (útil si otra instancia modificó el archivo)."""
