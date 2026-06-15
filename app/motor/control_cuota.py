@@ -17,6 +17,7 @@ class ControlCuota:
             "azure": 500000,      # 500 000 caracteres (Capa gratuita)
             "polly": 1000000,     # 1 000 000 (Capa gratuita estándar, primer año)
             "elevenlabs": 10000,  # 10 000 (Plan gratuito)
+            "deepgram": 200000,   # 200 000 caracteres (~3 USD pay-as-you-go)
             "local": 999999999    # SAPI5 es gratuito e ilimitado
         }
         self.datos = self.cargar_datos()
@@ -24,7 +25,7 @@ class ControlCuota:
     def cargar_datos(self):
         datos_base = {
             "mes_actual": datetime.now().month,
-            "gastado": {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0},
+            "gastado": {"azure": 0, "polly": 0, "elevenlabs": 0, "deepgram": 0, "local": 0},
             "limites": self.limites_defecto.copy()
         }
 
@@ -69,7 +70,7 @@ class ControlCuota:
         if mes_hoy != self.datos.get("mes_actual"):
             logger.info("[ControlCuota] Nuevo mes detectado. Reiniciando contadores.")
             self.datos["mes_actual"] = mes_hoy
-            self.datos["gastado"] = {"azure": 0, "polly": 0, "elevenlabs": 0, "local": 0}
+            self.datos["gastado"] = {"azure": 0, "polly": 0, "elevenlabs": 0, "deepgram": 0, "local": 0}
             self.guardar_datos()
 
     def verificar_y_registrar(self, texto, proveedor):
@@ -86,6 +87,8 @@ class ControlCuota:
             clave = "polly"
         elif "eleven" in prov_key:
             clave = "elevenlabs"
+        elif "deepgram" in prov_key:
+            clave = "deepgram"
         else:
             return True  # Voz local: gratuita e ilimitada
 
@@ -137,6 +140,8 @@ class ControlCuota:
             clave = "polly"
         elif "eleven" in prov_key:
             clave = "elevenlabs"
+        elif "deepgram" in prov_key:
+            clave = "deepgram"
         else:
             return True  # Voz local: siempre disponible
 
@@ -156,6 +161,8 @@ class ControlCuota:
             clave = "polly"
         elif "eleven" in prov_key:
             clave = "elevenlabs"
+        elif "deepgram" in prov_key:
+            clave = "deepgram"
         else:
             return  # Voz local: no se registra
         self.datos["gastado"][clave] = self.datos["gastado"].get(clave, 0) + len(texto)

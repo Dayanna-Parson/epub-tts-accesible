@@ -23,7 +23,8 @@ class GestorVoces:
         self.voces_cache = {
             "azure": [],
             "polly": [],
-            "elevenlabs": []
+            "elevenlabs": [],
+            "deepgram": [],
         }
 
     def cargar_configuracion(self):
@@ -84,6 +85,19 @@ class GestorVoces:
                 resumen.append(f"Amazon Polly Error: {str(e)}")
         else:
             resumen.append("Amazon Polly: Faltan credenciales (Access Key / Secret Key).")
+
+        # 4. DEEPGRAM (lista estática — no requiere llamada de red)
+        datos_dg = config.get("deepgram", {})
+        key_dg = datos_dg.get("api_key", "").strip()
+        if key_dg:
+            try:
+                voces = self._listar_voces_deepgram(key_dg)
+                self.voces_cache["deepgram"] = voces
+                resumen.append(f"Deepgram: {len(voces)} voces disponibles.")
+            except Exception as e:
+                resumen.append(f"Deepgram Error: {str(e)}")
+        else:
+            resumen.append("Deepgram: Falta API Key.")
 
         # GUARDAR EN DISCO
         self._guardar_cache()
@@ -228,6 +242,24 @@ class GestorVoces:
 
         return voces_procesadas
 
+    def _listar_voces_deepgram(self, api_key: str) -> list:
+        """
+        Valida la API key contra Deepgram y devuelve la lista estática de voces Aura.
+        Lanza excepción si la clave es inválida.
+        """
+        resp = requests.get(
+            "https://api.deepgram.com/v1/projects",
+            headers={"Authorization": f"Token {api_key}"},
+            timeout=10,
+        )
+        if resp.status_code == 401:
+            raise Exception("API Key de Deepgram incorrecta o sin permisos.")
+        if resp.status_code not in (200, 404):
+            raise Exception(f"Error al verificar clave Deepgram: {resp.status_code}")
+
+        from app.servicios.cliente_deepgram import _VOCES_DEEPGRAM
+        return [dict(v) for v in _VOCES_DEEPGRAM]
+
     def actualizar_proveedor(self, proveedor: str) -> str:
         """
         Descarga y guarda las voces de un único proveedor sin tocar los demás.
@@ -286,6 +318,19 @@ class GestorVoces:
                 return f"ElevenLabs: {len(voces)} voces descargadas."
             except Exception as e:
                 return f"ElevenLabs Error: {e}"
+
+        elif proveedor == "deepgram":
+            datos = config.get("deepgram", {})
+            key = datos.get("api_key", "").strip()
+            if not key:
+                return "Deepgram: Falta API Key."
+            try:
+                voces = self._listar_voces_deepgram(key)
+                self.voces_cache["deepgram"] = voces
+                self._guardar_cache()
+                return f"Deepgram: {len(voces)} voces disponibles."
+            except Exception as e:
+                return f"Deepgram Error: {e}"
 
         return f"Proveedor desconocido: {proveedor}"
 

@@ -66,6 +66,15 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
             f"Restante: {restante} caracteres, aprox {libros} libros. "
             f"Suscripcion sugerida: {plan}."
         )
+    elif proveedor == "deepgram":
+        # Deepgram Aura: 1,5 centavos de dolar por cada 1000 caracteres
+        coste_gas = round(gas * 0.015 / 1000, 3)
+        coste_lim = round(lim * 0.015 / 1000, 3)
+        return (
+            f"Gasto: {gas} caracteres, unos {coste_gas} dolares. "
+            f"Restante: {restante} caracteres, aprox {libros} libros. "
+            f"Coste total al limite: {coste_lim} dolares."
+        )
     return ""
 
 
@@ -95,6 +104,10 @@ class PanelGeneral(wx.ScrolledWindow):
         # Controles Eleven
         g_el, l_el = self.cuota.get_info_uso("elevenlabs")
         sizer_cuota.Add(self._crear_fila_limite("ElevenLabs", g_el, l_el, "elevenlabs"), 0, wx.EXPAND|wx.ALL, 2)
+
+        # Controles Deepgram
+        g_dg, l_dg = self.cuota.get_info_uso("deepgram")
+        sizer_cuota.Add(self._crear_fila_limite("Deepgram", g_dg, l_dg, "deepgram"), 0, wx.EXPAND|wx.ALL, 2)
 
         sizer.Add(sizer_cuota, 0, wx.EXPAND | wx.ALL, 10)
 
@@ -454,6 +467,36 @@ class PanelClaves(wx.ScrolledWindow):
         sz_el.Add(hb_el, 0, wx.ALL, 5)
         sizer.Add(sz_el, 0, wx.EXPAND|wx.ALL, 10)
 
+        # --- DEEPGRAM ---
+        sb_dg = wx.StaticBox(self, label="Deepgram Aura TTS")
+        sz_dg = wx.StaticBoxSizer(sb_dg, wx.VERTICAL)
+
+        sz_dg.Add(wx.StaticText(self, label="API Key (clave de acceso de Deepgram):"), 0, wx.ALL, 2)
+        self.txt_dg_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+        self.txt_dg_key.SetHelpText(
+            "Clave API de Deepgram. La encontrarás en deepgram.com, "
+            "sección Console, apartado API Keys. "
+            "Las cuentas nuevas incluyen 200 dólares de crédito gratuito."
+        )
+        sz_dg.Add(self.txt_dg_key, 0, wx.EXPAND|wx.ALL, 5)
+
+        hb_dg = wx.BoxSizer(wx.HORIZONTAL)
+        btn_dg_web = wx.Button(self, label="Conseguir clave Deepgram")
+        btn_dg_web.SetHelpText("Abre el navegador en deepgram.com para crear una cuenta o consultar tu API Key.")
+        btn_dg_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://deepgram.com/"))
+        btn_dg_check = wx.Button(self, label="Comprobar clave Deepgram")
+        btn_dg_check.SetHelpText("Guarda la clave API y la verifica contra el servidor de Deepgram.")
+        btn_dg_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "deepgram"))
+        btn_dg_del = wx.Button(self, label="Borrar clave Deepgram")
+        btn_dg_del.SetHelpText("Borra la API Key de Deepgram guardada en la aplicación.")
+        btn_dg_del.Bind(wx.EVT_BUTTON, self.al_borrar_deepgram)
+
+        hb_dg.Add(btn_dg_web, 0, wx.RIGHT, 5)
+        hb_dg.Add(btn_dg_check, 0, wx.RIGHT, 5)
+        hb_dg.Add(btn_dg_del, 0)
+        sz_dg.Add(hb_dg, 0, wx.ALL, 5)
+        sizer.Add(sz_dg, 0, wx.EXPAND|wx.ALL, 10)
+
         # --- GUARDAR — atributo de instancia para el bucle de tabulación accesible ---
         self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
         self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
@@ -477,6 +520,9 @@ class PanelClaves(wx.ScrolledWindow):
         d_el = claves.get("elevenlabs", {})
         self.txt_el_key.SetValue(d_el.get("api_key", ""))
 
+        d_dg = claves.get("deepgram", {})
+        self.txt_dg_key.SetValue(d_dg.get("api_key", ""))
+
     def al_guardar(self, event):
         """Guarda las claves en configuraciones/claves_api.json (nunca en ajustes.json)."""
         claves = {
@@ -491,6 +537,9 @@ class PanelClaves(wx.ScrolledWindow):
             },
             "elevenlabs": {
                 "api_key": self.txt_el_key.GetValue().strip(),
+            },
+            "deepgram": {
+                "api_key": self.txt_dg_key.GetValue().strip(),
             },
         }
         guardar_claves(claves)
@@ -511,6 +560,10 @@ class PanelClaves(wx.ScrolledWindow):
 
     def al_borrar_elevenlabs(self, event):
         self.txt_el_key.Clear()
+        self.al_guardar(None)
+
+    def al_borrar_deepgram(self, event):
+        self.txt_dg_key.Clear()
         self.al_guardar(None)
 
     def al_comprobar(self, event, proveedor=None):

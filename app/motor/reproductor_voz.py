@@ -11,6 +11,7 @@ from app.servicios.cliente_sapi5 import ClienteSapi5
 from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
+from app.servicios.cliente_deepgram import ClienteDeepgram
 from app.motor.control_cuota import ControlCuota
 from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
 from app.config_rutas import ruta_config
@@ -30,6 +31,7 @@ class ReproductorVoz:
         self.cliente_azure = ClienteAzure()
         self.cliente_eleven = ClienteEleven()
         self.cliente_polly = ClientePolly()
+        self.cliente_deepgram = ClienteDeepgram()
         
         # Estado inicial del sistema
         self.motor_activo = self.cliente_local
@@ -81,6 +83,9 @@ class ReproductorVoz:
         elif "polly" in proveedor:
             self.motor_activo = self.cliente_polly
             self.tipo_motor_actual = "polly"
+        elif "deepgram" in proveedor:
+            self.motor_activo = self.cliente_deepgram
+            self.tipo_motor_actual = "deepgram"
         else:
 
             # ANCLAJE_INICIO: CONFIGURACION_VOZ_ACTIVA
@@ -109,6 +114,7 @@ class ReproductorVoz:
             ("azure", self.cliente_azure),
             ("polly", self.cliente_polly),
             ("eleven", self.cliente_eleven),
+            ("deepgram", self.cliente_deepgram),
         ]
         # El proveedor actual va primero
         prioridad = [(t, m) for t, m in todos if t == self.tipo_motor_actual] + \
@@ -326,6 +332,8 @@ class ReproductorVoz:
         try: self.cliente_eleven.detener()
         except: pass
         try: self.cliente_polly.detener()
+        except: pass
+        try: self.cliente_deepgram.detener()
         except: pass
         self.estado = "detenido"
 
