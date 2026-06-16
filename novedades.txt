@@ -1,3 +1,55 @@
+Versión 1.2.0 — 2026-06-16
+
+Nuevas funciones
+────────────────
+
+- Deepgram Aura-2 — Nuevo motor de voz neuronal:
+  Deepgram Aura-2 es la alternativa principal recomendada para síntesis en
+  la nube. Ofrece velocidad de respuesta superior, calidad natural
+  sobresaliente en inglés y español, y solo necesita una API Key propia
+  (sin suscripción mensual fija). Para configurarlo: Ajustes → Claves API.
+
+  ElevenLabs sigue completamente disponible en la aplicación para quien
+  desee utilizarlo. Sin embargo, su sistema de créditos puede resultar
+  muy costoso en sesiones largas: los planes gratuito y de entrada se
+  agotan con rapidez y los planes de pago son significativamente más caros
+  que el modelo pay-as-you-go de Deepgram. Deepgram es la opción
+  recomendada por eficiencia y coste.
+
+- Diccionario de pronunciación:
+  Nueva herramienta disponible en Ajustes → Voces e idiomas.
+  Permite definir sustituciones fonéticas para cualquier palabra que las
+  voces neuronales pronuncien mal: nombres de fantasía, siglas,
+  extranjerismos o términos técnicos. Las reglas se aplican a todos los
+  motores antes de enviar el texto a la síntesis.
+
+- Historial de voces nuevas:
+  La casilla "Solo nuevas voces" ahora funciona correctamente.
+  La primera vez que descargas el catálogo de un proveedor se establece
+  la línea base. En descargas siguientes solo aparecen las voces que la
+  API haya añadido desde la última actualización.
+
+- Control de cuota para Deepgram:
+  Deepgram aparece ahora en el panel de Control de Presupuesto dentro de
+  Ajustes. Puedes ver el gasto mensual y fijar un límite de caracteres
+  igual que con Azure, Polly y ElevenLabs.
+
+Correcciones
+────────────
+
+- Lectura continua sin pausas entre bloques:
+  Las voces de nube (Azure, Polly, Deepgram, ElevenLabs) ya no hacen una
+  pausa audible entre fragmentos. El audio descargado en segundo plano
+  arranca de forma inmediata (~5 ms), sin silencios ni esperas.
+
+- Límite de 2000 caracteres en Deepgram eliminado:
+  Los textos largos se dividen automáticamente en fragmentos de tamaño
+  seguro antes de enviarse a la API. No hace falta editar el EPUB ni
+  dividir el texto a mano.
+
+
+───────────────────────────────────────────────────────────────────────────
+
 Versión 1.1.0 — 2026-04-15
 
 Nuevas funciones
@@ -24,12 +76,19 @@ Correcciones
 - [Reaper / importación por lotes] Todos los MP3 generados se normalizan
   ahora a 44 100 Hz mono. Se elimina el bug de AudioSegment.empty() que
   producía metadatos de frecuencia incorrectos al concatenar fragmentos,
-  lo que hacía que algunos archivos fallaran al importarlos en lotes en DAW
-  como Reaper o en reproductores estrictos.
+  lo que hacía que algunos archivos fallaran al importarlos en lotes en
+  DAW como Reaper o en reproductores estrictos.
 
 - [NVDA] Las ventanas de consola de ffmpeg/ffprobe ya no aparecen durante
   la grabación. NVDA dejará de verbalizar las rutas de los ejecutables
   de audio entre fragmento y fragmento.
+
+- [Modo Grabación] NVDA ya no anuncia repetidamente la ruta de la carpeta
+  de salida entre fragmento y fragmento. El callback de progreso
+  actualizaba el label de estado con la ruta completa de salida en cada
+  fragmento procesado, causando que NVDA la verbalizara una y otra vez.
+  El fix limita los mensajes de progreso a contadores de fragmento; solo
+  aparece el nombre corto de la carpeta en el mensaje final de éxito.
 
 - [TXT exportados] Los capítulos generados al dividir un EPUB ya no
   contienen líneas en blanco entre cada línea de texto. El problema era
