@@ -47,6 +47,12 @@ Correcciones
   seguro antes de enviarse a la API. No hace falta editar el EPUB ni
   dividir el texto a mano.
 
+- Mensajes de arranque silenciados:
+  Al abrir la app desde INICIAR_APP.bat, la ventana de terminal ya no
+  muestra ni emite los textos técnicos de inicio (ruta del log, detección
+  de ffmpeg). NVDA no los verbaliza al abrir la aplicación por primera
+  vez. Solo aparecen en la consola mensajes de advertencia o error reales.
+
 
 ───────────────────────────────────────────────────────────────────────────
 
