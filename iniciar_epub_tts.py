@@ -29,20 +29,19 @@ _handler_archivo.setFormatter(
 )
 
 _handler_consola = logging.StreamHandler()
-_handler_consola.setLevel(logging.INFO)      # consola: INFO y superiores (útil en desarrollo)
+_handler_consola.setLevel(logging.WARNING)   # consola: solo WARNING / ERROR / CRITICAL
 _handler_consola.setFormatter(
     logging.Formatter("%(levelname)-8s  %(name)s  %(message)s")
 )
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     handlers=[_handler_archivo, _handler_consola],
 )
 
 # comtypes genera líneas INFO muy ruidosas sobre su caché interna — silenciar en archivo
 logging.getLogger("comtypes").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
-logger.info("Epub-TTS arrancando. Errores → %s", _RUTA_LOG)
 
 # ── Migración de archivos de configuración ────────────────────────────────────
 try:
@@ -92,7 +91,6 @@ class EpubTTSApp(wx.App):
 
     def OnInit(self):
         try:
-            logger.info("Iniciando ventana principal")
             self.frame = VentanaPrincipal(None, titulo="Epub-TTS")
             return True
         except Exception as e:
@@ -116,4 +114,4 @@ if __name__ == "__main__":
         logger.exception("Error fatal al ejecutar la aplicación")
         sys.exit(1)
     finally:
-        logger.info("Epub-TTS cerrado")   # solo consola, no llega al archivo
+        pass
