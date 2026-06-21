@@ -1,8 +1,41 @@
 # Guía técnica para desarrolladores
 
-Este documento describe la arquitectura interna de Epub TTS, las convenciones del proyecto y las decisiones técnicas que hay detrás de cada pieza. Está pensado para que cualquier desarrollador que llegue al código pueda entender el sistema sin tener que reconstruirlo a base de pruebas.
+Este documento describe la arquitectura interna de Epub TTS, las convenciones del proyecto y las decisiones técnicas que hay detrás de cada pieza. Está pensado para que cualquier desarrolladora que llegue al código pueda entender el sistema sin tener que reconstruirlo a base de pruebas.
 
 Léelo antes de tocar nada.
+
+---
+
+## Mapa mental antes de abrir el código
+
+Este apartado es para quien llega de cero. La idea es que, leyéndolo con calma, puedas construir un modelo mental de la app antes de abrir ningún archivo.
+
+### El problema real que resuelve
+
+El problema no es simplemente «leer libros con TTS». El problema es trabajar con libros largos y complejos, escucharlos de forma cómoda durante sesiones largas, y producir audiolibros multivoz, sin depender de flujos frágiles ni de herramientas pensadas para móvil.
+
+El flujo previo a esta app incluía: preparar textos en Word, insertar marcas a mano para voces y personajes, usar apps móviles para generar audio, mover archivos constantemente entre móvil y PC, y editar después en Reaper. La app nace para unificar y simplificar todo eso en un entorno de escritorio accesible.
+
+### Cómo se organiza la interfaz
+
+Tres pestañas, porque es la forma más clara y accesible de separar usos: **Modo Lectura**, **Modo Grabación** y **Ajustes**. El usuario siempre sabe dónde está y qué puede hacer en cada momento.
+
+### El reproductor: núcleo que no conoce nada más
+
+El reproductor (`reproductor_voz.py`) gestiona estados (detenido, reproduciendo, pausado), decide qué motor de voz usar y asegura que nunca se quede la app en silencio. Clave: **el reproductor no conoce ni la interfaz ni el EPUB**. Recibe texto y lo envía al motor correspondiente. Si una API falla o no hay conexión, cae automáticamente a voz local.
+
+### Las voces viven en caché local
+
+Las voces no se consultan en tiempo real. Se descargan bajo demanda, se guardan en caché JSON y se normalizan a un formato común (id, nombre, idioma, proveedor, tipo). La interfaz siempre lee de esa caché. La API solo se consulta cuando el usuario pide actualizar.
+
+### Si vas a tocar el código
+
+Antes de modificar cualquier cosa, ten en cuenta:
+
+- La accesibilidad es el eje del proyecto. Si algo deja de anunciarse bien con NVDA, es un bug crítico.
+- La voz local (SAPI5) es siempre el respaldo. Nunca puede quedar sin ruta de escape.
+- La interfaz no debe bloquearse. Toda llamada a una API ocurre en un hilo secundario; la UI solo se actualiza desde el hilo principal con `wx.CallAfter`.
+- Las decisiones no son casuales. Antes de cambiar algo, busca si hay un comentario ANCLAJE que explique el porqué.
 
 ---
 
