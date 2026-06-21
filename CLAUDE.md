@@ -75,6 +75,7 @@ app/
 ├── motor/
 │   ├── gestor_epub.py            # Abre EPUB, limpia HTML, reconstruye índice
 │   ├── gestor_proyectos.py       # Lógica de proyectos. Persistencia en proyectos.json
+│   ├── gestor_backups.py         # Copias de seguridad automáticas de proyectos.json en /backups/
 │   ├── gestor_atajos.py          # Atajos de teclado configurables
 │   ├── grabador_audio.py         # Grabación + concatenación FFmpeg + exportación MP3
 │   ├── procesador_etiquetas.py   # Parsea {{@voz}} y fragmenta para grabación
