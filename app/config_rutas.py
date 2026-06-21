@@ -29,6 +29,7 @@ _CLAVES_DEFAULT = {
     "azure":       {"key": "", "region": ""},
     "polly":       {"access_key": "", "secret_key": "", "region": ""},
     "elevenlabs":  {"api_key": ""},
+    "deepgram":    {"api_key": ""},
 }
 
 

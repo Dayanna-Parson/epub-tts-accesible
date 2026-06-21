@@ -11,6 +11,7 @@ from app.servicios.cliente_sapi5 import ClienteSapi5
 from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
+from app.servicios.cliente_deepgram import ClienteDeepgram
 from app.motor.control_cuota import ControlCuota
 from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
 from app.config_rutas import ruta_config
@@ -26,10 +27,11 @@ class ReproductorVoz:
         self.config = self._cargar_config()
         
         # Inicialización de motores de síntesis
-        self.cliente_local = ClienteSapi5()
-        self.cliente_azure = ClienteAzure()
-        self.cliente_eleven = ClienteEleven()
-        self.cliente_polly = ClientePolly()
+        self.cliente_local   = ClienteSapi5()
+        self.cliente_azure   = ClienteAzure()
+        self.cliente_eleven  = ClienteEleven()
+        self.cliente_polly   = ClientePolly()
+        self.cliente_deepgram = ClienteDeepgram()
         
         # Estado inicial del sistema
         self.motor_activo = self.cliente_local
@@ -81,6 +83,9 @@ class ReproductorVoz:
         elif "polly" in proveedor:
             self.motor_activo = self.cliente_polly
             self.tipo_motor_actual = "polly"
+        elif "deepgram" in proveedor:
+            self.motor_activo = self.cliente_deepgram
+            self.tipo_motor_actual = "deepgram"
         else:
 
             # ANCLAJE_INICIO: CONFIGURACION_VOZ_ACTIVA
@@ -106,9 +111,10 @@ class ReproductorVoz:
         Retorna el tipo de motor elegido ("azure", "polly", "eleven" o "local").
         """
         todos = [
-            ("azure", self.cliente_azure),
-            ("polly", self.cliente_polly),
-            ("eleven", self.cliente_eleven),
+            ("azure",    self.cliente_azure),
+            ("polly",    self.cliente_polly),
+            ("deepgram", self.cliente_deepgram),
+            ("eleven",   self.cliente_eleven),
         ]
         # El proveedor actual va primero
         prioridad = [(t, m) for t, m in todos if t == self.tipo_motor_actual] + \
@@ -140,7 +146,7 @@ class ReproductorVoz:
         return "local"
 
     def cargar_texto(self, texto, callback_completado=None,
-                     pos_offset=0, callback_progreso=None):
+                     pos_offset=0, callback_progreso=None, modo_cola=False):
         """
         Inicia la lectura del texto.
         Aplica el método adecuado según si se usa una voz local o una voz neuronal.
@@ -155,12 +161,18 @@ class ReproductorVoz:
             Solo se usa con voces SAPI5 para la sincronización de cursor.
         callback_progreso   : función(pos) llamada al iniciar cada párrafo en SAPI5.
             Permite mover el cursor exactamente al párrafo que se está leyendo.
+        modo_cola           : True cuando el fragmento llega desde la cola de lectura
+            continua. El audio anterior ya terminó de sonar (sd.wait() completó antes
+            del callback), por lo que no hay nada que detener ni sesiones que cerrar.
+            Saltar detener() y el sleep elimina la pausa entre fragmentos y preserva
+            la sesión HTTP activa, permitiendo que el audio predesargado se use.
         """
         if not texto: return
 
-        # Detener cualquier lectura en curso antes de iniciar una nueva
-        self.detener()
-        time.sleep(0.05)
+        if not modo_cola:
+            # Detener cualquier lectura en curso antes de iniciar una nueva
+            self.detener()
+            time.sleep(0.05)
 
         # Nueva síntesis: restablecer el flag de detención intencional
         self._detenido_intencionalmente = False
@@ -180,12 +192,12 @@ class ReproductorVoz:
 
         if self.tipo_motor_actual == "local":
             try:
-                if callback_progreso and hasattr(self.cliente_local, 'hablar_con_callback'):
-                    # Lectura párrafo a párrafo con sincronización de cursor (estilo Bookworm)
+                usa_callback = (callback_progreso or callback_completado) and hasattr(self.cliente_local, 'hablar_con_callback')
+                if usa_callback:
                     self.cliente_local.hablar_con_callback(
                         texto,
                         pos_offset,
-                        callback_progreso,
+                        callback_progreso or (lambda pos: None),
                         callback_completado or (lambda: None),
                     )
                 else:
@@ -326,6 +338,8 @@ class ReproductorVoz:
         try: self.cliente_eleven.detener()
         except: pass
         try: self.cliente_polly.detener()
+        except: pass
+        try: self.cliente_deepgram.detener()
         except: pass
         self.estado = "detenido"
 

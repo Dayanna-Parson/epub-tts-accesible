@@ -11,6 +11,7 @@
         h1, h2, h3 { color: #2c3e50; border-bottom: 2px solid #bdc3c7; padding-bottom: 10px; }
         .info-box { background: #e8f4fd; border-left: 5px solid #3498db; padding: 15px; margin: 20px 0; border-radius: 4px; }
         .novedad-box { background: #eafaf1; border-left: 5px solid #27ae60; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .aviso-box { background: #fef9e7; border-left: 5px solid #f39c12; padding: 15px; margin: 20px 0; border-radius: 4px; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #3498db; color: white; }
@@ -23,10 +24,28 @@
 <header>
     <h1>MANUAL DE USUARIO: EPUB TTS ACCESIBLE</h1>
     <p>Desarrolladora: Dayanna Parson (TifloTutos) | tiflotutos.com</p>
-    <p>Versión 1.1.0</p>
+    <p>Versión 1.2.0</p>
 </header>
 
-<section id="novedades">
+<section id="novedades-12">
+    <h2>Novedades de la versión 1.2.0</h2>
+    <div class="novedad-box">
+        <strong>Nuevas funciones:</strong>
+        <ul>
+            <li><strong>Deepgram Aura-2 — Nuevo motor de voz neuronal</strong>: Deepgram es ahora la alternativa recomendada para síntesis en la nube. Ofrece velocidad de respuesta superior y calidad natural sobresaliente en inglés y español. Solo necesita una API Key propia, sin suscripción mensual fija. Puedes configurarla en <strong>Ajustes → Claves API</strong>.</li>
+            <li><strong>Diccionario de pronunciación</strong>: Disponible en <strong>Ajustes → Voces e idiomas</strong>. Permite definir sustituciones fonéticas para palabras que las voces neuronales pronuncien mal: nombres propios, siglas, extranjerismos o términos técnicos. Las reglas se aplican a todos los motores antes de enviar el texto a la síntesis.</li>
+            <li><strong>Historial de voces nuevas</strong>: La casilla «Solo nuevas voces» funciona correctamente. La primera vez que descargas el catálogo de un proveedor se establece la línea base; en descargas siguientes solo aparecen las voces que la API haya añadido desde la última actualización.</li>
+            <li><strong>Control de cuota para Deepgram</strong>: Deepgram aparece ahora en el panel de Control de Presupuesto dentro de Ajustes, con el mismo sistema de límites y seguimiento de gasto mensual que Azure, Polly y ElevenLabs.</li>
+        </ul>
+        <strong>Correcciones:</strong>
+        <ul>
+            <li><strong>Lectura continua sin pausas entre bloques</strong>: Las voces de nube (Azure, Polly, Deepgram, ElevenLabs) ya no hacen una pausa audible entre fragmentos. El audio se descarga en segundo plano mientras el fragmento actual se reproduce, y el siguiente arranca de forma inmediata (~5 ms).</li>
+            <li><strong>Límite de 2000 caracteres en Deepgram eliminado</strong>: Los textos largos se dividen automáticamente en fragmentos de tamaño seguro antes de enviarse a la API. No hace falta editar el EPUB ni dividir el texto a mano.</li>
+        </ul>
+    </div>
+</section>
+
+<section id="novedades-11">
     <h2>Novedades de la versión 1.1.0</h2>
     <div class="novedad-box">
         <strong>Nuevas funciones:</strong>
@@ -78,6 +97,8 @@
     </ul>
     <h3>Controles de Voz</h3>
     <p>Puedes ajustar la <strong>Velocidad</strong> y el <strong>Volumen</strong>. Los deslizadores se mueven de 1 en 1 con las flechas del teclado y de 5 en 5 con RePág/AvPág, para mayor comodidad con lectores de pantalla.</p>
+    <h3>Lectura continua en la nube</h3>
+    <p>Con voces de Azure, Amazon Polly, Deepgram o ElevenLabs, la lectura continua descarga en segundo plano el siguiente fragmento mientras el actual se está reproduciendo. La transición entre bloques es prácticamente imperceptible (menos de 5 ms), sin silencios ni esperas visibles.</p>
 </section>
 
 <section id="grabacion">
@@ -89,7 +110,7 @@
     <p><code>{{@nar}}Había una vez...{{@james}}¡Buenos días!</code></p>
 
     <h3>Velocidad y volumen en grabación</h3>
-    <p>La sección «Opciones de salida» incluye ahora dos deslizadores: <strong>Velocidad de grabación</strong> y <strong>Volumen de grabación</strong>. Funcionan igual que los de la pestaña de lectura (flechas ±1, RePág/AvPág ±5) y sus valores se recuerdan entre sesiones.</p>
+    <p>La sección «Opciones de salida» incluye dos deslizadores: <strong>Velocidad de grabación</strong> y <strong>Volumen de grabación</strong>. Funcionan igual que los de la pestaña de lectura (flechas ±1, RePág/AvPág ±5) y sus valores se recuerdan entre sesiones.</p>
 
     <h3>Modos de salida</h3>
     <ul>
@@ -107,13 +128,13 @@
 
 <section id="ajustes">
     <h2>5. Ajustes y Presupuesto</h2>
-    <p>Controla tu consumo de APIs de forma inteligente. La app viene configurada con límites por defecto para cuentas gratuitas:</p>
+    <p>Controla tu consumo de APIs de forma inteligente. La app viene configurada con límites por defecto para cuentas gratuitas o de acceso básico:</p>
 
     <table>
         <thead>
             <tr>
                 <th>Proveedor</th>
-                <th>Límite Gratuito</th>
+                <th>Límite por defecto</th>
                 <th>Equivalencia Aproximada</th>
             </tr>
         </thead>
@@ -129,6 +150,11 @@
                 <td>~400 páginas (novela larga)</td>
             </tr>
             <tr>
+                <td><strong>Deepgram</strong></td>
+                <td>1 000 000 caracteres</td>
+                <td>~400 páginas — aprox. 15 $ si se agota el límite</td>
+            </tr>
+            <tr>
                 <td><strong>ElevenLabs</strong></td>
                 <td>10 000 caracteres</td>
                 <td>~4 páginas (pruebas cortas)</td>
@@ -142,8 +168,21 @@
     </table>
     <p><em>Nota: 1 millón de caracteres equivale a unas 15-18 horas de audio.</em></p>
 
+    <div class="aviso-box">
+        <strong>Nota sobre ElevenLabs:</strong> ElevenLabs sigue disponible en la aplicación y funciona correctamente. Sin embargo, su sistema de créditos puede resultar muy costoso en sesiones largas: los planes gratuito y de entrada se agotan con rapidez, y los planes de pago son significativamente más caros que el modelo pay-as-you-go de Deepgram. Si buscas la mejor relación calidad-coste, Deepgram es la opción recomendada.
+    </div>
+
+    <h3>Cómo obtener una API Key de Deepgram</h3>
+    <ol>
+        <li>Ve a <strong>console.deepgram.com</strong> y crea una cuenta gratuita.</li>
+        <li>Dentro del panel, selecciona <strong>API Keys → Create a new API Key</strong>.</li>
+        <li>Copia la clave generada (solo se muestra una vez).</li>
+        <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega la clave en el campo de Deepgram.</li>
+    </ol>
+    <p>Deepgram funciona con un modelo de pago por uso (pay-as-you-go). La síntesis de voz cuesta aproximadamente 0,015 $ por cada 1 000 caracteres. No hay suscripción mensual obligatoria; solo pagas lo que consumes.</p>
+
     <h3>Actualizaciones automáticas</h3>
-    <p>La aplicación puede comprobar al arranque si existe una versión nueva comparando tu <code>version.json</code> local con el del repositorio. Si hay novedades, se muestra un diálogo con el resumen de cambios. También puedes comprobarlo manualmente desde el botón <strong>«Buscar actualizaciones ahora»</strong> en la pestaña Ajustes.</p>
+    <p>La aplicación puede comprobar al arranque si existe una versión nueva. Si hay novedades, se muestra un diálogo con el resumen de cambios. También puedes comprobarlo manualmente desde el botón <strong>«Buscar actualizaciones ahora»</strong> en la pestaña Ajustes.</p>
     <p>En el diálogo de novedades encontrarás el botón <strong>«Actualizar automáticamente»</strong>. Al pulsarlo la aplicación:</p>
     <ol>
         <li>Descarga el ZIP de la versión más reciente desde GitHub (se muestra el progreso en KB).</li>
@@ -154,13 +193,42 @@
     <p>Si la descarga falla (sin conexión, corte de red…) el botón cambia a <strong>«Reintentar actualización»</strong> para volver a intentarlo.</p>
 </section>
 
+<section id="diccionario">
+    <h2>6. Diccionario de Pronunciación</h2>
+    <p>Disponible en <strong>Ajustes → Voces e idiomas</strong>. Permite corregir la pronunciación de palabras que los motores de voz neuronal lean de forma incorrecta: nombres propios de fantasía, siglas, palabras en otros idiomas o términos técnicos.</p>
+    <p>Las reglas del diccionario se aplican automáticamente a todos los motores (Azure, Polly, Deepgram, ElevenLabs y SAPI5) antes de enviar el texto a la síntesis.</p>
+
+    <h3>Cómo añadir una regla</h3>
+    <p>Abre <strong>Ajustes → Voces e idiomas → Diccionario de pronunciación</strong>. El diálogo tiene esta secuencia de controles (puedes navegar con Tab):</p>
+    <ol type="a">
+        <li><strong>Lista de reglas:</strong> Muestra las reglas ya definidas. Puedes navegar con las flechas de teclado para seleccionar una y editarla o eliminarla.</li>
+        <li><strong>Palabra original:</strong> Escribe la palabra tal como aparece en el texto (por ejemplo: <code>Tolkien</code>).</li>
+        <li><strong>Pronunciación:</strong> Escribe la forma fonética que quieres que lea la voz (por ejemplo: <code>Tolkién</code>).</li>
+        <li><strong>Añadir / Guardar:</strong> Guarda la regla en el diccionario. Si la palabra ya existía, la actualiza.</li>
+        <li><strong>Eliminar:</strong> Borra la regla seleccionada en la lista.</li>
+        <li><strong>Cerrar:</strong> Cierra el diálogo. Los cambios ya están guardados.</li>
+    </ol>
+
+    <h3>Ejemplo de uso</h3>
+    <p>Si la voz pronuncia «Tolkien» con acento incorrecto, crea esta regla:</p>
+    <ul>
+        <li>Palabra original: <code>Tolkien</code></li>
+        <li>Pronunciación: <code>Tolkién</code></li>
+    </ul>
+    <p>A partir de ese momento, cada vez que aparezca «Tolkien» en el texto, se enviará «Tolkién» a la voz.</p>
+
+    <div class="info-box">
+        <strong>Nota:</strong> Las sustituciones son sensibles a mayúsculas y minúsculas. Si una palabra puede aparecer en ambas formas en el texto, crea dos reglas (una para cada variante).
+    </div>
+</section>
+
 <section id="contacto">
-    <h2>6. Contacto y Soporte</h2>
+    <h2>7. Contacto y Soporte</h2>
     <p>Si tienes problemas, envía el archivo <code>app.log</code> a: <strong>contacto@tiflotutos.com</strong></p>
 </section>
 
 <div class="footer">
-    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 1.1.0</p>
+    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 1.2.0</p>
 </div>
 
 </body>

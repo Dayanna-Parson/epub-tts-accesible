@@ -66,6 +66,14 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
             f"Restante: {restante} caracteres, aprox {libros} libros. "
             f"Suscripcion sugerida: {plan}."
         )
+    elif proveedor == "deepgram":
+        coste_gas = round(gas * 15 / 1_000_000, 2)
+        coste_lim = round(lim * 15 / 1_000_000, 2)
+        return (
+            f"Gasto: {gas} caracteres, unos {coste_gas} dolares. "
+            f"Restante: {restante} caracteres, aprox {libros} libros. "
+            f"Coste total al limite: {coste_lim} dolares al mes."
+        )
     return ""
 
 
@@ -95,6 +103,10 @@ class PanelGeneral(wx.ScrolledWindow):
         # Controles Eleven
         g_el, l_el = self.cuota.get_info_uso("elevenlabs")
         sizer_cuota.Add(self._crear_fila_limite("ElevenLabs", g_el, l_el, "elevenlabs"), 0, wx.EXPAND|wx.ALL, 2)
+
+        # Controles Deepgram
+        g_dg, l_dg = self.cuota.get_info_uso("deepgram")
+        sizer_cuota.Add(self._crear_fila_limite("Deepgram", g_dg, l_dg, "deepgram"), 0, wx.EXPAND|wx.ALL, 2)
 
         sizer.Add(sizer_cuota, 0, wx.EXPAND | wx.ALL, 10)
 
@@ -454,11 +466,41 @@ class PanelClaves(wx.ScrolledWindow):
         sz_el.Add(hb_el, 0, wx.ALL, 5)
         sizer.Add(sz_el, 0, wx.EXPAND|wx.ALL, 10)
 
+        # --- DEEPGRAM ---
+        sb_dg = wx.StaticBox(self, label="Deepgram Aura-2 TTS")
+        sz_dg = wx.StaticBoxSizer(sb_dg, wx.VERTICAL)
+
+        sz_dg.Add(wx.StaticText(self, label="API Key de Deepgram:"), 0, wx.ALL, 2)
+        self.txt_dg_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+        self.txt_dg_key.SetHelpText(
+            "Clave API de Deepgram. La encontrarás en el panel de Deepgram, "
+            "sección API Keys. Deepgram ofrece créditos gratuitos de inicio "
+            "y factura por carácter sin cuota mensual fija."
+        )
+        sz_dg.Add(self.txt_dg_key, 0, wx.EXPAND|wx.ALL, 5)
+
+        hb_dg = wx.BoxSizer(wx.HORIZONTAL)
+        btn_dg_web = wx.Button(self, label="Conseguir clave Deepgram")
+        btn_dg_web.SetHelpText("Abre el navegador en la página de Deepgram para crear una cuenta o consultar tu API Key.")
+        btn_dg_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://console.deepgram.com/"))
+        btn_dg_check = wx.Button(self, label="Comprobar clave y descargar voces Deepgram")
+        btn_dg_check.SetHelpText("Guarda la API Key, la verifica contra Deepgram y descarga la lista de modelos Aura-2 disponibles.")
+        btn_dg_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "deepgram"))
+        btn_dg_del = wx.Button(self, label="Borrar clave Deepgram")
+        btn_dg_del.SetHelpText("Borra la API Key de Deepgram guardada en la aplicación.")
+        btn_dg_del.Bind(wx.EVT_BUTTON, self.al_borrar_deepgram)
+
+        hb_dg.Add(btn_dg_web,   0, wx.RIGHT, 5)
+        hb_dg.Add(btn_dg_check, 0, wx.RIGHT, 5)
+        hb_dg.Add(btn_dg_del,   0)
+        sz_dg.Add(hb_dg, 0, wx.ALL, 5)
+        sizer.Add(sz_dg, 0, wx.EXPAND|wx.ALL, 10)
+
         # --- GUARDAR — atributo de instancia para el bucle de tabulación accesible ---
         self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
         self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
         sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER|wx.ALL, 15)
-        
+
         self.SetSizer(sizer)
         self.cargar_datos_visuales()
 
@@ -477,6 +519,9 @@ class PanelClaves(wx.ScrolledWindow):
         d_el = claves.get("elevenlabs", {})
         self.txt_el_key.SetValue(d_el.get("api_key", ""))
 
+        d_dg = claves.get("deepgram", {})
+        self.txt_dg_key.SetValue(d_dg.get("api_key", ""))
+
     def al_guardar(self, event):
         """Guarda las claves en configuraciones/claves_api.json (nunca en ajustes.json)."""
         claves = {
@@ -491,6 +536,9 @@ class PanelClaves(wx.ScrolledWindow):
             },
             "elevenlabs": {
                 "api_key": self.txt_el_key.GetValue().strip(),
+            },
+            "deepgram": {
+                "api_key": self.txt_dg_key.GetValue().strip(),
             },
         }
         guardar_claves(claves)
@@ -513,25 +561,12 @@ class PanelClaves(wx.ScrolledWindow):
         self.txt_el_key.Clear()
         self.al_guardar(None)
 
+    def al_borrar_deepgram(self, event):
+        self.txt_dg_key.Clear()
+        self.al_guardar(None)
+
     def al_comprobar(self, event, proveedor=None):
         self.al_guardar(None)
-        # Guardar snapshot de IDs actuales ANTES de descargar nuevas voces.
-        # Se escribe SIEMPRE (aunque no haya voces previas) para que después de
-        # la descarga cargar_datos_y_llenar() pueda detectar las voces nuevas.
-        # Con lista vacía [] todas las voces descargadas aparecerán como nuevas.
-        try:
-            ruta_voces = ruta_config("voces_disponibles.json")
-            ruta_conocidas = ruta_config("voces_conocidas.json")
-            ids_actuales = []
-            if os.path.exists(ruta_voces):
-                with open(ruta_voces, 'r', encoding='utf-8') as f:
-                    datos = json.load(f)
-                ids_actuales = [v.get("id","") for lista in datos.values() for v in lista if v.get("id")]
-            os.makedirs(os.path.dirname(ruta_conocidas), exist_ok=True)
-            with open(ruta_conocidas, 'w', encoding='utf-8') as f:
-                json.dump(ids_actuales, f)
-        except Exception:
-            pass
         wx.BeginBusyCursor()
         try:
             gestor = GestorVoces()
@@ -671,14 +706,24 @@ class PanelVoces(wx.Panel):
         
         sizer.Add(self.lista_voces, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
         
-        # 4. BOTONERA — atributo de instancia para el bucle de tabulación accesible
+        # 4. BOTONERA — cada botón se añade directamente al sizer principal para que
+        # NVDA los alcance con Tabulador sin necesidad de navegar con flechas de cursor.
         self.btn_escuchar = wx.Button(self, label="Escuchar muestra de la voz seleccionada (Alt+P)")
         self.btn_escuchar.SetHelpText(
-            "Reproduce una muestra de texto con la voz seleccionada en la lista "
-            "para que puedas evaluar su sonido antes de usarla."
+            "Reproduce una muestra de texto con la voz seleccionada en la lista. "
+            "Púlsalo de nuevo para detener la reproducción."
         )
         self.btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
-        sizer.Add(self.btn_escuchar, 0, wx.ALIGN_RIGHT|wx.ALL, 10)
+        sizer.Add(self.btn_escuchar, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.TOP, 10)
+
+        self.btn_diccionario = wx.Button(self, label="Diccionario de pronunciación")
+        self.btn_diccionario.SetHelpText(
+            "Abre el editor del diccionario de pronunciación local. "
+            "Permite corregir cómo la voz pronuncia palabras concretas: "
+            "siglas, nombres propios, tecnicismos, etc."
+        )
+        self.btn_diccionario.Bind(wx.EVT_BUTTON, self.al_abrir_diccionario)
+        sizer.Add(self.btn_diccionario, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
         
         id_play = wx.NewIdRef()
         self.Bind(wx.EVT_MENU, self.al_escuchar, id=id_play)
@@ -751,19 +796,7 @@ class PanelVoces(wx.Panel):
 
     def cargar_datos_y_llenar(self):
         ruta = ruta_config("voces_disponibles.json")
-        ruta_conocidas = ruta_config("voces_conocidas.json")
         self.voces_todas = []
-
-        # Cargar IDs de voces conocidas (para detectar novedades).
-        # None = nunca se descargó antes (no hay base de comparación).
-        # set() vacío = primera descarga; todas las voces serán "nuevas".
-        voces_conocidas = None
-        try:
-            if os.path.exists(ruta_conocidas):
-                with open(ruta_conocidas, 'r', encoding='utf-8') as f:
-                    voces_conocidas = set(json.load(f))
-        except Exception:
-            pass
 
         if os.path.exists(ruta):
             try:
@@ -772,8 +805,7 @@ class PanelVoces(wx.Panel):
                     for prov, lista in datos.items():
                         for v in lista:
                             v["proveedor_id"] = prov
-                            # Nueva si existía snapshot previo y el ID no estaba en él
-                            v["es_nueva"] = voces_conocidas is not None and v.get("id","") not in voces_conocidas
+                            v["es_nueva"] = bool(v.get("es_nueva", False))
                             self.voces_todas.append(v)
             except Exception as e:
                 print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
@@ -790,7 +822,7 @@ class PanelVoces(wx.Panel):
 
         # Proveedor con opciones fijas; idioma se rellena según proveedor seleccionado
         self.combo_proveedor.Clear()
-        self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "ElevenLabs", "SAPI 5"])
+        self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "Deepgram", "ElevenLabs", "SAPI 5"])
         self.combo_proveedor.SetSelection(0)
 
         # Con proveedor=Todos, poblar idioma con todos los disponibles
@@ -865,6 +897,8 @@ class PanelVoces(wx.Panel):
             voces_prov = [v for v in self.voces_todas if "azure" in v.get("proveedor_id","").lower()]
         elif f_prov == "ElevenLabs":
             voces_prov = [v for v in self.voces_todas if "eleven" in v.get("proveedor_id","").lower()]
+        elif f_prov == "Deepgram":
+            voces_prov = [v for v in self.voces_todas if "deepgram" in v.get("proveedor_id","").lower()]
         elif f_prov == "SAPI 5":
             voces_prov = [v for v in self.voces_todas if v.get("proveedor_id","").lower() == "local"]
         else:
@@ -930,6 +964,7 @@ class PanelVoces(wx.Panel):
                     if f_prov == "Amazon Polly" and "polly" not in prov_raw: continue
                     elif f_prov == "Azure" and "azure" not in prov_raw: continue
                     elif f_prov == "ElevenLabs" and "eleven" not in prov_raw: continue
+                    elif f_prov == "Deepgram" and "deepgram" not in prov_raw: continue
                     elif f_prov == "SAPI 5" and prov_raw != "local": continue
 
                 if f_tipo != "Todos":
@@ -958,6 +993,8 @@ class PanelVoces(wx.Panel):
                 prov_mostrar = "Amazon Polly"
             elif prov_raw == "elevenlabs":
                 prov_mostrar = "ElevenLabs"
+            elif prov_raw == "deepgram":
+                prov_mostrar = "Deepgram"
             elif prov_raw == "local":
                 prov_mostrar = "SAPI5 (Local)"
 
@@ -976,12 +1013,17 @@ class PanelVoces(wx.Panel):
         self.lista_voces.Thaw()
 
     def al_escuchar(self, event):
+        if self.reproductor.obtener_estado() == "reproduciendo":
+            self.reproductor.detener()
+            self.btn_escuchar.SetLabel("Escuchar muestra de la voz seleccionada (Alt+P)")
+            return
+
         idx = self.lista_voces.GetFirstSelected()
         if idx == -1:
             reproducir(ERROR)
             wx.MessageBox("Selecciona una voz.", "Info")
             return
-        
+
         voz = self.mapa_indices.get(idx)
         nombre = voz.get('nombre')
         try:
@@ -991,10 +1033,127 @@ class PanelVoces(wx.Panel):
                 "El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar. "
                 "Una brisa suave movía las hojas de los árboles en el parque."
             )
-            self.reproductor.cargar_texto(texto)
+            self.btn_escuchar.SetLabel("Detener preescucha (Alt+P)")
+            self.reproductor.cargar_texto(texto, callback_completado=self._al_terminar_escucha)
         except Exception as e:
+            self.btn_escuchar.SetLabel("Escuchar muestra de la voz seleccionada (Alt+P)")
             reproducir(ERROR)
             wx.MessageBox(f"Error: {e}", "Error")
+
+    def _al_terminar_escucha(self):
+        self.btn_escuchar.SetLabel("Escuchar muestra de la voz seleccionada (Alt+P)")
+
+    def al_abrir_diccionario(self, event):
+        dlg = _DialogoPronunciacion(self)
+        dlg.ShowModal()
+        dlg.Destroy()
+        from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
+        recargar_diccionario_pronunciacion()
+
+
+class _DialogoPronunciacion(wx.Dialog):
+    """
+    Editor del diccionario de pronunciación local (pronunciacion.json).
+    Permite añadir, editar y eliminar entradas sin reiniciar la aplicación.
+    """
+
+    def __init__(self, padre):
+        super().__init__(
+            padre,
+            title="Diccionario de pronunciación",
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+            size=(540, 420),
+        )
+        from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
+        self._dic = DiccionarioPronunciacion()
+        self._construir()
+        wx.CallAfter(self._rellenar_lista)
+
+    def _construir(self):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(
+            wx.StaticText(self, label="Palabras con pronunciación personalizada:"),
+            0, wx.ALL, 8,
+        )
+
+        self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.lista.InsertColumn(0, "Palabra original", width=200)
+        self.lista.InsertColumn(1, "Pronunciación fonética", width=290)
+        self.lista.SetHelpText(
+            "Lista de sustituciones activas. Selecciona una entrada y usa los botones "
+            "para editarla o eliminarla."
+        )
+        sizer.Add(self.lista, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 8)
+
+        # Formulario de entrada rápida
+        sz_form = wx.BoxSizer(wx.HORIZONTAL)
+        sz_form.Add(wx.StaticText(self, label="Palabra:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        self.txt_original = wx.TextCtrl(self)
+        self.txt_original.SetHelpText("Escribe la palabra o sigla tal como aparece en el texto.")
+        sz_form.Add(self.txt_original, 1, wx.RIGHT, 10)
+        sz_form.Add(wx.StaticText(self, label="Pronunciación:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        self.txt_pronunciacion = wx.TextCtrl(self)
+        self.txt_pronunciacion.SetHelpText(
+            "Escribe la pronunciación fonética que usará la voz. "
+            "Ejemplo: NVDA → en-ví-di-ei"
+        )
+        sz_form.Add(self.txt_pronunciacion, 1)
+        sizer.Add(sz_form, 0, wx.EXPAND|wx.ALL, 8)
+
+        # Botonera
+        sz_btn = wx.BoxSizer(wx.HORIZONTAL)
+        btn_anadir = wx.Button(self, label="Añadir / Actualizar")
+        btn_anadir.SetHelpText("Guarda la entrada del formulario. Si la palabra ya existe, actualiza su pronunciación.")
+        btn_anadir.Bind(wx.EVT_BUTTON, self.al_anadir)
+        btn_eliminar = wx.Button(self, label="Eliminar seleccionada")
+        btn_eliminar.SetHelpText("Elimina la entrada seleccionada en la lista.")
+        btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar)
+        # wx.ID_CANCEL hace que wx gestione el cierre con ESC automáticamente
+        btn_cerrar = wx.Button(self, wx.ID_CANCEL, label="Cerrar")
+        sz_btn.Add(btn_anadir,   0, wx.RIGHT, 8)
+        sz_btn.Add(btn_eliminar, 0, wx.RIGHT, 8)
+        sz_btn.Add(btn_cerrar,   0)
+        sizer.Add(sz_btn, 0, wx.ALL, 8)
+
+        self.lista.Bind(wx.EVT_LIST_ITEM_SELECTED, self.al_seleccionar)
+        self.SetSizer(sizer)
+        wx.CallAfter(btn_anadir.SetFocus)
+
+    def _rellenar_lista(self):
+        self.lista.Freeze()
+        self.lista.DeleteAllItems()
+        for i, (original, pronunciacion) in enumerate(sorted(self._dic.obtener_tabla().items())):
+            self.lista.InsertItem(i, original)
+            self.lista.SetItem(i, 1, pronunciacion)
+        self.lista.Thaw()
+
+    def al_seleccionar(self, event):
+        idx = event.GetIndex()
+        self.txt_original.SetValue(self.lista.GetItemText(idx, 0))
+        self.txt_pronunciacion.SetValue(self.lista.GetItemText(idx, 1))
+
+    def al_anadir(self, event):
+        original      = self.txt_original.GetValue().strip()
+        pronunciacion = self.txt_pronunciacion.GetValue().strip()
+        if not original or not pronunciacion:
+            wx.MessageBox("Rellena los dos campos.", "Aviso")
+            return
+        self._dic.anadir_entrada(original, pronunciacion)
+        self.txt_original.Clear()
+        self.txt_pronunciacion.Clear()
+        self._rellenar_lista()
+
+    def al_eliminar(self, event):
+        idx = self.lista.GetFirstSelected()
+        if idx == -1:
+            wx.MessageBox("Selecciona una entrada de la lista.", "Aviso")
+            return
+        original = self.lista.GetItemText(idx, 0)
+        self._dic.eliminar_entrada(original)
+        self._rellenar_lista()
+
+
 class _DialogoCapturaTecla(wx.Dialog):
     """
     Diálogo modal que espera una pulsación de tecla y la almacena.
@@ -1276,7 +1435,7 @@ class PestanaAjustes(wx.Panel):
         elif idx == 1:
             return self.pag_claves.btn_save
         elif idx == 2:
-            return self.pag_voces.btn_escuchar
+            return self.pag_voces.btn_diccionario
         elif idx == 3:
             return self.pag_atajos.btn_restablecer
 
