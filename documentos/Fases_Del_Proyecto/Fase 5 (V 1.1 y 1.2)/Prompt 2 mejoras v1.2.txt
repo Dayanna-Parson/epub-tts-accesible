@@ -1,0 +1,14 @@
+Confirmado el diagnóstico del bug. Tu análisis es totalmente correcto. Aplica el fix quirúrgico en `verificador_voces_nuevas.py` de inmediato.
+
+Una vez solucionado el bug, avanza con las mejoras en este orden de prioridad, optimizando al máximo tus respuestas para cuidar el consumo de contexto:
+
+1. MEJORA DE ACCESIBILIDAD (Añadir ahora): Modifica la lógica del atajo `Alt + P` en la preescucha de voces. Actualmente solo inicia la reproducción. Necesito que actúe como un conmutador (toggle): si la voz está sonando, `Alt + P` debe pausar/detener el audio; si está detenido, debe iniciar la reproducción. Aplica esto de forma universal en las secciones de preescucha.
+
+2. Diccionario de pronunciación local (con el JSON local y el hook en `limpiador_lectura.py` como propusiste).
+
+3. Copias de seguridad automáticas de proyectos (con el sistema rotativo de 5 archivos .zip).
+
+4. Integración de Deepgram (Aura) y degradación de ElevenLabs.
+   - REQUISITO CRÍTICO: Para la API de Deepgram, es OBLIGATORIO que consultes la documentación oficial más actualizada y real antes de escribir el cliente HTTP. No te bases en supuestos de versiones antiguas. Necesitamos el endpoint correcto para modelos Aura y el manejo exacto de cabeceras.
+
+Recuerda: antes de hacer commits o dar por terminadas las tareas, limpia por completo cualquier comentario o rastro en el código que haga referencia a nuestras conversaciones. ¡Adelante con el fix y la mejora de Alt + P!

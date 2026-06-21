@@ -1,0 +1,2 @@
+prompt claude 11
+perfecto! y, estaba pensando, es buena idea tabién actualizar los documentos con esas cosas que has hecho? con esas dos cosas que acabas de solucionar? Y, esta librería, Install python-docx es mejor tenerla instalada ya en la app, y añadida? para que sirve? y si es así, la puedes añadir también al archivo requisitos.txt, y también actualizarlo por si huviese librerías o cosas nuevas que vallan a llí?

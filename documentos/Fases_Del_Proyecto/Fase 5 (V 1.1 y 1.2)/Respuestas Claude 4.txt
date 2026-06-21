@@ -1,0 +1,32 @@
+Respuestas Claude 4
+
+Voy a leer los archivos relevantes antes de tocar nada.
+
+Necesito verificar los IDs reales en el SDK de Deepgram y revisar cómo la UI filtra por idioma.
+
+GitHub no permite acceso público. Voy a buscar en el SDK directamente con las MCP tools de GitHub.
+
+La estructura real de la API es diferente a lo que parseamos: el campo `name` es solo el nombre corto ("zeus"), y el ID completo está en `canonical_name`. Voy a obtener la lista completa de voces Aura-2.
+
+Ahora tengo toda la información. El problema del parser es claro: la API devuelve `name: "zeus"` (nombre corto) y `canonical_name: "aura-2-zeus-en"` (ID real). El parser actual busca el ID completo en `name` y falla. Voy a leer el diálogo para precisar los cambios.
+
+Tengo todo lo que necesito. Aplico los tres cambios:
+
+**Fix 1** — `cliente_nube_voces.py`: parser corregido (`canonical_name` en lugar de `name`) + voces Apollo/Jupiter/Mars añadidas  
+**Fix 2** — `pestana_ajustes.py`: `MoveAfterInTabOrder` para orden de tabulación explícito  
+**Fix 3** — `pestana_ajustes.py`: `wx.ID_CANCEL` en btn_cerrar (wx gestiona ESC automáticamente)
+
+Ahora Fix 2 (orden de tabulación) en `pestana_ajustes.py`:
+
+Ahora Fix 3 (Escape en el diálogo):
+
+Cambios subidos. Resumen de lo aplicado:
+
+**1. Deepgram — voces en 0 (cliente_nube_voces.py)**  
+El bug raíz: la API de `/v1/models` devuelve `name: "zeus"` (nombre corto) y `canonical_name: "aura-2-zeus-en"` (ID real). El parser anterior buscaba el ID completo en `name`, obtenía "zeus" (sin guiones suficientes) y descartaba el modelo. El parser corregido usa `canonical_name` para el ID, extrae el idioma del array `languages` buscando el primer elemento con guión (ej. `"en-US"`), e infiere el género de `metadata.tags` si `gender` no está presente. Lista base ampliada con Apollo, Jupiter y Mars, verificados en el SDK oficial.
+
+**2. Tabulación (pestana_ajustes.py)**  
+`self.btn_diccionario.MoveAfterInTabOrder(self.btn_escuchar)` fuerza el orden explícito a nivel de sistema de ventanas, garantizando que NVDA llegue al botón diccionario al tabular desde el de preescucha, independientemente del orden de creación interna de controles.
+
+**3. Escape en diálogo (pestana_ajustes.py)**  
+`btn_cerrar = wx.Button(self, wx.ID_CANCEL, label="Cerrar")` — al usar el ID estándar `wx.ID_CANCEL`, wxPython enruta automáticamente la tecla Escape al botón y llama a `EndModal(wx.ID_CANCEL)` sin necesidad de ningún binding manual.

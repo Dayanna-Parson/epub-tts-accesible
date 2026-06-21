@@ -1,0 +1,37 @@
+Necesito que hagamos la documentación final e histórica de la aplicación antes de dar por cerrada esta etapa del desarrollo. Debes estructurar de forma cronológica y clara los cambios en NOVEDADES.TXT, AYUDA.TXT (y el manual HTML de ayuda correspondiente) y el CHANGELOG para desarrolladores, dividiéndolos estrictamente en dos bloques históricos (Versión 1.1 y Versión 1.2).
+
+Usa un tono directo, natural y conciso, tal y como me comunico yo en el proyecto:
+
+---
+
+HISTÓRICO DE CAMBIOS A INCLUIR:
+
+[BLOQUE 1: VERSIÓN 1.1 - ESTRUCTURA, MODO GRABACIÓN Y CORRECCIÓN DE FOCO]
+- Mudanza de directorios: Se ha extraído la carpeta 'grabaciones epub tts' y el archivo HTML de ayuda del directorio interno, situándolos directamente en la raíz principal de la aplicación junto al ejecutable (.exe) y los archivos de configuración para facilitar su acceso.
+- Deslizadores en Modo Grabación: Incorporación de dos deslizadores independientes para controlar la velocidad y el volumen general de todas las etiquetas de audio, funcionando tanto si la casilla está marcada como desmarcada. Su comportamiento se ha unificado con el modo lectura, adaptándose automáticamente si la voz activa es local (SAPI5) o de algún proveedor de la nube.
+- Corrección de exportación MP3 y formatos: Solucionada la anomalía en la codificación de los archivos generados en la nube (que daban errores de importación masiva en REAPER al registrar metadatos extraños). Ahora el formato de salida es un estándar MPEG Capa 3 limpio a 48000 Hz, Mono, CBR, compatible con cualquier DAW.
+- Nuevo formato de nomenclatura de etiquetas: Simplificación en el nombre de los archivos de audio exportados. Se pasa del formato rígido '001_narr.mp3' a una estructura más limpia y directa: '[Número].[Nombre de la etiqueta].mp3' (ejemplo: '1.Narr.mp3').
+- Silenciado del molesto anuncio "Carpeta de salida": Se corrigió el problema en el modo grabación donde, al terminar de procesar cada fragmento o archivo unificado, el lector de pantalla (NVDA) repetía constantemente la frase 'carpeta de salida'. (Claude: Busca en tu contexto o historial de código qué línea de evento de la UI o log de actualización generaba esta lectura repetitiva de la ruta, elimínala si queda rastro y documéntala técnicamente).
+
+[BLOQUE 2: VERSIÓN 1.2 - REVOLUCIÓN DE MOTORES, DEEPGRAM Y DICCIONARIO DE PRONUNCIACIÓN]
+- Incorporación Estratégica de Deepgram e Información de ElevenLabs (PÁRRAFO OBLIGATORIO EN LOS DOCUMENTOS): Explicar detalladamente la llegada de Deepgram Aura-2 como la alternativa principal recomendada por su excelente realismo, velocidad y alta calidad en español. Debe quedar explícitamente aclarado que ElevenLabs NO se elimina de la aplicación y sigue completamente disponible para los usuarios que deseen utilizarlo; sin embargo, se incluye una advertencia clara sobre sus desventajas, detallando que su sistema de créditos es abusivo y costoso en comparación con la eficiencia de Deepgram, que solo requiere una API Key propia del usuario.
+- Diccionario de Pronunciación (Ubicación en Novedades y Ayuda): Especificar claramente que la nueva ventana del Diccionario se encuentra dentro de la ruta: Ajustes -> pestaña Voces e idiomas.
+- Aniquilación del bache entre bloques (Modo Cola): Inyección del parámetro 'modo_cola=True' en 'ReproductorVoz.cargar_texto()' para omitir el 'detener()' y el delay de 50ms. Ahora las sesiones HTTP se quedan abiertas y el audio pre-descargado en segundo plano arranca instantáneamente (~5ms), logrando una lectura continua fluida e imperceptible para NVDA.
+- Eliminación del límite de 2000 caracteres en Deepgram: El motor ahora trocea de forma inteligente los textos largos por frases en '_llamar_api()' sin que el usuario tenga que editar el EPUB a mano.
+- Escudo de cuotas: Integración completa de Deepgram en el control de consumo mensual en Ajustes.
+- Historial de Voces Nuevas: Corrección en 'cliente_nube_voces.py' con 'voces_conocidas.json'. El catálogo de novedades ya no aparece vacío al marcar la casilla.
+
+---
+
+TAREAS ESPECÍFICAS DE DOCUMENTACIÓN:
+
+1. En NOVEDADES.TXT: Añade ambos bloques al inicio, ordenados de más reciente (v1.2) a anterior (v1.1). Indica explícitamente que el Diccionario de Pronunciación está accesible desde la sección "Voces e idiomas" dentro de los Ajustes.
+
+2. En el ARCHIVO HTML DE AYUDA (Manual de Usuario):
+- Detalla la ubicación de la nueva carpeta raíz de grabaciones y el funcionamiento de los deslizadores de grabación.
+- Mantén ElevenLabs pero con la advertencia de costes de créditos. Explica cómo obtener la API Key de Deepgram y su cuota.
+- GUÍA DEL DICCIONARIO (Sección dedicada): Explica detalladamente todos los apartados de la ventana del Diccionario de Pronunciación en orden de tabulación (Lista de reglas guardadas, Cuadro de edición para 'Palabra original', Cuadro de edición para 'Sustitución/Pronunciación', Botón 'Añadir/Guardar', Botón 'Eliminar' y Botón 'Cerrar'). Añade una guía de uso de cómo añadir una regla (ej. corregir un nombre de fantasía o sigla) para lograr una lectura fonética perfecta.
+
+3. En el REGISTRO DE CAMBIOS/COMMIT para desarrolladores: Realiza el resumen técnico de la migración de archivos, la limpieza del control que causaba la lectura de 'carpeta de salida', los sizers de los deslizadores y los parches de 'modo_cola', el diccionario y el 'text-splitter'.
+
+Modifica los archivos correspondientes, haz el commit final con toda esta documentación unificada y confírmame cuando esté todo listo. No toques nada de código funcional.
