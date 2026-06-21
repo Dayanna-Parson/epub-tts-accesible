@@ -23,12 +23,66 @@ class GestorVoces:
         self.voces_cache = {
             "azure": [],
             "polly": [],
-            "elevenlabs": []
+            "elevenlabs": [],
+            "deepgram": [],
         }
 
     def cargar_configuracion(self):
         """Lee las claves API desde configuraciones/claves_api.json."""
         return cargar_claves()
+
+    # ANCLAJE_INICIO: HISTORIAL_VOCES_CONOCIDAS
+    def _cargar_ids_conocidos(self) -> set:
+        """Lee voces_conocidas.json y devuelve el conjunto de IDs ya vistos."""
+        ruta = ruta_config("voces_conocidas.json")
+        try:
+            if os.path.exists(ruta):
+                with open(ruta, "r", encoding="utf-8") as f:
+                    return {str(x).strip() for x in json.load(f) if x}
+        except Exception:
+            pass
+        return set()
+
+    def _guardar_ids_conocidos(self, ids: set):
+        """Persiste el historial de IDs conocidos de forma atómica."""
+        ruta = ruta_config("voces_conocidas.json")
+        ruta_tmp = ruta + ".tmp"
+        try:
+            os.makedirs(os.path.dirname(ruta), exist_ok=True)
+            with open(ruta_tmp, "w", encoding="utf-8") as f:
+                json.dump(sorted(ids), f, ensure_ascii=False)
+            os.replace(ruta_tmp, ruta)
+        except Exception as e:
+            print(f"[GestorVoces] Error guardando voces_conocidas.json: {e}")
+
+    def _aplicar_marca_nuevas(self, primera_vez: bool, ids_conocidos: set) -> set:
+        """
+        Recorre voces_cache, inyecta 'es_nueva' en cada voz y devuelve el
+        conjunto de todos los IDs actuales para actualizar el historial.
+        Si primera_vez=True, ninguna voz se marca como nueva (línea base inicial).
+        """
+        todos_ids = set()
+        for lista in self.voces_cache.values():
+            for v in lista:
+                id_voz = str(v.get("id") or "").strip()
+                if not id_voz:
+                    continue
+                v["es_nueva"] = not primera_vez and id_voz not in ids_conocidos
+                todos_ids.add(id_voz)
+        return todos_ids
+
+    def _marcar_y_guardar(self):
+        """
+        Aplica el historial de voces conocidas a voces_cache, inyecta 'es_nueva'
+        y guarda voces_disponibles.json y voces_conocidas.json en disco.
+        Centraliza toda la lógica de persistencia post-descarga.
+        """
+        ids_conocidos = self._cargar_ids_conocidos()
+        primera_vez = len(ids_conocidos) == 0
+        todos_ids = self._aplicar_marca_nuevas(primera_vez, ids_conocidos)
+        self._guardar_ids_conocidos(ids_conocidos | todos_ids)
+        self._guardar_cache()
+    # ANCLAJE_FIN: HISTORIAL_VOCES_CONOCIDAS
 
     def actualizar_voces_desde_internet(self):
         """
@@ -85,8 +139,22 @@ class GestorVoces:
         else:
             resumen.append("Amazon Polly: Faltan credenciales (Access Key / Secret Key).")
 
-        # GUARDAR EN DISCO
-        self._guardar_cache()
+        # 4. ACTUALIZAR DEEPGRAM (Vía REST API)
+        datos_dg = config.get("deepgram", {})
+        key_dg = datos_dg.get("api_key", "").strip()
+
+        if key_dg:
+            try:
+                voces = self._descargar_deepgram(key_dg)
+                self.voces_cache["deepgram"] = voces
+                resumen.append(f"Deepgram: {len(voces)} voces encontradas.")
+            except Exception as e:
+                resumen.append(f"Deepgram Error: {str(e)}")
+        else:
+            resumen.append("Deepgram: Falta API Key.")
+
+        # MARCAR VOCES NUEVAS Y GUARDAR EN DISCO
+        self._marcar_y_guardar()
         return "\n".join(resumen)
 
     def _descargar_azure(self, key, region):
@@ -228,6 +296,109 @@ class GestorVoces:
 
         return voces_procesadas
 
+    # ANCLAJE_INICIO: VOCES_DEEPGRAM_HARDCODED
+    # Lista de voces Aura-2 verificada contra el SDK oficial de Deepgram.
+    # Se usa como fallback cuando /v1/models falla o devuelve lista vacía.
+    _VOCES_DEEPGRAM_BASE = [
+        # Voces femeninas en inglés
+        {"nombre": "Asteria",   "id": "aura-2-asteria-en",   "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Luna",      "id": "aura-2-luna-en",      "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Stella",    "id": "aura-2-stella-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Athena",    "id": "aura-2-athena-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Hera",      "id": "aura-2-hera-en",      "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Helena",    "id": "aura-2-helena-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Thalia",    "id": "aura-2-thalia-en",    "idioma": "en-US", "genero": "Female"},
+        {"nombre": "Andromeda", "id": "aura-2-andromeda-en", "idioma": "en-US", "genero": "Female"},
+        # Voces masculinas en inglés
+        {"nombre": "Orion",     "id": "aura-2-orion-en",     "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Arcas",     "id": "aura-2-arcas-en",     "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Perseus",   "id": "aura-2-perseus-en",   "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Angus",     "id": "aura-2-angus-en",     "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Orpheus",   "id": "aura-2-orpheus-en",   "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Helios",    "id": "aura-2-helios-en",    "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Zeus",      "id": "aura-2-zeus-en",      "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Apollo",    "id": "aura-2-apollo-en",    "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Jupiter",   "id": "aura-2-jupiter-en",   "idioma": "en-US", "genero": "Male"},
+        {"nombre": "Mars",      "id": "aura-2-mars-en",      "idioma": "en-US", "genero": "Male"},
+        # Voces en español
+        {"nombre": "Celeste",   "id": "aura-2-celeste-es",   "idioma": "es-ES", "genero": "Female"},
+        {"nombre": "Cora",      "id": "aura-2-cora-es",      "idioma": "es-ES", "genero": "Female"},
+    ]
+    # ANCLAJE_FIN: VOCES_DEEPGRAM_HARDCODED
+
+    def _descargar_deepgram(self, api_key: str) -> list:
+        """
+        Obtiene la lista de modelos TTS de Deepgram consultando /v1/models.
+        La respuesta real de la API usa 'canonical_name' para el ID completo
+        (ej. 'aura-2-zeus-en') y 'name' para el nombre corto ('zeus').
+        Si la petición falla o devuelve lista vacía, usa la lista base integrada.
+        """
+        idioma_map = {
+            "en": "en-US", "es": "es-ES", "de": "de-DE",
+            "fr": "fr-FR", "nl": "nl-NL", "it": "it-IT", "ja": "ja-JP",
+        }
+
+        def _parsear_modelos(modelos_tts):
+            voces = []
+            for m in modelos_tts:
+                # 'canonical_name' contiene el ID completo (aura-2-zeus-en);
+                # 'name' es el nombre corto ('zeus'). Priorizar canonical_name.
+                id_voz = m.get("canonical_name") or m.get("name", "")
+                if not id_voz:
+                    continue
+                nombre_voz = m.get("name", id_voz).capitalize()
+
+                # El array 'languages' puede incluir código regional ('en-US').
+                # Buscar el primero con guión; si no hay, mapear el código base.
+                idioma = ""
+                for lang in m.get("languages", []):
+                    if "-" in lang:
+                        idioma = lang
+                        break
+                if not idioma:
+                    idiomas = m.get("languages", [])
+                    idioma = idioma_map.get(idiomas[0], idiomas[0]) if idiomas else ""
+
+                # Género: campo metadata.gender o inferencia por tags
+                meta = m.get("metadata", {})
+                genero_raw = meta.get("gender", "").lower()
+                if not genero_raw:
+                    tags = [t.lower() for t in meta.get("tags", [])]
+                    if any(t in tags for t in ("feminine", "female")):
+                        genero_raw = "female"
+                    elif any(t in tags for t in ("masculine", "male")):
+                        genero_raw = "male"
+                genero = "Female" if genero_raw == "female" else "Male"
+
+                voces.append({
+                    "nombre":    nombre_voz,
+                    "id":        id_voz,
+                    "idioma":    idioma,
+                    "genero":    genero,
+                    "proveedor": "Deepgram",
+                })
+            return voces
+
+        try:
+            url = "https://api.deepgram.com/v1/models"
+            cabeceras = {"Authorization": f"Token {api_key}"}
+            respuesta = requests.get(url, headers=cabeceras, timeout=15)
+
+            if respuesta.status_code == 401:
+                raise Exception("API Key de Deepgram incorrecta o sin permisos.")
+            if respuesta.status_code == 200:
+                datos = respuesta.json()
+                modelos_tts = datos.get("tts") or datos.get("models") or []
+                voces = _parsear_modelos(modelos_tts)
+                if voces:
+                    return voces
+        except Exception as e:
+            if "incorrecta" in str(e):
+                raise
+
+        # Fallback: lista base con voces Aura-2 verificadas
+        return [dict(v, proveedor="Deepgram") for v in self._VOCES_DEEPGRAM_BASE]
+
     def actualizar_proveedor(self, proveedor: str) -> str:
         """
         Descarga y guarda las voces de un único proveedor sin tocar los demás.
@@ -252,7 +423,7 @@ class GestorVoces:
             try:
                 voces = self._descargar_azure(key, region)
                 self.voces_cache["azure"] = voces
-                self._guardar_cache()
+                self._marcar_y_guardar()
                 return f"Azure: {len(voces)} voces descargadas."
             except Exception as e:
                 return f"Azure Error: {e}"
@@ -267,7 +438,7 @@ class GestorVoces:
             try:
                 voces = self._descargar_polly(access_key, secret_key, region)
                 self.voces_cache["polly"] = voces
-                self._guardar_cache()
+                self._marcar_y_guardar()
                 return f"Amazon Polly: {len(voces)} voces descargadas."
             except ImportError:
                 return "Amazon Polly Error: boto3 no instalado (pip install boto3)."
@@ -282,10 +453,23 @@ class GestorVoces:
             try:
                 voces = self._descargar_elevenlabs(key)
                 self.voces_cache["elevenlabs"] = voces
-                self._guardar_cache()
+                self._marcar_y_guardar()
                 return f"ElevenLabs: {len(voces)} voces descargadas."
             except Exception as e:
                 return f"ElevenLabs Error: {e}"
+
+        elif proveedor == "deepgram":
+            datos = config.get("deepgram", {})
+            key = datos.get("api_key", "").strip()
+            if not key:
+                return "Deepgram: Falta API Key."
+            try:
+                voces = self._descargar_deepgram(key)
+                self.voces_cache["deepgram"] = voces
+                self._marcar_y_guardar()
+                return f"Deepgram: {len(voces)} voces descargadas."
+            except Exception as e:
+                return f"Deepgram Error: {e}"
 
         return f"Proveedor desconocido: {proveedor}"
 

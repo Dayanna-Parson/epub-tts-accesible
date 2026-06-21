@@ -26,7 +26,7 @@ _LOCALES_ES = {
     "Multilingüe (v2)": "Multilingüe",
 }
 _GENEROS_ES = {"Female": "Femenino", "Male": "Masculino", "Neutral": "Neutro"}
-_PROVEEDORES = {"polly": "Amazon Polly", "elevenlabs": "ElevenLabs", "azure": "Azure"}
+_PROVEEDORES = {"polly": "Amazon Polly", "elevenlabs": "ElevenLabs", "azure": "Azure", "deepgram": "Deepgram"}
 
 
 def _nombre_combo_neuronal(voz, prov_id):
@@ -375,7 +375,7 @@ class PestanaLectura(wx.Panel):
             es_voz_neuronal = False
             if voz_data:
                 prov = voz_data.get('proveedor_id', 'local').lower()
-                if 'azure' in prov or 'eleven' in prov or 'polly' in prov:
+                if 'azure' in prov or 'eleven' in prov or 'polly' in prov or 'deepgram' in prov:
                     es_voz_neuronal = True
 
             if es_voz_neuronal:
@@ -479,12 +479,15 @@ class PestanaLectura(wx.Panel):
         self._tiempo_inicio_frag = time.time()
         self._longitud_frag_actual = len(texto_frag)
 
+        # Resetear flag para que la precarga del fragmento N+1 se dispare
+        # en cada nuevo fragmento, no solo en el primero.
+        self._precarga_solicitada = False
+
         # Disparar precarga del fragmento siguiente de forma inmediata,
         # sin esperar al 70% del timer. Así APIs lentas como Polly tienen
         # tiempo suficiente para responder antes de que termine el fragmento.
         idx_siguiente = self._idx_fragmento_actual + 1
-        if (not self._precarga_solicitada and
-                self._cola_lectura and idx_siguiente < len(self._cola_lectura)):
+        if self._cola_lectura and idx_siguiente < len(self._cola_lectura):
             texto_sig, _ = self._cola_lectura[idx_siguiente]
             if texto_sig.strip():
                 self._precarga_solicitada = True
@@ -494,7 +497,7 @@ class PestanaLectura(wx.Panel):
         self.txt_contenido.SetInsertionPoint(pos_inicio)
         self.txt_contenido.ShowPosition(pos_inicio)
 
-        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado)
+        self.reproductor.cargar_texto(texto_frag, callback_completado=self._al_fragmento_completado, modo_cola=True)
 
     def _al_fragmento_completado(self):
         """Callback invocado por ReproductorVoz cuando termina un fragmento neuronal."""

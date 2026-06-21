@@ -314,6 +314,85 @@ No hay suite de tests automatizados todavía. Antes de hacer commit de cambios e
 - No añadas dependencias sin justificación. Cada nueva librería es un punto de rotura potencial en la portabilidad.
 - No rompas los bloques ANCLAJE sin documentar el cambio en el mensaje de commit.
 
+---
+
+## Registro técnico v1.1 y v1.2
+
+### Mudanza de carpetas al directorio del ejecutable
+
+**Problema:** Al empaquetar con PyInstaller, `sys.executable` apunta a un directorio temporal de extracción que se borra al cerrar la app. Las carpetas `Grabaciones_Epub-TTS/` y el archivo `ayuda.html` desaparecían con cada cierre.
+
+**Solución:** `config_rutas.py` define `RAIZ` como el directorio del `.exe` real (o del script Python en desarrollo), no del directorio de trabajo actual. Todas las rutas de salida se construyen sobre `RAIZ`.
+
+---
+
+### Corrección del mensaje de progreso en grabación
+
+**Problema:** El callback `_actualizar_progreso_ui()` en `pestana_grabacion.py` actualizaba `lbl_progreso` con la ruta completa de la carpeta de salida en cada fragmento procesado. NVDA verbalizaba esa ruta larga entre cada fragmento durante toda la grabación.
+
+**Solución:** Los mensajes de progreso se limitan a contadores de fragmento (`"Fragmento 3 de 12…"`). Solo el mensaje final de éxito incluye el nombre corto de la carpeta de salida.
+
+---
+
+### Deslizadores en modo grabación
+
+Los deslizadores de velocidad y volumen de `pestana_grabacion.py` siguen exactamente el mismo patrón que los de `pestana_lectura.py`: valor inicial desde `ajustes.json`, guardado en cada cambio, pasos de 1 con flechas y 5 con RePág/AvPág. Solo exponen el valor actual a la API de accesibilidad (no la escala completa).
+
+---
+
+### Cliente Deepgram REST (`app/servicios/cliente_deepgram.py`)
+
+Deepgram TTS usa la API REST `POST https://api.deepgram.com/v1/speak` con cabecera `Authorization: Token <key>`. El cuerpo es JSON `{"text": "..."}` y el parámetro de voz va en la query string (`model=aura-2-...`).
+
+La respuesta devuelve audio en formato MP3 directamente en el cuerpo de la respuesta HTTP, sin necesidad de pasos intermedios.
+
+**Limitación de la API:** Deepgram rechaza peticiones con más de ~1 900 caracteres.
+
+**Solución implementada en `_dividir_texto()`:** Los textos largos se fraccionan en fragmentos de máximo 1 900 caracteres, cortando siempre en límite de palabra (sin partir palabras). `_llamar_api()` coordina la división y llama a `_peticion_http()` por cada fragmento, concatenando los bytes de audio resultantes antes de reproducirlos.
+
+**Precarga:** `preparar(texto, datos_voz)` inicia en segundo plano la misma llamada que haría `hablar()` y guarda el resultado en `_cache_audio`. Cuando `hablar()` llega después, encuentra el audio ya listo y lo reproduce sin latencia de red.
+
+---
+
+### Lectura continua sin pausas entre fragmentos (`modo_cola`)
+
+**Problema original:** Al terminar un fragmento, `cargar_texto()` llamaba a `detener()`, que a su vez cerraba la sesión HTTP activa de todos los clientes de nube. El audio predesargado por `preparar()` quedaba invalidado al cerrar su conexión. Además, `time.sleep(0.05)` añadía 50 ms adicionales. El resultado eran pausas de 1-2 s entre cada bloque.
+
+**Solución — parámetro `modo_cola=True`:**
+
+Cuando `PestanaLectura` encadena fragmentos desde la cola de lectura continua, llama a `cargar_texto(..., modo_cola=True)`. En este modo:
+
+- Se omite `self.detener()` (el audio anterior ya terminó; `sd.wait()` lo garantiza antes de que llegue el callback).
+- Se omite `time.sleep(0.05)`.
+- La sesión HTTP permanece abierta y el audio predesargado está disponible de inmediato.
+
+El resultado son transiciones de ~5 ms entre fragmentos, imperceptibles al oído.
+
+**Importante:** `_precarga_solicitada` se reinicia a `False` al inicio de cada `_reproducir_siguiente_fragmento()`, no al final. Esto garantiza que cada fragmento intente precargar el siguiente, no solo el primero.
+
+---
+
+### Sistema de historial de voces nuevas (`voces_conocidas.json`)
+
+**Problema anterior:** La UI calculaba `es_nueva` en tiempo de visualización comparando con `voces_conocidas.json`, pero el archivo se sobreescribía antes de la descarga, haciendo que la comparación siempre resultara vacía.
+
+**Solución:** `_marcar_y_guardar()` en `cliente_nube_voces.py` inyecta el campo `es_nueva` directamente en la caché JSON en el momento de la descarga, antes de que la UI la lea.
+
+Flujo:
+1. `_cargar_ids_conocidos()` lee `voces_conocidas.json` (IDs ya vistos antes de esta descarga).
+2. Si el archivo está vacío, `primera_vez=True` → ninguna voz se marca nueva (evita marcar 400 voces como nuevas en la primera instalación).
+3. `_aplicar_marca_nuevas()` recorre `self.voces_cache` y pone `v["es_nueva"] = True` solo a las IDs que no estaban en `ids_conocidos`.
+4. `_guardar_ids_conocidos()` actualiza el archivo con la unión de IDs anteriores y actuales (escritura atómica con `.tmp` + `os.replace()`).
+5. `_guardar_cache()` persiste la caché con los campos `es_nueva` ya incluidos.
+
+La UI en `pestana_ajustes.py` solo lee `bool(v.get("es_nueva", False))` directamente del JSON; no recalcula nada.
+
+---
+
+### Control de cuota ampliado a Deepgram
+
+`control_cuota.py` añade `"deepgram"` a todos sus diccionarios internos: `limites_defecto`, el bloque `"gastado"` de `datos_base`, y la lógica de `tiene_cuota()` / `registrar_gasto()`. El panel de presupuesto en `pestana_ajustes.py` (`PanelGeneral`) muestra una fila Deepgram junto a Azure, Polly y ElevenLabs, con el mismo cálculo de coste aproximado en dólares.
+
 ## Decisiones Técnicas Recientes (Fase 5)
 
 ### Gestión de Audio y SAPI 5

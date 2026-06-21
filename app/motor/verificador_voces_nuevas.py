@@ -112,8 +112,10 @@ class VerificadorVocesNuevas:
             # 5. Detectar novedades
             nuevas = self._detectar_nuevas(voces_actuales, ids_conocidos)
 
-            # 6. Actualizar voces_conocidas.json con el estado actual
-            self._guardar_conocidas(voces_actuales)
+            # 6. Persistir el snapshot PREVIO en voces_conocidas.json.
+            #    PanelVoces compara este archivo contra voces_disponibles.json
+            #    para marcar las voces recién añadidas como "nuevas".
+            self._guardar_conocidas_ids(ids_conocidos)
 
             callback({"nuevas": nuevas, "error": None})
 
@@ -170,8 +172,9 @@ class VerificadorVocesNuevas:
 
     def _guardar_conocidas(self, voces_dict: dict):
         """
-        Persiste los IDs actuales en voces_conocidas.json.
-        Este archivo también lo usa PanelVoces para marcar 'es_nueva'.
+        Persiste los IDs actuales en voces_conocidas.json a partir de un dict
+        {proveedor: [voz, ...]}. Se usa en la primera ejecución para guardar
+        el baseline completo.
         """
         try:
             ruta = ruta_config("voces_conocidas.json")
@@ -183,7 +186,21 @@ class VerificadorVocesNuevas:
             ]
             os.makedirs(os.path.dirname(ruta), exist_ok=True)
             with open(ruta, "w", encoding="utf-8") as f:
-                json.dump(ids, f, ensure_ascii=False)
+                json.dump(sorted(ids), f, ensure_ascii=False)
+        except Exception:
+            pass
+
+    def _guardar_conocidas_ids(self, ids: set):
+        """
+        Persiste en voces_conocidas.json el set de IDs anteriores a la descarga.
+        PanelVoces carga este archivo y lo compara contra voces_disponibles.json
+        (que ya tiene las voces nuevas) para determinar cuáles son novedades.
+        """
+        try:
+            ruta = ruta_config("voces_conocidas.json")
+            os.makedirs(os.path.dirname(ruta), exist_ok=True)
+            with open(ruta, "w", encoding="utf-8") as f:
+                json.dump(sorted(ids), f, ensure_ascii=False)
         except Exception:
             pass
 # ANCLAJE_FIN: VERIFICADOR_VOCES_NUEVAS
