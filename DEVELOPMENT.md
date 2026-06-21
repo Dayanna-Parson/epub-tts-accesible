@@ -56,7 +56,7 @@ La accesibilidad con NVDA no se añadió al final. Condiciona cada decisión: qu
 | EPUB | EbookLib + BeautifulSoup4 | EbookLib para la estructura, BS4 para limpiar el HTML crudo. |
 | Sonidos | `wx.adv.Sound` + `winsound` | Sin deps pesadas. Ambos son stdlib o parte de wxPython. |
 | TTS local | pyttsx3 / SAPI5 | Respaldo offline siempre disponible. |
-| TTS nube | Azure Neural, Amazon Polly, ElevenLabs | Cada uno con su cliente propio en `/app/servicios/`. |
+| TTS nube | Azure Neural, Amazon Polly, Deepgram Aura-2, ElevenLabs | Cada uno con su cliente propio en `/app/servicios/`. |
 | Logs | `logging` + `RotatingFileHandler` | 512 KB, 1 backup. Solo WARNING+ en disco, INFO en consola. |
 
 **El código está íntegramente en español.** Variables, funciones, clases, comentarios. Es una decisión consciente de la autora y debe mantenerse.
@@ -81,6 +81,7 @@ app/
 ├── motor/
 │   ├── gestor_epub.py            # Abre EPUB, limpia HTML, reconstruye índice, mapea posiciones
 │   ├── gestor_proyectos.py       # Lógica de proyectos. Persistencia en proyectos.json
+│   ├── gestor_backups.py         # Copias de seguridad automáticas de proyectos.json en /backups/
 │   ├── gestor_atajos.py          # Atajos de teclado configurables por el usuario
 │   ├── grabador_audio.py         # Grabación + concatenación FFmpeg + exportación MP3
 │   ├── procesador_etiquetas.py   # Parsea {{@voz}} en el texto y fragmenta para grabación
@@ -91,11 +92,13 @@ app/
 │   ├── comprobador_actualizaciones.py # Versioning semver contra GitHub
 │   ├── control_cuota.py          # Contadores mensuales por proveedor con autoreset
 │   ├── troceador_epub.py         # Divide EPUB por anclas HTML. TOC jerárquico y plano.
-│   └── limpiador_lectura.py      # Limpieza de texto para TTS (sin HTML, sin ruido)
+│   ├── limpiador_lectura.py      # Limpieza de texto para TTS (sin HTML, sin ruido)
+│   └── diccionario_pronunciacion.py  # Sustituciones fonéticas locales para todos los motores
 ├── servicios/
 │   ├── cliente_azure.py          # Azure Neural TTS. SSML escapado con xml.sax.saxutils.
 │   ├── cliente_polly.py          # Amazon Polly. Selección automática de motor (standard/neural/generative).
 │   ├── cliente_eleven.py         # ElevenLabs. Multilingüe. Streaming de audio.
+│   ├── cliente_deepgram.py       # Deepgram Aura-2. REST puro. Pay-as-you-go. Caché LRU.
 │   └── cliente_sapi5.py          # SAPI5 local. Siempre disponible, siempre el fallback.
 └── config_rutas.py               # Rutas absolutas. cargar_claves() / guardar_claves(). RAIZ del proyecto.
 ```
@@ -313,7 +316,7 @@ El sistema de logs está centralizado en `iniciar_epub_tts.py`:
 
 - **Archivo:** `app/registros/app.log`, máximo 512 KB, 1 backup (`app.log.1`).
 - **Nivel en disco:** WARNING y superior. Los mensajes de depuración rutinarios no van al archivo.
-- **Nivel en consola:** INFO. Para sesiones de desarrollo.
+- **Nivel en consola:** WARNING y superior. Los mensajes informativos de arranque no se emiten para no interferir con NVDA.
 
 Formato: `%(asctime)s — %(name)s — %(levelname)s — %(message)s`
 
@@ -425,6 +428,21 @@ La UI en `pestana_ajustes.py` solo lee `bool(v.get("es_nueva", False))` directam
 ### Control de cuota ampliado a Deepgram
 
 `control_cuota.py` añade `"deepgram"` a todos sus diccionarios internos: `limites_defecto`, el bloque `"gastado"` de `datos_base`, y la lógica de `tiene_cuota()` / `registrar_gasto()`. El panel de presupuesto en `pestana_ajustes.py` (`PanelGeneral`) muestra una fila Deepgram junto a Azure, Polly y ElevenLabs, con el mismo cálculo de coste aproximado en dólares.
+
+---
+
+### Copias de seguridad automáticas de proyectos (`gestor_backups.py`)
+
+Cada vez que `gestor_proyectos.py` guarda `proyectos.json`, llama automáticamente a `crear_backup_proyectos()` de `gestor_backups.py`. No requiere ninguna acción del usuario.
+
+**Qué hace:**
+- Crea un ZIP en `/backups/proyectos_YYYYMMDD_HHMMSS.zip` con el estado actual de `proyectos.json`.
+- La escritura es atómica: primero a `.tmp`, luego `os.replace()` sobre el destino.
+- Mantiene un historial rotativo de las últimas 5 copias; las más antiguas se eliminan solas.
+
+**Lo que no hace todavía:** No hay UI para restaurar una copia desde dentro de la app. Para recuperar manualmente, basta con descomprimir el ZIP elegido y reemplazar `configuraciones/proyectos.json`.
+
+**Diseño:** La llamada en `gestor_proyectos.py` está envuelta en `try/except` propio para que un fallo del backup nunca interrumpa el guardado del proyecto.
 
 ## Decisiones Técnicas Recientes (Fase 5)
 

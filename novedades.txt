@@ -34,6 +34,14 @@ Nuevas funciones
   Ajustes. Puedes ver el gasto mensual y fijar un límite de caracteres
   igual que con Azure, Polly y ElevenLabs.
 
+- Copias de seguridad automáticas de proyectos:
+  La aplicación guarda automáticamente una copia de seguridad de
+  proyectos.json cada vez que se modifica el árbol de proyectos.
+  Las copias se almacenan en la carpeta backups/ como archivos ZIP con
+  marca de fecha y hora (proyectos_YYYYMMDD_HHMMSS.zip).
+  Se conservan las últimas 5 copias; las más antiguas se eliminan solas.
+  No requiere ninguna acción por parte del usuario.
+
 Correcciones
 ────────────
 
