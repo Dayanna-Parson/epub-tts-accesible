@@ -6,10 +6,10 @@ Léelo entero antes de tocar nada. Estas reglas no son sugerencias.
 
 ## Identidad del proyecto
 
-**Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
+**Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
 
 - Desarrolladora: Dayanna Parson (TifloTutos · tiflotutos.com)
-- Versión actual: 1.1.0
+- Versión actual: 1.2.0
 - Python 3.12+ · wxPython 4.2+ · Windows como plataforma principal
 
 ---
@@ -50,7 +50,7 @@ Nunca reescribas un archivo completo si solo hay que modificar un bloque. Entreg
 | EPUB | EbookLib + BeautifulSoup4 |
 | Sonidos del sistema | `wx.adv.Sound` + `winsound` (fallback) |
 | TTS local | pyttsx3 / SAPI5 |
-| TTS nube | Azure Neural, Amazon Polly, ElevenLabs |
+| TTS nube | Azure Neural, Amazon Polly, Deepgram Aura-2, ElevenLabs |
 | Logs | `logging` + `RotatingFileHandler` (512 KB, 1 backup) |
 
 No añadas dependencias sin justificación explícita. Cada librería nueva es un punto de rotura potencial en la portabilidad.
@@ -85,11 +85,13 @@ app/
 │   ├── comprobador_actualizaciones.py  # Versioning semver contra GitHub
 │   ├── control_cuota.py          # Contadores mensuales por proveedor con autoreset
 │   ├── troceador_epub.py         # Divide EPUB por anclas HTML
-│   └── limpiador_lectura.py      # Limpieza de texto para TTS
+│   ├── limpiador_lectura.py      # Limpieza de texto para TTS
+│   └── diccionario_pronunciacion.py  # Sustituciones fonéticas locales para todos los motores
 ├── servicios/
 │   ├── cliente_azure.py          # Azure Neural TTS. SSML con xml.sax.saxutils.
 │   ├── cliente_polly.py          # Amazon Polly. Motor automático standard/neural/generative.
 │   ├── cliente_eleven.py         # ElevenLabs. Multilingüe. Streaming.
+│   ├── cliente_deepgram.py       # Deepgram Aura-2. REST puro. Pay-as-you-go. Caché LRU.
 │   └── cliente_sapi5.py          # SAPI5 local. Fallback siempre disponible.
 └── config_rutas.py               # Rutas absolutas. cargar_claves() / guardar_claves().
 ```
@@ -98,9 +100,11 @@ Archivos de configuración (en `/configuraciones/`):
 
 | Archivo | Contenido | En .gitignore |
 |---|---|---|
-| `claves_api.json` | Claves de Azure, Polly, ElevenLabs | Sí |
+| `claves_api.json` | Claves de Azure, Polly, ElevenLabs, Deepgram | Sí |
 | `ajustes.json` | Velocidad, volumen, tiempos, favoritas, límites de cuota | No |
 | `proyectos.json` | Jerarquía completa de proyectos | No |
+| `pronunciacion.json` | Reglas del diccionario de pronunciación | No |
+| `voces_conocidas.json` | IDs de voces ya vistas (historial para filtro «solo nuevas») | No |
 
 ---
 
