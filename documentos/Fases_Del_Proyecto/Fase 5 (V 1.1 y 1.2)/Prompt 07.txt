@@ -1,0 +1,21 @@
+Hemos detectado la causa raíz de los dos bugs principales en el motor de audio y la gestión de voces. Debes aplicar de forma estricta las siguientes correcciones estructurales en esta rama:
+
+1. REPARAR LÍMITE DE 2000 CARACTERES (TODOS LOS MÉTODOS DE DEEPGRAM):
+El divisor de texto anterior falló en la pestaña de lectura continua porque implementaste el 'text splitter' solo en el método 'hablar()'. Sin embargo, 'ReproductorVoz' utiliza 'preparar()' en segundo plano para cachear el audio del siguiente fragmento, saltándose tu filtro. 
+- Abre 'app/servicios/cliente_deepgram.py'.
+- Elimina el troceador de texto de 'hablar()'.
+- Implementa el divisor de texto (text splitter) de forma estricta directamente dentro de la función privada '_llamar_api()'. Garantiza que cualquier texto que supere los 1900 caracteres se fragmente por frases/puntos, realice las peticiones HTTP secuenciales y concatene el audio binario con numpy antes de devolver el resultado. Así, tanto 'hablar()' como 'preparar()' estarán protegidos.
+
+2. INICIALIZAR DEEPGRAM EN EL ESCUDO DE CUOTAS:
+- Abre 'app/motor/control_cuota.py'.
+- Añade la clave "deepgram" dentro de 'self.limites_defecto' (con un límite predeterminado de 500000 caracteres) y dentro del diccionario de inicialización de 'self.datos["gastado"]'. Esto evitará errores de clave inexistente y registrará el gasto correctamente.
+
+3. SOLUCIÓN GLOBAL AL BUG DE LA CASILLA "NUEVAS VOCES" (AZURE, POLLY, ELEVENLABS, DEEPGRAM):
+El filtro de la casilla "Nuevas voces" en la UI se queda en blanco porque las APIs de internet no devuelven ningún atributo 'es_nueva'. Para que la casilla sea útil, independiente de las API Keys y portable, implementa la siguiente lógica en 'app/motor/cliente_nube_voces.py':
+- Crea un mecanismo que gestione un archivo de historial estático (ej. 'voces_conocidas.json') que registre únicamente una lista de los IDs de voces que la app ya ha visto en el pasado.
+- Al pulsar "Comprobar y descargar" y procesar las voces de CUALQUIER proveedor (Azure, Polly, ElevenLabs, Deepgram), compara los IDs descargados con este historial local.
+- Si el historial está completamente vacío (primera ejecución de la app o instalación limpia), guarda todos los IDs descargados como "Línea Base" y NO marques ninguna voz como nueva.
+- Si el historial ya existía, cualquier ID descargado que NO esté en la lista significa que es una voz nueva del proveedor. Inyecta dinámicamente la propiedad '"es_nueva": True' en el diccionario de esa voz antes de guardarla en 'voces_disponibles.json'.
+- Añade el ID de la nueva voz al historial para que no vuelva a aparecer como nueva en la siguiente comprobación.
+
+Aplica estos cambios de forma limpia, sin comentarios de IA, y confírmame cuando estén subidos a GitHub para hacer el pull local.

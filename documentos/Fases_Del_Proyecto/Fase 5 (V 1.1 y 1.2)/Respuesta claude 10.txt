@@ -1,0 +1,46 @@
+Respuesta claude 10
+
+Déjame buscar los dos problemas en paralelo: los documentos `.docx` y la configuración de logging al arranque.
+
+Los `.docx` son archivos binarios. Voy a verificar si `python-docx` está disponible para leerlos, y también veo el fix de logging:
+
+`python-docx` no está instalado. Voy a instalarlo temporalmente para leer los documentos, y en paralelo ya preparo el fix de logging (que es independiente):
+
+Instalado. Ahora leo los 4 documentos en paralelo:
+
+El output es muy largo. Voy a leerlo en partes para entender la estructura de cada documento:
+
+Perfecto. Ahora necesito ver el texto exacto de las secciones que voy a modificar en cada documento:
+
+Tengo todo lo que necesito. Voy a hacer los dos cambios en paralelo: el script de los documentos y el fix de logging:
+
+Todo sin errores. Voy a verificar los cambios clave y hacer el fix de logging en paralelo:
+
+Los documentos quedaron perfectos. Ahora el fix de logging:
+
+Hay dos `logger.info()` más en el mismo archivo que ahora son inofensivos (el nivel root ya los filtra), pero los elimino para que el código sea coherente:
+
+También verifico que el mensaje de ffmpeg en `grabador_audio.py` use INFO (y quede silenciado automáticamente):
+
+El mensaje usa `logger.info()`, que con el nivel root en WARNING queda silenciado automáticamente — sin tocar ese archivo. Ahora el commit:
+
+Todo subido. Aquí el resumen de lo que se hizo:
+
+---
+
+**Documentos Word — cambios manteniendo el tono de cada uno:**
+
+- **Doc 1 (Visión Personal):** La sección 17 pasa de "Lo que queda por implementar" a **"De los planes a la realidad"**, con dos bloques diferenciados (Versión 1.1.0 / Versión 1.2.0) en el mismo estilo visual del documento. Deepgram añadido a la lista de motores. Amazon Polly sin "(pendiente de implementación)".
+
+- **Doc 2 (Guía Técnica):** La sección 15 se convierte en **"Estado actual del proyecto"** con historial técnico por versión (1.0.0 / 1.1.0 / 1.2.0), incluyendo `modo_cola`, `pronunciacion.json` y `voces_conocidas.json`. Deepgram en motores.
+
+- **Doc 3 (Readme público):** Síntesis de voz con Amazon Polly y Deepgram (recomendado). Estado actualizado a "aplicación completa y estable, versión 1.2.0". Manual de usuario ahora dice que existe `ayuda.html` y se abre con F1. Eliminadas las tres líneas "en desarrollo" que ya están implementadas.
+
+- **Doc 4 (Idea original):** Nota histórica añadida al final con el resumen de las tres versiones publicadas.
+
+---
+
+**Fix de logging (`iniciar_epub_tts.py`):**
+
+La consola ahora solo muestra WARNING y superiores. Los mensajes de arranque (`Epub-TTS arrancando...`, `ffmpeg local detectado...`, `Iniciando ventana principal`) desaparecen completamente. NVDA no leerá nada durante el arranque normal — solo sonará el sonido de bienvenida y mostrará la interfaz.
+

@@ -1,0 +1,105 @@
+Respuestas Claude 1
+Voy a explorar el repositorio completo antes de proponer nada, con especial atención a los archivos implicados en el filtrado de voces nuevas.
+
+El análisis del explorador me da las claves. Necesito leer el código real de los archivos críticos para confirmar el bug exacto antes de proponer nada.
+
+Ahora leo la sección crítica de `pestana_ajustes.py` — la carga y filtrado de voces:
+
+Tengo el diagnóstico completo. Aquí está el análisis antes de tocar una sola línea.
+
+---
+
+## Bug confirmado: filtro "Solo nuevas voces" siempre vacío
+
+### Causa raíz — `verificador_voces_nuevas.py` línea 116
+
+El fallo es una **inversión de orden en lo que se guarda en `voces_conocidas.json`**. Traza el flujo:
+
+```
+_ejecutar():
+  1. ids_conocidos = _leer_ids_locales()          → lee voces_disponibles.json ANTES de descargar
+                                                    (snapshot "antiguo" correcto)
+
+  2. gestor.actualizar_voces_desde_internet()     → descarga y SOBREESCRIBE voces_disponibles.json
+                                                    con la lista NUEVA completa
+
+  3. _guardar_timestamp()
+
+  4. voces_actuales = gestor.obtener_todas_las_voces()  → lee voces_disponibles.json (ya nuevo)
+
+  5. _detectar_nuevas(voces_actuales, ids_conocidos)    → compara correcto ✓
+     → el diálogo emergente funciona bien
+
+  6. _guardar_conocidas(voces_actuales)           ← *** AQUÍ ESTÁ EL BUG ***
+     → guarda la lista NUEVA en voces_conocidas.json
+```
+
+Después de la ejecución:
+| Archivo | Contenido |
+|---|---|
+| `voces_disponibles.json` | Lista nueva (100 + 5 voces nuevas = 105) |
+| `voces_conocidas.json` | Lista nueva también (105 IDs) ← mismo contenido |
+
+Cuando `PanelVoces.cargar_datos_y_llenar()` evalúa (línea 776):
+```python
+v["es_nueva"] = voces_conocidas is not None and v.get("id","") not in voces_conocidas
+```
+Como **ambos archivos tienen los mismos 105 IDs**, la expresión `not in voces_conocidas` es siempre `False`. El filtro "Solo nuevas" nunca muestra nada.
+
+---
+
+### Corrección quirúrgica propuesta
+
+**Solo dos cambios en `verificador_voces_nuevas.py`**, dentro del bloque `ANCLAJE: VERIFICADOR_VOCES_NUEVAS`:
+
+**Cambio 1** — En `_ejecutar()`, sustituir la línea 116:
+```python
+# ANTES (bug):
+self._guardar_conocidas(voces_actuales)   # guarda la lista NUEVA (= idéntica a voces_disponibles.json)
+
+# DESPUÉS (fix):
+self._guardar_conocidas_ids(ids_conocidos)  # guarda los IDs PREVIOS a la descarga
+```
+
+**Cambio 2** — Añadir método `_guardar_conocidas_ids()` que acepta el set de IDs viejos directamente:
+```python
+def _guardar_conocidas_ids(self, ids: set):
+    try:
+        ruta = ruta_config("voces_conocidas.json")
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        with open(ruta, "w", encoding="utf-8") as f:
+            json.dump(sorted(ids), f, ensure_ascii=False)
+    except Exception:
+        pass
+```
+
+Con este fix, tras cada verificación:
+- `voces_disponibles.json` = lista **nueva** (105 voces)
+- `voces_conocidas.json` = IDs **anteriores** (100 voces)
+
+Y `PanelVoces` detecta correctamente las 5 nuevas con `not in voces_conocidas`.
+
+---
+
+### Plan de las tres mejoras (resumen ejecutivo)
+
+**1. Diccionario de pronunciación local**
+- Nuevo módulo `app/motor/diccionario_pronunciacion.py` — clase `DiccionarioPronunciacion` con `cargar()`, `guardar()`, `aplicar(texto)`.
+- JSON en `configuraciones/pronunciacion.json` — estructura `{"NVDA": "en-ví-di-ei", ...}`.
+- Hook en `limpiador_lectura.py`: el texto pasa por `aplicar()` justo antes de enviarse a cualquier cliente TTS. Universal y transparente para todos los proveedores.
+- UI: nueva sección en `PanelVoces` o botón que abre un diálogo de edición del diccionario.
+
+**2. Deepgram como sustituto de ElevenLabs**
+- Nuevo `app/servicios/cliente_deepgram.py` siguiendo el patrón de `cliente_azure.py` (REST HTTP, sin SDK, solo `requests`).
+- API: Deepgram Aura TTS, endpoint `https://api.deepgram.com/v1/speak`, retorna audio MP3 directamente.
+- Clave `"deepgram": {"api_key": ""}` en `claves_api.json`.
+- `cliente_nube_voces.py`: añadir `_descargar_deepgram()` + clave `"deepgram"` en `voces_cache`.
+- ElevenLabs queda como opcional pero rebajado de prioridad (no se elimina para no romper usuarios existentes).
+
+**3. Copias de seguridad automáticas de proyectos**
+- Nuevo `app/motor/gestor_backups.py` — función `crear_backup_proyectos()`: comprime `proyectos.json` en `/backups/proyectos_YYYYMMDD_HHMMSS.zip` y elimina backups que superen los últimos 5.
+- Integración quirúrgica en `gestor_proyectos.py`: llamada a `crear_backup_proyectos()` cada vez que se guarda el archivo.
+
+---
+
+¿Confirmas que aplique el fix del bug ahora? ¿Y en qué orden quieres que avance con las tres mejoras?

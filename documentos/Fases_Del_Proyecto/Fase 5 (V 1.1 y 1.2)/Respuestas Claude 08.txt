@@ -1,0 +1,27 @@
+Respuestas Claude 7
+
+Eso es una pista muy clara: funciona en preescucha (texto corto, llamada directa al cliente) pero falla en lectura continua. La diferencia está en la ruta que sigue el texto — el `ReproductorVoz`. Voy a leer ese archivo y el de la pestaña de lectura para ver cómo enruta la voz.
+
+El enrutamiento de `ReproductorVoz` está correcto. Necesito ver cómo `PestanaLectura` envía el texto al reproductor, porque hay diferencias de flujo respecto a la preescucha.
+
+Encontré el bug. En `pestana_lectura.py`, líneas 377-379:
+
+```python
+if 'azure' in prov or 'eleven' in prov or 'polly' in prov:
+    es_voz_neuronal = True
+```
+
+Deepgram **no está incluido** en esta comprobación. Resultado: la pestaña de lectura trata Deepgram como si fuera SAPI5 local, envía el texto completo del capítulo (10,000+ caracteres) directamente a `cargar_texto`, y aunque `_llamar_api` lo parte, acumula decenas de peticiones en serie antes de reproducir nada — lo que provoca timeouts o el error 400.
+
+Con `es_voz_neuronal = True`, Deepgram recibiría fragmentos de 200 chars (igual que Azure/Polly/ElevenLabs), cada uno con una sola petición HTTP, y la cola funciona fragmento a fragmento con seguimiento de posición.
+
+También añado Deepgram al diccionario de nombres de proveedor para que el combo de voz muestre "Deepgram" en lugar de caer en el fallback:
+
+**El bug y la causa raíz:**
+
+En `pestana_lectura.py` la variable `es_voz_neuronal` solo se ponía a `True` para `azure`, `eleven` y `polly`. Deepgram quedaba excluido y tomaba el camino del SAPI5 local: enviaba **el capítulo completo** (potencialmente 50.000+ caracteres) como una sola llamada a `cargar_texto`. Aunque `_llamar_api` tiene el divisor de 1900 chars, el problema es que tenía que hacer decenas de peticiones HTTP en serie antes de reproducir ni un segundo de audio — lo que en la práctica causaba el timeout o el error 400 de la API.
+
+**Con la corrección:** Deepgram recibe exactamente el mismo tratamiento que Azure/Polly/ElevenLabs:
+- El texto del capítulo se parte en fragmentos de **200 chars** por `_dividir_en_fragmentos`
+- Cada fragmento es una sola petición HTTP (muy por debajo del límite de 2000 chars)
+- La cola avanza fragmento a fragmento con seguimiento de posición y precarga proactiva del siguiente

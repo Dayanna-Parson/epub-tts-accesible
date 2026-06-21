@@ -1,0 +1,123 @@
+respuestas Claude 2
+
+
+Empiezo con el setup de la rama y aplico el bug fix + el toggle de Alt+P en paralelo.
+
+Necesito ver el método `detener()` del reproductor y la sección del acelerador en `pestana_ajustes.py`:
+
+Busco si hay más instancias de Alt+P en otras pestañas:
+
+Verifico el método `probar_voz` en grabador_audio para el toggle en grabación:
+
+Verifico cuándo se invoca `callback_completado` en el reproductor:
+
+Reviso `cliente_sapi5.py` para entender si `hablar()` es sincrónico:
+
+Tengo toda la información necesaria. Aplico los tres cambios ahora.
+
+**Cambio 1**: Fix del bug en `verificador_voces_nuevas.py`
+
+**Cambio 2**: Extensión de `cargar_texto()` para que SAPI5 también dispare el callback de completado:
+
+**Cambio 3**: Toggle Alt+P en `pestana_ajustes.py`:
+
+Bug fix y toggle aplicados. Ahora avanzo con las tres mejoras en paralelo: leo los archivos que voy a modificar mientras busco la documentación de Deepgram:
+
+Ahora busco la documentación oficial de Deepgram mientras avanzo con las mejoras simples:
+
+Busco la documentación de Deepgram por una ruta alternativa:
+
+Tengo suficiente información sobre Deepgram. Ahora leo PanelClaves de ajustes antes de implementar todo:
+
+Necesito ver el patrón de un cliente existente para seguirlo en Deepgram:
+
+Leo el resto del cliente Azure para copiar el patrón de reproducción:
+
+Tengo todo lo que necesito. Ahora implemento las tres mejoras en orden. Empiezo creando los archivos nuevos en paralelo con las modificaciones quirúrgicas:
+
+**Mejora 1 — Diccionario de pronunciación (nuevo módulo):**
+
+**Hook en `limpiador_lectura.py`:**
+
+**Mejora 2 — Copias de seguridad automáticas:**
+
+**Hook de backup en `guardar()` de `gestor_proyectos.py`:**
+
+**Mejora 3 — Cliente Deepgram:**
+
+Ahora integro Deepgram en `cliente_nube_voces.py`, `config_rutas.py` y `reproductor_voz.py` en paralelo:
+
+Ahora añado el método `_descargar_deepgram()` y la rama Deepgram en `actualizar_proveedor()`. Primero localizo dónde insertar:
+
+Añado la rama Deepgram en `actualizar_proveedor()`:
+
+Ahora integro Deepgram en `reproductor_voz.py` — cuatro cambios quirúrgicos:
+
+Ahora las modificaciones de UI en `pestana_ajustes.py`: sección Deepgram en PanelClaves y botón del diccionario en PanelVoces. Primero PanelClaves:
+
+Actualizo `cargar_datos_visuales()`, `al_guardar()` y añado `al_borrar_deepgram()`:
+
+Actualizo `al_comprobar()` para que también maneje el snapshot de Deepgram, y añado Deepgram al combo de proveedor en `PanelVoces`:
+
+Actualizo `al_cambiar_proveedor()` para que filtre Deepgram correctamente y añado el botón del diccionario en `PanelVoces`:
+
+Actualizo `filtrar_y_mostrar()` para añadir Deepgram al filtro de proveedor:
+
+Ahora añado el nombre del proveedor Deepgram en la columna de la lista y el botón del diccionario de pronunciación:
+
+Ahora añado el botón de diccionario de pronunciación en `PanelVoces` (justo después del btn_escuchar existente) y el diálogo de edición:
+
+Añado el método `al_abrir_diccionario()` en `PanelVoces` y el diálogo `_DialogoPronunciacion`. Los inserto justo antes de la clase `_DialogoCapturaTecla`:
+
+Todas las modificaciones están aplicadas. Verifico que no haya errores de sintaxis en los archivos clave:
+
+Sin errores de sintaxis. Hago el commit con todos los cambios:
+PR creado: https://github.com/Dayanna-Parson/epub-tts-accesible/pull/3
+
+Ahora compruebo el estado del PR y CI:
+
+Sin CI configurado y sin comentarios de revisión. El PR está limpio. Compruebo si hay herramienta `send_later` disponible para el check-in automático:
+
+No hay `send_later` disponible. El repositorio no tiene CI configurado (0 check runs), y el PR no tiene comentarios de revisión pendientes. La suscripción a webhooks está activa y me notificará si llegan comentarios o revisiones.
+
+---
+
+Aquí está el resumen completo de todo lo que se ha implementado en esta sesión:
+
+## Resumen — 4 commits en `claude/intelligent-ptolemy-ig6v3a` → [PR #3](https://github.com/Dayanna-Parson/epub-tts-accesible/pull/3)
+
+---
+
+### Bug corregido — Filtro "Solo nuevas voces" vacío
+**Causa raíz:** `_guardar_conocidas()` en `verificador_voces_nuevas.py` sobreescribía `voces_conocidas.json` con la lista NUEVA (idéntica a `voces_disponibles.json`). La comparación en `PanelVoces` nunca encontraba diferencias.
+
+**Fix quirúrgico:** Se persiste el snapshot PREVIO (`ids_conocidos`) en lugar del nuevo. Nuevo método `_guardar_conocidas_ids(ids: set)`.
+
+---
+
+### Mejora 1 — Toggle Alt+P en preescucha
+- `al_escuchar()` comprueba `obtener_estado() == "reproduciendo"`: si sí, detiene y resetea etiqueta; si no, inicia la muestra.
+- Botón cambia a "Detener preescucha (Alt+P)" mientras suena y vuelve al original al terminar via `_al_terminar_escucha()`.
+- Fix adicional en `reproductor_voz.py`: SAPI5 ahora llama al `callback_completado` también cuando se usa sin `callback_progreso`.
+
+---
+
+### Mejora 2 — Diccionario de pronunciación local
+- **`app/motor/diccionario_pronunciacion.py`**: singleton con caché, persistencia atómica en `pronunciacion.json`, sustituciones de palabra completa con `\b` regex.
+- **`limpiador_lectura.py`**: hook al final de `limpiar_para_lectura()` — universal para todos los proveedores. `recargar_diccionario_pronunciacion()` invalida la caché sin reiniciar.
+- **UI**: botón en `PanelVoces` → `_DialogoPronunciacion` (lista editable, añadir/actualizar/eliminar).
+
+---
+
+### Mejora 3 — Copias de seguridad automáticas
+- **`app/motor/gestor_backups.py`**: `crear_backup_proyectos()` → `/backups/proyectos_YYYYMMDD_HHMMSS.zip` con `zipfile.ZIP_DEFLATED`. Rotación automática: máximo 5 copias.
+- **`gestor_proyectos.guardar()`**: llama al backup tras cada guardado exitoso; fallo de backup no interrumpe el guardado principal.
+
+---
+
+### Mejora 4 — Deepgram Aura-2
+- **`app/servicios/cliente_deepgram.py`**: `POST https://api.deepgram.com/v1/speak`, `Authorization: Token <api_key>`, body JSON `{"text": "..."}`, `?model=...&encoding=mp3`. Caché LRU + buffer proactivo, idéntico al patrón de `ClienteAzure`.
+- **`cliente_nube_voces.py`**: `_descargar_deepgram()` consulta `GET /v1/models` dinámicamente para obtener voces Aura-2.
+- **`config_rutas.py`**: clave `"deepgram"` en `_CLAVES_DEFAULT`.
+- **`reproductor_voz.py`**: enrutado en `fijar_voz()`, `_elegir_motor_con_cuota()` y `detener()`.
+- **`pestana_ajustes.py`**: sección Deepgram en PanelClaves + filtro "Deepgram" en combo de proveedor.

@@ -1,0 +1,145 @@
+Prompt y respuesta 9
+
+escucha, hay algo que no sabemos que es, porque, sigue dando fallos la api de deepgram, a la hora de reproducir en la pestaña lectura, (Modo lectura). sigue dando el mismo error. Pero sin embargo, puedo preescuchar cada voz perfectamente. Que puede estar pasando?
+Respuesta de Claude:
+
+Eso es una pista muy clara: funciona en preescucha (texto corto, llamada directa al cliente) pero falla en lectura continua. La diferencia está en la ruta que sigue el texto — el `ReproductorVoz`. Voy a leer ese archivo y el de la pestaña de lectura para ver cómo enruta la voz.
+
+El enrutamiento de `ReproductorVoz` está correcto. Necesito ver cómo `PestanaLectura` envía el texto al reproductor, porque hay diferencias de flujo respecto a la preescucha.
+
+Encontré el bug. En `pestana_lectura.py`, líneas 377-379:
+
+```python
+if 'azure' in prov or 'eleven' in prov or 'polly' in prov:
+    es_voz_neuronal = True
+```
+
+Deepgram **no está incluido** en esta comprobación. Resultado: la pestaña de lectura trata Deepgram como si fuera SAPI5 local, envía el texto completo del capítulo (10,000+ caracteres) directamente a `cargar_texto`, y aunque `_llamar_api` lo parte, acumula decenas de peticiones en serie antes de reproducir nada — lo que provoca timeouts o el error 400.
+
+Con `es_voz_neuronal = True`, Deepgram recibiría fragmentos de 200 chars (igual que Azure/Polly/ElevenLabs), cada uno con una sola petición HTTP, y la cola funciona fragmento a fragmento con seguimiento de posición.
+
+También añado Deepgram al diccionario de nombres de proveedor para que el combo de voz muestre "Deepgram" en lugar de caer en el fallback:
+
+**El bug y la causa raíz:**
+
+En `pestana_lectura.py` la variable `es_voz_neuronal` solo se ponía a `True` para `azure`, `eleven` y `polly`. Deepgram quedaba excluido y tomaba el camino del SAPI5 local: enviaba **el capítulo completo** (potencialmente 50.000+ caracteres) como una sola llamada a `cargar_texto`. Aunque `_llamar_api` tiene el divisor de 1900 chars, el problema es que tenía que hacer decenas de peticiones HTTP en serie antes de reproducir ni un segundo de audio — lo que en la práctica causaba el timeout o el error 400 de la API.
+
+**Con la corrección:** Deepgram recibe exactamente el mismo tratamiento que Azure/Polly/ElevenLabs:
+- El texto del capítulo se parte en fragmentos de **200 chars** por `_dividir_en_fragmentos`
+- Cada fragmento es una sola petición HTTP (muy por debajo del límite de 2000 chars)
+- La cola avanza fragmento a fragmento con seguimiento de posición y precarga proactiva del siguiente
+mi respuesta:
+
+y el otro problema también está solucionado? es que no lo voy a poder probar para decirte si si o si no funciona, hasta que se actualicen las voces
+
+Respuesta de claude:
+Sí, está solucionado. El flujo completo es correcto y no depende de ninguna condición de carrera. Te explico lo que ocurrirá cuando actualices voces:
+
+**Primera actualización tras la nueva versión:**
+- `voces_conocidas.json` está vacío (o no existe)
+- `_marcar_y_guardar()` detecta `primera_vez = True`
+- Guarda TODOS los IDs actuales como línea base
+- Ninguna voz queda marcada como nueva (es correcto — no tiene sentido que aparezcan "nuevas" 400 voces de golpe en la primera carga)
+
+**Segunda actualización (cuando la API añada voces nuevas):**
+- Lee el historial (los IDs de la vez anterior)
+- Cualquier ID que no estuviera antes → `es_nueva = True` en el JSON
+- `cargar_datos_y_llenar()` lo lee directamente con `v.get("es_nueva", False)` sin recomputar nada
+
+La cadena completa es:
+```
+al_comprobar → actualizar_proveedor / actualizar_voces_desde_internet
+    → _marcar_y_guardar()
+        → lee voces_conocidas.json
+        → inyecta es_nueva en cada voz del caché
+        → guarda voces_conocidas.json (atómico con .tmp)
+        → guarda voces_disponibles.json
+    ← UI llama cargar_datos_y_llenar()
+        → lee voces_disponibles.json
+        → v["es_nueva"] = bool(v.get("es_nueva", False))  ← confía en el JSON
+```
+
+No hay ningún punto donde el valor pueda corromperse ni sobreescribirse incorrectamente. Cuando puedas probar, el comportamiento esperado es ese: primera actualización establece la línea base, la siguiente muestra las realmente nuevas.
+
+Mi respuesta:
+aaaaaa, tenías razón, ya funciona por fin!!!!! pero, te faltó añadir el presupuesto, y lo de el control de cuota... Además, me e dado cuenta, que etre bloques pues hace una pausa de varios segundos, y aunque en el resto de motores también la hace, pues me preguntaba si esa pausa pe puede reducir a lo mas mínimo posible, haciendo que la lectura sea continua de verdad, pero sin sobrecargar las apis. Mira la consola: ---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+INFO      __main__  Epub-TTS arrancando. Errores → C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\registros\app.log
+INFO      app.motor.grabador_audio  [GrabadorAudio] ffmpeg local detectado: C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\bin\ffmpeg.exe
+INFO      __main__  Iniciando ventana principal
+[Polly] Conexión establecida | 1.06s | Motor: generative | Voz: Lucia | 7 chars
+[Polly] Conexión establecida | 1.04s | Motor: generative | Voz: Lucia | 75 chars
+[Polly] Conexión establecida | 1.04s | Motor: generative | Voz: Lucia | 158 chars
+[Polly] Conexión establecida | 1.17s | Motor: generative | Voz: Lucia | 102 chars
+[Polly] Conexión establecida | 0.97s | Motor: generative | Voz: Lucia | 172 chars
+[Polly] Conexión establecida | 0.92s | Motor: generative | Voz: Lucia | 182 chars
+[Polly] Conexión establecida | 1.05s | Motor: generative | Voz: Lucia | 144 chars
+[Polly] Conexión establecida | 0.98s | Motor: generative | Voz: Lucia | 195 chars
+Respuesta de Claude:
+Dos problemas distintos. Los analizo antes de tocar nada.
+
+Confirmado: el panel de presupuesto solo tiene Azure, Polly y ElevenLabs. Falta la fila de Deepgram. Ahora busco también el bug de la pausa entre fragmentos:
+
+Encontré el bug de las pausas. `_precarga_solicitada` se pone a `True` al cargar el fragmento 1, pero **nunca se resetea a `False` entre fragmentos**. Resultado: solo el fragmento 2 se precarga; todos los demás tienen ~1 segundo de silencio esperando la API.
+
+Los dos fixes en paralelo:
+
+Aplico los dos cambios:
+
+También necesito revisar `_texto_ayuda_limite` para que Deepgram tenga su texto de ayuda correcto para NVDA:
+
+**Lo que estaba fallando:**
+
+**Pausas entre fragmentos** — `_precarga_solicitada` se ponía a `True` al precargar el fragmento 2, y nunca volvía a `False`. Cada llamada posterior a `_reproducir_siguiente_fragmento` veía el flag activo y no lanzaba ninguna precarga. Resultado: fragmentos 3, 4, 5... esperaban 1 segundo la API antes de sonar. Ahora el flag se resetea al inicio de cada fragmento, así la precarga del N+1 se dispara siempre de inmediato y el audio llega antes de que el actual termine.
+
+**Cuota Deepgram** — El `PanelGeneral` de ajustes construía la sección de presupuesto con tres filas hardcoded (Azure, Polly, ElevenLabs). Deepgram no aparecía. Añadida la cuarta fila con su texto de ayuda accesible para NVDA (precio de referencia: 15 USD/millón de caracteres pay-as-you-go).
+
+
+Mi respuesta
+
+Todavía sigue haviendo la misma pausa de antes, pero un poco menos, todavía se nota. Se puede reducir aún mas? que sea impercectible? hay alguna manera de que eso se haga en segundo plano, lo de los bloques, y que se una.... se me ocurre que mientras uno se está reproduciendo, que el siguiente ya esté listo para reproducirse, de hecho, eso ya estaba implementado, creo que desde casi el principio si no recuerdo mal, pero nunca llegó a funcionar del todo bien.
+respuesta de claude:
+
+Voy a leer exactamente qué ocurre en el interior del cliente Deepgram cuando llega la orden de parar, para confirmar la causa raíz antes de tocar nada.
+
+La causa raíz está clara. Cada vez que `cargar_texto()` se llama entre fragmentos ejecuta:
+1. `self.detener()` → cierra `self._sesion` de Deepgram, matando el hilo de precarga que ya tenía el audio listo
+2. `time.sleep(0.05)` → 50ms de espera artificial
+
+El audio predesargado muere antes de poder usarse, y hay que volver a pedir a la API. La solución es un parámetro `modo_cola` que salta ambas cosas cuando el audio anterior ya terminó de sonar por sí solo.
+
+Ahora `_reproducir_siguiente_fragmento` pasa `modo_cola=True`:
+
+**Qué estaba pasando exactamente:**
+
+El sistema de precarga SÍ descargaba el audio en segundo plano (`preparar()` hacía la petición HTTP y guardaba los datos en `_audio_preparado`). Pero cuando terminaba el fragmento N y `cargar_texto` era llamado para el fragmento N+1, lo primero que hacía era `self.detener()` → `self._sesion.close()`. Eso mataba la conexión que `preparar()` estaba usando, tiraba el audio descargado, y el siguiente `hablar()` tenía que volver a pedirlo desde cero (~1 segundo de espera).
+
+**Qué hace ahora:**
+
+En modo cola, `cargar_texto` salta completamente `detener()` y el sleep. La sesión HTTP permanece abierta, `_audio_preparado` tiene el audio listo, y `hablar()` lo encuentra y empieza a sonar en ~5ms (solo el arranque de sounddevice). La detención explícita del usuario con Ctrl+D sigue funcionando igual porque `al_detener()` llama a `reproductor.detener()` directamente, no pasa por `cargar_texto`.
+
+Mi respuesta:
+vale, pero, no solo pasa con deep gram, si no que también pasa con azure, polly y eleven. Y no se si con sapi también
+
+Respuesta de claude:
+
+El fix ya está en `ReproductorVoz.cargar_texto()` que es el punto de entrada compartido para todos los proveedores — aplica a Azure, Polly y ElevenLabs igual que a Deepgram. Pero antes de confirmarlo necesito saber si los otros clientes tienen `preparar()`, porque sin eso la precarga es un no-op silencioso.
+
+Los cuatro clientes de nube tienen `preparar()` y los cuatro se benefician del fix exactamente igual. El fix ya está publicado en el último commit. Aquí el cuadro completo:
+
+| Proveedor | `preparar()` | Afectado por `modo_cola` | Gap esperado tras el fix |
+|---|---|---|---|
+| Azure | ✓ | ✓ | ~5ms (arranque sounddevice) |
+| Polly | ✓ | ✓ | ~5ms |
+| ElevenLabs | ✓ | ✓ | ~5ms |
+| Deepgram | ✓ | ✓ | ~5ms |
+| SAPI5 | No tiene | No aplica | Sin gap (lectura continua nativa) |
+
+**Por qué aplica a todos:** `modo_cola=True` está en `ReproductorVoz.cargar_texto()`, que es el único punto de entrada para todos los motores. El proveedor activo da igual.
+
+**Por qué SAPI5 no tiene gap:** cuando seleccionas una voz local, `al_alternar_reproduccion` toma la rama de SAPI5 directamente — envía todo el texto de una vez a `hablar_con_callback()` y SAPI5 gestiona su propio encadenamiento interno. No pasa por la cola de fragmentos en absoluto.
+
+**Lo que hace el fix en detalle:**
+- Antes: entre fragmentos → `detener()` (cierra la sesión HTTP, mata el audio predesargado) + 50ms de sleep → nuevo pedido a la API (~1s) → silencio audible
+- Ahora: entre fragmentos → hilo nuevo + `hablar()` encuentra el audio en `_audio_preparado` + `sd.play()` → ~5ms de transición imperceptible.

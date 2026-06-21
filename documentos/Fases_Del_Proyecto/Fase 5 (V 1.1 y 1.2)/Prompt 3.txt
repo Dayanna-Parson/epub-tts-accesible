@@ -1,0 +1,9 @@
+La implementación previa tiene fallos críticos que debes solucionar en esta misma rama antes de hacer nada más. Sé directo, no inventes código y optimiza las respuestas para ahorrar contexto:
+
+1. FIX DICCIONARIO INVISIBLE: El módulo del diccionario está creado, pero el botón o acceso en la interfaz NO aparece en 'pestana_ajustes.py'. Asegúrate de añadir el botón '_DialogoPronunciacion' de forma real dentro del Sizer del 'PanelVoces' para que sea visible y accesible mediante teclado/lector de pantalla.
+
+2. FIX DEEPGRAM (0 VOCES): El endpoint dinámico 'GET /v1/models' está fallando o devolviendo un formato incompatible que resulta en 0 voces descargadas. Corrige 'cliente_deepgram.py' y 'cliente_nube_voces.py'. Si la petición dinámica da problemas, implementa un mapeo cableado (hardcoded) temporal en local con las voces Aura-2 en español e inglés más importantes (como 'aura-asteria-en', 'aura-stella-en', etc.) para asegurar que la lista se llene correctamente.
+
+3. REVISIÓN DE "NUEVAS VOCES": El filtro sigue sin mostrar las voces nuevas. Verifica por qué la comparación de 'not in voces_conocidas' en 'PanelVoces.cargar_datos_y_llenar()' sigue dando False. Asegúrate de que los tipos de datos coincidan (ej. strings de IDs).
+
+No limpies los archivos todavía. Corrige estos tres puntos y avísame para probar la interfaz de nuevo.

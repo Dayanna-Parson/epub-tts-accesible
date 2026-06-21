@@ -1,0 +1,10 @@
+La implementación anterior ha fallado por completo en la práctica. La aplicación sigue lanzando el mismo error de límite de 2000 caracteres en Deepgram y el botón del diccionario pierde el orden del Tabulador tras el primer uso. Corrige estos problemas de raíz analizando la estructura real del proyecto:
+
+1. REFACTORIZACIÓN COMPLETA DE LECTURA (DEEPGRAM): El divisor de texto actual no está funcionando en la lectura continua. Revisa 'cliente_deepgram.py' y 'reproductor_voz.py'. Asegúrate de que el método 'hablar()' fragmente el texto de forma real en bloques de menos de 1900 caracteres antes de realizar cualquier petición POST a la API. Si el reproductor espera un flujo continuo (stream), debes procesar los fragmentos secuencialmente y unificar el contenido binario o gestionar los callbacks de audio sin que la interfaz detecte cortes ni envíe bloques superiores al límite de la API.
+
+2. ESTRUCTURA ESTÁTICA Y ACCESIBLE DE LA UI (PESTANA_AJUSTES): No utilices 'MoveAfterInTabOrder' ni soluciones temporales que se rompan al refrescar el panel. Lee el archivo completo de la interfaz mediante tus herramientas para ver cómo están construidos y cómo se comportan todos los botones. Para garantizar una accesibilidad nativa impecable con NVDA, recuerda la regla de oro de wxPython en Windows: el orden del Tabulador lo define la secuencia física de creación de los objetos de arriba a abajo en el código. 
+
+Reorganiza el código para que el botón 'Diccionario de pronunciación' se cree de forma estática e inmediatamente debajo de la creación del botón de preescucha (Alt+P). Añade ambos al mismo sizer principal uno tras otro. Asegúrate de que, tras pasar por el diccionario, el foco retorne de forma cíclica y limpia al contenedor de pestañas (wx.Notebook) como pasa en el resto de la app, sin importar cuántas veces se recargue la lista de voces.
+
+
+Analiza todo el árbol de llamadas de reproducción y el flujo de refresco de la UI antes de aplicar los cambios. Confírmame cuando los archivos locales estén editados y subidos a la rama de GitHub para hacer el pull.

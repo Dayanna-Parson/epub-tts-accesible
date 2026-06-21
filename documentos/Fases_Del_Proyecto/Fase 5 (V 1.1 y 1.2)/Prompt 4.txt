@@ -1,0 +1,13 @@
+Hemos testeado la aplicación en local. El motor interno de peticiones HTTP ya está diseñado, pero la API de Deepgram devuelve 0 voces debido a que los identificadores de los modelos han cambiado y los códigos de idioma no coinciden con el filtrado regional de la UI. 
+
+Usa como referencia el repositorio oficial (https://github.com/deepgram/deepgram-python-sdk.git) para verificar los nombres actuales de los modelos, pero NO instales el SDK ni agregues nuevas librerías a 'requisitos.txt'. Mantén la arquitectura ligera basada en peticiones directas con 'requests'.
+
+Corrige de forma estricta los siguientes puntos en los archivos de esta rama:
+
+1. REPARAR VOCES DE DEEPGRAM (0 VOCES): En 'cliente_nube_voces.py', actualiza la lista fija (fallback) de Deepgram utilizando exclusivamente los identificadores reales de Aura-2 (como "aura-2-asteria-en", "aura-2-stella-en"). Asegúrate de mapear explícitamente sus códigos de idioma al formato regional completo que exige nuestra interfaz (ej. 'en-US' para inglés y 'es-ES' para español) para que el filtro de selección de idioma de la UI no las descarte.
+
+2. SECUENCIA DE TABULACIÓN DEL BOTÓN: En 'pestana_ajustes.py', el botón 'Diccionario de pronunciación' no sigue el orden del Tabulador. Muévelo dentro del diseño del Sizer para que aparezca exactamente después del botón de preescucha (Alt+P). Necesito que el lector de pantalla NVDA llegue a él de forma natural al pulsar el Tabulador.
+
+3. ATAJO ESCAPE EN DIÁLOGO: En la clase del diálogo del diccionario ('_DialogoPronunciacion'), intercepta el evento 'wx.EVT_CHAR_HOOK' o asigna el ID estándar 'wx.ID_CANCEL' al botón de Cerrar. Es indispensable que, al pulsar la tecla ESCAPE, la ventana se cierre automáticamente de manera accesible.
+
+Realiza únicamente estas modificaciones en los archivos correspondientes y confírmame cuando los cambios estén subidos a la rama para proceder con el pull local.

@@ -1,0 +1,40 @@
+Respuestas Claude 6
+
+Voy a leer los tres archivos antes de tocar nada.
+
+Tengo toda la información. Aplico los tres cambios en paralelo donde sea posible.
+
+**`control_cuota.py`** — la parte más pequeña, la hago primero:
+
+Ahora añado "deepgram" a los tres métodos de consulta/registro:
+
+Ahora `cliente_deepgram.py` — mover el splitting a `_llamar_api` y simplificar `hablar()`:
+
+Ahora `cliente_nube_voces.py` — leer el archivo completo para saber dónde insertar y editar:
+
+Ahora el cambio más complejo — `cliente_nube_voces.py`. Añado los helpers del historial y reemplazo `_guardar_cache()` por `_marcar_y_guardar()` en todos los puntos de guardado:
+
+Leyendo las secciones pendientes de `cliente_nube_voces.py` y `pestana_ajustes.py`.
+
+Necesito ver las líneas exactas de `al_comprobar` para eliminar la lógica de snapshot ahora obsoleta.
+
+Ahora tengo todo lo que necesito. Aplico los tres cambios:
+
+Ahora `pestana_ajustes.py`: elimino el snapshot de `al_comprobar` y simplifico `cargar_datos_y_llenar`.
+
+Ahora simplifico `cargar_datos_y_llenar` para que confíe en el campo `es_nueva` ya inyectado en el JSON:
+
+Ahora hago commit y push de todo.
+
+Ahora creo el PR si no existe.
+
+El PR #3 ya existe. Todo está publicado. Resumen de lo completado:
+
+**`app/motor/cliente_nube_voces.py`**
+- `actualizar_voces_desde_internet()` y las 4 ramas de `actualizar_proveedor()` ahora llaman a `_marcar_y_guardar()` en lugar de `_guardar_cache()`. Esto significa que en cada descarga se inyecta `es_nueva` en el JSON y se actualiza el historial en `voces_conocidas.json`.
+
+**`app/interfaz/pestana_ajustes.py`**
+- `al_comprobar()`: eliminado el bloque que sobreescribía `voces_conocidas.json` antes de descargar — esa lógica ahora vive en `GestorVoces`.
+- `cargar_datos_y_llenar()`: eliminada la carga de `voces_conocidas.json` y la comparación manual; ahora lee `v.get("es_nueva", False)` directamente del JSON.
+
+El flujo completo es: primera descarga → `voces_conocidas.json` vacío → `_marcar_y_guardar()` detecta `primera_vez=True` → ninguna voz marcada como nueva → guarda todos los IDs como línea base. Descargas siguientes → solo los IDs nuevos se marcan `es_nueva: True`.

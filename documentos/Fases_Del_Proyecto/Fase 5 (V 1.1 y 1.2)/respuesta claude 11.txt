@@ -1,0 +1,39 @@
+respuesta claude 11
+Buenas preguntas — déjame mirar el `requirements.txt` actual antes de responder:
+
+Primero déjame revisar las importaciones del cliente Deepgram para confirmar si hay algo nuevo:
+
+Tengo todo claro. Respondo los tres puntos:
+
+---
+
+**`python-docx` — NO va en `requisitos.txt`**
+
+`python-docx` es una librería para leer y modificar archivos Word (`.docx`). Yo la instalé temporalmente *solo* para actualizar tus documentos de desarrollo. La app en sí nunca abre ni escribe archivos Word — sus datos son JSON, audio MP3 y EPUB. Añadirla a `requisitos.txt` sería una dependencia inútil que todos los usuarios tendrían que descargar. No va ahí.
+
+**`requisitos.txt` — no necesita cambios**
+
+Todo lo que usa Deepgram ya estaba: `requests`, `numpy`, `sounddevice`, `soundfile`. Amazon Polly usa `boto3` (ya estaba desde v1.1). La lista actual está completa.
+
+---
+
+**Documentos — sí vale la pena añadir el fix de logging**
+
+El silencio del arranque es una mejora real de accesibilidad para la primera vez que alguien abre la app. Le propongo añadirlo a `novedades.txt` (como corrección de v1.2.0) y al bloque v1.2 de los tres documentos Word. ¿Lo hago?
+sí. añádelo!
+
+Añado el fix a `novedades.txt` y a los documentos Word en paralelo:
+
+Ahora los documentos Word:
+
+Listo. Resumen final de todo:
+
+**`python-docx` no entra en `requisitos.txt`** porque la app no usa Word en ningún flujo del usuario — lo instalé solo para este trabajo de edición de documentos, y no tiene ningún papel en la aplicación portable. Añadirlo penalizaría a todos los usuarios sin aportar nada.
+
+**`requisitos.txt` no necesita cambios.** Deepgram usa `requests`, `sounddevice`, `soundfile` y `numpy`, todas ya estaban desde antes. No hay ninguna dependencia nueva en v1.2.
+
+**Documentos actualizados con el fix de logging:**
+- `novedades.txt`: nueva corrección en v1.2.0 — "Mensajes de arranque silenciados"
+- Doc 1 (Visión Personal): ítem añadido al final del bloque v1.2
+- Doc 2 (Guía Técnica): ítem técnico con la causa raíz (nivel WARNING en consola)
+- Doc 3 (Readme público): ítem añadido a la lista de estado actual

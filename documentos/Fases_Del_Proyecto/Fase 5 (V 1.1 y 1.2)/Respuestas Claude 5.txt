@@ -1,0 +1,23 @@
+Respuestas Claude 5
+
+Voy a leer los archivos relevantes antes de tocar nada.
+
+La estructura está clara. El problema de tabulación viene de que `sz_botones` es un subsizer que NVDA trata como grupo interno navegable con flechas. La solución es sacar cada botón directamente al sizer principal. Para Deepgram, hay que añadir splitting de texto + concatenación numpy antes de reproducir.
+
+Ahora Fix 2 — splitting de texto en `cliente_deepgram.py`:
+
+Ahora actualizo `hablar()` para usar el splitter cuando el texto supera el límite:
+
+Cambios subidos. Respondo las dos preguntas:
+
+---
+
+**1. ¿ClienteDeepgram está integrado con GrabadorAudio para etiquetas de personaje?**
+
+Sí, completamente. El flujo de grabación con etiquetas (`{{@nar}}`, `{{@pj1}}`) pasa por `GrabadorAudio`, que para cada fragmento de texto llama a `ReproductorVoz.cargar_texto()` y luego a `motor_activo.hablar()`. Cuando la voz asignada a un personaje es Deepgram (proveedor_id contiene "deepgram"), `ReproductorVoz.fijar_voz()` ya activa `self.cliente_deepgram` como motor activo. `ClienteDeepgram.hablar()` devuelve audio sintetizado igual que `ClienteAzure` o `ClienteEleven`, y `GrabadorAudio` lo recoge, lo normaliza con FFmpeg y lo exporta a MP3. El nuevo splitting de texto tampoco afecta el flujo: la concatenación numpy ocurre internamente antes de que el audio llegue al grabador. No hay ningún punto de rotura.
+
+---
+
+**2. ¿Las voces nuevas de Deepgram se detectarán automáticamente al pulsar "Comprobar y descargar"?**
+
+Sí, siempre que el endpoint `/v1/models` devuelva las nuevas voces con el campo `canonical_name` (que es el formato que usa la API actual). El parser corregido leerá `canonical_name` para el ID, `languages` para el idioma y `metadata.tags` para el género de cualquier modelo nuevo, sin necesidad de actualizaciones en el código. La lista base (`_VOCES_DEEPGRAM_BASE`) solo actúa como fallback de emergencia cuando la petición falla o devuelve vacío — en condiciones normales de red con API key válida, la descarga dinámica tiene prioridad absoluta y se actualiza sola.

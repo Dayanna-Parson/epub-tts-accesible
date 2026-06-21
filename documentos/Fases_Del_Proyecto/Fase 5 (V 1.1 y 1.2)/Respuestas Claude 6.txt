@@ -1,0 +1,31 @@
+Respuestas Claude 6
+
+Voy a leer el estado real de todos los archivos implicados antes de tocar nada.
+
+Necesito leer el `__init__` completo de `PanelVoces` para entender la secuencia real de creación de controles, y ver la ventana principal para localizar el Notebook.
+
+Necesito ver la estructura del Notebook en `ventana_principal.py` para implementar el ciclo de foco correctamente.
+
+Encontré el mecanismo clave. `ventana_principal.py` tiene un `al_navegacion_tab_global` que gestiona el ciclo completo con `ultimo = self.pestana_ajustes.obtener_ultimo_control()`. Necesito ver ese método.
+
+**Causa raíz del fallo de tabulación encontrada**: `obtener_ultimo_control()` devuelve `self.pag_voces.btn_escuchar`, pero `btn_diccionario` es ahora el último control. El handler global de `ventana_principal.py` usa ese valor para decidir cuándo enviar el foco al Notebook — como el control referenciado no es el último real, nunca activa el ciclo.
+
+**Causa raíz del fallo de Deepgram**: La rama `elif len(texto) > self._LIMITE_API` del `hablar()` actual crea un código path paralelo que depende de la evaluación correcta de `_LIMITE_API`. La solución más robusta es hacer que `hablar()` SIEMPRE pase por `_sintetizar_fragmentos`, eliminando la posibilidad de llegar a `_llamar_api` con texto largo.
+
+Aplico ambos fixes ahora:
+
+Ahora restructuro `hablar()` en `cliente_deepgram.py` para que **toda** síntesis pase por `_sintetizar_fragmentos`:
+
+También optimizo `_sintetizar_fragmentos` para evitar la concatenación innecesaria cuando solo hay un fragmento:
+
+Cambios subidos. Resumen de los dos problemas de raíz:
+
+---
+
+**Tabulación rota tras primer uso — causa exacta**
+
+`PestanaAjustes.obtener_ultimo_control()` tenía `return self.pag_voces.btn_escuchar` para el panel de voces. `VentanaPrincipal.al_navegacion_tab_global()` compara `foco == ultimo` para decidir si enviar foco al Notebook. Al añadir `btn_diccionario` después de `btn_escuchar`, el handler nunca detectaba que el usuario estaba en el último control — Tab desde `btn_diccionario` no coincidía con `ultimo` y el evento se cedía a wx sin ningún destino claro. Línea corregida: `return self.pag_voces.btn_diccionario`.
+
+**Deepgram 2000 chars — causa exacta**
+
+La rama `elif len(texto) > self._LIMITE_API:` coexistía con una rama `else: data, fs = self._llamar_api(texto, datos_voz)` que llamaba a la API directamente para textos cortos. Si por alguna razón la condición no se evaluaba correctamente (e.g., bytecode cacheado, instancia compartida con estado previo), el texto largo podía caer al `else`. El nuevo código elimina completamente esa rama: `hablar()` ahora siempre termina en `_sintetizar_fragmentos(texto, datos_voz)`, que a su vez siempre llama a `_dividir_texto()` antes de cualquier `POST`. Es estructuralmente imposible llegar a `_llamar_api` con texto > 1900 chars.

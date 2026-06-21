@@ -1,0 +1,28 @@
+Actúa como un ingeniero de software experto y arquitecto de soluciones en Python. Necesito que analices todo el repositorio local para solucionar un bug y planificar la implementación de tres mejoras estratégicas, descartando de forma drástica otras ideas que no aportan valor técnico.
+
+Antes de tocar nada del código, lee y revisa obligatoriamente el archivo `CLAUDE.md` que está en la raíz de la rama `main` para entender las directrices de desarrollo, comandos y arquitectura del proyecto. Mantén siempre el código limpio, eliminando cualquier rastro o comentario sobre nuestras conversaciones previas antes de hacer commits o subir cambios a GitHub.
+
+Este es nuestro plan de ataque. Ejecuta las tareas en este orden:
+
+1. ARREGLAR BUG: Filtrado de "Nuevas Voces"
+- Problema: Cuando hay voces nuevas en los proveedores, se descargan correctamente (salen en la lista general de idiomas y en favoritos), pero la categoría/filtro "Nuevas" (al marcar la casilla correspondiente en la interfaz) aparece completamente vacía.
+- Tarea: Localiza dónde se gestiona el filtrado de voces al activar esa casilla. Revisa si falta actualizar el caché local, si hay una inconsistencia en los atributos de fecha/novedad que devuelven las APIs de los proveedores, o si la lógica de filtrado está rota. Corrígelo.
+
+2. MEJORA: Diccionario de Pronunciación Local
+- Objetivo: Permitir al usuario corregir la forma en que las voces pronuncian ciertas palabras (ideal para nombres propios en fantasía o siglas en distopías).
+- Enfoque técnico obligatorio: NO dependas de las plataformas o webs de los proveedores. Implementa un sistema local en Python utilizando un archivo JSON (por ejemplo, `pronunciation_dict.json`) que almacene pares de "palabra_original": "pronunciacion_fonetica".
+- Tarea: Crea la lógica para que la app intercepte el texto del EPUB, aplique las sustituciones del diccionario local y luego envíe el texto ya modificado a la API del TTS. Debe funcionar de manera universal para todos los proveedores.
+
+3. MEJORA: Soporte para Deepgram (Sustituto de ElevenLabs)
+- Objetivo: Evaluar y preparar la integración de Deepgram (su modelo Aura de TTS) como alternativa viable y económica, manteniendo una alta calidad y baja latencia. 
+- Tarea: Analiza el módulo actual de proveedores de voz. Prepara la estructura para añadir Deepgram y reducir la prioridad o eliminar por completo ElevenLabs (debido a su sistema de créditos inviable para libros largos).
+
+4. MEJORA: Copias de Seguridad Automáticas de Proyectos
+- Objetivo: Evitar la pérdida de datos si se corrompe un proyecto.
+- Enfoque técnico obligatorio: Manténlo simple. Diseña una función automatizada en Python que, al guardar o cerrar un proyecto, realice una copia de la base de datos o archivos del proyecto actual, los comprima en un `.zip` y los guarde en una carpeta local `/backups`, manteniendo únicamente un historial rotativo de las últimas 5 copias para no saturar el disco.
+
+RESTRICCIONES CRÍTICAS (NO IMPLEMENTAR):
+- Queda totalmente descartado el uso de formato FLAC. Mantendremos MP3/M4A para evitar archivos gigantescos innecesarios en audiolibros.
+- Queda descartado el uso generalizado de SSML, ya que entorpece la lectura con lector de pantalla y las voces neuronales modernas calculan la entonación de forma orgánica.
+
+Por favor, localiza primero los archivos implicados en el bug de las voces y proponme los cambios antes de aplicarlos.

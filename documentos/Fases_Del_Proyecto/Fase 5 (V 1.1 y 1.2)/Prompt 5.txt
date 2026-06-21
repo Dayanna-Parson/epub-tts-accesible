@@ -1,0 +1,15 @@
+¡Buenas noticias! El parser dinámico de Deepgram ya funciona perfectamente y descarga las voces Aura-2. El atajo de Escape en el diálogo también responde de diez. Sin embargo, quedan flecos de accesibilidad y un problema técnico crítico con los textos largos que debes corregir en el código de esta rama, además de un par de dudas que debes responder.
+
+APLICA ESTOS TRES FIXES MECÁNICOS EN EL CÓDIGO:
+
+1. FIX DEFINITIVO DE TABULACIÓN: El botón 'Diccionario de pronunciación' sigue requiriendo usar flechas abajo de NVDA para encontrarlo. Esto ocurre porque usaste 'MoveAfterInTabOrder' pero NO añadiste el botón físicamente dentro del Sizer principal del panel junto a los demás controles (o se quedó fuera del contenedor del cuaderno de pestañas). Localiza el Sizer que gestiona los controles inferiores de la pestaña de voces y haz un 'sizer.Add(self.btn_diccionario)' en la posición correcta para que se renderice visualmente y sea 100% accesible con Tabulador antes de saltar a la pestaña de Ajustes.
+
+2. REPARAR LÍMITE DE TEXTO EN DEEPGRAM: En 'cliente_deepgram.py' (o donde gestiones la petición 'speak' de Deepgram), al enviar textos largos en la pestaña de lectura la API devuelve el error: "Input text exceeds maximum character limit of 2000". Añade un divisor de texto (text splitter). Si el texto enviado supera los 1900 caracteres, divídelo automáticamente en fragmentos más pequeños respetando los puntos o finales de frase, realiza las peticiones HTTP secuenciales y une los flujos de audio resultantes en la respuesta antes de enviarlos al reproductor para evitar el límite de la API.
+
+RESPONDE A ESTAS DOS PREGUNTAS TÉCNICAS EN TU RESPUESTA:
+
+1. PREGUNTA SOBRE ETIQUETAS: ¿El nuevo cliente de Deepgram está completamente integrado con el 'GrabadorAudio'? Confírmame si al procesar un libro por etiquetas de personajes (ej. @nar, @pj1), el sistema puede usar las voces Aura-2 asignadas sin romper el flujo de generación de archivos temporales y concatenación en MP3.
+
+2. PREGUNTA SOBRE ACTUALIZACIONES FUTURAS: Dado que corregiste el parser dinámico para que lea 'canonical_name' y extraiga los idiomas de la lista 'languages' de la API, ¿si Deepgram añade nuevas voces Aura-2 en el futuro en su plataforma, nuestra app las detectará y descargará automáticamente al pulsar "Comprobar y descargar", o dependeremos de la lista fija (fallback)?
+
+Realiza las modificaciones en los archivos y respóndeme de forma directa y concisa. Avísame cuando los cambios estén subidos a la rama de GitHub para proceder con mi pull local.

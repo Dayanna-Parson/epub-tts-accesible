@@ -1,0 +1,16 @@
+necesito que hagas dos cambios mas. quiero que actualices con tod lo que falten en los documentos que se llaman: Documento 1 – Visión Personal Del Proyecto (versión Completa).docx
+Documento 2 – Guía Técnica Para Desarrolladores.docx
+Documento 3 – Presentación Pública _ Readme.docx
+Idea de aplicación de lectura y audiolibros.docx.
+Creo que lo único que falta por añadir es la v 1.1 y 1.2. Después creo que todo está correcto, y no falta nada mas. Y cuando los leas, vas a ver que cada uno tiene un propósito distinto. (Recuerda que todo lo que escribas, tiene que mantener todo el tono del documento, y la forma de redactar!...
+Luego, cuando abro mi app por primera vez, (solo pasa la primera vez. Ya la segunda no) Dice esto:
+INICIAR_APP.bat
+C:\WINDOWS\system32\cmd.exe
+C:\WINDOWS\system32\cmd.exe  terminal
+INFO      __main__  Epub-TTS arrancando. Errores → C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\registros\app.log                         
+INFO      app.motor.grabador_audio  [GrabadorAudio] ffmpeg local detectado: C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\bin\ffmpeg.exe       
+Epub-TTS
+lista de pestañas
+Azure (Gastado: 6943):  edición  500000
+No hace falta que el NVDA me diga, donde están los errores, de donde se guardan, ni que me diga que se detectaron los ffmpg.
+Porque cuando haga la carpeta portable, cro que lo de los ffmpg, pues al usuario le va da igual eso. Lo único importante es que suenen los soniditos y se muestre todo bien!
