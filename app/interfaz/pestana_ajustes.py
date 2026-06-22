@@ -1039,8 +1039,8 @@ class PanelElevenLabs(PanelProveedorIA):
 class PanelSapi5(wx.Panel):
     """
     Panel de catálogo para voces locales SAPI5.
-    Más simple que los paneles cloud: sin filtro de idioma ni voces nuevas,
-    solo lista con casillas de favorito y preescucha.
+    Más simple que los paneles cloud: sin filtro de idioma ni voces nuevas.
+    Solo casilla de favoritas, lista con casillas nativas y preescucha.
     """
 
     def __init__(self, padre, config):
@@ -1063,7 +1063,8 @@ class PanelSapi5(wx.Panel):
 
         self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
         self.chk_solo_favs.SetHelpText(
-            "Marcada: muestra solo las voces SAPI5 marcadas como favoritas."
+            "Marcada: muestra solo las voces SAPI5 marcadas como favoritas. "
+            "Desmarcada: muestra todas las voces SAPI5 del sistema."
         )
         self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self._al_filtrar)
         sizer.Add(self.chk_solo_favs, 0, wx.LEFT | wx.BOTTOM, 8)
@@ -1072,8 +1073,10 @@ class PanelSapi5(wx.Panel):
         self.lista_voces.InsertColumn(0, "Nombre", width=320)
         self.lista_voces.InsertColumn(1, "Idioma", width=200)
         self.lista_voces.SetHelpText(
-            "Lista de voces SAPI5 locales. Usa las flechas para navegar. "
-            "Pulsa Intro para marcar o desmarcar una voz como favorita."
+            "Lista de voces SAPI5 locales instaladas en este equipo. "
+            "Usa las flechas para navegar. "
+            "Pulsa Intro para marcar o desmarcar una voz como favorita. "
+            "Las voces marcadas aparecerán en las pestañas Lectura y Grabación."
         )
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)
@@ -1083,7 +1086,10 @@ class PanelSapi5(wx.Panel):
         self._reproductor = ReproductorVoz()
 
         self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
-        self.btn_escuchar.SetHelpText("Reproduce una muestra con la voz SAPI5 seleccionada.")
+        self.btn_escuchar.SetHelpText(
+            "Reproduce una muestra de texto con la voz SAPI5 seleccionada. "
+            "Púlsalo de nuevo para detener la reproducción."
+        )
         self.btn_escuchar.Bind(wx.EVT_BUTTON, self._al_escuchar)
         sizer.Add(self.btn_escuchar, 0, wx.ALL, 8)
 
@@ -1141,9 +1147,12 @@ class PanelSapi5(wx.Panel):
         return []
 
     def _guardar_favoritos(self):
+        # Escritura atómica: primero .tmp, luego renombrar
+        ruta_tmp = self.ruta_favs + ".tmp"
         try:
-            with open(self.ruta_favs, 'w', encoding='utf-8') as f:
+            with open(ruta_tmp, 'w', encoding='utf-8') as f:
                 json.dump(self.favoritos, f, indent=4)
+            os.replace(ruta_tmp, self.ruta_favs)
         except Exception:
             logger.exception("Error al guardar voces_favoritas.json (SAPI5)")
 
@@ -1154,7 +1163,7 @@ class PanelSapi5(wx.Panel):
             if id_voz not in self.favoritos:
                 self.favoritos.append(id_voz)
                 self._guardar_favoritos()
-                self._notificar_grabacion()
+                wx.CallAfter(self._notificar_pestanas)
 
     def _al_desmarcar_favorito(self, evento):
         voz = self.mapa_indices.get(evento.GetIndex())
@@ -1163,15 +1172,18 @@ class PanelSapi5(wx.Panel):
             if id_voz in self.favoritos:
                 self.favoritos.remove(id_voz)
                 self._guardar_favoritos()
-                self._notificar_grabacion()
+                wx.CallAfter(self._notificar_pestanas)
 
-    def _notificar_grabacion(self):
+    def _notificar_pestanas(self):
+        """Recarga en segundo plano los combos de voz en Lectura y Grabación."""
         try:
             ventana = wx.GetTopLevelParent(self)
             if hasattr(ventana, 'pestana_grabacion'):
                 ventana.pestana_grabacion._cargar_voces_disponibles()
+            if hasattr(ventana, 'pestana_lectura') and hasattr(ventana.pestana_lectura, '_recargar_combo_voces'):
+                ventana.pestana_lectura._recargar_combo_voces()
         except Exception:
-            logger.exception("Error al notificar cambio de favoritos (SAPI5) a pestaña Grabación")
+            logger.exception("Error al notificar cambio de favoritos SAPI5 a otras pestañas")
 
     def _al_escuchar(self, evento):
         if self._reproductor.obtener_estado() == "reproduciendo":
@@ -1208,12 +1220,15 @@ class PanelDiccionario(wx.Panel):
     """
     Habitación del diccionario de pronunciación local (pronunciacion.json).
     Permite añadir, editar y eliminar entradas sin reiniciar la aplicación.
+    Guarda cambios de forma explícita con el botón «Guardar Cambios (Alt+G)».
+    Si hay cambios pendientes al navegar a otro nodo del árbol, solicita confirmación.
     """
 
     def __init__(self, padre):
         super().__init__(padre)
         from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
         self._dic = DiccionarioPronunciacion()
+        self._pendiente = False
         self._construir_ui()
         wx.CallAfter(self._rellenar_lista)
 
@@ -1239,6 +1254,7 @@ class PanelDiccionario(wx.Panel):
         sz_form.Add(wx.StaticText(self, label="Palabra:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_original = wx.TextCtrl(self)
         self.txt_original.SetHelpText("Escribe la palabra o sigla tal como aparece en el texto.")
+        self.txt_original.Bind(wx.EVT_TEXT, self._al_modificar_campo)
         sz_form.Add(self.txt_original, 1, wx.RIGHT, 10)
         sz_form.Add(wx.StaticText(self, label="Pronunciación:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_pronunciacion = wx.TextCtrl(self)
@@ -1246,28 +1262,48 @@ class PanelDiccionario(wx.Panel):
             "Escribe la pronunciación fonética que usará la voz. "
             "Ejemplo: NVDA → en-ví-di-ei"
         )
+        self.txt_pronunciacion.Bind(wx.EVT_TEXT, self._al_modificar_campo)
         sz_form.Add(self.txt_pronunciacion, 1)
         sizer.Add(sz_form, 0, wx.EXPAND | wx.ALL, 8)
 
         sz_btn = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_anadir = wx.Button(self, label="Añadir / Actualizar")
         self.btn_anadir.SetHelpText(
-            "Guarda la entrada del formulario. Si la palabra ya existe, actualiza su pronunciación."
+            "Guarda la entrada del formulario en la lista. "
+            "Si la palabra ya existe, actualiza su pronunciación."
         )
         self.btn_anadir.Bind(wx.EVT_BUTTON, self._al_anadir)
         self.btn_eliminar = wx.Button(self, label="Eliminar seleccionada")
         self.btn_eliminar.SetHelpText("Elimina la entrada seleccionada en la lista.")
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
+        self.btn_guardar = wx.Button(self, label="Guardar cambios\tAlt+G")
+        self.btn_guardar.SetHelpText(
+            "Guarda todos los cambios del diccionario en disco y recarga la pronunciación activa."
+        )
+        self.btn_guardar.Bind(wx.EVT_BUTTON, self._al_guardar_cambios)
         sz_btn.Add(self.btn_anadir, 0, wx.RIGHT, 8)
-        sz_btn.Add(self.btn_eliminar, 0)
+        sz_btn.Add(self.btn_eliminar, 0, wx.RIGHT, 8)
+        sz_btn.Add(self.btn_guardar, 0)
         sizer.Add(sz_btn, 0, wx.ALL, 8)
+
+        tabla_accel = wx.AcceleratorTable([
+            (wx.ACCEL_ALT, ord('G'), self.btn_guardar.GetId()),
+        ])
+        self.SetAcceleratorTable(tabla_accel)
 
         self.SetSizer(sizer)
         self.primer_control = self.txt_original
 
     @property
     def ultimo_control(self):
-        return self.btn_eliminar
+        return self.btn_guardar
+
+    def tiene_cambios_pendientes(self):
+        return self._pendiente
+
+    def _al_modificar_campo(self, evento):
+        self._pendiente = True
+        evento.Skip()
 
     def _rellenar_lista(self):
         self.lista.Freeze()
@@ -1289,11 +1325,10 @@ class PanelDiccionario(wx.Panel):
             wx.MessageBox("Rellena los dos campos.", "Aviso")
             return
         self._dic.anadir_entrada(original, pronunciacion)
+        self._pendiente = True
         self.txt_original.Clear()
         self.txt_pronunciacion.Clear()
         self._rellenar_lista()
-        from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
-        recargar_diccionario_pronunciacion()
 
     def _al_eliminar(self, evento):
         idx = self.lista.GetFirstSelected()
@@ -1302,9 +1337,19 @@ class PanelDiccionario(wx.Panel):
             return
         original = self.lista.GetItemText(idx, 0)
         self._dic.eliminar_entrada(original)
+        self._pendiente = True
         self._rellenar_lista()
-        from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
-        recargar_diccionario_pronunciacion()
+
+    def _al_guardar_cambios(self, evento):
+        try:
+            self._dic.guardar()
+            self._pendiente = False
+            from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
+            recargar_diccionario_pronunciacion()
+            wx.MessageBox("Diccionario guardado correctamente.", "Guardado", wx.OK | wx.ICON_INFORMATION)
+        except Exception:
+            logger.exception("Error al guardar el diccionario de pronunciación")
+            wx.MessageBox("No se pudo guardar el diccionario.", "Error", wx.OK | wx.ICON_ERROR)
 # ANCLAJE_FIN: PANEL_DICCIONARIO
 
 
@@ -1568,6 +1613,7 @@ class PestanaAjustes(wx.Panel):
         )
         self._nodos = {}
         self._construir_arbol()
+        self.arbol_cat.Bind(wx.EVT_TREE_SEL_CHANGING, self._al_previa_cambio_nodo)
         self.arbol_cat.Bind(wx.EVT_TREE_SEL_CHANGED, self._al_cambiar_nodo)
         self.arbol_cat.Bind(wx.EVT_KEY_DOWN, self._al_tecla_arbol)
 
@@ -1675,6 +1721,26 @@ class PestanaAjustes(wx.Panel):
             reproducir(LIST_NAV)
         evento.Skip()
     # ANCLAJE_FIN: NAVEGACION_ARBOL_TAB
+
+    # ANCLAJE_INICIO: VETO_CAMBIO_NODO_PENDIENTE
+    def _al_previa_cambio_nodo(self, evento):
+        panel_actual = self.panel_derecho.GetCurrentPage()
+        if (
+            isinstance(panel_actual, PanelDiccionario)
+            and panel_actual.tiene_cambios_pendientes()
+        ):
+            respuesta = wx.MessageBox(
+                "Tienes cambios sin guardar en el diccionario de pronunciación.\n"
+                "¿Deseas descartarlos y continuar?",
+                "Cambios sin guardar",
+                wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING,
+            )
+            if respuesta != wx.YES:
+                evento.Veto()
+                return
+            panel_actual._pendiente = False
+        evento.Skip()
+    # ANCLAJE_FIN: VETO_CAMBIO_NODO_PENDIENTE
 
     def _al_cambiar_nodo(self, evento):
         nodo = evento.GetItem()
