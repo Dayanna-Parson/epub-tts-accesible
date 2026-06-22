@@ -184,6 +184,12 @@ class PanelGeneral(wx.ScrolledWindow):
         self.btn_buscar_updates.Bind(wx.EVT_BUTTON, self._al_buscar_actualizaciones)
         sizer_updates.Add(self.btn_buscar_updates, 0, wx.ALL, 5)
 
+        self.lbl_progreso = wx.StaticText(self, label="")
+        self.lbl_progreso.SetHelpText(
+            "Estado del proceso de actualización. NVDA lo leerá automáticamente al cambiar."
+        )
+        sizer_updates.Add(self.lbl_progreso, 0, wx.ALL, 5)
+
         sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
 
         self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
@@ -325,10 +331,15 @@ class PanelGeneral(wx.ScrolledWindow):
         reproducir(SUCCESS)
         wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
 
+    # ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON
     def _al_buscar_actualizaciones(self, evento=None):
         from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
         self.btn_buscar_updates.Disable()
         self.btn_buscar_updates.SetLabel("Comprobando…")
+        wx.CallAfter(
+            self.lbl_progreso.SetLabel,
+            "Comprobando versiones en el repositorio de GitHub...",
+        )
         comp = ComprobadorActualizaciones()
         comp.comprobar_en_hilo(
             lambda r: wx.CallAfter(self._al_resultado_actualizacion, r)
@@ -339,6 +350,7 @@ class PanelGeneral(wx.ScrolledWindow):
         self.btn_buscar_updates.SetLabel("Buscar actualizaciones ahora")
 
         if resultado.get("error"):
+            wx.CallAfter(self.lbl_progreso.SetLabel, "")
             reproducir(ERROR)
             wx.MessageBox(
                 f"No se pudo comprobar la actualización:\n{resultado['error']}",
@@ -349,18 +361,172 @@ class PanelGeneral(wx.ScrolledWindow):
         v_local = resultado.get("version_local", "—")
         v_remota = resultado.get("version_remota", "—")
 
-        if resultado.get("hay_nueva"):
+        if not resultado.get("hay_nueva"):
             reproducir(SUCCESS)
-            from app.interfaz.dialogo_novedades import DialogoNovedades
-            dlg = DialogoNovedades(self, v_remota, resultado.get("novedades", ""))
-            dlg.ShowModal()
-            dlg.Destroy()
-        else:
-            reproducir(SUCCESS)
+            wx.CallAfter(self.lbl_progreso.SetLabel, "")
             wx.MessageBox(
                 f"Ya tienes la versión más reciente ({v_local}).",
                 "Sin actualizaciones", wx.OK | wx.ICON_INFORMATION,
             )
+            return
+
+        reproducir(SUCCESS)
+        from app.interfaz.dialogo_novedades import DialogoNovedades
+        dlg = DialogoNovedades(self, v_remota, resultado.get("novedades", ""))
+        respuesta = dlg.ShowModal()
+        dlg.Destroy()
+
+        if respuesta != wx.ID_OK:
+            wx.CallAfter(self.lbl_progreso.SetLabel, "")
+            return
+
+        wx.CallAfter(
+            self.lbl_progreso.SetLabel,
+            "Descargando el archivo de actualización en segundo plano, por favor espera...",
+        )
+        self.btn_buscar_updates.Disable()
+        import threading
+        hilo = threading.Thread(
+            target=self._hilo_descargar_e_instalar,
+            args=(v_remota,),
+            daemon=True,
+        )
+        hilo.start()
+
+    def _hilo_descargar_e_instalar(self, version_remota: str):
+        import shutil
+        import urllib.request
+        import zipfile
+        from app.config_rutas import RAIZ
+
+        _URL_ZIP = (
+            "https://github.com/Dayanna-Parson/epub-tts-accesible"
+            "/archive/refs/heads/main.zip"
+        )
+
+        carpeta_actualizacion = os.path.join(RAIZ, "actualizacion")
+        os.makedirs(carpeta_actualizacion, exist_ok=True)
+        ruta_zip = os.path.join(carpeta_actualizacion, "nueva_version.zip")
+
+        try:
+            req = urllib.request.Request(
+                _URL_ZIP,
+                headers={"User-Agent": "epub-tts-accesible/updater"},
+            )
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                with open(ruta_zip, "wb") as f_out:
+                    bloque = 65536
+                    while True:
+                        chunk = resp.read(bloque)
+                        if not chunk:
+                            break
+                        f_out.write(chunk)
+        except Exception as exc:
+            logger.exception("Error al descargar el ZIP de actualización")
+            wx.CallAfter(self.lbl_progreso.SetLabel, "")
+            wx.CallAfter(self.btn_buscar_updates.Enable)
+            wx.CallAfter(
+                wx.MessageBox,
+                f"No se pudo descargar la actualización:\n{exc}",
+                "Error de descarga",
+                wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        wx.CallAfter(
+            self.lbl_progreso.SetLabel,
+            "Descarga completada con éxito. Preparando la instalación...",
+        )
+
+        try:
+            self._escribir_y_lanzar_bat(ruta_zip, RAIZ)
+        except Exception as exc:
+            logger.exception("Error al generar el script de actualización")
+            wx.CallAfter(self.lbl_progreso.SetLabel, "")
+            wx.CallAfter(self.btn_buscar_updates.Enable)
+            wx.CallAfter(
+                wx.MessageBox,
+                f"No se pudo preparar la instalación:\n{exc}",
+                "Error interno",
+                wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+    def _escribir_y_lanzar_bat(self, ruta_zip: str, raiz: str):
+        import subprocess
+
+        lanzador = os.path.join(raiz, "INICIAR_APP.bat")
+        bat_path = os.path.join(raiz, "actualizador.bat")
+
+        # Carpetas y archivos que el .bat debe conservar intactos
+        _PRESERVAR = {
+            "configuraciones",
+            "Grabaciones_Epub-TTS",
+            "bin",
+            "recursos",
+            "actualizacion",
+            "INICIAR_APP.bat",
+            "Manual de usuario.pdf",
+            "Léeme.txt",
+            "README.md",
+            "LICENSE",
+        }
+
+        # Genera las líneas del .bat que borran lo que NO está en _PRESERVAR
+        lineas_borrado = []
+        try:
+            for entrada in os.listdir(raiz):
+                if entrada in _PRESERVAR or entrada == "actualizador.bat":
+                    continue
+                ruta_entrada = os.path.join(raiz, entrada)
+                if os.path.isdir(ruta_entrada):
+                    lineas_borrado.append(f'rmdir /s /q "{ruta_entrada}"')
+                else:
+                    lineas_borrado.append(f'del /f /q "{ruta_entrada}"')
+        except Exception:
+            logger.exception("Error al listar raíz para el script de borrado")
+
+        bloque_borrado = "\n".join(lineas_borrado)
+
+        contenido_bat = (
+            "@echo off\n"
+            "timeout /t 2 /nobreak >nul\n"
+            "\n"
+            ":: Eliminar archivos y carpetas de la versión anterior\n"
+            f"{bloque_borrado}\n"
+            "\n"
+            ":: Descomprimir la nueva versión (PowerShell incluido en Windows 10+)\n"
+            f'powershell -Command "Expand-Archive -Path \\"{ruta_zip}\\" -DestinationPath \\"{raiz}\\" -Force"\n'
+            "\n"
+            ":: Mover el contenido de la subcarpeta del ZIP a la raíz del portable\n"
+            f'for /d %%D in ("{raiz}\\epub-tts-accesible-*") do (\n'
+            f'    robocopy "%%D" "{raiz}" /e /move /xd configuraciones Grabaciones_Epub-TTS bin recursos actualizacion >nul\n'
+            "    rmdir /s /q \"%%D\" 2>nul\n"
+            ")\n"
+            "\n"
+            ":: Eliminar el ZIP temporal\n"
+            f'rmdir /s /q "{os.path.join(raiz, "actualizacion")}"\n'
+            "\n"
+            ":: Relanzar la aplicación\n"
+            f'start "" "{lanzador}"\n'
+            "\n"
+            ":: Autoeliminar este script\n"
+            "del %0\n"
+        )
+
+        ruta_bat_tmp = bat_path + ".tmp"
+        with open(ruta_bat_tmp, "w", encoding="cp1252", errors="replace") as f:
+            f.write(contenido_bat)
+        os.replace(ruta_bat_tmp, bat_path)
+
+        subprocess.Popen(
+            ["cmd.exe", "/c", bat_path],
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            close_fds=True,
+        )
+
+        wx.CallAfter(wx.GetTopLevelParent(self).Close)
+    # ANCLAJE_FIN: ACTUALIZADOR_SCRIPT_CLON
 # ANCLAJE_FIN: PANEL_GENERAL
 
 
