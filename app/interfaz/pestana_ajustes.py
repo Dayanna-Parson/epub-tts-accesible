@@ -1,44 +1,38 @@
 import wx
 import os
 import json
+import logging
 import webbrowser
 import wx.lib.mixins.listctrl as listmix
-from app.motor.cliente_nube_voces import GestorVoces
-from app.motor.reproductor_voz import ReproductorVoz
+
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
-from app.motor.control_cuota import ControlCuota
 from app.motor.reproductor_sonidos import reproducir, LIST_NAV, SUCCESS, ERROR
 
-# --- CLASE ESPECIAL PARA LA LISTA CON CASILLAS ---
+logger = logging.getLogger(__name__)
+
+
+# ANCLAJE_INICIO: LISTA_VOCES_CHECK
 class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
     def __init__(self, parent):
         wx.ListCtrl.__init__(self, parent, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES | wx.LC_VRULES)
         listmix.CheckListCtrlMixin.__init__(self)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
-        # ESTO ES CRUCIAL PARA QUE SE VEAN LAS CASILLAS
-        self.EnableCheckBoxes(True) 
-        
-        # Evento para que NVDA anuncie el cambio al pulsar espacio
-        self.Bind(wx.EVT_LIST_KEY_DOWN, self.al_tecla)
+        self.EnableCheckBoxes(True)
+        self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
 
-    def al_tecla(self, event):
-        key = event.GetKeyCode()
+    def _al_tecla(self, evento):
+        key = evento.GetKeyCode()
         if key in (wx.WXK_UP, wx.WXK_DOWN):
             reproducir(LIST_NAV)
-        elif key == wx.WXK_SPACE:
-            self.ToggleItem(self.GetFirstSelected())
-        event.Skip()
+        evento.Skip()
+# ANCLAJE_FIN: LISTA_VOCES_CHECK
 
 
-_CHARS_POR_LIBRO = 300_000  # aprox. 300 paginas de 1000 caracteres
+# ANCLAJE_INICIO: HELPER_TEXTO_LIMITE
+_CHARS_POR_LIBRO = 300_000
 
 
 def _texto_ayuda_limite(proveedor, gastado, limite_chars):
-    """
-    Genera el texto de SetHelpText que NVDA verbalizara al tabular al campo de limite.
-    Conciso y sin simbolos especiales para que el lector de pantalla lo lea limpio.
-    Precios 2026 pay-as-you-go (USD): Azure/Polly Neural 16 dolares por millon.
-    """
     try:
         lim = int(limite_chars)
         gas = int(gastado)
@@ -57,10 +51,14 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
             f"Coste total al limite: {coste_lim} dolares al mes."
         )
     elif proveedor == "elevenlabs":
-        if lim <= 30_000:    plan = "Plan Starter, 5 dolares al mes"
-        elif lim <= 100_000: plan = "Plan Creator, 22 dolares al mes"
-        elif lim <= 500_000: plan = "Plan Pro, 99 dolares al mes"
-        else:                plan = "Plan Scale, 330 dolares al mes"
+        if lim <= 30_000:
+            plan = "Plan Starter, 5 dolares al mes"
+        elif lim <= 100_000:
+            plan = "Plan Creator, 22 dolares al mes"
+        elif lim <= 500_000:
+            plan = "Plan Pro, 99 dolares al mes"
+        else:
+            plan = "Plan Scale, 330 dolares al mes"
         return (
             f"Gasto: {gas} caracteres. "
             f"Restante: {restante} caracteres, aprox {libros} libros. "
@@ -75,46 +73,44 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
             f"Coste total al limite: {coste_lim} dolares al mes."
         )
     return ""
+# ANCLAJE_FIN: HELPER_TEXTO_LIMITE
 
 
+# ANCLAJE_INICIO: PANEL_GENERAL
 class PanelGeneral(wx.ScrolledWindow):
     def __init__(self, padre, config):
         super().__init__(padre, style=wx.VSCROLL)
         self.SetScrollRate(0, 20)
         self.config = config
-        self.cuota = ControlCuota() # Instancia para leer datos
+        from app.motor.control_cuota import ControlCuota
+        self.cuota = ControlCuota()
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        # CONTROL DE PRESUPUESTO
-        # La información de costes se integra en el AccessibleDescription (SetHelpText)
-        # de cada campo — NVDA la verbalizará al tabular, sin texto suelto que sature.
         sb_cuota = wx.StaticBox(self, label="Control de Presupuesto y Límites")
         sizer_cuota = wx.StaticBoxSizer(sb_cuota, wx.VERTICAL)
 
-        # Controles Azure
         g_az, l_az = self.cuota.get_info_uso("azure")
-        sizer_cuota.Add(self._crear_fila_limite("Azure", g_az, l_az, "azure"), 0, wx.EXPAND|wx.ALL, 2)
-        
-        # Controles Polly
-        g_po, l_po = self.cuota.get_info_uso("polly")
-        sizer_cuota.Add(self._crear_fila_limite("Polly", g_po, l_po, "polly"), 0, wx.EXPAND|wx.ALL, 2)
-        
-        # Controles Eleven
-        g_el, l_el = self.cuota.get_info_uso("elevenlabs")
-        sizer_cuota.Add(self._crear_fila_limite("ElevenLabs", g_el, l_el, "elevenlabs"), 0, wx.EXPAND|wx.ALL, 2)
+        sizer_cuota.Add(self._crear_fila_limite("Azure", g_az, l_az, "azure"), 0, wx.EXPAND | wx.ALL, 2)
 
-        # Controles Deepgram
+        g_po, l_po = self.cuota.get_info_uso("polly")
+        sizer_cuota.Add(self._crear_fila_limite("Polly", g_po, l_po, "polly"), 0, wx.EXPAND | wx.ALL, 2)
+
+        g_el, l_el = self.cuota.get_info_uso("elevenlabs")
+        sizer_cuota.Add(self._crear_fila_limite("ElevenLabs", g_el, l_el, "elevenlabs"), 0, wx.EXPAND | wx.ALL, 2)
+
         g_dg, l_dg = self.cuota.get_info_uso("deepgram")
-        sizer_cuota.Add(self._crear_fila_limite("Deepgram", g_dg, l_dg, "deepgram"), 0, wx.EXPAND|wx.ALL, 2)
+        sizer_cuota.Add(self._crear_fila_limite("Deepgram", g_dg, l_dg, "deepgram"), 0, wx.EXPAND | wx.ALL, 2)
 
         sizer.Add(sizer_cuota, 0, wx.EXPAND | wx.ALL, 10)
 
-        # 3. NAVEGACIÓN
         sb_nav = wx.StaticBox(self, label="Navegación")
         sizer_nav = wx.StaticBoxSizer(sb_nav, wx.VERTICAL)
         hbox_salto = wx.BoxSizer(wx.HORIZONTAL)
-        hbox_salto.Add(wx.StaticText(self, label="Segundos de salto (botones Retroceder y Avanzar en Lectura):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
+        hbox_salto.Add(
+            wx.StaticText(self, label="Segundos de salto (botones Retroceder y Avanzar en Lectura):"),
+            0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10,
+        )
         self.txt_salto = wx.TextCtrl(self, value=str(self.config.get("segundos_salto", "10")), size=(50, -1))
         self.txt_salto.SetHelpText(
             "Número de segundos que avanza o retrocede el audio al pulsar los botones "
@@ -124,111 +120,103 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer_nav.Add(hbox_salto, 0, wx.ALL, 5)
 
         hbox_pausa = wx.BoxSizer(wx.HORIZONTAL)
-        hbox_pausa.Add(wx.StaticText(self, label="Pausa entre párrafos en voces de IA (milisegundos):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 10)
-        self.spin_pausa = wx.SpinCtrl(self, value=str(self.config.get("pausa_entre_fragmentos_ms", 0)),
-                                      min=0, max=3000, size=(70, -1))
+        hbox_pausa.Add(
+            wx.StaticText(self, label="Pausa entre párrafos en voces de IA (milisegundos):"),
+            0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10,
+        )
+        self.spin_pausa = wx.SpinCtrl(
+            self,
+            value=str(self.config.get("pausa_entre_fragmentos_ms", 0)),
+            min=0, max=3000, size=(70, -1),
+        )
         self.spin_pausa.SetHelpText(
-            "Tiempo de espera entre fragmentos consecutivos cuando se usan voces de IA (Azure, Polly, ElevenLabs). "
-            "0 = sin pausa adicional. Ejemplo: 300 añade 0,3 segundos de silencio entre párrafos. "
-            "No afecta a las voces SAPI5 locales."
+            "Tiempo de espera entre fragmentos consecutivos cuando se usan voces de IA. "
+            "0 = sin pausa adicional. Ejemplo: 300 añade 0,3 segundos de silencio entre párrafos."
         )
         hbox_pausa.Add(self.spin_pausa, 0)
         sizer_nav.Add(hbox_pausa, 0, wx.ALL, 5)
 
         sizer.Add(sizer_nav, 0, wx.EXPAND | wx.ALL, 10)
 
-        # ACTUALIZACIONES
         sb_updates = wx.StaticBox(self, label="Actualizaciones")
         sizer_updates = wx.StaticBoxSizer(sb_updates, wx.VERTICAL)
 
         self.chk_actualizar = wx.CheckBox(
-            self,
-            label="Buscar actualizaciones automáticamente al iniciar la app",
+            self, label="Buscar actualizaciones automáticamente al iniciar la app"
         )
-        self.chk_actualizar.SetValue(
-            self.config.get("actualizar_automaticamente", True)
-        )
+        self.chk_actualizar.SetValue(self.config.get("actualizar_automaticamente", True))
         self.chk_actualizar.SetHelpText(
-            "Si está marcado, la aplicación comprueba si hay una nueva versión "
-            "disponible cada vez que se inicia. La comprobación se hace en segundo "
-            "plano y no ralentiza el arranque. Guarda la configuración para que "
-            "el cambio surta efecto."
+            "Si está marcado, la aplicación comprueba si hay una nueva versión disponible "
+            "cada vez que se inicia. La comprobación se hace en segundo plano."
         )
         sizer_updates.Add(self.chk_actualizar, 0, wx.ALL, 5)
 
         self.btn_buscar_updates = wx.Button(self, label="Buscar actualizaciones ahora")
         self.btn_buscar_updates.SetHelpText(
             "Comprueba si hay una versión nueva comparando tu version.json local "
-            "con el del repositorio de GitHub. Si hay novedades, se abre un diálogo "
-            "accesible con el contenido de novedades.txt. "
-            "La consulta se hace en segundo plano; el botón se reactiva al terminar."
+            "con el del repositorio de GitHub."
         )
         self.btn_buscar_updates.Bind(wx.EVT_BUTTON, self._al_buscar_actualizaciones)
         sizer_updates.Add(self.btn_buscar_updates, 0, wx.ALL, 5)
 
         sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
 
-        # GUARDAR — guardado como atributo para que VentanaPrincipal pueda usarlo
-        # como punto de anclaje del bucle de tabulación accesible
         self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
         self.btn_guardar.SetHelpText(
-            "Guarda los segundos de salto y los límites de presupuesto de cada proveedor "
-            "en el archivo de configuración."
+            "Guarda los segundos de salto y los límites de presupuesto de cada proveedor."
         )
         self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
         sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
 
         self.btn_limpiar = wx.Button(self, label="Limpiar caché")
         self.btn_limpiar.SetHelpText(
-            "Elimina carpetas __pycache__, archivos .tmp y audio temporal generado "
-            "por la aplicación. Al terminar muestra cuántos archivos se borraron y "
-            "cuánto espacio se liberó."
+            "Elimina carpetas __pycache__, archivos .tmp y audio temporal."
         )
         self.btn_limpiar.Bind(wx.EVT_BUTTON, self._limpiar_cache)
         sizer.Add(self.btn_limpiar, 0, wx.ALL, 10)
 
         self.SetSizer(sizer)
+        self.primer_control = self.txt_salto
+
+    @property
+    def ultimo_control(self):
+        return self.btn_limpiar
 
     def _crear_fila_limite(self, nombre, gastado, limite, clave):
-        if not hasattr(self, "txt_limites"): self.txt_limites = {}
-
+        if not hasattr(self, "txt_limites"):
+            self.txt_limites = {}
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         lbl = wx.StaticText(self, label=f"{nombre} (Gastado: {gastado}):", size=(180, -1))
         txt = wx.TextCtrl(self, value=str(limite))
         txt.SetName(f"limite_{clave}")
-        # SetHelpText: NVDA lo verbalizará al recibir foco — gasto, restante y libros equiv.
         txt.SetHelpText(_texto_ayuda_limite(clave, gastado, limite))
         self.txt_limites[clave] = txt
 
-        def _on_texto(event, _clave=clave, _gas=gastado, _txt=txt):
-            _txt.SetHelpText(_texto_ayuda_limite(_clave, _gas, event.GetString()))
-            event.Skip()
+        def _on_texto(evento, _clave=clave, _gas=gastado, _txt=txt):
+            _txt.SetHelpText(_texto_ayuda_limite(_clave, _gas, evento.GetString()))
+            evento.Skip()
 
         txt.Bind(wx.EVT_TEXT, _on_texto)
-        hbox.Add(lbl, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        hbox.Add(lbl, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         hbox.Add(txt, 1, wx.EXPAND)
         return hbox
 
     def guardar_todo(self):
-        # Guardar config general
         self.config["segundos_salto"] = self.txt_salto.GetValue()
         self.config["pausa_entre_fragmentos_ms"] = self.spin_pausa.GetValue()
         self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
         padre = wx.GetTopLevelParent(self)
         if hasattr(padre, "guardar_config_en_archivo"):
             padre.guardar_config_en_archivo()
-            
-        # Guardar límites de cuota
         if hasattr(self, "txt_limites"):
             for clave, txt in self.txt_limites.items():
                 val = txt.GetValue()
                 if val.isdigit():
                     self.cuota.set_limite(clave, int(val))
-        
         reproducir(SUCCESS)
         wx.MessageBox("Configuración y límites guardados.")
 
-    def _limpiar_cache(self, event=None):
+    def _limpiar_cache(self, evento=None):
         from app.config_rutas import RAIZ
         import shutil
 
@@ -236,9 +224,7 @@ class PanelGeneral(wx.ScrolledWindow):
         total_bytes = 0
         errores = 0
 
-        # 1. Carpetas __pycache__ en el árbol del proyecto
         for dirpath, dirnames, _ in os.walk(RAIZ):
-            # No entrar en carpetas ocultas ni en el entorno virtual
             dirnames[:] = [
                 d for d in dirnames
                 if not d.startswith('.') and d not in ('venv', '.venv', 'env', 'node_modules')
@@ -257,7 +243,6 @@ class PanelGeneral(wx.ScrolledWindow):
                 except Exception:
                     errores += 1
 
-        # 2. Archivos .tmp en todo el proyecto
         for dirpath, dirnames, filenames in os.walk(RAIZ):
             dirnames[:] = [
                 d for d in dirnames
@@ -273,7 +258,6 @@ class PanelGeneral(wx.ScrolledWindow):
                     except Exception:
                         errores += 1
 
-        # 3. Archivos de audio temporal en la carpeta 'cache' del proyecto
         carpeta_cache = os.path.join(RAIZ, 'cache')
         if os.path.isdir(carpeta_cache):
             for fname in os.listdir(carpeta_cache):
@@ -286,7 +270,6 @@ class PanelGeneral(wx.ScrolledWindow):
                     except Exception:
                         errores += 1
 
-        # Formatear tamaño legible
         if total_bytes >= 1_048_576:
             tam_str = f"{total_bytes / 1_048_576:.1f} MB"
         elif total_bytes >= 1024:
@@ -304,8 +287,7 @@ class PanelGeneral(wx.ScrolledWindow):
         reproducir(SUCCESS)
         wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
 
-    def _al_buscar_actualizaciones(self, event=None):
-        """Lanza la comprobación de versión en hilo de fondo y deshabilita el botón."""
+    def _al_buscar_actualizaciones(self, evento=None):
         from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
         self.btn_buscar_updates.Disable()
         self.btn_buscar_updates.SetLabel("Comprobando…")
@@ -315,7 +297,6 @@ class PanelGeneral(wx.ScrolledWindow):
         )
 
     def _al_resultado_actualizacion(self, resultado: dict):
-        """Recibe el resultado del hilo y muestra el diálogo o un aviso."""
         self.btn_buscar_updates.Enable()
         self.btn_buscar_updates.SetLabel("Buscar actualizaciones ahora")
 
@@ -327,7 +308,7 @@ class PanelGeneral(wx.ScrolledWindow):
             )
             return
 
-        v_local  = resultado.get("version_local",  "—")
+        v_local = resultado.get("version_local", "—")
         v_remota = resultado.get("version_remota", "—")
 
         if resultado.get("hay_nueva"):
@@ -342,21 +323,22 @@ class PanelGeneral(wx.ScrolledWindow):
                 f"Ya tienes la versión más reciente ({v_local}).",
                 "Sin actualizaciones", wx.OK | wx.ICON_INFORMATION,
             )
+# ANCLAJE_FIN: PANEL_GENERAL
 
 
+# ANCLAJE_INICIO: PANEL_CLAVES
 class PanelClaves(wx.ScrolledWindow):
     def __init__(self, padre, config):
         super().__init__(padre, style=wx.VSCROLL)
         self.SetScrollRate(0, 20)
-        self.config = config   # ajustes generales (NO contiene claves API)
-        
+        self.config = config
+
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(self, label="Configura tus claves API."), 0, wx.ALL, 10)
 
-        # --- AZURE ---
+        # Azure
         sb_az = wx.StaticBox(self, label="Microsoft Azure TTS")
         sz_az = wx.StaticBoxSizer(sb_az, wx.VERTICAL)
-        
         sz_az.Add(wx.StaticText(self, label="Clave de suscripción (Key). Formato: 32 caracteres hexadecimales:"), 0, wx.ALL, 2)
         self.txt_az_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_az_key.SetHelpText(
@@ -364,20 +346,17 @@ class PanelClaves(wx.ScrolledWindow):
             "Puedes encontrarla en el Portal de Azure, en tu recurso de Servicios Cognitivos, "
             "sección Claves y Punto de conexión."
         )
-        sz_az.Add(self.txt_az_key, 0, wx.EXPAND|wx.ALL, 5)
-
+        sz_az.Add(self.txt_az_key, 0, wx.EXPAND | wx.ALL, 5)
         sz_az.Add(wx.StaticText(self, label="Región del recurso (ej: eastus, westeurope):"), 0, wx.ALL, 2)
         self.txt_az_region = wx.TextCtrl(self)
         self.txt_az_region.SetHelpText(
             "Región de Azure donde está creado tu recurso. "
-            "Ejemplos: eastus, westus2, westeurope. "
-            "La encontrarás junto a la clave en el Portal de Azure."
+            "Ejemplos: eastus, westus2, westeurope."
         )
-        sz_az.Add(self.txt_az_region, 0, wx.EXPAND|wx.ALL, 5)
-        
+        sz_az.Add(self.txt_az_region, 0, wx.EXPAND | wx.ALL, 5)
         hb_az = wx.BoxSizer(wx.HORIZONTAL)
         btn_az_web = wx.Button(self, label="Conseguir clave Azure")
-        btn_az_web.SetHelpText("Abre el navegador en la página de Azure Text to Speech para crear o consultar tu clave.")
+        btn_az_web.SetHelpText("Abre el navegador en la página de Azure Text to Speech.")
         btn_az_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://azure.microsoft.com/es-es/services/cognitive-services/text-to-speech/"))
         btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")
         btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")
@@ -385,44 +364,35 @@ class PanelClaves(wx.ScrolledWindow):
         btn_az_del = wx.Button(self, label="Borrar clave Azure")
         btn_az_del.SetHelpText("Borra los datos de acceso de Azure guardados en la aplicación.")
         btn_az_del.Bind(wx.EVT_BUTTON, self.al_borrar_azure)
-        
         hb_az.Add(btn_az_web, 0, wx.RIGHT, 5)
         hb_az.Add(btn_az_check, 0, wx.RIGHT, 5)
         hb_az.Add(btn_az_del, 0)
         sz_az.Add(hb_az, 0, wx.ALL, 5)
-        sizer.Add(sz_az, 0, wx.EXPAND|wx.ALL, 10)
+        sizer.Add(sz_az, 0, wx.EXPAND | wx.ALL, 10)
 
-        # --- AMAZON POLLY (Restaurado) ---
+        # Amazon Polly
         sb_po = wx.StaticBox(self, label="Amazon Polly")
         sz_po = wx.StaticBoxSizer(sb_po, wx.VERTICAL)
-        
         sz_po.Add(wx.StaticText(self, label="Access Key ID (identificador de la clave AWS):"), 0, wx.ALL, 2)
         self.txt_po_key = wx.TextCtrl(self)
         self.txt_po_key.SetHelpText(
             "Identificador de clave de acceso de AWS. "
             "Lo encontrarás en la consola de AWS, sección IAM, Mis credenciales de seguridad."
         )
-        sz_po.Add(self.txt_po_key, 0, wx.EXPAND|wx.ALL, 5)
-
+        sz_po.Add(self.txt_po_key, 0, wx.EXPAND | wx.ALL, 5)
         sz_po.Add(wx.StaticText(self, label="Secret Access Key (clave secreta, se muestra solo al crearla):"), 0, wx.ALL, 2)
         self.txt_po_secret = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_po_secret.SetHelpText(
-            "Clave de acceso secreta de AWS. Solo se muestra una vez al crearla. "
-            "Si la perdiste, debes generar una nueva en la consola de AWS."
+            "Clave de acceso secreta de AWS. Solo se muestra una vez al crearla."
         )
-        sz_po.Add(self.txt_po_secret, 0, wx.EXPAND|wx.ALL, 5)
-
+        sz_po.Add(self.txt_po_secret, 0, wx.EXPAND | wx.ALL, 5)
         sz_po.Add(wx.StaticText(self, label="Región AWS (ej: us-east-1, eu-west-1):"), 0, wx.ALL, 2)
         self.txt_po_region = wx.TextCtrl(self)
-        self.txt_po_region.SetHelpText(
-            "Región de AWS donde usarás Amazon Polly. "
-            "Ejemplos: us-east-1, us-west-2, eu-west-1."
-        )
-        sz_po.Add(self.txt_po_region, 0, wx.EXPAND|wx.ALL, 5)
-        
+        self.txt_po_region.SetHelpText("Región de AWS donde usarás Amazon Polly.")
+        sz_po.Add(self.txt_po_region, 0, wx.EXPAND | wx.ALL, 5)
         hb_po = wx.BoxSizer(wx.HORIZONTAL)
         btn_po_web = wx.Button(self, label="Conseguir clave Amazon Polly")
-        btn_po_web.SetHelpText("Abre el navegador en la página de Amazon Polly para crear o gestionar tus credenciales AWS.")
+        btn_po_web.SetHelpText("Abre el navegador en la página de Amazon Polly.")
         btn_po_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aws.amazon.com/polly/"))
         btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
         btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
@@ -430,100 +400,89 @@ class PanelClaves(wx.ScrolledWindow):
         btn_po_del = wx.Button(self, label="Borrar clave Polly")
         btn_po_del.SetHelpText("Borra los datos de acceso de Amazon Polly guardados en la aplicación.")
         btn_po_del.Bind(wx.EVT_BUTTON, self.al_borrar_polly)
-
         hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
         hb_po.Add(btn_po_check, 0, wx.RIGHT, 5)
         hb_po.Add(btn_po_del, 0)
         sz_po.Add(hb_po, 0, wx.ALL, 5)
-        sizer.Add(sz_po, 0, wx.EXPAND|wx.ALL, 10)
+        sizer.Add(sz_po, 0, wx.EXPAND | wx.ALL, 10)
 
-        # --- ELEVENLABS ---
+        # ElevenLabs
         sb_el = wx.StaticBox(self, label="ElevenLabs")
         sz_el = wx.StaticBoxSizer(sb_el, wx.VERTICAL)
-        
         sz_el.Add(wx.StaticText(self, label="API Key (clave de acceso de ElevenLabs):"), 0, wx.ALL, 2)
         self.txt_el_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_el_key.SetHelpText(
-            "Clave API de ElevenLabs. La encontrarás en tu perfil de ElevenLabs, "
-            "sección Profile Settings, apartado API Key."
+            "Clave API de ElevenLabs. La encontrarás en tu perfil, sección API Key."
         )
-        sz_el.Add(self.txt_el_key, 0, wx.EXPAND|wx.ALL, 5)
-        
+        sz_el.Add(self.txt_el_key, 0, wx.EXPAND | wx.ALL, 5)
         hb_el = wx.BoxSizer(wx.HORIZONTAL)
         btn_el_web = wx.Button(self, label="Conseguir clave ElevenLabs")
-        btn_el_web.SetHelpText("Abre el navegador en la página de ElevenLabs para crear una cuenta o consultar tu clave API.")
+        btn_el_web.SetHelpText("Abre el navegador en la página de ElevenLabs.")
         btn_el_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://elevenlabs.io/"))
         btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
-        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces disponibles.")
+        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces.")
         btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))
         btn_el_del = wx.Button(self, label="Borrar clave ElevenLabs")
         btn_el_del.SetHelpText("Borra la API Key de ElevenLabs guardada en la aplicación.")
         btn_el_del.Bind(wx.EVT_BUTTON, self.al_borrar_elevenlabs)
-
         hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
         hb_el.Add(btn_el_check, 0, wx.RIGHT, 5)
         hb_el.Add(btn_el_del, 0)
         sz_el.Add(hb_el, 0, wx.ALL, 5)
-        sizer.Add(sz_el, 0, wx.EXPAND|wx.ALL, 10)
+        sizer.Add(sz_el, 0, wx.EXPAND | wx.ALL, 10)
 
-        # --- DEEPGRAM ---
+        # Deepgram
         sb_dg = wx.StaticBox(self, label="Deepgram Aura-2 TTS")
         sz_dg = wx.StaticBoxSizer(sb_dg, wx.VERTICAL)
-
         sz_dg.Add(wx.StaticText(self, label="API Key de Deepgram:"), 0, wx.ALL, 2)
         self.txt_dg_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_dg_key.SetHelpText(
-            "Clave API de Deepgram. La encontrarás en el panel de Deepgram, "
-            "sección API Keys. Deepgram ofrece créditos gratuitos de inicio "
-            "y factura por carácter sin cuota mensual fija."
+            "Clave API de Deepgram. La encontrarás en el panel de Deepgram, sección API Keys."
         )
-        sz_dg.Add(self.txt_dg_key, 0, wx.EXPAND|wx.ALL, 5)
-
+        sz_dg.Add(self.txt_dg_key, 0, wx.EXPAND | wx.ALL, 5)
         hb_dg = wx.BoxSizer(wx.HORIZONTAL)
         btn_dg_web = wx.Button(self, label="Conseguir clave Deepgram")
-        btn_dg_web.SetHelpText("Abre el navegador en la página de Deepgram para crear una cuenta o consultar tu API Key.")
+        btn_dg_web.SetHelpText("Abre el navegador en la página de Deepgram.")
         btn_dg_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://console.deepgram.com/"))
         btn_dg_check = wx.Button(self, label="Comprobar clave y descargar voces Deepgram")
-        btn_dg_check.SetHelpText("Guarda la API Key, la verifica contra Deepgram y descarga la lista de modelos Aura-2 disponibles.")
+        btn_dg_check.SetHelpText("Guarda la API Key, la verifica contra Deepgram y descarga la lista de modelos Aura-2.")
         btn_dg_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "deepgram"))
         btn_dg_del = wx.Button(self, label="Borrar clave Deepgram")
         btn_dg_del.SetHelpText("Borra la API Key de Deepgram guardada en la aplicación.")
         btn_dg_del.Bind(wx.EVT_BUTTON, self.al_borrar_deepgram)
-
-        hb_dg.Add(btn_dg_web,   0, wx.RIGHT, 5)
+        hb_dg.Add(btn_dg_web, 0, wx.RIGHT, 5)
         hb_dg.Add(btn_dg_check, 0, wx.RIGHT, 5)
-        hb_dg.Add(btn_dg_del,   0)
+        hb_dg.Add(btn_dg_del, 0)
         sz_dg.Add(hb_dg, 0, wx.ALL, 5)
-        sizer.Add(sz_dg, 0, wx.EXPAND|wx.ALL, 10)
+        sizer.Add(sz_dg, 0, wx.EXPAND | wx.ALL, 10)
 
-        # --- GUARDAR — atributo de instancia para el bucle de tabulación accesible ---
         self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
         self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
-        sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER|wx.ALL, 15)
+        sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER | wx.ALL, 15)
 
         self.SetSizer(sizer)
+        self.primer_control = self.txt_az_key
         self.cargar_datos_visuales()
 
+    @property
+    def ultimo_control(self):
+        return self.btn_save
+
     def cargar_datos_visuales(self):
-        """Carga las claves desde configuraciones/claves_api.json (separado de ajustes)."""
         claves = cargar_claves()
         d_az = claves.get("azure", {})
         self.txt_az_key.SetValue(d_az.get("key", ""))
         self.txt_az_region.SetValue(d_az.get("region", ""))
-
         d_po = claves.get("polly", {})
         self.txt_po_key.SetValue(d_po.get("access_key", ""))
         self.txt_po_secret.SetValue(d_po.get("secret_key", ""))
         self.txt_po_region.SetValue(d_po.get("region", ""))
-
         d_el = claves.get("elevenlabs", {})
         self.txt_el_key.SetValue(d_el.get("api_key", ""))
-
         d_dg = claves.get("deepgram", {})
         self.txt_dg_key.SetValue(d_dg.get("api_key", ""))
 
-    def al_guardar(self, event):
-        """Guarda las claves en configuraciones/claves_api.json (nunca en ajustes.json)."""
+    def al_guardar(self, evento):
         claves = {
             "azure": {
                 "key": self.txt_az_key.GetValue().strip(),
@@ -534,305 +493,70 @@ class PanelClaves(wx.ScrolledWindow):
                 "secret_key": self.txt_po_secret.GetValue().strip(),
                 "region": self.txt_po_region.GetValue().strip(),
             },
-            "elevenlabs": {
-                "api_key": self.txt_el_key.GetValue().strip(),
-            },
-            "deepgram": {
-                "api_key": self.txt_dg_key.GetValue().strip(),
-            },
+            "elevenlabs": {"api_key": self.txt_el_key.GetValue().strip()},
+            "deepgram": {"api_key": self.txt_dg_key.GetValue().strip()},
         }
         guardar_claves(claves)
-        if event:
+        if evento:
             reproducir(SUCCESS)
             wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")
 
-    def al_borrar_azure(self, event):
+    def al_borrar_azure(self, evento):
         self.txt_az_key.Clear()
         self.txt_az_region.Clear()
         self.al_guardar(None)
 
-    def al_borrar_polly(self, event):
+    def al_borrar_polly(self, evento):
         self.txt_po_key.Clear()
         self.txt_po_secret.Clear()
         self.txt_po_region.Clear()
         self.al_guardar(None)
 
-    def al_borrar_elevenlabs(self, event):
+    def al_borrar_elevenlabs(self, evento):
         self.txt_el_key.Clear()
         self.al_guardar(None)
 
-    def al_borrar_deepgram(self, event):
+    def al_borrar_deepgram(self, evento):
         self.txt_dg_key.Clear()
         self.al_guardar(None)
 
-    def al_comprobar(self, event, proveedor=None):
+    def al_comprobar(self, evento, proveedor=None):
+        from app.motor.cliente_nube_voces import GestorVoces
         self.al_guardar(None)
         wx.BeginBusyCursor()
         try:
             gestor = GestorVoces()
-            if proveedor:
-                res = gestor.actualizar_proveedor(proveedor)
-            else:
-                res = gestor.actualizar_voces_desde_internet()
+            res = gestor.actualizar_proveedor(proveedor) if proveedor else gestor.actualizar_voces_desde_internet()
             wx.EndBusyCursor()
             reproducir(SUCCESS)
             wx.MessageBox(f"Resultado:\n{res}", "Info")
-            # Recargar PanelVoces para que "Solo nuevas voces" detecte las recién llegadas
             try:
                 ventana = wx.GetTopLevelParent(self)
                 if hasattr(ventana, 'pestana_ajustes'):
-                    wx.CallAfter(ventana.pestana_ajustes.pag_voces.cargar_datos_y_llenar)
+                    wx.CallAfter(ventana.pestana_ajustes._recargar_panel_proveedor, proveedor)
             except Exception:
-                pass
+                logger.exception("Error al recargar panel de proveedor tras descarga de voces")
         except Exception as e:
             wx.EndBusyCursor()
             reproducir(ERROR)
             wx.MessageBox(f"Error: {e}", "Error")
+# ANCLAJE_FIN: PANEL_CLAVES
 
-class PanelVoces(wx.Panel):
-    def __init__(self, padre, config):
-        super().__init__(padre)
-        self.config = config
-        self.voces_todas = []
-        self.mapa_indices = {}   # índice de fila → datos_voz; se rellena en filtrar_y_mostrar
-        self.reproductor = ReproductorVoz()
-        self.ruta_favs = ruta_config("voces_favoritas.json")
-        self.favoritos = self.cargar_favoritos()
-        # Temporizador para debounce del cuadro de búsqueda (300 ms)
-        self._timer_busqueda = None
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        # 1. CONFIGURACIÓN LIBRO
-        sb_libro = wx.StaticBox(self, label="Configuración del Libro")
-        sz_libro = wx.StaticBoxSizer(sb_libro, wx.VERTICAL)
-        sz_libro.Add(wx.StaticText(self, label="Idioma del libro, usado para seleccionar el acento de la voz por defecto:"), 0, wx.BOTTOM, 5)
-        self.combo_idioma_libro = wx.ComboBox(self, choices=["Detectar auto", "Español (ES)", "Español (LAT)", "Inglés"], style=wx.CB_READONLY)
-        self.combo_idioma_libro.SetHelpText(
-            "Define el idioma principal del libro para preseleccionar el acento correcto "
-            "en el combo de voz de la pestaña Lectura. "
-            "Elige Español (ES) para España, Español (LAT) para Latinoamérica, o Inglés."
-        )
-        
-        # Cargar selección guardada
-        conf_idioma = self.config.get("idioma_libro_codigo", "es-ES")
-        if conf_idioma == "es-MX": self.combo_idioma_libro.SetSelection(2)
-        elif conf_idioma == "en-US": self.combo_idioma_libro.SetSelection(3)
-        else: self.combo_idioma_libro.SetSelection(1) # Por defecto ES
-        
-        self.combo_idioma_libro.Bind(wx.EVT_COMBOBOX, self.al_cambiar_idioma_libro)
-        
-        sz_libro.Add(self.combo_idioma_libro, 0, wx.EXPAND|wx.ALL, 5)
-        sizer.Add(sz_libro, 0, wx.EXPAND|wx.ALL, 10)
-        
-        # 2. FILTROS DE VOCES
-        sb_filtros = wx.StaticBox(self, label="Filtros de Voces")
-        sz_filtros = wx.StaticBoxSizer(sb_filtros, wx.VERTICAL)
-        
-        # Fila A: Proveedor primero, luego Idioma (el idioma se filtra según el proveedor)
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1.Add(wx.StaticText(self, label="Proveedor:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        self.combo_proveedor = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
-        self.combo_proveedor.SetSelection(0)
-        self.combo_proveedor.SetHelpText("Filtra la lista de voces por proveedor: Azure, Amazon Polly, ElevenLabs, o Todos. Al cambiar el proveedor, el filtro de idioma se actualiza automáticamente.")
-        self.combo_proveedor.Bind(wx.EVT_COMBOBOX, self.al_cambiar_proveedor)
-        hbox1.Add(self.combo_proveedor, 0, wx.RIGHT, 15)
 
-        hbox1.Add(wx.StaticText(self, label="Idioma:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
-        self.combo_idioma.SetSelection(0)
-        self.combo_idioma.SetHelpText("Filtra la lista de voces por idioma. Muestra solo los idiomas del proveedor seleccionado.")
-        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
-        hbox1.Add(self.combo_idioma, 1)
-        sz_filtros.Add(hbox1, 0, wx.EXPAND|wx.ALL, 5)
-        
-        # Fila B: Tipo y Gestión
-        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox2.Add(wx.StaticText(self, label="Tipo:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        self.combo_tipo = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos", "Femenino", "Masculino", "Multilingüe", "Dragon"])
-        self.combo_tipo.SetSelection(0)
-        self.combo_tipo.SetHelpText("Filtra por tipo de voz: Femenino, Masculino, voces Multilingüe, voces Dragon HD, o Todos.")
-        self.combo_tipo.Bind(wx.EVT_COMBOBOX, self.al_filtrar)
-        hbox2.Add(self.combo_tipo, 0, wx.RIGHT, 15)
+# ANCLAJE_INICIO: BASE_PANEL_PROVEEDOR_IA
+class PanelProveedorIA(wx.Panel):
+    """
+    Clase base parametrizada para los paneles de catálogo de voces de cada proveedor cloud.
 
-        # Casillas de gestión y filtros especiales
-        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
-        self.chk_solo_favs.SetHelpText(
-            "Marcada: muestra solo las voces que ya tienes marcadas como favoritas. "
-            "Desmarcada: muestra todas las voces según los demás filtros activos."
-        )
-        self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
-        hbox2.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 15)
+    Secuencia de tabulación lineal y estricta:
+        Idioma → Solo favoritas → Solo nuevas voces → Búsqueda → ListCtrl → Botonera
 
-        self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
-        self.chk_solo_nuevas.SetHelpText(
-            "Marcada: muestra solo las voces marcadas como nuevas desde la última actualización. "
-            "Desmarcada: muestra todas las voces según los demás filtros activos."
-        )
-        self.chk_solo_nuevas.Bind(wx.EVT_CHECKBOX, self.al_filtrar)
-        hbox2.Add(self.chk_solo_nuevas, 0, wx.ALIGN_CENTER_VERTICAL)
-        sz_filtros.Add(hbox2, 0, wx.EXPAND|wx.ALL, 5)
+    Las casillas de favoritos y nuevas voces son locales a cada panel e independientes
+    entre sí: activarlas no contamina la vista de otros proveedores.
 
-        # Fila C: Buscador
-        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox3.Add(wx.StaticText(self, label="Buscar nombre de voz (filtro en tiempo real):"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
-        self.txt_buscar = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
-        self.txt_buscar.SetHelpText(
-            "Escribe parte del nombre de una voz para filtrar la lista en tiempo real. "
-            "Borra el campo para volver a ver todas las voces del filtro activo."
-        )
-        # Debounce: reconstruye la lista 300 ms después de la última pulsación
-        self.txt_buscar.Bind(wx.EVT_TEXT, self.al_filtrar_texto)
-        hbox3.Add(self.txt_buscar, 1, wx.EXPAND)
-        sz_filtros.Add(hbox3, 0, wx.EXPAND|wx.ALL, 5)
-        
-        sizer.Add(sz_filtros, 0, wx.EXPAND|wx.ALL, 10)
-        
-        # 3. LISTA — columnas con Carga Cognitiva Frontal para NVDA:
-        # el lector anuncia primero el nombre enriquecido con etiquetas
-        self.lista_voces = ListaVocesCheck(self)
-        self.lista_voces.InsertColumn(0, "Nombre", width=280)
-        self.lista_voces.InsertColumn(1, "Género", width=80)
-        self.lista_voces.InsertColumn(2, "Idioma", width=160)
-        self.lista_voces.InsertColumn(3, "Proveedor", width=110)
-        self.lista_voces.SetHelpText(
-            "Lista de voces disponibles. Usa las flechas Arriba y Abajo para navegar. "
-            "Pulsa Espacio para marcar o desmarcar una voz como favorita. "
-            "Las voces marcadas aparecerán en la pestaña Grabación para asignarlas a personajes."
-        )
-        
-        self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self.al_marcar_favorito)
-        self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self.al_desmarcar_favorito)
-        
-        sizer.Add(self.lista_voces, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
-        
-        # 4. BOTONERA — cada botón se añade directamente al sizer principal para que
-        # NVDA los alcance con Tabulador sin necesidad de navegar con flechas de cursor.
-        self.btn_escuchar = wx.Button(self, label="Escuchar muestra de la voz seleccionada (Alt+P)")
-        self.btn_escuchar.SetHelpText(
-            "Reproduce una muestra de texto con la voz seleccionada en la lista. "
-            "Púlsalo de nuevo para detener la reproducción."
-        )
-        self.btn_escuchar.Bind(wx.EVT_BUTTON, self.al_escuchar)
-        sizer.Add(self.btn_escuchar, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.TOP, 10)
-
-        self.btn_diccionario = wx.Button(self, label="Diccionario de pronunciación")
-        self.btn_diccionario.SetHelpText(
-            "Abre el editor del diccionario de pronunciación local. "
-            "Permite corregir cómo la voz pronuncia palabras concretas: "
-            "siglas, nombres propios, tecnicismos, etc."
-        )
-        self.btn_diccionario.Bind(wx.EVT_BUTTON, self.al_abrir_diccionario)
-        sizer.Add(self.btn_diccionario, 0, wx.ALIGN_RIGHT|wx.LEFT|wx.RIGHT|wx.BOTTOM, 10)
-        
-        id_play = wx.NewIdRef()
-        self.Bind(wx.EVT_MENU, self.al_escuchar, id=id_play)
-        self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_ALT, ord('P'), id_play)]))
-        
-        self.SetSizer(sizer)
-        # Diferir la carga pesada de voces para que el panel se muestre antes
-        # de leer los JSONs. El foco llega al control antes de que empiece la carga.
-        wx.CallAfter(self.cargar_datos_y_llenar)
-
-    def al_cambiar_idioma_libro(self, event):
-        seleccion = self.combo_idioma_libro.GetSelection()
-        codigo = "es-ES" 
-        
-        if seleccion == 2: codigo = "es-MX"
-        elif seleccion == 3: codigo = "en-US"
-        elif seleccion == 0: codigo = "es-ES"
-        
-        self.config["idioma_libro_codigo"] = codigo
-        # Guardar en disco
-        try:
-            padre_ajustes = wx.GetTopLevelParent(self)
-            if hasattr(padre_ajustes, "guardar_config_en_archivo"):
-                padre_ajustes.guardar_config_en_archivo()
-        except Exception:
-            pass
-
-    def cargar_favoritos(self):
-        try:
-            if os.path.exists(self.ruta_favs):
-                with open(self.ruta_favs, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-        except Exception as e:
-            print(f"[Error] No se pudo leer voces_favoritas.json: {e}")
-        return []
-
-    def guardar_favoritos(self):
-        try:
-            with open(self.ruta_favs, 'w', encoding='utf-8') as f: json.dump(self.favoritos, f, indent=4)
-        except Exception as e: print(f"Error guardando favs: {e}")
-
-    def al_marcar_favorito(self, event):
-        idx = event.GetIndex()
-        voz = self.mapa_indices.get(idx)
-        if voz:
-            id_voz = voz.get("id")
-            if id_voz not in self.favoritos:
-                self.favoritos.append(id_voz)
-                self.guardar_favoritos()
-                self._notificar_grabacion()
-
-    def al_desmarcar_favorito(self, event):
-        idx = event.GetIndex()
-        voz = self.mapa_indices.get(idx)
-        if voz:
-            id_voz = voz.get("id")
-            if id_voz in self.favoritos:
-                self.favoritos.remove(id_voz)
-                self.guardar_favoritos()
-                self._notificar_grabacion()
-
-    def _notificar_grabacion(self):
-        """Recarga la lista de voces en PestanaGrabacion al instante."""
-        try:
-            ventana = wx.GetTopLevelParent(self)
-            if hasattr(ventana, 'pestana_grabacion'):
-                ventana.pestana_grabacion._cargar_voces_disponibles()
-        except Exception:
-            pass
-
-    def cargar_datos_y_llenar(self):
-        ruta = ruta_config("voces_disponibles.json")
-        self.voces_todas = []
-
-        if os.path.exists(ruta):
-            try:
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    datos = json.load(f)
-                    for prov, lista in datos.items():
-                        for v in lista:
-                            v["proveedor_id"] = prov
-                            v["es_nueva"] = bool(v.get("es_nueva", False))
-                            self.voces_todas.append(v)
-            except Exception as e:
-                print(f"[Error] No se pudo leer voces_disponibles.json: {e}")
-                self.voces_todas = []
-
-        # Voces SAPI5 locales (no están en voces_disponibles.json; se enumeran en tiempo real)
-        try:
-            from app.servicios.cliente_sapi5 import ClienteSapi5
-            for v in ClienteSapi5().obtener_voces():
-                v["es_nueva"] = False
-                self.voces_todas.append(v)
-        except Exception as e:
-            print(f"[Aviso] No se pudieron cargar las voces SAPI5 locales: {e}")
-
-        # Proveedor con opciones fijas; idioma se rellena según proveedor seleccionado
-        self.combo_proveedor.Clear()
-        self.combo_proveedor.AppendItems(["Todos", "Azure", "Amazon Polly", "Deepgram", "ElevenLabs", "SAPI 5"])
-        self.combo_proveedor.SetSelection(0)
-
-        # Con proveedor=Todos, poblar idioma con todos los disponibles
-        idiomas = sorted(set(v.get("idioma","") for v in self.voces_todas if v.get("idioma")))
-        self.combo_idioma.Clear()
-        self.combo_idioma.Append("Todos")
-        self.combo_idioma.AppendItems(idiomas)
-        self.combo_idioma.SetSelection(0)
-
-        self.filtrar_y_mostrar()
+    Cada subclase debe implementar `cargar_datos` para poblar `self.voces_todas`
+    con la lista de voces filtrada por su proveedor.
+    """
 
     # Tabla de traducción de códigos de idioma a texto legible en español
     _LOCALES_ES = {
@@ -861,23 +585,192 @@ class PanelVoces(wx.Panel):
         "Multilingüe (v2)": "Multilingüe",
     }
 
-    # Tabla de traducción de género
     _GENEROS_ES = {
         "Female": "Femenino",
         "Male": "Masculino",
         "Neutral": "Neutro",
     }
 
+    def __init__(self, padre, config, id_proveedor, nombre_proveedor):
+        super().__init__(padre)
+        self.config = config
+        self.id_proveedor = id_proveedor
+        self.nombre_proveedor = nombre_proveedor
+        self.voces_todas = []
+        self.mapa_indices = {}
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+        self.favoritos = self._cargar_favoritos()
+        self._timer_busqueda = None
+        self._construir_ui()
+        wx.CallAfter(self.cargar_datos)
+
+    def _construir_ui(self):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # 1. Idioma
+        hbox_idioma = wx.BoxSizer(wx.HORIZONTAL)
+        hbox_idioma.Add(
+            wx.StaticText(self, label="Idioma:"),
+            0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
+        )
+        self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
+        self.combo_idioma.SetSelection(0)
+        self.combo_idioma.SetHelpText(
+            f"Filtra las voces de {self.nombre_proveedor} por idioma. "
+            "Elige Todos para ver el catálogo completo del proveedor."
+        )
+        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self._al_filtrar)
+        hbox_idioma.Add(self.combo_idioma, 1)
+        sizer.Add(hbox_idioma, 0, wx.EXPAND | wx.ALL, 8)
+
+        # 2. Casillas de filtro local (independientes por panel)
+        hbox_filtros = wx.BoxSizer(wx.HORIZONTAL)
+        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+        self.chk_solo_favs.SetHelpText(
+            "Marcada: muestra solo las voces de este proveedor que ya tienes marcadas como favoritas."
+        )
+        self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self._al_filtrar)
+        hbox_filtros.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 20)
+
+        self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
+        self.chk_solo_nuevas.SetHelpText(
+            "Marcada: muestra solo las voces de este proveedor añadidas desde la última actualización."
+        )
+        self.chk_solo_nuevas.Bind(wx.EVT_CHECKBOX, self._al_filtrar)
+        hbox_filtros.Add(self.chk_solo_nuevas, 0, wx.ALIGN_CENTER_VERTICAL)
+        sizer.Add(hbox_filtros, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+        # 3. Búsqueda de texto con debounce
+        hbox_busqueda = wx.BoxSizer(wx.HORIZONTAL)
+        hbox_busqueda.Add(
+            wx.StaticText(self, label="Buscar nombre de voz:"),
+            0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
+        )
+        self.txt_buscar = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
+        self.txt_buscar.SetHelpText(
+            "Escribe parte del nombre de una voz para filtrar la lista en tiempo real. "
+            "Borra el campo para ver todas las voces del filtro activo."
+        )
+        self.txt_buscar.Bind(wx.EVT_TEXT, self._al_filtrar_texto)
+        hbox_busqueda.Add(self.txt_buscar, 1, wx.EXPAND)
+        sizer.Add(hbox_busqueda, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+        # 4. ListCtrl de voces
+        self.lista_voces = ListaVocesCheck(self)
+        self.lista_voces.InsertColumn(0, "Nombre", width=280)
+        self.lista_voces.InsertColumn(1, "Género", width=80)
+        self.lista_voces.InsertColumn(2, "Idioma", width=200)
+        self.lista_voces.SetHelpText(
+            f"Lista de voces de {self.nombre_proveedor}. Usa las flechas para navegar. "
+            "Pulsa Intro para marcar o desmarcar una voz como favorita."
+        )
+        self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
+        self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)
+        sizer.Add(self.lista_voces, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        # 5. Botonera inferior
+        sizer.Add(self._construir_botonera(), 0, wx.EXPAND | wx.ALL, 8)
+
+        self.SetSizer(sizer)
+        self.primer_control = self.combo_idioma
+
+    def _construir_botonera(self):
+        """
+        Construye la botonera inferior estándar.
+        Las subclases pueden sobreescribir este método para añadir botones propios.
+        """
+        from app.motor.reproductor_voz import ReproductorVoz
+        self._reproductor = ReproductorVoz()
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar.SetHelpText(
+            "Reproduce una muestra de texto con la voz seleccionada. "
+            "Púlsalo de nuevo para detener la reproducción."
+        )
+        self.btn_escuchar.Bind(wx.EVT_BUTTON, self._al_escuchar)
+        hbox.Add(self.btn_escuchar, 0, wx.RIGHT, 8)
+
+        id_play = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, self._al_escuchar, id=id_play)
+        self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_ALT, ord('P'), id_play)]))
+
+        return hbox
+
+    @property
+    def ultimo_control(self):
+        return self.btn_escuchar
+
+    # --- Carga de datos (a implementar por cada subclase) ---
+
+    def cargar_datos(self):
+        """
+        Carga las voces del proveedor desde voces_disponibles.json y puebla
+        self.voces_todas. Llama a filtrar_y_mostrar al terminar.
+        Implementar en cada subclase.
+        """
+        raise NotImplementedError(f"{self.__class__.__name__} debe implementar cargar_datos()")
+
+    # --- Lógica de filtrado compartida ---
+
+    def _al_filtrar(self, evento):
+        self.filtrar_y_mostrar()
+
+    def _al_filtrar_texto(self, evento):
+        if self._timer_busqueda:
+            self._timer_busqueda.Stop()
+        self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
+        evento.Skip()
+
+    def filtrar_y_mostrar(self):
+        self.lista_voces.Freeze()
+        self.lista_voces.DeleteAllItems()
+        self.mapa_indices = {}
+
+        f_idioma = self.combo_idioma.GetValue()
+        f_texto = self.txt_buscar.GetValue().lower()
+        solo_favs = self.chk_solo_favs.IsChecked()
+        solo_nuevas = self.chk_solo_nuevas.IsChecked()
+
+        idx = 0
+        for voz in self.voces_todas:
+            id_voz = voz.get("id", "")
+            es_favorita = id_voz in self.favoritos
+            es_nueva = bool(voz.get("es_nueva"))
+
+            if solo_nuevas:
+                if not es_nueva:
+                    continue
+            elif solo_favs:
+                if not es_favorita:
+                    continue
+            else:
+                if f_idioma != "Todos" and voz.get("idioma") != f_idioma:
+                    continue
+                if f_texto and f_texto not in voz.get("nombre", "").lower():
+                    continue
+
+            nombre_mostrar = self._construir_nombre_enriquecido(voz)
+            genero_mostrar = self._GENEROS_ES.get(voz.get("genero", ""), voz.get("genero", ""))
+            idioma_raw = voz.get("idioma", "")
+            idioma_mostrar = self._LOCALES_ES.get(idioma_raw, idioma_raw)
+
+            pos = self.lista_voces.InsertItem(idx, nombre_mostrar)
+            self.lista_voces.SetItem(pos, 1, genero_mostrar)
+            self.lista_voces.SetItem(pos, 2, idioma_mostrar)
+
+            if es_favorita:
+                self.lista_voces.CheckItem(pos, True)
+
+            self.mapa_indices[pos] = voz
+            idx += 1
+
+        self.lista_voces.Thaw()
+
     def _construir_nombre_enriquecido(self, voz):
-        """
-        Construye el nombre visible de la voz inyectando etiquetas semánticas
-        que adelantan información relevante al principio para NVDA.
-        Ejemplo: 'Aria [Dragon] [Multilingüe]'
-        """
         nombre_base = voz.get("nombre", "")
         id_voz = voz.get("id", "").lower()
         etiquetas = []
-
         if "dragonhd" in id_voz or "dragon" in id_voz:
             etiquetas.append("[Dragon]")
         if "multilingual" in id_voz:
@@ -888,134 +781,56 @@ class PanelVoces(wx.Panel):
             return f"{nombre_base} {' '.join(etiquetas)}"
         return nombre_base
 
-    def al_cambiar_proveedor(self, event):
-        """Actualiza el combo de idioma para mostrar solo los del proveedor seleccionado."""
-        f_prov = self.combo_proveedor.GetValue()
-        if f_prov == "Amazon Polly":
-            voces_prov = [v for v in self.voces_todas if "polly" in v.get("proveedor_id","").lower()]
-        elif f_prov == "Azure":
-            voces_prov = [v for v in self.voces_todas if "azure" in v.get("proveedor_id","").lower()]
-        elif f_prov == "ElevenLabs":
-            voces_prov = [v for v in self.voces_todas if "eleven" in v.get("proveedor_id","").lower()]
-        elif f_prov == "Deepgram":
-            voces_prov = [v for v in self.voces_todas if "deepgram" in v.get("proveedor_id","").lower()]
-        elif f_prov == "SAPI 5":
-            voces_prov = [v for v in self.voces_todas if v.get("proveedor_id","").lower() == "local"]
-        else:
-            voces_prov = self.voces_todas
+    # --- Favoritos ---
 
-        idiomas = sorted(set(v.get("idioma","") for v in voces_prov if v.get("idioma")))
-        idioma_actual = self.combo_idioma.GetValue()
-        self.combo_idioma.Clear()
-        self.combo_idioma.Append("Todos")
-        self.combo_idioma.AppendItems(idiomas)
-        if idioma_actual in idiomas:
-            self.combo_idioma.SetValue(idioma_actual)
-        else:
-            self.combo_idioma.SetSelection(0)
-        self.filtrar_y_mostrar()
+    def _cargar_favoritos(self):
+        try:
+            if os.path.exists(self.ruta_favs):
+                with open(self.ruta_favs, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception:
+            logger.exception("Error al leer voces_favoritas.json")
+        return []
 
-    def al_filtrar(self, event):
-        self.filtrar_y_mostrar()
+    def _guardar_favoritos(self):
+        try:
+            with open(self.ruta_favs, 'w', encoding='utf-8') as f:
+                json.dump(self.favoritos, f, indent=4)
+        except Exception:
+            logger.exception("Error al guardar voces_favoritas.json")
 
-    def al_filtrar_texto(self, event):
-        """
-        Filtro con debounce: espera 300 ms tras la última pulsación antes de
-        reconstruir la lista. Evita congelar la UI en cada carácter tecleado.
-        """
-        if self._timer_busqueda:
-            self._timer_busqueda.Stop()
-        self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
-        event.Skip()
+    def _al_marcar_favorito(self, evento):
+        voz = self.mapa_indices.get(evento.GetIndex())
+        if voz:
+            id_voz = voz.get("id")
+            if id_voz not in self.favoritos:
+                self.favoritos.append(id_voz)
+                self._guardar_favoritos()
+                self._notificar_grabacion()
 
-    def filtrar_y_mostrar(self):
-        # Freeze suspende el redibujado del ListCtrl durante la inserción masiva,
-        # eliminando el parpadeo y reduciendo el tiempo de pintado a una sola pasada.
-        self.lista_voces.Freeze()
-        self.lista_voces.DeleteAllItems()
+    def _al_desmarcar_favorito(self, evento):
+        voz = self.mapa_indices.get(evento.GetIndex())
+        if voz:
+            id_voz = voz.get("id")
+            if id_voz in self.favoritos:
+                self.favoritos.remove(id_voz)
+                self._guardar_favoritos()
+                self._notificar_grabacion()
 
-        f_idioma = self.combo_idioma.GetValue()
-        f_tipo = self.combo_tipo.GetValue()
-        f_prov = self.combo_proveedor.GetValue()
-        f_texto = self.txt_buscar.GetValue().lower()
+    def _notificar_grabacion(self):
+        try:
+            ventana = wx.GetTopLevelParent(self)
+            if hasattr(ventana, 'pestana_grabacion'):
+                ventana.pestana_grabacion._cargar_voces_disponibles()
+        except Exception:
+            logger.exception("Error al notificar cambio de favoritos a pestaña Grabación")
 
-        solo_favs = self.chk_solo_favs.IsChecked() if hasattr(self, 'chk_solo_favs') else False
-        solo_nuevas = self.chk_solo_nuevas.IsChecked() if hasattr(self, 'chk_solo_nuevas') else False
+    # --- Preescucha ---
 
-        self.mapa_indices = {}
-        idx = 0
-
-        for voz in self.voces_todas:
-            nombre_lower = voz.get("nombre", "").lower()
-            id_voz = voz.get("id", "")
-            prov_raw = voz.get("proveedor_id", "local").lower()
-            es_favorita = id_voz in self.favoritos
-            es_nueva = bool(voz.get("es_nueva"))
-
-            # Filtros especiales exclusivos (tienen prioridad sobre el resto)
-            if solo_nuevas:
-                if not es_nueva: continue
-            elif solo_favs:
-                if not es_favorita: continue
-            else:
-                if f_idioma != "Todos" and voz.get("idioma") != f_idioma: continue
-
-                if f_prov != "Todos":
-                    if f_prov == "Amazon Polly" and "polly" not in prov_raw: continue
-                    elif f_prov == "Azure" and "azure" not in prov_raw: continue
-                    elif f_prov == "ElevenLabs" and "eleven" not in prov_raw: continue
-                    elif f_prov == "Deepgram" and "deepgram" not in prov_raw: continue
-                    elif f_prov == "SAPI 5" and prov_raw != "local": continue
-
-                if f_tipo != "Todos":
-                    genero_raw = voz.get("genero", "")
-                    id_lower = id_voz.lower()
-                    if f_tipo == "Femenino" and genero_raw != "Female": continue
-                    if f_tipo == "Masculino" and genero_raw != "Male": continue
-                    if f_tipo == "Multilingüe" and "multilingual" not in id_lower: continue
-                    if f_tipo == "Dragon" and "dragon" not in id_lower: continue
-
-                if f_texto and f_texto not in nombre_lower: continue
-
-            # Construir nombre enriquecido con etiquetas
-            nombre_mostrar = self._construir_nombre_enriquecido(voz)
-
-            # Traducir género al español
-            genero_mostrar = self._GENEROS_ES.get(voz.get("genero", ""), voz.get("genero", ""))
-
-            # Traducir código de idioma a nombre legible
-            idioma_raw = voz.get("idioma", "")
-            idioma_mostrar = self._LOCALES_ES.get(idioma_raw, idioma_raw)
-
-            # Normalizar nombre del proveedor
-            prov_mostrar = prov_raw.capitalize()
-            if prov_raw == "polly":
-                prov_mostrar = "Amazon Polly"
-            elif prov_raw == "elevenlabs":
-                prov_mostrar = "ElevenLabs"
-            elif prov_raw == "deepgram":
-                prov_mostrar = "Deepgram"
-            elif prov_raw == "local":
-                prov_mostrar = "SAPI5 (Local)"
-
-            pos = self.lista_voces.InsertItem(idx, nombre_mostrar)
-            self.lista_voces.SetItem(pos, 1, genero_mostrar)
-            self.lista_voces.SetItem(pos, 2, idioma_mostrar)
-            self.lista_voces.SetItem(pos, 3, prov_mostrar)
-
-            if es_favorita:
-                self.lista_voces.CheckItem(pos, True)
-
-            self.mapa_indices[pos] = voz
-            idx += 1
-
-        # Thaw reactiva el redibujado y pinta todos los items de una sola vez
-        self.lista_voces.Thaw()
-
-    def al_escuchar(self, event):
-        if self.reproductor.obtener_estado() == "reproduciendo":
-            self.reproductor.detener()
-            self.btn_escuchar.SetLabel("Escuchar muestra de la voz seleccionada (Alt+P)")
+    def _al_escuchar(self, evento):
+        if self._reproductor.obtener_estado() == "reproduciendo":
+            self._reproductor.detener()
+            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
             return
 
         idx = self.lista_voces.GetFirstSelected()
@@ -1025,51 +840,323 @@ class PanelVoces(wx.Panel):
             return
 
         voz = self.mapa_indices.get(idx)
-        nombre = voz.get('nombre')
+        nombre = voz.get('nombre', '')
         try:
-            self.reproductor.fijar_voz(voz)
+            self._reproductor.fijar_voz(voz)
             texto = (
                 f"Hola, mi nombre es {nombre}. "
-                "El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar. "
-                "Una brisa suave movía las hojas de los árboles en el parque."
+                "El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar."
             )
             self.btn_escuchar.SetLabel("Detener preescucha (Alt+P)")
-            self.reproductor.cargar_texto(texto, callback_completado=self._al_terminar_escucha)
+            self._reproductor.cargar_texto(texto, callback_completado=self._al_terminar_escucha)
         except Exception as e:
-            self.btn_escuchar.SetLabel("Escuchar muestra de la voz seleccionada (Alt+P)")
+            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
             reproducir(ERROR)
             wx.MessageBox(f"Error: {e}", "Error")
 
     def _al_terminar_escucha(self):
-        self.btn_escuchar.SetLabel("Escuchar muestra de la voz seleccionada (Alt+P)")
-
-    def al_abrir_diccionario(self, event):
-        dlg = _DialogoPronunciacion(self)
-        dlg.ShowModal()
-        dlg.Destroy()
-        from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
-        recargar_diccionario_pronunciacion()
+        wx.CallAfter(self.btn_escuchar.SetLabel, "Escuchar muestra (Alt+P)")
+# ANCLAJE_FIN: BASE_PANEL_PROVEEDOR_IA
 
 
-class _DialogoPronunciacion(wx.Dialog):
+# ANCLAJE_INICIO: PANEL_AZURE
+class PanelAzure(PanelProveedorIA):
+    def __init__(self, padre, config):
+        super().__init__(padre, config, "azure", "Azure Neural")
+
+    def cargar_datos(self):
+        self.voces_todas = self._leer_voces_proveedor("azure")
+        self._poblar_combo_idioma()
+        self.filtrar_y_mostrar()
+
+    def _leer_voces_proveedor(self, clave_proveedor):
+        ruta = ruta_config("voces_disponibles.json")
+        voces = []
+        if os.path.exists(ruta):
+            try:
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                for v in datos.get(clave_proveedor, []):
+                    v["proveedor_id"] = clave_proveedor
+                    v["es_nueva"] = bool(v.get("es_nueva", False))
+                    voces.append(v)
+            except Exception:
+                logger.exception(f"Error al leer voces de {clave_proveedor}")
+        return voces
+
+    def _poblar_combo_idioma(self):
+        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(idiomas)
+        self.combo_idioma.SetSelection(0)
+# ANCLAJE_FIN: PANEL_AZURE
+
+
+# ANCLAJE_INICIO: PANEL_DEEPGRAM
+class PanelDeepgram(PanelProveedorIA):
+    def __init__(self, padre, config):
+        super().__init__(padre, config, "deepgram", "Deepgram Aura-2")
+
+    def cargar_datos(self):
+        ruta = ruta_config("voces_disponibles.json")
+        self.voces_todas = []
+        if os.path.exists(ruta):
+            try:
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                for v in datos.get("deepgram", []):
+                    v["proveedor_id"] = "deepgram"
+                    v["es_nueva"] = bool(v.get("es_nueva", False))
+                    self.voces_todas.append(v)
+            except Exception:
+                logger.exception("Error al leer voces de Deepgram")
+        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(idiomas)
+        self.combo_idioma.SetSelection(0)
+        self.filtrar_y_mostrar()
+# ANCLAJE_FIN: PANEL_DEEPGRAM
+
+
+# ANCLAJE_INICIO: PANEL_POLLY
+class PanelPolly(PanelProveedorIA):
+    def __init__(self, padre, config):
+        super().__init__(padre, config, "polly", "Amazon Polly")
+
+    def cargar_datos(self):
+        ruta = ruta_config("voces_disponibles.json")
+        self.voces_todas = []
+        if os.path.exists(ruta):
+            try:
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                for v in datos.get("polly", []):
+                    v["proveedor_id"] = "polly"
+                    v["es_nueva"] = bool(v.get("es_nueva", False))
+                    self.voces_todas.append(v)
+            except Exception:
+                logger.exception("Error al leer voces de Amazon Polly")
+        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(idiomas)
+        self.combo_idioma.SetSelection(0)
+        self.filtrar_y_mostrar()
+# ANCLAJE_FIN: PANEL_POLLY
+
+
+# ANCLAJE_INICIO: PANEL_ELEVENLABS
+class PanelElevenLabs(PanelProveedorIA):
+    def __init__(self, padre, config):
+        super().__init__(padre, config, "elevenlabs", "ElevenLabs")
+
+    def cargar_datos(self):
+        ruta = ruta_config("voces_disponibles.json")
+        self.voces_todas = []
+        if os.path.exists(ruta):
+            try:
+                with open(ruta, 'r', encoding='utf-8') as f:
+                    datos = json.load(f)
+                for v in datos.get("elevenlabs", []):
+                    v["proveedor_id"] = "elevenlabs"
+                    v["es_nueva"] = bool(v.get("es_nueva", False))
+                    self.voces_todas.append(v)
+            except Exception:
+                logger.exception("Error al leer voces de ElevenLabs")
+        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(idiomas)
+        self.combo_idioma.SetSelection(0)
+        self.filtrar_y_mostrar()
+# ANCLAJE_FIN: PANEL_ELEVENLABS
+
+
+# ANCLAJE_INICIO: PANEL_SAPI5
+class PanelSapi5(wx.Panel):
     """
-    Editor del diccionario de pronunciación local (pronunciacion.json).
+    Panel de catálogo para voces locales SAPI5.
+    Más simple que los paneles cloud: sin filtro de idioma ni voces nuevas,
+    solo lista con casillas de favorito y preescucha.
+    """
+
+    def __init__(self, padre, config):
+        super().__init__(padre)
+        self.config = config
+        self.voces_todas = []
+        self.mapa_indices = {}
+        self.ruta_favs = ruta_config("voces_favoritas.json")
+        self.favoritos = self._cargar_favoritos()
+        self._construir_ui()
+        wx.CallAfter(self.cargar_datos)
+
+    def _construir_ui(self):
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(
+            wx.StaticText(self, label="Voces SAPI5 instaladas en este equipo:"),
+            0, wx.ALL, 8,
+        )
+
+        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+        self.chk_solo_favs.SetHelpText(
+            "Marcada: muestra solo las voces SAPI5 marcadas como favoritas."
+        )
+        self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self._al_filtrar)
+        sizer.Add(self.chk_solo_favs, 0, wx.LEFT | wx.BOTTOM, 8)
+
+        self.lista_voces = ListaVocesCheck(self)
+        self.lista_voces.InsertColumn(0, "Nombre", width=320)
+        self.lista_voces.InsertColumn(1, "Idioma", width=200)
+        self.lista_voces.SetHelpText(
+            "Lista de voces SAPI5 locales. Usa las flechas para navegar. "
+            "Pulsa Intro para marcar o desmarcar una voz como favorita."
+        )
+        self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
+        self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)
+        sizer.Add(self.lista_voces, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        from app.motor.reproductor_voz import ReproductorVoz
+        self._reproductor = ReproductorVoz()
+
+        self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar.SetHelpText("Reproduce una muestra con la voz SAPI5 seleccionada.")
+        self.btn_escuchar.Bind(wx.EVT_BUTTON, self._al_escuchar)
+        sizer.Add(self.btn_escuchar, 0, wx.ALL, 8)
+
+        id_play = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, self._al_escuchar, id=id_play)
+        self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_ALT, ord('P'), id_play)]))
+
+        self.SetSizer(sizer)
+        self.primer_control = self.chk_solo_favs
+
+    @property
+    def ultimo_control(self):
+        return self.btn_escuchar
+
+    def cargar_datos(self):
+        self.voces_todas = []
+        try:
+            from app.servicios.cliente_sapi5 import ClienteSapi5
+            for v in ClienteSapi5().obtener_voces():
+                v["es_nueva"] = False
+                self.voces_todas.append(v)
+        except Exception:
+            logger.exception("Error al cargar voces SAPI5 locales")
+        self._filtrar_y_mostrar()
+
+    def _al_filtrar(self, evento):
+        self._filtrar_y_mostrar()
+
+    def _filtrar_y_mostrar(self):
+        self.lista_voces.Freeze()
+        self.lista_voces.DeleteAllItems()
+        self.mapa_indices = {}
+        solo_favs = self.chk_solo_favs.IsChecked()
+        idx = 0
+        for voz in self.voces_todas:
+            id_voz = voz.get("id", "")
+            es_favorita = id_voz in self.favoritos
+            if solo_favs and not es_favorita:
+                continue
+            pos = self.lista_voces.InsertItem(idx, voz.get("nombre", ""))
+            self.lista_voces.SetItem(pos, 1, voz.get("idioma", ""))
+            if es_favorita:
+                self.lista_voces.CheckItem(pos, True)
+            self.mapa_indices[pos] = voz
+            idx += 1
+        self.lista_voces.Thaw()
+
+    def _cargar_favoritos(self):
+        try:
+            if os.path.exists(self.ruta_favs):
+                with open(self.ruta_favs, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception:
+            logger.exception("Error al leer voces_favoritas.json (SAPI5)")
+        return []
+
+    def _guardar_favoritos(self):
+        try:
+            with open(self.ruta_favs, 'w', encoding='utf-8') as f:
+                json.dump(self.favoritos, f, indent=4)
+        except Exception:
+            logger.exception("Error al guardar voces_favoritas.json (SAPI5)")
+
+    def _al_marcar_favorito(self, evento):
+        voz = self.mapa_indices.get(evento.GetIndex())
+        if voz:
+            id_voz = voz.get("id")
+            if id_voz not in self.favoritos:
+                self.favoritos.append(id_voz)
+                self._guardar_favoritos()
+                self._notificar_grabacion()
+
+    def _al_desmarcar_favorito(self, evento):
+        voz = self.mapa_indices.get(evento.GetIndex())
+        if voz:
+            id_voz = voz.get("id")
+            if id_voz in self.favoritos:
+                self.favoritos.remove(id_voz)
+                self._guardar_favoritos()
+                self._notificar_grabacion()
+
+    def _notificar_grabacion(self):
+        try:
+            ventana = wx.GetTopLevelParent(self)
+            if hasattr(ventana, 'pestana_grabacion'):
+                ventana.pestana_grabacion._cargar_voces_disponibles()
+        except Exception:
+            logger.exception("Error al notificar cambio de favoritos (SAPI5) a pestaña Grabación")
+
+    def _al_escuchar(self, evento):
+        if self._reproductor.obtener_estado() == "reproduciendo":
+            self._reproductor.detener()
+            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
+            return
+        idx = self.lista_voces.GetFirstSelected()
+        if idx == -1:
+            reproducir(ERROR)
+            wx.MessageBox("Selecciona una voz.", "Info")
+            return
+        voz = self.mapa_indices.get(idx)
+        nombre = voz.get('nombre', '')
+        try:
+            self._reproductor.fijar_voz(voz)
+            texto = (
+                f"Hola, mi nombre es {nombre}. "
+                "Esta es una muestra de voz local de tu sistema."
+            )
+            self.btn_escuchar.SetLabel("Detener preescucha (Alt+P)")
+            self._reproductor.cargar_texto(texto, callback_completado=self._al_terminar_escucha)
+        except Exception as e:
+            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
+            reproducir(ERROR)
+            wx.MessageBox(f"Error: {e}", "Error")
+
+    def _al_terminar_escucha(self):
+        wx.CallAfter(self.btn_escuchar.SetLabel, "Escuchar muestra (Alt+P)")
+# ANCLAJE_FIN: PANEL_SAPI5
+
+
+# ANCLAJE_INICIO: PANEL_DICCIONARIO
+class PanelDiccionario(wx.Panel):
+    """
+    Habitación del diccionario de pronunciación local (pronunciacion.json).
     Permite añadir, editar y eliminar entradas sin reiniciar la aplicación.
     """
 
     def __init__(self, padre):
-        super().__init__(
-            padre,
-            title="Diccionario de pronunciación",
-            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
-            size=(540, 420),
-        )
+        super().__init__(padre)
         from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
         self._dic = DiccionarioPronunciacion()
-        self._construir()
+        self._construir_ui()
         wx.CallAfter(self._rellenar_lista)
 
-    def _construir(self):
+    def _construir_ui(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(
@@ -1079,46 +1166,47 @@ class _DialogoPronunciacion(wx.Dialog):
 
         self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
         self.lista.InsertColumn(0, "Palabra original", width=200)
-        self.lista.InsertColumn(1, "Pronunciación fonética", width=290)
+        self.lista.InsertColumn(1, "Pronunciación fonética", width=320)
         self.lista.SetHelpText(
             "Lista de sustituciones activas. Selecciona una entrada y usa los botones "
             "para editarla o eliminarla."
         )
-        sizer.Add(self.lista, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 8)
+        self.lista.Bind(wx.EVT_LIST_ITEM_SELECTED, self._al_seleccionar)
+        sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
-        # Formulario de entrada rápida
         sz_form = wx.BoxSizer(wx.HORIZONTAL)
-        sz_form.Add(wx.StaticText(self, label="Palabra:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        sz_form.Add(wx.StaticText(self, label="Palabra:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_original = wx.TextCtrl(self)
         self.txt_original.SetHelpText("Escribe la palabra o sigla tal como aparece en el texto.")
         sz_form.Add(self.txt_original, 1, wx.RIGHT, 10)
-        sz_form.Add(wx.StaticText(self, label="Pronunciación:"), 0, wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)
+        sz_form.Add(wx.StaticText(self, label="Pronunciación:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_pronunciacion = wx.TextCtrl(self)
         self.txt_pronunciacion.SetHelpText(
             "Escribe la pronunciación fonética que usará la voz. "
             "Ejemplo: NVDA → en-ví-di-ei"
         )
         sz_form.Add(self.txt_pronunciacion, 1)
-        sizer.Add(sz_form, 0, wx.EXPAND|wx.ALL, 8)
+        sizer.Add(sz_form, 0, wx.EXPAND | wx.ALL, 8)
 
-        # Botonera
         sz_btn = wx.BoxSizer(wx.HORIZONTAL)
-        btn_anadir = wx.Button(self, label="Añadir / Actualizar")
-        btn_anadir.SetHelpText("Guarda la entrada del formulario. Si la palabra ya existe, actualiza su pronunciación.")
-        btn_anadir.Bind(wx.EVT_BUTTON, self.al_anadir)
-        btn_eliminar = wx.Button(self, label="Eliminar seleccionada")
-        btn_eliminar.SetHelpText("Elimina la entrada seleccionada en la lista.")
-        btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar)
-        # wx.ID_CANCEL hace que wx gestione el cierre con ESC automáticamente
-        btn_cerrar = wx.Button(self, wx.ID_CANCEL, label="Cerrar")
-        sz_btn.Add(btn_anadir,   0, wx.RIGHT, 8)
-        sz_btn.Add(btn_eliminar, 0, wx.RIGHT, 8)
-        sz_btn.Add(btn_cerrar,   0)
+        self.btn_anadir = wx.Button(self, label="Añadir / Actualizar")
+        self.btn_anadir.SetHelpText(
+            "Guarda la entrada del formulario. Si la palabra ya existe, actualiza su pronunciación."
+        )
+        self.btn_anadir.Bind(wx.EVT_BUTTON, self._al_anadir)
+        self.btn_eliminar = wx.Button(self, label="Eliminar seleccionada")
+        self.btn_eliminar.SetHelpText("Elimina la entrada seleccionada en la lista.")
+        self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
+        sz_btn.Add(self.btn_anadir, 0, wx.RIGHT, 8)
+        sz_btn.Add(self.btn_eliminar, 0)
         sizer.Add(sz_btn, 0, wx.ALL, 8)
 
-        self.lista.Bind(wx.EVT_LIST_ITEM_SELECTED, self.al_seleccionar)
         self.SetSizer(sizer)
-        wx.CallAfter(btn_anadir.SetFocus)
+        self.primer_control = self.txt_original
+
+    @property
+    def ultimo_control(self):
+        return self.btn_eliminar
 
     def _rellenar_lista(self):
         self.lista.Freeze()
@@ -1128,13 +1216,13 @@ class _DialogoPronunciacion(wx.Dialog):
             self.lista.SetItem(i, 1, pronunciacion)
         self.lista.Thaw()
 
-    def al_seleccionar(self, event):
-        idx = event.GetIndex()
+    def _al_seleccionar(self, evento):
+        idx = evento.GetIndex()
         self.txt_original.SetValue(self.lista.GetItemText(idx, 0))
         self.txt_pronunciacion.SetValue(self.lista.GetItemText(idx, 1))
 
-    def al_anadir(self, event):
-        original      = self.txt_original.GetValue().strip()
+    def _al_anadir(self, evento):
+        original = self.txt_original.GetValue().strip()
         pronunciacion = self.txt_pronunciacion.GetValue().strip()
         if not original or not pronunciacion:
             wx.MessageBox("Rellena los dos campos.", "Aviso")
@@ -1143,8 +1231,10 @@ class _DialogoPronunciacion(wx.Dialog):
         self.txt_original.Clear()
         self.txt_pronunciacion.Clear()
         self._rellenar_lista()
+        from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
+        recargar_diccionario_pronunciacion()
 
-    def al_eliminar(self, event):
+    def _al_eliminar(self, evento):
         idx = self.lista.GetFirstSelected()
         if idx == -1:
             wx.MessageBox("Selecciona una entrada de la lista.", "Aviso")
@@ -1152,14 +1242,19 @@ class _DialogoPronunciacion(wx.Dialog):
         original = self.lista.GetItemText(idx, 0)
         self._dic.eliminar_entrada(original)
         self._rellenar_lista()
+        from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
+        recargar_diccionario_pronunciacion()
+# ANCLAJE_FIN: PANEL_DICCIONARIO
 
 
+# ANCLAJE_INICIO: DIALOGO_CAPTURA_TECLA
 class _DialogoCapturaTecla(wx.Dialog):
     """
     Diálogo modal que espera una pulsación de tecla y la almacena.
     Compatible con NVDA: anuncia el título y la instrucción al abrirse.
     Escape cancela; cualquier otra tecla (con o sin modificador) confirma.
     """
+
     _ESPECIALES = {
         wx.WXK_SPACE: "Espacio", wx.WXK_RETURN: "Intro",
         wx.WXK_F1: "F1",  wx.WXK_F2: "F2",  wx.WXK_F3: "F3",
@@ -1177,7 +1272,7 @@ class _DialogoCapturaTecla(wx.Dialog):
     def __init__(self, parent, descripcion_atajo):
         super().__init__(parent, title="Asignar tecla",
                          style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP)
-        self.resultado = None  # (modificador, tecla) o None tras Escape
+        self.resultado = None
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         lbl = wx.StaticText(self, label=(
@@ -1186,50 +1281,43 @@ class _DialogoCapturaTecla(wx.Dialog):
             "Escape para cancelar sin cambios."
         ))
         sizer.Add(lbl, 0, wx.ALL, 20)
-
         self.lbl_capturada = wx.StaticText(self, label="Esperando tecla...")
         sizer.Add(self.lbl_capturada, 0, wx.ALIGN_CENTER | wx.BOTTOM, 20)
-
         self.SetSizer(sizer)
         self.Fit()
         self.CenterOnParent()
-
         self.Bind(wx.EVT_CHAR_HOOK, self._al_capturar)
 
-    def _al_capturar(self, event):
-        key = event.GetKeyCode()
+    def _al_capturar(self, evento):
+        key = evento.GetKeyCode()
         if key == wx.WXK_ESCAPE:
             self.resultado = None
             self.EndModal(wx.ID_CANCEL)
             return
-
-        # Ignorar pulsaciones de solo modificador
-        if key in (wx.WXK_SHIFT, wx.WXK_CONTROL, wx.WXK_ALT, wx.WXK_WINDOWS_LEFT,
-                   wx.WXK_WINDOWS_RIGHT, wx.WXK_WINDOWS_MENU):
+        if key in (wx.WXK_SHIFT, wx.WXK_CONTROL, wx.WXK_ALT,
+                   wx.WXK_WINDOWS_LEFT, wx.WXK_WINDOWS_RIGHT, wx.WXK_WINDOWS_MENU):
             return
-
         mods = []
-        if event.ControlDown(): mods.append("Ctrl")
-        if event.AltDown():     mods.append("Alt")
-        if event.ShiftDown():   mods.append("Shift")
-
+        if evento.ControlDown(): mods.append("Ctrl")
+        if evento.AltDown():     mods.append("Alt")
+        if evento.ShiftDown():   mods.append("Shift")
         if key in self._ESPECIALES:
             nombre_tecla = self._ESPECIALES[key]
         elif 32 <= key <= 127:
             nombre_tecla = chr(key).upper()
         else:
-            return  # Tecla no reconocida: ignorar
-
+            return
         self.resultado = ("+".join(mods), nombre_tecla)
         combo = f"{'+'.join(mods)}+{nombre_tecla}" if mods else nombre_tecla
         self.lbl_capturada.SetLabel(f"Asignando: {combo}")
         self.EndModal(wx.ID_OK)
+# ANCLAJE_FIN: DIALOGO_CAPTURA_TECLA
 
 
+# ANCLAJE_INICIO: PANEL_ATAJOS
 class PanelAtajos(wx.Panel):
     def __init__(self, padre):
         super().__init__(padre)
-        from app.motor.gestor_atajos import cargar_atajos, cargar_defaults
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(self, label=(
@@ -1243,8 +1331,7 @@ class PanelAtajos(wx.Panel):
         self.lista.SetHelpText(
             "Lista de acciones con sus atajos de teclado. "
             "Usa las flechas Arriba y Abajo para navegar. "
-            "Pulsa Intro para abrir el diálogo de asignación de la acción seleccionada. "
-            "Las teclas personalizadas se marcan con la etiqueta personalizada."
+            "Pulsa Intro para abrir el diálogo de asignación de la acción seleccionada."
         )
         self.lista.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista)
         sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
@@ -1252,17 +1339,15 @@ class PanelAtajos(wx.Panel):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_asignar = wx.Button(self, label="Asignar nueva tecla al atajo seleccionado")
         self.btn_asignar.SetHelpText(
-            "Abre un diálogo donde puedes pulsar la combinación de teclas que quieres "
-            "asignar a la acción seleccionada en la lista."
+            "Abre un diálogo donde puedes pulsar la combinación de teclas que quieres asignar."
         )
         self.btn_eliminar = wx.Button(self, label="Eliminar asignación personalizada")
         self.btn_eliminar.SetHelpText(
-            "Elimina la asignación personalizada de la acción seleccionada y vuelve a la tecla predeterminada."
+            "Elimina la asignación personalizada y vuelve a la tecla predeterminada."
         )
         self.btn_restablecer = wx.Button(self, label="Restablecer todos los atajos a valores predeterminados")
         self.btn_restablecer.SetHelpText(
-            "Borra todas las personalizaciones y devuelve todos los atajos de teclado "
-            "a sus valores predeterminados de fábrica. Se pedirá confirmación."
+            "Borra todas las personalizaciones y devuelve todos los atajos a sus valores de fábrica."
         )
         self.btn_asignar.Bind(wx.EVT_BUTTON, self._al_asignar)
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
@@ -1272,32 +1357,34 @@ class PanelAtajos(wx.Panel):
         hbox.Add(self.btn_restablecer, 0)
         sizer.Add(hbox, 0, wx.ALL, 10)
 
-        # Sección de atajos fijos del menú (no configurables desde esta lista)
         sb_fijos = wx.StaticBox(self, label="Atajos fijos del menú (no configurables)")
         sz_fijos = wx.StaticBoxSizer(sb_fijos, wx.VERTICAL)
         _FIJOS = [
-            ("Ctrl+A",           "Abrir libro EPUB (menú Archivo)"),
-            ("Ctrl+T",           "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
-            ("Ctrl+Shift+P",     "Abrir gestor de proyectos (menú Proyectos)"),
-            ("Ctrl+B",           "Buscar en el texto (menú Ir a...)"),
-            ("Ctrl+G",           "Ir a porcentaje del libro (menú Ir a...)"),
-            ("Ctrl+M",           "Gestor de marcadores (menú Ir a...)"),
-            ("Alt+F4",           "Salir de la aplicación"),
+            ("Ctrl+A",       "Abrir libro EPUB (menú Archivo)"),
+            ("Ctrl+T",       "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
+            ("Ctrl+Shift+P", "Abrir gestor de proyectos (menú Proyectos)"),
+            ("Ctrl+B",       "Buscar en el texto (menú Ir a...)"),
+            ("Ctrl+G",       "Ir a porcentaje del libro (menú Ir a...)"),
+            ("Ctrl+M",       "Gestor de marcadores (menú Ir a...)"),
+            ("Alt+F4",       "Salir de la aplicación"),
         ]
         for atajo, desc in _FIJOS:
-            lbl = wx.StaticText(self, label=f"  {atajo:<20}  {desc}")
-            sz_fijos.Add(lbl, 0, wx.LEFT | wx.TOP, 4)
+            sz_fijos.Add(wx.StaticText(self, label=f"  {atajo:<20}  {desc}"), 0, wx.LEFT | wx.TOP, 4)
         sizer.Add(sz_fijos, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         self.SetSizer(sizer)
+        self.primer_control = self.lista
         self._rellenar_lista()
+
+    @property
+    def ultimo_control(self):
+        return self.btn_restablecer
 
     def _rellenar_lista(self):
         from app.motor.gestor_atajos import cargar_atajos, cargar_defaults, texto_atajo
         self._atajos = cargar_atajos()
         self._defaults = cargar_defaults()
         self._claves = list(self._atajos.keys())
-
         self.lista.DeleteAllItems()
         for i, clave in enumerate(self._claves):
             entrada = self._atajos[clave]
@@ -1305,44 +1392,34 @@ class PanelAtajos(wx.Panel):
             desc = entrada.get("descripcion", clave)
             tecla_def = texto_atajo(entrada_def)
             tecla_actual = texto_atajo(entrada)
-
-            # Columna 1: descripción con el default entre paréntesis
             col_accion = f"{desc} ({tecla_def})"
-            # Columna 2: tecla actual, marcada si es personalizada
-            if tecla_actual == tecla_def:
-                col_tecla = tecla_actual
-            else:
-                col_tecla = f"{tecla_actual}  [personalizada]"
-
+            col_tecla = tecla_actual if tecla_actual == tecla_def else f"{tecla_actual}  [personalizada]"
             self.lista.InsertItem(i, col_accion)
             self.lista.SetItem(i, 1, col_tecla)
-
         if self.lista.GetItemCount() > 0:
             self.lista.Select(0)
 
-    def _al_tecla_lista(self, event):
-        key = event.GetKeyCode()
+    def _al_tecla_lista(self, evento):
+        key = evento.GetKeyCode()
         if key == wx.WXK_RETURN:
             self._al_asignar(None)
         else:
             if key in (wx.WXK_UP, wx.WXK_DOWN):
                 reproducir(LIST_NAV)
-            event.Skip()
+            evento.Skip()
 
     def _refrescar_aceleradores_frame(self):
-        """Pide al Frame principal que reconstruya el AcceleratorTable con los atajos actuales."""
         ventana = wx.GetTopLevelParent(self)
         if hasattr(ventana, '_configurar_aceleradores_globales'):
             ventana._configurar_aceleradores_globales()
 
-    def _al_asignar(self, event):
+    def _al_asignar(self, evento):
         from app.motor.gestor_atajos import guardar_atajo_usuario
         idx = self.lista.GetFirstSelected()
         if idx == -1:
             reproducir(ERROR)
             wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
             return
-
         clave = self._claves[idx]
         desc = self._atajos[clave].get("descripcion", clave)
         dlg = _DialogoCapturaTecla(self, desc)
@@ -1356,7 +1433,7 @@ class PanelAtajos(wx.Panel):
                 self.lista.EnsureVisible(idx)
         dlg.Destroy()
 
-    def _al_eliminar(self, event):
+    def _al_eliminar(self, evento):
         from app.motor.gestor_atajos import eliminar_atajo_usuario
         idx = self.lista.GetFirstSelected()
         if idx == -1:
@@ -1370,113 +1447,239 @@ class PanelAtajos(wx.Panel):
         if idx < self.lista.GetItemCount():
             self.lista.Select(idx)
 
-    def _al_restablecer(self, event):
+    def _al_restablecer(self, evento):
         from app.motor.gestor_atajos import restablecer_todos
         if wx.MessageBox(
             "¿Restablecer todos los atajos a los valores predeterminados?",
-            "Confirmar", wx.YES_NO | wx.ICON_QUESTION
+            "Confirmar", wx.YES_NO | wx.ICON_QUESTION,
         ) == wx.YES:
             restablecer_todos()
             self._rellenar_lista()
             self._refrescar_aceleradores_frame()
             reproducir(SUCCESS)
             wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
+# ANCLAJE_FIN: PANEL_ATAJOS
 
+
+# ANCLAJE_INICIO: PESTANA_AJUSTES_PRINCIPAL
 class PestanaAjustes(wx.Panel):
+    """
+    Pestaña de Ajustes — modelo híbrido V2.0.
+
+    Árbol de categorías completamente expandido (izquierda) + Simplebook de
+    habitaciones independientes (derecha).
+
+    Navegación con teclado:
+      - Flechas dentro del árbol para moverse entre categorías.
+      - Tab desde el árbol salta directamente al primer control interactivo
+        de la habitación activa, sin quedarse atrapado en sizers.
+      - Cada habitación expone primer_control y ultimo_control para que
+        ventana_principal.py cierre el ciclo de tabulación accesible.
+    """
+
+    # Índices de página en el Simplebook — deben coincidir con el orden de AddPage
+    _PAG_GENERAL    = 0
+    _PAG_CLAVES     = 1
+    _PAG_AZURE      = 2
+    _PAG_DEEPGRAM   = 3
+    _PAG_POLLY      = 4
+    _PAG_ELEVENLABS = 5
+    _PAG_SAPI5      = 6
+    _PAG_DICCIONARIO = 7
+    _PAG_ATAJOS     = 8
+
     def __init__(self, padre):
         super().__init__(padre)
         self.ruta_config = ruta_config("ajustes.json")
-        self.config = self.cargar_config()
+        self.config = self._cargar_config()
 
         self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
 
-        self.lista_cat = wx.ListBox(self.splitter, style=wx.LB_SINGLE)
-        self.lista_cat.Append("General")
-        self.lista_cat.Append("Claves y Proveedores")
-        self.lista_cat.Append("Voces e Idiomas")
-        self.lista_cat.Append("Atajos de teclado")
-        self.lista_cat.SetSelection(0)
-        self.lista_cat.SetHelpText(
-            "Categorías de ajustes. Usa las flechas Arriba y Abajo para navegar. "
-            "Pulsa Intro o Espacio para abrir la categoría seleccionada en el panel de la derecha."
+        # --- Árbol de categorías ---
+        self.arbol_cat = wx.TreeCtrl(
+            self.splitter,
+            style=wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_SINGLE | wx.TR_HIDE_ROOT,
         )
-        self.lista_cat.Bind(wx.EVT_LISTBOX, self.al_cambiar_cat)
-        self.lista_cat.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista_cat)
+        self.arbol_cat.SetHelpText(
+            "Árbol de categorías de ajustes. Usa las flechas Arriba y Abajo para navegar "
+            "entre categorías. Flecha Derecha expande una rama; Flecha Izquierda la contrae. "
+            "Tab salta al primer control de la habitación seleccionada."
+        )
+        self._nodos = {}
+        self._construir_arbol()
+        self.arbol_cat.Bind(wx.EVT_TREE_SEL_CHANGED, self._al_cambiar_nodo)
+        self.arbol_cat.Bind(wx.EVT_KEY_DOWN, self._al_tecla_arbol)
 
+        # --- Simplebook de habitaciones (inicialización temprana: evita punteros nulos) ---
         self.panel_derecho = wx.Simplebook(self.splitter)
-        self.pag_general = PanelGeneral(self.panel_derecho, self.config)
-        self.pag_claves = PanelClaves(self.panel_derecho, self.config)
-        self.pag_voces = PanelVoces(self.panel_derecho, self.config)
-        self.pag_atajos = PanelAtajos(self.panel_derecho)
 
-        self.panel_derecho.AddPage(self.pag_general, "General")
-        self.panel_derecho.AddPage(self.pag_claves, "Claves")
-        self.panel_derecho.AddPage(self.pag_voces, "Voces")
-        self.panel_derecho.AddPage(self.pag_atajos, "Atajos")
+        self.pag_general     = PanelGeneral(self.panel_derecho, self.config)
+        self.pag_claves      = PanelClaves(self.panel_derecho, self.config)
+        self.pag_azure       = PanelAzure(self.panel_derecho, self.config)
+        self.pag_deepgram    = PanelDeepgram(self.panel_derecho, self.config)
+        self.pag_polly       = PanelPolly(self.panel_derecho, self.config)
+        self.pag_elevenlabs  = PanelElevenLabs(self.panel_derecho, self.config)
+        self.pag_sapi5       = PanelSapi5(self.panel_derecho, self.config)
+        self.pag_diccionario = PanelDiccionario(self.panel_derecho)
+        self.pag_atajos      = PanelAtajos(self.panel_derecho)
 
-        self.splitter.SetMinimumPaneSize(150)
-        self.splitter.SplitVertically(self.lista_cat, self.panel_derecho, 200)
+        self.panel_derecho.AddPage(self.pag_general,     "Configuración General")
+        self.panel_derecho.AddPage(self.pag_claves,      "Credenciales y API Keys")
+        self.panel_derecho.AddPage(self.pag_azure,       "Azure Neural")
+        self.panel_derecho.AddPage(self.pag_deepgram,    "Deepgram Aura-2")
+        self.panel_derecho.AddPage(self.pag_polly,       "Amazon Polly")
+        self.panel_derecho.AddPage(self.pag_elevenlabs,  "ElevenLabs")
+        self.panel_derecho.AddPage(self.pag_sapi5,       "Voces Locales SAPI5")
+        self.panel_derecho.AddPage(self.pag_diccionario, "Reglas del Diccionario")
+        self.panel_derecho.AddPage(self.pag_atajos,      "Atajos de Teclado")
+
+        self.splitter.SetMinimumPaneSize(180)
+        self.splitter.SplitVertically(self.arbol_cat, self.panel_derecho, 220)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.splitter, 1, wx.EXPAND|wx.ALL, 5)
+        sizer.Add(self.splitter, 1, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(sizer)
 
-        # Puntos de anclaje para el bucle de tabulación gestionado desde VentanaPrincipal
-        self.primer_control = self.lista_cat
+        # Punto de entrada para el bucle de tabulación de ventana_principal.py
+        self.primer_control = self.arbol_cat
+
+        # Seleccionar el primer nodo visible para que NVDA lo anuncie al entrar
+        wx.CallAfter(self._seleccionar_nodo_inicial)
+
+    # ANCLAJE_INICIO: CONSTRUIR_ARBOL_CATEGORIAS
+    def _construir_arbol(self):
+        raiz = self.arbol_cat.AddRoot("Ajustes")
+
+        nodo_general = self.arbol_cat.AppendItem(raiz, "Configuración General")
+        self._nodos[nodo_general] = self._PAG_GENERAL
+
+        nodo_claves = self.arbol_cat.AppendItem(raiz, "Credenciales y API Keys")
+        self._nodos[nodo_claves] = self._PAG_CLAVES
+
+        # Rama de Catálogos de Voces con sub-nodos por proveedor
+        nodo_voces = self.arbol_cat.AppendItem(raiz, "Catálogos de Voces")
+        # La rama padre no tiene página propia; su selección abre Azure por defecto
+        self._nodos[nodo_voces] = self._PAG_AZURE
+
+        nodo_azure = self.arbol_cat.AppendItem(nodo_voces, "Azure Neural")
+        self._nodos[nodo_azure] = self._PAG_AZURE
+
+        nodo_deepgram = self.arbol_cat.AppendItem(nodo_voces, "Deepgram Aura-2")
+        self._nodos[nodo_deepgram] = self._PAG_DEEPGRAM
+
+        nodo_polly = self.arbol_cat.AppendItem(nodo_voces, "Amazon Polly")
+        self._nodos[nodo_polly] = self._PAG_POLLY
+
+        nodo_eleven = self.arbol_cat.AppendItem(nodo_voces, "ElevenLabs")
+        self._nodos[nodo_eleven] = self._PAG_ELEVENLABS
+
+        nodo_sapi5 = self.arbol_cat.AppendItem(nodo_voces, "Voces Locales SAPI5")
+        self._nodos[nodo_sapi5] = self._PAG_SAPI5
+
+        nodo_diccionario = self.arbol_cat.AppendItem(raiz, "Reglas del Diccionario")
+        self._nodos[nodo_diccionario] = self._PAG_DICCIONARIO
+
+        nodo_atajos = self.arbol_cat.AppendItem(raiz, "Atajos de Teclado")
+        self._nodos[nodo_atajos] = self._PAG_ATAJOS
+
+        # Expandir todas las ramas para que el usuario ciego conozca la estructura
+        # completa desde el primer momento que el árbol recibe el foco.
+        self.arbol_cat.ExpandAll()
+    # ANCLAJE_FIN: CONSTRUIR_ARBOL_CATEGORIAS
+
+    def _seleccionar_nodo_inicial(self):
+        raiz = self.arbol_cat.GetRootItem()
+        if raiz.IsOk():
+            primer_hijo, _ = self.arbol_cat.GetFirstChild(raiz)
+            if primer_hijo.IsOk():
+                self.arbol_cat.SelectItem(primer_hijo)
+
+    # ANCLAJE_INICIO: NAVEGACION_ARBOL_TAB
+    def _al_tecla_arbol(self, evento):
+        """
+        Intercepta Tab para saltar al primer control interactivo de la habitación
+        activa sin quedar atrapado en los sizers del Simplebook.
+        Las flechas se dejan pasar (Skip) para que el TreeCtrl las procese de forma
+        nativa: así NVDA anuncia cada nodo al moverse.
+        """
+        key = evento.GetKeyCode()
+        if key == wx.WXK_TAB:
+            panel = self._panel_activo()
+            if panel is not None:
+                primer = getattr(panel, 'primer_control', None)
+                if primer is not None and primer.IsShownOnScreen():
+                    primer.SetFocus()
+                    return  # absorber el Tab — no hacer Skip
+        elif key in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
+            reproducir(LIST_NAV)
+        evento.Skip()
+    # ANCLAJE_FIN: NAVEGACION_ARBOL_TAB
+
+    def _al_cambiar_nodo(self, evento):
+        nodo = evento.GetItem()
+        if nodo.IsOk() and nodo in self._nodos:
+            indice = self._nodos[nodo]
+            self.panel_derecho.ChangeSelection(indice)
+            # Devolver el foco al árbol para que NVDA siga leyendo el árbol
+            # y no anuncie el contenido del panel antes de tiempo.
+            wx.CallAfter(self.arbol_cat.SetFocus)
+        evento.Skip()
+
+    def _panel_activo(self):
+        """Devuelve el panel wx del Simplebook que está visible en este momento."""
+        idx = self.panel_derecho.GetSelection()
+        paneles = [
+            self.pag_general, self.pag_claves,
+            self.pag_azure, self.pag_deepgram, self.pag_polly,
+            self.pag_elevenlabs, self.pag_sapi5,
+            self.pag_diccionario, self.pag_atajos,
+        ]
+        if 0 <= idx < len(paneles):
+            return paneles[idx]
+        return None
 
     def obtener_ultimo_control(self):
         """
-        Devuelve el último control navegable del sub-panel activo en ese momento.
-        VentanaPrincipal lo consulta para saber cuándo Tab debe volver al Notebook.
+        Devuelve el último control navegable de la habitación activa.
+        ventana_principal.py lo consulta para cerrar el ciclo de tabulación accesible.
         """
-        idx = self.panel_derecho.GetSelection()
-        if idx == 0:
-            return self.pag_general.btn_limpiar
-        elif idx == 1:
-            return self.pag_claves.btn_save
-        elif idx == 2:
-            return self.pag_voces.btn_diccionario
-        elif idx == 3:
-            return self.pag_atajos.btn_restablecer
+        panel = self._panel_activo()
+        if panel is not None and hasattr(panel, 'ultimo_control'):
+            return panel.ultimo_control
+        return None
 
-    def _al_tecla_lista_cat(self, evento):
-        """Sonido de navegación al moverse por la lista de categorías de ajustes."""
-        if evento.GetKeyCode() in (wx.WXK_UP, wx.WXK_DOWN):
-            reproducir(LIST_NAV)
-        evento.Skip()
+    def _recargar_panel_proveedor(self, id_proveedor):
+        """
+        Recarga el panel del proveedor indicado tras una descarga de voces.
+        Se llama desde PanelClaves tras una verificación exitosa.
+        """
+        mapa = {
+            "azure":      self.pag_azure,
+            "deepgram":   self.pag_deepgram,
+            "polly":      self.pag_polly,
+            "elevenlabs": self.pag_elevenlabs,
+        }
+        panel = mapa.get(id_proveedor)
+        if panel is not None:
+            panel.cargar_datos()
 
-    def al_cambiar_cat(self, event):
-        idx = self.lista_cat.GetSelection()
-        if idx != wx.NOT_FOUND:
-            self.panel_derecho.ChangeSelection(idx)
-            # wx.CallAfter garantiza que el foco vuelve a la lista DESPUÉS de que
-            # ChangeSelection termine, evitando que NVDA anuncie dos veces el mismo ítem.
-            # Sin este SetFocus, al cambiar de página el panel derecho roba el foco
-            # y NVDA deja de leer las flechas de navegación en la lista de categorías.
-            wx.CallAfter(self.lista_cat.SetFocus)
-            # Sin event.Skip(): evita que EVT_LISTBOX suba al splitter y mueva el foco.
-            if idx == 2:
-                # Diferir la carga para que el foco vuelva a lista_cat antes de
-                # que comience la lectura del JSON de voces.
-                wx.CallAfter(self.pag_voces.cargar_datos_y_llenar)
-
-    def cargar_config(self):
+    def _cargar_config(self):
         try:
             with open(self.ruta_config, "r", encoding='utf-8') as f:
                 return json.load(f)
         except FileNotFoundError:
             return {}
-        except Exception as e:
-            print(f"[Error] No se pudo leer ajustes.json: {e}")
+        except Exception:
+            logger.exception("Error al leer ajustes.json")
             return {}
 
     def guardar_config_en_archivo(self):
         try:
             os.makedirs(CONFIG_DIR, exist_ok=True)
-            with open(self.ruta_config, "w", encoding='utf-8') as f:
+            ruta_tmp = self.ruta_config + ".tmp"
+            with open(ruta_tmp, "w", encoding='utf-8') as f:
                 json.dump(self.config, f, indent=4, ensure_ascii=False)
-            # Notificar a PestanaLectura para que actualice las etiquetas de los botones
-            # de salto con el nuevo valor de segundos guardado
+            os.replace(ruta_tmp, self.ruta_config)
             try:
                 ventana = wx.GetTopLevelParent(self)
                 if hasattr(ventana, 'pestana_lectura'):
@@ -1485,7 +1688,9 @@ class PestanaAjustes(wx.Panel):
                     pl.btn_atras.SetLabel(f"Retroceder {pl.segundos_salto}s")
                     pl.btn_adelante.SetLabel(f"Avanzar {pl.segundos_salto}s")
             except Exception:
-                pass
-        except Exception as e:
+                logger.exception("Error al actualizar etiquetas de botones de salto en Lectura")
+        except Exception:
+            logger.exception("Error al guardar ajustes.json")
             reproducir(ERROR)
-            wx.MessageBox(str(e))
+            wx.MessageBox("No se pudo guardar la configuración.")
+# ANCLAJE_FIN: PESTANA_AJUSTES_PRINCIPAL
