@@ -183,7 +183,7 @@ class VentanaPrincipal(wx.Frame):
             primer = self.pestana_grabacion.primer_control
             ultimo = self.pestana_grabacion.ultimo_control
         elif indice == 2:
-            primer = self.pestana_ajustes.primer_control
+            primer = self.pestana_ajustes.arbol_cat
             ultimo = self.pestana_ajustes.obtener_ultimo_control()
         else:
             evento.Skip()

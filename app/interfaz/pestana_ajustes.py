@@ -87,6 +87,32 @@ class PanelGeneral(wx.ScrolledWindow):
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # ANCLAJE_INICIO: IDIOMA_LIBRO_GENERAL
+        sb_idioma = wx.StaticBox(self, label="Idioma del libro")
+        sz_idioma = wx.StaticBoxSizer(sb_idioma, wx.VERTICAL)
+        sz_idioma.Add(
+            wx.StaticText(self, label="Idioma principal del libro (preselecciona el acento de voz en Lectura):"),
+            0, wx.ALL, 2,
+        )
+        self.combo_idioma_libro = wx.ComboBox(
+            self,
+            choices=["Español (ES)", "Español (LAT)", "Inglés", "Detectar auto"],
+            style=wx.CB_READONLY,
+        )
+        self.combo_idioma_libro.SetHelpText(
+            "Define el idioma principal del libro para preseleccionar el acento correcto "
+            "en el combo de voz de la pestaña Lectura. "
+            "Elige Español (ES) para España, Español (LAT) para Latinoamérica, "
+            "Inglés para textos en inglés, o Detectar auto para dejar que la aplicación lo decida."
+        )
+        _codigo_guardado = self.config.get("idioma_libro_codigo", "es-ES")
+        _mapa_codigo_idx = {"es-ES": 0, "es-MX": 1, "en-US": 2, "auto": 3}
+        self.combo_idioma_libro.SetSelection(_mapa_codigo_idx.get(_codigo_guardado, 0))
+        self.combo_idioma_libro.Bind(wx.EVT_COMBOBOX, self._al_cambiar_idioma_libro)
+        sz_idioma.Add(self.combo_idioma_libro, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(sz_idioma, 0, wx.EXPAND | wx.ALL, 10)
+        # ANCLAJE_FIN: IDIOMA_LIBRO_GENERAL
+
         sb_cuota = wx.StaticBox(self, label="Control de Presupuesto y Límites")
         sizer_cuota = wx.StaticBoxSizer(sb_cuota, wx.VERTICAL)
 
@@ -201,10 +227,23 @@ class PanelGeneral(wx.ScrolledWindow):
         hbox.Add(txt, 1, wx.EXPAND)
         return hbox
 
+    def _al_cambiar_idioma_libro(self, evento):
+        _mapa_idx_codigo = {0: "es-ES", 1: "es-MX", 2: "en-US", 3: "auto"}
+        self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
+            self.combo_idioma_libro.GetSelection(), "es-ES"
+        )
+        padre = wx.GetTopLevelParent(self)
+        if hasattr(padre, "guardar_config_en_archivo"):
+            padre.guardar_config_en_archivo()
+
     def guardar_todo(self):
         self.config["segundos_salto"] = self.txt_salto.GetValue()
         self.config["pausa_entre_fragmentos_ms"] = self.spin_pausa.GetValue()
         self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
+        _mapa_idx_codigo = {0: "es-ES", 1: "es-MX", 2: "en-US", 3: "auto"}
+        self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
+            self.combo_idioma_libro.GetSelection(), "es-ES"
+        )
         padre = wx.GetTopLevelParent(self)
         if hasattr(padre, "guardar_config_en_archivo"):
             padre.guardar_config_en_archivo()
@@ -549,13 +588,15 @@ class PanelProveedorIA(wx.Panel):
     Clase base parametrizada para los paneles de catálogo de voces de cada proveedor cloud.
 
     Secuencia de tabulación lineal y estricta:
-        Idioma → Solo favoritas → Solo nuevas voces → Búsqueda → ListCtrl → Botonera
+        Idioma → [controles extra del proveedor] → Solo favoritas → Solo nuevas voces
+        → Búsqueda → ListCtrl → Botonera
 
     Las casillas de favoritos y nuevas voces son locales a cada panel e independientes
     entre sí: activarlas no contamina la vista de otros proveedores.
 
-    Cada subclase debe implementar `cargar_datos` para poblar `self.voces_todas`
-    con la lista de voces filtrada por su proveedor.
+    Ganchos de extensión para subclases:
+      _construir_controles_extra(sizer)  — añade controles entre Idioma y las casillas
+      _obtener_filtros_extra(voz)        — devuelve False para excluir la voz del filtrado
     """
 
     # Tabla de traducción de códigos de idioma a texto legible en español
@@ -623,6 +664,9 @@ class PanelProveedorIA(wx.Panel):
         hbox_idioma.Add(self.combo_idioma, 1)
         sizer.Add(hbox_idioma, 0, wx.EXPAND | wx.ALL, 8)
 
+        # 1b. Controles extra del proveedor (gancho: subclases añaden aquí)
+        self._construir_controles_extra(sizer)
+
         # 2. Casillas de filtro local (independientes por panel)
         hbox_filtros = wx.BoxSizer(wx.HORIZONTAL)
         self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
@@ -640,7 +684,7 @@ class PanelProveedorIA(wx.Panel):
         hbox_filtros.Add(self.chk_solo_nuevas, 0, wx.ALIGN_CENTER_VERTICAL)
         sizer.Add(hbox_filtros, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
-        # 3. Búsqueda de texto con debounce
+        # 3. Búsqueda de texto con debounce (300 ms)
         hbox_busqueda = wx.BoxSizer(wx.HORIZONTAL)
         hbox_busqueda.Add(
             wx.StaticText(self, label="Buscar nombre de voz:"),
@@ -655,14 +699,15 @@ class PanelProveedorIA(wx.Panel):
         hbox_busqueda.Add(self.txt_buscar, 1, wx.EXPAND)
         sizer.Add(hbox_busqueda, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
-        # 4. ListCtrl de voces
+        # 4. ListCtrl de voces con casillas nativas
         self.lista_voces = ListaVocesCheck(self)
         self.lista_voces.InsertColumn(0, "Nombre", width=280)
         self.lista_voces.InsertColumn(1, "Género", width=80)
         self.lista_voces.InsertColumn(2, "Idioma", width=200)
         self.lista_voces.SetHelpText(
             f"Lista de voces de {self.nombre_proveedor}. Usa las flechas para navegar. "
-            "Pulsa Intro para marcar o desmarcar una voz como favorita."
+            "Pulsa Intro para marcar o desmarcar una voz como favorita. "
+            "Las voces marcadas aparecerán en Grabación para asignarlas a personajes."
         )
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)
@@ -674,11 +719,27 @@ class PanelProveedorIA(wx.Panel):
         self.SetSizer(sizer)
         self.primer_control = self.combo_idioma
 
+    # --- Ganchos de extensión para subclases ---
+
+    def _construir_controles_extra(self, sizer):
+        """
+        Gancho invocado durante _construir_ui(), entre Idioma y las casillas.
+        Las subclases sobreescriben este método para añadir controles de filtrado propios
+        (por ejemplo, el combo de tipo de motor de Amazon Polly).
+        """
+        pass
+
+    def _obtener_filtros_extra(self, voz):
+        """
+        Gancho de filtrado invocado en filtrar_y_mostrar() tras los filtros estándar.
+        Devuelve True para incluir la voz o False para excluirla.
+        Las subclases sobreescriben este método para aplicar filtros específicos del proveedor.
+        """
+        return True
+
+    # --- Botonera estándar ---
+
     def _construir_botonera(self):
-        """
-        Construye la botonera inferior estándar.
-        Las subclases pueden sobreescribir este método para añadir botones propios.
-        """
         from app.motor.reproductor_voz import ReproductorVoz
         self._reproductor = ReproductorVoz()
 
@@ -701,28 +762,49 @@ class PanelProveedorIA(wx.Panel):
     def ultimo_control(self):
         return self.btn_escuchar
 
-    # --- Carga de datos (a implementar por cada subclase) ---
+    # --- Carga de datos desde voces_disponibles.json ---
 
     def cargar_datos(self):
         """
-        Carga las voces del proveedor desde voces_disponibles.json y puebla
-        self.voces_todas. Llama a filtrar_y_mostrar al terminar.
-        Implementar en cada subclase.
+        Lee perezosamente voces_disponibles.json vía GestorVoces y filtra por
+        self.id_proveedor. Pobla el combo de idioma y llama a filtrar_y_mostrar.
         """
-        raise NotImplementedError(f"{self.__class__.__name__} debe implementar cargar_datos()")
+        from app.motor.cliente_nube_voces import GestorVoces
+        try:
+            todas = GestorVoces().obtener_todas_las_voces()
+        except Exception:
+            logger.exception(f"Error al obtener voces de {self.nombre_proveedor}")
+            todas = {}
 
-    # --- Lógica de filtrado compartida ---
+        self.voces_todas = []
+        for v in todas.get(self.id_proveedor, []):
+            entrada = dict(v)
+            entrada["proveedor_id"] = self.id_proveedor
+            entrada["es_nueva"] = bool(entrada.get("es_nueva", False))
+            self.voces_todas.append(entrada)
+
+        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
+        self.combo_idioma.Clear()
+        self.combo_idioma.Append("Todos")
+        self.combo_idioma.AppendItems(idiomas)
+        self.combo_idioma.SetSelection(0)
+
+        self.filtrar_y_mostrar()
+
+    # --- Lógica de filtrado combinada ---
 
     def _al_filtrar(self, evento):
         self.filtrar_y_mostrar()
 
     def _al_filtrar_texto(self, evento):
+        # Debounce: reconstruye la lista 300 ms después de la última pulsación
         if self._timer_busqueda:
             self._timer_busqueda.Stop()
         self._timer_busqueda = wx.CallLater(300, self.filtrar_y_mostrar)
         evento.Skip()
 
     def filtrar_y_mostrar(self):
+        # Freeze suspende el redibujado durante la inserción masiva (sin parpadeo)
         self.lista_voces.Freeze()
         self.lista_voces.DeleteAllItems()
         self.mapa_indices = {}
@@ -738,6 +820,7 @@ class PanelProveedorIA(wx.Panel):
             es_favorita = id_voz in self.favoritos
             es_nueva = bool(voz.get("es_nueva"))
 
+            # Filtros especiales exclusivos: tienen prioridad sobre el resto
             if solo_nuevas:
                 if not es_nueva:
                     continue
@@ -745,11 +828,17 @@ class PanelProveedorIA(wx.Panel):
                 if not es_favorita:
                     continue
             else:
+                # 1. Idioma
                 if f_idioma != "Todos" and voz.get("idioma") != f_idioma:
                     continue
+                # 2. Filtro extra del proveedor (gancho: motor Polly, etc.)
+                if not self._obtener_filtros_extra(voz):
+                    continue
+                # 3. Búsqueda por texto
                 if f_texto and f_texto not in voz.get("nombre", "").lower():
                     continue
 
+            # Traducción semántica: NVDA lee las cadenas técnicas en español
             nombre_mostrar = self._construir_nombre_enriquecido(voz)
             genero_mostrar = self._GENEROS_ES.get(voz.get("genero", ""), voz.get("genero", ""))
             idioma_raw = voz.get("idioma", "")
@@ -765,9 +854,14 @@ class PanelProveedorIA(wx.Panel):
             self.mapa_indices[pos] = voz
             idx += 1
 
+        # Thaw reactiva el redibujado y pinta todos los ítems de una sola pasada
         self.lista_voces.Thaw()
 
     def _construir_nombre_enriquecido(self, voz):
+        """
+        Inyecta etiquetas semánticas en el nombre para que NVDA las anuncie
+        antes de que el usuario baje al siguiente control.
+        """
         nombre_base = voz.get("nombre", "")
         id_voz = voz.get("id", "").lower()
         etiquetas = []
@@ -781,7 +875,7 @@ class PanelProveedorIA(wx.Panel):
             return f"{nombre_base} {' '.join(etiquetas)}"
         return nombre_base
 
-    # --- Favoritos ---
+    # --- Favoritos (guardado atómico + notificación inmediata) ---
 
     def _cargar_favoritos(self):
         try:
@@ -793,9 +887,12 @@ class PanelProveedorIA(wx.Panel):
         return []
 
     def _guardar_favoritos(self):
+        # Escritura atómica: primero .tmp, luego renombrar
+        ruta_tmp = self.ruta_favs + ".tmp"
         try:
-            with open(self.ruta_favs, 'w', encoding='utf-8') as f:
+            with open(ruta_tmp, 'w', encoding='utf-8') as f:
                 json.dump(self.favoritos, f, indent=4)
+            os.replace(ruta_tmp, self.ruta_favs)
         except Exception:
             logger.exception("Error al guardar voces_favoritas.json")
 
@@ -806,7 +903,7 @@ class PanelProveedorIA(wx.Panel):
             if id_voz not in self.favoritos:
                 self.favoritos.append(id_voz)
                 self._guardar_favoritos()
-                self._notificar_grabacion()
+                wx.CallAfter(self._notificar_pestanas)
 
     def _al_desmarcar_favorito(self, evento):
         voz = self.mapa_indices.get(evento.GetIndex())
@@ -815,15 +912,18 @@ class PanelProveedorIA(wx.Panel):
             if id_voz in self.favoritos:
                 self.favoritos.remove(id_voz)
                 self._guardar_favoritos()
-                self._notificar_grabacion()
+                wx.CallAfter(self._notificar_pestanas)
 
-    def _notificar_grabacion(self):
+    def _notificar_pestanas(self):
+        """Recarga en segundo plano los combos de voz en Lectura y Grabación."""
         try:
             ventana = wx.GetTopLevelParent(self)
             if hasattr(ventana, 'pestana_grabacion'):
                 ventana.pestana_grabacion._cargar_voces_disponibles()
+            if hasattr(ventana, 'pestana_lectura') and hasattr(ventana.pestana_lectura, '_recargar_combo_voces'):
+                ventana.pestana_lectura._recargar_combo_voces()
         except Exception:
-            logger.exception("Error al notificar cambio de favoritos a pestaña Grabación")
+            logger.exception("Error al notificar cambio de favoritos a otras pestañas")
 
     # --- Preescucha ---
 
@@ -863,33 +963,6 @@ class PanelProveedorIA(wx.Panel):
 class PanelAzure(PanelProveedorIA):
     def __init__(self, padre, config):
         super().__init__(padre, config, "azure", "Azure Neural")
-
-    def cargar_datos(self):
-        self.voces_todas = self._leer_voces_proveedor("azure")
-        self._poblar_combo_idioma()
-        self.filtrar_y_mostrar()
-
-    def _leer_voces_proveedor(self, clave_proveedor):
-        ruta = ruta_config("voces_disponibles.json")
-        voces = []
-        if os.path.exists(ruta):
-            try:
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    datos = json.load(f)
-                for v in datos.get(clave_proveedor, []):
-                    v["proveedor_id"] = clave_proveedor
-                    v["es_nueva"] = bool(v.get("es_nueva", False))
-                    voces.append(v)
-            except Exception:
-                logger.exception(f"Error al leer voces de {clave_proveedor}")
-        return voces
-
-    def _poblar_combo_idioma(self):
-        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
-        self.combo_idioma.Clear()
-        self.combo_idioma.Append("Todos")
-        self.combo_idioma.AppendItems(idiomas)
-        self.combo_idioma.SetSelection(0)
 # ANCLAJE_FIN: PANEL_AZURE
 
 
@@ -897,53 +970,61 @@ class PanelAzure(PanelProveedorIA):
 class PanelDeepgram(PanelProveedorIA):
     def __init__(self, padre, config):
         super().__init__(padre, config, "deepgram", "Deepgram Aura-2")
-
-    def cargar_datos(self):
-        ruta = ruta_config("voces_disponibles.json")
-        self.voces_todas = []
-        if os.path.exists(ruta):
-            try:
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    datos = json.load(f)
-                for v in datos.get("deepgram", []):
-                    v["proveedor_id"] = "deepgram"
-                    v["es_nueva"] = bool(v.get("es_nueva", False))
-                    self.voces_todas.append(v)
-            except Exception:
-                logger.exception("Error al leer voces de Deepgram")
-        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
-        self.combo_idioma.Clear()
-        self.combo_idioma.Append("Todos")
-        self.combo_idioma.AppendItems(idiomas)
-        self.combo_idioma.SetSelection(0)
-        self.filtrar_y_mostrar()
 # ANCLAJE_FIN: PANEL_DEEPGRAM
 
 
 # ANCLAJE_INICIO: PANEL_POLLY
 class PanelPolly(PanelProveedorIA):
+    """
+    Panel de Amazon Polly. Añade un combo de tipo de motor (Neural / Estándar /
+    Generativa) mediante los ganchos _construir_controles_extra y _obtener_filtros_extra.
+    """
+
+    # Mapa de etiquetas legibles → valores que aparecen en voz["motores"]
+    _MOTORES_ETIQUETA = {
+        "Neural":                  "neural",
+        "Estándar":                "standard",
+        "Generativa (Long-form)":  "long-form",
+        "Generativa":              "generative",
+    }
+
     def __init__(self, padre, config):
         super().__init__(padre, config, "polly", "Amazon Polly")
 
-    def cargar_datos(self):
-        ruta = ruta_config("voces_disponibles.json")
-        self.voces_todas = []
-        if os.path.exists(ruta):
-            try:
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    datos = json.load(f)
-                for v in datos.get("polly", []):
-                    v["proveedor_id"] = "polly"
-                    v["es_nueva"] = bool(v.get("es_nueva", False))
-                    self.voces_todas.append(v)
-            except Exception:
-                logger.exception("Error al leer voces de Amazon Polly")
-        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
-        self.combo_idioma.Clear()
-        self.combo_idioma.Append("Todos")
-        self.combo_idioma.AppendItems(idiomas)
-        self.combo_idioma.SetSelection(0)
-        self.filtrar_y_mostrar()
+    def _construir_controles_extra(self, sizer):
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(
+            wx.StaticText(self, label="Tipo de motor:"),
+            0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
+        )
+        self.combo_motor = wx.ComboBox(
+            self,
+            style=wx.CB_READONLY,
+            choices=["Todos"] + list(self._MOTORES_ETIQUETA.keys()),
+        )
+        self.combo_motor.SetSelection(0)
+        self.combo_motor.SetHelpText(
+            "Filtra las voces de Amazon Polly por tipo de motor. "
+            "Neural: mayor calidad y naturalidad. "
+            "Estándar: compatible con todos los planes. "
+            "Generativa Long-form: optimizada para textos largos. "
+            "Generativa: motor generativo estándar."
+        )
+        self.combo_motor.Bind(wx.EVT_COMBOBOX, self._al_filtrar)
+        hbox.Add(self.combo_motor, 0)
+        sizer.Add(hbox, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+    def _obtener_filtros_extra(self, voz):
+        if not hasattr(self, 'combo_motor'):
+            return True
+        f_motor = self.combo_motor.GetValue()
+        if f_motor == "Todos":
+            return True
+        valor_buscado = self._MOTORES_ETIQUETA.get(f_motor)
+        if valor_buscado is None:
+            return True
+        motores_voz = voz.get("motores", [])
+        return valor_buscado in motores_voz
 # ANCLAJE_FIN: PANEL_POLLY
 
 
@@ -951,26 +1032,6 @@ class PanelPolly(PanelProveedorIA):
 class PanelElevenLabs(PanelProveedorIA):
     def __init__(self, padre, config):
         super().__init__(padre, config, "elevenlabs", "ElevenLabs")
-
-    def cargar_datos(self):
-        ruta = ruta_config("voces_disponibles.json")
-        self.voces_todas = []
-        if os.path.exists(ruta):
-            try:
-                with open(ruta, 'r', encoding='utf-8') as f:
-                    datos = json.load(f)
-                for v in datos.get("elevenlabs", []):
-                    v["proveedor_id"] = "elevenlabs"
-                    v["es_nueva"] = bool(v.get("es_nueva", False))
-                    self.voces_todas.append(v)
-            except Exception:
-                logger.exception("Error al leer voces de ElevenLabs")
-        idiomas = sorted(set(v.get("idioma", "") for v in self.voces_todas if v.get("idioma")))
-        self.combo_idioma.Clear()
-        self.combo_idioma.Append("Todos")
-        self.combo_idioma.AppendItems(idiomas)
-        self.combo_idioma.SetSelection(0)
-        self.filtrar_y_mostrar()
 # ANCLAJE_FIN: PANEL_ELEVENLABS
 
 
@@ -1642,10 +1703,11 @@ class PestanaAjustes(wx.Panel):
         """
         Devuelve el último control navegable de la habitación activa.
         ventana_principal.py lo consulta para cerrar el ciclo de tabulación accesible.
+        Usa GetCurrentPage() para delegar dinámicamente sin mantener un índice paralelo.
         """
-        panel = self._panel_activo()
-        if panel is not None and hasattr(panel, 'ultimo_control'):
-            return panel.ultimo_control
+        pagina = self.panel_derecho.GetCurrentPage()
+        if pagina is not None and hasattr(pagina, 'ultimo_control'):
+            return pagina.ultimo_control
         return None
 
     def _recargar_panel_proveedor(self, id_proveedor):
