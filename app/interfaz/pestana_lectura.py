@@ -738,14 +738,152 @@ class PestanaLectura(wx.Panel):
                 dlg_lista.Destroy()
         dlg.Destroy()
 
-    def iniciar_ir_a_porcentaje(self): 
-        dlg = wx.TextEntryDialog(self, "Porcentaje (0-100):", "Ir a")
+    # ANCLAJE_INICIO: DIALOGO_IR_A_PAGINA
+    def iniciar_ir_a_pagina(self):
+        """
+        Diálogo «Ir a página X» accesible para NVDA.
+        Acepta número de página del capítulo o del libro (bloques de 1 000 caracteres).
+        """
+        if not self.longitud_texto:
+            wx.MessageBox("Abre un libro antes de usar esta función.", "Sin libro", wx.OK | wx.ICON_INFORMATION)
+            return
+
+        pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
+
+        dlg = wx.Dialog(self, title="Ir a página")
+        dlg.SetHelpText(
+            "Introduce el número de página al que quieres saltar. "
+            "Puedes usar el número de página dentro del capítulo o dentro del libro completo."
+        )
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(
+            wx.StaticText(dlg, label=f"Página del capítulo (1–{total_cap}):"),
+            0, wx.ALL, 8,
+        )
+        txt_cap = wx.TextCtrl(dlg, value=str(pag_cap))
+        txt_cap.SetHelpText(f"Número de página dentro del capítulo activo. Rango válido: 1 a {total_cap}.")
+        sizer.Add(txt_cap, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        sizer.Add(
+            wx.StaticText(dlg, label=f"— o —  Página del libro (1–{total_libro}):"),
+            0, wx.ALL, 8,
+        )
+        txt_libro = wx.TextCtrl(dlg, value=str(pag_libro))
+        txt_libro.SetHelpText(f"Número de página dentro del libro completo. Rango válido: 1 a {total_libro}.")
+        sizer.Add(txt_libro, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        sizer.Add(
+            wx.StaticText(dlg, label="(Deja en blanco el campo que no quieras usar.)"),
+            0, wx.ALL, 8,
+        )
+
+        sz_btn = dlg.CreateButtonSizer(wx.OK | wx.CANCEL)
+        sizer.Add(sz_btn, 0, wx.EXPAND | wx.ALL, 8)
+        dlg.SetSizer(sizer)
+        dlg.Fit()
+        dlg.CentreOnParent()
+
         if dlg.ShowModal() == wx.ID_OK:
-            val = dlg.GetValue()
-            if val.isdigit():
-                self.deslizador_progreso.SetValue(int(val))
-                self.al_buscar_usuario(None)
+            val_libro = txt_libro.GetValue().strip()
+            val_cap   = txt_cap.GetValue().strip()
+            destino   = None
+
+            if val_libro.isdigit():
+                n = max(1, min(int(val_libro), total_libro))
+                destino = (n - 1) * self._CHARS_POR_PAGINA
+            elif val_cap.isdigit():
+                # Calcular inicio del capítulo actual
+                pos_cursor = self.txt_contenido.GetInsertionPoint()
+                posiciones_ordenadas = sorted(self.posiciones_capitulos.values())
+                inicio_cap = 0
+                for pos in posiciones_ordenadas:
+                    if pos <= pos_cursor:
+                        inicio_cap = pos
+                n = max(1, min(int(val_cap), total_cap))
+                destino = inicio_cap + (n - 1) * self._CHARS_POR_PAGINA
+
+            if destino is not None:
+                destino = max(0, min(destino, self.longitud_texto - 1))
+                self.txt_contenido.SetInsertionPoint(destino)
+                self.txt_contenido.ShowPosition(destino)
+                if hasattr(self.reproductor, 'detener'):
+                    self.reproductor.detener()
+                self.anunciar_pagina_actual()
+
         dlg.Destroy()
+    # ANCLAJE_FIN: DIALOGO_IR_A_PAGINA
+
+    # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD
+    def alternar_escala_velocidad(self):
+        """
+        Alterna el slider de velocidad entre escala porcentual (0–100)
+        y multiplicadores (0.5×–3.0×).
+        La escala activa se persiste en ajustes.json.
+        """
+        ruta = ruta_config("ajustes.json")
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                conf = json.load(f)
+        except Exception:
+            conf = {}
+
+        escala_actual = conf.get("escala_velocidad", "porcentaje")
+        nueva_escala  = "multiplicador" if escala_actual == "porcentaje" else "porcentaje"
+        conf["escala_velocidad"] = nueva_escala
+
+        ruta_tmp = ruta + ".tmp"
+        with open(ruta_tmp, "w", encoding="utf-8") as f:
+            json.dump(conf, f, ensure_ascii=False, indent=2)
+        os.replace(ruta_tmp, ruta)
+
+        self._aplicar_escala_velocidad(nueva_escala, conf.get("velocidad_lectura", 50))
+
+    def _aplicar_escala_velocidad(self, escala: str, valor_guardado: int):
+        """
+        Reconfigura el slider de velocidad según la escala activa y actualiza
+        la etiqueta y el texto de ayuda para que NVDA lo lea correctamente.
+        """
+        if escala == "multiplicador":
+            self.deslizador_velocidad.SetMin(0)
+            self.deslizador_velocidad.SetMax(25)
+            self.deslizador_velocidad.SetValue(
+                min(25, max(0, round((valor_guardado / 100) * 12)))
+            )
+            self.lbl_velocidad.SetLabel("Velocidad (×):")
+            self.deslizador_velocidad.SetHelpText(
+                "Velocidad de lectura en multiplicadores. "
+                "0 = 0.5×, 12 = 1.75×, 25 = 3.0×. "
+                "Flechas: ±1 paso. RePág/AvPág: ±5 pasos."
+            )
+        else:
+            self.deslizador_velocidad.SetMin(0)
+            self.deslizador_velocidad.SetMax(100)
+            self.deslizador_velocidad.SetValue(valor_guardado)
+            self.lbl_velocidad.SetLabel("Velocidad de lectura:")
+            self.deslizador_velocidad.SetHelpText(
+                "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
+                "Flechas: ±1. RePág/AvPág: ±5."
+            )
+
+    def obtener_velocidad_normalizada(self) -> int:
+        """
+        Devuelve siempre un valor 0–100 independientemente de la escala activa,
+        para pasarlo al reproductor sin que este sepa nada de escalas.
+        """
+        ruta = ruta_config("ajustes.json")
+        escala = "porcentaje"
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                escala = json.load(f).get("escala_velocidad", "porcentaje")
+        except Exception:
+            pass
+
+        val = self.deslizador_velocidad.GetValue()
+        if escala == "multiplicador":
+            return min(100, max(0, round(val * 100 / 25)))
+        return val
+    # ANCLAJE_FIN: SELECTOR_ESCALA_VELOCIDAD
 
     def al_buscar_usuario(self, e):
         if self.longitud_texto > 0:
@@ -889,21 +1027,91 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(6)]
-        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,              id=ids[0])
-        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,         id=ids[1])
-        self.Bind(wx.EVT_MENU, self.al_detener,                       id=ids[2])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),     id=ids[3])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_porcentaje(), id=ids[4])
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[5])
+        ids = [wx.NewIdRef() for _ in range(9)]
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,                   id=ids[0])
+        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,              id=ids[1])
+        self.Bind(wx.EVT_MENU, self.al_detener,                            id=ids[2])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),          id=ids[3])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(),       id=ids[4])
+        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                       id=ids[5])
+        self.Bind(wx.EVT_MENU, lambda e: self.anunciar_pagina_actual(),    id=ids[6])
+        self.Bind(wx.EVT_MENU, lambda e: self._navegar_encabezado(+1),     id=ids[7])
+        self.Bind(wx.EVT_MENU, lambda e: self._navegar_encabezado(-1),     id=ids[8])
         self.SetAcceleratorTable(wx.AcceleratorTable([
-            (wx.ACCEL_CTRL, ord('M'), ids[0]),
-            (wx.ACCEL_CTRL, ord('P'), ids[1]),
-            (wx.ACCEL_CTRL, ord('D'), ids[2]),
-            (wx.ACCEL_CTRL, ord('F'), ids[3]),
-            (wx.ACCEL_CTRL, ord('G'), ids[4]),
-            (wx.ACCEL_CTRL, ord('O'), ids[5]),
+            (wx.ACCEL_CTRL,              ord('M'), ids[0]),
+            (wx.ACCEL_CTRL,              ord('P'), ids[1]),
+            (wx.ACCEL_CTRL,              ord('D'), ids[2]),
+            (wx.ACCEL_CTRL,              ord('F'), ids[3]),
+            (wx.ACCEL_CTRL,              ord('G'), ids[4]),
+            (wx.ACCEL_CTRL,              ord('O'), ids[5]),
+            (wx.ACCEL_CTRL,              ord('I'), ids[6]),
+            (wx.ACCEL_NORMAL,            ord('H'), ids[7]),
+            (wx.ACCEL_SHIFT,             ord('H'), ids[8]),
         ]))
+
+    # ANCLAJE_INICIO: PAGINAS_VIRTUALES
+    _CHARS_POR_PAGINA = 1000
+
+    def _calcular_paginas(self):
+        """
+        Devuelve (pag_cap, total_cap, pag_libro, total_libro) basándose en
+        bloques fijos de _CHARS_POR_PAGINA caracteres.
+        Retorna (0, 0, 0, 0) si no hay texto cargado.
+        """
+        if not self.longitud_texto:
+            return 0, 0, 0, 0
+
+        pos_cursor = self.txt_contenido.GetInsertionPoint()
+        total_libro = max(1, (self.longitud_texto + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
+        pag_libro = pos_cursor // self._CHARS_POR_PAGINA + 1
+
+        # Determinar inicio/fin del capítulo actual a partir de posiciones_capitulos
+        inicio_cap = 0
+        fin_cap = self.longitud_texto
+        posiciones_ordenadas = sorted(self.posiciones_capitulos.values())
+        for i, pos in enumerate(posiciones_ordenadas):
+            if pos <= pos_cursor:
+                inicio_cap = pos
+                fin_cap = posiciones_ordenadas[i + 1] if i + 1 < len(posiciones_ordenadas) else self.longitud_texto
+
+        longitud_cap = max(1, fin_cap - inicio_cap)
+        total_cap = max(1, (longitud_cap + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
+        pag_cap = (pos_cursor - inicio_cap) // self._CHARS_POR_PAGINA + 1
+
+        return pag_cap, total_cap, pag_libro, total_libro
+
+    def anunciar_pagina_actual(self):
+        """
+        Anuncia la posición de lectura por voz nativa de accesibilidad (sin diálogo).
+        NVDA verbaliza el texto del StaticText al actualizarse.
+        """
+        if not self.longitud_texto:
+            self.lbl_progreso.SetLabel("No hay libro cargado.")
+            return
+        pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
+        texto = (
+            f"Página {pag_cap} de {total_cap} del capítulo. "
+            f"Página {pag_libro} de {total_libro} del libro."
+        )
+        self.lbl_progreso.SetLabel(texto)
+    # ANCLAJE_FIN: PAGINAS_VIRTUALES
+
+    def _navegar_encabezado(self, direccion: int):
+        """Salta al encabezado anterior (−1) o siguiente (+1) en el capítulo."""
+        if not self.posiciones_encabezados:
+            return
+        pos_actual = self.txt_contenido.GetInsertionPoint()
+        encabezados_ord = sorted(self.posiciones_encabezados, key=lambda e: e['pos'])
+        if direccion > 0:
+            candidatos = [e for e in encabezados_ord if e['pos'] > pos_actual]
+            enc = candidatos[0] if candidatos else None
+        else:
+            candidatos = [e for e in encabezados_ord if e['pos'] < pos_actual]
+            enc = candidatos[-1] if candidatos else None
+        if enc:
+            self._ir_a_posicion(enc['pos'])
+            reproducir(LIST_NAV)
+    # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO
 
     def _aplicar_estilos_ricos(self):
         """
