@@ -12,10 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 # ANCLAJE_INICIO: LISTA_VOCES_CHECK
-class ListaVocesCheck(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
+class ListaVocesCheck(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def __init__(self, parent):
         wx.ListCtrl.__init__(self, parent, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES | wx.LC_VRULES)
-        listmix.CheckListCtrlMixin.__init__(self)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.EnableCheckBoxes(True)
         self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
@@ -1747,9 +1746,6 @@ class PestanaAjustes(wx.Panel):
         if nodo.IsOk() and nodo in self._nodos:
             indice = self._nodos[nodo]
             self.panel_derecho.ChangeSelection(indice)
-            # Devolver el foco al árbol para que NVDA siga leyendo el árbol
-            # y no anuncie el contenido del panel antes de tiempo.
-            wx.CallAfter(self.arbol_cat.SetFocus)
         evento.Skip()
 
     def _panel_activo(self):
