@@ -168,6 +168,8 @@ class PestanaLectura(wx.Panel):
         )
         self.deslizador_velocidad.Bind(wx.EVT_SLIDER, self.al_cambiar_velocidad)
         self.deslizador_velocidad.Bind(wx.EVT_KEY_DOWN, self._al_tecla_slider_velocidad)
+        self.deslizador_velocidad.Bind(wx.EVT_SCROLL_CHANGED, self._al_slider_velocidad_cambio)
+        self.deslizador_velocidad.Bind(wx.EVT_SCROLL_THUMBTRACK, self._al_slider_velocidad_cambio)
 
         self.lbl_volumen = wx.StaticText(self, label="Volumen:")
         self.deslizador_volumen = wx.Slider(self, value=100, minValue=0, maxValue=100)
@@ -191,6 +193,8 @@ class PestanaLectura(wx.Panel):
         sizer_inferior.Add(self.deslizador_volumen, 1, wx.LEFT, 5)
 
         sizer_principal.Add(sizer_inferior, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.txt_contenido.Bind(wx.EVT_CONTEXT_MENU, self._al_menu_contextual_texto)
 
         self.SetSizer(sizer_principal)
         self.configurar_aceleradores()
@@ -741,19 +745,23 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_INICIO: DIALOGO_IR_A_PAGINA
     def iniciar_ir_a_pagina(self):
         """
-        Diálogo «Ir a página X» accesible para NVDA.
-        Acepta número de página del capítulo o del libro (bloques de 1 000 caracteres).
+        Ctrl+G — diálogo unificado de salto accesible para NVDA.
+        Tres campos independientes: página del capítulo, página del libro,
+        porcentaje global. El usuario rellena solo el que desee.
+        Prioridad: porcentaje > página del libro > página del capítulo.
         """
         if not self.longitud_texto:
             wx.MessageBox("Abre un libro antes de usar esta función.", "Sin libro", wx.OK | wx.ICON_INFORMATION)
             return
 
         pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
+        pct_actual = int(self.txt_contenido.GetInsertionPoint() / self.longitud_texto * 100)
 
-        dlg = wx.Dialog(self, title="Ir a página")
+        dlg = wx.Dialog(self, title="Ir a página o porcentaje")
         dlg.SetHelpText(
-            "Introduce el número de página al que quieres saltar. "
-            "Puedes usar el número de página dentro del capítulo o dentro del libro completo."
+            "Rellena uno de los tres campos para saltar a esa posición del libro. "
+            "Deja los otros dos en blanco. "
+            "Prioridad si rellenas varios: porcentaje, luego página del libro, luego página del capítulo."
         )
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -761,20 +769,37 @@ class PestanaLectura(wx.Panel):
             wx.StaticText(dlg, label=f"Página del capítulo (1–{total_cap}):"),
             0, wx.ALL, 8,
         )
-        txt_cap = wx.TextCtrl(dlg, value=str(pag_cap))
-        txt_cap.SetHelpText(f"Número de página dentro del capítulo activo. Rango válido: 1 a {total_cap}.")
+        txt_cap = wx.TextCtrl(dlg, value="")
+        txt_cap.SetHelpText(
+            f"Número de página dentro del capítulo activo. "
+            f"Ahora estás en la página {pag_cap} de {total_cap}. Deja vacío para ignorar."
+        )
         sizer.Add(txt_cap, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
         sizer.Add(
-            wx.StaticText(dlg, label=f"— o —  Página del libro (1–{total_libro}):"),
+            wx.StaticText(dlg, label=f"Página del libro (1–{total_libro}):"),
             0, wx.ALL, 8,
         )
-        txt_libro = wx.TextCtrl(dlg, value=str(pag_libro))
-        txt_libro.SetHelpText(f"Número de página dentro del libro completo. Rango válido: 1 a {total_libro}.")
+        txt_libro = wx.TextCtrl(dlg, value="")
+        txt_libro.SetHelpText(
+            f"Número de página dentro del libro completo. "
+            f"Ahora estás en la página {pag_libro} de {total_libro}. Deja vacío para ignorar."
+        )
         sizer.Add(txt_libro, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
         sizer.Add(
-            wx.StaticText(dlg, label="(Deja en blanco el campo que no quieras usar.)"),
+            wx.StaticText(dlg, label="Porcentaje del libro (0–100):"),
+            0, wx.ALL, 8,
+        )
+        txt_pct = wx.TextCtrl(dlg, value="")
+        txt_pct.SetHelpText(
+            f"Posición como porcentaje del libro completo. "
+            f"Ahora estás al {pct_actual}%. Deja vacío para ignorar."
+        )
+        sizer.Add(txt_pct, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        sizer.Add(
+            wx.StaticText(dlg, label="(Rellena solo el campo que quieras usar y deja los demás vacíos.)"),
             0, wx.ALL, 8,
         )
 
@@ -785,15 +810,18 @@ class PestanaLectura(wx.Panel):
         dlg.CentreOnParent()
 
         if dlg.ShowModal() == wx.ID_OK:
+            val_pct   = txt_pct.GetValue().strip()
             val_libro = txt_libro.GetValue().strip()
             val_cap   = txt_cap.GetValue().strip()
             destino   = None
 
-            if val_libro.isdigit():
+            if val_pct.isdigit():
+                pct = max(0, min(int(val_pct), 100))
+                destino = int(pct / 100 * self.longitud_texto)
+            elif val_libro.isdigit():
                 n = max(1, min(int(val_libro), total_libro))
                 destino = (n - 1) * self._CHARS_POR_PAGINA
             elif val_cap.isdigit():
-                # Calcular inicio del capítulo actual
                 pos_cursor = self.txt_contenido.GetInsertionPoint()
                 posiciones_ordenadas = sorted(self.posiciones_capitulos.values())
                 inicio_cap = 0
@@ -1027,26 +1055,22 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(9)]
-        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,                   id=ids[0])
-        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,              id=ids[1])
-        self.Bind(wx.EVT_MENU, self.al_detener,                            id=ids[2])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),          id=ids[3])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(),       id=ids[4])
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                       id=ids[5])
-        self.Bind(wx.EVT_MENU, lambda e: self.anunciar_pagina_actual(),    id=ids[6])
-        self.Bind(wx.EVT_MENU, lambda e: self._navegar_encabezado(+1),     id=ids[7])
-        self.Bind(wx.EVT_MENU, lambda e: self._navegar_encabezado(-1),     id=ids[8])
+        ids = [wx.NewIdRef() for _ in range(7)]
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,                id=ids[0])
+        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,           id=ids[1])
+        self.Bind(wx.EVT_MENU, self.al_detener,                         id=ids[2])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),       id=ids[3])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(),    id=ids[4])
+        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                    id=ids[5])
+        self.Bind(wx.EVT_MENU, lambda e: self.anunciar_pagina_actual(), id=ids[6])
         self.SetAcceleratorTable(wx.AcceleratorTable([
-            (wx.ACCEL_CTRL,              ord('M'), ids[0]),
-            (wx.ACCEL_CTRL,              ord('P'), ids[1]),
-            (wx.ACCEL_CTRL,              ord('D'), ids[2]),
-            (wx.ACCEL_CTRL,              ord('F'), ids[3]),
-            (wx.ACCEL_CTRL,              ord('G'), ids[4]),
-            (wx.ACCEL_CTRL,              ord('O'), ids[5]),
-            (wx.ACCEL_CTRL,              ord('I'), ids[6]),
-            (wx.ACCEL_NORMAL,            ord('H'), ids[7]),
-            (wx.ACCEL_SHIFT,             ord('H'), ids[8]),
+            (wx.ACCEL_CTRL, ord('M'), ids[0]),
+            (wx.ACCEL_CTRL, ord('P'), ids[1]),
+            (wx.ACCEL_CTRL, ord('D'), ids[2]),
+            (wx.ACCEL_CTRL, ord('F'), ids[3]),
+            (wx.ACCEL_CTRL, ord('G'), ids[4]),
+            (wx.ACCEL_CTRL, ord('O'), ids[5]),
+            (wx.ACCEL_CTRL, ord('I'), ids[6]),
         ]))
 
     # ANCLAJE_INICIO: PAGINAS_VIRTUALES
@@ -1065,7 +1089,6 @@ class PestanaLectura(wx.Panel):
         total_libro = max(1, (self.longitud_texto + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
         pag_libro = pos_cursor // self._CHARS_POR_PAGINA + 1
 
-        # Determinar inicio/fin del capítulo actual a partir de posiciones_capitulos
         inicio_cap = 0
         fin_cap = self.longitud_texto
         posiciones_ordenadas = sorted(self.posiciones_capitulos.values())
@@ -1081,36 +1104,56 @@ class PestanaLectura(wx.Panel):
         return pag_cap, total_cap, pag_libro, total_libro
 
     def anunciar_pagina_actual(self):
-        """
-        Anuncia la posición de lectura por voz nativa de accesibilidad (sin diálogo).
-        NVDA verbaliza el texto del StaticText al actualizarse.
-        """
+        """Ctrl+I: voz nativa de posición sin abrir diálogo."""
         if not self.longitud_texto:
             self.lbl_progreso.SetLabel("No hay libro cargado.")
             return
         pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
-        texto = (
+        self.lbl_progreso.SetLabel(
             f"Página {pag_cap} de {total_cap} del capítulo. "
             f"Página {pag_libro} de {total_libro} del libro."
         )
-        self.lbl_progreso.SetLabel(texto)
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
 
-    def _navegar_encabezado(self, direccion: int):
-        """Salta al encabezado anterior (−1) o siguiente (+1) en el capítulo."""
-        if not self.posiciones_encabezados:
+    # ANCLAJE_INICIO: MENU_CONTEXTUAL_TEXTO
+    def _al_menu_contextual_texto(self, evento):
+        menu = wx.Menu()
+        item_ir = menu.Append(wx.ID_ANY, "Ir a página / porcentaje... (Ctrl+G)")
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(), item_ir)
+        self.txt_contenido.PopupMenu(menu)
+        menu.Destroy()
+    # ANCLAJE_FIN: MENU_CONTEXTUAL_TEXTO
+
+    # ANCLAJE_INICIO: SLIDER_VELOCIDAD_SEMANTICO
+    # Tabla de escalones del modo multiplicador:
+    # índice 0–25 → valor real mostrado a NVDA
+    _ETIQUETAS_MULTIPLICADOR = {
+        0: "0.5× (Muy lenta)", 2: "0.6×", 4: "0.75× (Lenta)",
+        6: "0.9×",  8: "1.0× (Normal)", 10: "1.1×",
+        12: "1.25×", 14: "1.5× (Rápida)", 17: "1.75×",
+        20: "2.0× (Muy rápida)", 22: "2.5×", 25: "3.0× (Máxima)",
+    }
+
+    def _al_slider_velocidad_cambio(self, evento):
+        """Actualiza SetHelpText con la etiqueta semántica en modo multiplicador."""
+        ruta = ruta_config("ajustes.json")
+        escala = "porcentaje"
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                escala = json.load(f).get("escala_velocidad", "porcentaje")
+        except Exception:
+            pass
+        if escala != "multiplicador":
+            evento.Skip()
             return
-        pos_actual = self.txt_contenido.GetInsertionPoint()
-        encabezados_ord = sorted(self.posiciones_encabezados, key=lambda e: e['pos'])
-        if direccion > 0:
-            candidatos = [e for e in encabezados_ord if e['pos'] > pos_actual]
-            enc = candidatos[0] if candidatos else None
-        else:
-            candidatos = [e for e in encabezados_ord if e['pos'] < pos_actual]
-            enc = candidatos[-1] if candidatos else None
-        if enc:
-            self._ir_a_posicion(enc['pos'])
-            reproducir(LIST_NAV)
+        val = self.deslizador_velocidad.GetValue()
+        # Buscar la etiqueta del escalón más cercano
+        escalon = min(self._ETIQUETAS_MULTIPLICADOR, key=lambda k: abs(k - val))
+        etiqueta = self._ETIQUETAS_MULTIPLICADOR[escalon]
+        self.deslizador_velocidad.SetHelpText(f"Velocidad: {etiqueta}")
+        self.lbl_velocidad.SetLabel(f"Velocidad ({etiqueta}):")
+        evento.Skip()
+    # ANCLAJE_FIN: SLIDER_VELOCIDAD_SEMANTICO
     # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO
 
     def _aplicar_estilos_ricos(self):
