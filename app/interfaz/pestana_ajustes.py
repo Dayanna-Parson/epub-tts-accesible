@@ -1860,9 +1860,12 @@ class PestanaAjustes(wx.Panel):
             (wx.ACCEL_CTRL, ord('S'), id_guardar),
         ]))
 
-        # Etiqueta de estado: NVDA la lee cuando cambia su texto
-        self.lbl_estado = wx.StaticText(self, label="")
-        sizer.Add(self.lbl_estado, 0, wx.LEFT | wx.BOTTOM, 8)
+        # Anunciador oculto: recibe el foco un instante para que NVDA verbalice el texto
+        self._anunciador = wx.TextCtrl(
+            self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1)
+        )
+        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
+        sizer.Add(self._anunciador, 0, wx.LEFT, 0)
 
         # Punto de entrada para el bucle de tabulación de ventana_principal.py
         self.primer_control = self.arbol_cat
@@ -1872,7 +1875,7 @@ class PestanaAjustes(wx.Panel):
 
     # ANCLAJE_INICIO: GUARDAR_GLOBAL_CTRL_S
     def _al_guardar_global(self, evento=None):
-        """Ctrl+S: guarda solo las claves que PanelGeneral gestiona, sin tocar el resto."""
+        """Ctrl+S: guarda las claves de PanelGeneral y sincroniza el slider de lectura."""
         try:
             ruta = self.ruta_config
             try:
@@ -1886,11 +1889,30 @@ class PestanaAjustes(wx.Panel):
                 json.dump(datos, f, ensure_ascii=False, indent=2)
             os.replace(ruta_tmp, ruta)
             reproducir(SUCCESS)
-            wx.CallAfter(self.lbl_estado.SetLabel, "Guardado.")
+            # Sincronizar el slider de velocidad en la pestaña de lectura
+            padre = wx.GetTopLevelParent(self)
+            if hasattr(padre, "pestana_lectura"):
+                wx.CallAfter(padre.pestana_lectura.cargar_config_salto)
+            # NVDA verbaliza "Guardado" mediante el anunciador oculto
+            def _anunciar():
+                foco_anterior = wx.Window.FindFocus()
+                self._anunciador.SetValue("Guardado.")
+                self._anunciador.SetFocus()
+                if foco_anterior:
+                    wx.CallLater(300, lambda: foco_anterior.SetFocus()
+                                 if foco_anterior.IsShownOnScreen() else None)
+            wx.CallAfter(_anunciar)
         except Exception:
             logger.exception("Error al guardar configuración global con Ctrl+S")
             reproducir(ERROR)
-            wx.CallAfter(self.lbl_estado.SetLabel, "Error al guardar.")
+            def _anunciar_error():
+                foco_anterior = wx.Window.FindFocus()
+                self._anunciador.SetValue("Error al guardar.")
+                self._anunciador.SetFocus()
+                if foco_anterior:
+                    wx.CallLater(300, lambda: foco_anterior.SetFocus()
+                                 if foco_anterior.IsShownOnScreen() else None)
+            wx.CallAfter(_anunciar_error)
     # ANCLAJE_FIN: GUARDAR_GLOBAL_CTRL_S
 
     # ANCLAJE_INICIO: CONSTRUIR_ARBOL_CATEGORIAS

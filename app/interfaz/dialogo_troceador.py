@@ -35,7 +35,7 @@ from app.interfaz.ui_recursos import aplicar_icono_boton
 
 # ── Lista de capítulos con casillas ──────────────────────────────────────────
 
-class ListaCapitulos(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
+class ListaCapitulos(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """
     ListCtrl accesible con casillas. Una sola columna: "01 Nombre del capítulo".
     NVDA anuncia directamente el número y el título sin separadores artificiales.
@@ -45,7 +45,6 @@ class ListaCapitulos(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAu
             self, parent,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES | wx.LC_NO_HEADER,
         )
-        listmix.CheckListCtrlMixin.__init__(self)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.EnableCheckBoxes(True)
         self.InsertColumn(0, "Capítulo", width=500)

@@ -206,19 +206,16 @@ class DialogoBautizo(wx.Dialog):
 
 
 # ── Lista con casillas de verificación (igual que en pestana_ajustes) ────────
-class ListaVocesCheck(wx.ListCtrl,
-                      listmix.CheckListCtrlMixin,
-                      listmix.ListCtrlAutoWidthMixin):
+class ListaVocesCheck(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """
-    ListCtrl con casillas nativas (EnableCheckBoxes) y CheckListCtrlMixin.
-    NVDA anuncia el estado marcado/desmarcado al pulsar Espacio.
+    ListCtrl con casillas nativas (EnableCheckBoxes).
+    NVDA anuncia el estado marcado/desmarcado al navegar con las flechas.
     """
     def __init__(self, parent):
         wx.ListCtrl.__init__(
             self, parent,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES | wx.LC_VRULES,
         )
-        listmix.CheckListCtrlMixin.__init__(self)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         # Casillas nativas — imprescindible para que NVDA las detecte
         self.EnableCheckBoxes(True)
