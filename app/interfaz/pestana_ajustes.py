@@ -1820,6 +1820,10 @@ class PestanaAjustes(wx.Panel):
             (wx.ACCEL_CTRL, ord('S'), id_guardar),
         ]))
 
+        # Etiqueta de estado: NVDA la lee cuando cambia su texto
+        self.lbl_estado = wx.StaticText(self, label="")
+        sizer.Add(self.lbl_estado, 0, wx.LEFT | wx.BOTTOM, 8)
+
         # Punto de entrada para el bucle de tabulación de ventana_principal.py
         self.primer_control = self.arbol_cat
 
@@ -1842,9 +1846,11 @@ class PestanaAjustes(wx.Panel):
                 json.dump(datos, f, ensure_ascii=False, indent=2)
             os.replace(ruta_tmp, ruta)
             reproducir(SUCCESS)
+            wx.CallAfter(self.lbl_estado.SetLabel, "Guardado.")
         except Exception:
             logger.exception("Error al guardar configuración global con Ctrl+S")
             reproducir(ERROR)
+            wx.CallAfter(self.lbl_estado.SetLabel, "Error al guardar.")
     # ANCLAJE_FIN: GUARDAR_GLOBAL_CTRL_S
 
     # ANCLAJE_INICIO: CONSTRUIR_ARBOL_CATEGORIAS
