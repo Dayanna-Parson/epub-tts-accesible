@@ -194,8 +194,6 @@ class PestanaLectura(wx.Panel):
 
         sizer_principal.Add(sizer_inferior, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.txt_contenido.Bind(wx.EVT_CONTEXT_MENU, self._al_menu_contextual_texto)
-
         self.SetSizer(sizer_principal)
         self.configurar_aceleradores()
         
@@ -1114,15 +1112,6 @@ class PestanaLectura(wx.Panel):
             f"Página {pag_libro} de {total_libro} del libro."
         )
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
-
-    # ANCLAJE_INICIO: MENU_CONTEXTUAL_TEXTO
-    def _al_menu_contextual_texto(self, evento):
-        menu = wx.Menu()
-        item_ir = menu.Append(wx.ID_ANY, "Ir a página / porcentaje... (Ctrl+G)")
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(), item_ir)
-        self.txt_contenido.PopupMenu(menu)
-        menu.Destroy()
-    # ANCLAJE_FIN: MENU_CONTEXTUAL_TEXTO
 
     # ANCLAJE_INICIO: SLIDER_VELOCIDAD_SEMANTICO
     # Tabla de escalones del modo multiplicador:
