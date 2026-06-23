@@ -192,9 +192,33 @@ class PanelGeneral(wx.ScrolledWindow):
 
         sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
 
+        # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD_AJUSTES
+        sb_vel = wx.StaticBox(self, label="Deslizadores de velocidad")
+        sz_vel = wx.StaticBoxSizer(sb_vel, wx.VERTICAL)
+        sz_vel.Add(
+            wx.StaticText(self, label="Sistema de visualización de velocidad:"),
+            0, wx.ALL, 2,
+        )
+        self.combo_escala_vel = wx.ComboBox(
+            self,
+            choices=["Porcentaje (0 – 100)", "Multiplicador por puntos (0.5× – 3.0×)"],
+            style=wx.CB_READONLY,
+        )
+        self.combo_escala_vel.SetHelpText(
+            "Elige cómo se muestra la velocidad en el deslizador de la pestaña Lectura. "
+            "Porcentaje: valores del 0 al 100. "
+            "Multiplicador: etiquetas tipo 1.0× (Normal), 1.5× (Rápida), 2.0× (Muy rápida). "
+            "El motor de audio recibe siempre un valor normalizado 0-100."
+        )
+        _escala_guardada = self.config.get("escala_velocidad", "porcentaje")
+        self.combo_escala_vel.SetSelection(0 if _escala_guardada == "porcentaje" else 1)
+        sz_vel.Add(self.combo_escala_vel, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(sz_vel, 0, wx.EXPAND | wx.ALL, 10)
+        # ANCLAJE_FIN: SELECTOR_ESCALA_VELOCIDAD_AJUSTES
+
         self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
         self.btn_guardar.SetHelpText(
-            "Guarda los segundos de salto y los límites de presupuesto de cada proveedor."
+            "Guarda los segundos de salto, la escala de velocidad y los límites de presupuesto de cada proveedor."
         )
         self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
         sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
@@ -245,6 +269,9 @@ class PanelGeneral(wx.ScrolledWindow):
         self.config["segundos_salto"] = self.txt_salto.GetValue()
         self.config["pausa_entre_fragmentos_ms"] = self.spin_pausa.GetValue()
         self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
+        self.config["escala_velocidad"] = (
+            "porcentaje" if self.combo_escala_vel.GetSelection() == 0 else "multiplicador"
+        )
         _mapa_idx_codigo = {0: "es-ES", 1: "es-MX", 2: "en-US", 3: "auto"}
         self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
             self.combo_idioma_libro.GetSelection(), "es-ES"

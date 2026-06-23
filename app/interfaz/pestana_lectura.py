@@ -196,6 +196,16 @@ class PestanaLectura(wx.Panel):
 
         self.SetSizer(sizer_principal)
         self.configurar_aceleradores()
+
+        # Control oculto para anuncios de accesibilidad NVDA.
+        # Al darle foco con un valor nuevo, NVDA lo verbaliza al instante
+        # sin necesidad de diálogos ni de que el usuario navegue hasta él.
+        self._anunciador = wx.TextCtrl(
+            self,
+            style=wx.TE_READONLY | wx.BORDER_NONE,
+            size=(1, 1),
+        )
+        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
         
         self.temporizador_ui = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.al_actualizar_ui, self.temporizador_ui)
@@ -336,9 +346,11 @@ class PestanaLectura(wx.Panel):
 
         # 2. Transiciones de estado (Play/Pausa)
         if estado == 'reproduciendo':
-            # Al pausar, cancelar la cola pendiente (las voces neuronales requieren
-            # reenviar el texto desde la nueva posición al reanudar)
+            # Al pausar: vaciar cola y cancelar precarga para que no llegue audio
+            # de un fragmento que ya no es el actual al reanudar.
             self._cola_lectura = []
+            self._idx_fragmento_actual = 0
+            self._precarga_solicitada = False
             if hasattr(self.reproductor, 'pausar'):
                 self.reproductor.pausar()
         elif estado == 'pausado':
@@ -1072,20 +1084,39 @@ class PestanaLectura(wx.Panel):
         ]))
 
     # ANCLAJE_INICIO: PAGINAS_VIRTUALES
-    _CHARS_POR_PAGINA = 1000
+    # 1800 caracteres por página virtual — aproxima mejor las páginas reales
+    # de un libro de bolsillo estándar (~250 palabras × 7 chars promedio).
+    _CHARS_POR_PAGINA = 1800
+
+    @staticmethod
+    def _longitud_normalizada(texto: str) -> int:
+        """
+        Devuelve la longitud del texto tras colapsar espacios en blanco
+        masivos procedentes del EPUB (tabuladores, saltos dobles, etc.)
+        para que el conteo de páginas virtuales sea más fiel al libro real.
+        """
+        import re
+        texto = re.sub(r'\t', ' ', texto)
+        texto = re.sub(r' {2,}', ' ', texto)
+        texto = re.sub(r'\n{3,}', '\n\n', texto)
+        return len(texto)
 
     def _calcular_paginas(self):
         """
         Devuelve (pag_cap, total_cap, pag_libro, total_libro) basándose en
-        bloques fijos de _CHARS_POR_PAGINA caracteres.
+        bloques virtuales de _CHARS_POR_PAGINA caracteres normalizados.
         Retorna (0, 0, 0, 0) si no hay texto cargado.
         """
         if not self.longitud_texto:
             return 0, 0, 0, 0
 
         pos_cursor = self.txt_contenido.GetInsertionPoint()
-        total_libro = max(1, (self.longitud_texto + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
-        pag_libro = pos_cursor // self._CHARS_POR_PAGINA + 1
+        texto_completo = self.txt_contenido.GetValue()
+        long_norm = self._longitud_normalizada(texto_completo)
+
+        total_libro = max(1, (long_norm + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
+        pag_libro = int(pos_cursor / max(1, self.longitud_texto) * long_norm) // self._CHARS_POR_PAGINA + 1
+        pag_libro = min(pag_libro, total_libro)
 
         inicio_cap = 0
         fin_cap = self.longitud_texto
@@ -1095,22 +1126,34 @@ class PestanaLectura(wx.Panel):
                 inicio_cap = pos
                 fin_cap = posiciones_ordenadas[i + 1] if i + 1 < len(posiciones_ordenadas) else self.longitud_texto
 
-        longitud_cap = max(1, fin_cap - inicio_cap)
-        total_cap = max(1, (longitud_cap + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
-        pag_cap = (pos_cursor - inicio_cap) // self._CHARS_POR_PAGINA + 1
+        texto_cap = texto_completo[inicio_cap:fin_cap]
+        long_cap_norm = self._longitud_normalizada(texto_cap)
+        total_cap = max(1, (long_cap_norm + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
+        pos_en_cap = pos_cursor - inicio_cap
+        pag_cap = int(pos_en_cap / max(1, fin_cap - inicio_cap) * long_cap_norm) // self._CHARS_POR_PAGINA + 1
+        pag_cap = min(pag_cap, total_cap)
 
         return pag_cap, total_cap, pag_libro, total_libro
 
     def anunciar_pagina_actual(self):
-        """Ctrl+I: voz nativa de posición sin abrir diálogo."""
+        """
+        Ctrl+I: verbaliza la posición de lectura a través del control _anunciador.
+        NVDA lo lee al instante al recibir el foco; en 300 ms el foco vuelve
+        al control anterior sin que el usuario perciba el salto.
+        """
         if not self.longitud_texto:
-            self.lbl_progreso.SetLabel("No hay libro cargado.")
             return
         pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
-        self.lbl_progreso.SetLabel(
+        texto = (
             f"Página {pag_cap} de {total_cap} del capítulo. "
             f"Página {pag_libro} de {total_libro} del libro."
         )
+        self.lbl_progreso.SetLabel(texto)
+        foco_anterior = wx.Window.FindFocus()
+        self._anunciador.SetValue(texto)
+        self._anunciador.SetFocus()
+        if foco_anterior:
+            wx.CallLater(300, lambda: foco_anterior.SetFocus() if foco_anterior.IsShownOnScreen() else None)
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
 
     # ANCLAJE_INICIO: SLIDER_VELOCIDAD_SEMANTICO
