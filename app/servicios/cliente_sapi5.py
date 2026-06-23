@@ -165,17 +165,27 @@ class ClienteSapi5:
 
     def _avisar_voz_incompatible(self, nombre_voz):
         """Muestra un aviso accesible cuando una voz SAPI5 de 32 bits no puede activarse."""
-        try:
-            import wx
-            wx.MessageBox(
+        import os
+        from app.config_rutas import RAIZ
+        auxiliar = os.path.join(RAIZ, "bin", "auxiliar_sapi32.exe")
+        if os.path.isfile(auxiliar):
+            mensaje = (
+                f"La voz «{nombre_voz}» es de 32 bits y no puede usarse directamente "
+                "en la aplicación de 64 bits.\n\n"
+                "Se ha activado automáticamente el puente de compatibilidad de 32 bits "
+                "incluido en la aplicación. Selecciona de nuevo la voz para usarla."
+            )
+        else:
+            mensaje = (
                 f"La voz «{nombre_voz}» no es compatible con esta versión de la aplicación.\n\n"
                 "Algunas voces de CodeFactory (Eloquence, RealSpeak) son motores de 32 bits "
                 "y no funcionan en una aplicación de 64 bits.\n\n"
-                "Solución: usa una voz SAPI5 de 64 bits, voces OneCore de Windows 10/11, "
-                "o un motor de nube (Azure, ElevenLabs, etc.).",
-                "Voz incompatible (32 bits)",
-                wx.OK | wx.ICON_WARNING,
+                "Esta versión no incluye el módulo de compatibilidad de 32 bits. "
+                "Contacta con el soporte para obtener la versión con compatibilidad Eloquence."
             )
+        try:
+            import wx
+            wx.MessageBox(mensaje, "Voz de 32 bits detectada", wx.OK | wx.ICON_INFORMATION)
         except Exception as e:
             logger.warning("[SAPI5] No se pudo mostrar aviso de voz incompatible: %s", e)
 

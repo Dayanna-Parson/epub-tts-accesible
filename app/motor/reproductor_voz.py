@@ -8,6 +8,7 @@ import time
 logger = logging.getLogger(__name__)
 import wx
 from app.servicios.cliente_sapi5 import ClienteSapi5
+from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
 from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
@@ -27,7 +28,8 @@ class ReproductorVoz:
         self.config = self._cargar_config()
         
         # Inicialización de motores de síntesis
-        self.cliente_local   = ClienteSapi5()
+        self.cliente_local    = ClienteSapi5()
+        self.cliente_local_32 = ClienteSapi32Bridge()
         self.cliente_azure   = ClienteAzure()
         self.cliente_eleven  = ClienteEleven()
         self.cliente_polly   = ClientePolly()
@@ -89,14 +91,27 @@ class ReproductorVoz:
         else:
 
             # ANCLAJE_INICIO: CONFIGURACION_VOZ_ACTIVA
-            # --- FIX PARA SAPI5 (VOCES LOCALES) ---
-            self.motor_activo = self.cliente_local
-            self.tipo_motor_actual = "local"
-            
-            # Le decimos a SAPI que cambie la voz.
             nombre_voz = datos_voz.get("nombre", "")
-            if hasattr(self.cliente_local, "cambiar_voz_por_nombre"):
-                self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
+            if "local_32" in proveedor:
+                # Voz SAPI5 de 32 bits (p. ej. Eloquence de CodeFactory):
+                # usar el proceso auxiliar de 32 bits si está disponible.
+                if self.cliente_local_32.conectado:
+                    self.motor_activo = self.cliente_local_32
+                    self.tipo_motor_actual = "local_32"
+                    self.cliente_local_32.cambiar_voz_por_nombre(nombre_voz)
+                else:
+                    logger.warning(
+                        "[ReproductorVoz] Voz 32 bits solicitada pero auxiliar_sapi32.exe "
+                        "no está disponible. Cae a SAPI5 de 64 bits."
+                    )
+                    self.motor_activo = self.cliente_local
+                    self.tipo_motor_actual = "local"
+                    self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
+            else:
+                self.motor_activo = self.cliente_local
+                self.tipo_motor_actual = "local"
+                if hasattr(self.cliente_local, "cambiar_voz_por_nombre"):
+                    self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
             # ANCLAJE_FIN: CONFIGURACION_VOZ_ACTIVA
 
 # ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
@@ -178,7 +193,7 @@ class ReproductorVoz:
         self._detenido_intencionalmente = False
 
         # Para voces neuronales, verificar cuota y seleccionar motor disponible
-        if self.tipo_motor_actual != "local":
+        if self.tipo_motor_actual not in ("local", "local_32"):
             self._elegir_motor_con_cuota(texto)
 
         # Incrementar generación: los hilos de síntesis anteriores quedan invalidados
@@ -190,20 +205,21 @@ class ReproductorVoz:
 
         self.estado = "reproduciendo"
 
-        if self.tipo_motor_actual == "local":
+        if self.tipo_motor_actual in ("local", "local_32"):
+            motor_local = self.motor_activo
             try:
-                usa_callback = (callback_progreso or callback_completado) and hasattr(self.cliente_local, 'hablar_con_callback')
+                usa_callback = (callback_progreso or callback_completado) and hasattr(motor_local, "hablar_con_callback")
                 if usa_callback:
-                    self.cliente_local.hablar_con_callback(
+                    motor_local.hablar_con_callback(
                         texto,
                         pos_offset,
                         callback_progreso or (lambda pos: None),
                         callback_completado or (lambda: None),
                     )
                 else:
-                    self.cliente_local.hablar(texto)
+                    motor_local.hablar(texto)
             except Exception as e:
-                logger.warning("[ReproductorVoz] Error en voz local SAPI5: %s", e)
+                logger.warning("[ReproductorVoz] Error en voz local: %s", e)
                 self.estado = "detenido"
         else:
             # Voces neuronales: se ejecutan en segundo plano para no bloquear la interfaz
