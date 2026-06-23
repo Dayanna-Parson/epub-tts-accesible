@@ -305,17 +305,29 @@ class ReproductorVoz:
         Cuando hablar() se llame después con el mismo texto, encontrará el audio
         ya listo y lo reproducirá sin la latencia de la API (típicamente 1-2s).
         Solo aplica a voces neuronales; SAPI5 no necesita precarga.
+        La precarga captura la generación actual y la verifica antes de almacenar
+        el resultado: si el usuario pausó/detuvo mientras se descargaba, el audio
+        se descarta en lugar de reproducirse de forma residual.
         """
         if self.tipo_motor_actual == "local":
             return
         if not hasattr(self.motor_activo, 'preparar'):
             return
 
-        motor = self.motor_activo  # capturar referencia local para el hilo
+        motor = self.motor_activo
+        generacion_precarga = self._generacion  # capturar generación al lanzar
 
         def _preparar():
             try:
                 motor.preparar(texto, datos_voz)
+                # Si la generación cambió durante la descarga (pausa/detención),
+                # invalidar la caché para que no se sirva el audio viejo.
+                if self._generacion != generacion_precarga:
+                    if hasattr(motor, 'invalidar_cache'):
+                        try:
+                            motor.invalidar_cache(texto)
+                        except Exception:
+                            pass
             except Exception as e:
                 logger.warning("[ReproductorVoz] Error en precarga: %s", e)
 
@@ -325,11 +337,12 @@ class ReproductorVoz:
     # ANCLAJE_INICIO: COMANDOS_REPRODUCTOR
     def detener(self):
         """Finaliza cualquier proceso de audio activo en todos los motores."""
-        # Marcar como detención intencional ANTES de cerrar la sesión HTTP.
-        # El hilo de síntesis leerá este flag cuando capture la ConnectionError
-        # y no mostrará el diálogo de error ni sobreescribirá el estado.
+        # Incrementar generación PRIMERO: invalida al instante cualquier hilo
+        # de síntesis o precarga en vuelo. Si el hilo llega a la comprobación
+        # _generacion == generacion tras el cierre HTTP, encontrará valores
+        # distintos y descartará el audio sin reproducirlo ni encadenar la cola.
+        self._generacion += 1
         self._detenido_intencionalmente = True
-        # Limpiar callback para que el hilo no encadene el siguiente fragmento
         self._callback_completado = None
         try: self.cliente_local.detener()
         except: pass

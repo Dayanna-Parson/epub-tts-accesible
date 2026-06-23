@@ -163,6 +163,22 @@ class ClienteSapi5:
         if not self._detener_flag and self._generacion_sapi == gen:
             wx.CallAfter(callback_completado)
 
+    def _avisar_voz_incompatible(self, nombre_voz):
+        """Muestra un aviso accesible cuando una voz SAPI5 de 32 bits no puede activarse."""
+        try:
+            import wx
+            wx.MessageBox(
+                f"La voz «{nombre_voz}» no es compatible con esta versión de la aplicación.\n\n"
+                "Algunas voces de CodeFactory (Eloquence, RealSpeak) son motores de 32 bits "
+                "y no funcionan en una aplicación de 64 bits.\n\n"
+                "Solución: usa una voz SAPI5 de 64 bits, voces OneCore de Windows 10/11, "
+                "o un motor de nube (Azure, ElevenLabs, etc.).",
+                "Voz incompatible (32 bits)",
+                wx.OK | wx.ICON_WARNING,
+            )
+        except Exception as e:
+            logger.warning("[SAPI5] No se pudo mostrar aviso de voz incompatible: %s", e)
+
     def detener(self):
         if self.conectado:
             # Señalizar al hilo de párrafos que debe detenerse
@@ -224,7 +240,21 @@ class ClienteSapi5:
                         tok  = tokens.Item(i)
                         desc = tok.GetDescription()
                         if nombre_lower in desc.lower():
-                            self.motor.Voice = tok
+                            try:
+                                self.motor.Voice = tok
+                            except Exception as e_activar:
+                                # Probable voz de 32 bits (p. ej. Eloquence de CodeFactory)
+                                # incompatible con el proceso de 64 bits.
+                                logger.warning(
+                                    "[SAPI5] No se pudo activar '%s': %s. "
+                                    "Si es una voz de 32 bits (CodeFactory Eloquence), "
+                                    "no es compatible con Python 64 bits.",
+                                    desc, e_activar,
+                                )
+                                wx.CallAfter(
+                                    self._avisar_voz_incompatible, desc
+                                )
+                                return
                             logger.debug("[SAPI5] Voz cambiada a: %s", desc)
                             return
                     except Exception as e:
