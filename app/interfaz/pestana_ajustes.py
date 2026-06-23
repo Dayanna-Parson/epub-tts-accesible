@@ -1303,6 +1303,19 @@ class PanelSapi5(wx.Panel):
                 self.voces_todas.append(v)
         except Exception:
             logger.exception("Error al cargar voces SAPI5 locales")
+        # Añadir voces de 32 bits si el proceso auxiliar está disponible
+        try:
+            from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
+            bridge = ClienteSapi32Bridge()
+            if bridge.conectado:
+                ids_existentes = {v.get("id") for v in self.voces_todas}
+                for v in bridge.obtener_voces():
+                    if v.get("id") not in ids_existentes:
+                        v["es_nueva"] = False
+                        self.voces_todas.append(v)
+                bridge.cerrar()
+        except Exception:
+            logger.exception("Error al cargar voces SAPI5 de 32 bits")
         self._filtrar_y_mostrar()
 
     def _al_filtrar(self, evento):
