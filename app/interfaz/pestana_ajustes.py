@@ -459,17 +459,15 @@ class PanelGeneral(wx.ScrolledWindow):
         bat_path = os.path.join(raiz, "actualizador.bat")
 
         # Carpetas y archivos que el .bat debe conservar intactos
+        # Solo se preservan los datos del usuario; todo lo demás (recursos/,
+        # app/, epubtts.exe…) se sobreescribe con la versión nueva, incluyendo
+        # recursos/version.json para que el comprobador detecte futuras actualizaciones.
         _PRESERVAR = {
             "configuraciones",
             "Grabaciones_Epub-TTS",
             "bin",
-            "recursos",
             "actualizacion",
             "INICIAR_APP.bat",
-            "Manual de usuario.pdf",
-            "Léeme.txt",
-            "README.md",
-            "LICENSE",
         }
 
         # Genera las líneas del .bat que borran lo que NO está en _PRESERVAR
@@ -500,7 +498,7 @@ class PanelGeneral(wx.ScrolledWindow):
             "\n"
             ":: Mover el contenido de la subcarpeta del ZIP a la raíz del portable\n"
             f'for /d %%D in ("{raiz}\\epub-tts-accesible-*") do (\n'
-            f'    robocopy "%%D" "{raiz}" /e /move /xd configuraciones Grabaciones_Epub-TTS bin recursos actualizacion >nul\n'
+            f'    robocopy "%%D" "{raiz}" /e /move /xd configuraciones Grabaciones_Epub-TTS bin actualizacion >nul\n'
             "    rmdir /s /q \"%%D\" 2>nul\n"
             ")\n"
             "\n"
