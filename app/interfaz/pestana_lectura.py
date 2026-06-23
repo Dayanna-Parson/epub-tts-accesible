@@ -235,12 +235,15 @@ class PestanaLectura(wx.Panel):
                     if hasattr(self, 'deslizador_velocidad'):
                         vel = int(conf.get("velocidad_lectura", 50))
                         vol = int(conf.get("volumen_lectura", 100))
-                        self.deslizador_velocidad.SetValue(vel)
+                        # Aplicar la escala de velocidad guardada (puede haber cambiado en Ajustes)
+                        self._aplicar_escala_velocidad(
+                            conf.get("escala_velocidad", "porcentaje"), vel
+                        )
                         self.deslizador_volumen.SetValue(vol)
                         self.reproductor.fijar_velocidad(vel)
                         self.reproductor.fijar_volumen(vol)
         except Exception as e:
-            print(f"[Aviso] No se pudo leer la configuración de salto: {e}")
+            logger.warning("[PestanaLectura] No se pudo leer ajustes.json: %s", e)
             self.segundos_salto = 10
 
     def al_cambiar_pestana_padre(self, event):
