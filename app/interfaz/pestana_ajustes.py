@@ -1632,9 +1632,11 @@ class PanelAtajos(wx.Panel):
             ("Ctrl+A",       "Abrir libro EPUB (menú Archivo)"),
             ("Ctrl+T",       "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
             ("Ctrl+Shift+P", "Abrir gestor de proyectos (menú Proyectos)"),
-            ("Ctrl+B",       "Buscar en el texto (menú Ir a...)"),
-            ("Ctrl+G",       "Ir a porcentaje del libro (menú Ir a...)"),
-            ("Ctrl+M",       "Gestor de marcadores (menú Ir a...)"),
+            ("Ctrl+B",       "Buscar en el texto (pestaña Lectura)"),
+            ("Ctrl+G",       "Ir a página del capítulo, del libro o porcentaje (pestaña Lectura)"),
+            ("Ctrl+I",       "Consultar páginas virtuales actuales del capítulo y del libro (pestaña Lectura)"),
+            ("Ctrl+S",       "Guardar configuración general (pestaña Ajustes)"),
+            ("Ctrl+M",       "Gestor de marcadores (pestaña Lectura)"),
             ("Alt+F4",       "Salir de la aplicación"),
         ]
         for atajo, desc in _FIJOS:
@@ -1761,6 +1763,7 @@ class PestanaAjustes(wx.Panel):
         super().__init__(padre)
         self.ruta_config = ruta_config("ajustes.json")
         self.config = self._cargar_config()
+        self._bloqueo_anuncio = False  # evita re-anuncio doble al re-enfocar el árbol
 
         self.splitter = wx.SplitterWindow(self, style=wx.SP_LIVE_UPDATE | wx.SP_3D)
 
@@ -1810,11 +1813,39 @@ class PestanaAjustes(wx.Panel):
         sizer.Add(self.splitter, 1, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(sizer)
 
+        # Ctrl+S guarda la configuración general desde cualquier control de la pestaña
+        id_guardar = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, self._al_guardar_global, id=id_guardar)
+        self.SetAcceleratorTable(wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, ord('S'), id_guardar),
+        ]))
+
         # Punto de entrada para el bucle de tabulación de ventana_principal.py
         self.primer_control = self.arbol_cat
 
         # Seleccionar el primer nodo visible para que NVDA lo anuncie al entrar
         wx.CallAfter(self._seleccionar_nodo_inicial)
+
+    # ANCLAJE_INICIO: GUARDAR_GLOBAL_CTRL_S
+    def _al_guardar_global(self, evento=None):
+        """Ctrl+S: guarda solo las claves que PanelGeneral gestiona, sin tocar el resto."""
+        try:
+            ruta = self.ruta_config
+            try:
+                with open(ruta, "r", encoding="utf-8") as f:
+                    datos = json.load(f)
+            except Exception:
+                datos = {}
+            datos.update(self.config)
+            ruta_tmp = ruta + ".tmp"
+            with open(ruta_tmp, "w", encoding="utf-8") as f:
+                json.dump(datos, f, ensure_ascii=False, indent=2)
+            os.replace(ruta_tmp, ruta)
+            reproducir(SUCCESS)
+        except Exception:
+            logger.exception("Error al guardar configuración global con Ctrl+S")
+            reproducir(ERROR)
+    # ANCLAJE_FIN: GUARDAR_GLOBAL_CTRL_S
 
     # ANCLAJE_INICIO: CONSTRUIR_ARBOL_CATEGORIAS
     def _construir_arbol(self):
@@ -1910,7 +1941,17 @@ class PestanaAjustes(wx.Panel):
         if nodo.IsOk() and nodo in self._nodos:
             indice = self._nodos[nodo]
             self.panel_derecho.ChangeSelection(indice)
+            # Devolver el foco al árbol después de cambiar la página.
+            # La bandera _bloqueo_anuncio evita que el re-enfoque dispare
+            # un segundo anuncio de NVDA para el mismo nodo.
+            if not self._bloqueo_anuncio:
+                self._bloqueo_anuncio = True
+                self.arbol_cat.SetFocus()
+                wx.CallAfter(self._desbloquear_anuncio)
         evento.Skip()
+
+    def _desbloquear_anuncio(self):
+        self._bloqueo_anuncio = False
 
     def _panel_activo(self):
         """Devuelve el panel wx del Simplebook que está visible en este momento."""
