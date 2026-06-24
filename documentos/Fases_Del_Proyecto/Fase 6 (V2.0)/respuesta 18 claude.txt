@@ -1,0 +1,42 @@
+respuesta 18 claude
+
+Voy a leer los archivos necesarios en paralelo antes de tocar nada.
+
+Tengo todo lo que necesito. Voy a trabajar en paralelo: código por un lado, documentos por otro.
+
+Ahora aplico todo en orden. Primero los tres arreglos de código, luego todos los documentos.
+
+**Fix 1-3: código**
+
+Ahora `construir_app.py` — añado carpetas vacías de backup y `proyectos.json` inicial:
+
+Ahora `.gitignore`:
+
+Ahora los documentos. Empiezo por `novedades.txt` (se prepende al inicio):
+
+Ahora `README.md`:
+
+Ahora actualizo los tres documentos pendientes.
+
+Ahora actualizo la Bitácora con la Fase 6:
+
+Ahora actualizo `DEVELOPMENT.md`:
+
+Ahora añado al final de `DEVELOPMENT.md` la sección técnica de la Fase 6:
+
+Ahora hago commit y push de todo:
+
+PR #6 creado: https://github.com/Dayanna-Parson/epub-tts-accesible/pull/6
+
+Todos los documentos están actualizados y pusheados. Resumen de lo que se hizo en esta sesión:
+
+- **`CLAUDE.md`**: versión 2.0.0, estructura con `cliente_sapi32_bridge.py` y `auxiliar_sapi32.py`, proveedor `local_32`, patrón `_anunciador`, logs 2 MB/3 backups, regla sobre `CheckListCtrlMixin`
+- **`BITACORA_DE_DESARROLLO.md`**: Fase 6 añadida con la historia completa de v2.0
+- **`DEVELOPMENT.md`**: sección técnica Fase 6 completa (puente 32 bits, contador generación, páginas normalizadas, árbol ajustes, selector escala velocidad), corrección de la entrada `CheckListCtrlMixin`, patrón `_anunciador`, logs actualizados
+
+Sobre los `.docx` — esos cuatro archivos (`Documento 1 – Visión Personal Del Proyecto.docx`, `Documento 2 – Guía Técnica Para Desarrolladores.docx`, `Documento 3 – Presentación Pública _ Readme.docx`, `Idea de aplicación de lectura y audiolibros.docx`) no se pueden editar con las herramientas disponibles porque son formato binario. Tendrás que actualizarlos tú manualmente en Word, basándote en los contenidos ya escritos en `README.md`, `DEVELOPMENT.md` y `BITACORA_DE_DESARROLLO.md`.
+
+
+No hay CI configurada en el repositorio ni comentarios de revisión pendientes. El PR #6 está limpio — draft abierto, sin checks que fallen, sin nada que atender.
+
+Estoy suscrito y monitorizando. Si llega algún comentario de revisión o fallo de CI, te aviso.
