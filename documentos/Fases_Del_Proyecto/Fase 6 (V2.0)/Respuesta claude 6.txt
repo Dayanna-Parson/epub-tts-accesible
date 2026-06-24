@@ -1,0 +1,35 @@
+Respuesta claude 6
+
+Primero leo el bloque de actualizaciones existente para hacer el reemplazo quirúrgico correcto.
+
+Tengo el contexto completo. Ahora veo que el bloque `PANEL_GENERAL` contiene `_al_buscar_actualizaciones` y `_al_resultado_actualizacion`. Necesito también saber qué contiene `comprobador_actualizaciones.py` para entender qué devuelve el resultado (especialmente la URL del zip):
+
+Ahora veo el panorama completo. El motor ya tiene `descargar_en_hilo()` pero el patrón "Script Clon" es diferente: hay que descargar el ZIP a `/actualizacion/`, escribir el `.bat`, lanzarlo con `subprocess.Popen` y cerrar la app. Busco el inicio exacto del ANCLAJE:
+
+Ahora verifico cómo se lanza la app (nombre del `.bat` de inicio) y la estructura de RAIZ:
+
+El lanzador es `INICIAR_APP.bat`. Ahora tengo todo. Reemplazo el bloque completo `_al_buscar_actualizaciones` / `_al_resultado_actualizacion` dentro de `PANEL_GENERAL`, añadiendo también el `lbl_progreso` en la UI y los nuevos métodos del patrón Script Clon:
+
+Primero añado `lbl_progreso` al bloque de UI dentro del `StaticBoxSizer` de Actualizaciones:
+
+Ahora reemplazo los dos métodos viejos por el sistema completo de Script Clon:
+
+PR actualizado con commit `773b317`. Resumen del sistema implementado:
+
+**Flujo completo de actualización:**
+
+1. **`_al_buscar_actualizaciones`** — deshabilita el botón, setea `lbl_progreso` con *"Comprobando versiones en el repositorio de GitHub..."* vía `wx.CallAfter`, lanza hilo de comprobación.
+
+2. **`_al_resultado_actualizacion`** — si hay versión nueva muestra `DialogoNovedades` y espera `wx.ID_OK`. Al confirmar, setea *"Descargando..."* y lanza `_hilo_descargar_e_instalar` como hilo daemon.
+
+3. **`_hilo_descargar_e_instalar`** — descarga el ZIP con `urllib.request` (sin dependencias nuevas) a `RAIZ/actualizacion/nueva_version.zip`. Al terminar setea *"Descarga completada con éxito. Preparando la instalación..."* y llama `_escribir_y_lanzar_bat`.
+
+4. **`_escribir_y_lanzar_bat`** — genera `actualizador.bat` con escritura atómica (`.tmp` → `os.replace`). El script hace:
+   - `timeout /t 2 /nobreak` — espera que la app cierre del todo
+   - Borra archivos/carpetas de la versión anterior (lista generada en tiempo de ejecución, preservando `configuraciones/`, `bin/`, `recursos/`, `Grabaciones_Epub-TTS/`, documentos y el propio lanzador)
+   - `powershell Expand-Archive` — descomprime el ZIP
+   - `robocopy` con `/move` — mueve el contenido de la subcarpeta del ZIP a la raíz
+   - `start "" INICIAR_APP.bat` — relanza la app
+   - `del %0` — se autoelimlina
+
+   Luego `subprocess.Popen(CREATE_NO_WINDOW)` lanza el `.bat` y `wx.CallAfter(wx.GetTopLevelParent(self).Close)` cierra la app liberando todos los descriptores de Windows.

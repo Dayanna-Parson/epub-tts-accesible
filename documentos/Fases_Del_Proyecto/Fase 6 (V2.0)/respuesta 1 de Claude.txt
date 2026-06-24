@@ -1,0 +1,36 @@
+respuesta 1 de Claude
+
+respuesta de Claude: Antes de dar mi análisis necesito releer los puntos críticos actuales: el gestor de tabulación global y la estructura interna de pestana_ajustes.py.
+Tengo toda la información que necesito. Mi análisis:
+Viabilidad técnica del modelo híbrido
+Conflicto con el gestor Tab de VentanaPrincipal — NINGUNO, con un cambio mínimo
+El bucle de tabulación actual compara foco == primer_control y foco == obtener_ultimo_control(). El primer_control hoy apunta a self.lista_cat (ListBox). Con el rediseño, ese atributo pasa a apuntar al wx.TreeCtrl. Es una sola línea de cambio:
+
+self.primer_control = self.arbol_cat   # en lugar de self.lista_cat
+Esto es una comparación de ventana (foco == arbol_cat), no de ítem — funciona igual.
+Para obtener_ultimo_control(), actualmente hay 4 ramas if/elif. Con 9 habitaciones serían 9 ramas. La solución más limpia es que cada panel exponga su propio atributo:
+
+@property
+def ultimo_control(self): ...
+…y obtener_ultimo_control() lo delega a pagina_activa.ultimo_control. De ese modo la función no crece con cada proveedor nuevo — el panel se autogestiona.
+wx.TreeCtrl para el navegador izquierdo — VIABLE, con una precaución
+El TreeCtrl es completamente accesible en NVDA: anuncia nombre, nivel, expandido/colapsado. La navegación interna usa flechas (no Tab), por lo que el ciclo Tab sigue siendo exactamente el mismo:
+Notebook → TreeCtrl → [Tab] → primer control del panel derecho → … → último control → Notebook
+La precaución: el árbol debe estar expandido por defecto al cargar. Si "Catálogos de Voces" arranca colapsado, el usuario ciego no sabe que hay sub-ramas ahí. Llamar a arbol.Expand(nodo_catalogos) al construir resuelve esto.
+wx.Simplebook en el derecho — ELECCIÓN PERFECTA
+Ya lo estáis usando. Su característica clave es que los paneles existen en memoria pero solo uno es visible: no hay destrucción ni creación de widgets al cambiar de página. Eso significa que NVDA nunca pierde el hilo de la jerarquía de controles. Es el mecanismo más estable disponible en wxPython para este patrón.
+PanelProveedorIA genérico — SÓLIDO ARQUITECTÓNICAMENTE
+La estructura de controles comunes (combo idioma, Solo favoritas, Solo nuevas, búsqueda, lista, btn_escuchar, btn_diccionario) es idéntica para Azure, Deepgram, Polly y ElevenLabs. Una clase base con esos controles y un método _crear_filtros_extra() vacío que las subclases sobreescriben (Polly lo rellena con el combo de motor; SAPI5 hereda menos) es limpio y extensible.
+El cargado diferido por panel también mejora el rendimiento: en lugar de leer los 1000+ registros de voces_disponibles.json de golpe al activar la pestaña de Ajustes, cada panel carga solo su proveedor cuando el árbol navega a él.
+Filtros locales por panel — MEJORA REAL
+Actualmente hay un único PanelVoces con un filtro de proveedor que contamina la vista cruzada. Con paneles aislados, marcar "Solo favoritas" en Azure no afecta a Polly. Esto simplifica el código de filtrado (elimina la cláusula if prov_raw == filtro_prov) y elimina una fuente de bugs.
+Riesgos reales que debes conocer
+1. El refresco cruzado tras guardar claves. Hoy al_comprobar() hace:
+
+wx.CallAfter(ventana.pestana_ajustes.pag_voces.cargar_datos_y_llenar)
+Con paneles separados, ese callback necesita recargar el panel del proveedor actualizado, no todos. La solución es un diccionario { "azure": pag_azure, "polly": pag_polly, ... } en PestanaAjustes y llamar solo al panel correspondiente.
+2. El Diccionario como categoría tiene que decidir su modelo de guardado. Como diálogo modal, hoy guarda al pulsar "Aplicar" y cancela con Escape. Como panel fijo dentro del Simplebook, ¿se guarda al salir de la categoría? ¿Hay un botón "Guardar"? Esto no es un problema técnico — es una decisión de UX que hay que tomar antes de implementar.
+3. obtener_ultimo_control() necesita cubrir el caso en que el árbol navega a una subrama con el Simplebook ya en esa página. Si el árbol tiene foco en "Voces Amazon Polly" y el panel derecho muestra Polly, el último control es pag_polly.ultimo_control. Pero si el árbol tiene foco y el panel todavía no se ha cargado (primera visita), hay que garantizar que el panel esté inicializado antes de que el Tab handler lo consulte.
+Veredicto
+El diseño es viable y técnicamente superior al actual. El impacto en NVDA es neutro a positivo (menos controles por panel visible, sin destrucción de widgets, anuncios de nivel más claros). El único cambio no trivial para el gestor Tab de VentanaPrincipal es la línea del primer_control y que cada panel exponga su ultimo_control. Todo lo demás es interno a pestana_ajustes.py.
+Antes de proceder necesito que tomes una decisión sobre el punto 2: ¿el Diccionario de Pronunciación en su habitación propia guarda automáticamente (estilo plugin VSCode), o tiene botón explícito "Guardar cambios"?

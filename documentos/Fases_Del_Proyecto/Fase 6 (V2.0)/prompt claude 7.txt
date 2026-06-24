@@ -1,0 +1,3 @@
+prompt claude 7
+
+genial, pero, que pasa cuando haga el portable? es que has visto que cuando ejecuto el punto bat, pues se abre la aplicación y también se abre la consola cmd... eso no quiero que cambie, me gusta que siga siendo así. Bueno, mi idea es hacer el portable pero en plan carpeta... mas o menos como está ahora, pero listo para el usuario final. ya sabes, como cualquier programa portable. y me preguntaba, se que cuando la rama principal se actualiza, pues git ya crea dos zip no?  Crea el código fuente, y luego el otro es la app o eso hay que compilarlo siempre en pues el .exe... me preguntaba también si cuando se esté actualizannndo, se va adescargar ya el exe para los usuarios, o como va a funcionar

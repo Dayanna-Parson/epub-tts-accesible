@@ -1,0 +1,19 @@
+respuesta claude 12
+
+Voy a leer los archivos necesarios antes de tocar nada.
+
+Ahora leo los bloques de `pestana_lectura.py` que tocan la cola, el buffer proactivo y el anuncio de página:
+
+Ahora leo el bloque `PANEL_GENERAL` para el selector de velocidad y el bloque `ListaVocesCheck`:
+
+`ListaVocesCheck` ya está limpio (sin `CheckListCtrl
+
+Voy bien, justo estaba a punto de ejecutar los cambios. Tengo todos los archivos leídos y el plan claro:
+
+1. **`reproductor_voz.py`** — `detener()` incrementa `_generacion` primero; `precargar_fragmento()` captura la generación y aborta si cambió antes de reproducir.
+2. **`pestana_lectura.py`** — `anunciar_pagina_actual()` usa `wx.NotifyEvent` para que NVDA lo verbalice al instante; `_calcular_paginas()` limpia espacios/saltos masivos antes de contar; al pausar/cambiar voz vacía cola y resetea índices.
+3. **`pestana_ajustes.py`** — `PanelGeneral` añade el combo de escala de velocidad conectado a `Ctrl+S`.
+4. **`construir_app.py`** — confirmar flag `--target-arch x86_64` o equivalente en PyInstaller para x64.
+5. **`ListaVocesCheck`** ya está limpio desde commits anteriores, solo verificar.
+
+¿Arranco con los cambios ahora?

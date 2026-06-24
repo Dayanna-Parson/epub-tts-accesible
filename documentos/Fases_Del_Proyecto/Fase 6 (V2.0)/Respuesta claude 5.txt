@@ -1,0 +1,38 @@
+Respuesta claude 5
+
+Voy a leer el estado actual del archivo para saber exactamente qué hay en cada bloque antes de tocar nada.
+
+Tengo toda la información. Las necesidades concretas son:
+
+- **PanelSapi5**: escritura atómica de favoritos + notificar también a Lectura.
+- **PanelDiccionario**: añadir "Guardar Cambios (Alt+G)", flag de pendiente, e interceptar la navegación del árbol via `EVT_TREE_SEL_CHANGING` con `veto()`.
+- **PestanaAjustes**: enganchar `EVT_TREE_SEL_CHANGING` para la guarda del diccionario.
+- **PanelAtajos** y **PanelClaves**: ya completos — no requieren cambios.
+
+Ejecuto los tres bloques ahora:
+
+Now let me find the `PESTANA_AJUSTES_PRINCIPAL` section to understand the current EVT_TREE binding:
+
+Now I'll make both edits. First, the `PANEL_DICCIONARIO` replacement:
+
+Now add `EVT_TREE_SEL_CHANGING` binding and the veto handler to `PESTANA_AJUSTES_PRINCIPAL`:
+
+Now find where `_al_cambiar_nodo` is defined to add the veto handler just before it:
+
+Now commit and push:
+
+La rama está actualizada. Resumen de los cambios de este turno:
+
+**`PANEL_DICCIONARIO`** — reemplazado por completo:
+- `_pendiente = False` inicializado en `__init__`
+- `EVT_TEXT` en `txt_original` y `txt_pronunciacion` activan la bandera
+- `_al_anadir` y `_al_eliminar` también activan `_pendiente` (cambio en memoria)
+- Nuevo botón **Guardar Cambios** con acelerador `Alt+G` como `ultimo_control`
+- `tiene_cambios_pendientes()` expone el estado al árbol
+- Guardar: llama a `self._dic.guardar()`, baja el flag, recarga pronunciación activa
+
+**`VETO_CAMBIO_NODO_PENDIENTE`** (nuevo ANCLAJE en `PestanaAjustesPrincipal`):
+- `EVT_TREE_SEL_CHANGING` enlazado antes de `EVT_TREE_SEL_CHANGED`
+- Si el panel activo es `PanelDiccionario` con cambios pendientes, muestra diálogo `wx.YES_NO | wx.NO_DEFAULT`; si el usuario cancela, llama a `evento.Veto()`
+
+La rama está lista para descargar y probar con NVDA. Puedes confirmar con `python -m py_compile` o descargando directamente desde GitHub.

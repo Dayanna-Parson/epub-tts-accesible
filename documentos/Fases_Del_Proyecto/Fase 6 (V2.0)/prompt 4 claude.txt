@@ -1,0 +1,16 @@
+prompt 4 claude
+
+¡Excelente análisis, Claude! Vamos a proceder exactamente con los dos frentes que propones para que la aplicación vuelva a ser completamente funcional y testeable en esta sesión.
+Antes de picar el código, ten en cuenta una precisión de diseño fundamental para la "Configuración del Libro" que estaba en la interfaz vieja: el cuadro combinado agrupado "Idioma del libro" (Español (ES), Español (LAT), Inglés, Detectar auto) debe quedar implementado de forma lineal vertical al principio de la habitación PanelGeneral, leyendo y guardando su valor en el diccionario self.config de forma transparente.
+Dicho esto, tienes luz verde para ejecutar las siguientes dos tareas en paralelo:
+1. Conexión del Contrato de Accesibilidad en ventana_principal.py
+Modifica el método al_navegacion_tab_global en app/interfaz/ventana_principal.py para engancharlo al nuevo sistema híbrido:
+En la rama elif indice == 2: (Ajustes), cambia la asignación de primer para que apunte a self.pestana_ajustes.arbol_cat (el wx.TreeCtrl) en lugar de self.lista_cat.
+Cambia la lógica de ultimo = self.pestana_ajustes.obtener_ultimo_control() para que delegue dinámicamente la consulta en la página activa del Simplebook: return self.panel_derecho.GetCurrentPage().ultimo_control. Asegúrate de que el Tab handler capture correctamente este retorno.
+2. Implementación Funcional de la lógica en pestana_ajustes.py
+Dota de vida e inteligencia a los métodos de carga y filtrado de la jerarquía de voces:
+PanelProveedorIA (Clase Base): Implementa cargar_datos_y_llenar() para que lea perezosamente de voces_disponibles.json vía GestorVoces.obtener_todas_las_voces(), aislando solo las voces de su proveedor_id correspondiente.
+Filtrado Lineal Combinado: Programa filtrar_y_mostrar() protegiendo la lista con Freeze()/Thaw(). Debe evaluar secuencialmente el Combo de Idioma, el Combo de Tipo (usando el método gancho _obtener_filtros_extra() para que Polly procese sus motores y Deepgram lo ignore de forma limpia), la casilla local "Solo favoritas" (contra voces_favoritas.json), la casilla "Solo nuevas voces" (es_nueva) y la búsqueda por texto (con el Debounce de 300 ms vía wx.CallLater).
+Gestión de Favoritos: Intercepta EVT_LIST_ITEM_CHECKED y UNCHECKED para guardar de forma atómica en voces_favoritas.json al pulsar Espacio y notifica inmediatamente a las pestañas de lectura y grabación para recargar sus combos en segundo plano.
+Traducción Semántica: Asegura que las columnas de Género e Idioma traduzcan las cadenas técnicas de las APIs al español para NVDA, enriqueciendo el nombre de la voz en la columna 0 con sus etiquetas.
+Procede con la reestructuración funcional completa de estos bloques de ANCLAJE y avísame cuando los archivos estén listos y subidos al PR draft de GitHub.

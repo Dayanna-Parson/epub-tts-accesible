@@ -1,0 +1,34 @@
+Hemos diseñado la arquitectura definitiva para la reestructuración completa de la pestaña de Ajustes (pestana_ajustes.py) y queremos que analices la viabilidad técnica de este modelo HÍBRIDO. No generes líneas de código todavía; limítate a evaluar el diseño, confirmar su impacto en el foco del Tabulador y darnos tu feedback.
+
+OBJETIVO DEL DISEÑO HÍBRIDO:
+Pasar de la pantalla única masificada actual a un sistema de árbol expandible (wx.TreeCtrl) a la izquierda conectado a un wx.Simplebook a la derecha. La clave es conservar intactos tus filtros combinados y listas de reporte, pero distribuidos en "habitaciones independientes" (sub-paneles aislados) para reducir la carga de sizers concurrentes y blindar la tabulación accesible para NVDA.
+
+ESTRUCTURA DEL ÁRBOL Y SUS HABITACIONES (De arriba a abajo):
+
+1. CATEGORÍA: CONFIGURACIÓN GENERAL (Panel limpio)
+- Parámetros lineales verticales: Segundos de salto (Retroceder/Avanzar), milisegundos de pausa entre fragmentos y el checkbox de actualizaciones automáticas.
+- Botón final: "Limpiar caché".
+
+2. CATEGORÍA: CREDENCIALES Y API KEYS (Panel de pura escritura)
+- Se agrupan exclusivamente los campos de texto y contraseñas de las llaves de la nube (Azure, Deepgram, Polly, ElevenLabs) con sus botones de ayuda web. No hay listas aquí.
+- Botón centrado final: "Guardar todas las claves".
+
+3. CATEGORÍA: CATÁLOGOS DE VOCES (Rama principal expandible)
+Queremos aislar las listas y sus filtros específicos por proveedor para que la UI no cambie dinámicamente destruyendo controles dentro del mismo panel. Cada proveedor tendrá su sub-rama (habitación hija). El orden de tabulación vertical dentro de cada panel debe incluir los filtros específicos de ese proveedor de forma lineal antes de entrar en la lista para que NVDA sepa qué filtros hay aplicados:
+   A. Sub-rama: Voces Microsoft Azure -> Contiene de arriba a abajo: Combo de idioma de voz + Casilla "Solo favoritas" + Casilla "Solo nuevas voces" + Cuadro de búsqueda de texto + Lista de voces con casillas específicas de Azure + Botón Preescuchar + Botón de acceso al Diccionario.
+   B. Sub-rama: Voces Amazon Polly -> Contiene: Combo de idioma de voz + Combo específico de tipo de motor (Standard, Neural, Long-Form, Generative) + Casilla "Solo favoritas" + Casilla "Solo nuevas voces" + Cuadro de búsqueda + Lista de voces de Polly + Botones inferiores.
+   C. Sub-rama: Voces Deepgram Aura-2 -> Contiene: Combo de idioma + Casilla "Solo favoritas" + Casilla "Solo nuevas voces" + Cuadro de búsqueda + Lista de voces de tus 112 voces estáticas + Botones inferiores. (Sin combo de tipos, ya que Aura-2 es directa, limpiando el panel).
+   D. Sub-rama: Voces ElevenLabs -> Contiene: Combo de idioma + Casilla "Solo favoritas" + Casilla "Solo nuevas voces" + Cuadro de búsqueda + Lista de voces de ElevenLabs + Botones inferiores.
+   E. Sub-rama: Voces Locales SAPI5 -> Contiene: Lista de voces nativas de Windows detectadas en tiempo real, sin campos de red, junto con sus botones de preescucha.
+
+4. CATEGORÍA: REGLAS DEL DICCIONARIO (Habitación dedicada)
+- Aquí se separa la gestión pesada del diccionario: la lista completa de palabras con sustituciones fonéticas personalizadas (Palabra original vs Pronunciación) y la botonera de Añadir, Editar y Eliminar reglas.
+- Nota: Los botones de "Diccionario" de los catálogos anteriores serán solo accesos rápidos que abren el diálogo flotante rápido, devolviendo el foco a la lista al cerrar.
+
+5. CATEGORÍA: ATAJOS DE TECLADO (Panel aislado)
+- El asignador de comandos de teclado actual con su ListCtrl y su botón de captura.
+
+ESCALABILIDAD FUTURA:
+Para que el diseño sea mantenible, los paneles de catálogo de voces de IA (Azure, Deepgram, etc.) deben heredar de una clase genérica parametrizada (ej. 'PanelProveedorIA'). Si en el futuro añadimos otra API o un proveedor añade un campo/filtro en 'voces_disponibles.json', la habitación se generará dinámicamente basándose en la estructura del JSON, sin romper los sizers ni el foco de las demás habitaciones. Las casillas "Solo favoritas" y "Solo nuevas voces" actuarán de forma local e independiente en cada panel para no contaminar los filtros de los otros proveedores.
+
+Analiza todo este mapa conceptual. ¿Ves algún conflicto con el gestor global de tabulación de ventana_principal.py? ¿Cómo evaluarías el impacto de este aislamiento de sizers en el rendimiento de NVDA al cambiar de foco? Confírmame tu análisis antes de proceder con cualquier modificación.

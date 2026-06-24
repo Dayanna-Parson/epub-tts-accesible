@@ -54,3 +54,13 @@ Grabaciones_Epub-TTS/
 bin/*.exe
 bin/*.dll
 Epub-TTS.spec
+
+# Copias de seguridad y proyectos locales de usuario
+backups/
+*.zip
+proyectos/
+
+# Carpetas temporales y salidas de compilación de PyInstaller
+build/
+dist/epubtts/
+dist/epub-tts-accesible/

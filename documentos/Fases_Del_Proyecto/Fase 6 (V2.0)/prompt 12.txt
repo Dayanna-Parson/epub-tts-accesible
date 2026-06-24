@@ -1,0 +1,18 @@
+prompt 12
+
+¡Claude, vamos a aplicar la solución definitiva y de máxima calidad para cerrar la versión 2.0, optimizando el búfer proactivo de red para no generar gastos innecesarios en las APIs y manteniendo la aplicación firmemente en la arquitectura moderna de 64 bits!
+Aplica estas modificaciones exactas en los bloques de ANCLAJE:
+1. REPARACIÓN DE Ctrl+I Y AJUSTE DE PÁGINAS VIRTUALES (pestana_lectura.py)
+En el método anunciar_pagina_actual(), actualiza el texto de la etiqueta lbl_progreso. Para que NVDA lo verbalice inmediatamente al vuelo sin abrir ningún diálogo ni mover el foco del cursor, utiliza el sistema de notificación de eventos de accesibilidad nativo de Windows lanzando un evento wx.accessible de alerta o notificación (wx.Accessible.NotifyEvent con el foco correspondiente) sobre dicho control, garantizando que el lector intercepte el cambio de texto de forma inmediata.
+Modifica _calcular_paginas() para que realice el conteo virtual de caracteres (_CHARS_POR_PAGINA = 1000) sobre una copia del texto del capítulo que limpie previamente espacios en blanco duplicados, tabuladores y saltos de línea masivos (\n\n) procedentes del EPUB. Esto ajustará la métrica artificial para aproximarla fielmente al volumen del libro real.
+2. DESCARTE ATÓMICO DE HILOS PARA EVITAR SOLAPAMIENTOS Y GASTOS (reproductor_voz.py y pestana_lectura.py)
+El búfer proactivo es excelente, pero al pausar o cambiar de voz, los hilos de red se quedan colgados y provocan silencios de 7 segundos o frases residuales.
+En reproductor_voz.py (detener): Asegúrate de incrementar inmediatamente self._generacion += 1. Modifica el hilo de _procesar_voz_neuronal y la función precargar_fragmento para que verifiquen estrictamente si la generación cambió justo antes de enviar el audio extraído a los altavoces. Si cambió, deben abortar de inmediato, cerrar la conexión de red y destruir el búfer viejo. ¡Esto blindará el motor y ahorrará caracteres en las APIs!
+En pestana_lectura.py: Al pausar, detener o cambiar de voz, vacía por completo self._cola_lectura = [] y resetea los índices para limpiar el flujo.
+3. PINTAR EL SELECTOR DE VELOCIDAD EN AJUSTES GENERALES (pestana_ajustes.py)
+Inserta en el sizer visual de PanelGeneral un wx.ComboBox etiquetado como "Sistema de visualización de velocidad:" con las opciones "Porcentaje (0-100)" y "Multiplicador por puntos (0.5x - 3.0x)".
+Conéctalo para que persista en ajustes.json al pulsar Ctrl+S. Asegúrate de que el slider de lectura actualice su SetHelpText para cantar los multiplicadores planos limpios (1.0 (Normal), 1.5 (Rápida)) sin números de pasos de fondo. obtener_velocidad_normalizada() seguirá enviando el valor 0-100 por debajo al reproductor.
+4. ELIMINAR EL MIXIN RESIDUAL Y MANTENER COMPILACIÓN NATIVA x64 (construir_app.py)
+Quita de forma definitiva el mixin antiguo listmix.CheckListCtrlMixin de la declaración y el __init__ de la clase ListaVocesCheck en la pestaña de ajustes.
+En el script construir_app.py, mantén el empaquetador nativo en 64 bits para asegurar la máxima eficiencia y modernidad de la aplicación, alineada con los estándares actuales de NVDA.
+Entrégame los bloques de código limpios y definitivos. ¡Dejemos la v2.0 impecable!

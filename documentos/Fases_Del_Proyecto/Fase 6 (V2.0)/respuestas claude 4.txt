@@ -1,0 +1,79 @@
+respuestas claude 4
+
+Voy a leer los archivos necesarios antes de tocar nada.
+
+¿cómo vas?
+
+Estaba terminando de leer los archivos necesarios antes de escribir el código. Aquí el estado:
+
+**Leído y entendido:**
+- `ventana_principal.py` — la rama `elif indice == 2:` del Tab handler está en la línea 185-187. Cambio quirúrgico claro.
+- `cliente_nube_voces.py` — `obtener_todas_las_voces()` devuelve un dict `{proveedor: [lista_voces]}` leyendo de `voces_disponibles.json`.
+
+**Lo que voy a hacer ahora en paralelo:**
+
+1. **`ventana_principal.py`** — bloque `EVENTOS_GLOBALES`: cambiar `primer` a `arbol_cat` y actualizar la consulta de `ultimo` para delegar en `obtener_ultimo_control()` (que ya usa `_panel_activo()` dinámicamente).
+
+2. **`pestana_ajustes.py`** — varios bloques:
+   - Añadir combo "Idioma del libro" al inicio de `PanelGeneral`.
+   - Dotar de vida `cargar_datos()` en `PanelProveedorIA` usando `GestorVoces.obtener_todas_las_voces()`.
+   - Implementar `filtrar_y_mostrar()` completo con Freeze/Thaw, debounce, gancho `_obtener_filtros_extra()`, y traducción semántica de columnas.
+
+¿Continúo?
+
+
+sí, ¡vas muy bien!
+
+Perfecto. Manos a la obra — voy a hacer los dos cambios en paralelo ahora mismo.
+
+Perfecto: el campo es `"motores": ["neural", "standard", "generative", "long-form"]`. Tengo todo lo que necesito. Ejecuto ambas tareas en paralelo.
+
+Ahora los bloques de `pestana_ajustes.py`. Primero el combo de idioma del libro en `PanelGeneral`:
+
+Ahora añado el método `_al_cambiar_idioma_libro` y actualizo `guardar_todo` en PanelGeneral para que persista el idioma:
+
+Ahora el bloque grande: `BASE_PANEL_PROVEEDOR_IA` con toda la lógica implementada:
+
+Ahora simplifico los paneles Azure, Deepgram y ElevenLabs (la base ya hace todo) y amplío Polly con el gancho de motor:
+
+Finalmente actualizo `obtener_ultimo_control()` en `PestanaAjustes` para usar `GetCurrentPage()`:
+
+Verifico que no haya errores de sintaxis en ambos archivos y luego hago commit:
+
+Sin errores. Hago el commit y lo subo:
+
+Subido al PR draft. Aquí el resumen completo de lo que se acaba de implementar:
+
+---
+
+### Cambios en este commit
+
+**`ventana_principal.py` — bloque `EVENTOS_GLOBALES` (1 línea)**
+- `primer = self.pestana_ajustes.primer_control` → `primer = self.pestana_ajustes.arbol_cat`
+- El Tab desde el Notebook ahora aterriza directamente en el árbol, no en un atributo genérico.
+
+---
+
+**`pestana_ajustes.py` — cuatro bloques modificados**
+
+`ANCLAJE: IDIOMA_LIBRO_GENERAL` *(nuevo dentro de PanelGeneral)*
+- Combo en la parte superior de la habitación General: "Español (ES) / Español (LAT) / Inglés / Detectar auto".
+- Enlazado a `self.config["idioma_libro_codigo"]`. Se guarda al cambiar y también al pulsar "Guardar todo".
+
+`ANCLAJE: BASE_PANEL_PROVEEDOR_IA` *(reimplementado)*
+- `cargar_datos()` — lee de `GestorVoces.obtener_todas_las_voces()`, filtra por `id_proveedor`, puebla el combo de idioma y llama a `filtrar_y_mostrar`.
+- `filtrar_y_mostrar()` — Freeze/Thaw, secuencia estricta: idioma → gancho `_obtener_filtros_extra` → favoritas → nuevas → texto (debounce 300 ms). Traducción semántica de género e idioma al español.
+- `_guardar_favoritos()` — escritura atómica con `.tmp` + `os.replace`.
+- `_notificar_pestanas()` — notifica a Lectura y Grabación via `wx.CallAfter`.
+- Dos ganchos de extensión: `_construir_controles_extra(sizer)` y `_obtener_filtros_extra(voz)`.
+
+`ANCLAJE: PANEL_POLLY` *(ampliado)*
+- Sobreescribe `_construir_controles_extra` → añade combo "Tipo de motor" (Neural / Estándar / Generativa Long-form / Generativa) enlazado a `voz["motores"]`.
+- Sobreescribe `_obtener_filtros_extra` → filtra por el campo `motores` del JSON de Polly.
+
+`ANCLAJE: PANEL_AZURE / DEEPGRAM / ELEVENLABS` *(simplificados al mínimo)*
+- Un `__init__` de una línea. La base hace todo.
+
+`obtener_ultimo_control()` en `PestanaAjustes`
+- Ahora usa `GetCurrentPage().ultimo_control` — delegación dinámica real.
+

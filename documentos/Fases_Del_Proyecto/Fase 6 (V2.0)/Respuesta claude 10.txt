@@ -1,0 +1,42 @@
+Voy a leer los bloques exactos que necesito modificar antes de tocar nada.
+
+Ahora leo el bloque PANEL_ATAJOS para ver `_FIJOS`:
+
+Tengo todo el mapa. Ahora ejecuto los tres grupos de cambios:
+
+**Bloque 1: `pestana_ajustes.py` — bandera de bloqueo en `__init__`, `_al_cambiar_nodo`, `Ctrl+S`, y `_FIJOS`**
+
+Ahora el `Ctrl+S` global. Primero localizo dónde está el `SetSizer` final de `PestanaAjustesPrincipal` para añadir el acelerador:
+
+Ahora añado `_al_guardar_global` justo antes de `_construir_arbol`:
+
+Ahora actualizo `_FIJOS` en `PanelAtajos`:
+
+**Bloque 2: `pestana_lectura.py` — diálogo unificado Ctrl+G, menú contextual, slider semántico, eliminar H/Shift+H**
+
+Añado el `EVT_CONTEXT_MENU` en `txt_contenido` y el binding del slider semántico en el `__init__`:
+
+Ahora reemplazo `CONFIGURACION_ATAJOS_TECLADO` — elimino H/Shift+H, mantengo Ctrl+I y Ctrl+G limpios:
+
+Ahora reemplazo `PAGINAS_VIRTUALES` — elimino `_navegar_encabezado` (ya no está en los atajos), añado menú contextual y slider semántico:
+
+Ahora reemplazo `DIALOGO_IR_A_PAGINA` para añadir el tercer campo de porcentaje:
+
+PR actualizado con commit `41d7eed`. Resumen de cada cambio:
+
+---
+
+**`pestana_ajustes.py`**
+
+- **`_bloqueo_anuncio`**: bandera booleana en `__init__`. En `_al_cambiar_nodo`, tras `ChangeSelection`, llama a `SetFocus()` para mantener el foco en el árbol y activa la bandera. Un `CallAfter(_desbloquear_anuncio)` la baja en el siguiente ciclo. Esto corta el ciclo anuncio→focus→anuncio sin eliminar el re-foco que sí es necesario para la navegación estructural.
+- **`GUARDAR_GLOBAL_CTRL_S`**: lee el JSON existente, hace `datos.update(self.config)` (solo sobreescribe las claves de Configuración General), escribe atómicamente y reproduce `SUCCESS`. `Ctrl+S` funciona desde cualquier control de la pestaña gracias al `SetAcceleratorTable` en el panel raíz.
+- **`_FIJOS`**: Ctrl+G, Ctrl+I y Ctrl+S con descripciones actualizadas.
+
+---
+
+**`pestana_lectura.py`**
+
+- **H/Shift+H eliminados**: los 2 slots liberados reducen la tabla de 9 a 7 acciones. La navegación por encabezados ya la cubre el árbol de índice con teclado nativo.
+- **`DIALOGO_IR_A_PAGINA`** (Ctrl+G): tres `TextCtrl` independientes con `SetHelpText` que dice la posición actual en cada unidad (*"Ahora estás en la página 3 de 12"*). Prioridad: porcentaje > libro > capítulo. Los campos empiezan vacíos para que el usuario no tenga que borrar el valor previo.
+- **`MENU_CONTEXTUAL_TEXTO`**: clic derecho en el área de texto despliega un `wx.Menu` con una única entrada limpia → `iniciar_ir_a_pagina()`.
+- **`SLIDER_VELOCIDAD_SEMANTICO`**: `EVT_SCROLL_CHANGED` + `EVT_SCROLL_THUMBTRACK` actualizan `SetHelpText` y `lbl_velocidad` con etiquetas tipo `1.5× (Rápida)` al mover el slider en modo multiplicador. NVDA lee la etiqueta, no el número de paso interno.

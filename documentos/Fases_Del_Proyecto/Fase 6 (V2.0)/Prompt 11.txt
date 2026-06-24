@@ -1,0 +1,3 @@
+rompt 11
+
+vale, pero, y dime a ver que te parece esto, cuando en ajustes, se pulsa el botón o combinación control + s, tiene que decir guardad, y reproducir el sonido de success. A, y otra cosa. No te pedí en ningún momento que la opción ir a página tuviese su propio menú... Si no que esa opción además de tener su atajo de teclado, que también esté accesible desde el menú de la pestaña lectura, abrir libro, recientes, buscar e ir a porcentaje... A ese me refería.
