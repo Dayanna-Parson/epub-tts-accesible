@@ -9,7 +9,7 @@ Léelo entero antes de tocar nada. Estas reglas no son sugerencias.
 **Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
 
 - Desarrolladora: Dayanna Parson (TifloTutos · tiflotutos.com)
-- Versión actual: 1.2.0
+- Versión actual: 2.0.0
 - Python 3.12+ · wxPython 4.2+ · Windows como plataforma principal
 
 ---
@@ -49,9 +49,9 @@ Nunca reescribas un archivo completo si solo hay que modificar un bloque. Entreg
 | HTTP asíncrono (preparado) | `httpx` |
 | EPUB | EbookLib + BeautifulSoup4 |
 | Sonidos del sistema | `wx.adv.Sound` + `winsound` (fallback) |
-| TTS local | pyttsx3 / SAPI5 |
+| TTS local | SAPI5 64 bits (`cliente_sapi5.py`) + SAPI5 32 bits vía proceso puente (`cliente_sapi32_bridge.py`) |
 | TTS nube | Azure Neural, Amazon Polly, Deepgram Aura-2, ElevenLabs |
-| Logs | `logging` + `RotatingFileHandler` (512 KB, 1 backup) |
+| Logs | `logging` + `RotatingFileHandler` (2 MB, 3 backups) |
 
 No añadas dependencias sin justificación explícita. Cada librería nueva es un punto de rotura potencial en la portabilidad.
 
@@ -92,8 +92,11 @@ app/
 │   ├── cliente_polly.py          # Amazon Polly. Motor automático standard/neural/generative.
 │   ├── cliente_eleven.py         # ElevenLabs. Multilingüe. Streaming.
 │   ├── cliente_deepgram.py       # Deepgram Aura-2. REST puro. Pay-as-you-go. Caché LRU.
-│   └── cliente_sapi5.py          # SAPI5 local. Fallback siempre disponible.
+│   ├── cliente_sapi5.py          # SAPI5 64 bits. Fallback siempre disponible.
+│   └── cliente_sapi32_bridge.py  # SAPI5 32 bits (Eloquence, RealSpeak). Proceso puente.
 └── config_rutas.py               # Rutas absolutas. cargar_claves() / guardar_claves().
+
+auxiliar_sapi32.py                # Proceso auxiliar de 32 bits. Se compila a bin/auxiliar_sapi32.exe.
 ```
 
 Archivos de configuración (en `/configuraciones/`):
@@ -105,6 +108,13 @@ Archivos de configuración (en `/configuraciones/`):
 | `proyectos.json` | Jerarquía completa de proyectos | No |
 | `pronunciacion.json` | Reglas del diccionario de pronunciación | No |
 | `voces_conocidas.json` | IDs de voces ya vistas (historial para filtro «solo nuevas») | No |
+
+### Voces locales: dos proveedores
+
+- `local` → `cliente_sapi5.py` (64 bits, siempre disponible)
+- `local_32` → `cliente_sapi32_bridge.py` (32 bits vía proceso puente, requiere `bin/auxiliar_sapi32.exe`)
+
+El campo `proveedor_id` de cada voz indica cuál de los dos usa. El reproductor enruta automáticamente. Si el puente no está disponible, las voces `local_32` no aparecen en la lista.
 
 ---
 
@@ -168,6 +178,24 @@ Prohibido `except: pass` o `except Exception: pass` sin logging. Mínimo:
 ```python
 logger.exception("contexto descriptivo del error")
 ```
+
+### Patrón `_anunciador`: verbalización inmediata en NVDA
+
+Para que NVDA verbalice texto inmediatamente sin mover el foco visible, usa un `wx.TextCtrl` oculto de 1×1 px con el patrón establecido:
+
+```python
+# En __init__:
+self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
+
+# Para verbalizar:
+def _anunciar(self, texto):
+    control_previo = wx.Window.FindFocus()
+    self._anunciador.SetValue(texto)
+    self._anunciador.SetFocus()
+    wx.CallLater(300, lambda: control_previo.SetFocus() if control_previo else None)
+```
+
+Usado en Ctrl+I (anunciar página), Ctrl+S en Ajustes ("Guardado."), y otros puntos donde `SetLabel()` no activa el evento de accesibilidad.
 
 ---
 
@@ -234,3 +262,5 @@ En modo "Dividir por etiquetas", los archivos se nombran `1. Narr.mp3`, `2. Jame
 - No incluyas ninguna referencia a conversaciones, sesiones de IA ni proceso de desarrollo en el código ni en los comentarios.
 - No uses la tecla `Espacio` como atajo de teclado.
 - No escribes código en inglés. Todo en español.
+- No uses `CheckListCtrlMixin.__init__(self)` — en wxPython 4.2+ genera `DeprecationWarning`. Usa solo `EnableCheckBoxes(True)` directamente sobre el `ListCtrl`.
+- No uses `StaticText.SetLabel()` para mensajes que NVDA deba verbalizar sin foco — usa el patrón `_anunciador`.

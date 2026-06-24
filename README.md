@@ -2,7 +2,7 @@
 
 > Aplicación de escritorio accesible para Windows — lee libros EPUB y crea audiolibros multivoz con síntesis de voz neuronal.
 
-**Desarrollada por [Dayanna Parson (TifloTutos)](https://tiflotutos.com) · Versión 1.2.0**
+**Desarrollada por [Dayanna Parson (TifloTutos)](https://tiflotutos.com) · Versión 2.0.0**
 
 ---
 
@@ -28,8 +28,9 @@ Nace de una necesidad real: poder leer libros largos en el PC y preparar audioli
 - Abrir y leer libros en formato EPUB con navegación por índice.
 - Escuchar el contenido con distintas voces TTS, sin pausas entre fragmentos.
 - Pausar, reanudar y moverte por el texto con saltos configurables.
+- Consultar en qué página estás con Ctrl+I y saltar a cualquier página con Ctrl+G.
 - Añadir y gestionar marcadores.
-- Grabar audiolibros multivoz con etiquetas de personaje (`{{@narrador}}`, `{{@james}}`...).
+- Grabar audiolibros multivoz con etiquetas de personaje (`{{@narrador}}`, `{{@james}}`…).
 - Exportar en MP3 a 320 kbps, normalizado a 44 100 Hz para edición en DAW.
 - Corregir pronunciaciones incorrectas con el diccionario propio.
 - Controlar el consumo de cada API con límites y avisos automáticos.
@@ -41,7 +42,8 @@ Nace de una necesidad real: poder leer libros largos en el PC y preparar audioli
 
 | Motor | Tipo | Notas |
 |---|---|---|
-| SAPI5 | Local | Siempre disponible, sin conexión ni coste |
+| SAPI5 (64 bits) | Local | Siempre disponible, sin conexión ni coste |
+| SAPI5 (32 bits) | Local | Eloquence, RealSpeak y otras voces de CodeFactory — requiere `auxiliar_sapi32.exe` en `/bin/` (incluido en el portable) |
 | Microsoft Azure TTS | Nube | Motor neuronal principal |
 | Amazon Polly | Nube | Motor neuronal alternativo |
 | **Deepgram Aura-2** | Nube | **Recomendado** — pay-as-you-go, sin suscripción mensual fija |
@@ -59,6 +61,7 @@ Diseñada desde el principio para funcionar con NVDA y lectores de pantalla:
 - Uso completo con teclado — ningún flujo requiere ratón.
 - Diálogos que no pierden el foco al cerrarse.
 - Sin ventanas de consola al arrancar: NVDA no verbaliza textos técnicos de inicio.
+- Respuestas vocales inmediatas: Ctrl+I anuncia la página actual sin mover el foco visible.
 
 ---
 
@@ -67,24 +70,30 @@ Diseñada desde el principio para funcionar con NVDA y lectores de pantalla:
 | Atajo | Acción |
 |---|---|
 | `Control + 1` | Modo Lectura |
-| `Control + 2` | Modo Grabación |
+| `Control + 2` | Grabación de Fragmentos |
 | `Control + 3` | Ajustes |
 | `Control + O` | Abrir EPUB / carpeta |
 | `Control + P` | Reproducir / Pausar |
+| `Control + I` | Anunciar página actual (NVDA) |
+| `Control + G` | Saltar a página o porcentaje |
+| `Control + S` | Guardar ajustes (en pestaña Ajustes) |
 | `F1` | Abrir manual de usuario |
 
 ---
 
 ## Estado actual
 
-**Versión 1.2.0 — aplicación completa y estable.**
+**Versión 2.0.0 — aplicación completa y estable.**
 
-- Modo lectura con voces de Azure, Amazon Polly, Deepgram y ElevenLabs.
-- Modo grabación multivoz con etiquetas de personaje.
+- Ajustes rediseñados con árbol de navegación (wx.TreeCtrl + wx.Simplebook).
+- Actualizaciones automáticas mediante Script Clon: descarga ZIP, reemplaza archivos y vuelve a arrancar.
+- Compatibilidad con voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante proceso puente.
+- Modo lectura con páginas virtuales dinámicas y salto directo por página o porcentaje.
+- Selector de escala de velocidad: porcentajes (0–100) o multiplicadores (0.5×–3.0×).
+- Modo Grabación de Fragmentos multivoz con etiquetas de personaje.
 - Exportación MP3 a 320 kbps, normalizado a 44 100 Hz.
 - Diccionario de pronunciación para todos los motores.
 - Control de cuota y avisos de gasto por proveedor.
-- Actualizaciones automáticas desde la propia app.
 - Manual de usuario accesible integrado (`F1`).
 
 ---
@@ -108,6 +117,7 @@ Visita la [página de releases](https://github.com/Dayanna-Parson/epub-tts-acces
 | [`novedades.txt`](novedades.txt) | Historial de cambios por versión |
 | [`ayuda.html`](ayuda.html) | Manual de usuario completo |
 | [`DEVELOPMENT.md`](DEVELOPMENT.md) | Guía técnica para desarrolladoras |
+| [`BITACORA_DE_DESARROLLO.md`](BITACORA_DE_DESARROLLO.md) | Historia del proyecto |
 
 ---
 
