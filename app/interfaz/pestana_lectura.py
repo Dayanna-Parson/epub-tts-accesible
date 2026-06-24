@@ -263,32 +263,51 @@ class PestanaLectura(wx.Panel):
         self.combo_voz.Clear()
         voces_para_combo = []
 
-        # Carga de voces locales SAPI5
-        try:
-            if hasattr(self.reproductor, 'cliente_local'):
-                voces_locales = self.reproductor.cliente_local.obtener_voces()
-                for v in voces_locales:
-                    nombre_mostrar = f"[Local] {v['nombre']}"
-                    voces_para_combo.append((nombre_mostrar, v))
-        except Exception as e:
-            print(f"[Aviso] No se pudieron cargar las voces locales SAPI5: {e}")
-
-        # Carga de voces neuronales favoritas
+        # Cargar favoritos globales (SAPI5 y neurales comparten el mismo archivo)
         ruta_favs = ruta_config("voces_favoritas.json")
         ruta_todas = ruta_config("voces_disponibles.json")
 
         ids_favoritos = []
         if os.path.exists(ruta_favs):
             try:
-                with open(ruta_favs, 'r', encoding='utf-8') as f:
+                with open(ruta_favs, "r", encoding="utf-8") as f:
                     ids_favoritos = json.load(f)
             except Exception as e:
-                print(f"[Aviso] No se pudo leer voces_favoritas.json: {e}")
-                ids_favoritos = []
+                logger.warning("[PestanaLectura] No se pudo leer voces_favoritas.json: %s", e)
 
+        # Carga de voces SAPI5 de 64 bits
+        voces_locales_64 = []
+        try:
+            if hasattr(self.reproductor, "cliente_local"):
+                voces_locales_64 = self.reproductor.cliente_local.obtener_voces()
+        except Exception as e:
+            logger.warning("[PestanaLectura] No se pudieron cargar voces SAPI5: %s", e)
+
+        # Carga de voces SAPI5 de 32 bits (bridge Eloquence/CodeFactory)
+        voces_locales_32 = []
+        try:
+            if hasattr(self.reproductor, "cliente_local_32") and self.reproductor.cliente_local_32.conectado:
+                voces_locales_32 = self.reproductor.cliente_local_32.obtener_voces()
+        except Exception as e:
+            logger.warning("[PestanaLectura] No se pudieron cargar voces SAPI5 32-bits: %s", e)
+
+        # Combinar voces locales y filtrar por favoritos
+        # Si hay favoritos marcados, mostrar solo los favoritos; si no hay ninguno marcado,
+        # mostrar todas las voces locales (fallback para que siempre haya al menos una opción).
+        todas_locales = voces_locales_64 + voces_locales_32
+        ids_locales_favoritas = [v.get("id") for v in todas_locales if v.get("id") in ids_favoritos]
+        mostrar_todas_locales = not ids_locales_favoritas
+
+        for v in todas_locales:
+            if mostrar_todas_locales or v.get("id") in ids_favoritos:
+                etiqueta = "[32 bits]" if v.get("proveedor_id") == "local_32" else "[Local]"
+                nombre_mostrar = f"{etiqueta} {v['nombre']}"
+                voces_para_combo.append((nombre_mostrar, v))
+
+        # Carga de voces neuronales favoritas
         if ids_favoritos and os.path.exists(ruta_todas):
             try:
-                with open(ruta_todas, 'r', encoding='utf-8') as f:
+                with open(ruta_todas, "r", encoding="utf-8") as f:
                     todas = json.load(f)
                     for prov, lista in todas.items():
                         for v in lista:

@@ -163,8 +163,25 @@ def crear_configuraciones_fabrica():
             json.dump(contenido, f, ensure_ascii=False, indent=2)
         print(f"      Creado: configuraciones/{nombre}")
 
-    # Carpeta de grabaciones vacía para que el portable la tenga desde el inicio
+    # proyectos.json vacío: estructura mínima para que el gestor arranque sin errores
+    ruta_proy = os.path.join(dir_conf, "proyectos.json")
+    datos_proy = {"proyectos": {}, "orden_raiz": []}
+    with open(ruta_proy, "w", encoding="utf-8") as f:
+        json.dump(datos_proy, f, ensure_ascii=False, indent=2)
+    print("      Creado: configuraciones/proyectos.json (vacío)")
+
+    # pronunciacion.json vacío
+    ruta_pron = os.path.join(dir_conf, "pronunciacion.json")
+    with open(ruta_pron, "w", encoding="utf-8") as f:
+        json.dump([], f)
+    print("      Creado: configuraciones/pronunciacion.json (vacío)")
+
+    # Carpetas vacías necesarias desde la primera ejecución
     os.makedirs(os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS"), exist_ok=True)
+    os.makedirs(os.path.join(dir_conf, "proyectos_backup"), exist_ok=True)
+    # Marca que indica al gestor de proyectos que hay carpeta de backup
+    open(os.path.join(dir_conf, "proyectos_backup", ".gitkeep"), "w").close()
+    print("      Creado: configuraciones/proyectos_backup/ (carpeta de respaldos)")
 
 
 def comprimir_portable():

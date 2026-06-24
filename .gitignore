@@ -55,12 +55,14 @@ bin/*.exe
 bin/*.dll
 Epub-TTS.spec
 
-# Copias de seguridad y proyectos locales de usuario
-backups/
-*.zip
-proyectos/
-
-# Carpetas temporales y salidas de compilación de PyInstaller
+# ── Build y distribución ─────────────────────────────────────────────────────
+dist/
 build/
-dist/epubtts/
-dist/epub-tts-accesible/
+*.spec
+actualizador.bat
+
+# ── Caché de audio (generada en tiempo de ejecución) ─────────────────────────
+app/motor/cache/
+
+# ── Respaldos de proyectos (datos personales) ─────────────────────────────────
+configuraciones/proyectos_backup/
