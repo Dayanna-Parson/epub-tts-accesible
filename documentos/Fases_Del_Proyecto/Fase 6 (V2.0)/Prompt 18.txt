@@ -1,0 +1,51 @@
+Prompt 18
+Perfecto, haz esos dos pendientes, el reenombrado, y los dos bugs. Y ya que estás, actualiza todos los documentos con el tono adecuado de cada uno,... Ya sabes, el de novedades, el manual de ayuda, el de idea de aplicación de audiolibros, documentos que tiene que actualizar claude con el tono adecuado
+
+
+
+ayuda.html
+
+BITACORA_DE_DESARROLLO.md
+
+CLAUDE.md
+
+DEVELOPMENT.md
+
+estructura_proyecto.txt
+
+novedades.txt
+
+README.md
+
+requisitos.txt (Si fuese necesario)
+
+subir_version.py (si fuese necesario)
+
+Documento 1 – Visión Personal Del Proyecto (versión Completa).docx
+
+Documento 2 – Guía Técnica Para Desarrolladores.docx
+
+Documento 3 – Presentación Pública _ Readme.docx
+
+Idea de aplicación de lectura y audiolibros.docx. Y, estás de acuerdo con este prompt de gemini?:
+
+¡Claude, excelente auditoría técnica! Tienes toda la razón y me alegra saber que el Script Clon del actualizador está completamente operativo.
+Vamos a aplicar de golpe estos tres parches finales y a redactar la documentación definitiva para cerrar la versión 2.0 impecable.
+Aplica estas modificaciones exactas en los bloques de ANCLAJE:
+1. CORRECCIONES DE CÓDIGO FINAL (ventana_principal.py, pestana_lectura.py y pestana_ajustes.py)
+Renombrado de Pestaña: En ventana_principal.py (línea 83), cambia definitivamente el nombre de la pestaña de "Modo Grabación" a "Grabación de Fragmentos".
+Integración de local_32 en Lectura: Modifica cargar_voces_usuario() en la pestaña de lectura para que consulte e incluya en el ComboBox de voces las opciones procedentes de cliente_local_32 (puente de Eloquence), asegurando que las usuarias puedan seleccionarlas para leer.
+Filtro de Favoritos en SAPI5: Corrige la inconsistencia en el combo de lectura. Haz que las voces de SAPI5 (local y local_32) respeten de forma estricta el estado de la casilla "Solo favoritas", filtrando la lista mediante voces_favoritas.json exactamente igual que haces con los proveedores de IA.
+2. GENERACIÓN DE documentos/novedades.txt
+Escribe el texto plano definitivo para este archivo, estructurado y directo para lectores de pantalla, reflejando solo la realidad del código:
+Árbol Híbrido en Ajustes: Rediseño con wx.TreeCtrl + wx.Simplebook para una navegación accesible, aislada y sin retrasos de carga.
+Actualización Automatizada (Script Clon): Ciclo completo que detecta versión en GitHub, descarga el ZIP en segundo plano, lanza actualizador.bat y reinicia la app mostrando novedades.
+Compatibilidad SAPI5 de 32 bits: Puente multiproceso auxiliar_sapi32.exe en /bin/ que habilita voces clásicas como Eloquence en la app de 64 bits de forma transparente.
+Anuncios Relámpago y Accesibilidad: Respuestas instantáneas de NVDA con foco de 1x1 para Ctrl+I (páginas virtuales dinámicas a 1800 chars) y Ctrl+S (estado de guardado).
+Selector de Velocidad Escalar: Soporte síncrono para multiplicadores (0.5x - 3.0x) y porcentajes (0-100) entre ajustes y lectura.
+Optimización del Motor: Descarte atómico de hilos (_generacion) para ahorro de APIs y purga automatizada de caché al arranque (límite de 7 días o 50 MB).
+Pestaña de Grabación: Renombrada oficialmente a "Grabación de Fragmentos" enfocada a flujos de REAPER.
+3. ACTUALIZACIÓN DEL MANUAL (Léeme.txt)
+Genera el párrafo de instrucciones para el usuario sobre el soporte de voces local_32, indicando que el puente viene integrado en el portable y no requiere configurar nada en Windows.
+
+A, y por último, dos cosas más. Verifica en el archivo, construir app .py creo que se llama, pues, que al crear el zip, también se creen las carpetas vacías de bacups de los proyectos, y no se si meter ahí, también la carpeta proyectos... ya me dirás que opinas. Y si se nos pasó actualizar el .gitignore, pues también lo puedes actualizar si lo ves conveniente hacerlo

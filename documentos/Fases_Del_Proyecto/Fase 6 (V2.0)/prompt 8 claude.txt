@@ -1,0 +1,17 @@
+prompt 8 claude
+
+¡Espectacular, Claude! Con la lógica del actualizador Script Clon blindada, vamos a rematar los últimos detalles de control de lectura para cerrar oficialmente la versión 2.0 y dejar la rama lista para las pruebas con NVDA.
+Implementemos en paralelo estas tres tareas finales de la fase:
+1.
+Comando de Consulta de Estado de Páginas Virtuales:
+Define un atajo de teclado para la pestaña de lectura que ejecute una consulta de posición por voz nativa (sin abrir diálogos).
+El motor debe calcular las páginas virtuales fijadas a bloques de 1.000 caracteres. Al ejecutar el comando, NVDA debe verbalizar de forma lineal y concisa: "Página X de Y del capítulo. Página A de B del libro."
+2.
+Diálogo Accesible "Ir a página X" y Selector de Velocidad:
+Implementa el diálogo "Ir a página X" en el menú de lectura. Debe abrir un cuadro de diálogo simple con un wx.TextCtrl numérico accesible que acepte la página del capítulo o del libro para saltar el cursor al fragmento de texto exacto.
+Modifica el panel correspondiente para añadir el Selector del Sistema de Velocidad. Debe permitir al usuario alternar mediante un control limpio entre la escala de porcentajes (0-100) y multiplicadores (0.5x - 3.0x) para los deslizadores principales de velocidad de las voces de IA.
+3.
+Script de Construcción del Portable Final (construir_app.py):
+Prepara el script construir_app.py utilizando PyInstaller con la directiva --noconsole para el usuario final.
+El script debe automatizar el empaquetado de la aplicación portátil final en un archivo ZIP limpio, aislando los recursos de desarrollo (como .gitignore, archivos .md, bitácoras, entornos virtuales o tests) y exportando únicamente la estructura portable accesible para el usuario invidente: bin/, configuraciones/ (vacía), documentos/ (solo con ayuda y novedades), recursos/ y el ejecutable único epubtts.exe sin consola.
+Completa estos últimos bloques funcionales de la Fase 6 y actualiza el PR draft. ¡Con esto cerramos la v2.0!

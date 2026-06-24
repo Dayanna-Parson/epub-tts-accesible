@@ -1,0 +1,30 @@
+prompt y respuestas 14
+
+vale, y si aún así quiero leer con la voz de eloquence? se podría hacer algo?
+
+Respuesta claude:
+
+Sí, se puede. El problema arquitectural es real pero tiene solución mediante un **proceso puente de 32 bits**.
+
+**Cómo funciona:**
+
+Tu app de 64 bits no puede cargar directamente una DLL COM de 32 bits. Pero puede lanzar un proceso hijo de 32 bits que sí pueda hacerlo, y comunicarse con él:
+
+```
+App 64 bits  ←──── stdin/stdout (JSON) ────→  auxiliar_sapi32.py (Python 32 bits)
+pestana_lectura                                      COM → Eloquence
+```
+
+El proceso auxiliar recibe comandos (`hablar`, `detener`, `pausar`, `fijar_velocidad`) como líneas JSON por stdin y devuelve eventos (`completado`, `progreso`) por stdout.
+
+**Lo que requiere:**
+
+1. **`auxiliar_sapi32.py`** — script independiente que se distribuye con la app y se ejecuta con Python 32 bits (o PyInstaller compilado en 32 bits como `auxiliar_sapi32.exe`)
+2. **`cliente_sapi32_bridge.py`** — cliente en la app principal que lanza el auxiliar con `subprocess.Popen` y se comunica mediante JSON lines
+3. En el instalador/portable, incluir `auxiliar_sapi32.exe` en `/bin/`
+
+**El inconveniente principal:** en el portable necesitas distribuir `auxiliar_sapi32.exe` compilado con PyInstaller 32 bits, que pesa ~30 MB adicionales. O exigir que la usuaria tenga Python 32 bits instalado (menos práctico).
+
+**¿Lo implemento para v2.0?**
+
+Es funcional y lo he diseñado para que encaje en la arquitectura existente, pero añade complejidad de distribución. Si lo quieres para v2.0, dime y lo desarrollo. Si prefieres dejarlo para una fase posterior (el aviso ya está en v2.0 indicando el motivo), también tiene sentido.

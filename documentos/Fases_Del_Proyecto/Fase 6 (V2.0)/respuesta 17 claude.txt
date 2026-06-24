@@ -1,0 +1,58 @@
+respuesta 17 claude
+
+Voy a verificar punto por punto contra el código real antes de responder nada.
+
+Tengo suficiente para darte una evaluación honesta. Voy punto por punto:
+
+---
+
+**Lo que el documento dice correctamente:**
+
+- **Árbol híbrido Ajustes (punto 1)** — Hecho. El código lo confirma.
+- **Tabulación (punto 2)** — Hecho. El contrato `primer_control`/`ultimo_control` por panel está en su sitio.
+- **Selector de velocidad (punto 4)** — Hecho. El ComboBox en PanelGeneral y `_aplicar_escala_velocidad` existen.
+- **Ctrl+I y Ctrl+G (punto 5)** — Hecho. El anunciador oculto y el diálogo de salto a página están implementados. Lo de las "casillas automáticas en Ajustes" efectivamente se descartó, eso es correcto.
+- **Puente SAPI32** — Hecho. `auxiliar_sapi32.py` + `cliente_sapi32_bridge.py` están en el repo.
+- **Descarte atómico de hilos** — Hecho. `detener()` incrementa `_generacion` como primera instrucción.
+- **Mantenimiento de caché** — Hecho. La rutina `_limpiar_temporales_huerfanos()` en `iniciar_epub_tts.py`.
+- **Bug de favoritos SAPI5** — Real. Te lo confirmo abajo.
+
+---
+
+**Lo que el documento dice MAL:**
+
+**Punto 3 — el actualizador.** Gemini dice que *"el Script Clon se pospone a la v3.0 mediante un TODO en el código."* Eso es **falso**. El Script Clon está completamente implementado: `_hilo_descargar_e_instalar` (línea 423) y `_escribir_y_lanzar_bat` (línea 482) están en `pestana_ajustes.py` y funcionan. Descarga el ZIP, escribe `actualizador.bat`, lo lanza y cierra la app. No hay ningún TODO aplazando esto.
+
+---
+
+**Lo que el documento no menciona pero está pendiente:**
+
+**Punto 6 — el renombrado de pestaña.** `ventana_principal.py:83` dice literalmente `"Modo Grabación"` — **nunca se renombró a "Grabación de Fragmentos"**. Gemini no lo menciona en absoluto, ni como hecho ni como pendiente. Se quedó en el tintero.
+
+**Bug adicional no mencionado:** Las voces `local_32` (Eloquence por el bridge) no aparecen en el combo de voces de la pestaña Lectura. `cargar_voces_usuario()` solo consulta `self.reproductor.cliente_local` (64 bits) pero no `cliente_local_32`. Las usuarias que instalen el bridge no verían sus voces de Eloquence en el combo del modo lectura.
+
+---
+
+**Sobre el bug de favoritos SAPI5 que sí menciona:**
+
+Confirmado y bien descrito. En la pestaña Lectura, `cargar_voces_usuario()` carga **todas** las voces SAPI5 locales sin filtrar por favoritos (líneas 268-272), mientras que las voces neurales sí se filtran por `voces_favoritas.json` (líneas 289-298). Es inconsistente: si tienes 40 voces SAPI5 instaladas, las 40 aparecen en el combo aunque hayas marcado solo 2 como favoritas.
+
+---
+
+**Resumen ejecutivo:**
+
+| Ítem | Estado real |
+|---|---|
+| Árbol Ajustes | ✅ Hecho |
+| Tabulación | ✅ Hecho |
+| Script Clon | ✅ Hecho (Gemini se equivoca) |
+| Selector velocidad | ✅ Hecho |
+| Ctrl+I / Ctrl+G | ✅ Hecho |
+| Renombrar pestaña Grabación | ❌ No hecho, no mencionado |
+| Puente SAPI32 | ✅ Hecho |
+| Descarte atómico hilos | ✅ Hecho |
+| Caché inteligente | ✅ Hecho |
+| Bug favoritos SAPI5 | 🐛 Real, pendiente de corregir |
+| Voces local_32 en combo Lectura | 🐛 Real, pendiente (no mencionado) |
+
+Cuando quieras dime y aplico los dos pendientes reales (renombrado + los dos bugs) para cerrar la v2.0 limpiamente.

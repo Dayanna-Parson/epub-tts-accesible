@@ -1,0 +1,44 @@
+respuesta claude 16
+Primero leo los bloques relevantes para confirmar el estado real del código antes de tocar nada.
+
+Veo que `CheckListCtrlMixin` ya no está en la herencia — necesito buscar si la advertencia viene de otro sitio. También necesito ver dónde está la caché de audio:
+
+El `UserWarning` viene de tres archivos más. Necesito ver también si hay archivos de caché en disco:
+
+Tengo todo lo que necesito. Ahora aplico los 4 cambios.
+
+**Fix 1 y 2: `_al_guardar_global` — sincronizar escala + anunciador NVDA** (en `PestanaAjustesPrincipal`):
+
+Ahora necesito que `cargar_config_salto` llame a `_aplicar_escala_velocidad`. Lo hace ahora solo cuando se alterna manualmente; hay que añadirlo:
+
+**Fix 3: Limpieza inteligente de temporales huérfanos** — los archivos `tfh_*.mp3` que se generan en el directorio temp del sistema:
+
+**Fix 4: Eliminar `CheckListCtrlMixin` de los tres archivos restantes:**
+
+Subido. Ahora respondo tu pregunta sobre las páginas:
+
+---
+
+**Sobre el cálculo dinámico de páginas — confirmado directamente del código:**
+
+Sí, es completamente dinámico. Lo acabo de leer en `pestana_lectura.py:1104-1136`:
+
+- **`total_libro`** se calcula dividiendo la longitud normalizada del texto completo entre `_CHARS_POR_PAGINA = 1800`. Si el libro tiene 600.000 caracteres normalizados → 333 páginas. Si tiene 1.200.000 → 666 páginas. Cada libro da un número diferente.
+
+- **`total_cap`** se calcula de la misma forma pero solo sobre el texto del capítulo actual (`texto_completo[inicio_cap:fin_cap]`). Un capítulo corto de 3.600 chars → 2 páginas. Uno largo de 36.000 → 20 páginas. Completamente variable.
+
+- **La posición del cursor** se mapea proporcionalmente dentro de esa longitud normalizada para calcular `pag_libro` y `pag_cap`.
+
+Lo que hace `_longitud_normalizada()` es colapsar el exceso de espacios y saltos de línea que los EPUB suelen incluir, para que el conteo se parezca más a páginas reales de papel. Sin esa normalización un EPUB con mucho espaciado artificial inflaría artificialmente el conteo.
+
+---
+
+**Resumen de los 4 cambios del commit:**
+
+1. **Sincronización de escala** — Ctrl+S en Ajustes llama `cargar_config_salto()` en la pestaña Lectura; esta ahora invoca `_aplicar_escala_velocidad()` para reconfigurar el slider (rango 0–100 o 0–25, etiqueta, HelpText) al instante sin reiniciar.
+
+2. **NVDA verbaliza "Guardado"** — reemplazado `StaticText.SetLabel` (que NVDA ignora) por el patrón `_anunciador`: un TextCtrl oculto 1×1 que recibe el foco momentáneamente, hace que NVDA lo lea, y en 300 ms el foco vuelve al control anterior.
+
+3. **Limpieza inteligente de caché** — al arrancar, se escanean archivos `tfh_*.mp3/wav` huérfanos en el temp del sistema. Se eliminan los de más de 7 días, y si aun así supera 50 MB se eliminan los más antiguos hasta bajar del umbral.
+
+4. **UserWarning eliminado definitivamente** — `CheckListCtrlMixin.__init__()` ya no se llama en ningún archivo: `dialogo_troceador.py`, `ventana_proyectos.py` y `pestana_grabacion.py` usan solo `EnableCheckBoxes(True)`.

@@ -1,0 +1,48 @@
+Respuesta claude 3
+
+Voy a leer el CLAUDE.md y el archivo actual de la pestaña de ajustes antes de generar el esqueleto.
+
+Tengo toda la información necesaria. Voy a crear la rama de trabajo y escribir el esqueleto estructural completo.
+
+Bien. Ahora escribo el esqueleto estructural completo de `pestana_ajustes.py`.
+
+Ahora hago el commit y lo subo a la rama:
+
+El PR #5 está limpio: sin checks de CI configurados en el repositorio y sin comentarios de revisión pendientes. Todo en orden por ahora.
+
+---
+
+Aquí tienes el resumen de lo que se ha hecho en esta sesión:
+
+**Rama creada:** `fase-6-V2.0`
+**PR draft abierto:** [#5 — Fase 6 V2.0: esqueleto híbrido de pestana_ajustes.py](https://github.com/Dayanna-Parson/epub-tts-accesible/pull/5)
+
+---
+
+### Qué contiene el esqueleto
+
+**Cambio estructural central — `PestanaAjustes`:**
+- `wx.ListBox` → `wx.TreeCtrl` (`arbol_cat`) con todas las ramas expandidas por defecto al recibir el foco.
+- Intercepción de Tab en el árbol: salta directamente al `primer_control` de la habitación activa, sin trampa en sizers.
+- `wx.Simplebook` con **9 habitaciones** preinicializadas (evita punteros nulos en el handler global de Tab).
+
+**Nueva jerarquía de clases de voces:**
+- `PanelProveedorIA` — base parametrizada con secuencia lineal de Tab estricta: Idioma → Solo favoritas → Solo nuevas voces → Búsqueda → Lista → Botonera. Favoritos locales e independientes por panel.
+- `PanelAzure`, `PanelDeepgram`, `PanelPolly`, `PanelElevenLabs` heredan de ella.
+- `PanelSapi5` — versión simplificada para voces locales (sin idioma ni voces nuevas).
+- `PanelDiccionario` — el editor de pronunciación sale del diálogo y se convierte en habitación propia.
+
+**Contrato de accesibilidad en cada panel:**
+- `self.primer_control` — atributo de instancia.
+- `@property ultimo_control` — para que `ventana_principal.py` cierre el ciclo de Tab de forma dinámica.
+
+**Motor intacto:** `voces_favoritas.json`, notificación a `PestanaGrabacion`, `ReproductorVoz` y todas las llamadas HTTP se conservan exactamente igual.
+
+**Mejoras adicionales:**
+- Escritura de `ajustes.json` ahora atómica (`write tmp` + `os.replace`).
+- `logger.exception(...)` en todos los `except` (sin `except: pass`).
+- Todos los bloques delimitados con ANCLAJE documentados.
+
+---
+
+El siguiente paso natural será implementar el contenido funcional de `cargar_datos()` en cada panel de proveedor y conectar `ventana_principal.py` al nuevo contrato `primer_control` / `ultimo_control`. Dime cuándo quieres continuar.

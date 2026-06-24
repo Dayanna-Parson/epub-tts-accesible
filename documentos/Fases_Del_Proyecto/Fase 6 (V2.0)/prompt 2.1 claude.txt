@@ -1,0 +1,15 @@
+Excelente análisis técnico, Claude. Has captado a la perfección el propósito de la arquitectura híbrida y tus soluciones para delegar 'ultimo_control' en la página activa y expandir el árbol por defecto son impecables.
+
+Tomamos las siguientes decisiones de diseño basadas en tus riesgos identificados para que puedas proceder:
+
+1. EL MODELO DEL DICCIONARIO (Punto 2):
+Optamos por un modelo con botón explícito de "Guardar Cambios" (Alt+G) situado al final del panel del Diccionario, acompañado de un botón "Restablecer/Cancelar". No queremos guardado automático al vuelo. Si el usuario cambia de categoría en el árbol sin guardar, se le mostrará un diálogo accesible de confirmación ("Hay cambios sin guardar en el diccionario. ¿Deseas guardarlos antes de cambiar de sección?").
+
+2. REFRESCO CRUZADO Y PRECAUCIONES (Puntos 1 y 3):
+- Implementa el diccionario de mapeo { "azure": pag_azure, "deepgram": pag_deepgram, ... } en PestanaAjustes para que 'al_comprobar()' refresque únicamente el panel del proveedor involucrado de forma quirúrgica.
+- Asegura la inicialización temprana de las habitaciones para que el Tab handler global de VentanaPrincipal jamás consulte un 'ultimo_control' nulo o no inicializado.
+
+Procedimiento de ejecución:
+Tienes luz verde para comenzar la reestructuración completa de 'app/interfaz/pestana_ajustes.py' e inyectar el cambio de 'self.primer_control = self.arbol_cat' en 'ventana_principal.py'. 
+
+Implementa la clase base 'PanelProveedorIA' para Azure, Deepgram, Polly y ElevenLabs con las casillas de favoritos y voces nuevas integradas de forma lineal como acordamos. SAPI5 compartirá el diseño pero libre de credenciales de red. Hazlo de forma limpia y estructurada. Avísanos cuando los archivos estén listos y subidos a GitHub.

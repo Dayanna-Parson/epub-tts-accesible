@@ -1,0 +1,64 @@
+respuesta claude 9
+
+Buenas preguntas, y hay un bug real que señalar. Voy a responder primero y luego lo corrijo.
+
+---
+
+**Estructura del portable tras una actualización** — sí, exactamente lo que describes:
+
+```
+epub-tts-accesible/
+├── configuraciones/     ← preservada siempre (ajustes, claves, proyectos)
+├── Grabaciones_Epub-TTS/ ← preservada siempre
+├── bin/                 ← preservada siempre (FFmpeg)
+├── documentos/          ← novedades.txt y manual se actualizan con cada versión
+├── recursos/            ← se actualiza (iconos, sonidos, version.json)
+├── app/                 ← se actualiza (código)
+├── epubtts.exe          ← se actualiza
+└── INICIAR_APP.bat      ← preservada
+```
+
+---
+
+**El bug: `recursos/` está en `_PRESERVAR` del .bat**
+
+En `_escribir_y_lanzar_bat` metí `recursos` en la lista de preservados. Eso significa que `recursos/version.json` **nunca se actualizaría** tras la primera instalación y el comprobador siempre vería la misma versión local. Hay que sacarlo.
+
+**El problema de olvidar actualizar `version.json`**
+
+El actualizador actual no tiene salvaguarda: si subes código a `main` sin tocar `version.json`, los usuarios nunca reciben la notificación. La solución correcta es un script `subir_version.py` que sea el único camino para crear releases — lo hace todo solo.
+
+Voy a corregir los dos problemas ahora:
+
+Ahora también hay que alinear las exclusiones del `robocopy` en el .bat con esta misma lista:
+
+Ahora creo `subir_version.py` — el único punto de entrada para crear una release:
+
+PR actualizado con commit `f9a76f7`. Resumen de lo corregido:
+
+---
+
+**Bug corregido — `recursos/` ya no está preservada en el .bat**
+
+Antes `recursos/version.json` nunca se actualizaba, así que el comprobador siempre veía la misma versión local y nunca notificaba futuras actualizaciones. Ahora solo se preservan los datos reales del usuario: `configuraciones/`, `Grabaciones_Epub-TTS/`, `bin/` e `INICIAR_APP.bat`.
+
+---
+
+**`subir_version.py` — el olvido ya no puede ocurrir**
+
+El flujo de publicación ahora es:
+
+```
+python subir_version.py minor     # 1.2.0 → 1.3.0 (o patch, major, o 2.0.0)
+# edita novedades.txt con los cambios
+git push origin main
+# crea el release en GitHub y sube el ZIP del portable
+```
+
+Lo que hace solo:
+1. Actualiza `recursos/version.json` con la versión nueva y la fecha
+2. Añade la cabecera `=== v2.0.0 (23/06/2026) ===` a `novedades.txt` si no existe
+3. Hace el commit automático con mensaje estándar
+4. Muestra los tres pasos siguientes sin hacer el push nunca solo
+
+Para ponerse al día ahora mismo: `python subir_version.py 2.0.0` desde la raíz del proyecto.

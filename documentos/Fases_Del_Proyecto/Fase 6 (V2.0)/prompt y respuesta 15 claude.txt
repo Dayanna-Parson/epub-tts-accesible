@@ -1,0 +1,54 @@
+prompt y respuesta 15 claude
+
+si, lo quiero que lo hagas ahora, pero no e entendido, tengo que instalar maualmente yo algo? podré compilar mi app en 64 y compartirlas con mis usuarios, sin que necesiten hacer nada?
+
+respuesta:
+
+Antes de implementar, déjame ver cómo `reproductor_voz.py` selecciona el motor, para diseñar la integración correctamente:
+
+Ahora tengo todo lo que necesito. El plan es:
+
+**Para la usuaria (tú):** solo tienes que compilar `auxiliar_sapi32.exe` una vez con Python 32 bits e incluirlo en `/bin/`. Los usuarios no instalan nada — el exe va dentro del portable.
+
+**Arquitectura:**
+- `auxiliar_sapi32.py` → proceso independiente 32 bits, habla JSON por stdin/stdout
+- `cliente_sapi32_bridge.py` → cliente en tu app 64 bits que lanza el auxiliar
+- `reproductor_voz.py` → cuando `proveedor_id == "local_32"`, usa el bridge en vez de SAPI5
+- `cliente_sapi5.py` → cuando falla activación de voz, intenta el bridge automáticamente
+
+Ahora integro el bridge en `reproductor_voz.py`: importación + routing por `proveedor_id == "local_32"`:
+
+Ahora el bloque `CONFIGURACION_VOZ_ACTIVA` que enruta según proveedor:
+
+También hay que actualizar `_elegir_motor_con_cuota` para que `local_32` no entre en la lista de proveedores de IA y caiga igual que `local`:
+
+Ahora hay que actualizar también el bloque `cargar_texto` donde decide si usar `hablar_con_callback` o `hablar` para voces locales — `local_32` debe seguir la misma rama:
+
+Ahora `cliente_sapi5.py` — cuando detecta falla de voz 32 bits, en lugar de solo mostrar un aviso, también puede intentar el bridge automáticamente. Actualizo `_avisar_voz_incompatible` para ofrecer activar el bridge:
+
+Ahora hay que hacer que las voces 32-bit aparezcan en el selector de voces. El `cliente_nube_voces.py` o la pestaña de ajustes llaman a `obtener_voces()` de cada cliente. Necesito que `ClienteSapi32Bridge.obtener_voces()` sea consultado también. Veamos dónde se recopilan las voces locales:
+
+Subido. Aquí está el resumen claro de lo que tienes que hacer tú una sola vez, y lo que obtienen tus usuarias:
+
+---
+
+**Lo que haces tú (una vez, en tu máquina):**
+
+1. Instala Python 32 bits (python.org → descargar el instalador x86)
+2. En esa instalación 32 bits, instala las dependencias:
+   ```
+   pip install comtypes pyinstaller
+   ```
+3. Compila el auxiliar:
+   ```
+   python -m PyInstaller --noconsole --onefile --name auxiliar_sapi32 auxiliar_sapi32.py
+   ```
+4. Copia `dist/auxiliar_sapi32.exe` a la carpeta `/bin/` de tu portable
+5. Ya. No vuelves a hacerlo salvo que cambies `auxiliar_sapi32.py`
+
+**Lo que obtienen tus usuarias:**
+
+- Nada que instalar. El exe va dentro del ZIP del portable
+- Las voces de Eloquence aparecen en la lista de voces locales marcadas como `local_32`
+- Si seleccionan una voz Eloquence, la app lanza el proceso auxiliar en segundo plano de forma transparente
+- Si no tiene `auxiliar_sapi32.exe` en `/bin/` (p. ej. versión sin ese módulo), la app muestra un mensaje informativo en lugar de fallar silenciosamente

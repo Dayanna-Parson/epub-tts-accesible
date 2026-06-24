@@ -1,0 +1,24 @@
+Prompt 16
+
+
+¡Claude, vamos a cerrar definitivamente la versión 2.0 solucionando los últimos flecos de sincronización entre pestañas y optimizando el mantenimiento de la caché!
+Aplica estas correcciones exactas en los bloques de ANCLAJE:
+1.
+Sincronización de Escala de Velocidad (pestana_lectura.py y pestana_ajustes.py)
+El slider de velocidad en el modo lectura sigue mostrando porcentajes aunque en Ajustes se elija la escala por puntos.
+Solución: Haz que al pulsar Ctrl+S en la pestaña de ajustes, se invoque inmediatamente un método de refresco en la pestaña de lectura (ej. self.pestana_lectura.cargar_config_salto()) que ejecute _aplicar_escala_velocidad() al vuelo para actualizar los límites (0-25 o 0-100), la etiqueta y el SetHelpText del slider de lectura sin necesidad de reiniciar la app.
+2.
+Verbalización Real de Guardado (pestana_ajustes.py)
+El control lbl_estado actual no es verbalizado por NVDA. Modifica su inicialización para asignarle el rol de accesibilidad wx.ACCESSIBLE_ROLE_ALERT o utiliza un evento directo de notificación de accesibilidad para que el lector de pantalla cante inmediatamente "Guardado" al pulsar Ctrl+S.
+3.
+Mantenimiento Inteligente de Caché (iniciar_epub_tts.py o reproductor_voz.py)
+No vacíes la caché por completo al cerrar la app, ya que se perderían las pre-descargas útiles. En su lugar, implementa una función de limpieza automática al arranque o cierre que escanee la carpeta de caché de audio y elimine únicamente los archivos .wav o .mp3 temporales que tengan más de 7 días de antigüedad o si la carpeta supera un límite estricto de 50 MB. Los archivos de configuración de voces (voces_disponibles.json) nunca deben borrarse.
+4.
+Eliminación Total del Redundant UserWarning
+Revisa minuciosamente el archivo pestana_ajustes.py. El aviso de CheckListCtrlMixin sigue apareciendo porque la clase o su importación residual permanecen en las primeras líneas. Extírpalo por completo del código.
+Entrégame los bloques limpios para consolidar la rama. ¡Dejemos la v2.0 impecable!
+
+
+A, otra cosa. Has tenido en cuenta también, que, no todos los libros tienen las mismas páginas, no tienen el mismo número de páginas quiero decir, y que todos los capítulos no tienen la misma extensión?
+Según gemini, lo has hecho así.... la app calcula dinámicamente la extensión de cada libro y capítulo. Pero, me gustaría también preguntártelo a ti, porque tienes acceso y puedes leeer en tiempo real todo el código, y solo  para que me lo confirmes.
+

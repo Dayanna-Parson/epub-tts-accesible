@@ -1,0 +1,35 @@
+respuesta claude 8
+
+Voy a leer los archivos clave antes de tocar nada.
+
+Ahora tengo el contexto completo. Ejecuto las tres tareas en paralelo — dos ediciones en `pestana_lectura.py` y la reescritura de `construir_app.py`:
+
+Ahora tengo el mapa completo. Ejecuto los tres cambios:
+
+**Tarea 1+2: `CONFIGURACION_ATAJOS_TECLADO` + `NAVEGACION_TEXTO_Y_SALTOS` en pestana_lectura.py**
+
+Ahora reemplazo `iniciar_ir_a_porcentaje` → `iniciar_ir_a_pagina` con el diálogo accesible de páginas virtuales, y añado el selector de escala de velocidad, dentro de `NAVEGACION_TEXTO_Y_SALTOS`:
+
+Ahora reescribo `construir_app.py` completo con PyInstaller:
+
+PR actualizado con commit `b615ca2`. Resumen de los tres bloques entregados:
+
+---
+
+**1 — Páginas virtuales + anuncio NVDA (`PAGINAS_VIRTUALES`)**
+
+- `_calcular_paginas()` divide el texto en bloques de 1 000 caracteres y calcula `pag_cap / total_cap / pag_libro / total_libro` usando `posiciones_capitulos` para detectar los límites del capítulo activo.
+- `anunciar_pagina_actual()` escribe directamente en `lbl_progreso.SetLabel()` → NVDA lo verbaliza al vuelo sin ningún diálogo: *"Página 3 de 12 del capítulo. Página 47 de 280 del libro."*
+- Atajo: `Ctrl+I`.
+
+**2 — Diálogo «Ir a página X» (`DIALOGO_IR_A_PAGINA`) + selector de escala**
+
+- El diálogo tiene dos `TextCtrl` independientes (página del capítulo / del libro); el usuario rellena el que quiera y deja el otro vacío. Prioriza el del libro si ambos tienen valor. Al saltar llama a `anunciar_pagina_actual()`.
+- `alternar_escala_velocidad()` conmuta entre **porcentaje (0–100)** y **multiplicadores (0.5×–3.0×)** reconfigurando el slider en tiempo real, actualizando la etiqueta y el `SetHelpText` para que NVDA lea la escala correcta. `obtener_velocidad_normalizada()` siempre devuelve 0–100 al reproductor.
+- La escala activa se persiste en `ajustes.json` con escritura atómica.
+
+**3 — `construir_app.py` reescrito (`SCRIPT_CONSTRUCCION_PORTABLE`)**
+
+- `python construir_app.py` ejecuta 6 pasos: limpiar, PyInstaller (`--noconsole --onedir`), copiar recursos, crear `configuraciones/` de fábrica, comprimir en ZIP versionado, limpiar temporales.
+- El ZIP resultante es `dist/epub-tts-accesible-v1.2.0.zip` con carpeta raíz `epub-tts-accesible-v1.2.0/` lista para descomprimir y ejecutar.
+- Excluye: `.git`, `.venv`, `tests`, archivos `.md`, `.log`, `.spec` y el propio script de construcción.

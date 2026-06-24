@@ -1,0 +1,33 @@
+prompt claude 6
+¡Excelente diagnóstico con el foco del árbol y la limpieza del UserWarning, Claude! La interfaz del árbol híbrido ha quedado impecable y la lectura con NVDA ahora es fluida y directa.
+Procedamos con el Paso 4: Implementar el sistema real de actualizaciones automáticas portables mediante el patrón de "Script Clon", asegurando la máxima accesibilidad por voz para el usuario en cada etapa del proceso.
+Requisitos específicos para el desarrollo:
+1.
+Flujo de Accesibilidad Verbalizado en la UI (PanelGeneral):
+Asegura que el método _al_buscar_actualizaciones y su correspondiente callback en el hilo de fondo utilicen de forma intensiva self.lbl_progreso.SetLabel() vía wx.CallAfter para cantar cada estado del proceso.
+Los estados obligatorios que NVDA debe verbalizar al vuelo son:
+Al arrancar: "Comprobando versiones en el repositorio de GitHub..."
+Si hay una versión nueva y el usuario acepta la descarga en el diálogo: "Descargando el archivo de actualización en segundo plano, por favor espera..."
+Al terminar la descarga: "Descarga completada con éxito. Preparando la instalación..."
+2.
+Descarga y Preparación del Entorno Temporal:
+Si el usuario confirma la actualización, el hilo secundario de red debe descargar el archivo .zip de la última versión desde GitHub de forma asíncrona (usando la librería requests que ya está en el stack).
+Guarda el archivo temporalmente en una carpeta segura /temp o /actualizacion dentro de RAIZ (obtenida de config_rutas.py).
+3.
+Generación del Script Clon Volátil (actualizador.bat):
+Justo después de completar la descarga de forma exitosa, la aplicación debe escribir un archivo de procesamiento por lotes de Windows (actualizador.bat) en la raíz del proyecto.
+El script .bat debe programarse para ejecutar la siguiente secuencia externa:
+a.
+Un retardo inicial corto (timeout /t 2 /nobreak) para garantizar que la aplicación principal se haya cerrado del todo.
+b.
+Borrar los archivos antiguos del portable (excepto la carpeta /configuraciones/ para mantener intactos ajustes.json, claves_api.json y proyectos.json).
+c.
+Descomprimir el contenido del nuevo .zip temporal en la raíz del portable.
+d.
+Volver a arrancar la aplicación de forma automática llamando a python iniciar_tiflohistorias.py.
+e.
+Auto-eliminarse del disco (del %0) para no dejar basura residual.
+4.
+Cierre de Seguridad Atómico:
+Tras escribir y disparar el proceso externo del .bat mediante subprocess.Popen, la aplicación principal debe invocar inmediatamente a wx.GetTopLevelParent(self).Close() para liberar los descriptores de archivos de Windows y permitir que el script clon sobreescriba el entorno sin errores de "archivo en uso".
+Implementa esta lógica de automatización respetando los bloques de ANCLAJE de las actualizaciones en pestana_ajustes.py y confírmame cuando el PR draft esté actualizado para realizar las pruebas de compilación. ¡Entrégame el código!

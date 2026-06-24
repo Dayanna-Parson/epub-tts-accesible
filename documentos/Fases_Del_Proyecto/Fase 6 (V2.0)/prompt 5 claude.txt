@@ -1,0 +1,23 @@
+prompt 5 claude
+¡Excelente trabajo, Claude! Los ganchos de extensión y la inyección del idioma del libro en el panel general han quedado perfectos.
+Para cerrar por completo la reestructuración de la pestaña de Ajustes y poder descargar la rama fase-6-V2.0 para realizar pruebas reales de teclado y accesibilidad con NVDA, procedamos con el Paso 3: Completar el contenido funcional de las habitaciones restantes en pestana_ajustes.py, respetando estrictamente los bloques de ANCLAJE.
+Requisitos para cada panel pendiente:
+1.
+PanelSapi5 (Voces Locales):
+Implementa la carga nativa de las voces SAPI5 instaladas en el Windows del usuario.
+Al ser voces locales, este panel debe quedar simplificado: libre de combos de idioma de la nube o casillas de voces nuevas. Solo mostrará la lista (ListCtrl) y respetará el guardado/marcado en voces_favoritas.json al pulsar Espacio.
+2.
+PanelClaves (Credenciales y API Keys):
+Agrupa verticalmente todos los campos de texto protegidos para las llaves de Azure, Deepgram, Polly y ElevenLabs junto con sus botones de ayuda.
+Conéctalo de forma segura a tus funciones atómicas cargar_claves() y guardar_claves(). El botón final debe procesar el guardado de forma limpia.
+Ten siempre presente como estaba la pestaña ajustes antigua, para que no se quede ningún fleco suelto. Y además, recuerdas que en el apartado de proovedores, estaba al lado de cada uno, el botón de comprobar y descargar?
+
+3.
+PanelDiccionario (Reglas de Pronunciación):
+Transfiere toda la lógica del antiguo diálogo del diccionario a esta habitación fija.
+Debe renderizar el ListCtrl con las columnas "Palabra original" y "Sustitución fonética", junto con la botonera lateral (Añadir, Editar, Eliminar).
+Aplica el modelo de UX acordado: incluye un botón explícito al final para "Guardar Cambios" (Alt+G). Si el usuario intenta cambiar de categoría en el árbol teniendo cambios pendientes sin guardar en la lista del diccionario, intercepta el evento y muestra el diálogo accesible de confirmación.
+4.
+PanelAtajos (Atajos de Teclado):
+Muda intacta la lógica del asignador de comandos con su lista de atajos actual y el botón de captura de teclas rápidas, asegurando que no se rompa la comunicación con el gestor de atajos global.
+Completa la maquetación y la lógica de estos bloques de ANCLAJE. Con esto tendremos la interfaz del árbol totalmente operativa para compilar y probar. ¡Entrégame el código revisado!

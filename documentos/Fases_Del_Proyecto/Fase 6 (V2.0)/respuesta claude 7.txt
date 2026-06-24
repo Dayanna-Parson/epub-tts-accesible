@@ -1,0 +1,53 @@
+respuesta claude 7
+
+
+Buenas preguntas de arquitectura. Te lo explico claro:
+
+---
+
+**Lo que GitHub genera automáticamente en cada release**
+
+GitHub crea dos ZIPs de código fuente (`Source code.zip` y `.tar.gz`) en cada release, pero son solo el código Python puro — sin intérprete, sin dependencias. Un usuario final no puede ejecutarlos directamente.
+
+**Para un portable de usuario final hay dos caminos:**
+
+| Enfoque | Qué descarga el usuario | Cómo se actualiza |
+|---|---|---|
+| **Python portable** (carpeta) | ZIP con `python.exe` embebido + código fuente + `pip install` ya hecho | El actualizador descarga solo los archivos `.py` nuevos (lo que tienes ahora) |
+| **Compilado con PyInstaller** | ZIP con `App.exe` + recursos, sin Python visible | El actualizador tiene que descargar el nuevo `.exe` compilado, que hay que subir a mano o con CI |
+
+---
+
+**Qué encaja mejor con lo que describes**
+
+Dices "carpeta portable, como está ahora, con el `.bat` que abre la consola". Eso es el **Python portable embebido** — la carpeta contiene:
+
+```
+epub-tts-accesible/
+├── python/          ← Python 3.12 embebido (portable, sin instalar)
+├── app/             ← código fuente (lo que toca el actualizador)
+├── configuraciones/ ← datos del usuario (nunca se toca)
+├── bin/             ← FFmpeg
+├── recursos/
+├── INICIAR_APP.bat  ← lanza python/python.exe iniciar_epub_tts.py
+```
+
+Con este modelo el actualizador que ya tienes **funciona perfectamente**: descarga el ZIP de GitHub main, sobreescribe solo la carpeta `app/` y los archivos raíz, y deja intactos `python/`, `configuraciones/` y `bin/`. El usuario nunca instala Python.
+
+---
+
+**Lo que hay que hacer una vez para preparar ese portable**
+
+1. Descargar [Python embebido para Windows](https://www.python.org/downloads/windows/) (el paquete `python-3.12.x-embed-amd64.zip`), descomprimirlo en `/python/`
+2. Añadir `pip` al embebido y hacer `python/python.exe -m pip install -r requirements.txt --target python/Lib/site-packages`
+3. Comprimir toda la carpeta como `epub-tts-accesible-v1.2.0.zip` y subirla como asset en el release de GitHub
+
+El actualizador entonces no necesita cambiar nada — ya descarga el ZIP de `main` que solo contiene el código fuente, que es exactamente lo que hay que reemplazar.
+
+---
+
+**Sobre la consola CMD**
+
+El `INICIAR_APP.bat` actual la abre porque usa `python.exe` (con consola). Si en algún momento quisieras ocultarla usarías `pythonw.exe`, pero dijiste que te gusta así — sin cambios.
+
+¿Quieres que prepare el `requirements.txt` y el script de construcción del portable (`construir_portable.py`) para automatizar ese proceso de empaquetado?

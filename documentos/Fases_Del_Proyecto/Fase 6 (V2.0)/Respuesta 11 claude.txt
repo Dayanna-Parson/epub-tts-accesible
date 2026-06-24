@@ -1,0 +1,28 @@
+Respuesta 11 claude
+
+Voy bien, gracias. Dos correcciones claras:
+
+1. `Ctrl+S` debe anunciar "Guardado" por voz además de reproducir el sonido.
+2. "Ir a página" va en el menú de barra de la app (el que ya tiene Abrir/Recientes/Buscar/Ir a porcentaje), no en un menú contextual del texto.
+
+Busco el menú de la ventana principal:
+
+Perfecto. Tengo los dos puntos exactos. Tres cambios quirúrgicos:
+
+**1. `ventana_principal.py` — renombrar la entrada del menú y apuntar al nuevo método**
+**2. `ventana_principal.py` — actualizar `al_ir_a_porcentaje` y `_ACCIONES`**
+**3. `pestana_ajustes.py` — `_al_guardar_global` anuncia "Guardado" por voz**
+
+También actualizo la acción en `_ACCIONES` del gestor de atajos configurables:
+
+Ahora el anuncio de voz en `Ctrl+S`. Leo el bloque exacto:
+
+Necesito también una referencia a un `StaticText` de estado en la pestaña de Ajustes para que NVDA lo lea. El panel raíz no tiene `lbl_progreso` propio — lo más limpio es añadir uno en el `__init__` de `PestanaAjustesPrincipal` y usarlo en `_al_guardar_global`:
+
+Ahora elimino el `EVT_CONTEXT_MENU` del `txt_contenido` y el bloque `MENU_CONTEXTUAL_TEXTO` de `pestana_lectura.py`, ya que el menú va en la barra y no en el área de texto:
+
+Listo, commit `910cdbd`. Los tres cambios:
+
+- **Ctrl+S** ahora reproduce `SUCCESS` **y** escribe `"Guardado."` en `lbl_estado` (un `StaticText` invisible en la parte inferior de la pestaña) → NVDA lo verbaliza automáticamente al cambiar.
+- **Menú de barra**: la entrada `"Ir a porcentaje"` pasa a llamarse `"Ir a página / porcentaje...\tCtrl+G"` y llama a `iniciar_ir_a_pagina()`. El gestor de atajos configurables también queda actualizado.
+- **Menú contextual eliminado**: ya no hay clic derecho en el texto — el acceso queda solo en la barra de menú y en `Ctrl+G`, que es donde debe estar.

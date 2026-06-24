@@ -1,0 +1,55 @@
+respuesta claude 13
+
+Primero te respondo sobre Eloquence y Ctrl+I, luego leo los archivos y ejecuto todos los cambios.
+
+---
+
+**Eloquence 32 bits — dos opciones, te doy mi recomendación:**
+
+- **Opción A — Proceso puente 32 bits**: un script `auxiliar_sapi32.py` compilado con PyInstaller 32-bit que recibe texto por stdin y habla con SAPI5. La app principal (64-bit) lo lanza como subproceso. Funciona, pero añade un exe extra al portable y latencia de IPC.
+- **Opción B — Detección y aviso al usuario**: detectar en `cliente_sapi5.py` si una voz falla por arquitectura y mostrar un mensaje claro en la UI.
+
+**Mi recomendación**: Opción A a largo plazo, pero para la v2.0 la B es la correcta — es la v2.0, no la v3.0. Añadir un puente de procesos es trabajo de una fase separada. Lo dejo documentado con un TODO en el código.
+
+**Ctrl+I — el problema real**: `StaticText.SetLabel()` no dispara evento de accesibilidad en NVDA a menos que el control tenga el foco. La solución probada es un `TextCtrl` oculto de lectura: al actualizarlo y darle foco momentáneo NVDA lo lee siempre, y en 200ms el foco vuelve al control anterior.
+
+Ahora leo todo lo necesario:
+
+Tengo el mapa completo. Ejecuto los 4 archivos en paralelo:
+
+Listo. Ejecuto los cuatro cambios:
+
+**1. `pestana_lectura.py` — `_anunciador`, `_calcular_paginas` con normalización y `_CHARS_POR_PAGINA=1800`, vaciado de cola en pausa**
+
+Ahora el vaciado de cola en pausa — añadir `_precarga_solicitada = False`:
+
+**2. `reproductor_voz.py` — `detener()` incrementa `_generacion` primero; `precargar_fragmento()` respeta generación**
+
+**3. `pestana_ajustes.py` — selector de escala de velocidad en `PanelGeneral` + `guardar_todo`**
+
+Ahora conectar `combo_escala_vel` a `guardar_todo()`:
+
+Ahora voy a revisar el estado actual del branch y hacer commit + push. También necesito implementar la detección de Eloquence 32-bit en `cliente_sapi5.py`.
+
+Ahora añado la detección de voces 32-bit de Eloquence en `cliente_sapi5.py`. Primero veo cómo se llama desde el reproductor:
+
+Añado la detección de voces 32-bit en `cambiar_voz_por_nombre`. Si la activación falla con un error COM, aviso al usuario mediante `wx.CallAfter`:
+
+Ahora añado el método `_avisar_voz_incompatible` antes de `detener`:
+
+Subido. Resumen de lo que está en este commit:
+
+**`pestana_lectura.py`**
+- `_anunciador`: TextCtrl oculto 1×1 que recibe foco momentáneo cuando se pulsa Ctrl+I → NVDA anuncia la página inmediatamente sin que el usuario tenga que tabular hasta `lbl_progreso`
+- `_CHARS_POR_PAGINA = 1800` + `_longitud_normalizada()` con regex → el libro de 432 páginas ya no da 701
+- Al pausar, resetea `_idx_fragmento_actual` y `_precarga_solicitada` para que al reanudar no se solapen fragmentos
+
+**`reproductor_voz.py`**
+- `detener()` incrementa `_generacion` como primera instrucción → invalida todos los hilos de síntesis en vuelo antes de cerrar conexiones HTTP
+- `precargar_fragmento()` captura la generación al lanzarse y llama `invalidar_cache()` si ya no es válida → elimina los 7 segundos de silencio causados por audio precargado de una voz anterior
+
+**`pestana_ajustes.py`**
+- Selector "Porcentaje (0–100)" / "Multiplicador por puntos (0.5×–3.0×)" visible en PanelGeneral con persistencia en `ajustes.json`
+
+**`cliente_sapi5.py`**
+- Si `self.motor.Voice = tok` lanza excepción COM (Eloquence CodeFactory 32 bits), muestra `wx.MessageBox` accesible explicando la incompatibilidad y qué alternativas tiene la usuaria

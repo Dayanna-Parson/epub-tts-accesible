@@ -1,0 +1,18 @@
+¡Claude, vamos a aplicar la solución definitiva y limpia para la versión 2.0 solucionando las regresiones de foco, eliminando comandos redundantes y unificando el sistema de lectura de forma accesible con NVDA en pestana_ajustes.py y pestana_lectura.py!
+Aplica estas modificaciones completas respetando los bloques de ANCLAJE estrictamente:
+1. REPARACIÓN DEL FOCO Y ELIMINACIÓN DEL USERWARNING (pestana_ajustes.py)
+Foco del Árbol: En el __init__, declara una bandera self._bloqueo_anuncio = False. En _al_cambiar_nodo, tras ejecutar self.panel_derecho.ChangeSelection(indice), fuerza el foco de vuelta de inmediato con self.arbol_cat.SetFocus(). Usa la bandera de bloqueo para evitar que el re-enfoque provoque que NVDA vuelva a anunciar el ítem de forma duplicada.
+Limpieza de Consola: En la declaración de la clase principal ListaVocesCheck (línea 15), elimina cualquier rastro de herencia o inicialización del mixin antiguo. Debe heredar y usar exclusivamente self.EnableCheckBoxes(True) y listmix.ListCtrlAutoWidthMixin de forma nativa.
+Atajo Global de Guardado: Añade el acelerador Ctrl+S enlazado al botón de guardado general. Al pulsar Ctrl+S, debe procesar el guardado atómico de la configuración en disco (modificando solo las claves alteradas sin sobreescribir el resto) y reproducir el sonido SUCCESS.
+2. UNIFICACIÓN DE SALTO (Ctrl+G), VELOCIDAD Y MENÚ CONTEXTUAL (pestana_lectura.py)
+Diálogo Unificado de Salto (Ctrl+G): Modifica iniciar_ir_a_pagina() para que abra un único diálogo accesible que contenga tres campos editables independientes (TextCtrl): 1) Página del capítulo, 2) Página del libro, y 3) Porcentaje global del libro (0-100). El usuario rellenará el campo deseado y dejará los demás vacíos. Si introduce porcentaje, procesa el salto clásico a la posición equivalente.
+Atajo de Consulta (Ctrl+I): Vincula el acelerador Ctrl+I para llamar a self.anunciar_pagina_actual() y cantar la posición (capítulo y libro) por voz nativa a través del lbl_progreso sin abrir ventanas.
+Deslizador de Velocidad Semántico: Si el usuario usa el modo Multiplicador (por puntos), configura el slider para que al mover las flechas, el SetHelpText y la etiqueta verbalicen directamente el valor real plano con su estado limpio para NVDA: 1.0 (Normal), 1.5 (Rápida), 2.0 (Muy rápida), etc., omitiendo números de pasos internos. El motor de audio seguirá recibiendo el valor normalizado 0-100 por debajo.
+Eliminación de Encabezados Redundantes (H / Shift+H): Elimina por completo las funciones de salto de encabezados por texto editable, ya que entran en conflicto con la inserción y la navegación estructural está perfectamente cubierta por el árbol de índice nativo accesible.
+Menú Contextual: Añade un evento wx.EVT_CONTEXT_MENU al área de texto self.txt_contenido para desplegar un wx.Menu con la opción "Ir a página / porcentaje... (Ctrl+G)" conectada al diálogo unificado.
+3. ACTUALIZACIÓN DEL LISTADO DE ATAJOS EN AJUSTES
+Modifica la lista visual de _FIJOS en PanelAtajos para reflejar con precisión este mapa limpio de comandos:
+Ctrl+S: Guardar configuración (en la pestaña Ajustes).
+Ctrl+I: Consultar páginas virtuales actuales y restantes (capítulo y libro).
+Ctrl+G: Ir a página (capítulo/libro) o porcentaje global.
+Entrega los bloques de código corregidos y limpios para actualizar el PR draft. ¡Dejemos la v2.0 perfecta!

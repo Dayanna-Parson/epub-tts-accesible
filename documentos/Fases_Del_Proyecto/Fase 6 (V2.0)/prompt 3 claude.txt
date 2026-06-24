@@ -1,0 +1,31 @@
+prompt 3 claude
+Cuando hagas la rama de trabajo para esta sesión, quiero que se llame así: fase 6 V2.0
+
+Primero, lee obligatoriamente el archivo CLAUDE.md de la raíz para asumir la identidad, reglas absolutas de colaboración (código e interfaz estrictamente en español, sin rastro de IA en comentarios ni commits) y el sistema de bloques de ANCLAJE.
+Estamos iniciando la Fase 6 (Versión 2.0.0) del proyecto en esta nueva rama de desarrollo. El objetivo principal de esta versión es la reestructuración completa de la interfaz de configuración para blindar la accesibilidad con el lector de pantalla NVDA mediante un modelo HÍBRIDO, además de implementar mejoras de control.
+No generes código funcional para las APIs ni para los motores de audio todavía. En este primer paso, limítate a evaluar el diseño arquitectónico de app/interfaz/pestana_ajustes.py y genera el esqueleto estructural base según las siguientes directrices de accesibilidad y simplicidad:
+1.
+Estructura del Árbol Híbrido (Izquierda):
+Reemplaza el control actual de categorías por un wx.TreeCtrl (self.arbol_cat).
+El árbol debe inicializarse completamente expandido por defecto invocando arbol.Expand en sus nodos principales para que el usuario ciego conozca la existencia de todas las sub-ramas de inmediato al recibir el foco.
+La navegación interna del árbol se realizará exclusivamente con las Flechas del teclado. Al pulsar Tab estando en el árbol, el foco debe saltar directamente al primer control interactivo de la habitación activa de la derecha, sin quedarse atrapado en los sizers.
+2.
+Habitaciones Independientes (Derecha):
+Implementa un wx.Simplebook conectado al árbol que contendrá las siguientes habitaciones inicializadas de forma temprana (evitando punteros nulos o no inicializados en el Tab handler global):
+Configuración General
+Credenciales y API Keys
+Catálogos de Voces (Rama principal del árbol que despliega las sub-ramas de proveedores de la nube: Azure, Deepgram, Polly, ElevenLabs y Voces Locales SAPI5).
+Reglas del Diccionario
+Atajos de Teclado
+3.
+Simplicidad y No Duplicidad (Clase Base Genérica):
+Para evitar la duplicación de sizers y lógica repetitiva en las listas y filtros de voces, diseña la clase base parametrizada PanelProveedorIA (de la que heredarán Azure, Deepgram, Polly y ElevenLabs).
+Esta clase base debe definir una secuencia lineal vertical estricta para el Tabulador (Idioma -> Casilla "Solo favoritas" -> Casilla "Solo nuevas voces" -> Búsqueda de texto -> ListCtrl de voces -> Botonera inferior). Las casillas de favoritos y nuevas actuarán de forma local e independiente por panel para no contaminar la vista de otros proveedores.
+Cada panel derivado debe exponer una propiedad @property def ultimo_control(self) para delegar la comprobación del foco en el Tab handler global de ventana_principal.py de forma dinámica.
+4.
+Persistencia del Motor Actual:
+Todo el motor de audio de fondo, las peticiones HTTP y la dependencia absoluta del archivo voces_favoritas.json deben respetarse y mantenerse intactos. Los cambios en los favoritos de los paneles locales deben seguir guardando en dicho archivo y notificando globalmente a las pestañas de lectura y grabación para actualizar sus combos de forma transparente.
+5.
+Referencias Externas (Bookworm):
+Tienes autorización para analizar y replicar soluciones técnicas de accesibilidad o comportamiento de estanterías del repositorio público de Bookworm (https://github.com/blindpandas/bookworm.git) si lo consideras necesario para asegurar la robustez de la UI, priorizando siempre el código más simple y limpio posible.
+Analiza este mapa conceptual de inicio, confirma que entiendes las restricciones de accesibilidad y genera el cascarón estructural inicial de pestana_ajustes.py.

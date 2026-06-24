@@ -1,0 +1,7 @@
+prompt 13
+
+si, pero, desde que implementamos lo del árbol, en la consola no me deja de aparecer este error! ---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+C:\Program Files\Python312\Lib\site-packages\wx\lib\mixins\listctrl.py:722: UserWarning: The CheckListCtrlMixin class has been made redundant by new checkbox features in the wx.ListCtrl class. It is advised to switch your code to use that instead of this mixin.
+  warnings.warn(_warning) A, además, ayer me compré la licencia de codefactory para utilizar las voces sapi 5 de  eloquence, y algunas no se escuchan, y según gemini, aunque me las compré en codefactory gloval, o algo así se llama la web, es oficial, y solo las venden ellos! pues, no consigo que se escuchen, y según gemini, es porque son de 32 bits. y mi app pues es de 64 y quiero que mi app siga siendo de 64 porque es lo moderno y standar. Así que no se que hacer.
