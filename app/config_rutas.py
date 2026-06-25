@@ -3,20 +3,23 @@ import sys
 import json
 
 # ── Detección de entorno PyInstaller ─────────────────────────────────────────
-# En un .exe generado con --onefile:
+# La app se empaqueta con --onedir. En ese modo:
 #   sys.frozen = True
-#   sys._MEIPASS = directorio temporal donde se extraen los recursos del bundle
+#   sys._MEIPASS = subcarpeta _internal/ (archivos Python del bundle)
 #   sys.executable = ruta al propio .exe
 #
-# RAIZ_RECURSOS → donde están sonidos, iconos y otros archivos del bundle.
-#   · Frozen: sys._MEIPASS  (extracción temporal)
+# recursos/, bin/, configuraciones/ y ayuda.html viven JUNTO AL .exe,
+# no dentro de _internal/. Por eso RAIZ_RECURSOS usa el directorio del exe.
+#
+# RAIZ_RECURSOS → donde están sonidos, iconos y otros archivos externos.
+#   · Frozen: directorio del .exe  (recursos copiados por construir_app.py)
 #   · Normal: raíz del proyecto (donde está app/)
 #
 # RAIZ → directorio donde guardar configuraciones del usuario.
 #   · Frozen: carpeta del .exe  (persistente entre ejecuciones)
 #   · Normal: raíz del proyecto
 if getattr(sys, "frozen", False):
-    RAIZ_RECURSOS = sys._MEIPASS
+    RAIZ_RECURSOS = os.path.dirname(sys.executable)
     RAIZ = os.path.dirname(sys.executable)
 else:
     RAIZ_RECURSOS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

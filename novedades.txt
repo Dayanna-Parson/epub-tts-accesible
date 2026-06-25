@@ -57,10 +57,9 @@ Nuevas funciones
 Correcciones
 ────────────
 
-- Pestaña renombrada a "Grabación de Fragmentos":
+- Pestaña renombrada a "Crear Audiolibro":
   La pestaña de producción de audio pasa a llamarse así para dejar
-  claro que está pensada para flujos numerados de REAPER. El atajo
-  Ctrl+2 sigue funcionando igual.
+  claro su propósito principal. El atajo Ctrl+2 sigue funcionando igual.
 
 - Sin silencios entre fragmentos al cambiar de voz o pausar:
   Al detener la reproducción, el reproductor invalida de inmediato
