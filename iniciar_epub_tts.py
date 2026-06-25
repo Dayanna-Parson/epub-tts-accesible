@@ -46,10 +46,23 @@ logger = logging.getLogger(__name__)
 # ── Migración de archivos de configuración ────────────────────────────────────
 try:
     sys.path.insert(0, _RAIZ)
-    from app.config_rutas import migrar_archivos_config
+    from app.config_rutas import migrar_archivos_config, RAIZ as _RAIZ_APP, CONFIG_DIR as _CONFIG_DIR
     migrar_archivos_config()
 except Exception as _e:
     logging.getLogger(__name__).warning("Migración de configuración fallida: %s", _e)
+    _RAIZ_APP = _RAIZ
+    _CONFIG_DIR = os.path.join(_RAIZ, "configuraciones")
+
+# ── Carpetas persistentes necesarias desde la primera ejecución ───────────────
+# Se crean aquí por si el ZIP se extrajo sin preservar carpetas vacías.
+for _carpeta_arranque in [
+    os.path.join(_RAIZ_APP, "Grabaciones_Epub-TTS"),
+    os.path.join(_CONFIG_DIR, "proyectos_backup"),
+]:
+    try:
+        os.makedirs(_carpeta_arranque, exist_ok=True)
+    except Exception as _e:
+        logging.getLogger(__name__).warning("No se pudo crear carpeta de arranque %s: %s", _carpeta_arranque, _e)
 
 # ANCLAJE_INICIO: LIMPIEZA_TEMPORALES_ARRANQUE
 def _limpiar_temporales_huerfanos():

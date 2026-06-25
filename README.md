@@ -70,7 +70,7 @@ Diseñada desde el principio para funcionar con NVDA y lectores de pantalla:
 | Atajo | Acción |
 |---|---|
 | `Control + 1` | Modo Lectura |
-| `Control + 2` | Grabación de Fragmentos |
+| `Control + 2` | Crear Audiolibro |
 | `Control + 3` | Ajustes |
 | `Control + O` | Abrir EPUB / carpeta |
 | `Control + P` | Reproducir / Pausar |
@@ -90,7 +90,7 @@ Diseñada desde el principio para funcionar con NVDA y lectores de pantalla:
 - Compatibilidad con voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante proceso puente.
 - Modo lectura con páginas virtuales dinámicas y salto directo por página o porcentaje.
 - Selector de escala de velocidad: porcentajes (0–100) o multiplicadores (0.5×–3.0×).
-- Modo Grabación de Fragmentos multivoz con etiquetas de personaje.
+- Modo Crear Audiolibro multivoz con etiquetas de personaje.
 - Exportación MP3 a 320 kbps, normalizado a 44 100 Hz.
 - Diccionario de pronunciación para todos los motores.
 - Control de cuota y avisos de gasto por proveedor.

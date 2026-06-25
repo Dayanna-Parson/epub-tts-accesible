@@ -145,11 +145,13 @@ def copiar_recursos():
             shutil.copy2(origen, os.path.join(dir_docs_dest, nombre))
             print(f"      Copiado: documentos/{nombre}")
 
-    # INICIAR_APP.bat en la raíz
-    bat_origen = os.path.join(RAIZ, "INICIAR_APP.bat")
-    if os.path.isfile(bat_origen):
-        shutil.copy2(bat_origen, os.path.join(DIR_PORTABLE, "INICIAR_APP.bat"))
-        print("      Copiado: INICIAR_APP.bat")
+    # ayuda.html en la raíz del portable (F1 la busca junto al ejecutable)
+    ayuda_origen = os.path.join(RAIZ, "ayuda.html")
+    if os.path.isfile(ayuda_origen):
+        shutil.copy2(ayuda_origen, os.path.join(DIR_PORTABLE, "ayuda.html"))
+        print("      Copiado: ayuda.html")
+    else:
+        print("      AVISO: ayuda.html no encontrado en la raíz del proyecto, omitido.")
 
 
 def crear_configuraciones_fabrica():
@@ -176,10 +178,14 @@ def crear_configuraciones_fabrica():
         json.dump([], f)
     print("      Creado: configuraciones/pronunciacion.json (vacío)")
 
-    # Carpetas vacías necesarias desde la primera ejecución
+    # Carpetas vacías necesarias desde la primera ejecución.
+    # Se añade un marcador .gitkeep para que el ZIP las incluya al comprimir
+    # (os.walk solo recoge archivos; carpetas sin contenido se perderían).
     os.makedirs(os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS"), exist_ok=True)
+    open(os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS", ".gitkeep"), "w").close()
+    print("      Creado: Grabaciones_Epub-TTS/ (carpeta de salida de audio)")
+
     os.makedirs(os.path.join(dir_conf, "proyectos_backup"), exist_ok=True)
-    # Marca que indica al gestor de proyectos que hay carpeta de backup
     open(os.path.join(dir_conf, "proyectos_backup", ".gitkeep"), "w").close()
     print("      Creado: configuraciones/proyectos_backup/ (carpeta de respaldos)")
 

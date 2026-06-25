@@ -251,7 +251,7 @@ El fix fue quirúrgico: la primera línea de `detener()` incrementa `_generacion
 
 ### La pestaña que tardó en tener nombre correcto
 
-En el primer boceto de la app, la pestaña de producción se llamaba "Modo Grabación". Pasó tiempo antes de que el nombre reflejara bien para qué sirve realmente: preparar fragmentos para flujos numerados de REAPER, no simplemente "grabar". Pasó a llamarse "Grabación de Fragmentos" en esta versión.
+En el primer boceto de la app, la pestaña de producción se llamaba "Modo Grabación". Pasó tiempo antes de que el nombre reflejara bien para qué sirve realmente. Pasó a llamarse "Crear Audiolibro" en esta versión.
 
 ### Las voces SAPI5 y el filtro de favoritas
 
