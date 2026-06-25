@@ -72,6 +72,15 @@ _AJUSTES_FABRICA = {
 
 
 # ═════════════════════════════════════════════════════════════════════════════
+def _ocultar_archivo(ruta: str):
+    """Marca un archivo como oculto en Windows (atributo FILE_ATTRIBUTE_HIDDEN)."""
+    try:
+        import ctypes
+        ctypes.windll.kernel32.SetFileAttributesW(ruta, 0x02)
+    except Exception:
+        pass  # En sistemas no-Windows se ignora silenciosamente
+
+
 def limpiar_destino():
     print("[1/6] Limpiando directorios de salida anteriores...")
     for ruta in (DIR_DIST_RAW, DIR_PORTABLE):
@@ -182,11 +191,15 @@ def crear_configuraciones_fabrica():
     # Se añade un marcador .gitkeep para que el ZIP las incluya al comprimir
     # (os.walk solo recoge archivos; carpetas sin contenido se perderían).
     os.makedirs(os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS"), exist_ok=True)
-    open(os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS", ".gitkeep"), "w").close()
+    _gitkeep_grab = os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS", ".gitkeep")
+    open(_gitkeep_grab, "w").close()
+    _ocultar_archivo(_gitkeep_grab)
     print("      Creado: Grabaciones_Epub-TTS/ (carpeta de salida de audio)")
 
     os.makedirs(os.path.join(dir_conf, "proyectos_backup"), exist_ok=True)
-    open(os.path.join(dir_conf, "proyectos_backup", ".gitkeep"), "w").close()
+    _gitkeep_bak = os.path.join(dir_conf, "proyectos_backup", ".gitkeep")
+    open(_gitkeep_bak, "w").close()
+    _ocultar_archivo(_gitkeep_bak)
     print("      Creado: configuraciones/proyectos_backup/ (carpeta de respaldos)")
 
 
