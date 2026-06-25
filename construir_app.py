@@ -1,104 +1,225 @@
-import os
+# ANCLAJE_INICIO: SCRIPT_CONSTRUCCION_PORTABLE
+"""
+construir_app.py
+────────────────
+Empaqueta Epub TTS Accesible en un archivo ZIP portable listo para
+distribuir a usuarios finales invidentes.
 
-# --- MAPA DE ESTRUCTURA  ---
-estructura_proyecto = {
-    "recursos": {
-        "iconos": [],   # Carpeta para imágenes .png/.ico
-        "sonidos": []   # Carpeta para audios .wav del sistema
-    },
-    "configuracion": [
-        "ajustes_globales.json",
-        "mapeo_etiquetas.json",
-        "voces_favoritas.json",
-        "libros_recientes.json",
-        "datos_lectura.json"
-    ],
-    "registros": ["app.log", "errors.log"],
-    "documentos": ["CHANGELOG.md"],
-    "app": {
-        "__init__.py": "",
-        "motor": [ # Lógica pura (Antiguo 'core')
-            "__init__.py",
-            "gestor_epub.py",         # Antes: epub_loader.py
-            "motor_tts.py",           # Antes: tts_engine.py
-            "procesador_etiquetas.py",# Antes: tag_processor.py
-            "grabador_audio.py",      # Antes: audio_recorder.py
-            "gestor_config.py",       # Antes: config_manager.py
-            "reproductor_voz.py"      # Antes: audio_player.py (Solo control)
-        ],
-        "interfaz": [ # Interfaz Gráfica (Antiguo 'ui')
-            "__init__.py",
-            "ventana_principal.py",   # Antes: main_window.py
-            "pestana_lectura.py",     # Antes: read_tab.py
-            "pestana_grabacion.py",   # Antes: record_tab.py
-            "pestana_ajustes.py",     # Antes: utils_ui.py / settings
-            "dialogos.py"             # Antes: dialogs.py
-        ],
-        "servicios": [ # Conexiones TTS (Antiguo 'services')
-            "__init__.py",
-            "cliente_azure.py",
-            "cliente_polly.py",
-            "cliente_eleven.py",
-            "cliente_sapi5.py"        # Lógica movida aquí
-        ]
-    }
-}
+Pasos que ejecuta:
+  1. Limpia el directorio de salida anterior (/dist/epubtts/).
+  2. Ejecuta PyInstaller con --noconsole para generar epubtts.exe.
+  3. Copia bin/, recursos/ y documentos/ al portable.
+  4. Crea configuraciones/ vacía (con solo ajustes.json de fábrica).
+  5. Copia INICIAR_APP.bat y novedades.txt a la raíz del portable.
+  6. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
 
-# --- CONTENIDO BÁSICO DEL LEEME (README) ---
-texto_leeme = """# Tiflo Historias 🎧📚
+Uso:
+    python construir_app.py
 
-**Aplicación de escritorio accesible para crear audiolibros.**
-
-Estructura del Proyecto:
-- **app/**: Código fuente.
-  - **motor/**: Lógica de lectura y audio.
-  - **interfaz/**: Ventanas y menús.
-  - **servicios/**: Conexión con Azure, Polly, SAPI5.
-- **configuracion/**: Archivos JSON de datos.
-- **recursos/**: Iconos y sonidos.
+Requisitos previos:
+    pip install pyinstaller
+    FFmpeg portátil en bin/ffmpeg.exe
 """
 
-def crear_estructura():
-    base = "." 
-    print(f"--- Creando/Verificando estructura 'Tiflo Historias' ---")
+import json
+import os
+import shutil
+import subprocess
+import sys
+import zipfile
 
-    for carpeta, contenido in estructura_proyecto.items():
-        ruta_carpeta = os.path.join(base, carpeta)
-        os.makedirs(ruta_carpeta, exist_ok=True)
-        print(f"[DIR] {carpeta}")
-        
-        if isinstance(contenido, list):
-            for archivo in contenido:
-                ruta = os.path.join(ruta_carpeta, archivo)
-                if not os.path.exists(ruta):
-                    with open(ruta, 'w', encoding='utf-8') as f: pass
-                    print(f"  [+] Creado archivo: {archivo}")
-        
-        elif isinstance(contenido, dict):
-            for subcarpeta, subarchivos in contenido.items():
-                ruta_sub = os.path.join(ruta_carpeta, subcarpeta)
-                
-                # Si es un archivo (termina en .py pero está como clave de dict)
-                if subcarpeta.endswith(".py"): 
-                    if not os.path.exists(ruta_sub):
-                        with open(ruta_sub, 'w', encoding='utf-8') as f: pass
-                        print(f"  [+] Creado archivo: {subcarpeta}")
-                else:
-                    # Es una subcarpeta
-                    os.makedirs(ruta_sub, exist_ok=True)
-                    print(f"  [DIR] {subcarpeta}")
-                    for subarch in subarchivos:
-                        ruta_final = os.path.join(ruta_sub, subarch)
-                        if not os.path.exists(ruta_final):
-                            with open(ruta_final, 'w', encoding='utf-8') as f: pass
-                            print(f"    [+] Creado archivo: {subarch}")
+# ── Raíz del proyecto ─────────────────────────────────────────────────────────
+RAIZ = os.path.dirname(os.path.abspath(__file__))
 
-    # Crear LEEME si no existe
-    if not os.path.exists("README.md"):
-        with open("README.md", "w", encoding="utf-8") as f:
-            f.write(texto_leeme)
-        print("[+] Creado README.md")
+# ── Versión ───────────────────────────────────────────────────────────────────
+def _leer_version() -> str:
+    ruta = os.path.join(RAIZ, "recursos", "version.json")
+    try:
+        with open(ruta, encoding="utf-8") as f:
+            return json.load(f).get("version", "0.0.0")
+    except Exception:
+        return "0.0.0"
 
+VERSION = _leer_version()
+
+# ── Rutas de trabajo ──────────────────────────────────────────────────────────
+DIR_DIST_RAW  = os.path.join(RAIZ, "dist", "epubtts")   # PyInstaller vuelca aquí
+DIR_PORTABLE  = os.path.join(RAIZ, "dist", "epub-tts-accesible")
+ZIP_SALIDA    = os.path.join(RAIZ, "dist", f"epub-tts-accesible-v{VERSION}.zip")
+
+# Archivos y carpetas del proyecto que NO van al portable
+_EXCLUIR_RAIZ = {
+    ".git", ".gitignore", ".gitattributes",
+    "__pycache__", ".venv", "venv", "env",
+    "dist", "build", ".pytest_cache",
+    "tests", "test",
+    "*.md", "*.log", "*.spec",
+    "construir_app.py",
+}
+
+# Ajustes de fábrica vacíos que se incluyen en configuraciones/
+_AJUSTES_FABRICA = {
+    "ajustes.json": {
+        "velocidad_lectura": 50,
+        "volumen_lectura": 100,
+        "segundos_salto": 10,
+        "pausa_entre_fragmentos_ms": 0,
+        "actualizar_automaticamente": True,
+        "escala_velocidad": "porcentaje",
+        "idioma_libro_codigo": "es-ES",
+    },
+}
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+def limpiar_destino():
+    print("[1/6] Limpiando directorios de salida anteriores...")
+    for ruta in (DIR_DIST_RAW, DIR_PORTABLE):
+        if os.path.exists(ruta):
+            shutil.rmtree(ruta)
+            print(f"      Eliminado: {ruta}")
+    if os.path.exists(ZIP_SALIDA):
+        os.remove(ZIP_SALIDA)
+        print(f"      Eliminado: {ZIP_SALIDA}")
+    os.makedirs(os.path.join(RAIZ, "dist"), exist_ok=True)
+
+
+def ejecutar_pyinstaller():
+    print("[2/6] Ejecutando PyInstaller...")
+    punto_entrada = os.path.join(RAIZ, "iniciar_epub_tts.py")
+    icono         = os.path.join(RAIZ, "recursos", "iconos", "epubtts.ico")
+    args = [
+        sys.executable, "-m", "PyInstaller",
+        "--noconfirm",
+        "--noconsole",
+        "--onedir",
+        f"--name=epubtts",
+        f"--distpath={os.path.join(RAIZ, 'dist')}",
+        f"--workpath={os.path.join(RAIZ, 'build')}",
+        f"--specpath={os.path.join(RAIZ, 'build')}",
+    ]
+    if os.path.isfile(icono):
+        args.append(f"--icon={icono}")
+    args.append(punto_entrada)
+
+    resultado = subprocess.run(args, cwd=RAIZ)
+    if resultado.returncode != 0:
+        print("ERROR: PyInstaller terminó con errores. Abortando.")
+        sys.exit(1)
+
+
+def copiar_recursos():
+    print("[3/6] Copiando recursos al portable...")
+    os.makedirs(DIR_PORTABLE, exist_ok=True)
+
+    # Mover el directorio generado por PyInstaller a DIR_PORTABLE
+    if os.path.isdir(DIR_DIST_RAW):
+        for entrada in os.listdir(DIR_DIST_RAW):
+            shutil.move(
+                os.path.join(DIR_DIST_RAW, entrada),
+                os.path.join(DIR_PORTABLE, entrada),
+            )
+        shutil.rmtree(DIR_DIST_RAW, ignore_errors=True)
+
+    # Carpetas de recursos
+    for carpeta in ("bin", "recursos"):
+        origen = os.path.join(RAIZ, carpeta)
+        destino = os.path.join(DIR_PORTABLE, carpeta)
+        if os.path.isdir(origen):
+            shutil.copytree(origen, destino)
+            print(f"      Copiado: {carpeta}/")
+        else:
+            print(f"      AVISO: carpeta '{carpeta}/' no encontrada, omitida.")
+
+    # Carpeta documentos: solo ayuda y novedades
+    dir_docs_orig  = os.path.join(RAIZ, "documentos")
+    dir_docs_dest  = os.path.join(DIR_PORTABLE, "documentos")
+    os.makedirs(dir_docs_dest, exist_ok=True)
+    _archivos_docs = ("Manual de usuario.pdf", "novedades.txt", "Léeme.txt")
+    for nombre in _archivos_docs:
+        origen = os.path.join(RAIZ, nombre) if not os.path.isdir(dir_docs_orig) \
+                 else os.path.join(dir_docs_orig, nombre)
+        if not os.path.isfile(origen):
+            origen = os.path.join(RAIZ, nombre)
+        if os.path.isfile(origen):
+            shutil.copy2(origen, os.path.join(dir_docs_dest, nombre))
+            print(f"      Copiado: documentos/{nombre}")
+
+    # ayuda.html en la raíz del portable (F1 la busca junto al ejecutable)
+    ayuda_origen = os.path.join(RAIZ, "ayuda.html")
+    if os.path.isfile(ayuda_origen):
+        shutil.copy2(ayuda_origen, os.path.join(DIR_PORTABLE, "ayuda.html"))
+        print("      Copiado: ayuda.html")
+    else:
+        print("      AVISO: ayuda.html no encontrado en la raíz del proyecto, omitido.")
+
+
+def crear_configuraciones_fabrica():
+    print("[4/6] Creando configuraciones/ de fábrica...")
+    dir_conf = os.path.join(DIR_PORTABLE, "configuraciones")
+    os.makedirs(dir_conf, exist_ok=True)
+
+    for nombre, contenido in _AJUSTES_FABRICA.items():
+        ruta = os.path.join(dir_conf, nombre)
+        with open(ruta, "w", encoding="utf-8") as f:
+            json.dump(contenido, f, ensure_ascii=False, indent=2)
+        print(f"      Creado: configuraciones/{nombre}")
+
+    # proyectos.json vacío: estructura mínima para que el gestor arranque sin errores
+    ruta_proy = os.path.join(dir_conf, "proyectos.json")
+    datos_proy = {"proyectos": {}, "orden_raiz": []}
+    with open(ruta_proy, "w", encoding="utf-8") as f:
+        json.dump(datos_proy, f, ensure_ascii=False, indent=2)
+    print("      Creado: configuraciones/proyectos.json (vacío)")
+
+    # pronunciacion.json vacío
+    ruta_pron = os.path.join(dir_conf, "pronunciacion.json")
+    with open(ruta_pron, "w", encoding="utf-8") as f:
+        json.dump([], f)
+    print("      Creado: configuraciones/pronunciacion.json (vacío)")
+
+    # Carpetas vacías necesarias desde la primera ejecución.
+    # Se añade un marcador .gitkeep para que el ZIP las incluya al comprimir
+    # (os.walk solo recoge archivos; carpetas sin contenido se perderían).
+    os.makedirs(os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS"), exist_ok=True)
+    open(os.path.join(DIR_PORTABLE, "Grabaciones_Epub-TTS", ".gitkeep"), "w").close()
+    print("      Creado: Grabaciones_Epub-TTS/ (carpeta de salida de audio)")
+
+    os.makedirs(os.path.join(dir_conf, "proyectos_backup"), exist_ok=True)
+    open(os.path.join(dir_conf, "proyectos_backup", ".gitkeep"), "w").close()
+    print("      Creado: configuraciones/proyectos_backup/ (carpeta de respaldos)")
+
+
+def comprimir_portable():
+    print(f"[5/6] Comprimiendo en {os.path.basename(ZIP_SALIDA)}...")
+    raiz_zip = f"epub-tts-accesible-v{VERSION}"
+    with zipfile.ZipFile(ZIP_SALIDA, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+        for carpeta_actual, _, archivos in os.walk(DIR_PORTABLE):
+            for archivo in archivos:
+                ruta_abs = os.path.join(carpeta_actual, archivo)
+                ruta_rel = os.path.relpath(ruta_abs, DIR_PORTABLE)
+                zf.write(ruta_abs, os.path.join(raiz_zip, ruta_rel))
+    tam = os.path.getsize(ZIP_SALIDA) / (1024 * 1024)
+    print(f"      ZIP creado: {tam:.1f} MB")
+
+
+def limpiar_temporal():
+    print("[6/6] Eliminando archivos temporales de compilación...")
+    dir_build = os.path.join(RAIZ, "build")
+    if os.path.isdir(dir_build):
+        shutil.rmtree(dir_build, ignore_errors=True)
+    if os.path.isdir(DIR_PORTABLE):
+        shutil.rmtree(DIR_PORTABLE, ignore_errors=True)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
-    crear_estructura()
-    print("\n✅ Estructura verificada.")
+    print(f"\n=== Construcción del portable Epub TTS Accesible v{VERSION} ===\n")
+    limpiar_destino()
+    ejecutar_pyinstaller()
+    copiar_recursos()
+    crear_configuraciones_fabrica()
+    comprimir_portable()
+    limpiar_temporal()
+    print(f"\n✓ Portable listo: dist/epub-tts-accesible-v{VERSION}.zip\n")
+# ANCLAJE_FIN: SCRIPT_CONSTRUCCION_PORTABLE

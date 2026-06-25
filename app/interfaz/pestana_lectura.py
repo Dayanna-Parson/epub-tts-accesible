@@ -168,6 +168,8 @@ class PestanaLectura(wx.Panel):
         )
         self.deslizador_velocidad.Bind(wx.EVT_SLIDER, self.al_cambiar_velocidad)
         self.deslizador_velocidad.Bind(wx.EVT_KEY_DOWN, self._al_tecla_slider_velocidad)
+        self.deslizador_velocidad.Bind(wx.EVT_SCROLL_CHANGED, self._al_slider_velocidad_cambio)
+        self.deslizador_velocidad.Bind(wx.EVT_SCROLL_THUMBTRACK, self._al_slider_velocidad_cambio)
 
         self.lbl_volumen = wx.StaticText(self, label="Volumen:")
         self.deslizador_volumen = wx.Slider(self, value=100, minValue=0, maxValue=100)
@@ -194,6 +196,16 @@ class PestanaLectura(wx.Panel):
 
         self.SetSizer(sizer_principal)
         self.configurar_aceleradores()
+
+        # Control oculto para anuncios de accesibilidad NVDA.
+        # Al darle foco con un valor nuevo, NVDA lo verbaliza al instante
+        # sin necesidad de diálogos ni de que el usuario navegue hasta él.
+        self._anunciador = wx.TextCtrl(
+            self,
+            style=wx.TE_READONLY | wx.BORDER_NONE,
+            size=(1, 1),
+        )
+        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
         
         self.temporizador_ui = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.al_actualizar_ui, self.temporizador_ui)
@@ -223,12 +235,15 @@ class PestanaLectura(wx.Panel):
                     if hasattr(self, 'deslizador_velocidad'):
                         vel = int(conf.get("velocidad_lectura", 50))
                         vol = int(conf.get("volumen_lectura", 100))
-                        self.deslizador_velocidad.SetValue(vel)
+                        # Aplicar la escala de velocidad guardada (puede haber cambiado en Ajustes)
+                        self._aplicar_escala_velocidad(
+                            conf.get("escala_velocidad", "porcentaje"), vel
+                        )
                         self.deslizador_volumen.SetValue(vol)
                         self.reproductor.fijar_velocidad(vel)
                         self.reproductor.fijar_volumen(vol)
         except Exception as e:
-            print(f"[Aviso] No se pudo leer la configuración de salto: {e}")
+            logger.warning("[PestanaLectura] No se pudo leer ajustes.json: %s", e)
             self.segundos_salto = 10
 
     def al_cambiar_pestana_padre(self, event):
@@ -248,32 +263,51 @@ class PestanaLectura(wx.Panel):
         self.combo_voz.Clear()
         voces_para_combo = []
 
-        # Carga de voces locales SAPI5
-        try:
-            if hasattr(self.reproductor, 'cliente_local'):
-                voces_locales = self.reproductor.cliente_local.obtener_voces()
-                for v in voces_locales:
-                    nombre_mostrar = f"[Local] {v['nombre']}"
-                    voces_para_combo.append((nombre_mostrar, v))
-        except Exception as e:
-            print(f"[Aviso] No se pudieron cargar las voces locales SAPI5: {e}")
-
-        # Carga de voces neuronales favoritas
+        # Cargar favoritos globales (SAPI5 y neurales comparten el mismo archivo)
         ruta_favs = ruta_config("voces_favoritas.json")
         ruta_todas = ruta_config("voces_disponibles.json")
 
         ids_favoritos = []
         if os.path.exists(ruta_favs):
             try:
-                with open(ruta_favs, 'r', encoding='utf-8') as f:
+                with open(ruta_favs, "r", encoding="utf-8") as f:
                     ids_favoritos = json.load(f)
             except Exception as e:
-                print(f"[Aviso] No se pudo leer voces_favoritas.json: {e}")
-                ids_favoritos = []
+                logger.warning("[PestanaLectura] No se pudo leer voces_favoritas.json: %s", e)
 
+        # Carga de voces SAPI5 de 64 bits
+        voces_locales_64 = []
+        try:
+            if hasattr(self.reproductor, "cliente_local"):
+                voces_locales_64 = self.reproductor.cliente_local.obtener_voces()
+        except Exception as e:
+            logger.warning("[PestanaLectura] No se pudieron cargar voces SAPI5: %s", e)
+
+        # Carga de voces SAPI5 de 32 bits (bridge Eloquence/CodeFactory)
+        voces_locales_32 = []
+        try:
+            if hasattr(self.reproductor, "cliente_local_32") and self.reproductor.cliente_local_32.conectado:
+                voces_locales_32 = self.reproductor.cliente_local_32.obtener_voces()
+        except Exception as e:
+            logger.warning("[PestanaLectura] No se pudieron cargar voces SAPI5 32-bits: %s", e)
+
+        # Combinar voces locales y filtrar por favoritos
+        # Si hay favoritos marcados, mostrar solo los favoritos; si no hay ninguno marcado,
+        # mostrar todas las voces locales (fallback para que siempre haya al menos una opción).
+        todas_locales = voces_locales_64 + voces_locales_32
+        ids_locales_favoritas = [v.get("id") for v in todas_locales if v.get("id") in ids_favoritos]
+        mostrar_todas_locales = not ids_locales_favoritas
+
+        for v in todas_locales:
+            if mostrar_todas_locales or v.get("id") in ids_favoritos:
+                etiqueta = "[32 bits]" if v.get("proveedor_id") == "local_32" else "[Local]"
+                nombre_mostrar = f"{etiqueta} {v['nombre']}"
+                voces_para_combo.append((nombre_mostrar, v))
+
+        # Carga de voces neuronales favoritas
         if ids_favoritos and os.path.exists(ruta_todas):
             try:
-                with open(ruta_todas, 'r', encoding='utf-8') as f:
+                with open(ruta_todas, "r", encoding="utf-8") as f:
                     todas = json.load(f)
                     for prov, lista in todas.items():
                         for v in lista:
@@ -334,9 +368,11 @@ class PestanaLectura(wx.Panel):
 
         # 2. Transiciones de estado (Play/Pausa)
         if estado == 'reproduciendo':
-            # Al pausar, cancelar la cola pendiente (las voces neuronales requieren
-            # reenviar el texto desde la nueva posición al reanudar)
+            # Al pausar: vaciar cola y cancelar precarga para que no llegue audio
+            # de un fragmento que ya no es el actual al reanudar.
             self._cola_lectura = []
+            self._idx_fragmento_actual = 0
+            self._precarga_solicitada = False
             if hasattr(self.reproductor, 'pausar'):
                 self.reproductor.pausar()
         elif estado == 'pausado':
@@ -738,14 +774,176 @@ class PestanaLectura(wx.Panel):
                 dlg_lista.Destroy()
         dlg.Destroy()
 
-    def iniciar_ir_a_porcentaje(self): 
-        dlg = wx.TextEntryDialog(self, "Porcentaje (0-100):", "Ir a")
+    # ANCLAJE_INICIO: DIALOGO_IR_A_PAGINA
+    def iniciar_ir_a_pagina(self):
+        """
+        Ctrl+G — diálogo unificado de salto accesible para NVDA.
+        Tres campos independientes: página del capítulo, página del libro,
+        porcentaje global. El usuario rellena solo el que desee.
+        Prioridad: porcentaje > página del libro > página del capítulo.
+        """
+        if not self.longitud_texto:
+            wx.MessageBox("Abre un libro antes de usar esta función.", "Sin libro", wx.OK | wx.ICON_INFORMATION)
+            return
+
+        pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
+        pct_actual = int(self.txt_contenido.GetInsertionPoint() / self.longitud_texto * 100)
+
+        dlg = wx.Dialog(self, title="Ir a página o porcentaje")
+        dlg.SetHelpText(
+            "Rellena uno de los tres campos para saltar a esa posición del libro. "
+            "Deja los otros dos en blanco. "
+            "Prioridad si rellenas varios: porcentaje, luego página del libro, luego página del capítulo."
+        )
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(
+            wx.StaticText(dlg, label=f"Página del capítulo (1–{total_cap}):"),
+            0, wx.ALL, 8,
+        )
+        txt_cap = wx.TextCtrl(dlg, value="")
+        txt_cap.SetHelpText(
+            f"Número de página dentro del capítulo activo. "
+            f"Ahora estás en la página {pag_cap} de {total_cap}. Deja vacío para ignorar."
+        )
+        sizer.Add(txt_cap, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        sizer.Add(
+            wx.StaticText(dlg, label=f"Página del libro (1–{total_libro}):"),
+            0, wx.ALL, 8,
+        )
+        txt_libro = wx.TextCtrl(dlg, value="")
+        txt_libro.SetHelpText(
+            f"Número de página dentro del libro completo. "
+            f"Ahora estás en la página {pag_libro} de {total_libro}. Deja vacío para ignorar."
+        )
+        sizer.Add(txt_libro, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        sizer.Add(
+            wx.StaticText(dlg, label="Porcentaje del libro (0–100):"),
+            0, wx.ALL, 8,
+        )
+        txt_pct = wx.TextCtrl(dlg, value="")
+        txt_pct.SetHelpText(
+            f"Posición como porcentaje del libro completo. "
+            f"Ahora estás al {pct_actual}%. Deja vacío para ignorar."
+        )
+        sizer.Add(txt_pct, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        sizer.Add(
+            wx.StaticText(dlg, label="(Rellena solo el campo que quieras usar y deja los demás vacíos.)"),
+            0, wx.ALL, 8,
+        )
+
+        sz_btn = dlg.CreateButtonSizer(wx.OK | wx.CANCEL)
+        sizer.Add(sz_btn, 0, wx.EXPAND | wx.ALL, 8)
+        dlg.SetSizer(sizer)
+        dlg.Fit()
+        dlg.CentreOnParent()
+
         if dlg.ShowModal() == wx.ID_OK:
-            val = dlg.GetValue()
-            if val.isdigit():
-                self.deslizador_progreso.SetValue(int(val))
-                self.al_buscar_usuario(None)
+            val_pct   = txt_pct.GetValue().strip()
+            val_libro = txt_libro.GetValue().strip()
+            val_cap   = txt_cap.GetValue().strip()
+            destino   = None
+
+            if val_pct.isdigit():
+                pct = max(0, min(int(val_pct), 100))
+                destino = int(pct / 100 * self.longitud_texto)
+            elif val_libro.isdigit():
+                n = max(1, min(int(val_libro), total_libro))
+                destino = (n - 1) * self._CHARS_POR_PAGINA
+            elif val_cap.isdigit():
+                pos_cursor = self.txt_contenido.GetInsertionPoint()
+                posiciones_ordenadas = sorted(self.posiciones_capitulos.values())
+                inicio_cap = 0
+                for pos in posiciones_ordenadas:
+                    if pos <= pos_cursor:
+                        inicio_cap = pos
+                n = max(1, min(int(val_cap), total_cap))
+                destino = inicio_cap + (n - 1) * self._CHARS_POR_PAGINA
+
+            if destino is not None:
+                destino = max(0, min(destino, self.longitud_texto - 1))
+                self.txt_contenido.SetInsertionPoint(destino)
+                self.txt_contenido.ShowPosition(destino)
+                if hasattr(self.reproductor, 'detener'):
+                    self.reproductor.detener()
+                self.anunciar_pagina_actual()
+
         dlg.Destroy()
+    # ANCLAJE_FIN: DIALOGO_IR_A_PAGINA
+
+    # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD
+    def alternar_escala_velocidad(self):
+        """
+        Alterna el slider de velocidad entre escala porcentual (0–100)
+        y multiplicadores (0.5×–3.0×).
+        La escala activa se persiste en ajustes.json.
+        """
+        ruta = ruta_config("ajustes.json")
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                conf = json.load(f)
+        except Exception:
+            conf = {}
+
+        escala_actual = conf.get("escala_velocidad", "porcentaje")
+        nueva_escala  = "multiplicador" if escala_actual == "porcentaje" else "porcentaje"
+        conf["escala_velocidad"] = nueva_escala
+
+        ruta_tmp = ruta + ".tmp"
+        with open(ruta_tmp, "w", encoding="utf-8") as f:
+            json.dump(conf, f, ensure_ascii=False, indent=2)
+        os.replace(ruta_tmp, ruta)
+
+        self._aplicar_escala_velocidad(nueva_escala, conf.get("velocidad_lectura", 50))
+
+    def _aplicar_escala_velocidad(self, escala: str, valor_guardado: int):
+        """
+        Reconfigura el slider de velocidad según la escala activa y actualiza
+        la etiqueta y el texto de ayuda para que NVDA lo lea correctamente.
+        """
+        if escala == "multiplicador":
+            self.deslizador_velocidad.SetMin(0)
+            self.deslizador_velocidad.SetMax(25)
+            self.deslizador_velocidad.SetValue(
+                min(25, max(0, round((valor_guardado / 100) * 12)))
+            )
+            self.lbl_velocidad.SetLabel("Velocidad (×):")
+            self.deslizador_velocidad.SetHelpText(
+                "Velocidad de lectura en multiplicadores. "
+                "0 = 0.5×, 12 = 1.75×, 25 = 3.0×. "
+                "Flechas: ±1 paso. RePág/AvPág: ±5 pasos."
+            )
+        else:
+            self.deslizador_velocidad.SetMin(0)
+            self.deslizador_velocidad.SetMax(100)
+            self.deslizador_velocidad.SetValue(valor_guardado)
+            self.lbl_velocidad.SetLabel("Velocidad de lectura:")
+            self.deslizador_velocidad.SetHelpText(
+                "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
+                "Flechas: ±1. RePág/AvPág: ±5."
+            )
+
+    def obtener_velocidad_normalizada(self) -> int:
+        """
+        Devuelve siempre un valor 0–100 independientemente de la escala activa,
+        para pasarlo al reproductor sin que este sepa nada de escalas.
+        """
+        ruta = ruta_config("ajustes.json")
+        escala = "porcentaje"
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                escala = json.load(f).get("escala_velocidad", "porcentaje")
+        except Exception:
+            pass
+
+        val = self.deslizador_velocidad.GetValue()
+        if escala == "multiplicador":
+            return min(100, max(0, round(val * 100 / 25)))
+        return val
+    # ANCLAJE_FIN: SELECTOR_ESCALA_VELOCIDAD
 
     def al_buscar_usuario(self, e):
         if self.longitud_texto > 0:
@@ -889,13 +1087,14 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(6)]
-        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,              id=ids[0])
-        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,         id=ids[1])
-        self.Bind(wx.EVT_MENU, self.al_detener,                       id=ids[2])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),     id=ids[3])
-        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_porcentaje(), id=ids[4])
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                  id=ids[5])
+        ids = [wx.NewIdRef() for _ in range(7)]
+        self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,                id=ids[0])
+        self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,           id=ids[1])
+        self.Bind(wx.EVT_MENU, self.al_detener,                         id=ids[2])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),       id=ids[3])
+        self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(),    id=ids[4])
+        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                    id=ids[5])
+        self.Bind(wx.EVT_MENU, lambda e: self.anunciar_pagina_actual(), id=ids[6])
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('M'), ids[0]),
             (wx.ACCEL_CTRL, ord('P'), ids[1]),
@@ -903,7 +1102,113 @@ class PestanaLectura(wx.Panel):
             (wx.ACCEL_CTRL, ord('F'), ids[3]),
             (wx.ACCEL_CTRL, ord('G'), ids[4]),
             (wx.ACCEL_CTRL, ord('O'), ids[5]),
+            (wx.ACCEL_CTRL, ord('I'), ids[6]),
         ]))
+
+    # ANCLAJE_INICIO: PAGINAS_VIRTUALES
+    # 1800 caracteres por página virtual — aproxima mejor las páginas reales
+    # de un libro de bolsillo estándar (~250 palabras × 7 chars promedio).
+    _CHARS_POR_PAGINA = 1800
+
+    @staticmethod
+    def _longitud_normalizada(texto: str) -> int:
+        """
+        Devuelve la longitud del texto tras colapsar espacios en blanco
+        masivos procedentes del EPUB (tabuladores, saltos dobles, etc.)
+        para que el conteo de páginas virtuales sea más fiel al libro real.
+        """
+        import re
+        texto = re.sub(r'\t', ' ', texto)
+        texto = re.sub(r' {2,}', ' ', texto)
+        texto = re.sub(r'\n{3,}', '\n\n', texto)
+        return len(texto)
+
+    def _calcular_paginas(self):
+        """
+        Devuelve (pag_cap, total_cap, pag_libro, total_libro) basándose en
+        bloques virtuales de _CHARS_POR_PAGINA caracteres normalizados.
+        Retorna (0, 0, 0, 0) si no hay texto cargado.
+        """
+        if not self.longitud_texto:
+            return 0, 0, 0, 0
+
+        pos_cursor = self.txt_contenido.GetInsertionPoint()
+        texto_completo = self.txt_contenido.GetValue()
+        long_norm = self._longitud_normalizada(texto_completo)
+
+        total_libro = max(1, (long_norm + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
+        pag_libro = int(pos_cursor / max(1, self.longitud_texto) * long_norm) // self._CHARS_POR_PAGINA + 1
+        pag_libro = min(pag_libro, total_libro)
+
+        inicio_cap = 0
+        fin_cap = self.longitud_texto
+        posiciones_ordenadas = sorted(self.posiciones_capitulos.values())
+        for i, pos in enumerate(posiciones_ordenadas):
+            if pos <= pos_cursor:
+                inicio_cap = pos
+                fin_cap = posiciones_ordenadas[i + 1] if i + 1 < len(posiciones_ordenadas) else self.longitud_texto
+
+        texto_cap = texto_completo[inicio_cap:fin_cap]
+        long_cap_norm = self._longitud_normalizada(texto_cap)
+        total_cap = max(1, (long_cap_norm + self._CHARS_POR_PAGINA - 1) // self._CHARS_POR_PAGINA)
+        pos_en_cap = pos_cursor - inicio_cap
+        pag_cap = int(pos_en_cap / max(1, fin_cap - inicio_cap) * long_cap_norm) // self._CHARS_POR_PAGINA + 1
+        pag_cap = min(pag_cap, total_cap)
+
+        return pag_cap, total_cap, pag_libro, total_libro
+
+    def anunciar_pagina_actual(self):
+        """
+        Ctrl+I: verbaliza la posición de lectura a través del control _anunciador.
+        NVDA lo lee al instante al recibir el foco; en 300 ms el foco vuelve
+        al control anterior sin que el usuario perciba el salto.
+        """
+        if not self.longitud_texto:
+            return
+        pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
+        texto = (
+            f"Página {pag_cap} de {total_cap} del capítulo. "
+            f"Página {pag_libro} de {total_libro} del libro."
+        )
+        self.lbl_progreso.SetLabel(texto)
+        foco_anterior = wx.Window.FindFocus()
+        self._anunciador.SetValue(texto)
+        self._anunciador.SetFocus()
+        if foco_anterior:
+            wx.CallLater(300, lambda: foco_anterior.SetFocus() if foco_anterior.IsShownOnScreen() else None)
+    # ANCLAJE_FIN: PAGINAS_VIRTUALES
+
+    # ANCLAJE_INICIO: SLIDER_VELOCIDAD_SEMANTICO
+    # Tabla de escalones del modo multiplicador:
+    # índice 0–25 → valor real mostrado a NVDA
+    _ETIQUETAS_MULTIPLICADOR = {
+        0: "0.5× (Muy lenta)", 2: "0.6×", 4: "0.75× (Lenta)",
+        6: "0.9×",  8: "1.0× (Normal)", 10: "1.1×",
+        12: "1.25×", 14: "1.5× (Rápida)", 17: "1.75×",
+        20: "2.0× (Muy rápida)", 22: "2.5×", 25: "3.0× (Máxima)",
+    }
+
+    def _al_slider_velocidad_cambio(self, evento):
+        """Actualiza SetHelpText con la etiqueta semántica en modo multiplicador."""
+        ruta = ruta_config("ajustes.json")
+        escala = "porcentaje"
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                escala = json.load(f).get("escala_velocidad", "porcentaje")
+        except Exception:
+            pass
+        if escala != "multiplicador":
+            evento.Skip()
+            return
+        val = self.deslizador_velocidad.GetValue()
+        # Buscar la etiqueta del escalón más cercano
+        escalon = min(self._ETIQUETAS_MULTIPLICADOR, key=lambda k: abs(k - val))
+        etiqueta = self._ETIQUETAS_MULTIPLICADOR[escalon]
+        self.deslizador_velocidad.SetHelpText(f"Velocidad: {etiqueta}")
+        self.lbl_velocidad.SetLabel(f"Velocidad ({etiqueta}):")
+        evento.Skip()
+    # ANCLAJE_FIN: SLIDER_VELOCIDAD_SEMANTICO
+    # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO
 
     def _aplicar_estilos_ricos(self):
         """

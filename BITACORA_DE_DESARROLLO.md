@@ -210,3 +210,63 @@ Esta fase marca la transformación de Epub TTS en una herramienta profesional, i
 4. **Optimización de Interfaz:** Unificamos atajos en `Control + O` (contextual) y refinamos los deslizadores de precisión (saltos de 1 y 10 unidades) para un control total sin fatiga auditiva.
 
 Epub TTS es ahora la estación de trabajo que siempre soñé para mis audiolibros con multivoces.
+
+---
+
+## Fase 6: V2.0 — Accesibilidad profunda y voces Eloquence (Junio 2026)
+
+La Fase 6 nació de una sesión larga de pruebas reales con NVDA. No de teoría ni de auditorías de código escritas a distancia, sino de sentarse con la app encendida, el lector de pantalla activo, y hacer exactamente lo que hace una usuaria ciega en su día a día.
+
+Lo que salió fue una lista de cosas que no funcionaban como debían. Algunas eran bugs evidentes; otras eran detalles que solo se notan cuando usas la app de verdad y no solo la programas.
+
+### Las voces Eloquence, por fin
+
+La primera semana de junio llegó con una noticia: compré la licencia de CodeFactory para usar Eloquence y RealSpeak en Windows. Son voces SAPI5 de 32 bits, y mi app corre en 64 bits. No hablan entre sí.
+
+El problema parecía difícil al principio. Una solución habitual sería pedir al usuario que instale una versión especial, o que configure algo manualmente. Eso no es una opción en una app pensada para personas ciegas que no tienen por qué saber si su Python es de 32 o 64 bits.
+
+La solución fue un proceso puente: `auxiliar_sapi32.py` es un script pequeño que se compila con Python de 32 bits en un ejecutable independiente. La app principal de 64 bits lo lanza como subproceso y se comunica con él por líneas JSON en stdin/stdout. El usuario instala la app portable y todo funciona. No tiene que saber que ese puente existe.
+
+El ejecutable `auxiliar_sapi32.exe` va en `/bin/`. Si no está, las voces de 32 bits simplemente no aparecen en la lista. Si el usuario intenta seleccionar una voz de CodeFactory sin el puente, aparece un mensaje claro que le dice qué está pasando, en lugar de silencio.
+
+### Lo que NVDA no verbalizaba
+
+Ctrl+I existía. Calculaba la página correctamente. Pero el mensaje se ponía en un `StaticText` y NVDA no lo anunciaba porque ese control no tenía el foco.
+
+La solución fue el patrón `_anunciador`: un `wx.TextCtrl` de 1×1 píxeles, de solo lectura, que normalmente es invisible al usuario. Cuando hay que verbalizar algo urgente —la página actual, la confirmación de guardado—, ese control recibe el texto y el foco brevemente. NVDA lo anuncia. Luego el foco vuelve al control anterior, con `wx.CallLater(300ms)`.
+
+Lo mismo ocurría con Ctrl+S en Ajustes. El usuario guardaba y no sabía si se había guardado. Con el mismo patrón, al pulsar Ctrl+S en cualquier panel de Ajustes, NVDA dice "Guardado." de inmediato.
+
+### Las páginas que no cuadraban
+
+El modo lectura mostraba 701 páginas para un libro de 432. El problema tenía dos causas: la unidad de página era de 1000 caracteres (demasiado pequeña), y los EPUBs suelen tener whitespace en exceso (espacios dobles, tabuladores, saltos de línea triples) que inflaba el recuento.
+
+La solución fue elevar la unidad a 1800 caracteres y normalizar el texto antes de contarlo: una función `_longitud_normalizada()` que colapsa todo el espacio sobrante con regex antes de medir. Cada libro y cada capítulo calculan sus páginas sobre la longitud real del texto limpio.
+
+### Los silencios de siete segundos
+
+Uno de los bugs más desagradables: al pausar la reproducción, si había voces de nube en vuelo, los hilos de descarga seguían corriendo. El audio que llegaba después se reproducía igualmente, produciendo silencios raros y, a veces, que la voz anterior se superponiera con la nueva.
+
+El fix fue quirúrgico: la primera línea de `detener()` incrementa `_generacion`. Todos los hilos de precarga capturan la generación en el momento de lanzarse. Si al volver comparan y la generación cambió, descartan el resultado sin reproducirlo.
+
+### La pestaña que tardó en tener nombre correcto
+
+En el primer boceto de la app, la pestaña de producción se llamaba "Modo Grabación". Pasó tiempo antes de que el nombre reflejara bien para qué sirve realmente. Pasó a llamarse "Crear Audiolibro" en esta versión.
+
+### Las voces SAPI5 y el filtro de favoritas
+
+Las voces de nube se filtraban por el archivo de favoritas. Las voces SAPI5 locales no. Si una usuaria quería ver solo sus voces locales preferidas en el combo del modo lectura, el filtro las ignoraba y mostraba todas.
+
+Se corrigió unificando el filtro: ahora las voces SAPI5 (tanto 64 como 32 bits) pasan por el mismo sistema de favoritas que los proveedores de nube. Si no hay ninguna SAPI5 marcada como favorita, se muestran todas como respaldo.
+
+### El árbol de ajustes y el `CheckListCtrlMixin`
+
+En la versión anterior, la interfaz de ajustes era lineal. En esta versión, los ajustes se reorganizaron en un árbol de navegación (`wx.TreeCtrl` a la izquierda, contenido a la derecha). Es más limpio, más escalable, y NVDA navega por él con las flechas igual que por cualquier árbol nativo de Windows.
+
+Durante ese trabajo, apareció un aviso en consola: `DeprecationWarning: CheckListCtrlMixin`. La causa era que las listas con casillas de verificación usaban `CheckListCtrlMixin.__init__(self)`, que en wxPython 4.2+ ya no hace falta y genera esa advertencia. Se eliminó de todos los archivos donde aparecía: `pestana_ajustes.py`, `dialogo_troceador.py`, `ventana_proyectos.py`, `pestana_grabacion.py`. `EnableCheckBoxes(True)` es suficiente.
+
+### Actualizaciones automáticas completadas (Script Clon)
+
+El sistema de actualizaciones automáticas estaba implementado desde la versión 1.1 en forma básica. En la versión 2.0 el flujo quedó completo: al detectar una versión nueva en GitHub, la app avisa de forma accesible. Si la usuaria acepta, descarga el ZIP en segundo plano, escribe `actualizador.bat` y se cierra. El script bat reemplaza los archivos y vuelve a abrir la app. Las grabaciones, configuraciones y la carpeta `/bin/` se conservan siempre.
+
+— Dayanna Parson, junio de 2026

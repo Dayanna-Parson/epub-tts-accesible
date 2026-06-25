@@ -55,9 +55,9 @@ La accesibilidad con NVDA no se añadió al final. Condiciona cada decisión: qu
 | HTTP | `requests` + `httpx` | `requests` para todo lo síncrono actual. `httpx` preparado para modo grabación asíncrono. |
 | EPUB | EbookLib + BeautifulSoup4 | EbookLib para la estructura, BS4 para limpiar el HTML crudo. |
 | Sonidos | `wx.adv.Sound` + `winsound` | Sin deps pesadas. Ambos son stdlib o parte de wxPython. |
-| TTS local | pyttsx3 / SAPI5 | Respaldo offline siempre disponible. |
-| TTS nube | Azure Neural, Amazon Polly, ElevenLabs | Cada uno con su cliente propio en `/app/servicios/`. |
-| Logs | `logging` + `RotatingFileHandler` | 512 KB, 1 backup. Solo WARNING+ en disco, INFO en consola. |
+| TTS local | SAPI5 64 bits + SAPI5 32 bits vía proceso puente | SAPI5 siempre disponible; puente para voces CodeFactory (Eloquence, RealSpeak). |
+| TTS nube | Azure Neural, Amazon Polly, Deepgram Aura-2, ElevenLabs | Cada uno con su cliente propio en `/app/servicios/`. |
+| Logs | `logging` + `RotatingFileHandler` | 2 MB, 3 backups. Solo WARNING+ en disco, INFO en consola. |
 
 **El código está íntegramente en español.** Variables, funciones, clases, comentarios. Es una decisión consciente de la autora y debe mantenerse.
 
@@ -96,8 +96,13 @@ app/
 │   ├── cliente_azure.py          # Azure Neural TTS. SSML escapado con xml.sax.saxutils.
 │   ├── cliente_polly.py          # Amazon Polly. Selección automática de motor (standard/neural/generative).
 │   ├── cliente_eleven.py         # ElevenLabs. Multilingüe. Streaming de audio.
-│   └── cliente_sapi5.py          # SAPI5 local. Siempre disponible, siempre el fallback.
+│   ├── cliente_deepgram.py       # Deepgram Aura-2. REST puro. Pay-as-you-go. Caché LRU.
+│   ├── cliente_sapi5.py          # SAPI5 64 bits. Siempre disponible, siempre el fallback.
+│   └── cliente_sapi32_bridge.py  # SAPI5 32 bits (Eloquence, RealSpeak). Proceso puente JSON.
 └── config_rutas.py               # Rutas absolutas. cargar_claves() / guardar_claves(). RAIZ del proyecto.
+
+auxiliar_sapi32.py                # Script 32 bits independiente. Compilar con Python 32 bits + PyInstaller.
+                                  # Resultado: bin/auxiliar_sapi32.exe (incluido en el portable).
 ```
 
 ---
@@ -297,11 +302,31 @@ if control_previo:
 
 Navegar la jerarquía de widgets con `GetParent().GetParent().GetParent()` es frágil. Si cambia la estructura del layout, se rompe. Usa `wx.GetTopLevelParent(self)` para llegar a la ventana raíz.
 
-**4. `CheckListCtrlMixin` para casillas de verificación en listas.**
+**4. Casillas de verificación en listas.**
 
-Las casillas nativas de wxPython (`EnableCheckBoxes(True)`) no siempre son anunciadas correctamente por NVDA al navegar con flechas. Usa `wx.lib.mixins.listctrl.CheckListCtrlMixin` combinado con `EnableCheckBoxes(True)` para garantizar el anuncio del estado.
+Usa `EnableCheckBoxes(True)` directamente sobre el `ListCtrl`. En wxPython 4.2+ es suficiente para que NVDA anuncie el estado al navegar con flechas.
 
-**5. El debounce de 300ms en búsquedas.**
+**No uses `CheckListCtrlMixin.__init__(self)`** — en wxPython 4.2+ genera `DeprecationWarning` en consola. Si el código hereda de `CheckListCtrlMixin`, elimina la llamada al `__init__` del mixin (la herencia en sí no causa problemas, pero la llamada sí).
+
+**5. Verbalización inmediata sin mover el foco visible (`_anunciador`).**
+
+`StaticText.SetLabel()` no dispara eventos de accesibilidad. Para que NVDA anuncie texto en respuesta a una acción (Ctrl+I para la página, Ctrl+S para "Guardado."), usa un `wx.TextCtrl` oculto de 1×1 px:
+
+```python
+# En __init__:
+self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
+
+# Para verbalizar:
+def _anunciar(self, texto):
+    control_previo = wx.Window.FindFocus()
+    self._anunciador.SetValue(texto)
+    self._anunciador.SetFocus()
+    wx.CallLater(300, lambda: control_previo.SetFocus() if control_previo else None)
+```
+
+El control recibe el foco brevemente, NVDA anuncia su valor, y el foco vuelve tras 300 ms. El usuario no nota ningún movimiento visible.
+
+**6. El debounce de 300ms en búsquedas.**
 
 Las búsquedas en la lista de voces usan un temporizador de 300ms para no lanzar filtrado en cada pulsación de tecla. Sin él, NVDA anuncia el texto mientras el usuario sigue escribiendo, lo que resulta caótico.
 
@@ -311,7 +336,7 @@ Las búsquedas en la lista de voces usan un temporizador de 300ms para no lanzar
 
 El sistema de logs está centralizado en `iniciar_epub_tts.py`:
 
-- **Archivo:** `app/registros/app.log`, máximo 512 KB, 1 backup (`app.log.1`).
+- **Archivo:** `app/registros/app.log`, máximo 2 MB, 3 backups (`app.log.1`, `app.log.2`, `app.log.3`).
 - **Nivel en disco:** WARNING y superior. Los mensajes de depuración rutinarios no van al archivo.
 - **Nivel en consola:** INFO. Para sesiones de desarrollo.
 
@@ -449,3 +474,103 @@ La UI en `pestana_ajustes.py` solo lee `bool(v.get("es_nueva", False))` directam
 ### UX y Atajos
 - **Slidrs:** Solo exponen el valor actual a la API de accesibilidad. Pasos de 1 (flechas) y 10 (RePág/AvPág).
 - **Atajos:** `Control + O` es el comando universal de apertura. `H / Shift+H` para navegación por encabezados. Se prohíbe el uso de la tecla `Espacio` para evitar conflictos de foco.
+
+---
+
+## Decisiones técnicas — Fase 6 (v2.0, junio 2026)
+
+### Puente SAPI5 de 32 bits
+
+Las voces de CodeFactory (Eloquence, RealSpeak) son motores COM de 32 bits. Un proceso de 64 bits no puede cargar un COM de 32 bits directamente.
+
+**Arquitectura implementada:**
+
+- `auxiliar_sapi32.py` — script independiente, compilado con Python 32 bits + PyInstaller a `bin/auxiliar_sapi32.exe`. Carga el motor SAPI5 de 32 bits y escucha comandos JSON por stdin.
+- `app/servicios/cliente_sapi32_bridge.py` — cliente en la app principal (64 bits). Lanza el ejecutable como subproceso con `subprocess.Popen(stdin=PIPE, stdout=PIPE, creationflags=0x08000000)`. Se comunica con líneas JSON.
+
+**Protocolo JSON (stdin → auxiliar / stdout → bridge):**
+
+```
+→ {"cmd": "listar_voces"}
+← {"evento": "voces", "datos": [{"id": "...", "nombre": "...", "idioma": "..."}, ...]}
+
+→ {"cmd": "cambiar_voz", "id": "..."}
+← {"evento": "voz_cambiada"}
+
+→ {"cmd": "hablar", "texto": "...", "velocidad": 50, "volumen": 100, "generacion": 3}
+← {"evento": "progreso", "posicion": 42}
+← {"evento": "completado"}
+
+→ {"cmd": "detener"}
+→ {"cmd": "salir"}
+```
+
+`ClienteSapi32Bridge` expone exactamente la misma interfaz pública que `ClienteSapi5`. `reproductor_voz.py` enruta según `proveedor_id`: `"local"` → `cliente_sapi5`, `"local_32"` → `cliente_sapi32_bridge`.
+
+**Para compilar el auxiliar** (una sola vez, en un entorno Python 32 bits):
+```
+python -m PyInstaller --noconsole --onefile --name auxiliar_sapi32 auxiliar_sapi32.py
+```
+El resultado (`auxiliar_sapi32.exe`) se copia a `/bin/` antes de empaquetar el portable.
+
+---
+
+### Contador de generación en `reproductor_voz.py`
+
+El problema de los silencios de ~7 segundos y la superposición de voces tenía una causa concreta: los hilos de precarga terminaban su descarga después de que el usuario había pausado o cambiado de voz, y reproducían el audio sin comprobar si seguía siendo válido.
+
+**Fix:** `detener()` incrementa `_generacion` como primera operación. Cada hilo de precarga captura `generacion_precarga = self._generacion` al lanzarse. Al terminar la descarga, compara:
+
+```python
+if self._generacion != generacion_precarga:
+    motor.invalidar_cache(texto)
+    return
+```
+
+Cualquier descarga que llegue con una generación obsoleta se descarta sin reproducirse.
+
+---
+
+### Páginas virtuales con texto normalizado
+
+La unidad de página virtual es de **1800 caracteres normalizados**. El método `_longitud_normalizada(texto)` usa regex para colapsar el whitespace sobrante antes de contar:
+
+```python
+@staticmethod
+def _longitud_normalizada(texto: str) -> int:
+    t = re.sub(r"[ \t]+", " ", texto)
+    t = re.sub(r"\n{3,}", "\n\n", t)
+    return len(t)
+```
+
+Esto compensa el exceso de whitespace habitual en EPUBs exportados desde Word o LibreOffice, que sin normalizar inflan el recuento hasta un 40%.
+
+---
+
+### Limpieza de temporales al arrancar
+
+`iniciar_epub_tts.py` ejecuta una limpieza de archivos huérfanos antes de mostrar la ventana principal. Solo toca archivos con prefijo `tfh_` (los que genera `grabador_audio.py` con `tempfile.mkstemp(prefix="tfh_")`). Nunca borra archivos de configuración.
+
+Criterios: archivos con más de 7 días, o, si la carpeta supera 50 MB, los más antiguos primero hasta bajar del límite.
+
+---
+
+### Ajustes — árbol de navegación
+
+La pestaña de Ajustes usa `wx.TreeCtrl` (completamente expandido, sin colapsar) a la izquierda y `wx.Simplebook` a la derecha. Cada nodo del árbol corresponde a un panel. NVDA navega el árbol con flechas; Tab entra en el panel.
+
+**Contrato de cada panel de ajustes:**
+- Expone `primer_control` y `ultimo_control`.
+- `pestana_ajustes.py` intercepta Tab en `ultimo_control` para devolver el foco al árbol (ciclo de navegación cerrado).
+- `EVT_CHAR_HOOK` gestiona el Tab antes de que wxPython lo procese como cambio de foco estándar.
+
+---
+
+### Selector de escala de velocidad
+
+El deslizador de velocidad del modo lectura puede operar en dos escalas:
+
+- **Porcentaje (0–100):** El valor del slider es el porcentaje directamente.
+- **Multiplicador (0.5×–3.0×):** El slider va de 0 a 25; el valor real es `0.5 + slider * 0.1`.
+
+El selector está en Ajustes → Configuración General. Al guardar con Ctrl+S, `pestana_lectura.cargar_config_salto()` se llama via `wx.CallAfter` para reconfigurar el slider (rango, etiqueta, helptext) sin reiniciar la app.

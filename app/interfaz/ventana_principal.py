@@ -80,7 +80,7 @@ class VentanaPrincipal(wx.Frame):
 
         # Pestaña 2: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
-        self.notebook.AddPage(self.pestana_grabacion, "Modo Grabación")
+        self.notebook.AddPage(self.pestana_grabacion, "Crear Audiolibro")
         
         # Pestaña 3: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
@@ -183,7 +183,7 @@ class VentanaPrincipal(wx.Frame):
             primer = self.pestana_grabacion.primer_control
             ultimo = self.pestana_grabacion.ultimo_control
         elif indice == 2:
-            primer = self.pestana_ajustes.primer_control
+            primer = self.pestana_ajustes.arbol_cat
             ultimo = self.pestana_ajustes.obtener_ultimo_control()
         else:
             evento.Skip()
@@ -257,9 +257,9 @@ class VentanaPrincipal(wx.Frame):
         if self.notebook.GetSelection() == 0:
             self.pestana_lectura.iniciar_busqueda()
 
-    def al_ir_a_porcentaje(self, evento): 
+    def al_ir_a_porcentaje(self, evento):
         if self.notebook.GetSelection() == 0:
-            self.pestana_lectura.iniciar_ir_a_porcentaje()
+            self.pestana_lectura.iniciar_ir_a_pagina()
 
     def al_salir(self, evento):
         self.Close()
@@ -522,7 +522,7 @@ class VentanaPrincipal(wx.Frame):
         # Navegación por el texto
         item_b = menu.Append(wx.ID_ANY, "Buscar en el texto\tCtrl+F")
         self.Bind(wx.EVT_MENU, self.al_buscar, item_b)
-        item_g = menu.Append(wx.ID_ANY, "Ir a porcentaje\tCtrl+G")
+        item_g = menu.Append(wx.ID_ANY, "Ir a página / porcentaje...\tCtrl+G")
         self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, item_g)
         item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores\tCtrl+M")
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
@@ -652,7 +652,7 @@ class VentanaPrincipal(wx.Frame):
             "detener":           lambda: self.pestana_lectura.al_detener(None),
             "marcadores":        lambda: self.pestana_lectura.al_abrir_marcadores(None),
             "buscar":            lambda: self.pestana_lectura.iniciar_busqueda(),
-            "ir_porcentaje":     lambda: self.pestana_lectura.iniciar_ir_a_porcentaje(),
+            "ir_porcentaje":     lambda: self.pestana_lectura.iniciar_ir_a_pagina(),
         }
         if clave in _ACCIONES:
             if clave in _ATAJOS_SOLO_LECTURA and not en_lectura:

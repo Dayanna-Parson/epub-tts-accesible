@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 # ANCLAJE_INICIO: LISTA_CATEGORIAS
-class ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlAutoWidthMixin):
+class ListaCategorias(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """
     ListCtrl con casillas de verificación para seleccionar múltiples categorías.
     NVDA anuncia el estado (marcado/desmarcado) al navegar con las flechas.
@@ -27,7 +27,6 @@ class ListaCategorias(wx.ListCtrl, listmix.CheckListCtrlMixin, listmix.ListCtrlA
             self, parent,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,
         )
-        listmix.CheckListCtrlMixin.__init__(self)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         # Imprescindible para que las casillas sean visibles
         self.EnableCheckBoxes(True)

@@ -8,6 +8,7 @@ import time
 logger = logging.getLogger(__name__)
 import wx
 from app.servicios.cliente_sapi5 import ClienteSapi5
+from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
 from app.servicios.cliente_azure import ClienteAzure
 from app.servicios.cliente_eleven import ClienteEleven
 from app.servicios.cliente_polly import ClientePolly
@@ -27,7 +28,8 @@ class ReproductorVoz:
         self.config = self._cargar_config()
         
         # Inicialización de motores de síntesis
-        self.cliente_local   = ClienteSapi5()
+        self.cliente_local    = ClienteSapi5()
+        self.cliente_local_32 = ClienteSapi32Bridge()
         self.cliente_azure   = ClienteAzure()
         self.cliente_eleven  = ClienteEleven()
         self.cliente_polly   = ClientePolly()
@@ -89,14 +91,27 @@ class ReproductorVoz:
         else:
 
             # ANCLAJE_INICIO: CONFIGURACION_VOZ_ACTIVA
-            # --- FIX PARA SAPI5 (VOCES LOCALES) ---
-            self.motor_activo = self.cliente_local
-            self.tipo_motor_actual = "local"
-            
-            # Le decimos a SAPI que cambie la voz.
             nombre_voz = datos_voz.get("nombre", "")
-            if hasattr(self.cliente_local, "cambiar_voz_por_nombre"):
-                self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
+            if "local_32" in proveedor:
+                # Voz SAPI5 de 32 bits (p. ej. Eloquence de CodeFactory):
+                # usar el proceso auxiliar de 32 bits si está disponible.
+                if self.cliente_local_32.conectado:
+                    self.motor_activo = self.cliente_local_32
+                    self.tipo_motor_actual = "local_32"
+                    self.cliente_local_32.cambiar_voz_por_nombre(nombre_voz)
+                else:
+                    logger.warning(
+                        "[ReproductorVoz] Voz 32 bits solicitada pero auxiliar_sapi32.exe "
+                        "no está disponible. Cae a SAPI5 de 64 bits."
+                    )
+                    self.motor_activo = self.cliente_local
+                    self.tipo_motor_actual = "local"
+                    self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
+            else:
+                self.motor_activo = self.cliente_local
+                self.tipo_motor_actual = "local"
+                if hasattr(self.cliente_local, "cambiar_voz_por_nombre"):
+                    self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
             # ANCLAJE_FIN: CONFIGURACION_VOZ_ACTIVA
 
 # ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
@@ -178,7 +193,7 @@ class ReproductorVoz:
         self._detenido_intencionalmente = False
 
         # Para voces neuronales, verificar cuota y seleccionar motor disponible
-        if self.tipo_motor_actual != "local":
+        if self.tipo_motor_actual not in ("local", "local_32"):
             self._elegir_motor_con_cuota(texto)
 
         # Incrementar generación: los hilos de síntesis anteriores quedan invalidados
@@ -190,20 +205,21 @@ class ReproductorVoz:
 
         self.estado = "reproduciendo"
 
-        if self.tipo_motor_actual == "local":
+        if self.tipo_motor_actual in ("local", "local_32"):
+            motor_local = self.motor_activo
             try:
-                usa_callback = (callback_progreso or callback_completado) and hasattr(self.cliente_local, 'hablar_con_callback')
+                usa_callback = (callback_progreso or callback_completado) and hasattr(motor_local, "hablar_con_callback")
                 if usa_callback:
-                    self.cliente_local.hablar_con_callback(
+                    motor_local.hablar_con_callback(
                         texto,
                         pos_offset,
                         callback_progreso or (lambda pos: None),
                         callback_completado or (lambda: None),
                     )
                 else:
-                    self.cliente_local.hablar(texto)
+                    motor_local.hablar(texto)
             except Exception as e:
-                logger.warning("[ReproductorVoz] Error en voz local SAPI5: %s", e)
+                logger.warning("[ReproductorVoz] Error en voz local: %s", e)
                 self.estado = "detenido"
         else:
             # Voces neuronales: se ejecutan en segundo plano para no bloquear la interfaz
@@ -305,17 +321,29 @@ class ReproductorVoz:
         Cuando hablar() se llame después con el mismo texto, encontrará el audio
         ya listo y lo reproducirá sin la latencia de la API (típicamente 1-2s).
         Solo aplica a voces neuronales; SAPI5 no necesita precarga.
+        La precarga captura la generación actual y la verifica antes de almacenar
+        el resultado: si el usuario pausó/detuvo mientras se descargaba, el audio
+        se descarta en lugar de reproducirse de forma residual.
         """
         if self.tipo_motor_actual == "local":
             return
         if not hasattr(self.motor_activo, 'preparar'):
             return
 
-        motor = self.motor_activo  # capturar referencia local para el hilo
+        motor = self.motor_activo
+        generacion_precarga = self._generacion  # capturar generación al lanzar
 
         def _preparar():
             try:
                 motor.preparar(texto, datos_voz)
+                # Si la generación cambió durante la descarga (pausa/detención),
+                # invalidar la caché para que no se sirva el audio viejo.
+                if self._generacion != generacion_precarga:
+                    if hasattr(motor, 'invalidar_cache'):
+                        try:
+                            motor.invalidar_cache(texto)
+                        except Exception:
+                            pass
             except Exception as e:
                 logger.warning("[ReproductorVoz] Error en precarga: %s", e)
 
@@ -325,11 +353,12 @@ class ReproductorVoz:
     # ANCLAJE_INICIO: COMANDOS_REPRODUCTOR
     def detener(self):
         """Finaliza cualquier proceso de audio activo en todos los motores."""
-        # Marcar como detención intencional ANTES de cerrar la sesión HTTP.
-        # El hilo de síntesis leerá este flag cuando capture la ConnectionError
-        # y no mostrará el diálogo de error ni sobreescribirá el estado.
+        # Incrementar generación PRIMERO: invalida al instante cualquier hilo
+        # de síntesis o precarga en vuelo. Si el hilo llega a la comprobación
+        # _generacion == generacion tras el cierre HTTP, encontrará valores
+        # distintos y descartará el audio sin reproducirlo ni encadenar la cola.
+        self._generacion += 1
         self._detenido_intencionalmente = True
-        # Limpiar callback para que el hilo no encadene el siguiente fragmento
         self._callback_completado = None
         try: self.cliente_local.detener()
         except: pass

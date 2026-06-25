@@ -46,10 +46,92 @@ logger = logging.getLogger(__name__)
 # ── Migración de archivos de configuración ────────────────────────────────────
 try:
     sys.path.insert(0, _RAIZ)
-    from app.config_rutas import migrar_archivos_config
+    from app.config_rutas import migrar_archivos_config, RAIZ as _RAIZ_APP, CONFIG_DIR as _CONFIG_DIR
     migrar_archivos_config()
 except Exception as _e:
     logging.getLogger(__name__).warning("Migración de configuración fallida: %s", _e)
+    _RAIZ_APP = _RAIZ
+    _CONFIG_DIR = os.path.join(_RAIZ, "configuraciones")
+
+# ── Carpetas persistentes necesarias desde la primera ejecución ───────────────
+# Se crean aquí por si el ZIP se extrajo sin preservar carpetas vacías.
+for _carpeta_arranque in [
+    os.path.join(_RAIZ_APP, "Grabaciones_Epub-TTS"),
+    os.path.join(_CONFIG_DIR, "proyectos_backup"),
+]:
+    try:
+        os.makedirs(_carpeta_arranque, exist_ok=True)
+    except Exception as _e:
+        logging.getLogger(__name__).warning("No se pudo crear carpeta de arranque %s: %s", _carpeta_arranque, _e)
+
+# ANCLAJE_INICIO: LIMPIEZA_TEMPORALES_ARRANQUE
+def _limpiar_temporales_huerfanos():
+    """
+    Elimina archivos temporales de audio huérfanos (prefijo tfh_) que hayan
+    quedado en el directorio temp del sistema si la app se cerró de forma
+    abrupta durante una grabación. Solo borra archivos con más de 7 días de
+    antigüedad. No toca ningún archivo de configuración ni JSON.
+    Límite adicional: si la carpeta supera 50 MB de archivos tfh_, elimina
+    los más antiguos hasta bajar del umbral.
+    """
+    import glob
+    import tempfile
+    import time
+
+    _PREFIJO       = "tfh_"
+    _DIAS_MAX      = 7
+    _LIMITE_BYTES  = 50 * 1024 * 1024  # 50 MB
+    _EXTS          = {".mp3", ".wav"}
+
+    dir_tmp = tempfile.gettempdir()
+    ahora   = time.time()
+    umbral  = ahora - _DIAS_MAX * 86400
+
+    candidatos = []
+    for ruta in glob.glob(os.path.join(dir_tmp, f"{_PREFIJO}*")):
+        ext = os.path.splitext(ruta)[1].lower()
+        if ext not in _EXTS:
+            continue
+        try:
+            mtime = os.path.getmtime(ruta)
+            size  = os.path.getsize(ruta)
+            candidatos.append((mtime, size, ruta))
+        except OSError:
+            continue
+
+    # Eliminar archivos mayores de 7 días
+    for mtime, size, ruta in candidatos:
+        if mtime < umbral:
+            try:
+                os.remove(ruta)
+                logging.getLogger(__name__).debug(
+                    "Temporal huérfano eliminado (>7 días): %s", ruta
+                )
+            except OSError:
+                pass
+
+    # Si la carpeta sigue superando el límite, eliminar los más antiguos
+    candidatos = [(m, s, r) for m, s, r in candidatos if os.path.exists(r)]
+    total = sum(s for _, s, _ in candidatos)
+    if total > _LIMITE_BYTES:
+        candidatos.sort()  # más antiguos primero
+        for mtime, size, ruta in candidatos:
+            if total <= _LIMITE_BYTES:
+                break
+            try:
+                os.remove(ruta)
+                total -= size
+                logging.getLogger(__name__).debug(
+                    "Temporal huérfano eliminado (límite 50 MB): %s", ruta
+                )
+            except OSError:
+                pass
+
+try:
+    _limpiar_temporales_huerfanos()
+except Exception as _e:
+    logging.getLogger(__name__).warning("Limpieza de temporales fallida: %s", _e)
+# ANCLAJE_FIN: LIMPIEZA_TEMPORALES_ARRANQUE
 
 # ── Hooks de pánico ──────────────────────────────────────────────────────────
 # Capturan cualquier excepción no controlada (hilo principal y threads de fondo)

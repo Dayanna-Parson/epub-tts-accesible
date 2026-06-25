@@ -1,3 +1,92 @@
+=== v2.0.0 (24/06/2026) ===
+
+Versión 2.0.0 — 2026-06-24
+
+Nuevas funciones
+────────────────
+
+- Ajustes rediseñados con árbol de navegación:
+  La pestaña de Ajustes usa ahora un árbol expandible a la izquierda
+  (wx.TreeCtrl) y un panel de contenido a la derecha. Cada sección
+  (General, Credenciales, Catálogos de Voces, Diccionario, Atajos) se
+  carga solo cuando se selecciona, sin bloquear el foco de NVDA.
+  Navega con flechas por el árbol y Tab para entrar en cada panel.
+
+- Actualizaciones automáticas desde la propia app (Script Clon):
+  Al detectar una versión nueva en GitHub, la app te avisa de forma
+  accesible. Si aceptas, descarga el ZIP en segundo plano, escribe un
+  script externo (actualizador.bat) y se cierra para que el script
+  reemplace los archivos. Al volver a abrir, aparecen estas novedades
+  como confirmación de que la actualización fue correcta.
+  Tus configuraciones, grabaciones y la carpeta bin/ se conservan
+  siempre. Solo se actualiza el código.
+
+- Compatibilidad con voces SAPI5 de 32 bits (Eloquence, RealSpeak):
+  Las voces de CodeFactory (Eloquence, RealSpeak) son motores de 32
+  bits y antes no funcionaban en la app de 64 bits. A partir de esta
+  versión, el portable incluye auxiliar_sapi32.exe en /bin/. Al
+  seleccionar una voz de 32 bits, la app lanza este proceso auxiliar
+  en segundo plano de forma transparente. No hace falta configurar
+  nada en Windows ni instalar ningún programa adicional.
+
+- Ctrl+I: estado de lectura inmediato para NVDA:
+  Pulsa Ctrl+I en cualquier momento para que NVDA verbalice
+  inmediatamente en qué página estás, tanto del capítulo como del
+  libro completo. El cálculo es dinámico: cada libro y cada capítulo
+  tienen su propio número de páginas según su extensión real.
+  La unidad de página virtual equivale a 1800 caracteres normalizados
+  (espacios y saltos de línea extra de los EPUB quedan descartados).
+
+- Ctrl+G: saltar a una página o posición concreta:
+  Abre un diálogo con tres campos independientes: página del capítulo,
+  página del libro y porcentaje. Rellena el que prefieras y pulsa
+  Aceptar. El sistema da prioridad al porcentaje, luego al número de
+  página del libro, y por último al del capítulo.
+
+- Selector de escala de velocidad:
+  En Ajustes → Configuración General puedes elegir entre el sistema en
+  Porcentajes (0-100) o en Multiplicadores (0.5× a 3.0×). Al guardar
+  con Ctrl+S, el deslizador del modo lectura cambia de escala al
+  instante sin necesidad de reiniciar la app.
+
+- Ctrl+S en Ajustes con confirmación vocal:
+  Al pulsar Ctrl+S en cualquier panel de Ajustes, la configuración se
+  guarda y NVDA verbaliza inmediatamente "Guardado." mediante un foco
+  relámpago en un control oculto, sin mover el foco visible.
+
+Correcciones
+────────────
+
+- Pestaña renombrada a "Crear Audiolibro":
+  La pestaña de producción de audio pasa a llamarse así para dejar
+  claro su propósito principal. El atajo Ctrl+2 sigue funcionando igual.
+
+- Sin silencios entre fragmentos al cambiar de voz o pausar:
+  Al detener la reproducción, el reproductor invalida de inmediato
+  todos los hilos de descarga en vuelo (contador _generacion). Las
+  voces de nube ya no descargan fragmentos de más que después causan
+  silencios de 7 segundos o frases solapadas.
+
+- Las voces SAPI5 respetan ahora el filtro de favoritas:
+  En el combo de voces del modo lectura, las voces locales SAPI5
+  (incluyendo las de 32 bits) se filtran por el mismo archivo de
+  favoritas que los proveedores de nube. Si no tienes ninguna SAPI5
+  marcada como favorita, se muestran todas como respaldo.
+
+- Limpieza automática de archivos temporales al arrancar:
+  Si la app se cerró de forma abrupta durante una grabación, los
+  archivos .mp3/.wav temporales que quedaron en el directorio del
+  sistema se eliminan al volver a abrir. Solo se borran los que
+  tengan más de 7 días o si la carpeta supera 50 MB. Nunca se tocan
+  archivos de configuración.
+
+- Aviso claro al seleccionar una voz de 32 bits sin el puente:
+  Si un usuario selecciona Eloquence u otra voz de 32 bits y el
+  portable no incluye auxiliar_sapi32.exe, la app muestra un mensaje
+  explicativo en lugar de fallar en silencio.
+
+───────────────────────────────────────────────────────────────────────────
+
 Versión 1.2.0 — 2026-06-16
 
 Nuevas funciones

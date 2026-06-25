@@ -54,3 +54,15 @@ Grabaciones_Epub-TTS/
 bin/*.exe
 bin/*.dll
 Epub-TTS.spec
+
+# ── Build y distribución ─────────────────────────────────────────────────────
+dist/
+build/
+*.spec
+actualizador.bat
+
+# ── Caché de audio (generada en tiempo de ejecución) ─────────────────────────
+app/motor/cache/
+
+# ── Respaldos de proyectos (datos personales) ─────────────────────────────────
+configuraciones/proyectos_backup/

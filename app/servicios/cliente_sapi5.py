@@ -163,6 +163,32 @@ class ClienteSapi5:
         if not self._detener_flag and self._generacion_sapi == gen:
             wx.CallAfter(callback_completado)
 
+    def _avisar_voz_incompatible(self, nombre_voz):
+        """Muestra un aviso accesible cuando una voz SAPI5 de 32 bits no puede activarse."""
+        import os
+        from app.config_rutas import RAIZ
+        auxiliar = os.path.join(RAIZ, "bin", "auxiliar_sapi32.exe")
+        if os.path.isfile(auxiliar):
+            mensaje = (
+                f"La voz «{nombre_voz}» es de 32 bits y no puede usarse directamente "
+                "en la aplicación de 64 bits.\n\n"
+                "Se ha activado automáticamente el puente de compatibilidad de 32 bits "
+                "incluido en la aplicación. Selecciona de nuevo la voz para usarla."
+            )
+        else:
+            mensaje = (
+                f"La voz «{nombre_voz}» no es compatible con esta versión de la aplicación.\n\n"
+                "Algunas voces de CodeFactory (Eloquence, RealSpeak) son motores de 32 bits "
+                "y no funcionan en una aplicación de 64 bits.\n\n"
+                "Esta versión no incluye el módulo de compatibilidad de 32 bits. "
+                "Contacta con el soporte para obtener la versión con compatibilidad Eloquence."
+            )
+        try:
+            import wx
+            wx.MessageBox(mensaje, "Voz de 32 bits detectada", wx.OK | wx.ICON_INFORMATION)
+        except Exception as e:
+            logger.warning("[SAPI5] No se pudo mostrar aviso de voz incompatible: %s", e)
+
     def detener(self):
         if self.conectado:
             # Señalizar al hilo de párrafos que debe detenerse
@@ -224,7 +250,21 @@ class ClienteSapi5:
                         tok  = tokens.Item(i)
                         desc = tok.GetDescription()
                         if nombre_lower in desc.lower():
-                            self.motor.Voice = tok
+                            try:
+                                self.motor.Voice = tok
+                            except Exception as e_activar:
+                                # Probable voz de 32 bits (p. ej. Eloquence de CodeFactory)
+                                # incompatible con el proceso de 64 bits.
+                                logger.warning(
+                                    "[SAPI5] No se pudo activar '%s': %s. "
+                                    "Si es una voz de 32 bits (CodeFactory Eloquence), "
+                                    "no es compatible con Python 64 bits.",
+                                    desc, e_activar,
+                                )
+                                wx.CallAfter(
+                                    self._avisar_voz_incompatible, desc
+                                )
+                                return
                             logger.debug("[SAPI5] Voz cambiada a: %s", desc)
                             return
                     except Exception as e:
