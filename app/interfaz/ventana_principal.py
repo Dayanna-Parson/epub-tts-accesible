@@ -80,7 +80,7 @@ class VentanaPrincipal(wx.Frame):
 
         # Pestaña 2: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
-        self.notebook.AddPage(self.pestana_grabacion, "Crear Audiolibro")
+        self.notebook.AddPage(self.pestana_grabacion, "Creación de fragmentos")
         
         # Pestaña 3: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
@@ -124,6 +124,10 @@ class VentanaPrincipal(wx.Frame):
 
         # Verificación automática de voces nuevas (una vez al día, hilo de fondo)
         wx.CallAfter(self._iniciar_verificacion_voces)
+
+        # Comprobación automática de actualizaciones al arranque (5 s de margen
+        # para que NVDA lea la ventana antes de que aparezca el diálogo).
+        wx.CallLater(5000, self._comprobar_actualizaciones_arranque)
 
         # Sonido "aplicación lista" — 200 ms de margen para que NVDA
         # empiece a leer la ventana antes de sonar (sin ser tardío).
@@ -779,6 +783,26 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: AYUDA
 
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS
+    # ANCLAJE_INICIO: COMPROBACION_ACTUALIZACIONES_ARRANQUE
+    def _comprobar_actualizaciones_arranque(self):
+        """
+        Comprueba actualizaciones al arrancar si el usuario tiene activada
+        la opción 'actualizar_automaticamente' en ajustes.json.
+        Solo lanza la comprobación; el diálogo aparece en el hilo principal
+        a través de wx.CallAfter en el callback.
+        """
+        import json
+        from app.config_rutas import ruta_config
+        try:
+            with open(ruta_config("ajustes.json"), encoding="utf-8") as f:
+                conf = json.load(f)
+            if not conf.get("actualizar_automaticamente", True):
+                return
+        except Exception:
+            pass
+        self.pestana_ajustes._al_buscar_actualizaciones()
+    # ANCLAJE_FIN: COMPROBACION_ACTUALIZACIONES_ARRANQUE
+
     def _iniciar_verificacion_voces(self):
         """
         Comprueba si hay voces nuevas en las APIs (Azure, Polly, ElevenLabs).

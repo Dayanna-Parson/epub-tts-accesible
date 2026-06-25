@@ -1,7 +1,7 @@
 # ANCLAJE_INICIO: SCRIPT_CONSTRUCCION_PORTABLE
 """
-construir_app.py
-────────────────
+crear_portable.py
+─────────────────
 Empaqueta Epub TTS Accesible en un archivo ZIP portable listo para
 distribuir a usuarios finales invidentes.
 
@@ -14,7 +14,7 @@ Pasos que ejecuta:
   6. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
 
 Uso:
-    python construir_app.py
+    python crear_portable.py
 
 Requisitos previos:
     pip install pyinstaller

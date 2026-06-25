@@ -10,10 +10,15 @@ import wx
 _RAIZ = os.path.dirname(os.path.abspath(__file__))
 
 # ── Sistema de logs centralizado ─────────────────────────────────────────────
-# Todos los registros van a app/registros/app.log (max 2 MB × 3 copias = 6 MB total).
+# Los registros van a <raiz>/registros/app.log (max 2 MB × 3 copias = 6 MB).
+# En el portable, <raiz> es la carpeta junto al .exe → fácil de encontrar.
+# En desarrollo, es la raíz del proyecto.
 # Solo se escriben WARNING / ERROR / CRITICAL → el archivo tarda mucho en llenarse.
-# Error_log.txt y error_tiflo.log ya no se usan.
-_DIR_REGISTROS = os.path.join(_RAIZ, "app", "registros")
+if getattr(sys, "frozen", False):
+    _BASE_REGISTROS = os.path.dirname(sys.executable)
+else:
+    _BASE_REGISTROS = _RAIZ
+_DIR_REGISTROS = os.path.join(_BASE_REGISTROS, "registros")
 os.makedirs(_DIR_REGISTROS, exist_ok=True)
 _RUTA_LOG = os.path.join(_DIR_REGISTROS, "app.log")
 
