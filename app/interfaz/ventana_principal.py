@@ -800,7 +800,27 @@ class VentanaPrincipal(wx.Frame):
                 return
         except Exception:
             pass
-        self.pestana_ajustes._al_buscar_actualizaciones()
+        try:
+            from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
+            comp = ComprobadorActualizaciones()
+            comp.comprobar_en_hilo(
+                lambda r: wx.CallAfter(self._al_resultado_actualizacion_arranque, r)
+            )
+        except Exception as e:
+            logger.warning("Comprobación de actualizaciones al arranque fallida: %s", e)
+
+    def _al_resultado_actualizacion_arranque(self, resultado: dict):
+        if resultado.get("error") or not resultado.get("hay_nueva"):
+            return
+        from app.interfaz.dialogo_novedades import DialogoNovedades
+        from app.motor.reproductor_sonidos import reproducir, SUCCESS
+        reproducir(SUCCESS)
+        v_remota = resultado.get("version_remota", "")
+        dlg = DialogoNovedades(self, v_remota, resultado.get("novedades", ""))
+        respuesta = dlg.ShowModal()
+        dlg.Destroy()
+        if respuesta == wx.ID_OK:
+            self.pestana_ajustes._hilo_descargar_e_instalar_desde_arranque(v_remota)
     # ANCLAJE_FIN: COMPROBACION_ACTUALIZACIONES_ARRANQUE
 
     def _iniciar_verificacion_voces(self):
