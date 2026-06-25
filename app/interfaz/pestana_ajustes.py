@@ -420,6 +420,16 @@ class PanelGeneral(wx.ScrolledWindow):
         )
         hilo.start()
 
+    def _hilo_descargar_e_instalar_desde_arranque(self, version_remota: str):
+        """Lanza la descarga e instalación desde la comprobación automática al arrancar."""
+        import threading
+        hilo = threading.Thread(
+            target=self._hilo_descargar_e_instalar,
+            args=(version_remota,),
+            daemon=True,
+        )
+        hilo.start()
+
     def _hilo_descargar_e_instalar(self, version_remota: str):
         import shutil
         import urllib.request
