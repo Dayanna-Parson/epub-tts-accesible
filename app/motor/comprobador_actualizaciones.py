@@ -40,7 +40,7 @@ _URL_BASE = (
     "https://raw.githubusercontent.com"
     "/Dayanna-Parson/epub-tts-accesible/main"
 )
-_URL_VERSION   = f"{_URL_BASE}/version.json"
+_URL_VERSION   = f"{_URL_BASE}/recursos/version.json"
 _URL_NOVEDADES = f"{_URL_BASE}/novedades.txt"
 _URL_ZIP = (
     "https://github.com/Dayanna-Parson/epub-tts-accesible"
