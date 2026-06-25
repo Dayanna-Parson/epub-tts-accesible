@@ -2012,10 +2012,15 @@ class PestanaAjustes(wx.Panel):
             # Devolver el foco al árbol después de cambiar la página.
             # La bandera _bloqueo_anuncio evita que el re-enfoque dispare
             # un segundo anuncio de NVDA para el mismo nodo.
-            if not self._bloqueo_anuncio:
-                self._bloqueo_anuncio = True
-                self.arbol_cat.SetFocus()
-                wx.CallAfter(self._desbloquear_anuncio)
+            # Guardia: el evento puede llegar durante el cierre de la ventana,
+            # cuando el TreeCtrl ya ha sido destruido por wx.
+            if not self._bloqueo_anuncio and self.arbol_cat:
+                try:
+                    self._bloqueo_anuncio = True
+                    self.arbol_cat.SetFocus()
+                    wx.CallAfter(self._desbloquear_anuncio)
+                except RuntimeError:
+                    self._bloqueo_anuncio = False
         evento.Skip()
 
     def _desbloquear_anuncio(self):

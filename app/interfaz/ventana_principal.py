@@ -80,7 +80,7 @@ class VentanaPrincipal(wx.Frame):
 
         # Pestaña 2: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
-        self.notebook.AddPage(self.pestana_grabacion, "Grabación de Fragmentos")
+        self.notebook.AddPage(self.pestana_grabacion, "Crear Audiolibro")
         
         # Pestaña 3: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
