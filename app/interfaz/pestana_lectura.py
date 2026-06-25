@@ -292,11 +292,11 @@ class PestanaLectura(wx.Panel):
             logger.warning("[PestanaLectura] No se pudieron cargar voces SAPI5 32-bits: %s", e)
 
         # Deduplicar: si una voz aparece tanto en 64 como en 32 bits (mismo nombre),
-        # conservar solo la entrada de 32 bits (que es la que realmente funciona).
-        nombres_32 = {v.get("nombre", "").strip().lower() for v in voces_locales_32}
-        voces_locales_64 = [
-            v for v in voces_locales_64
-            if v.get("nombre", "").strip().lower() not in nombres_32
+        # conservar solo la entrada de 64 bits (que es la que realmente funciona).
+        nombres_64 = {v.get("nombre", "").strip().lower() for v in voces_locales_64}
+        voces_locales_32 = [
+            v for v in voces_locales_32
+            if v.get("nombre", "").strip().lower() not in nombres_64
         ]
 
         # Combinar voces locales y filtrar por favoritos
