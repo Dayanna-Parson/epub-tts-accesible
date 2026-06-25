@@ -1122,8 +1122,12 @@ class VentanaProyectos(wx.Frame):
         elif proyecto.get("archivos"):
             carpeta = os.path.dirname(proyecto["archivos"][0])
         else:
-            self._anunciar_estado("No hay carpeta asociada a este proyecto.")
-            return
+            try:
+                os.makedirs(carpeta_libro, exist_ok=True)
+                carpeta = carpeta_libro
+            except Exception as e:
+                self._anunciar_estado(f"No se pudo crear la carpeta: {e}")
+                return
 
         try:
             if os.name == "nt":

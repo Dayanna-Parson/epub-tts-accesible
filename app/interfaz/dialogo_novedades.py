@@ -3,50 +3,49 @@
 dialogo_novedades.py
 ─────────────────────
 Ventana accesible que muestra el contenido remoto de novedades.txt
-cuando se detecta una versión nueva disponible, y permite instalar
-la actualización automáticamente sin abrir el navegador.
+cuando se detecta una versión nueva disponible, y pregunta si el
+usuario quiere instalar la actualización (Script Clon).
 
 Características de accesibilidad:
-  - Título de ventana descriptivo con el número de versión nueva.
+  - Título descriptivo con el número de versión nueva.
   - El foco cae en el área de texto al abrirse → NVDA lo lee de inmediato.
-  - Escape cierra el diálogo (EVT_CHAR_HOOK a nivel de Frame).
-  - Área de texto en modo solo lectura con scroll accesible (flechas, RePág/AvPág).
-  - SetHelpText en el TextCtrl explica los controles disponibles.
-  - RESIZE_BORDER: el usuario puede ampliar la ventana si necesita más espacio.
-  - La etiqueta de progreso informa a los lectores de pantalla del estado.
+  - Escape y el botón No → no actualizar (ID_CANCEL).
+  - Botón Sí → procede con la actualización (ID_OK).
+  - X de la ventana equivale a No (EVT_CLOSE → ID_CANCEL).
+  - Área de texto solo lectura con scroll accesible (flechas, RePág/AvPág).
+  - RESIZE_BORDER para ampliar la ventana si hace falta.
 """
 
-import subprocess
-import sys
 import wx
-
-from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 class DialogoNovedades(wx.Dialog):
     """
-    Diálogo modal que muestra las novedades de la nueva versión y ofrece
-    instalación automática.
+    Diálogo modal que muestra las novedades de la nueva versión y pregunta
+    si el usuario desea actualizar (Script Clon).
+
+    Devuelve wx.ID_OK si el usuario acepta actualizar,
+    wx.ID_CANCEL si rechaza o cierra la ventana.
 
     Parámetros
     ----------
     parent          : wx.Window | None
-    version_remota  : str   ej. "1.1.0"
+    version_remota  : str   ej. "2.0.0"
     texto_novedades : str   contenido descargado de novedades.txt
     """
 
     def __init__(self, parent, version_remota: str, texto_novedades: str):
         super().__init__(
             parent,
-            title=f"Novedades — Versión {version_remota} disponible",
+            title=f"Nueva versión disponible: {version_remota}",
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.STAY_ON_TOP,
             size=(640, 500),
         )
-        self._version_remota = version_remota
         self._construir(version_remota, texto_novedades)
         self.CentreOnScreen()
         self.Bind(wx.EVT_CHAR_HOOK, self._al_tecla)
+        self.Bind(wx.EVT_CLOSE, self._al_cerrar_ventana)
 
     # ── Construcción ──────────────────────────────────────────────────────────
 
@@ -57,10 +56,14 @@ class DialogoNovedades(wx.Dialog):
         # Encabezado
         lbl = wx.StaticText(
             self._panel,
-            label=f"Hay una nueva versión disponible: {version_remota}",
+            label=(
+                f"Hay una nueva versión disponible: {version_remota}\n"
+                "¿Deseas instalarla ahora?"
+            ),
         )
         lbl.SetHelpText(
-            "Se ha detectado una versión más reciente en el repositorio de GitHub."
+            "Se ha detectado una versión más reciente en el repositorio de GitHub. "
+            "Pulsa Sí para actualizar o No para cerrar sin actualizar."
         )
         sz.Add(lbl, 0, wx.ALL, 12)
 
@@ -75,66 +78,35 @@ class DialogoNovedades(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_AUTO_URL,
         )
         self.txt_novedades.SetHelpText(
-            "Novedades de la nueva versión. Solo lectura. "
-            "Usa las flechas, RePág y AvPág para desplazarte. "
-            "Pulsa Escape o el botón Cerrar para salir."
+            "Novedades de la versión. Solo lectura. "
+            "Usa las flechas, RePág y AvPág para desplazarte."
         )
         sz.Add(self.txt_novedades, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
 
-        # Separador
-        sz.Add(
-            wx.StaticLine(self._panel),
-            0,
-            wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP,
-            10,
-        )
+        sz.Add(wx.StaticLine(self._panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 10)
 
-        # Etiqueta de progreso (inicialmente vacía)
-        self.lbl_progreso = wx.StaticText(self._panel, label="")
-        self.lbl_progreso.SetName("Estado de la actualización")
-        self.lbl_progreso.SetHelpText(
-            "Muestra el estado de la descarga e instalación de la actualización."
-        )
-        sz.Add(
-            self.lbl_progreso,
-            0,
-            wx.ALIGN_CENTER | wx.TOP | wx.LEFT | wx.RIGHT,
-            6,
-        )
+        # Fila de botones Sí / No
+        fila = wx.BoxSizer(wx.HORIZONTAL)
 
-        # Botón actualizar automáticamente
-        self.btn_actualizar = wx.Button(
-            self._panel,
-            label="Actualizar automáticamente",
-        )
-        self.btn_actualizar.SetName("Actualizar automáticamente")
-        self.btn_actualizar.SetHelpText(
-            "Descarga e instala la nueva versión directamente desde GitHub. "
+        btn_si = wx.Button(self._panel, wx.ID_OK, label="&Sí, actualizar ahora")
+        btn_si.SetHelpText(
+            "Descarga e instala la nueva versión. "
             "Tus configuraciones y grabaciones no se borrarán. "
-            "La aplicación se reiniciará al terminar."
+            "La aplicación se cerrará y se volverá a abrir automáticamente."
         )
-        self.btn_actualizar.Bind(wx.EVT_BUTTON, self._al_actualizar)
-        sz.Add(self.btn_actualizar, 0, wx.ALIGN_CENTER | wx.TOP, 8)
+        btn_si.Bind(wx.EVT_BUTTON, self._al_aceptar)
 
-        # Botón reiniciar (oculto hasta que la descarga termine con éxito)
-        self.btn_reiniciar = wx.Button(
-            self._panel,
-            label="Reiniciar ahora para aplicar la actualización",
+        btn_no = wx.Button(self._panel, wx.ID_CANCEL, label="&No, cerrar")
+        btn_no.SetHelpText(
+            "Cierra este diálogo sin actualizar. "
+            "Podrás actualizar más tarde desde Ajustes."
         )
-        self.btn_reiniciar.SetName("Reiniciar ahora")
-        self.btn_reiniciar.SetHelpText(
-            "Cierra la aplicación y la vuelve a abrir con la nueva versión."
-        )
-        self.btn_reiniciar.Bind(wx.EVT_BUTTON, self._al_reiniciar)
-        self.btn_reiniciar.Hide()
-        sz.Add(self.btn_reiniciar, 0, wx.ALIGN_CENTER | wx.TOP, 6)
+        btn_no.SetDefault()
+        btn_no.Bind(wx.EVT_BUTTON, self._al_rechazar)
 
-        btn_cerrar = wx.Button(self._panel, wx.ID_OK, label="Cerrar (Escape)")
-        btn_cerrar.SetDefault()
-        btn_cerrar.SetHelpText(
-            "Cierra este diálogo. También puedes pulsar la tecla Escape."
-        )
-        sz.Add(btn_cerrar, 0, wx.ALIGN_CENTER | wx.ALL, 10)
+        fila.Add(btn_si, 0, wx.RIGHT, 12)
+        fila.Add(btn_no, 0)
+        sz.Add(fila, 0, wx.ALIGN_CENTER | wx.ALL, 12)
 
         self._panel.SetSizer(sz)
         outer = wx.BoxSizer(wx.VERTICAL)
@@ -144,7 +116,7 @@ class DialogoNovedades(wx.Dialog):
         # El foco cae en el texto al abrirse para que NVDA comience a leer
         wx.CallAfter(self.txt_novedades.SetFocus)
 
-    # ── Teclado ───────────────────────────────────────────────────────────────
+    # ── Teclado y cierre ──────────────────────────────────────────────────────
 
     def _al_tecla(self, evento):
         if evento.GetKeyCode() == wx.WXK_ESCAPE:
@@ -152,57 +124,13 @@ class DialogoNovedades(wx.Dialog):
             return
         evento.Skip()
 
-    # ── Actualización automática ──────────────────────────────────────────────
+    def _al_cerrar_ventana(self, evento):
+        """X de la ventana equivale a No."""
+        self.EndModal(wx.ID_CANCEL)
 
-    def _al_actualizar(self, evento):
-        """Lanza la descarga en un hilo daemon y deshabilita el botón."""
-        self.btn_actualizar.Disable()
-        self.btn_actualizar.SetLabel("Actualizando…")
-        self._set_progreso("Iniciando descarga…", 0)
-
-        comp = ComprobadorActualizaciones()
-        comp.descargar_en_hilo(
-            callback_resultado=lambda r: wx.CallAfter(self._al_fin_descarga, r),
-            callback_progreso=lambda msg, pct: wx.CallAfter(
-                self._set_progreso, msg, pct
-            ),
-        )
-
-    def _set_progreso(self, mensaje: str, porcentaje: int):
-        """Actualiza la etiqueta de progreso (siempre desde el hilo UI)."""
-        if porcentaje > 0:
-            texto = f"{mensaje} ({porcentaje} %)"
-        else:
-            texto = mensaje
-        self.lbl_progreso.SetLabel(texto)
-        self._panel.Layout()
-        self.Layout()
-
-    def _al_fin_descarga(self, resultado: dict):
-        """Callback invocado en el hilo UI tras terminar la descarga."""
-        if resultado["ok"]:
-            self._set_progreso("¡Actualización instalada correctamente!", 100)
-            self.btn_reiniciar.Show()
-            self._panel.Layout()
-            self.Layout()
-            wx.CallAfter(self.btn_reiniciar.SetFocus)
-        else:
-            error = resultado.get("error") or "Error desconocido."
-            self._set_progreso(f"Error: {error}", 0)
-            self.btn_actualizar.SetLabel("Reintentar actualización")
-            self.btn_actualizar.Enable()
-
-    def _al_reiniciar(self, evento):
-        """Lanza una nueva instancia de la app y cierra la actual."""
-        try:
-            if getattr(sys, "frozen", False):
-                # Ejecutable compilado con PyInstaller
-                subprocess.Popen([sys.executable] + sys.argv[1:])
-            else:
-                # Modo desarrollo con Python
-                subprocess.Popen([sys.executable] + sys.argv)
-        except Exception:
-            pass
+    def _al_aceptar(self, evento):
         self.EndModal(wx.ID_OK)
-        wx.CallAfter(wx.GetApp().ExitMainLoop)
+
+    def _al_rechazar(self, evento):
+        self.EndModal(wx.ID_CANCEL)
 # ANCLAJE_FIN: DIALOGO_NOVEDADES
