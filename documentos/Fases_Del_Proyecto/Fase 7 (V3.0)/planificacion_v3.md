@@ -67,7 +67,8 @@ CREATE TABLE libros (
     favorito              INTEGER NOT NULL DEFAULT 0 CHECK (favorito IN (0,1)),
     en_pendientes         INTEGER NOT NULL DEFAULT 0 CHECK (en_pendientes IN (0,1)),
     leyendo_ahora         INTEGER NOT NULL DEFAULT 0 CHECK (leyendo_ahora IN (0,1)),
-    leido                 INTEGER NOT NULL DEFAULT 0 CHECK (leido IN (0,1))
+    leido                 INTEGER NOT NULL DEFAULT 0 CHECK (leido IN (0,1)),
+    titulo_revisado       INTEGER NOT NULL DEFAULT 1 CHECK (titulo_revisado IN (0,1))
 );
 
 CREATE TABLE libro_autor (
@@ -120,6 +121,7 @@ Notas de diseño:
 - `categorias` (una por libro, tipo género) y `etiquetas` (varias por libro, tipo saga o colección personalizada) son conceptos separados: un libro pertenece a un único género pero puede estar en varias colecciones a la vez.
 - El estado de lectura se modela con cuatro banderas independientes (`favorito`, `en_pendientes`, `leyendo_ahora`, `leido`) en vez de un único campo, para permitir combinaciones reales de uso ("favorito y ya leído", "pendiente pero no favorito", etc.).
 - `metadatos_json` almacena datos secundarios que no necesitan ser consultables por SQL (portada, idioma, editorial) sin inflar el esquema de columnas.
+- `titulo_revisado` marca si el título almacenado coincide razonablemente con el nombre de archivo original o si proviene de una discrepancia sin resolver entre archivo y metadatos internos (ver sección 2.7). Por defecto `1` (revisado) para no marcar de más; se pone a `0` solo cuando el escáner detecta una discrepancia notable.
 - `exportaciones_pendientes` registra exportaciones de audiolibro cortadas por falta de cuota, para poder retomarlas sin regrabar lo ya hecho (ver sección 4.3).
 
 Migraciones futuras: se controla la versión del esquema con `PRAGMA user_version`, no con una librería externa de migraciones — con un único desarrollador y una base de datos de un solo usuario, un bloque de migración manual por versión es suficiente y no añade dependencias.
@@ -169,6 +171,21 @@ Todo el comportamiento de la pestaña Lectura ya existente para EPUB (`Ctrl+I` p
 - **Página**: en EPUB la paginación es virtual (fragmentos de texto calculados por la propia app). En PDF, la página **es la página real y numerada del archivo** — más simple, porque no hay que calcular nada: "ir a página X" mapea directamente al índice de página de `PyMuPDF`. `Ctrl+I` anuncia el número de página real del documento, no una posición estimada.
 - **Capítulo**: `PyMuPDF` expone el índice de contenidos del PDF si existe (`documento.get_toc()`), que se usa para la navegación por encabezados (`H`/`Shift+H`) igual que con los capítulos del EPUB. Si el PDF no tiene índice de contenidos embebido (muchos PDF escaneados o mal generados no lo tienen), la navegación por capítulo se desactiva para ese libro concreto y solo queda disponible la navegación por página — se anuncia este límite al abrir el libro ("Este PDF no tiene índice de capítulos; disponible solo navegación por página.") en vez de fallar silenciosamente o simular capítulos falsos.
 - El resto de la experiencia (marcadores, diccionario de pronunciación, velocidad, voces) es idéntico entre EPUB y PDF, porque ambos convergen en la misma tubería de audio tras pasar por su limpiador correspondiente.
+
+### 2.7 Coherencia entre nombre de archivo y título real
+
+Es habitual que el nombre de archivo de un EPUB o PDF descargado no coincida con el título real del libro (mayúsculas distintas, abreviaturas, información añadida por quien lo compartió, etc.). La app ya resuelve un problema similar en Grabación de Fragmentos mediante un flujo de **"bautizo"**: un campo de texto donde el usuario confirma o corrige el título antes de que se use para nombrar carpetas y archivos, saneado con la función ya existente `limpiar_nombre_archivo()` (en `procesador_etiquetas.py`). Ese patrón de confirmación explícita es el que se reutiliza aquí, en vez de renombrar archivos de forma silenciosa y automática.
+
+Diseño para Biblioteca y Creador de Audiolibros:
+
+1. **Durante el escaneo** (sección 2.3), cada worker extrae, además del nombre de archivo, el título de los metadatos internos (`ebooklib`: `book.get_metadata('DC', 'title')` en EPUB; metadatos de documento de `PyMuPDF` en PDF). Si ese título difiere de forma notable del nombre de archivo (sin extensión), el libro se inserta con `titulo = <título de metadatos>` pero `titulo_revisado = 0`. Si no hay metadatos de título disponibles, o coinciden razonablemente, se inserta con `titulo_revisado = 1` sin marcar nada.
+2. **No se renombra ningún archivo físico durante el escaneo masivo.** Igual que el calculador de presupuesto no lanza un diálogo por capítulo, el escáner no puede detenerse a preguntar por cada uno de 500 libros — el renombrado físico es siempre una acción explícita y posterior del usuario.
+3. **En la Biblioteca**, los libros con `titulo_revisado = 0` se distinguen con un indicador discreto en la lista (por ejemplo, una columna o marca de estado, sin sonido ni interrupción). Desde el menú contextual: **Renombrar archivo según metadatos**, que abre el mismo tipo de diálogo de confirmación de Grabación (editable, con el título de metadatos como valor propuesto, no aplicado a ciegas). Al confirmar:
+   - Se sanea el nombre con `limpiar_nombre_archivo()`.
+   - Se renombra el archivo físico en disco (`os.rename()`).
+   - Se actualiza `ruta_archivo`, `titulo` y `titulo_revisado = 1` en la misma operación sobre `libros`.
+4. **Acción por lotes**, también desde el menú de Biblioteca: **Renombrar todos los pendientes de revisión**, que recorre los libros con `titulo_revisado = 0` aplicando el mismo bautizo, con opción de confirmar uno a uno o aceptar todos de una vez tras revisar la lista propuesta — para no obligar a repetir la acción manualmente en colecciones grandes.
+5. **Creador de Audiolibros**: no necesita lógica adicional. La nomenclatura de salida ya definida en la sección 3.5 (`Título del libro.mp3`, `1. Capítulo uno.mp3`) toma el valor de `libros.titulo`, así que en cuanto ese campo es correcto — por venir de metadatos limpios o por haber sido bautizado manualmente — la exportación hereda el nombre correcto sin ningún cambio adicional en esa pestaña.
 
 ---
 
