@@ -149,13 +149,26 @@ Objetivo: importar cientos de libros sin bloquear la interfaz ni silenciar NVDA.
 
 El escaneo de la Biblioteca solo extrae metadatos ligeros de los PDF (título si existe, o nombre de archivo como respaldo, número de páginas) — la limpieza pesada no se ejecuta durante la importación masiva, solo cuando el usuario abre el libro.
 
-Módulo nuevo `limpiador_pdf.py` (hermano de `limpiador_lectura.py`), que recibe el texto extraído por página con `pdfplumber` y aplica, en orden:
+**Librerías:** `PyMuPDF` (paquete `pymupdf`, se importa como `fitz`) para la extracción, y `ftfy` para normalización de texto. Se descarta `pdfplumber` como opción inicial: está más orientado a extracción tabular/precisa por coordenadas, mientras que `PyMuPDF` ofrece extracción de texto en **modo de bloques y orden de lectura lógico** (`page.get_text("blocks")`), que ya resuelve gran parte del problema de columnas y orden de lectura sin heurística propia. Es además la librería usada por Bookworm como base común para varios formatos de documento, lo que respalda su madurez y mantenimiento. `ftfy` es una dependencia mínima (una función, sin dependencias pesadas) que corrige comillas curvas y errores de codificación Unicode que de otro modo llegarían intactos al motor de voz.
 
-1. **Cabeceras y pies repetidos**: se registra la primera y última línea de cada página; si una línea (o una variante muy similar tras normalizar espacios/números) aparece en el 70% o más de las páginas, se descarta en todas las páginas siguientes.
-2. **Números de página sueltos**: una línea compuesta solo por dígitos (o con guiones tipo "- 124 -") al inicio o final de página se descarta sin necesidad de heurística de repetición.
-3. **Unión de líneas rotas**: una línea que no termine en `. ! ? : ;` ni en cierre de comillas/paréntesis se concatena con la siguiente mediante un espacio. Si termina en guion de partición de palabra, se une sin espacio y sin el guion.
-4. **Notas al pie**: líneas que empiezan con un número seguido de espacio, situadas al final de página y separadas del cuerpo principal, se extraen aparte y no se envían al motor de voz.
-5. El texto limpio resultante entra por el mismo punto que el texto de EPUB: mismo `diccionario_pronunciacion.py`, mismo motor de voz, sin bifurcar la tubería de audio.
+Módulo nuevo `limpiador_pdf.py` (hermano de `limpiador_lectura.py`), que recibe los bloques de texto extraídos por página con `PyMuPDF` y aplica, en orden:
+
+1. **Normalización Unicode**: cada bloque de texto pasa por `ftfy.fix_text()` antes de cualquier otro procesamiento.
+2. **Números de página sueltos**: una línea compuesta solo por dígitos (o con guiones tipo "- 124 -") al inicio o final de página se descarta. El modo de bloques en orden de lectura no elimina esto por sí solo, así que se mantiene esta heurística propia.
+3. **Cabeceras y pies repetidos**: se registra el primer y último bloque de cada página; si un bloque (o una variante muy similar tras normalizar espacios/números) aparece en el 70% o más de las páginas, se descarta en las páginas siguientes. Se mantiene como red de seguridad adicional, aunque el modo "orden de lectura" de `PyMuPDF` ya reduce buena parte de este ruido frente al enfoque por coordenadas crudas.
+4. **Unión de líneas rotas**: dentro de cada bloque, una línea que no termine en `. ! ? : ;` ni en cierre de comillas/paréntesis se concatena con la siguiente mediante un espacio. Si termina en guion de partición de palabra, se une sin espacio y sin el guion.
+5. **Notas al pie**: bloques que empiezan con un número seguido de espacio, situados al final de página y separados del cuerpo principal por su posición, se extraen aparte y no se envían al motor de voz.
+6. El texto limpio resultante entra por el mismo punto que el texto de EPUB: mismo `diccionario_pronunciacion.py`, mismo motor de voz, sin bifurcar la tubería de audio.
+
+Se incorpora además un caché en memoria (diccionario simple, sin necesidad de LRU sofisticado a la escala de esta app) de páginas ya extraídas y limpiadas por sesión de lectura, para no repetir el procesamiento si el usuario retrocede a una página ya visitada.
+
+### 2.6 Navegación, Ctrl+I e "ir a página" en PDF
+
+Todo el comportamiento de la pestaña Lectura ya existente para EPUB (`Ctrl+I` para anunciar posición, diálogo de "Ir a página X", navegación por encabezados con `H`/`Shift+H`) se extiende a PDF a través del mismo punto de entrada de la tubería — no se duplica lógica de interfaz, solo cambia el origen del texto y el modelo de paginación subyacente:
+
+- **Página**: en EPUB la paginación es virtual (fragmentos de texto calculados por la propia app). En PDF, la página **es la página real y numerada del archivo** — más simple, porque no hay que calcular nada: "ir a página X" mapea directamente al índice de página de `PyMuPDF`. `Ctrl+I` anuncia el número de página real del documento, no una posición estimada.
+- **Capítulo**: `PyMuPDF` expone el índice de contenidos del PDF si existe (`documento.get_toc()`), que se usa para la navegación por encabezados (`H`/`Shift+H`) igual que con los capítulos del EPUB. Si el PDF no tiene índice de contenidos embebido (muchos PDF escaneados o mal generados no lo tienen), la navegación por capítulo se desactiva para ese libro concreto y solo queda disponible la navegación por página — se anuncia este límite al abrir el libro ("Este PDF no tiene índice de capítulos; disponible solo navegación por página.") en vez de fallar silenciosamente o simular capítulos falsos.
+- El resto de la experiencia (marcadores, diccionario de pronunciación, velocidad, voces) es idéntico entre EPUB y PDF, porque ambos convergen en la misma tubería de audio tras pasar por su limpiador correspondiente.
 
 ---
 
@@ -326,6 +339,7 @@ Bookworm (lector de pantalla accesible de código abierto, `github.com/blindpand
 - Autores como tabla normalizada en relación N:N con los libros, en vez de texto libre repetido (sección 2.2).
 - Estados de lectura desdoblados en varias banderas independientes (favorito / pendiente / leyendo ahora / leído) en vez de un único campo booleano (sección 2.2).
 - Escaneo de carpetas paralelizado con un pool de hilos en vez de un único hilo secuencial, para reducir el tiempo de indexación inicial en colecciones grandes (sección 2.3).
+- Extracción de texto de PDF con `PyMuPDF` en modo de bloques y orden de lectura, en vez de extracción cruda por coordenadas, más `ftfy` para normalización Unicode (sección 2.5). Bookworm usa PyXPDF como motor principal de texto y PyMuPDF como base común entre formatos; aquí se adopta solo PyMuPDF, por ser suficiente para el caso de uso y evitar sumar una segunda librería de PDF.
 
 **Descartado deliberadamente:**
 - Bookworm usa APSW (binding alternativo de SQLite) y `peewee` como ORM, con migraciones gestionadas por `alembic`. Para esta aplicación, con un único desarrollador y una base de datos de un solo usuario, se prefiere `sqlite3` de la librería estándar con SQL directo y un control de versión de esquema manual vía `PRAGMA user_version` — menos dependencias, más alineado con el resto del proyecto.
