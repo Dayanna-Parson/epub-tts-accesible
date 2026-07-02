@@ -1,0 +1,16 @@
+prompt claude 20
+el portable se crea bien, pero, hay varias cositas que mirar y solucionar.
+La carpeta proyectos sigue sin crearse, y por eso, al pulsar en el gestor de proyectos el atajo control enter, no se abre la carpeta, aunque tengamos al menos uno creado
+luego, estoy pensando, que tanto el documento de novedades, como el de los registros deveríamos sacarlos de sus respectivas carpetas, y dejarlos en la raíz de la carpeta, pero me gustaría saber tu opinión al respecto.
+Por otro lado, ahora si que funcionan los sonidos, y e notado algo curioso. en las voces sapi, pero, esto es solo en lectura en el caso de eloquence 32. en ajustes no aparece. salen estas voces. y no se si es por mi ordenador... o saldrá así en todos, pero salen estas. [Local] Code Factory ETI-Eloquence Castellano
+[32 bits] Code Factory ETI-Eloquence Castellano. Y solo funciona la de sin el 32. Y supongo que con todas las voces sapi, pero creo que solo pasa con las que marque como favoritas, pues sale, ese 32. después, creo que con el resto no pasa.
+Y además, en el catálogo de voces, / sapi sale la voz de Leonor, y no se porqué, igual, esa voz tampoco funciona.
+
+A, y también lo e probado, lo de las actualizaciones, y aquí pasan dos cosas.
+ Aunque esté marcada la casilla de buscar actualizaciones automáticamente, pues no notifica al usuario. solo notifica, si pulsa el botón buscar actualizaciones. Y cuando pulsa, lo curioso, es que sale la v1.2, pero eso es porque es lo que está en main. Sale todo bien, pero, yo pensaba que al darle en el botón cerrar, pues me iva a cerrar la ventana sin mas, porque como no pulsé el botón de actualizar...
+ Entonces, aquí, lo que faltaría son dos cosas. Pues que avise con un diálogo cuando hay actualizaciones, y que pregunte, si quiere actualizar. si pulsa alt mas s, o el botón si, pues que siga el mismo comportamiento de la ventana de actualización.... y otro botón o atajo, alt + n, para que no actualice.... Y el botón de cerrar, esto en la ventana de actualización, en general, pues que siga lo que el usuario halla seleccionado. y que también en esa bentana esté el botón no, por si no quiere actualizar... Espero que se halla entendido con tanto enrredo!
+A, y que la pestaña creación de audiolibros, me equiboqué, lo siento! la renombres a: Creación de fragmentos
+
+Y por último, necesito que me crees dos .bat. pero, estos son solo para mi, no para el portable.
+Te acuerdas del archivo, iniciar epub tts. bat? que llama a iniciar tts.py, y que con ese .bat, no es necesario, pues abrir el cmd, ir a la carpeta, y escribir, python, iniciar epub tts.py cada vez que quiera abrir mi app?
+Pues, lo mismo, pero para el archivo construir app.py, (estaba pensando en cambiar el nombre a crear_portable.py, porque esa es su función!) y al archivo subir_version.py
