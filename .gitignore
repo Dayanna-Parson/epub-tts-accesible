@@ -66,3 +66,8 @@ app/motor/cache/
 
 # ── Respaldos de proyectos (datos personales) ─────────────────────────────────
 configuraciones/proyectos_backup/
+
+# Copias de seguridad y proyectos locales de usuario
+backups/
+*.zip
+proyectos/
