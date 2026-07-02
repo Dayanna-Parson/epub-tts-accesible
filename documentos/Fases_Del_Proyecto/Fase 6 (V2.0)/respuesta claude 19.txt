@@ -1,0 +1,44 @@
+respuesta claude 19
+
+Hay varios problemas. Déjame investigar todos antes de tocar nada.
+
+Tengo el diagnóstico completo. Cinco problemas confirmados:
+
+1. **`ayuda.html` no se copia** al portable — `construir_app.py` no la incluye
+2. **Sonidos rotos**: `RAIZ_RECURSOS = sys._MEIPASS` apunta a `_internal/`, pero `recursos/` está junto al `.exe` → bug en `config_rutas.py`
+3. **`Grabaciones_Epub-TTS` no se crea**: la carpeta vacía no entra en el ZIP (no hay archivos que arrastren la ruta)
+4. **Crash `TreeCtrl has been deleted`**: `_al_cambiar_nodo` no guarda que el control puede ya no existir al cerrar
+5. **Tab rename pendiente** + **`INICIAR_APP.bat` sobra en el portable**
+
+Voy con todos a la vez.
+
+Ahora `construir_app.py` — añadir `ayuda.html`, quitar `INICIAR_APP.bat`, y crear un `.gitkeep` en `Grabaciones_Epub-TTS/` para que la carpeta entre en el ZIP:
+
+Ahora añadir el `.gitkeep` en `Grabaciones_Epub-TTS/` para que entre en el ZIP:
+
+Ahora `iniciar_epub_tts.py` — crear las carpetas necesarias al arrancar:
+
+Ahora también actualizo `novedades.txt` para reflejar el nuevo nombre de la pestaña ("Crear Audiolibro"):
+
+También hay que actualizar las referencias a "Grabación de Fragmentos" → "Crear Audiolibro" en los demás archivos relevantes:
+
+Solo necesito actualizar los archivos activos del proyecto (`README.md`, `CLAUDE.md`, `DEVELOPMENT.md`, `BITACORA_DE_DESARROLLO.md`, `ayuda.html`). Los de `documentos/Fases_Del_Proyecto/` son históricos, no los toco.
+
+Ahora commit y push:
+
+Listo. Resumen de lo que se corrigió:
+
+**Bug crítico — sonidos no sonaban**: `config_rutas.py` usaba `sys._MEIPASS` como `RAIZ_RECURSOS`. En compilación `--onedir`, `_MEIPASS` apunta a la carpeta `_internal/`, pero `recursos/` (con los sonidos) vive junto al `.exe`. Ahora usa `os.path.dirname(sys.executable)`, que es el directorio real del portable.
+
+**`ayuda.html` faltaba**: `construir_app.py` no la copiaba. Añadida al paso de recursos; F1 ya la encontrará.
+
+**`INICIAR_APP.bat` eliminada del portable**: el `.exe` arranca solo con doble clic. Los errores críticos van a `app/registros/app.log`.
+
+**`Grabaciones_Epub-TTS/` no se creaba al extraer el ZIP**: las carpetas vacías no entran en ZIPs con `os.walk`. Solución doble: `.gitkeep` en el portable (para el ZIP) + `os.makedirs` en `iniciar_epub_tts.py` al arranque (garantía en todo caso). Lo mismo para `proyectos_backup/`.
+
+**Crash `TreeCtrl has been deleted`**: `_al_cambiar_nodo` en `pestana_ajustes.py` ahora atrapa `RuntimeError` si el control ya fue destruido durante el cierre.
+
+**Pestaña renombrada a "Crear Audiolibro"** — Ctrl+2 sigue igual.
+
+Cuando vuelvas a generar el portable con `construir_app.py`, todos estos puntos quedarán resueltos. La carpeta `registros/` ya se creaba desde antes (`iniciar_epub_tts.py` línea 17); no estaba rota.
+

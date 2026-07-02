@@ -1,0 +1,69 @@
+oye claude, antes de pasar la rama definitivamente a main, y darla por cerrada, y esta versión lista, pues e  probado para asegurarme como se creeaba mi portable, y e encontrado 3 fallos, y menos mal que lo he hecho. para empezar, en la raíz sale esto. _internal
+
+bin
+
+configuraciones
+
+documentos
+
+Vista Elementos  lista
+
+novedades.txt  sin seleccionar
+
+seleccionado
+
+Vista Elementos  lista
+
+documentos
+
+Grabaciones_Epub-TTS
+
+Vista Elementos  lista
+
+Esta carpeta está vacía.
+
+Vista Elementos  lista
+
+Grabaciones_Epub-TTS
+
+recursos
+
+epubtts.exe
+
+INICIAR_APP.bat. Falta el documento de ayuda, el html, y asegurarse de que al pulsar f1, pues se abra. otro error que e detectado, es que no se esuchan los sonidos, no se reproduce quiero decir, aunque los dosce sonidos si que están en la carpeta de recursos. a, y tanto al abrir la carpeta del proyecto pues, no se guardan en las carpetas que el programa crea dentro de la misma, ya sabes Ni si quiera la creea. en la raíz. Y también no se porqué metes esto. este archivo que abre la consola, no hace falta, el usuario no lo necesita. Y asgúrate también de que la carpeta de registros se crea, y que se guardan los mismos..... Y la carpeta de copia de suridad de los proyectos que ya están implementados pues también... A, y dos cosas mas. te acuedas de los dos bugs  y de todo lo que acabas de hacer, además del renombrado de la segunda pestaña? del modo grabación, a la crear auriolibro? no se como llamarla. si crear audiolibro, o creación de audiolibro.... Pues no se ha hecho ni lo uno ni lo otro, puedes ver que a pasado? y por último, han salido estos errores en la consola: ---------------------------------------------------
+
+   INICIANDO EPUB-TTS...
+
+---------------------------------------------------
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+
+Traceback (most recent call last):
+
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_ajustes.py", line 2017, in _al_cambiar_nodo
+
+    self.arbol_cat.SetFocus()
+
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+
+Traceback (most recent call last):
+
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_ajustes.py", line 2017, in _al_cambiar_nodo
+
+    self.arbol_cat.SetFocus()
+
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+
+
+---------------------------------------------------
+
+   PROGRAMA CERRADO O FINALIZADO
+
+   (Si ves un error arriba, leelo ahora)
+
+---------------------------------------------------
+
+Presione una tecla para continuar . . .
