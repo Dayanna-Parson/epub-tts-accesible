@@ -187,6 +187,17 @@ Diseño para Biblioteca y Creador de Audiolibros:
 4. **Acción por lotes**, también desde el menú de Biblioteca: **Renombrar todos los pendientes de revisión**, que recorre los libros con `titulo_revisado = 0` aplicando el mismo bautizo, con opción de confirmar uno a uno o aceptar todos de una vez tras revisar la lista propuesta — para no obligar a repetir la acción manualmente en colecciones grandes.
 5. **Creador de Audiolibros**: no necesita lógica adicional. La nomenclatura de salida ya definida en la sección 3.5 (`Título del libro.mp3`, `1. Capítulo uno.mp3`) toma el valor de `libros.titulo`, así que en cuanto ese campo es correcto — por venir de metadatos limpios o por haber sido bautizado manualmente — la exportación hereda el nombre correcto sin ningún cambio adicional en esa pestaña.
 
+### 2.7.1 Seguridad del renombrado por lotes: nunca desincronizar la base de datos
+
+El renombrado por lotes no se ejecuta como una única transacción sobre varios archivos, sino como una secuencia de operaciones atómicas independientes, cada una verificada antes de tocar SQLite:
+
+1. Antes de iniciar el lote, se comprueba `os.access(carpeta, os.W_OK)` sobre la carpeta contenedora; si no hay permiso de escritura, se avisa y no se intenta ningún archivo.
+2. Por cada libro: `os.rename()` dentro de un bloque `try/except`. Solo si el renombrado tiene éxito — verificado además comprobando `os.path.exists()` sobre la ruta nueva — se actualiza `ruta_archivo`, `titulo` y `titulo_revisado = 1` en `libros`, como una escritura individual inmediata, no como parte de un `UPDATE` conjunto.
+3. Si un archivo falla (permisos, bloqueo por antivirus, carpeta sincronizada con un servicio en la nube tipo OneDrive/Dropbox que retiene el archivo momentáneamente, etc.), se captura la excepción con `logger.exception(...)`, el registro del libro se deja exactamente como estaba (misma ruta, `titulo_revisado` sigue en `0`), y el lote continúa con el siguiente archivo sin detenerse.
+4. Al finalizar el lote se muestra un único resumen (no un diálogo por archivo): número de renombrados correctamente y lista de los que fallaron con su motivo, para reintentarlos cuando el usuario quiera.
+
+Con este diseño, el peor caso posible es que algunos libros queden sin renombrar — nunca que la base de datos apunte a una ruta que ya no existe, porque la actualización de `ruta_archivo` depende siempre del resultado verificado del renombrado físico, archivo por archivo.
+
 ---
 
 ## 3. Fase B — Creador de Audiolibros
@@ -221,7 +232,13 @@ Si el proveedor elegido no tiene cuota suficiente:
 
 El comportamiento depende del modo de exportación elegido:
 
-- **Modo "libro completo"**: el corte se ubica en el límite de caracteres disponible, ajustado hacia atrás hasta la frontera de capítulo real más cercana (usando los marcadores internos de `troceador_epub.py`); si cae a mitad de capítulo, se ajusta al punto de frase más próximo (nunca a mitad de palabra). Resultado: varios archivos (`Título (parte 1).mp3`, `Título (parte 2 - pendiente).mp3`...). El punto exacto de corte se guarda en `exportaciones_pendientes.punto_corte` para retomar sin regrabar lo ya hecho.
+- **Modo "libro completo"**: el corte se ubica en el límite de caracteres disponible, ajustado hacia atrás hasta la frontera de capítulo real más cercana (usando los marcadores internos de `troceador_epub.py`); si cae a mitad de capítulo, se ajusta al punto de frase más próximo (nunca a mitad de palabra). El punto exacto de corte se guarda en `exportaciones_pendientes.punto_corte` para retomar sin regrabar lo ya hecho.
+
+  Importante: retomar la exportación **no consiste en pegar audio a un archivo ya existente** — un MP3 no se puede extender añadiendo bytes al final sin volver a codificarlo. Cada tramo pendiente se genera como una **exportación completa e independiente** cuando el usuario decide continuar (con cuota renovada o cambiando de proveedor). Nomenclatura para que el resultado sea claro y no un desorden de archivos sueltos en la carpeta:
+  - Mientras solo existe la primera parte, se nombra `Título del libro (parte 1 - pendiente).mp3` — sin asumir un total de partes que aún no se conoce.
+  - Al generar cada parte siguiente, se numera en el mismo formato (`parte 2 - pendiente`, etc.) hasta que se completa la última.
+  - Al completarse la última parte, se renombran todas las anteriores para incluir el conteo final (`parte 1 de 2`, `parte 2 de 2`, sin la marca "pendiente"), reutilizando el mecanismo de renombrado seguro descrito en 2.7.1.
+  - La lista de partes y su estado ("Completada" / "Pendiente, sin cuota") se muestra también dentro de la interfaz del Creador de Audiolibros (ver 3.6), para que el usuario no dependa de leer nombres de archivo sueltos en el Explorador para entender el estado de su exportación.
 - **Modo "por capítulos"**: no requiere cortes a mitad de contenido — se graban los capítulos completos que caben en la cuota disponible, y los que no caben quedan marcados como "Pendiente (sin cuota)" en la lista de capítulos, registrados en `exportaciones_pendientes.capitulo_pendiente`. El usuario puede retomarlos capítulo a capítulo cuando amplíe cuota o cambie de mes.
 
 ### 3.5 Carpetas de salida
@@ -293,6 +310,13 @@ Las palabras por minuto se descartan como métrica porque cada proveedor de voz 
 - Historial de conversación en un archivo JSON ligero (`configuraciones/chat_biblioteca.json`, estructurado por `id_libro`): es un caso legítimo de JSON, no de SQLite, por ser datos pequeños que no se filtran ni se consultan con SQL.
 - La llamada a la API de Gemini se ejecuta siempre en hilo secundario, con indicador de "Pensando..." anunciado una vez al enviar, y respuesta entregada vía `wx.CallAfter`.
 - La clave de API de Gemini sigue el mismo patrón `cargar_claves()`/`guardar_claves()` que el resto de proveedores, con su entrada correspondiente en Ajustes.
+
+**Orden de foco al abrir el diálogo (Ctrl+G):**
+
+1. El historial de conversación previo (si existe) se carga desde el JSON en el hilo principal antes de mostrar el diálogo — es una lectura de archivo pequeño, no requiere hilo secundario ni deja al diálogo mostrando una carga a medias.
+2. El contexto del libro se anuncia con el patrón `_anunciador` ya establecido en el proyecto ("Hablando sobre: El juego de Ender"), pero en vez de devolver el foco al control previo como en sus otros usos, aquí lo entrega directamente al campo de entrada de texto del chat.
+3. El foco final, con el diálogo ya visible, queda en el campo de entrada — no en el historial. Es el comportamiento esperado de cualquier chat accesible: el usuario debe poder escribir de inmediato sin tabular primero.
+4. Los mensajes nuevos que llegan de la API (en hilo secundario, vía `wx.CallAfter`) se añaden al control de historial sin mover el foco del campo de entrada — el usuario puede seguir escribiendo mientras llega la respuesta, y NVDA anuncia el contenido añadido sin robar el punto de edición.
 
 ---
 
