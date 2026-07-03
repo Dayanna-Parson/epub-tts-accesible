@@ -140,6 +140,19 @@ Objetivo: importar cientos de libros sin bloquear la interfaz ni silenciar NVDA.
 8. Al finalizar: anuncio final ("Escaneo completado. N libros añadidos."), refresco de la lista con `Freeze()/Thaw()`, foco a la lista de libros.
 9. Un archivo que falle al parsear (EPUB corrupto, PDF protegido) se registra con `logger.exception(...)` y se salta — un archivo malo nunca detiene el escaneo completo.
 
+### 2.3.1 Agrupamiento sugerido por carpeta (sagas y colecciones)
+
+Es habitual organizar los libros en carpetas por saga o colección (por ejemplo, una carpeta madre con una subcarpeta por saga, y dentro los libros sueltos para autoconclusivos). El escáner no puede asumir ninguna convención de nombres concreta — guiones, guiones bajos, orden "título - autor" u otro cualquiera — porque cada usuario organiza su colección a su manera. La estructura de carpetas se trata siempre como una **pista opcional**, nunca como una regla rígida; los metadatos internos del libro siguen siendo la única fuente de verdad para título y autor (sección 2.7).
+
+Lo único que sí se puede generalizar sin asumir una convención concreta: si una carpeta contiene **dos o más libros**, es una señal razonable de que están agrupados a propósito. Una carpeta con un único archivo suelto no genera ninguna sugerencia.
+
+1. Durante el escaneo, el coordinador agrupa las rutas candidatas por su carpeta contenedora inmediata, además de listarlas.
+2. Al finalizar, si se detectaron carpetas con 2 o más libros, se muestra un diálogo de confirmación (mismo patrón de bautizo ya usado en Grabación y en la sección 2.7) con una lista editable: una fila por carpeta detectada, con el nombre de carpeta propuesto como etiqueta y una casilla para incluirla o excluirla. El usuario puede editar el nombre antes de confirmar o desmarcar la fila si no quiere agrupar esa carpeta.
+3. Al confirmar, se crea (u obtiene) la etiqueta correspondiente y se asigna a todos los libros de esa carpeta mediante `libro_etiqueta` — nunca de forma automática y silenciosa.
+4. Esta sugerencia se ofrece una sola vez por carpeta detectada; las carpetas ya evaluadas (aceptadas o descartadas explícitamente) no vuelven a preguntarse en escaneos posteriores de la misma raíz.
+
+**Nombres de archivo sin metadatos disponibles:** si un libro no tiene título en sus metadatos internos y hay que recurrir al nombre de archivo como estimación, se reemplazan guiones y guiones bajos por espacios y se recortan espacios sobrantes antes de mostrarlo como propuesta editable en el flujo de bautizo — nunca se aplican mayúsculas automáticas agresivas, que podrían destrozar acrónimos o nombres propios.
+
 ### 2.4 Re-enrutado de archivos movidos o borrados
 
 1. Al pulsar Enter sobre un libro: `os.path.exists(ruta_archivo)` (comprobación instantánea en el hilo principal).
