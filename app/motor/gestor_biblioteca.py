@@ -501,6 +501,32 @@ class GestorBiblioteca:
         with self._conexion() as conexion:
             return conexion.execute(consulta, parametros).fetchall()
 
+    def obtener_autores_por_libros(self, ids_libro: list[int]) -> dict[int, list[str]]:
+        """
+        Devuelve los autores de varios libros en una sola consulta, en vez
+        de una consulta por libro — evita el problema N+1 al construir la
+        lista completa de la Biblioteca (una conexión SQLite por libro es
+        lento incluso con WAL cuando hay cientos de libros).
+        """
+        if not ids_libro:
+            return {}
+        marcadores = ",".join("?" * len(ids_libro))
+        with self._conexion() as conexion:
+            filas = conexion.execute(
+                f"""
+                SELECT la.id_libro AS id_libro, a.nombre AS nombre
+                FROM libro_autor la
+                JOIN autores a ON a.id = la.id_autor
+                WHERE la.id_libro IN ({marcadores})
+                ORDER BY a.nombre COLLATE NOCASE
+                """,
+                ids_libro,
+            ).fetchall()
+        resultado: dict[int, list[str]] = {id_libro: [] for id_libro in ids_libro}
+        for fila in filas:
+            resultado[fila["id_libro"]].append(fila["nombre"])
+        return resultado
+
     def obtener_autores_de_libro(self, id_libro: int) -> list[sqlite3.Row]:
         with self._conexion() as conexion:
             return conexion.execute(

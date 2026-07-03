@@ -17,74 +17,6 @@ from app.motor.reproductor_sonidos import (
 logger = logging.getLogger(__name__)
 
 
-# ANCLAJE_INICIO: DIALOGO_SELECCION_CATEGORIA
-class DialogoSeleccionCategoria(wx.Dialog):
-    """
-    Diálogo para asignar una categoría (género/subgénero) a un libro.
-    Permite elegir una categoría ya existente en el árbol o escribir una
-    ruta nueva separada por «>» (ej. «Fantasía > Fantasía épica»), que se
-    crea sobre la marcha si no existe.
-    """
-
-    def __init__(self, padre, gestor: GestorBiblioteca):
-        super().__init__(padre, title="Añadir a categoría", style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
-        self.gestor = gestor
-        self.ruta_resultado: list[str] = []
-
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        sizer.Add(
-            wx.StaticText(self, label="Elige una categoría existente:"), 0, wx.ALL, 5
-        )
-        self.arbol = wx.TreeCtrl(
-            self, style=wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_SINGLE | wx.TR_HIDE_ROOT
-        )
-        self.arbol.SetMinSize((320, 200))
-        self._raiz = self.arbol.AddRoot("raíz")
-        self._construir_arbol(self._raiz, None)
-        sizer.Add(self.arbol, 1, wx.EXPAND | wx.ALL, 5)
-
-        sizer.Add(
-            wx.StaticText(
-                self,
-                label="...o escribe una ruta nueva (Género > Subgénero, opcional):",
-            ),
-            0, wx.ALL, 5,
-        )
-        self.txt_ruta_nueva = wx.TextCtrl(self)
-        sizer.Add(self.txt_ruta_nueva, 0, wx.EXPAND | wx.ALL, 5)
-
-        botones = self.CreateButtonSizer(wx.OK | wx.CANCEL)
-        sizer.Add(botones, 0, wx.ALIGN_CENTER | wx.ALL, 8)
-
-        self.SetSizer(sizer)
-        self.Bind(wx.EVT_BUTTON, self.al_aceptar, id=wx.ID_OK)
-        self.arbol.SetFocus()
-
-    def _construir_arbol(self, nodo_padre, id_categoria_padre):
-        for categoria in self.gestor.listar_categorias_hijas(id_categoria_padre):
-            nodo = self.arbol.AppendItem(nodo_padre, categoria["nombre"])
-            self.arbol.SetItemData(nodo, categoria["id"])
-            self._construir_arbol(nodo, categoria["id"])
-
-    def al_aceptar(self, evento):
-        texto_nuevo = self.txt_ruta_nueva.GetValue().strip()
-        if texto_nuevo:
-            self.ruta_resultado = [parte.strip() for parte in texto_nuevo.split(">") if parte.strip()]
-        else:
-            nodo = self.arbol.GetSelection()
-            if not nodo.IsOk() or nodo == self._raiz:
-                wx.MessageBox(
-                    "Elige una categoría del árbol o escribe una ruta nueva.",
-                    "Nada seleccionado", wx.OK | wx.ICON_WARNING,
-                )
-                return
-            id_categoria = self.arbol.GetItemData(nodo)
-            self.ruta_resultado = self.gestor.obtener_ruta_categoria(id_categoria)
-        evento.Skip()
-# ANCLAJE_FIN: DIALOGO_SELECCION_CATEGORIA
-
-
 # ANCLAJE_INICIO: DEFINICION_PESTANA_BIBLIOTECA
 class PestanaBiblioteca(wx.Panel):
     """
@@ -107,6 +39,10 @@ class PestanaBiblioteca(wx.Panel):
 
         self._configurar_interfaz()
         self._configurar_atajos()
+
+        self._progreso_actual = (0, 0)
+        self._timer_progreso = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.al_temporizador_progreso, self._timer_progreso)
 
         wx.CallAfter(self._cargar_arbol_categorias)
         wx.CallAfter(self._cargar_libros)
@@ -139,8 +75,17 @@ class PestanaBiblioteca(wx.Panel):
         self.arbol_categorias.Bind(wx.EVT_TREE_KEY_DOWN, self.al_tecla_arbol)
         self.arbol_categorias.Bind(wx.EVT_KEY_DOWN, self.al_tecla_arbol_raw)
         self.arbol_categorias.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.al_fin_edicion_categoria)
-        self.arbol_categorias.Bind(wx.EVT_TREE_ITEM_MENU, self.al_menu_contextual_arbol)
+        self.arbol_categorias.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.al_clic_derecho_arbol)
         sizer_izquierdo.Add(self.arbol_categorias, 1, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_nueva_categoria = wx.Button(self, label="Nueva categoría...")
+        self.btn_nueva_categoria.SetHelpText(
+            "Crea una nueva categoría raíz. Para crear una subcategoría, "
+            "selecciona primero la categoría padre en el árbol y usa el menú contextual."
+        )
+        self.btn_nueva_categoria.Bind(wx.EVT_BUTTON, self.al_nueva_categoria_raiz)
+        sizer_izquierdo.Add(self.btn_nueva_categoria, 0, wx.EXPAND | wx.ALL, 5)
+
         sizer_principal.Add(sizer_izquierdo, 1, wx.EXPAND)
 
         # ── Panel derecho: filtros + lista ───────────────────────────────
@@ -275,29 +220,48 @@ class PestanaBiblioteca(wx.Panel):
             self.arbol_categorias.SelectItem(resultado_ref[0])
 
     def _categoria_seleccionada_id(self):
-        nodo = self.arbol_categorias.GetSelection()
+        # EVT_TREE_SEL_CHANGED puede dispararse durante el cierre de la app,
+        # después de que el árbol ya fue destruido (comportamiento conocido
+        # de wxPython). Sin esta guarda, el evento residual lanza
+        # RuntimeError en bucle y bloquea el cierre — mismo problema ya
+        # resuelto en ventana_proyectos.py para su propio árbol.
+        try:
+            nodo = self.arbol_categorias.GetSelection()
+        except RuntimeError:
+            return None
         if not nodo.IsOk():
             return None
         dato = self.arbol_categorias.GetItemData(nodo)
         return None if dato == self._SENTINEL_TODAS else dato
 
     def al_seleccionar_categoria(self, evento):
+        if self.arbol_categorias is None:
+            return
         self._id_categoria_activa = self._categoria_seleccionada_id()
         self._cargar_libros()
         evento.Skip()
 
+    def al_clic_derecho_arbol(self, evento):
+        nodo = evento.GetItem()
+        if nodo and nodo.IsOk():
+            self.arbol_categorias.SelectItem(nodo)
+        self.al_menu_contextual_arbol(evento)
+
     def al_tecla_arbol(self, evento):
-        codigo = evento.GetKeyCode()
-        if codigo in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
-            reproducir(LIST_NAV)
-        if codigo == wx.WXK_F2:
-            nodo = self.arbol_categorias.GetSelection()
-            if nodo.IsOk() and self.arbol_categorias.GetItemData(nodo) != self._SENTINEL_TODAS:
-                self.arbol_categorias.EditLabel(nodo)
-        elif codigo == wx.WXK_DELETE:
-            self.al_eliminar_categoria(evento)
-        else:
-            evento.Skip()
+        try:
+            codigo = evento.GetKeyCode()
+            if codigo in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
+                reproducir(LIST_NAV)
+            if codigo == wx.WXK_F2:
+                nodo = self.arbol_categorias.GetSelection()
+                if nodo.IsOk() and self.arbol_categorias.GetItemData(nodo) != self._SENTINEL_TODAS:
+                    self.arbol_categorias.EditLabel(nodo)
+            elif codigo == wx.WXK_DELETE:
+                self.al_eliminar_categoria(evento)
+            else:
+                evento.Skip()
+        except RuntimeError:
+            pass
 
     def al_tecla_arbol_raw(self, evento):
         codigo = evento.GetKeyCode()
@@ -344,19 +308,28 @@ class PestanaBiblioteca(wx.Panel):
             nombre = dlg.GetValue().strip()
             if nombre:
                 self.gestor.crear_categoria(nombre, None)
+                reproducir(SUCCESS)
+                self._anunciar(f"Categoría «{nombre}» creada.")
                 self._cargar_arbol_categorias()
         dlg.Destroy()
 
     def al_nueva_subcategoria(self, evento):
         id_padre = self._categoria_seleccionada_id()
         if id_padre is None:
-            self._anunciar("Selecciona primero una categoría para añadirle una subcategoría.")
+            self._anunciar(
+                "Selecciona primero una categoría en el árbol para añadirle una subcategoría."
+            )
             return
-        dlg = wx.TextEntryDialog(self, "Nombre del nuevo subgénero:", "Nueva subcategoría")
+        nombre_padre = self.arbol_categorias.GetItemText(self.arbol_categorias.GetSelection())
+        dlg = wx.TextEntryDialog(
+            self, f"Nombre del nuevo subgénero dentro de «{nombre_padre}»:", "Nueva subcategoría"
+        )
         if dlg.ShowModal() == wx.ID_OK:
             nombre = dlg.GetValue().strip()
             if nombre:
                 self.gestor.crear_categoria(nombre, id_padre)
+                reproducir(SUCCESS)
+                self._anunciar(f"Subcategoría «{nombre}» creada dentro de «{nombre_padre}».")
                 self._cargar_arbol_categorias(id_categoria_seleccionar=id_padre)
         dlg.Destroy()
 
@@ -453,11 +426,12 @@ class PestanaBiblioteca(wx.Panel):
         )
         self._libros_actuales = libros
 
+        autores_por_libro = self.gestor.obtener_autores_por_libros([libro["id"] for libro in libros])
+
         self.lista_libros.Freeze()
         self.lista_libros.DeleteAllItems()
         for indice, libro in enumerate(libros):
-            autores = self.gestor.obtener_autores_de_libro(libro["id"])
-            nombres_autores = ", ".join(a["nombre"] for a in autores) or "—"
+            nombres_autores = ", ".join(autores_por_libro.get(libro["id"], [])) or "—"
             estado_txt = self._describir_estado(libro)
 
             self.lista_libros.InsertItem(indice, libro["titulo"])
@@ -510,11 +484,12 @@ class PestanaBiblioteca(wx.Panel):
             "Categorías automáticas", wx.YES_NO | wx.ICON_QUESTION,
         ) == wx.YES
 
-        self._anunciar("Escaneando carpeta...")
+        self._anunciar("Escaneando carpeta, por favor espera...")
         self.barra_progreso.SetValue(0)
         self.barra_progreso.Show()
         self.Layout()
-        self._ultimo_anuncio_progreso = 0
+        self._progreso_actual = (0, 0)
+        self._timer_progreso.Start(2500)
 
         self.escaner = EscanerBiblioteca(
             self.gestor,
@@ -528,17 +503,21 @@ class PestanaBiblioteca(wx.Panel):
         self.escaner.iniciar(carpeta, usar_subcarpetas_como_categorias=usar_subcarpetas)
 
     def _al_progresar_escaneo(self, procesados, total):
+        # Solo actualiza el estado visual (Gauge + etiqueta) aquí — esto se
+        # llama muchas veces por segundo desde 8 hilos en paralelo. Llamar a
+        # _anunciar() (que roba y devuelve el foco) en cada evento provoca
+        # que las llamadas se pisen entre sí y NVDA acabe sin anunciar nada
+        # con claridad. El anuncio de voz va aparte, por temporizador
+        # (al_temporizador_progreso), con una cadencia fija y predecible.
+        self._progreso_actual = (procesados, total)
         if total > 0:
             self.barra_progreso.SetRange(total)
             self.barra_progreso.SetValue(min(procesados, total))
         self.lbl_estado.SetLabel(f"Escaneando... {procesados} de {total} libro(s) procesados.")
 
-        # Anuncio de voz espaciado (cada 20% del total o cada 25 libros, lo que
-        # sea más frecuente) para no saturar a NVDA en colecciones grandes,
-        # pero sí dar señales de vida claras en importaciones pequeñas.
-        paso = max(1, min(25, total // 5 or 1))
-        if procesados - self._ultimo_anuncio_progreso >= paso or procesados == total:
-            self._ultimo_anuncio_progreso = procesados
+    def al_temporizador_progreso(self, evento):
+        procesados, total = self._progreso_actual
+        if total > 0:
             self._anunciar(f"Procesando... {procesados} de {total} libros.")
 
     def _al_detectar_carpetas_agrupables(self, carpetas_candidatas: dict):
@@ -556,15 +535,30 @@ class PestanaBiblioteca(wx.Panel):
                 confirmar_agrupamiento_por_carpeta(self.gestor, carpeta, nombres_sugeridos[carpeta])
 
     def _al_terminar_escaneo(self, total_insertados):
+        self._timer_progreso.Stop()
         reproducir(SUCCESS)
         self.barra_progreso.Hide()
         self.Layout()
-        self._anunciar(f"Escaneo completado. {total_insertados} libro(s) añadidos.")
         self._cargar_arbol_categorias()
         self._cargar_libros()
         self.lista_libros.SetFocus()
 
+        # Diálogo modal nativo en vez de solo el anunciador: siempre tiene
+        # foco propio y se cierra con Enter/Escape/OK de forma garantizada,
+        # sin depender de que el usuario navegue de vuelta a la lista.
+        if total_insertados > 0:
+            wx.MessageBox(
+                f"Se han añadido {total_insertados} libro(s) a la biblioteca.",
+                "Escaneo completado", wx.OK | wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox(
+                "No se encontraron libros nuevos en esa carpeta.",
+                "Escaneo completado", wx.OK | wx.ICON_INFORMATION,
+            )
+
     def _al_fallar_escaneo(self, error):
+        self._timer_progreso.Stop()
         reproducir(ERROR)
         self.barra_progreso.Hide()
         self.Layout()
@@ -611,6 +605,8 @@ class PestanaBiblioteca(wx.Panel):
             )
             return
 
+        self._anunciar("Abriendo libro, por favor espera...")
+
         ventana_principal = self.padre_notebook.GetParent()
         try:
             from app.interfaz.ventana_principal import IDX_LECTURA
@@ -622,6 +618,7 @@ class PestanaBiblioteca(wx.Panel):
             return
 
         self.gestor.establecer_bandera(libro["id"], "leyendo_ahora", True)
+        reproducir(SUCCESS)
 
     def al_tecla_lista(self, evento):
         codigo = evento.GetKeyCode()
@@ -699,17 +696,92 @@ class PestanaBiblioteca(wx.Panel):
         wx.MessageBox(mensaje, "Renombrado por lotes", wx.OK | wx.ICON_INFORMATION)
         self._cargar_libros()
 
-    def al_anadir_a_categoria(self, evento):
-        libro = self._libro_seleccionado()
-        if libro is None:
-            return
-        dlg = DialogoSeleccionCategoria(self, self.gestor)
-        if dlg.ShowModal() == wx.ID_OK and dlg.ruta_resultado:
-            self.gestor.asignar_categoria_por_ruta(libro["id"], dlg.ruta_resultado)
-            reproducir(SUCCESS)
-            self._anunciar(f"Añadido a categoría {' > '.join(dlg.ruta_resultado)}.")
-            self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
-            self._cargar_libros()
+    def construir_menu_asignar_categoria(self, libro) -> wx.Menu:
+        """
+        Submenú "Añadir a categoría": primer elemento para crear una
+        categoría nueva y asignarla en el mismo paso, después el árbol
+        de categorías existentes como submenús anidados — cada nivel
+        tiene su propio elemento "Asignar aquí" antes de sus hijos, para
+        poder elegir tanto un género como uno de sus subgéneros.
+
+        Para asignar varias categorías a la vez, se invoca este menú una
+        vez por cada categoría a añadir (igual que marcar favorito), en
+        vez de una selección múltiple con casillas dentro del propio
+        menú — los menús no están pensados para selección múltiple y
+        forzarla los haría más confusos de navegar con teclado.
+        """
+        menu = wx.Menu()
+        item_nueva = menu.Append(wx.ID_ANY, "Crear categoría nueva y asignar...")
+        self.Bind(
+            wx.EVT_MENU, lambda e: self.al_crear_categoria_y_asignar(libro, None), item_nueva
+        )
+
+        raices = self.gestor.listar_categorias_hijas(None)
+        if raices:
+            menu.AppendSeparator()
+            self._rellenar_submenu_categorias(menu, None, libro)
+        return menu
+
+    def _rellenar_submenu_categorias(self, menu_destino, id_categoria_padre, libro):
+        for categoria in self.gestor.listar_categorias_hijas(id_categoria_padre):
+            hijas = self.gestor.listar_categorias_hijas(categoria["id"])
+            if hijas:
+                submenu = wx.Menu()
+                item_aqui = submenu.Append(wx.ID_ANY, f"Asignar a «{categoria['nombre']}»")
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda e, id_cat=categoria["id"]: self.al_asignar_categoria_existente(
+                        libro, id_cat
+                    ),
+                    item_aqui,
+                )
+                submenu.AppendSeparator()
+                item_nueva_sub = submenu.Append(wx.ID_ANY, "Crear subcategoría nueva y asignar...")
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda e, id_padre=categoria["id"]: self.al_crear_categoria_y_asignar(
+                        libro, id_padre
+                    ),
+                    item_nueva_sub,
+                )
+                submenu.AppendSeparator()
+                self._rellenar_submenu_categorias(submenu, categoria["id"], libro)
+                menu_destino.AppendSubMenu(submenu, categoria["nombre"])
+            else:
+                item = menu_destino.Append(wx.ID_ANY, categoria["nombre"])
+                self.Bind(
+                    wx.EVT_MENU,
+                    lambda e, id_cat=categoria["id"]: self.al_asignar_categoria_existente(
+                        libro, id_cat
+                    ),
+                    item,
+                )
+
+    def al_asignar_categoria_existente(self, libro, id_categoria):
+        ruta = self.gestor.obtener_ruta_categoria(id_categoria)
+        self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
+        reproducir(SUCCESS)
+        self._anunciar(f"Añadido a categoría {' > '.join(ruta)}.")
+        self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
+        self._cargar_libros()
+
+    def al_crear_categoria_y_asignar(self, libro, id_padre):
+        dlg = wx.TextEntryDialog(
+            self,
+            "Nombre de la nueva categoría:",
+            "Crear categoría y asignar",
+        )
+        if dlg.ShowModal() == wx.ID_OK:
+            nombre = dlg.GetValue().strip()
+            if nombre:
+                id_categoria = self.gestor.crear_categoria(nombre, id_padre)
+                self.gestor.asignar_categoria_por_ruta(
+                    libro["id"], self.gestor.obtener_ruta_categoria(id_categoria)
+                )
+                reproducir(SUCCESS)
+                self._anunciar(f"Categoría «{nombre}» creada y libro añadido.")
+                self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
+                self._cargar_libros()
         dlg.Destroy()
 
     def al_quitar_de_categoria_actual(self, evento):
@@ -740,8 +812,7 @@ class PestanaBiblioteca(wx.Panel):
         )
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, item_favorito)
 
-        item_categoria = menu.Append(wx.ID_ANY, "Añadir a categoría...")
-        self.Bind(wx.EVT_MENU, self.al_anadir_a_categoria, item_categoria)
+        menu.AppendSubMenu(self.construir_menu_asignar_categoria(libro), "Añadir a categoría")
 
         item_quitar_cat = menu.Append(wx.ID_ANY, "Quitar de esta categoría")
         item_quitar_cat.Enable(self._id_categoria_activa is not None)

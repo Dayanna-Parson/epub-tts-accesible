@@ -135,8 +135,16 @@ def _procesar_archivo(ruta_archivo: str) -> Optional[dict]:
     titulo_archivo = _titulo_desde_nombre_archivo(ruta_archivo)
 
     if titulo_metadatos:
-        coincide = _normalizar_para_comparar(titulo_metadatos) == _normalizar_para_comparar(
-            titulo_archivo
+        norm_metadatos = _normalizar_para_comparar(titulo_metadatos)
+        norm_archivo = _normalizar_para_comparar(titulo_archivo)
+        # Contención, no solo igualdad exacta: es habitual que el título de
+        # los metadatos incluya información de saga entre paréntesis que el
+        # nombre de archivo no tiene (o al revés), sin que eso sea una
+        # discrepancia real que merezca marcarse para revisión manual.
+        coincide = (
+            norm_metadatos == norm_archivo
+            or norm_archivo in norm_metadatos
+            or norm_metadatos in norm_archivo
         )
         titulo_final = titulo_metadatos
         titulo_revisado = coincide
