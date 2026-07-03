@@ -17,6 +17,16 @@ from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
 _URL_GITHUB = "https://github.com/Dayanna-Parson/epub-tts-accesible"
 
+# ── Índices de pestaña del notebook ───────────────────────────────────────────
+# Centralizados aquí para no repetir números mágicos por todo el archivo.
+# Cuando se añada la pestaña "Creador de Audiolibros" (Fase 7), se inserta
+# entre IDX_LECTURA e IDX_GRABACION y solo hay que renumerar este bloque.
+IDX_BIBLIOTECA = 0
+IDX_LECTURA    = 1
+IDX_GRABACION  = 2
+IDX_AJUSTES    = 3
+NUM_PESTANAS   = 4
+
 # ── Helpers para traducir atajos de gestor_atajos al formato de wx ───────────
 def _mod_a_flag(mod_str):
     """Convierte 'Ctrl', 'Alt', 'Ctrl+Shift'… al flag wx.ACCEL_* correspondiente."""
@@ -166,11 +176,21 @@ class VentanaPrincipal(wx.Frame):
             self._mostrar_menu_contextual()
             return
 
-        # Ctrl+1 / Ctrl+2 / Ctrl+3 → cambiar de pestaña directamente
+        # Ctrl+1 a Ctrl+4 → cambiar de pestaña directamente
         # Solo cuando el foco está dentro de la ventana principal (no en diálogos externos)
-        if evento.ControlDown() and keycode in (ord('1'), ord('2'), ord('3')):
-            idx = keycode - ord('1')   # 0, 1 ó 2
+        if evento.ControlDown() and not evento.ShiftDown() and keycode in (
+            ord('1'), ord('2'), ord('3'), ord('4')
+        ):
+            idx = keycode - ord('1')   # 0 a 3
             self.notebook.SetSelection(idx)
+            return
+
+        # Ctrl+Tab / Ctrl+Shift+Tab → cambiar de pestaña sin importar dónde
+        # esté el foco dentro de la ventana principal (nunca afecta a
+        # diálogos ni ventanas secundarias, que gestionan su propio Tab).
+        if keycode == wx.WXK_TAB and evento.ControlDown():
+            self.notebook.AdvanceSelection(not evento.ShiftDown())
+            wx.CallAfter(self.notebook.SetFocus)
             return
 
         if keycode != wx.WXK_TAB:
@@ -185,13 +205,16 @@ class VentanaPrincipal(wx.Frame):
         shift = evento.ShiftDown()
         indice = self.notebook.GetSelection()
 
-        if indice == 0:
+        if indice == IDX_BIBLIOTECA:
+            primer = self.pestana_biblioteca.primer_control
+            ultimo = self.pestana_biblioteca.ultimo_control
+        elif indice == IDX_LECTURA:
             primer = self.pestana_lectura.primer_control
             ultimo = self.pestana_lectura.ultimo_control
-        elif indice == 1:
+        elif indice == IDX_GRABACION:
             primer = self.pestana_grabacion.primer_control
             ultimo = self.pestana_grabacion.ultimo_control
-        elif indice == 2:
+        elif indice == IDX_AJUSTES:
             primer = self.pestana_ajustes.arbol_cat
             ultimo = self.pestana_ajustes.obtener_ultimo_control()
         else:
@@ -214,7 +237,7 @@ class VentanaPrincipal(wx.Frame):
     def al_cambiar_pestana(self, evento):
         reproducir(CLICK)   # PRIMERO — feedback antes de cualquier procesado visual
         indice = evento.GetSelection()
-        if indice == 0:
+        if indice == IDX_LECTURA:
             # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
             self._configurar_aceleradores_globales()
         self._guardar_sesion()
@@ -247,7 +270,7 @@ class VentanaPrincipal(wx.Frame):
 
     def al_abrir_txt_grabacion(self, evento):
         """Activa la pestaña Grabación y llama al método Examinar del panel."""
-        self.notebook.SetSelection(1)
+        self.notebook.SetSelection(IDX_GRABACION)
         ruta_previa = self.pestana_grabacion.ruta_txt_actual
         self.pestana_grabacion.al_examinar(None)
         ruta_nueva = self.pestana_grabacion.ruta_txt_actual
@@ -255,19 +278,19 @@ class VentanaPrincipal(wx.Frame):
             self.agregar_txt_a_recientes(ruta_nueva)
 
     def al_abrir_archivo(self, evento):
-        self.notebook.SetSelection(0)
+        self.notebook.SetSelection(IDX_LECTURA)
         self.pestana_lectura.al_cargar_libro(None)
 
     def al_abrir_marcadores(self, evento):
-        if self.notebook.GetSelection() == 0:
+        if self.notebook.GetSelection() == IDX_LECTURA:
             self.pestana_lectura.iniciar_marcadores()
 
     def al_buscar(self, evento):
-        if self.notebook.GetSelection() == 0:
+        if self.notebook.GetSelection() == IDX_LECTURA:
             self.pestana_lectura.iniciar_busqueda()
 
     def al_ir_a_porcentaje(self, evento):
-        if self.notebook.GetSelection() == 0:
+        if self.notebook.GetSelection() == IDX_LECTURA:
             self.pestana_lectura.iniciar_ir_a_pagina()
 
     def al_salir(self, evento):
@@ -318,8 +341,8 @@ class VentanaPrincipal(wx.Frame):
         config = self._cargar_config_general()
 
         # Restaurar pestaña activa
-        ultima_pestana = config.get("ultima_pestana", 0)
-        if isinstance(ultima_pestana, int) and 0 <= ultima_pestana <= 2:
+        ultima_pestana = config.get("ultima_pestana", IDX_BIBLIOTECA)
+        if isinstance(ultima_pestana, int) and 0 <= ultima_pestana < NUM_PESTANAS:
             self.notebook.SetSelection(ultima_pestana)
 
         # Restaurar estado del checkbox "Dividir por etiquetas"
@@ -368,7 +391,7 @@ class VentanaPrincipal(wx.Frame):
 
     def _abrir_txt_reciente(self, ruta: str):
         if os.path.exists(ruta):
-            self.notebook.SetSelection(1)
+            self.notebook.SetSelection(IDX_GRABACION)
             self.pestana_grabacion.cargar_txt_desde_ruta(ruta)
             self.agregar_txt_a_recientes(ruta)
         else:
@@ -429,7 +452,7 @@ class VentanaPrincipal(wx.Frame):
 
     def abrir_libro_reciente(self, ruta):
         if os.path.exists(ruta):
-            self.notebook.SetSelection(0)
+            self.notebook.SetSelection(IDX_LECTURA)
             self.pestana_lectura.cargar_epub_desde_ruta(ruta)
         else:
             wx.MessageBox("El archivo ya no existe", "Error")
@@ -443,12 +466,54 @@ class VentanaPrincipal(wx.Frame):
     def _mostrar_menu_contextual(self):
         """Muestra el menú contextual correspondiente a la pestaña activa."""
         indice = self.notebook.GetSelection()
-        if indice == 0:
+        if indice == IDX_BIBLIOTECA:
+            self._menu_contextual_biblioteca()
+        elif indice == IDX_LECTURA:
             self._menu_contextual_lectura()
-        elif indice == 1:
+        elif indice == IDX_GRABACION:
             self._menu_contextual_grabacion()
         else:
             self._menu_contextual_ajustes()
+
+    def _menu_contextual_biblioteca(self):
+        """Menú contextual de la pestaña Biblioteca: delega en el propio panel,
+        que conoce el libro seleccionado, y añade Ayuda y Salir."""
+        menu = wx.Menu()
+
+        item_importar = menu.Append(wx.ID_ANY, "Importar carpeta...\tCtrl+O")
+        self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_importar_carpeta, item_importar)
+
+        libro = self.pestana_biblioteca._libro_seleccionado()
+        if libro is not None:
+            menu.AppendSeparator()
+
+            item_favorito = menu.Append(
+                wx.ID_ANY,
+                "Quitar de favoritos" if libro["favorito"] else "Marcar como favorito",
+            )
+            self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_alternar_favorito, item_favorito)
+
+            item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo según metadatos")
+            item_renombrar.Enable(not bool(libro["titulo_revisado"]))
+            self.Bind(
+                wx.EVT_MENU, self.pestana_biblioteca.al_renombrar_segun_metadatos, item_renombrar
+            )
+
+            item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self.pestana_biblioteca._quitar_libro_seleccionado(),
+                item_quitar,
+            )
+
+        menu.AppendSeparator()
+        self._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+
+        self.pestana_biblioteca.PopupMenu(menu)
+        menu.Destroy()
 
     def _menu_contextual_ajustes(self):
         """Menú contextual de la pestaña Ajustes: solo Ayuda y Salir."""
@@ -653,7 +718,7 @@ class VentanaPrincipal(wx.Frame):
             )
             return
 
-        en_lectura = self.notebook.GetSelection() == 0
+        en_lectura = self.notebook.GetSelection() == IDX_LECTURA
         _ATAJOS_SOLO_LECTURA = {"buscar", "marcadores", "ir_porcentaje"}
 
         _ACCIONES = {
@@ -674,11 +739,14 @@ class VentanaPrincipal(wx.Frame):
 
     # ANCLAJE_INICIO: AYUDA
     def _al_ctrl_o_contextual(self, evento=None):
-        """Ctrl+O: abre libro en Lectura o carpeta de grabaciones en Grabación."""
+        """Ctrl+O: apertura contextual según la pestaña activa —
+        importar carpeta en Biblioteca, libro en Lectura, TXT en Grabación."""
         indice = self.notebook.GetSelection()
-        if indice == 0:
+        if indice == IDX_BIBLIOTECA:
+            self.pestana_biblioteca.al_importar_carpeta(None)
+        elif indice == IDX_LECTURA:
             self.pestana_lectura.al_cargar_libro(None)
-        elif indice == 1:
+        elif indice == IDX_GRABACION:
             self.pestana_grabacion.al_examinar(None)
 
     def _al_abrir_ayuda_global(self, evento=None):
