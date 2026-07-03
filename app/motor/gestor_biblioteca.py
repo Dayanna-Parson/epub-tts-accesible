@@ -193,6 +193,10 @@ class GestorBiblioteca:
         cursor = conexion.execute("INSERT INTO etiquetas (nombre) VALUES (?)", (nombre,))
         return cursor.lastrowid
 
+    def crear_categoria(self, nombre: str, id_padre: Optional[int] = None) -> int:
+        with self._conexion() as conexion:
+            return self.obtener_o_crear_categoria(conexion, nombre, id_padre)
+
     def listar_categorias_hijas(self, id_padre: Optional[int] = None) -> list[sqlite3.Row]:
         """Hijos directos de una categoría (o raíces del árbol si id_padre es None)."""
         with self._conexion() as conexion:
@@ -253,6 +257,69 @@ class GestorBiblioteca:
         for hijo in hijos:
             ids.extend(self._descendientes_categoria(conexion, hijo["id"]))
         return ids
+
+    def renombrar_categoria(self, id_categoria: int, nuevo_nombre: str) -> bool:
+        nuevo_nombre = nuevo_nombre.strip()
+        if not nuevo_nombre:
+            return False
+        with self._conexion() as conexion:
+            fila = conexion.execute(
+                "SELECT id_padre FROM categorias WHERE id = ?", (id_categoria,)
+            ).fetchone()
+            if fila is None:
+                return False
+            choque = conexion.execute(
+                "SELECT id FROM categorias WHERE nombre = ? COLLATE NOCASE "
+                "AND id_padre IS ? AND id != ?",
+                (nuevo_nombre, fila["id_padre"], id_categoria),
+            ).fetchone()
+            if choque:
+                return False
+            conexion.execute(
+                "UPDATE categorias SET nombre = ? WHERE id = ?", (nuevo_nombre, id_categoria)
+            )
+            return True
+
+    def reparentar_categoria(self, id_categoria: int, nuevo_id_padre: Optional[int]) -> bool:
+        """
+        Mueve una categoría (con todo su subárbol) bajo otra, o a raíz si
+        nuevo_id_padre es None. Rechaza la operación si crearía un ciclo
+        (mover una categoría dentro de sí misma o de un descendiente suyo).
+        """
+        if id_categoria == nuevo_id_padre:
+            return False
+        with self._conexion() as conexion:
+            if nuevo_id_padre is not None:
+                descendientes = self._descendientes_categoria(conexion, id_categoria)
+                if nuevo_id_padre in descendientes:
+                    return False
+            conexion.execute(
+                "UPDATE categorias SET id_padre = ? WHERE id = ?",
+                (nuevo_id_padre, id_categoria),
+            )
+            return True
+
+    def eliminar_categoria(self, id_categoria: int):
+        """Elimina la categoría y todo su subárbol (ON DELETE CASCADE)."""
+        with self._conexion() as conexion:
+            conexion.execute("DELETE FROM categorias WHERE id = ?", (id_categoria,))
+
+    def obtener_ruta_categoria(self, id_categoria: int) -> list[str]:
+        """Nombres desde la raíz hasta la categoría dada, ej. ['Fantasía', 'Fantasía épica']."""
+        with self._conexion() as conexion:
+            ruta = []
+            actual = conexion.execute(
+                "SELECT id, nombre, id_padre FROM categorias WHERE id = ?", (id_categoria,)
+            ).fetchone()
+            while actual:
+                ruta.insert(0, actual["nombre"])
+                if actual["id_padre"] is None:
+                    break
+                actual = conexion.execute(
+                    "SELECT id, nombre, id_padre FROM categorias WHERE id = ?",
+                    (actual["id_padre"],),
+                ).fetchone()
+            return ruta
 
     # ── Rutas ya indexadas (para el escáner) ────────────────────────────────
 

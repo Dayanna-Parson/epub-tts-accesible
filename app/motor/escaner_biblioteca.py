@@ -174,11 +174,16 @@ class EscanerBiblioteca:
     def __init__(
         self,
         gestor: GestorBiblioteca,
-        al_progresar: Optional[Callable[[int], None]] = None,
+        al_progresar: Optional[Callable[[int, int], None]] = None,
         al_detectar_carpetas: Optional[Callable[[dict], None]] = None,
         al_terminar: Optional[Callable[[int], None]] = None,
         al_fallar: Optional[Callable[[Exception], None]] = None,
     ):
+        """
+        al_progresar recibe (procesados, total) — no solo el número de
+        insertados — para poder anunciar y mostrar progreso real incluso
+        en importaciones pequeñas (menos de un lote de TAMANO_LOTE).
+        """
         self.gestor = gestor
         self.al_progresar = al_progresar
         self.al_detectar_carpetas = al_detectar_carpetas
@@ -187,11 +192,20 @@ class EscanerBiblioteca:
         self._hilo: Optional[threading.Thread] = None
         self._cancelado = threading.Event()
 
-    def iniciar(self, carpeta_raiz: str):
+    def iniciar(self, carpeta_raiz: str, usar_subcarpetas_como_categorias: bool = False):
+        """
+        Si usar_subcarpetas_como_categorias es True, la ruta de carpetas
+        entre carpeta_raiz y cada libro se usa como su género/subgénero
+        (ej. carpeta_raiz/Fantasía/Fantasía épica/libro.epub → categoría
+        "Fantasía > Fantasía épica"). Es opcional porque no todo el mundo
+        organiza su colección por género en el disco — quien no lo haga
+        no debe ver categorías inventadas a partir de nombres de carpeta
+        que en realidad son otra cosa (autor, formato, origen...).
+        """
         self._cancelado.clear()
         self._hilo = threading.Thread(
             target=self._ejecutar,
-            args=(carpeta_raiz,),
+            args=(carpeta_raiz, usar_subcarpetas_como_categorias),
             name="escaner_biblioteca",
             daemon=True,
         )
@@ -202,13 +216,15 @@ class EscanerBiblioteca:
 
     # ── Trabajo en segundo plano ─────────────────────────────────────────────
 
-    def _ejecutar(self, carpeta_raiz: str):
+    def _ejecutar(self, carpeta_raiz: str, usar_subcarpetas_como_categorias: bool = False):
         try:
             rutas_candidatas = self._listar_rutas_candidatas(carpeta_raiz)
             rutas_indexadas = self.gestor.obtener_rutas_indexadas()
             rutas_nuevas = [r for r in rutas_candidatas if r not in rutas_indexadas]
+            total_a_procesar = len(rutas_nuevas)
 
             total_insertados = 0
+            procesados = 0
             lote_actual = []
             libros_por_carpeta: dict[str, list[str]] = {}
 
@@ -220,8 +236,16 @@ class EscanerBiblioteca:
                         raise EscaneoCancelado()
 
                     resultado = futuro.result()
+                    procesados += 1
                     if resultado is None:
+                        if self.al_progresar:
+                            self.al_progresar(procesados, total_a_procesar)
                         continue
+
+                    if usar_subcarpetas_como_categorias:
+                        resultado["categorias"] = [
+                            self._ruta_categoria_desde_carpeta(carpeta_raiz, resultado["ruta_archivo"])
+                        ]
 
                     lote_actual.append(resultado)
                     carpeta = os.path.dirname(resultado["ruta_archivo"])
@@ -230,14 +254,15 @@ class EscanerBiblioteca:
                     if len(lote_actual) >= TAMANO_LOTE:
                         total_insertados += self.gestor.insertar_libros_lote(lote_actual)
                         lote_actual = []
-                        if self.al_progresar:
-                            self.al_progresar(total_insertados)
+
+                    if self.al_progresar:
+                        self.al_progresar(procesados, total_a_procesar)
 
             if lote_actual:
                 total_insertados += self.gestor.insertar_libros_lote(lote_actual)
 
             if self.al_progresar:
-                self.al_progresar(total_insertados)
+                self.al_progresar(total_a_procesar, total_a_procesar)
 
             carpetas_candidatas = {
                 carpeta: titulos
@@ -256,6 +281,14 @@ class EscanerBiblioteca:
             logger.exception("[EscanerBiblioteca] Fallo durante el escaneo de: %s", carpeta_raiz)
             if self.al_fallar:
                 self.al_fallar(error)
+
+    @staticmethod
+    def _ruta_categoria_desde_carpeta(carpeta_raiz: str, ruta_archivo: str) -> list[str]:
+        carpeta_libro = os.path.dirname(ruta_archivo)
+        relativa = os.path.relpath(carpeta_libro, carpeta_raiz)
+        if relativa in ("", "."):
+            return []
+        return [parte for parte in relativa.split(os.sep) if parte not in ("", ".")]
 
     @staticmethod
     def _listar_rutas_candidatas(carpeta_raiz: str) -> list[str]:
