@@ -169,8 +169,12 @@ class DialogoTroceador(wx.Dialog):
         self.btn_abrir_carpeta.Hide()
         aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta capitulos")
 
+        self.barra_progreso = wx.Gauge(panel, range=100)
+        self.barra_progreso.Hide()
+
         sz_accion.Add(self.btn_dividir,      0, wx.RIGHT, 8)
         sz_accion.Add(self.lbl_progreso,     1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        sz_accion.Add(self.barra_progreso,   1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         sz_accion.Add(self.btn_abrir_carpeta, 0)
         sz.Add(sz_accion, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
@@ -294,11 +298,14 @@ class DialogoTroceador(wx.Dialog):
         self.btn_examinar.Disable()
         self.btn_abrir_carpeta.Hide()
         self._set_progreso("Dividiendo…")
+        self.barra_progreso.SetValue(0)
+        self.barra_progreso.Show()
         self.Layout()
 
         reproducir(PROGRESS)
 
         def _progreso(actual, total, titulo):
+            wx.CallAfter(self._actualizar_barra, actual, total)
             wx.CallAfter(
                 self._set_progreso,
                 f"Procesando {actual}/{total}: {titulo}",
@@ -313,9 +320,16 @@ class DialogoTroceador(wx.Dialog):
 
         threading.Thread(target=_tarea, daemon=True).start()
 
+    def _actualizar_barra(self, actual: int, total: int):
+        if total > 0:
+            self.barra_progreso.SetRange(total)
+            self.barra_progreso.SetValue(min(actual, total))
+
     def _al_division_completada(self, n_archivos: int, carpeta: str, error: str):
         self.btn_dividir.Enable()
         self.btn_examinar.Enable()
+        self.barra_progreso.Hide()
+        self.Layout()
 
         if error:
             self._set_progreso(f"Error durante la división: {error}")
