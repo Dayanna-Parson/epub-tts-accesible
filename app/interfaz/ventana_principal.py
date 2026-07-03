@@ -302,6 +302,15 @@ class VentanaPrincipal(wx.Frame):
                 self.pestana_lectura.al_detener(None)
         except Exception:
             logger.warning("Error al detener la reproducción durante el cierre", exc_info=True)
+
+        # Desconectar EVT_TREE_SEL_CHANGED antes de destruir: puede
+        # dispararse durante el cierre y acceder a objetos C++ ya liberados
+        # (mismo problema ya resuelto para el árbol de ventana_proyectos.py).
+        try:
+            self.pestana_biblioteca.arbol_categorias.Unbind(wx.EVT_TREE_SEL_CHANGED)
+        except Exception:
+            pass
+
         self._guardar_sesion()
         self.Destroy()
     # ANCLAJE_FIN: EVENTOS_GLOBALES
@@ -500,8 +509,9 @@ class VentanaPrincipal(wx.Frame):
             )
             self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_alternar_favorito, item_favorito)
 
-            item_categoria = menu.Append(wx.ID_ANY, "Añadir a categoría...")
-            self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_anadir_a_categoria, item_categoria)
+            menu.AppendSubMenu(
+                self.pestana_biblioteca.construir_menu_asignar_categoria(libro), "Añadir a categoría"
+            )
 
             item_quitar_cat = menu.Append(wx.ID_ANY, "Quitar de esta categoría")
             item_quitar_cat.Enable(self.pestana_biblioteca._id_categoria_activa is not None)
