@@ -5,6 +5,7 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
+from app.interfaz.pestana_biblioteca import PestanaBiblioteca
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
@@ -74,15 +75,19 @@ class VentanaPrincipal(wx.Frame):
         # 1. Configurar Panel de Pestañas (Notebook)
         self.notebook = wx.Notebook(self)
 
-        # Pestaña 1: Lectura
+        # Pestaña 1: Biblioteca
+        self.pestana_biblioteca = PestanaBiblioteca(self.notebook)
+        self.notebook.AddPage(self.pestana_biblioteca, "Biblioteca")
+
+        # Pestaña 2: Lectura
         self.pestana_lectura = PestanaLectura(self.notebook)
         self.notebook.AddPage(self.pestana_lectura, "Modo Lectura")
 
-        # Pestaña 2: Grabación multivoz
+        # Pestaña 3: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
         self.notebook.AddPage(self.pestana_grabacion, "Creación de fragmentos")
-        
-        # Pestaña 3: Ajustes
+
+        # Pestaña 4: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
         self.notebook.AddPage(self.pestana_ajustes, "Ajustes")
 
