@@ -487,11 +487,27 @@ class VentanaPrincipal(wx.Frame):
         if libro is not None:
             menu.AppendSeparator()
 
+            item_abrir = menu.Append(wx.ID_ANY, "Abrir en Lectura\tIntro")
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e: self.pestana_biblioteca.al_abrir_libro_seleccionado(),
+                item_abrir,
+            )
+
             item_favorito = menu.Append(
                 wx.ID_ANY,
                 "Quitar de favoritos" if libro["favorito"] else "Marcar como favorito",
             )
             self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_alternar_favorito, item_favorito)
+
+            item_categoria = menu.Append(wx.ID_ANY, "Añadir a categoría...")
+            self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_anadir_a_categoria, item_categoria)
+
+            item_quitar_cat = menu.Append(wx.ID_ANY, "Quitar de esta categoría")
+            item_quitar_cat.Enable(self.pestana_biblioteca._id_categoria_activa is not None)
+            self.Bind(
+                wx.EVT_MENU, self.pestana_biblioteca.al_quitar_de_categoria_actual, item_quitar_cat
+            )
 
             item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo...\tF2")
             self.Bind(
