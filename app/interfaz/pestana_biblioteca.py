@@ -65,6 +65,11 @@ class PestanaBiblioteca(wx.Panel):
             sizer_casillas.Add(casilla, 0, wx.ALL, 5)
         sizer_principal.Add(sizer_casillas, 0)
 
+        # Botón de importación (visible además del atajo Ctrl+O)
+        self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
+        self.btn_importar.Bind(wx.EVT_BUTTON, self.al_importar_carpeta)
+        sizer_principal.Add(self.btn_importar, 0, wx.ALL, 5)
+
         # Lista principal de libros
         self.lista_libros = wx.ListCtrl(
             self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL
@@ -89,22 +94,32 @@ class PestanaBiblioteca(wx.Panel):
         self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
 
     def _configurar_atajos(self):
+        # Ctrl+O (apertura universal, contextual por pestaña) se gestiona a
+        # nivel de VentanaPrincipal y llama a al_importar_carpeta() desde
+        # allí — no se duplica aquí para no pisar el atajo global.
         id_buscar = wx.NewIdRef()
-        id_importar = wx.NewIdRef()
         id_info = wx.NewIdRef()
         id_favorito = wx.NewIdRef()
 
         self.Bind(wx.EVT_MENU, lambda e: self.txt_filtro.SetFocus(), id=id_buscar)
-        self.Bind(wx.EVT_MENU, self.al_importar_carpeta, id=id_importar)
         self.Bind(wx.EVT_MENU, self.al_anunciar_info_libro, id=id_info)
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, id=id_favorito)
 
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('F'), id_buscar),
-            (wx.ACCEL_CTRL, ord('N'), id_importar),
             (wx.ACCEL_CTRL, ord('I'), id_info),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('F'), id_favorito),
         ]))
+
+    # ── Propiedades para Tab cíclico (usadas por ventana_principal.py) ──────
+
+    @property
+    def primer_control(self):
+        return self.txt_filtro
+
+    @property
+    def ultimo_control(self):
+        return self.lista_libros
 
     # ── Anuncios de accesibilidad ────────────────────────────────────────────
 
