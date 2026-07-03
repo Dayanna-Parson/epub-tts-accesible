@@ -54,16 +54,27 @@ class PestanaBiblioteca(wx.Panel):
         sizer_filtro.Add(self.txt_filtro, 1, wx.ALL | wx.EXPAND, 5)
         sizer_principal.Add(sizer_filtro, 0, wx.EXPAND)
 
-        # Casillas de estado, combinables entre sí
-        sizer_casillas = wx.BoxSizer(wx.HORIZONTAL)
-        self.chk_favoritos = wx.CheckBox(self, label="Favoritos")
-        self.chk_pendientes = wx.CheckBox(self, label="Pendientes")
-        self.chk_leyendo = wx.CheckBox(self, label="Leyendo ahora")
-        self.chk_leidos = wx.CheckBox(self, label="Leídos")
-        for casilla in (self.chk_favoritos, self.chk_pendientes, self.chk_leyendo, self.chk_leidos):
-            casilla.Bind(wx.EVT_CHECKBOX, self.al_cambiar_filtro)
-            sizer_casillas.Add(casilla, 0, wx.ALL, 5)
-        sizer_principal.Add(sizer_casillas, 0)
+        # Filtro de estado: en_pendientes/leyendo_ahora/leido son etapas
+        # mutuamente excluyentes de un mismo libro (nunca coinciden a la
+        # vez), así que un combo de una sola selección es más claro que
+        # varias casillas independientes. Favorito sí es ortogonal al
+        # estado (un libro puede ser favorito en cualquier etapa), por
+        # eso se mantiene como casilla aparte, combinable con el combo.
+        sizer_filtro_estado = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_filtro_estado.Add(
+            wx.StaticText(self, label="Estado:"), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5
+        )
+        self._ESTADOS_FILTRO = ["Todos", "Pendientes", "Leyendo ahora", "Leídos"]
+        self.combo_estado = wx.Choice(self, choices=self._ESTADOS_FILTRO)
+        self.combo_estado.SetSelection(0)
+        self.combo_estado.Bind(wx.EVT_CHOICE, self.al_cambiar_filtro)
+        sizer_filtro_estado.Add(self.combo_estado, 0, wx.ALL, 5)
+
+        self.chk_favoritos = wx.CheckBox(self, label="Solo favoritos")
+        self.chk_favoritos.Bind(wx.EVT_CHECKBOX, self.al_cambiar_filtro)
+        sizer_filtro_estado.Add(self.chk_favoritos, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+
+        sizer_principal.Add(sizer_filtro_estado, 0)
 
         # Botón de importación (visible además del atajo Ctrl+O)
         self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
@@ -132,12 +143,13 @@ class PestanaBiblioteca(wx.Panel):
     # ── Carga y filtrado de la lista ─────────────────────────────────────────
 
     def _cargar_libros(self):
+        estado = self._ESTADOS_FILTRO[self.combo_estado.GetSelection()]
         libros = self.gestor.buscar_libros(
             texto=self.txt_filtro.GetValue().strip(),
             solo_favoritos=self.chk_favoritos.GetValue(),
-            solo_pendientes=self.chk_pendientes.GetValue(),
-            solo_leyendo=self.chk_leyendo.GetValue(),
-            solo_leidos=self.chk_leidos.GetValue(),
+            solo_pendientes=(estado == "Pendientes"),
+            solo_leyendo=(estado == "Leyendo ahora"),
+            solo_leidos=(estado == "Leídos"),
         )
         self._libros_actuales = libros
 
@@ -259,6 +271,9 @@ class PestanaBiblioteca(wx.Panel):
         if codigo == wx.WXK_F5:
             self.al_importar_carpeta(evento)
             return
+        if codigo == wx.WXK_F2:
+            self.al_renombrar_segun_metadatos(evento)
+            return
         evento.Skip()
 
     def _quitar_libro_seleccionado(self):
@@ -282,7 +297,7 @@ class PestanaBiblioteca(wx.Panel):
         dlg = wx.TextEntryDialog(
             self,
             "Nombre de archivo propuesto (editable):",
-            "Renombrar archivo según metadatos",
+            "Renombrar archivo (F2)",
             value=libro["titulo"],
         )
         if dlg.ShowModal() != wx.ID_OK:
@@ -337,8 +352,7 @@ class PestanaBiblioteca(wx.Panel):
 
         menu.AppendSeparator()
 
-        item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo según metadatos")
-        item_renombrar.Enable(not bool(libro["titulo_revisado"]))
+        item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo...\tF2")
         self.Bind(wx.EVT_MENU, self.al_renombrar_segun_metadatos, item_renombrar)
 
         item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")

@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 RUTA_BIBLIOTECA = ruta_config("biblioteca.db")
 
-VERSION_ESQUEMA = 1
+VERSION_ESQUEMA = 2
 
 _ESQUEMA_SQL = """
 CREATE TABLE IF NOT EXISTS autores (
@@ -38,8 +38,10 @@ CREATE TABLE IF NOT EXISTS autores (
 );
 
 CREATE TABLE IF NOT EXISTS categorias (
-    id      INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre  TEXT NOT NULL UNIQUE COLLATE NOCASE
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre    TEXT NOT NULL COLLATE NOCASE,
+    id_padre  INTEGER REFERENCES categorias(id) ON DELETE CASCADE,
+    UNIQUE (nombre, id_padre)
 );
 
 CREATE TABLE IF NOT EXISTS etiquetas (
@@ -52,7 +54,6 @@ CREATE TABLE IF NOT EXISTS libros (
     ruta_archivo          TEXT NOT NULL UNIQUE,
     titulo                TEXT NOT NULL,
     formato               TEXT NOT NULL CHECK (formato IN ('epub', 'pdf')),
-    id_categoria          INTEGER REFERENCES categorias(id) ON DELETE SET NULL,
     fecha_añadido         TEXT NOT NULL DEFAULT (datetime('now')),
     ultimo_punto_lectura  INTEGER NOT NULL DEFAULT 0,
     metadatos_json        TEXT,
@@ -69,9 +70,16 @@ CREATE TABLE IF NOT EXISTS libro_autor (
     PRIMARY KEY (id_libro, id_autor)
 );
 
+CREATE TABLE IF NOT EXISTS libro_categoria (
+    id_libro      INTEGER NOT NULL REFERENCES libros(id) ON DELETE CASCADE,
+    id_categoria  INTEGER NOT NULL REFERENCES categorias(id) ON DELETE CASCADE,
+    PRIMARY KEY (id_libro, id_categoria)
+);
+
 CREATE TABLE IF NOT EXISTS libro_etiqueta (
     id_libro    INTEGER NOT NULL REFERENCES libros(id) ON DELETE CASCADE,
     id_etiqueta INTEGER NOT NULL REFERENCES etiquetas(id) ON DELETE CASCADE,
+    orden       INTEGER,
     PRIMARY KEY (id_libro, id_etiqueta)
 );
 
@@ -93,12 +101,13 @@ CREATE TABLE IF NOT EXISTS exportaciones_pendientes (
     ruta_parcial        TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_libros_categoria   ON libros(id_categoria);
 CREATE INDEX IF NOT EXISTS idx_libros_favorito    ON libros(favorito);
 CREATE INDEX IF NOT EXISTS idx_libros_pendientes  ON libros(en_pendientes);
 CREATE INDEX IF NOT EXISTS idx_libros_leyendo     ON libros(leyendo_ahora);
 CREATE INDEX IF NOT EXISTS idx_libros_leido       ON libros(leido);
 CREATE INDEX IF NOT EXISTS idx_libro_autor_autor  ON libro_autor(id_autor);
+CREATE INDEX IF NOT EXISTS idx_libro_cat_cat      ON libro_categoria(id_categoria);
+CREATE INDEX IF NOT EXISTS idx_categorias_padre   ON categorias(id_padre);
 CREATE INDEX IF NOT EXISTS idx_libro_etiq_etiq    ON libro_etiqueta(id_etiqueta);
 CREATE INDEX IF NOT EXISTS idx_dicc_alcance       ON diccionario_reglas(tipo_alcance, id_referencia);
 """
@@ -155,14 +164,23 @@ class GestorBiblioteca:
         cursor = conexion.execute("INSERT INTO autores (nombre) VALUES (?)", (nombre,))
         return cursor.lastrowid
 
-    def obtener_o_crear_categoria(self, conexion, nombre: str) -> int:
+    def obtener_o_crear_categoria(self, conexion, nombre: str, id_padre: Optional[int] = None) -> int:
+        """
+        Géneros y subgéneros forman un árbol: id_padre es NULL para un
+        género raíz (ej. "Fantasía") y apunta al id del padre para un
+        subgénero (ej. "Fantasía épica" bajo "Fantasía"). El mismo
+        nombre puede existir bajo padres distintos sin chocar.
+        """
         nombre = nombre.strip()
         fila = conexion.execute(
-            "SELECT id FROM categorias WHERE nombre = ? COLLATE NOCASE", (nombre,)
+            "SELECT id FROM categorias WHERE nombre = ? COLLATE NOCASE AND id_padre IS ?",
+            (nombre, id_padre),
         ).fetchone()
         if fila:
             return fila["id"]
-        cursor = conexion.execute("INSERT INTO categorias (nombre) VALUES (?)", (nombre,))
+        cursor = conexion.execute(
+            "INSERT INTO categorias (nombre, id_padre) VALUES (?, ?)", (nombre, id_padre)
+        )
         return cursor.lastrowid
 
     def obtener_o_crear_etiqueta(self, conexion, nombre: str) -> int:
@@ -175,13 +193,66 @@ class GestorBiblioteca:
         cursor = conexion.execute("INSERT INTO etiquetas (nombre) VALUES (?)", (nombre,))
         return cursor.lastrowid
 
-    def listar_categorias(self) -> list[sqlite3.Row]:
+    def listar_categorias_hijas(self, id_padre: Optional[int] = None) -> list[sqlite3.Row]:
+        """Hijos directos de una categoría (o raíces del árbol si id_padre es None)."""
         with self._conexion() as conexion:
-            return conexion.execute("SELECT id, nombre FROM categorias ORDER BY nombre").fetchall()
+            return conexion.execute(
+                "SELECT id, nombre, id_padre FROM categorias "
+                "WHERE id_padre IS ? ORDER BY nombre COLLATE NOCASE",
+                (id_padre,),
+            ).fetchall()
 
     def listar_etiquetas(self) -> list[sqlite3.Row]:
         with self._conexion() as conexion:
             return conexion.execute("SELECT id, nombre FROM etiquetas ORDER BY nombre").fetchall()
+
+    def asignar_categoria_por_ruta(self, id_libro: int, ruta_categorias: list[str]) -> int:
+        """
+        Asigna un género/subgénero a un libro a partir de una ruta de
+        nombres desde la raíz (ej. ["Fantasía", "Fantasía épica"]),
+        creando los niveles que falten. Un libro puede tener varias
+        categorías asignadas (llamar una vez por cada una) — no es
+        exclusivo como en la v1 de este esquema.
+        """
+        with self._conexion() as conexion:
+            id_padre = None
+            id_categoria = None
+            for parte in ruta_categorias:
+                id_categoria = self.obtener_o_crear_categoria(conexion, parte, id_padre)
+                id_padre = id_categoria
+            conexion.execute(
+                "INSERT OR IGNORE INTO libro_categoria (id_libro, id_categoria) VALUES (?, ?)",
+                (id_libro, id_categoria),
+            )
+            return id_categoria
+
+    def quitar_categoria_de_libro(self, id_libro: int, id_categoria: int):
+        with self._conexion() as conexion:
+            conexion.execute(
+                "DELETE FROM libro_categoria WHERE id_libro = ? AND id_categoria = ?",
+                (id_libro, id_categoria),
+            )
+
+    def obtener_categorias_de_libro(self, id_libro: int) -> list[sqlite3.Row]:
+        with self._conexion() as conexion:
+            return conexion.execute(
+                """
+                SELECT c.id, c.nombre, c.id_padre FROM categorias c
+                JOIN libro_categoria lc ON lc.id_categoria = c.id
+                WHERE lc.id_libro = ?
+                ORDER BY c.nombre COLLATE NOCASE
+                """,
+                (id_libro,),
+            ).fetchall()
+
+    def _descendientes_categoria(self, conexion, id_categoria: int) -> list[int]:
+        ids = [id_categoria]
+        hijos = conexion.execute(
+            "SELECT id FROM categorias WHERE id_padre = ?", (id_categoria,)
+        ).fetchall()
+        for hijo in hijos:
+            ids.extend(self._descendientes_categoria(conexion, hijo["id"]))
+        return ids
 
     # ── Rutas ya indexadas (para el escáner) ────────────────────────────────
 
@@ -198,16 +269,21 @@ class GestorBiblioteca:
         titulo: str,
         formato: str,
         autores: Optional[list[str]] = None,
-        categoria: Optional[str] = None,
+        categorias: Optional[list[list[str]]] = None,
         titulo_revisado: bool = True,
     ) -> int:
         """
-        Inserta un único libro con sus autores y categoría, resolviendo
+        Inserta un único libro con sus autores y categorías, resolviendo
         las tablas auxiliares dentro de la misma transacción.
+
+        `categorias` es una lista de rutas de género (cada ruta es una
+        lista de nombres desde la raíz), ya que un libro puede
+        pertenecer a varios géneros/subgéneros a la vez. Ejemplo:
+        [["Fantasía", "Fantasía épica"], ["Aventuras"]].
         """
         with self._conexion() as conexion:
             return self._insertar_libro_en_conexion(
-                conexion, ruta_archivo, titulo, formato, autores, categoria, titulo_revisado
+                conexion, ruta_archivo, titulo, formato, autores, categorias, titulo_revisado
             )
 
     def insertar_libros_lote(self, libros: list[dict]) -> int:
@@ -216,7 +292,7 @@ class GestorBiblioteca:
 
         Cada elemento de `libros` es un dict con las claves:
         ruta_archivo, titulo, formato, autores (list[str], opcional),
-        categoria (str, opcional), titulo_revisado (bool, opcional).
+        categorias (list[list[str]], opcional), titulo_revisado (bool, opcional).
 
         Devuelve el número de libros insertados con éxito. Los que
         fallen individualmente (por ejemplo ruta duplicada) se registran
@@ -232,7 +308,7 @@ class GestorBiblioteca:
                         datos["titulo"],
                         datos["formato"],
                         datos.get("autores"),
-                        datos.get("categoria"),
+                        datos.get("categorias"),
                         datos.get("titulo_revisado", True),
                     )
                     insertados += 1
@@ -243,15 +319,14 @@ class GestorBiblioteca:
         return insertados
 
     def _insertar_libro_en_conexion(
-        self, conexion, ruta_archivo, titulo, formato, autores, categoria, titulo_revisado
+        self, conexion, ruta_archivo, titulo, formato, autores, categorias, titulo_revisado
     ) -> int:
-        id_categoria = self.obtener_o_crear_categoria(conexion, categoria) if categoria else None
         cursor = conexion.execute(
             """
-            INSERT INTO libros (ruta_archivo, titulo, formato, id_categoria, titulo_revisado)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO libros (ruta_archivo, titulo, formato, titulo_revisado)
+            VALUES (?, ?, ?, ?)
             """,
-            (ruta_archivo, titulo, formato, id_categoria, int(titulo_revisado)),
+            (ruta_archivo, titulo, formato, int(titulo_revisado)),
         )
         id_libro = cursor.lastrowid
         for nombre_autor in (autores or []):
@@ -259,6 +334,18 @@ class GestorBiblioteca:
             conexion.execute(
                 "INSERT OR IGNORE INTO libro_autor (id_libro, id_autor) VALUES (?, ?)",
                 (id_libro, id_autor),
+            )
+        for ruta_categoria in (categorias or []):
+            if not ruta_categoria:
+                continue
+            id_padre = None
+            id_categoria = None
+            for parte in ruta_categoria:
+                id_categoria = self.obtener_o_crear_categoria(conexion, parte, id_padre)
+                id_padre = id_categoria
+            conexion.execute(
+                "INSERT OR IGNORE INTO libro_categoria (id_libro, id_categoria) VALUES (?, ?)",
+                (id_libro, id_categoria),
             )
         return id_libro
 
@@ -284,6 +371,13 @@ class GestorBiblioteca:
         solo_leyendo: bool = False,
         solo_leidos: bool = False,
     ) -> list[sqlite3.Row]:
+        """
+        Si se filtra por id_etiqueta (una saga/colección concreta), el
+        resultado se ordena por libro_etiqueta.orden — para respetar el
+        orden de lectura de la saga en vez del alfabético. Si se filtra
+        por id_categoria, incluye también los libros de sus subgéneros.
+        Sin ninguno de los dos, se ordena alfabéticamente por título.
+        """
         condiciones = []
         parametros = []
 
@@ -292,8 +386,13 @@ class GestorBiblioteca:
             comodin = f"%{texto}%"
             parametros.extend([comodin, comodin])
         if id_categoria is not None:
-            condiciones.append("l.id_categoria = ?")
-            parametros.append(id_categoria)
+            with self._conexion() as conexion_aux:
+                ids_categoria = self._descendientes_categoria(conexion_aux, id_categoria)
+            marcadores = ",".join("?" * len(ids_categoria))
+            condiciones.append(
+                f"l.id IN (SELECT id_libro FROM libro_categoria WHERE id_categoria IN ({marcadores}))"
+            )
+            parametros.extend(ids_categoria)
         if id_etiqueta is not None:
             condiciones.append(
                 "l.id IN (SELECT id_libro FROM libro_etiqueta WHERE id_etiqueta = ?)"
@@ -309,14 +408,29 @@ class GestorBiblioteca:
             condiciones.append("l.leido = 1")
 
         where = f"WHERE {' AND '.join(condiciones)}" if condiciones else ""
-        consulta = f"""
-            SELECT DISTINCT l.*
-            FROM libros l
-            LEFT JOIN libro_autor la ON la.id_libro = l.id
-            LEFT JOIN autores a ON a.id = la.id_autor
-            {where}
-            ORDER BY l.titulo COLLATE NOCASE
-        """
+
+        if id_etiqueta is not None:
+            consulta = f"""
+                SELECT DISTINCT l.*, le.orden AS orden_en_etiqueta
+                FROM libros l
+                LEFT JOIN libro_autor la ON la.id_libro = l.id
+                LEFT JOIN autores a ON a.id = la.id_autor
+                LEFT JOIN libro_etiqueta le
+                    ON le.id_libro = l.id AND le.id_etiqueta = ?
+                {where}
+                ORDER BY (le.orden IS NULL), le.orden, l.titulo COLLATE NOCASE
+            """
+            parametros = [id_etiqueta] + parametros
+        else:
+            consulta = f"""
+                SELECT DISTINCT l.*
+                FROM libros l
+                LEFT JOIN libro_autor la ON la.id_libro = l.id
+                LEFT JOIN autores a ON a.id = la.id_autor
+                {where}
+                ORDER BY l.titulo COLLATE NOCASE
+            """
+
         with self._conexion() as conexion:
             return conexion.execute(consulta, parametros).fetchall()
 
@@ -340,21 +454,35 @@ class GestorBiblioteca:
                 "UPDATE libros SET ultimo_punto_lectura = ? WHERE id = ?", (posicion, id_libro)
             )
 
+    _CAMPOS_ESTADO_EXCLUYENTE = ("en_pendientes", "leyendo_ahora", "leido")
+
     def establecer_bandera(self, id_libro: int, campo: str, valor: bool):
-        campos_validos = {"favorito", "en_pendientes", "leyendo_ahora", "leido"}
+        """
+        favorito es independiente y se combina con cualquier estado.
+        en_pendientes / leyendo_ahora / leido son mutuamente excluyentes
+        entre sí — marcar uno desmarca los otros dos automáticamente,
+        porque un libro solo puede estar en una etapa de lectura a la vez.
+        """
+        campos_validos = {"favorito", *self._CAMPOS_ESTADO_EXCLUYENTE}
         if campo not in campos_validos:
             raise ValueError(f"Campo de bandera no válido: {campo}")
         with self._conexion() as conexion:
+            if campo in self._CAMPOS_ESTADO_EXCLUYENTE and valor:
+                for otro_campo in self._CAMPOS_ESTADO_EXCLUYENTE:
+                    if otro_campo != campo:
+                        conexion.execute(
+                            f"UPDATE libros SET {otro_campo} = 0 WHERE id = ?", (id_libro,)
+                        )
             conexion.execute(
                 f"UPDATE libros SET {campo} = ? WHERE id = ?", (int(valor), id_libro)
             )
 
-    def asignar_etiqueta(self, id_libro: int, nombre_etiqueta: str):
+    def asignar_etiqueta(self, id_libro: int, nombre_etiqueta: str, orden: Optional[int] = None):
         with self._conexion() as conexion:
             id_etiqueta = self.obtener_o_crear_etiqueta(conexion, nombre_etiqueta)
             conexion.execute(
-                "INSERT OR IGNORE INTO libro_etiqueta (id_libro, id_etiqueta) VALUES (?, ?)",
-                (id_libro, id_etiqueta),
+                "INSERT OR IGNORE INTO libro_etiqueta (id_libro, id_etiqueta, orden) VALUES (?, ?, ?)",
+                (id_libro, id_etiqueta, orden),
             )
 
     def quitar_libro(self, id_libro: int):
