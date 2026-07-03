@@ -46,8 +46,10 @@ CREATE TABLE autores (
 );
 
 CREATE TABLE categorias (
-    id      INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre  TEXT NOT NULL UNIQUE COLLATE NOCASE
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre    TEXT NOT NULL COLLATE NOCASE,
+    id_padre  INTEGER REFERENCES categorias(id) ON DELETE CASCADE,
+    UNIQUE (nombre, id_padre)
 );
 
 CREATE TABLE etiquetas (
@@ -60,7 +62,6 @@ CREATE TABLE libros (
     ruta_archivo          TEXT NOT NULL UNIQUE,
     titulo                TEXT NOT NULL,
     formato               TEXT NOT NULL CHECK (formato IN ('epub', 'pdf')),
-    id_categoria          INTEGER REFERENCES categorias(id) ON DELETE SET NULL,
     fecha_añadido         TEXT NOT NULL DEFAULT (datetime('now')),
     ultimo_punto_lectura  INTEGER NOT NULL DEFAULT 0,
     metadatos_json        TEXT,
@@ -77,9 +78,16 @@ CREATE TABLE libro_autor (
     PRIMARY KEY (id_libro, id_autor)
 );
 
+CREATE TABLE libro_categoria (
+    id_libro      INTEGER NOT NULL REFERENCES libros(id) ON DELETE CASCADE,
+    id_categoria  INTEGER NOT NULL REFERENCES categorias(id) ON DELETE CASCADE,
+    PRIMARY KEY (id_libro, id_categoria)
+);
+
 CREATE TABLE libro_etiqueta (
     id_libro    INTEGER NOT NULL REFERENCES libros(id) ON DELETE CASCADE,
     id_etiqueta INTEGER NOT NULL REFERENCES etiquetas(id) ON DELETE CASCADE,
+    orden       INTEGER,          -- posición dentro de la saga/colección (ver 2.3.1)
     PRIMARY KEY (id_libro, id_etiqueta)
 );
 
@@ -101,12 +109,13 @@ CREATE TABLE exportaciones_pendientes (
     ruta_parcial        TEXT              -- ruta del archivo parcial ya generado
 );
 
-CREATE INDEX idx_libros_categoria   ON libros(id_categoria);
 CREATE INDEX idx_libros_favorito    ON libros(favorito);
 CREATE INDEX idx_libros_pendientes  ON libros(en_pendientes);
 CREATE INDEX idx_libros_leyendo     ON libros(leyendo_ahora);
 CREATE INDEX idx_libros_leido       ON libros(leido);
 CREATE INDEX idx_libro_autor_autor  ON libro_autor(id_autor);
+CREATE INDEX idx_libro_cat_cat      ON libro_categoria(id_categoria);
+CREATE INDEX idx_categorias_padre   ON categorias(id_padre);
 CREATE INDEX idx_libro_etiq_etiq    ON libro_etiqueta(id_etiqueta);
 CREATE INDEX idx_dicc_alcance       ON diccionario_reglas(tipo_alcance, id_referencia);
 ```
@@ -114,17 +123,28 @@ CREATE INDEX idx_dicc_alcance       ON diccionario_reglas(tipo_alcance, id_refer
 Notas de diseño:
 
 - `ruta_archivo UNIQUE` evita duplicados al reimportar la misma carpeta.
-- `ON DELETE CASCADE` en las tablas de unión limpia relaciones huérfanas automáticamente al borrar un libro.
-- `ON DELETE SET NULL` en `id_categoria`: borrar una categoría no borra los libros, solo los deja sin categoría.
+- `ON DELETE CASCADE` en las tablas de unión limpia relaciones huérfanas automáticamente al borrar un libro o una categoría.
 - `COLLATE NOCASE` evita duplicar autores/categorías por diferencias de mayúsculas.
 - `autores` es una tabla normalizada en relación N:N con `libros` (un libro puede tener varios autores; un autor tiene varios libros), en vez de texto libre repetido.
-- `categorias` (una por libro, tipo género) y `etiquetas` (varias por libro, tipo saga o colección personalizada) son conceptos separados: un libro pertenece a un único género pero puede estar en varias colecciones a la vez.
-- El estado de lectura se modela con cuatro banderas independientes (`favorito`, `en_pendientes`, `leyendo_ahora`, `leido`) en vez de un único campo, para permitir combinaciones reales de uso ("favorito y ya leído", "pendiente pero no favorito", etc.).
+- **Categorías como árbol de géneros, no como campo único**: `categorias` es autorreferencial (`id_padre`) para modelar géneros y subgéneros (ej. "Fantasía" → "Fantasía épica", "Fantasía urbana"), y se relaciona con `libros` mediante `libro_categoria` (N:N), porque un libro puede pertenecer a varios géneros o subgéneros a la vez (poco común pero real). El par `(nombre, id_padre)` es único, así que el mismo nombre de subgénero puede repetirse bajo padres distintos sin chocar. Al filtrar por una categoría, la búsqueda incluye automáticamente los libros de sus subgéneros descendientes.
+- `etiquetas` sigue siendo un espacio plano (sagas y colecciones personalizadas), sin jerarquía — es un concepto distinto al de género.
+- El estado de lectura combina dos cosas de naturaleza distinta: `favorito` es independiente y se combina con cualquier etapa; `en_pendientes`, `leyendo_ahora` y `leido` son mutuamente excluyentes entre sí (un libro solo puede estar en una etapa de lectura a la vez) — marcar una de las tres desmarca automáticamente las otras dos.
+- `libro_etiqueta.orden` guarda la posición de un libro dentro de una saga/colección concreta, calculada por el orden alfabético del **nombre de archivo** (no del título) en el momento de confirmar el agrupamiento — es habitual que los archivos de una saga estén numerados ("01.", "02."...) aunque el título de los metadatos no lo indique. Al listar los libros de una etiqueta, se ordena por esta columna en vez de alfabéticamente por título.
 - `metadatos_json` almacena datos secundarios que no necesitan ser consultables por SQL (portada, idioma, editorial) sin inflar el esquema de columnas.
-- `titulo_revisado` marca si el título almacenado coincide razonablemente con el nombre de archivo original o si proviene de una discrepancia sin resolver entre archivo y metadatos internos (ver sección 2.7). Por defecto `1` (revisado) para no marcar de más; se pone a `0` solo cuando el escáner detecta una discrepancia notable.
+- `titulo_revisado` marca si el título almacenado coincide razonablemente con el nombre de archivo original o si proviene de una discrepancia sin resolver entre archivo y metadatos internos (ver sección 2.7). Por defecto `1` (revisado) para no marcar de más; se pone a `0` solo cuando el escáner detecta una discrepancia notable. La comparación ignora tildes y separadores para no generar falsos positivos con títulos acentuados.
 - `exportaciones_pendientes` registra exportaciones de audiolibro cortadas por falta de cuota, para poder retomarlas sin regrabar lo ya hecho (ver sección 4.3).
 
 Migraciones futuras: se controla la versión del esquema con `PRAGMA user_version`, no con una librería externa de migraciones — con un único desarrollador y una base de datos de un solo usuario, un bloque de migración manual por versión es suficiente y no añade dependencias.
+
+### 2.2.1 Extracción de metadatos de EPUB: lectura ligera, no un lector completo
+
+La extracción de título/autor durante el escaneo no usa un lector de EPUB de propósito general (como EbookLib, que sí se usa en el resto de la app para abrir y leer el contenido). En su lugar, lee únicamente `META-INF/container.xml` y el archivo `.opf` referenciado, con `zipfile` y el `ElementTree` de la librería estándar, sin cargar el resto del manifiesto.
+
+Esto no es una simplificación gratuita: EPUBs reales de la propia biblioteca de la autora incluían manifiestos con referencias rotas a imágenes (portadas movidas o exportaciones defectuosas de otras herramientas), que hacían fallar una carga completa del libro aunque los metadatos de título y autor fueran perfectamente legibles. Leer solo lo estrictamente necesario para el escaneo hace que esas discrepancias del manifiesto —irrelevantes para la Biblioteca— dejen de bloquear la importación del libro.
+
+### 2.2.2 Filtro de estado en la interfaz: combo de una selección, no casillas independientes
+
+Dado que `en_pendientes`/`leyendo_ahora`/`leido` son mutuamente excluyentes (ver 2.2), el filtro de la pestaña Biblioteca los representa como un único `wx.Choice` de una sola selección ("Todos" / "Pendientes" / "Leyendo ahora" / "Leídos"), en vez de tres o cuatro casillas independientes que sugerirían (incorrectamente) que se pueden combinar entre sí. "Solo favoritos" sigue siendo una casilla aparte, porque sí es combinable con cualquier estado del combo.
 
 ### 2.3 Escáner de carpetas en segundo plano
 
@@ -148,7 +168,7 @@ Lo único que sí se puede generalizar sin asumir una convención concreta: si u
 
 1. Durante el escaneo, el coordinador agrupa las rutas candidatas por su carpeta contenedora inmediata, además de listarlas.
 2. Al finalizar, si se detectaron carpetas con 2 o más libros, se muestra un diálogo de confirmación (mismo patrón de bautizo ya usado en Grabación y en la sección 2.7) con una lista editable: una fila por carpeta detectada, con el nombre de carpeta propuesto como etiqueta y una casilla para incluirla o excluirla. El usuario puede editar el nombre antes de confirmar o desmarcar la fila si no quiere agrupar esa carpeta.
-3. Al confirmar, se crea (u obtiene) la etiqueta correspondiente y se asigna a todos los libros de esa carpeta mediante `libro_etiqueta` — nunca de forma automática y silenciosa.
+3. Al confirmar, se crea (u obtiene) la etiqueta correspondiente y se asigna a todos los libros de esa carpeta mediante `libro_etiqueta` — nunca de forma automática y silenciosa. El campo `orden` de cada asignación se calcula ordenando los libros de la carpeta alfabéticamente por **nombre de archivo** (no por título), ya que es habitual numerar los archivos de una saga ("01.", "02."...) aunque el título de los metadatos no refleje ese orden.
 4. Esta sugerencia se ofrece una sola vez por carpeta detectada; las carpetas ya evaluadas (aceptadas o descartadas explícitamente) no vuelven a preguntarse en escaneos posteriores de la misma raíz.
 
 **Nombres de archivo sin metadatos disponibles:** si un libro no tiene título en sus metadatos internos y hay que recurrir al nombre de archivo como estimación, se reemplazan guiones y guiones bajos por espacios y se recortan espacios sobrantes antes de mostrarlo como propuesta editable en el flujo de bautizo — nunca se aplican mayúsculas automáticas agresivas, que podrían destrozar acrónimos o nombres propios.
@@ -354,7 +374,9 @@ Orden de tabulación:
 3. `TreeCtrl` de categorías y etiquetas (panel izquierdo): nodo raíz "Todos los libros", hijos por categoría, rama aparte para etiquetas/sagas. Moverse con flechas filtra la lista automáticamente.
 4. `ListCtrl` en modo reporte (panel derecho, control principal): columnas Título, Autor, Formato, Estado.
 
-Atajos: `Enter` abre en Lectura (o dispara el re-enrutado); `Ctrl+I` anuncia los metadatos del libro seleccionado sin mover el foco; `Supr` quita el libro de la biblioteca (nunca borra el archivo físico); `F5` re-escanea la carpeta de origen del libro seleccionado; `Ctrl+Shift+F` alterna favorito sin salir de la lista; `Ctrl+N` importa una carpeta nueva.
+Atajos: `Enter` abre en Lectura (o dispara el re-enrutado); `Ctrl+I` anuncia los metadatos del libro seleccionado sin mover el foco; `Supr` quita el libro de la biblioteca (nunca borra el archivo físico); `F5` re-escanea la carpeta de origen del libro seleccionado; `Ctrl+Shift+F` alterna favorito sin salir de la lista; `F2` renombra el archivo del libro seleccionado en cualquier momento (no solo cuando está marcado como pendiente de revisión); `Ctrl+O` importa una carpeta nueva — es la convención de apertura universal ya establecida en el resto de la app, contextual por pestaña, no un atajo exclusivo de Biblioteca.
+
+Navegación entre pestañas: `Ctrl+Tab`/`Ctrl+Shift+Tab` cambian de pestaña desde cualquier punto de la ventana principal, sin importar dónde esté el foco (no afecta a diálogos ni ventanas secundarias, que gestionan su propio Tab). `Ctrl+1` a `Ctrl+4` saltan directamente a cada pestaña por número.
 
 Menú contextual: Abrir en Lectura · Enviar a Creador de Audiolibros · Marcar como favorito/pendiente/leyendo/leído · Añadir a etiqueta (con opción de crear una nueva) · Localizar archivo manualmente · Quitar de la biblioteca.
 

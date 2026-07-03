@@ -25,10 +25,11 @@ import os
 import re
 import threading
 import unicodedata
+import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Optional
+from xml.etree import ElementTree
 
-from ebooklib import epub
 import fitz
 
 from app.motor.gestor_biblioteca import GestorBiblioteca
@@ -61,16 +62,42 @@ def _titulo_desde_nombre_archivo(ruta_archivo: str) -> str:
     return re.sub(r"\s+", " ", nombre).strip()
 
 
+def _nombre_local(etiqueta: str) -> str:
+    """'{http://purl.org/dc/elements/1.1/}title' → 'title'."""
+    return etiqueta.rsplit("}", 1)[-1].lower()
+
+
+def _textos_por_nombre_local(raiz: ElementTree.Element, nombre: str) -> list[str]:
+    return [
+        elemento.text.strip()
+        for elemento in raiz.iter()
+        if _nombre_local(elemento.tag) == nombre and elemento.text and elemento.text.strip()
+    ]
+
+
 def _extraer_metadatos_epub(ruta_archivo: str) -> dict:
-    libro = epub.read_epub(ruta_archivo, options={"ignore_ncx": True})
+    """
+    Lee solo container.xml y el .opf del EPUB para extraer título y
+    autores, sin cargar el resto del manifiesto. Este enfoque es
+    deliberadamente más ligero que un lector de EPUB completo: algunos
+    archivos reales traen referencias rotas a imágenes u otros recursos
+    en el manifiesto (portadas movidas, exportaciones defectuosas de
+    otras herramientas) que harían fallar una carga completa del libro
+    sin que eso afecte en nada a la lectura de sus metadatos.
+    """
+    with zipfile.ZipFile(ruta_archivo) as zf:
+        contenedor = ElementTree.fromstring(zf.read("META-INF/container.xml"))
+        rootfile = contenedor.find(".//{*}rootfile")
+        if rootfile is None or not rootfile.get("full-path"):
+            raise ValueError("container.xml sin rootfile válido")
+        ruta_opf = rootfile.get("full-path")
 
-    titulos = libro.get_metadata("DC", "title")
-    titulo = titulos[0][0].strip() if titulos else ""
+        opf = ElementTree.fromstring(zf.read(ruta_opf))
 
-    autores_meta = libro.get_metadata("DC", "creator")
-    autores = [a[0].strip() for a in autores_meta if a[0].strip()]
+    titulos = _textos_por_nombre_local(opf, "title")
+    autores = _textos_por_nombre_local(opf, "creator")
 
-    return {"titulo": titulo, "autores": autores}
+    return {"titulo": titulos[0] if titulos else "", "autores": autores}
 
 
 def _extraer_metadatos_pdf(ruta_archivo: str) -> dict:
@@ -249,10 +276,18 @@ def confirmar_agrupamiento_por_carpeta(
     procedan de `carpeta`. Debe llamarse solo tras la confirmación
     explícita del usuario en el diálogo de bautizo (sección 2.3.1 del
     documento de planificación) — nunca de forma automática.
+
+    El orden dentro de la etiqueta sigue el orden alfabético del nombre
+    de archivo dentro de la carpeta (no el título), porque es habitual
+    numerar los libros de una saga en el nombre del archivo ("01.",
+    "02."...) incluso cuando el título real de los metadatos no lo
+    indica. Ese orden es el que luego respeta buscar_libros() al listar
+    la saga, en vez del alfabético por título.
     """
     nombre_etiqueta = limpiar_nombre_archivo(nombre_etiqueta.strip()) or nombre_etiqueta.strip()
-    libros_de_la_carpeta = [
-        libro for libro in gestor.buscar_libros() if os.path.dirname(libro["ruta_archivo"]) == carpeta
-    ]
-    for libro in libros_de_la_carpeta:
-        gestor.asignar_etiqueta(libro["id"], nombre_etiqueta)
+    libros_de_la_carpeta = sorted(
+        (libro for libro in gestor.buscar_libros() if os.path.dirname(libro["ruta_archivo"]) == carpeta),
+        key=lambda libro: os.path.basename(libro["ruta_archivo"]).lower(),
+    )
+    for orden, libro in enumerate(libros_de_la_carpeta):
+        gestor.asignar_etiqueta(libro["id"], nombre_etiqueta, orden=orden)

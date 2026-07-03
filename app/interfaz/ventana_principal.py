@@ -493,8 +493,7 @@ class VentanaPrincipal(wx.Frame):
             )
             self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_alternar_favorito, item_favorito)
 
-            item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo según metadatos")
-            item_renombrar.Enable(not bool(libro["titulo_revisado"]))
+            item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo...\tF2")
             self.Bind(
                 wx.EVT_MENU, self.pestana_biblioteca.al_renombrar_segun_metadatos, item_renombrar
             )
