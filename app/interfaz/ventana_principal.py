@@ -512,6 +512,9 @@ class VentanaPrincipal(wx.Frame):
             menu.AppendSubMenu(
                 self.pestana_biblioteca.construir_menu_asignar_categoria(libro), "Añadir a categoría"
             )
+            menu.AppendSubMenu(
+                self.pestana_biblioteca.construir_menu_asignar_etiqueta(libro), "Añadir a etiqueta"
+            )
 
             item_quitar_cat = menu.Append(wx.ID_ANY, "Quitar de esta categoría")
             item_quitar_cat.Enable(self.pestana_biblioteca._id_categoria_activa is not None)

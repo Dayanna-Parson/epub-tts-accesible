@@ -4,11 +4,15 @@ import logging
 import os
 import zipfile
 
-from app.config_rutas import RAIZ, ruta_config
+from app.config_rutas import ruta_config
 
 logger = logging.getLogger(__name__)
 
-_DIR_BACKUPS = os.path.join(RAIZ, "backups")
+# Usa la misma carpeta que iniciar_epub_tts.py y crear_portable.py ya
+# pre-crean dentro de configuraciones/ — antes se escribía en RAIZ/backups/,
+# una carpeta distinta a la que el arranque preparaba (configuraciones/
+# proyectos_backup/), que por eso quedaba siempre vacía.
+_DIR_BACKUPS = ruta_config("proyectos_backup")
 _MAX_BACKUPS = 5
 
 
