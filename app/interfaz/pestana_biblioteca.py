@@ -594,6 +594,16 @@ class PestanaBiblioteca(wx.Panel):
         item_nueva = menu.Append(wx.ID_ANY, "Nueva etiqueta...")
         self.Bind(wx.EVT_MENU, self.al_nueva_etiqueta, item_nueva)
 
+        if etiqueta is not None:
+            libros_de_la_etiqueta = self.gestor.buscar_libros(id_etiqueta=etiqueta["id"])
+            etiqueta_menu = f"Asignar categoría a los {len(libros_de_la_etiqueta)} libro(s) de esta etiqueta"
+            if libros_de_la_etiqueta:
+                menu.AppendSubMenu(
+                    self.construir_menu_asignar_categoria_masivo(libros_de_la_etiqueta), etiqueta_menu
+                )
+            else:
+                menu.Append(wx.ID_ANY, etiqueta_menu).Enable(False)
+
         menu.AppendSeparator()
 
         item_renombrar = menu.Append(wx.ID_ANY, "Renombrar\tF2")
@@ -680,12 +690,12 @@ class PestanaBiblioteca(wx.Panel):
             carpeta = dlg.GetPath()
 
         usar_subcarpetas = wx.MessageBox(
-            "¿Quieres usar la estructura de subcarpetas de esta carpeta como árbol "
-            "de categorías (género/subgénero)?\n\n"
-            "Por ejemplo, si tienes libros dentro de «Fantasía/Fantasía épica/», se "
-            "crearán esas categorías automáticamente. Podrás renombrarlas o moverlas "
-            "después. Si no organizas tus libros por género en carpetas, elige No.",
-            "Categorías automáticas", wx.YES_NO | wx.ICON_QUESTION,
+            "¿Las subcarpetas de esta carpeta representan géneros y subgéneros?\n\n"
+            "Ejemplo: «Fantasía/Fantasía épica/tu_libro.epub» crearía la categoría "
+            "«Fantasía» con la subcategoría «Fantasía épica».\n\n"
+            "Podrás renombrar o mover las categorías después. Si tus subcarpetas "
+            "no son géneros (por ejemplo, son autores o sagas), elige No.",
+            "¿Crear categorías desde las subcarpetas?", wx.YES_NO | wx.ICON_QUESTION,
         ) == wx.YES
 
         self._voz.hablar("Escaneando carpeta, por favor espera...")
@@ -916,36 +926,48 @@ class PestanaBiblioteca(wx.Panel):
         self._cargar_libros()
 
     def construir_menu_asignar_categoria(self, libro) -> wx.Menu:
+        """Submenú «Añadir a categoría» para un único libro (ver _construir_menu_categorias)."""
+        return self._construir_menu_categorias([libro])
+
+    def construir_menu_asignar_categoria_masivo(self, libros) -> wx.Menu:
+        """
+        Igual que construir_menu_asignar_categoria pero aplicado a varios
+        libros a la vez — se usa desde la lista de etiquetas para asignar
+        una categoría a todos los libros de una saga de una sola vez, sin
+        tener que abrir el menú libro por libro.
+        """
+        return self._construir_menu_categorias(libros)
+
+    def _construir_menu_categorias(self, libros) -> wx.Menu:
         """
         Submenú "Añadir a categoría": primer elemento para crear una
         categoría nueva y asignarla en el mismo paso, después el árbol
         de categorías existentes como submenús anidados — cada nivel
         tiene su propio elemento "Asignar aquí" antes de sus hijos, para
-        poder elegir tanto un género como uno de sus subgéneros.
+        poder elegir tanto un género como uno de sus subgéneros
+        directamente, sin escribir ni buscar nada.
 
-        Para asignar varias categorías a la vez, se invoca este menú una
-        vez por cada categoría a añadir (igual que marcar favorito), en
-        vez de una selección múltiple con casillas dentro del propio
-        menú — los menús no están pensados para selección múltiple y
-        forzarla los haría más confusos de navegar con teclado.
+        `libros` es siempre una lista (uno o varios), para poder reutilizar
+        el mismo menú tanto al asignar un libro suelto como al asignar
+        todos los libros de una etiqueta de una vez.
         """
         menu = wx.Menu()
         item_nueva = menu.Append(wx.ID_ANY, "Crear categoría nueva y asignar...")
         self.Bind(
-            wx.EVT_MENU, lambda e: self.al_crear_categoria_y_asignar(libro, None), item_nueva
+            wx.EVT_MENU, lambda e: self.al_crear_categoria_y_asignar(libros, None), item_nueva
         )
 
         raices = self.gestor.listar_categorias_hijas(None)
         if raices:
             menu.AppendSeparator()
-            self._rellenar_submenu_categorias(menu, None, libro)
+            self._rellenar_submenu_categorias(menu, None, libros)
         return menu
 
-    def _rellenar_submenu_categorias(self, menu_destino, id_categoria_padre, libro):
+    def _rellenar_submenu_categorias(self, menu_destino, id_categoria_padre, libros):
         # Toda categoría —tenga o no subcategorías todavía— recibe su propio
-        # submenú con "Asignar aquí" y "Crear subcategoría nueva", para
-        # poder empezar a anidar en cualquier punto del árbol, no solo
-        # donde ya existan subcategorías previas.
+        # submenú con "Asignar aquí" y "Crear subcategoría nueva", y sus
+        # subcategorías existentes aparecen directamente anidadas debajo,
+        # sin necesidad de escribir ni buscar nada.
         for categoria in self.gestor.listar_categorias_hijas(id_categoria_padre):
             hijas = self.gestor.listar_categorias_hijas(categoria["id"])
             submenu = wx.Menu()
@@ -953,7 +975,7 @@ class PestanaBiblioteca(wx.Panel):
             self.Bind(
                 wx.EVT_MENU,
                 lambda e, id_cat=categoria["id"]: self.al_asignar_categoria_existente(
-                    libro, id_cat
+                    libros, id_cat
                 ),
                 item_aqui,
             )
@@ -962,13 +984,13 @@ class PestanaBiblioteca(wx.Panel):
             self.Bind(
                 wx.EVT_MENU,
                 lambda e, id_padre=categoria["id"]: self.al_crear_categoria_y_asignar(
-                    libro, id_padre
+                    libros, id_padre
                 ),
                 item_nueva_sub,
             )
             if hijas:
                 submenu.AppendSeparator()
-                self._rellenar_submenu_categorias(submenu, categoria["id"], libro)
+                self._rellenar_submenu_categorias(submenu, categoria["id"], libros)
             menu_destino.AppendSubMenu(submenu, categoria["nombre"])
 
     def construir_menu_asignar_etiqueta(self, libro) -> wx.Menu:
@@ -1025,15 +1047,19 @@ class PestanaBiblioteca(wx.Panel):
         self._voz.hablar("Libro quitado de esta etiqueta.")
         self._cargar_libros()
 
-    def al_asignar_categoria_existente(self, libro, id_categoria):
+    def al_asignar_categoria_existente(self, libros, id_categoria):
         ruta = self.gestor.obtener_ruta_categoria(id_categoria)
-        self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
+        for libro in libros:
+            self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
         reproducir(SUCCESS)
-        self._voz.hablar(f"Añadido a categoría {' > '.join(ruta)}.")
+        if len(libros) == 1:
+            self._voz.hablar(f"Añadido a categoría {' > '.join(ruta)}.")
+        else:
+            self._voz.hablar(f"{len(libros)} libros añadidos a categoría {' > '.join(ruta)}.")
         self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
         self._cargar_libros()
 
-    def al_crear_categoria_y_asignar(self, libro, id_padre):
+    def al_crear_categoria_y_asignar(self, libros, id_padre):
         dlg = wx.TextEntryDialog(
             self,
             "Nombre de la nueva categoría:",
@@ -1043,11 +1069,14 @@ class PestanaBiblioteca(wx.Panel):
             nombre = dlg.GetValue().strip()
             if nombre:
                 id_categoria = self.gestor.crear_categoria(nombre, id_padre)
-                self.gestor.asignar_categoria_por_ruta(
-                    libro["id"], self.gestor.obtener_ruta_categoria(id_categoria)
-                )
+                ruta = self.gestor.obtener_ruta_categoria(id_categoria)
+                for libro in libros:
+                    self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
                 reproducir(SUCCESS)
-                self._voz.hablar(f"Categoría {nombre} creada y libro añadido.")
+                if len(libros) == 1:
+                    self._voz.hablar(f"Categoría {nombre} creada y libro añadido.")
+                else:
+                    self._voz.hablar(f"Categoría {nombre} creada y {len(libros)} libros añadidos.")
                 self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
                 self._cargar_libros()
         dlg.Destroy()

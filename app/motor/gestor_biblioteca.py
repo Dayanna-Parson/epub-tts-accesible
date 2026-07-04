@@ -198,11 +198,15 @@ class GestorBiblioteca:
             return self.obtener_o_crear_categoria(conexion, nombre, id_padre)
 
     def listar_categorias_hijas(self, id_padre: Optional[int] = None) -> list[sqlite3.Row]:
-        """Hijos directos de una categoría (o raíces del árbol si id_padre es None)."""
+        """
+        Hijos directos de una categoría (o raíces del árbol si id_padre es
+        None), en el orden en que se crearon — no alfabético. La categoría
+        que la autora crea primero (ej. "Fantasía", su género principal)
+        debe seguir apareciendo primero aunque después cree "Distopía".
+        """
         with self._conexion() as conexion:
             return conexion.execute(
-                "SELECT id, nombre, id_padre FROM categorias "
-                "WHERE id_padre IS ? ORDER BY nombre COLLATE NOCASE",
+                "SELECT id, nombre, id_padre FROM categorias WHERE id_padre IS ? ORDER BY id",
                 (id_padre,),
             ).fetchall()
 

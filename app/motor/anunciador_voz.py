@@ -45,9 +45,8 @@ class AnunciadorVoz:
 
         try:
             import pyttsx3
-            motor = pyttsx3.init()
         except Exception:
-            logger.warning("[AnunciadorVoz] No se pudo inicializar pyttsx3", exc_info=True)
+            logger.warning("[AnunciadorVoz] No se pudo importar pyttsx3", exc_info=True)
             if pythoncom:
                 pythoncom.CoUninitialize()
             return
@@ -57,8 +56,16 @@ class AnunciadorVoz:
             if texto is None:
                 break
             try:
+                # pyttsx3 con el driver SAPI5 tiene un problema conocido:
+                # reutilizar la misma instancia del motor para varias
+                # llamadas seguidas a say()+runAndWait() falla en silencio
+                # a partir de la segunda vez (sin lanzar ninguna excepción).
+                # Crear una instancia nueva por cada anuncio es más costoso
+                # pero es la solución fiable documentada para este problema.
+                motor = pyttsx3.init()
                 motor.say(texto)
                 motor.runAndWait()
+                motor.stop()
             except Exception:
                 logger.debug("[AnunciadorVoz] Fallo al verbalizar", exc_info=True)
 
