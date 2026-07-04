@@ -118,17 +118,20 @@ class PestanaBiblioteca(wx.Panel):
     def _configurar_interfaz(self):
         sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
 
-        # ── Panel izquierdo: árbol de categorías + lista de etiquetas ────
-        # Dos controles separados a propósito: las categorías son un árbol
-        # jerárquico (género/subgénero) y las etiquetas son una lista plana
-        # (sagas/colecciones) — mezclarlas en un único árbol con una rama
-        # "Etiquetas" generaba confusión sobre qué era cada cosa.
-        sizer_izquierdo = wx.BoxSizer(wx.VERTICAL)
-        sizer_izquierdo.Add(
-            wx.StaticText(self, label="Categorías (géneros):"), 0, wx.ALL, 5
-        )
+        # ── Panel izquierdo: sub-pestañas Géneros / Sagas ────────────────
+        # Categorías (árbol jerárquico) y etiquetas (lista plana) son
+        # conceptos distintos y se guardan por separado, pero antes vivían
+        # como dos controles apilados uno debajo del otro, lo que hacía
+        # difícil ubicarlas mentalmente y obligaba a tabular de uno a otro.
+        # Un sub-notebook las coloca en el mismo sitio de la pantalla,
+        # alternando con Ctrl+RePág/Ctrl+AvPág (comportamiento nativo de
+        # wx.Notebook), igual que ya alternas entre pestañas principales.
+        self.subnotebook_izquierdo = wx.Notebook(self)
+
+        panel_generos = wx.Panel(self.subnotebook_izquierdo)
+        sizer_generos = wx.BoxSizer(wx.VERTICAL)
         self.arbol_categorias = wx.TreeCtrl(
-            self,
+            panel_generos,
             style=(
                 wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_SINGLE
                 | wx.TR_HIDE_ROOT | wx.TR_EDIT_LABELS
@@ -146,32 +149,39 @@ class PestanaBiblioteca(wx.Panel):
         self.arbol_categorias.Bind(wx.EVT_KEY_DOWN, self.al_tecla_arbol_raw)
         self.arbol_categorias.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.al_fin_edicion_categoria)
         self.arbol_categorias.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.al_clic_derecho_arbol)
-        sizer_izquierdo.Add(self.arbol_categorias, 1, wx.EXPAND | wx.ALL, 5)
+        sizer_generos.Add(self.arbol_categorias, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.btn_nueva_categoria = wx.Button(self, label="Nueva categoría... (F2 renombra, Supr elimina)")
-        self.btn_nueva_categoria.Bind(wx.EVT_BUTTON, self.al_nueva_categoria)
-        sizer_izquierdo.Add(self.btn_nueva_categoria, 0, wx.EXPAND | wx.ALL, 5)
-
-        sizer_izquierdo.Add(
-            wx.StaticText(self, label="Etiquetas (sagas y colecciones):"), 0, wx.ALL, 5
+        self.btn_nueva_categoria = wx.Button(
+            panel_generos, label="Nueva categoría... (F2 renombra, Supr elimina)"
         )
-        self.lista_etiquetas = wx.ListBox(self)
+        self.btn_nueva_categoria.Bind(wx.EVT_BUTTON, self.al_nueva_categoria)
+        sizer_generos.Add(self.btn_nueva_categoria, 0, wx.EXPAND | wx.ALL, 5)
+        panel_generos.SetSizer(sizer_generos)
+        self.subnotebook_izquierdo.AddPage(panel_generos, "Géneros")
+
+        panel_sagas = wx.Panel(self.subnotebook_izquierdo)
+        sizer_sagas = wx.BoxSizer(wx.VERTICAL)
+        self.lista_etiquetas = wx.ListBox(panel_sagas)
         self.lista_etiquetas.SetHelpText(
             "Lista plana de etiquetas (sagas y colecciones personalizadas). "
             "Seleccionar una filtra la lista de libros por esa etiqueta. "
             "F2 renombra, Supr elimina."
         )
-        self.lista_etiquetas.SetMinSize((220, 120))
+        self.lista_etiquetas.SetMinSize((220, 160))
         self.lista_etiquetas.Bind(wx.EVT_LISTBOX, self.al_seleccionar_etiqueta)
         self.lista_etiquetas.Bind(wx.EVT_KEY_DOWN, self.al_tecla_lista_etiquetas)
         self.lista_etiquetas.Bind(wx.EVT_CONTEXT_MENU, self.al_menu_contextual_etiquetas)
-        sizer_izquierdo.Add(self.lista_etiquetas, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_sagas.Add(self.lista_etiquetas, 1, wx.EXPAND | wx.ALL, 5)
 
-        self.btn_nueva_etiqueta = wx.Button(self, label="Nueva etiqueta... (F2 renombra, Supr elimina)")
+        self.btn_nueva_etiqueta = wx.Button(
+            panel_sagas, label="Nueva etiqueta... (F2 renombra, Supr elimina)"
+        )
         self.btn_nueva_etiqueta.Bind(wx.EVT_BUTTON, self.al_nueva_etiqueta)
-        sizer_izquierdo.Add(self.btn_nueva_etiqueta, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_sagas.Add(self.btn_nueva_etiqueta, 0, wx.EXPAND | wx.ALL, 5)
+        panel_sagas.SetSizer(sizer_sagas)
+        self.subnotebook_izquierdo.AddPage(panel_sagas, "Sagas y colecciones")
 
-        sizer_principal.Add(sizer_izquierdo, 1, wx.EXPAND)
+        sizer_principal.Add(self.subnotebook_izquierdo, 1, wx.EXPAND | wx.ALL, 5)
 
         # ── Panel derecho: filtros, lista (arriba) e importación (abajo) ──
         # Orden pensado para minimizar tabulaciones hasta lo que más se usa:
