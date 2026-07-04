@@ -34,12 +34,24 @@ class AnunciadorVoz:
         self._hilo.start()
 
     def _worker(self):
+        # El motor SAPI5 de pyttsx3 usa COM (vía comtypes), y COM debe
+        # inicializarse en cada hilo que lo use — el hilo principal de wx
+        # ya lo tiene inicializado, pero este es un hilo nuevo aparte.
+        try:
+            import pythoncom
+            pythoncom.CoInitialize()
+        except Exception:
+            pythoncom = None
+
         try:
             import pyttsx3
             motor = pyttsx3.init()
         except Exception:
             logger.warning("[AnunciadorVoz] No se pudo inicializar pyttsx3", exc_info=True)
+            if pythoncom:
+                pythoncom.CoUninitialize()
             return
+
         while True:
             texto = self._cola.get()
             if texto is None:
@@ -49,6 +61,9 @@ class AnunciadorVoz:
                 motor.runAndWait()
             except Exception:
                 logger.debug("[AnunciadorVoz] Fallo al verbalizar", exc_info=True)
+
+        if pythoncom:
+            pythoncom.CoUninitialize()
 
     def hablar(self, texto: str):
         while not self._cola.empty():
