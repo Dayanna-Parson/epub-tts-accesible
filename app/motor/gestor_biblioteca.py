@@ -210,6 +210,49 @@ class GestorBiblioteca:
         with self._conexion() as conexion:
             return conexion.execute("SELECT id, nombre FROM etiquetas ORDER BY nombre").fetchall()
 
+    def crear_etiqueta(self, nombre: str) -> int:
+        with self._conexion() as conexion:
+            return self.obtener_o_crear_etiqueta(conexion, nombre)
+
+    def renombrar_etiqueta(self, id_etiqueta: int, nuevo_nombre: str) -> bool:
+        nuevo_nombre = nuevo_nombre.strip()
+        if not nuevo_nombre:
+            return False
+        with self._conexion() as conexion:
+            choque = conexion.execute(
+                "SELECT id FROM etiquetas WHERE nombre = ? COLLATE NOCASE AND id != ?",
+                (nuevo_nombre, id_etiqueta),
+            ).fetchone()
+            if choque:
+                return False
+            conexion.execute(
+                "UPDATE etiquetas SET nombre = ? WHERE id = ?", (nuevo_nombre, id_etiqueta)
+            )
+            return True
+
+    def eliminar_etiqueta(self, id_etiqueta: int):
+        with self._conexion() as conexion:
+            conexion.execute("DELETE FROM etiquetas WHERE id = ?", (id_etiqueta,))
+
+    def obtener_etiquetas_de_libro(self, id_libro: int) -> list[sqlite3.Row]:
+        with self._conexion() as conexion:
+            return conexion.execute(
+                """
+                SELECT e.id, e.nombre FROM etiquetas e
+                JOIN libro_etiqueta le ON le.id_etiqueta = e.id
+                WHERE le.id_libro = ?
+                ORDER BY e.nombre COLLATE NOCASE
+                """,
+                (id_libro,),
+            ).fetchall()
+
+    def quitar_etiqueta_de_libro(self, id_libro: int, id_etiqueta: int):
+        with self._conexion() as conexion:
+            conexion.execute(
+                "DELETE FROM libro_etiqueta WHERE id_libro = ? AND id_etiqueta = ?",
+                (id_libro, id_etiqueta),
+            )
+
     def asignar_categoria_por_ruta(self, id_libro: int, ruta_categorias: list[str]) -> int:
         """
         Asigna un género/subgénero a un libro a partir de una ruta de
