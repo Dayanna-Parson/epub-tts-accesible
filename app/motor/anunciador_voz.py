@@ -63,6 +63,7 @@ class AnunciadorVoz:
                 # Crear una instancia nueva por cada anuncio es más costoso
                 # pero es la solución fiable documentada para este problema.
                 motor = pyttsx3.init()
+                logger.debug("[AnunciadorVoz] Verbalizando: %s", texto)
                 motor.say(texto)
                 motor.runAndWait()
                 motor.stop()
