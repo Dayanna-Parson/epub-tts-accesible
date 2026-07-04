@@ -311,7 +311,7 @@ class EscanerBiblioteca:
 
 def confirmar_agrupamiento_por_carpeta(
     gestor: GestorBiblioteca, carpeta: str, nombre_etiqueta: str
-):
+) -> tuple[int, int]:
     """
     Aplica la etiqueta de agrupamiento a todos los libros ya indexados que
     procedan de `carpeta`. Debe llamarse solo tras la confirmación
@@ -324,11 +324,33 @@ def confirmar_agrupamiento_por_carpeta(
     "02."...) incluso cuando el título real de los metadatos no lo
     indica. Ese orden es el que luego respeta buscar_libros() al listar
     la saga, en vez del alfabético por título.
+
+    Usa gestor.obtener_libros_de_carpeta() (consulta indexada por
+    carpeta) en vez de gestor.buscar_libros() sin filtro — con muchas
+    carpetas candidatas (una biblioteca grande puede detectar cientos de
+    sagas de golpe), repetir un SELECT de toda la biblioteca por cada
+    carpeta es demasiado lento.
+
+    Un fallo al asignar la etiqueta a un libro concreto no aborta el
+    resto de la carpeta — se registra y se continúa, mismo principio ya
+    usado en renombrar_pendientes_por_lote (renombrador_biblioteca.py).
+    Devuelve (exitosos, fallidos).
     """
     nombre_etiqueta = limpiar_nombre_archivo(nombre_etiqueta.strip()) or nombre_etiqueta.strip()
     libros_de_la_carpeta = sorted(
-        (libro for libro in gestor.buscar_libros() if os.path.dirname(libro["ruta_archivo"]) == carpeta),
+        gestor.obtener_libros_de_carpeta(carpeta),
         key=lambda libro: os.path.basename(libro["ruta_archivo"]).lower(),
     )
+    exitosos = 0
+    fallidos = 0
     for orden, libro in enumerate(libros_de_la_carpeta):
-        gestor.asignar_etiqueta(libro["id"], nombre_etiqueta, orden=orden)
+        try:
+            gestor.asignar_etiqueta(libro["id"], nombre_etiqueta, orden=orden)
+            exitosos += 1
+        except Exception:
+            fallidos += 1
+            logger.exception(
+                "[EscanerBiblioteca] No se pudo etiquetar el libro %s con «%s»",
+                libro["id"], nombre_etiqueta,
+            )
+    return exitosos, fallidos

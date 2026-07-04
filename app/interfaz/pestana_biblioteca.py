@@ -3,6 +3,7 @@ import wx
 import os
 import re
 import logging
+import threading
 
 from app.motor.gestor_biblioteca import GestorBiblioteca
 from app.motor.escaner_biblioteca import EscanerBiblioteca, confirmar_agrupamiento_por_carpeta
@@ -181,6 +182,10 @@ class PestanaBiblioteca(wx.Panel):
         panel_sagas.SetSizer(sizer_sagas)
         self.subnotebook_izquierdo.AddPage(panel_sagas, "Sagas y colecciones")
 
+        self.subnotebook_izquierdo.Bind(
+            wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_subpestana_izquierda
+        )
+
         sizer_principal.Add(self.subnotebook_izquierdo, 1, wx.EXPAND | wx.ALL, 5)
 
         # ── Panel derecho: filtros, lista (arriba) e importación (abajo) ──
@@ -271,6 +276,14 @@ class PestanaBiblioteca(wx.Panel):
             (wx.ACCEL_CTRL, ord('I'), id_info),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('F'), id_favorito),
         ]))
+
+    def al_cambiar_subpestana_izquierda(self, evento):
+        indice = evento.GetSelection()
+        if indice == 0:
+            wx.CallAfter(self.arbol_categorias.SetFocus)
+        elif indice == 1:
+            wx.CallAfter(self.lista_etiquetas.SetFocus)
+        evento.Skip()
 
     # ── Propiedades para Tab cíclico (usadas por ventana_principal.py) ──────
 
@@ -756,15 +769,71 @@ class PestanaBiblioteca(wx.Panel):
         )
         if wx.MessageBox(mensaje, "Agrupar por carpeta", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
             # Entre que se confirma y se termina de etiquetar puede pasar un
-            # rato perceptible con carpetas grandes — sin este aviso, NVDA se
-            # queda en silencio y parece que la app se ha colgado.
+            # rato perceptible con muchas carpetas — sin este aviso, NVDA se
+            # queda en silencio y parece que la app se ha colgado. El
+            # etiquetado en sí se hace en un hilo de fondo (ver
+            # _agrupar_carpetas_en_hilo) para no bloquear la interfaz.
             self._voz.hablar("Aplicando etiquetas, por favor espera...")
-            for carpeta in carpetas_candidatas:
-                confirmar_agrupamiento_por_carpeta(self.gestor, carpeta, nombres_sugeridos[carpeta])
             self._ultima_etiqueta_creada = next(iter(nombres_sugeridos.values()), None)
-            self._voz.hablar("Etiquetas aplicadas.")
+            threading.Thread(
+                target=self._agrupar_carpetas_en_hilo,
+                args=(dict(carpetas_candidatas), dict(nombres_sugeridos)),
+                name="agrupar_por_carpeta",
+                daemon=True,
+            ).start()
         else:
             self._ultima_etiqueta_creada = None
+
+    def _agrupar_carpetas_en_hilo(self, carpetas_candidatas: dict, nombres_sugeridos: dict):
+        """
+        Etiqueta cada carpeta candidata en un hilo de fondo. Un fallo en
+        una carpeta concreta (registrado por confirmar_agrupamiento_por_
+        carpeta) nunca detiene el resto; y si el hilo entero revienta por
+        algo inesperado, el except de aquí garantiza que igualmente se
+        llegue al callback de finalización en vez de dejar a NVDA
+        colgado en silencio para siempre.
+        """
+        total_fallos = 0
+        try:
+            for carpeta in carpetas_candidatas:
+                try:
+                    _exitosos, fallidos = confirmar_agrupamiento_por_carpeta(
+                        self.gestor, carpeta, nombres_sugeridos[carpeta]
+                    )
+                    total_fallos += fallidos
+                except Exception:
+                    total_fallos += len(carpetas_candidatas[carpeta])
+                    logger.exception(
+                        "[PestanaBiblioteca] Fallo agrupando la carpeta: %s", carpeta
+                    )
+        except Exception:
+            logger.exception("[PestanaBiblioteca] Fallo inesperado al agrupar por carpeta")
+        finally:
+            wx.CallAfter(self._al_terminar_agrupamiento, total_fallos)
+
+    def _al_terminar_agrupamiento(self, total_fallos: int):
+        id_etiqueta_nueva = None
+        nombre_etiqueta_nueva = getattr(self, "_ultima_etiqueta_creada", None)
+        if nombre_etiqueta_nueva:
+            id_etiqueta_nueva = next(
+                (e["id"] for e in self.gestor.listar_etiquetas() if e["nombre"] == nombre_etiqueta_nueva),
+                None,
+            )
+        self._ultima_etiqueta_creada = None
+
+        self._cargar_arbol_categorias()
+        self._cargar_lista_etiquetas(id_etiqueta_seleccionar=id_etiqueta_nueva)
+        self._cargar_libros()
+        self.lista_libros.SetFocus()
+
+        if total_fallos:
+            reproducir(ERROR)
+            self._voz.hablar(
+                f"Etiquetas aplicadas, pero {total_fallos} libro(s) no se pudieron etiquetar."
+            )
+        else:
+            reproducir(SUCCESS)
+            self._voz.hablar("Etiquetas aplicadas.")
 
     def _al_terminar_escaneo(self, total_insertados):
         self._timer_progreso.Stop()
@@ -826,6 +895,18 @@ class PestanaBiblioteca(wx.Panel):
         self._anunciar("Marcado como favorito." if nuevo_valor else "Quitado de favoritos.")
         self._cargar_libros()
 
+    def _marcar_estado_libro(self, campo, valor, mensaje):
+        libro = self._libro_seleccionado()
+        if libro is None:
+            return
+        if valor:
+            self.gestor.establecer_bandera(libro["id"], campo, True)
+        else:
+            for campo_estado in ("en_pendientes", "leyendo_ahora", "leido"):
+                self.gestor.establecer_bandera(libro["id"], campo_estado, False)
+        self._anunciar(mensaje)
+        self._cargar_libros()
+
     def al_abrir_libro_seleccionado(self, evento=None):
         libro = self._libro_seleccionado()
         if libro is None:
@@ -845,7 +926,11 @@ class PestanaBiblioteca(wx.Panel):
             return
 
         self._voz.hablar("Abriendo libro, por favor espera...")
+        self._anunciar("Abriendo libro, por favor espera...")
 
+        wx.CallLater(400, self._continuar_apertura_libro, libro)
+
+    def _continuar_apertura_libro(self, libro):
         ventana_principal = self.padre_notebook.GetParent()
         try:
             from app.interfaz.ventana_principal import IDX_LECTURA
@@ -1118,6 +1203,40 @@ class PestanaBiblioteca(wx.Panel):
             wx.ID_ANY, "Quitar de favoritos" if libro["favorito"] else "Marcar como favorito"
         )
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, item_favorito)
+
+        item_pendiente = menu.Append(wx.ID_ANY, "Marcar como pendiente")
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._marcar_estado_libro(
+                "en_pendientes", True, "Marcado como pendiente."
+            ),
+            item_pendiente,
+        )
+
+        item_leyendo = menu.Append(wx.ID_ANY, "Marcar como leyendo ahora")
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._marcar_estado_libro(
+                "leyendo_ahora", True, "Marcado como leyendo ahora."
+            ),
+            item_leyendo,
+        )
+
+        item_leido = menu.Append(wx.ID_ANY, "Marcar como leído")
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._marcar_estado_libro("leido", True, "Marcado como leído."),
+            item_leido,
+        )
+
+        item_quitar_estado = menu.Append(wx.ID_ANY, "Quitar estado de lectura")
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._marcar_estado_libro(
+                None, False, "Estado de lectura eliminado."
+            ),
+            item_quitar_estado,
+        )
 
         menu.AppendSubMenu(self.construir_menu_asignar_categoria(libro), "Añadir a categoría")
 

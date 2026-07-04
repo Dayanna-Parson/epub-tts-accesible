@@ -475,6 +475,35 @@ class GestorBiblioteca:
                 "SELECT * FROM libros WHERE ruta_archivo = ?", (ruta_archivo,)
             ).fetchone()
 
+    def obtener_libros_de_carpeta(self, carpeta: str) -> list[sqlite3.Row]:
+        """
+        Libros cuya carpeta contenedora inmediata (no subcarpetas) es
+        exactamente `carpeta`. Filtra en SQL con un LIKE por prefijo
+        (aprovecha el índice de ruta_archivo) en vez de traer toda la
+        biblioteca y filtrar en Python — con cientos de carpetas
+        candidatas tras un escaneo grande, repetir un SELECT * FROM libros
+        completo por cada una es demasiado lento y bloquea el hilo
+        principal (ver confirmar_agrupamiento_por_carpeta en
+        escaner_biblioteca.py).
+        """
+        carpeta_normalizada = os.path.normpath(carpeta)
+        prefijo = carpeta_normalizada + os.sep
+        comodin = (
+            prefijo.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        )
+        with self._conexion() as conexion:
+            filas = conexion.execute(
+                "SELECT * FROM libros WHERE ruta_archivo LIKE ? ESCAPE '\\'",
+                (comodin,),
+            ).fetchall()
+        # El LIKE por prefijo también trae subcarpetas más profundas; el
+        # filtro final en Python ya solo opera sobre las pocas filas de
+        # esta carpeta, no sobre toda la biblioteca.
+        return [
+            fila for fila in filas
+            if os.path.dirname(os.path.normpath(fila["ruta_archivo"])) == carpeta_normalizada
+        ]
+
     def buscar_libros(
         self,
         texto: str = "",
