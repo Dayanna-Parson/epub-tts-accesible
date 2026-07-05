@@ -860,17 +860,16 @@ class PestanaBiblioteca(wx.Panel):
         self.barra_progreso.Hide()
         self.Layout()
 
-        id_etiqueta_nueva = None
-        nombre_etiqueta_nueva = getattr(self, "_ultima_etiqueta_creada", None)
-        if nombre_etiqueta_nueva:
-            id_etiqueta_nueva = next(
-                (e["id"] for e in self.gestor.listar_etiquetas() if e["nombre"] == nombre_etiqueta_nueva),
-                None,
-            )
-        self._ultima_etiqueta_creada = None
-
+        # _ultima_etiqueta_creada no se toca aquí: EscanerBiblioteca llama a
+        # al_detectar_carpetas (que la fija, si hay agrupamiento por
+        # confirmar) y justo después a al_terminar, sin esperar a que el
+        # hilo de etiquetado (lanzado de forma asíncrona) haya terminado.
+        # Si este método la leyera y reseteara, se la "robaría" a
+        # _al_terminar_agrupamiento antes de que la etiqueta nueva tuviera
+        # libros asignados — mostrando la lista filtrada y vacía por una
+        # etiqueta recién creada sin contenido todavía.
         self._cargar_arbol_categorias()
-        self._cargar_lista_etiquetas(id_etiqueta_seleccionar=id_etiqueta_nueva)
+        self._cargar_lista_etiquetas(id_etiqueta_seleccionar=self._id_etiqueta_activa)
         self._cargar_libros()
         self.lista_libros.SetFocus()
 
