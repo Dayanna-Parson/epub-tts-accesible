@@ -700,6 +700,13 @@ class PestanaBiblioteca(wx.Panel):
             self.lista_libros.SetItem(indice, 2, libro["formato"].upper())
             self.lista_libros.SetItem(indice, 3, estado_txt)
         self.lista_libros.Thaw()
+        # Refresh() explícito: en algunos entornos Windows, Thaw() tras un
+        # DeleteAllItems()+recarga masiva dentro de un ciclo Freeze() no
+        # repinta el control hasta un evento externo (redimensionar,
+        # cambiar de ventana...), aunque los datos internos (GetItemCount)
+        # ya sean correctos — se ha visto la lista "vacía" o mostrando solo
+        # parte de los libros hasta reiniciar la app, sin ningún error.
+        self.lista_libros.Refresh()
 
         self.lbl_estado.SetLabel(f"{len(libros)} libro(s) en la biblioteca.")
 
