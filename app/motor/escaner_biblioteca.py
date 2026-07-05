@@ -63,16 +63,55 @@ def _titulo_desde_nombre_archivo(ruta_archivo: str) -> str:
 
 
 def _nombre_local(etiqueta: str) -> str:
-    """'{http://purl.org/dc/elements/1.1/}title' → 'title'."""
-    return etiqueta.rsplit("}", 1)[-1].lower()
+    """
+    '{http://purl.org/dc/elements/1.1/}title' → 'title'.
+
+    Se quita tanto el prefijo de namespace resuelto por ElementTree
+    ('{uri}') como cualquier prefijo textual tipo 'dc:' que pudiera
+    quedar sin resolver, para tolerar variaciones reales de cómo cada
+    herramienta genera el .opf.
+    """
+    sin_uri = etiqueta.rsplit("}", 1)[-1]
+    return sin_uri.rsplit(":", 1)[-1].lower()
 
 
 def _textos_por_nombre_local(raiz: ElementTree.Element, nombre: str) -> list[str]:
-    return [
-        elemento.text.strip()
-        for elemento in raiz.iter()
-        if _nombre_local(elemento.tag) == nombre and elemento.text and elemento.text.strip()
-    ]
+    textos = []
+    for elemento in raiz.iter():
+        if _nombre_local(elemento.tag) != nombre:
+            continue
+        # itertext() en vez de solo .text: algunos títulos/autores traen
+        # marcado anidado (por ejemplo <dc:title>La saga <i>completa</i></dc:title>),
+        # y quedarse solo con .text perdería todo lo que va después del
+        # primer hijo.
+        texto = "".join(elemento.itertext())
+        texto = re.sub(r"\s+", " ", texto).strip()
+        if texto:
+            textos.append(texto)
+    return textos
+
+
+def _valores_meta_epub3(raiz: ElementTree.Element, propiedad: str) -> list[str]:
+    """
+    Respaldo para EPUB3 cuando <dc:title>/<dc:creator> vienen vacíos o
+    ausentes y el dato real está en <meta property="dcterms:title">
+    (o variantes con atributo 'name' en vez de 'property', al estilo
+    de exportaciones de Calibre y otras herramientas de conversión).
+    """
+    valores = []
+    for elemento in raiz.iter():
+        if _nombre_local(elemento.tag) != "meta":
+            continue
+        propiedad_elemento = (elemento.get("property") or elemento.get("name") or "").lower()
+        if not propiedad_elemento.endswith(propiedad):
+            continue
+        valor = elemento.get("content")
+        if valor is None:
+            valor = "".join(elemento.itertext())
+        valor = re.sub(r"\s+", " ", valor or "").strip()
+        if valor:
+            valores.append(valor)
+    return valores
 
 
 def _extraer_metadatos_epub(ruta_archivo: str) -> dict:
@@ -94,8 +133,8 @@ def _extraer_metadatos_epub(ruta_archivo: str) -> dict:
 
         opf = ElementTree.fromstring(zf.read(ruta_opf))
 
-    titulos = _textos_por_nombre_local(opf, "title")
-    autores = _textos_por_nombre_local(opf, "creator")
+    titulos = _textos_por_nombre_local(opf, "title") or _valores_meta_epub3(opf, "title")
+    autores = _textos_por_nombre_local(opf, "creator") or _valores_meta_epub3(opf, "creator")
 
     return {"titulo": titulos[0] if titulos else "", "autores": autores}
 
