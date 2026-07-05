@@ -278,11 +278,30 @@ class PestanaBiblioteca(wx.Panel):
         ]))
 
     def al_cambiar_subpestana_izquierda(self, evento):
+        # SetFocus() por sí solo hace que algunos controles nativos de
+        # Windows pierdan la selección visual/de foco que tenían y salten
+        # al primer elemento — se restaura la selección actual justo
+        # después de enfocar para que NVDA siga anunciando lo que ya
+        # estaba seleccionado, no el primer nodo/etiqueta de la lista.
         indice = evento.GetSelection()
         if indice == 0:
-            wx.CallAfter(self.arbol_categorias.SetFocus)
+            nodo_actual = self.arbol_categorias.GetSelection()
+
+            def _enfocar_arbol():
+                self.arbol_categorias.SetFocus()
+                if nodo_actual and nodo_actual.IsOk():
+                    self.arbol_categorias.SelectItem(nodo_actual)
+
+            wx.CallAfter(_enfocar_arbol)
         elif indice == 1:
-            wx.CallAfter(self.lista_etiquetas.SetFocus)
+            indice_actual = self.lista_etiquetas.GetSelection()
+
+            def _enfocar_etiquetas():
+                self.lista_etiquetas.SetFocus()
+                if indice_actual != wx.NOT_FOUND:
+                    self.lista_etiquetas.SetSelection(indice_actual)
+
+            wx.CallAfter(_enfocar_etiquetas)
         evento.Skip()
 
     # ── Propiedades para Tab cíclico (usadas por ventana_principal.py) ──────
