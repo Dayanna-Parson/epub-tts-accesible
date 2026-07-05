@@ -63,12 +63,16 @@ class AnunciadorVoz:
                 # Crear una instancia nueva por cada anuncio es más costoso
                 # pero es la solución fiable documentada para este problema.
                 motor = pyttsx3.init()
-                logger.debug("[AnunciadorVoz] Verbalizando: %s", texto)
+                logger.warning("[AnunciadorVoz] Verbalizando: %s", texto)
                 motor.say(texto)
                 motor.runAndWait()
                 motor.stop()
             except Exception:
-                logger.debug("[AnunciadorVoz] Fallo al verbalizar", exc_info=True)
+                # A WARNING, no a DEBUG: el archivo de log solo registra desde
+                # WARNING hacia arriba (ver iniciar_epub_tts.py), así que un
+                # fallo aquí a nivel DEBUG queda completamente invisible —
+                # exactamente el silencio sin rastro que se venía reportando.
+                logger.warning("[AnunciadorVoz] Fallo al verbalizar", exc_info=True)
 
         if pythoncom:
             pythoncom.CoUninitialize()
