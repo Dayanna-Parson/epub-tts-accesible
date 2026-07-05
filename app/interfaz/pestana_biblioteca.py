@@ -895,15 +895,13 @@ class PestanaBiblioteca(wx.Panel):
         self._anunciar("Marcado como favorito." if nuevo_valor else "Quitado de favoritos.")
         self._cargar_libros()
 
-    def _marcar_estado_libro(self, campo, valor, mensaje):
+    def _alternar_estado_libro(self, campo, nombre_al_marcar, nombre_al_quitar):
         libro = self._libro_seleccionado()
         if libro is None:
             return
-        if valor:
-            self.gestor.establecer_bandera(libro["id"], campo, True)
-        else:
-            for campo_estado in ("en_pendientes", "leyendo_ahora", "leido"):
-                self.gestor.establecer_bandera(libro["id"], campo_estado, False)
+        nuevo_valor = not bool(libro[campo])
+        self.gestor.establecer_bandera(libro["id"], campo, nuevo_valor)
+        mensaje = f"Marcado como {nombre_al_marcar}." if nuevo_valor else f"Quitado de {nombre_al_quitar}."
         self._anunciar(mensaje)
         self._cargar_libros()
 
@@ -1204,38 +1202,35 @@ class PestanaBiblioteca(wx.Panel):
         )
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, item_favorito)
 
-        item_pendiente = menu.Append(wx.ID_ANY, "Marcar como pendiente")
+        item_pendiente = menu.Append(
+            wx.ID_ANY,
+            "Quitar de pendientes" if libro["en_pendientes"] else "Marcar como pendiente",
+        )
         self.Bind(
             wx.EVT_MENU,
-            lambda e: self._marcar_estado_libro(
-                "en_pendientes", True, "Marcado como pendiente."
-            ),
+            lambda e: self._alternar_estado_libro("en_pendientes", "pendiente", "pendientes"),
             item_pendiente,
         )
 
-        item_leyendo = menu.Append(wx.ID_ANY, "Marcar como leyendo ahora")
+        item_leyendo = menu.Append(
+            wx.ID_ANY,
+            "Quitar de leyendo ahora" if libro["leyendo_ahora"] else "Marcar como leyendo ahora",
+        )
         self.Bind(
             wx.EVT_MENU,
-            lambda e: self._marcar_estado_libro(
-                "leyendo_ahora", True, "Marcado como leyendo ahora."
+            lambda e: self._alternar_estado_libro(
+                "leyendo_ahora", "leyendo ahora", "leyendo ahora"
             ),
             item_leyendo,
         )
 
-        item_leido = menu.Append(wx.ID_ANY, "Marcar como leído")
-        self.Bind(
-            wx.EVT_MENU,
-            lambda e: self._marcar_estado_libro("leido", True, "Marcado como leído."),
-            item_leido,
+        item_leido = menu.Append(
+            wx.ID_ANY, "Quitar de leídos" if libro["leido"] else "Marcar como leído"
         )
-
-        item_quitar_estado = menu.Append(wx.ID_ANY, "Quitar estado de lectura")
         self.Bind(
             wx.EVT_MENU,
-            lambda e: self._marcar_estado_libro(
-                None, False, "Estado de lectura eliminado."
-            ),
-            item_quitar_estado,
+            lambda e: self._alternar_estado_libro("leido", "leído", "leídos"),
+            item_leido,
         )
 
         menu.AppendSubMenu(self.construir_menu_asignar_categoria(libro), "Añadir a categoría")
