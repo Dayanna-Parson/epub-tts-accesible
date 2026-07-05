@@ -278,35 +278,12 @@ class PestanaBiblioteca(wx.Panel):
         ]))
 
     def al_cambiar_subpestana_izquierda(self, evento):
-        # SetFocus() por sí solo hace que algunos controles nativos de
-        # Windows pierdan la selección visual/de foco que tenían y salten
-        # al primer elemento — se restaura la selección actual justo
-        # después de enfocar para que NVDA siga anunciando lo que ya
-        # estaba seleccionado, no el primer nodo/etiqueta de la lista.
-        indice = evento.GetSelection()
-        if indice == 0:
-            nodo_actual = self.arbol_categorias.GetSelection()
-
-            def _enfocar_arbol():
-                # El orden importa: seleccionar el nodo primero y enfocar
-                # después, para que el primer evento de foco que NVDA
-                # reciba ya sea sobre el nodo correcto y no sobre el
-                # primero del árbol.
-                if nodo_actual and nodo_actual.IsOk():
-                    self.arbol_categorias.SelectItem(nodo_actual)
-                    self.arbol_categorias.EnsureVisible(nodo_actual)
-                self.arbol_categorias.SetFocus()
-
-            wx.CallAfter(_enfocar_arbol)
-        elif indice == 1:
-            indice_actual = self.lista_etiquetas.GetSelection()
-
-            def _enfocar_etiquetas():
-                if indice_actual != wx.NOT_FOUND:
-                    self.lista_etiquetas.SetSelection(indice_actual)
-                self.lista_etiquetas.SetFocus()
-
-            wx.CallAfter(_enfocar_etiquetas)
+        # Igual que el notebook principal (ver al_cambiar_pestana en
+        # ventana_principal.py): cambiar de pestaña NO debe mover el foco
+        # a ningún control de su contenido. El foco se queda en la propia
+        # pestaña — así se puede seguir recorriendo con flechas o
+        # Ctrl+Av/RePág sin que NVDA salte al árbol o a la lista en cada
+        # cambio. Entrar al contenido sigue siendo un Tab explícito.
         evento.Skip()
 
     # ── Propiedades para Tab cíclico (usadas por ventana_principal.py) ──────
