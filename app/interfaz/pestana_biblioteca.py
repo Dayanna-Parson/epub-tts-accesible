@@ -708,6 +708,17 @@ class PestanaBiblioteca(wx.Panel):
         # parte de los libros hasta reiniciar la app, sin ningún error.
         self.lista_libros.Refresh()
 
+        # Diagnóstico temporal: compara cuántos libros devolvió la consulta
+        # (dato real) frente a cuántos terminó mostrando el control (dato
+        # visual), para saber si un futuro caso de "lista vacía" es un
+        # problema de datos o de repintado — quitar una vez confirmado.
+        logger.warning(
+            "[PestanaBiblioteca] _cargar_libros: %d libro(s) de la consulta, "
+            "%d ítem(s) en el control tras Thaw (id_categoria=%s, id_etiqueta=%s)",
+            len(libros), self.lista_libros.GetItemCount(),
+            self._id_categoria_activa, self._id_etiqueta_activa,
+        )
+
         self.lbl_estado.SetLabel(f"{len(libros)} libro(s) en la biblioteca.")
 
     @staticmethod
@@ -1282,6 +1293,16 @@ class PestanaBiblioteca(wx.Panel):
 
         item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")
         self.Bind(wx.EVT_MENU, lambda e: self._quitar_libro_seleccionado(), item_quitar)
+
+        # Diagnóstico temporal: deja constancia exacta de qué ítems se
+        # construyeron de verdad en este menú, para compararlo con lo que
+        # NVDA anuncia — quitar en cuanto se confirme la causa de que
+        # "Marcar como pendiente"/"leyendo ahora"/"leído" no aparezcan.
+        logger.warning(
+            "[PestanaBiblioteca] Menú contextual de libro construido con %d ítems: %s",
+            len(menu.GetMenuItems()),
+            [item.GetItemLabelText() for item in menu.GetMenuItems()],
+        )
 
         self.PopupMenu(menu)
         menu.Destroy()
