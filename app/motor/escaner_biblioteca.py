@@ -56,10 +56,32 @@ def _normalizar_para_comparar(texto: str) -> str:
     return "".join(c for c in texto_sin_tildes if not unicodedata.combining(c))
 
 
-def _titulo_desde_nombre_archivo(ruta_archivo: str) -> str:
-    nombre = os.path.splitext(os.path.basename(ruta_archivo))[0]
+def _limpiar_nombre_para_titulo(nombre: str) -> str:
     nombre = re.sub(r"[_\-]+", " ", nombre)
     return re.sub(r"\s+", " ", nombre).strip()
+
+
+def _titulo_desde_nombre_archivo(ruta_archivo: str) -> str:
+    nombre = os.path.splitext(os.path.basename(ruta_archivo))[0]
+    return _limpiar_nombre_para_titulo(nombre)
+
+
+def _separar_titulo_y_autor(texto: str) -> tuple[str, Optional[str]]:
+    """
+    Respaldo para cuando el EPUB no trae autor en sus metadatos internos.
+    Es habitual nombrar el archivo o la carpeta como "Título - Autor"
+    (por ejemplo "Lorris el elfo - Laura Gallego"), así que si el texto
+    trae un guion rodeado de espacios se asume que lo que va antes es el
+    título y lo que va después es el autor.
+    """
+    if " - " not in texto:
+        return texto, None
+    titulo, _, autor = texto.rpartition(" - ")
+    titulo = titulo.strip()
+    autor = autor.strip()
+    if not titulo or not autor:
+        return texto, None
+    return titulo, autor
 
 
 def _nombre_local(etiqueta: str) -> str:
@@ -171,7 +193,12 @@ def _procesar_archivo(ruta_archivo: str) -> Optional[dict]:
         return None
 
     titulo_metadatos = metadatos["titulo"]
-    titulo_archivo = _titulo_desde_nombre_archivo(ruta_archivo)
+    nombre_archivo_crudo = os.path.splitext(os.path.basename(ruta_archivo))[0]
+    # Se separa el posible autor del nombre de archivo ("Título - Autor")
+    # antes de limpiarlo, para no comparar ni mostrar el autor pegado al
+    # título cuando el EPUB no trae título propio en los metadatos.
+    titulo_parte_archivo, autor_desde_archivo = _separar_titulo_y_autor(nombre_archivo_crudo)
+    titulo_archivo = _limpiar_nombre_para_titulo(titulo_parte_archivo)
 
     if titulo_metadatos:
         norm_metadatos = _normalizar_para_comparar(titulo_metadatos)
@@ -191,11 +218,23 @@ def _procesar_archivo(ruta_archivo: str) -> Optional[dict]:
         titulo_final = titulo_archivo
         titulo_revisado = True
 
+    autores = metadatos["autores"]
+    if not autores:
+        # El EPUB no trae autor en sus metadatos: se intenta primero con
+        # el nombre de archivo y, si no, con el de la carpeta contenedora
+        # (patrón "Título - Autor" habitual en bibliotecas reales).
+        autor_inferido = autor_desde_archivo
+        if not autor_inferido:
+            nombre_carpeta = os.path.basename(os.path.dirname(ruta_archivo))
+            _, autor_inferido = _separar_titulo_y_autor(nombre_carpeta)
+        if autor_inferido:
+            autores = [autor_inferido]
+
     return {
         "ruta_archivo": ruta_archivo,
         "titulo": titulo_final or "Sin título",
         "formato": formato,
-        "autores": metadatos["autores"],
+        "autores": autores,
         "titulo_revisado": titulo_revisado,
     }
 
