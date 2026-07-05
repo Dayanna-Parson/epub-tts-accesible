@@ -288,18 +288,23 @@ class PestanaBiblioteca(wx.Panel):
             nodo_actual = self.arbol_categorias.GetSelection()
 
             def _enfocar_arbol():
-                self.arbol_categorias.SetFocus()
+                # El orden importa: seleccionar el nodo primero y enfocar
+                # después, para que el primer evento de foco que NVDA
+                # reciba ya sea sobre el nodo correcto y no sobre el
+                # primero del árbol.
                 if nodo_actual and nodo_actual.IsOk():
                     self.arbol_categorias.SelectItem(nodo_actual)
+                    self.arbol_categorias.EnsureVisible(nodo_actual)
+                self.arbol_categorias.SetFocus()
 
             wx.CallAfter(_enfocar_arbol)
         elif indice == 1:
             indice_actual = self.lista_etiquetas.GetSelection()
 
             def _enfocar_etiquetas():
-                self.lista_etiquetas.SetFocus()
                 if indice_actual != wx.NOT_FOUND:
                     self.lista_etiquetas.SetSelection(indice_actual)
+                self.lista_etiquetas.SetFocus()
 
             wx.CallAfter(_enfocar_etiquetas)
         evento.Skip()
