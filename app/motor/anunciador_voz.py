@@ -16,9 +16,18 @@ fondo, ya usado con éxito en la ventana de gestión de Proyectos.
 
 import logging
 import queue
+import subprocess
+import sys
 import threading
 
 logger = logging.getLogger(__name__)
+
+_CODIGO_HABLAR_SUBPROCESO = (
+    "import pyttsx3, sys\n"
+    "motor = pyttsx3.init()\n"
+    "motor.say(sys.argv[1])\n"
+    "motor.runAndWait()\n"
+)
 
 
 class AnunciadorVoz:
@@ -34,39 +43,12 @@ class AnunciadorVoz:
         self._hilo.start()
 
     def _worker(self):
-        # El motor SAPI5 de pyttsx3 usa COM (vía comtypes), y COM debe
-        # inicializarse en cada hilo que lo use — el hilo principal de wx
-        # ya lo tiene inicializado, pero este es un hilo nuevo aparte.
-        try:
-            import pythoncom
-            pythoncom.CoInitialize()
-        except Exception:
-            pythoncom = None
-
-        try:
-            import pyttsx3
-        except Exception:
-            logger.warning("[AnunciadorVoz] No se pudo importar pyttsx3", exc_info=True)
-            if pythoncom:
-                pythoncom.CoUninitialize()
-            return
-
         while True:
             texto = self._cola.get()
             if texto is None:
                 break
             try:
-                # pyttsx3 con el driver SAPI5 tiene un problema conocido:
-                # reutilizar la misma instancia del motor para varias
-                # llamadas seguidas a say()+runAndWait() falla en silencio
-                # a partir de la segunda vez (sin lanzar ninguna excepción).
-                # Crear una instancia nueva por cada anuncio es más costoso
-                # pero es la solución fiable documentada para este problema.
-                motor = pyttsx3.init()
-                logger.warning("[AnunciadorVoz] Verbalizando: %s", texto)
-                motor.say(texto)
-                motor.runAndWait()
-                motor.stop()
+                self._hablar_en_subproceso(texto)
             except Exception:
                 # A WARNING, no a DEBUG: el archivo de log solo registra desde
                 # WARNING hacia arriba (ver iniciar_epub_tts.py), así que un
@@ -74,8 +56,26 @@ class AnunciadorVoz:
                 # exactamente el silencio sin rastro que se venía reportando.
                 logger.warning("[AnunciadorVoz] Fallo al verbalizar", exc_info=True)
 
-        if pythoncom:
-            pythoncom.CoUninitialize()
+    @staticmethod
+    def _hablar_en_subproceso(texto: str):
+        """
+        pyttsx3 con el driver SAPI5 tiene un problema conocido: incluso
+        creando una instancia de motor nueva por cada anuncio dentro del
+        mismo proceso, deja de sonar a partir de la segunda o tercera
+        llamada, sin lanzar ninguna excepción — el estado COM/de audio de
+        SAPI5 queda inconsistente y solo un proceso nuevo lo resetea del
+        todo. Es el mismo motivo por el que SAPI de 32 bits ya se puentea
+        a un proceso aparte en cliente_sapi32_bridge.py. Lanzar un
+        proceso de Python nuevo por cada anuncio es más lento, pero es la
+        forma fiable de que suene siempre y no solo las primeras veces.
+        """
+        logger.warning("[AnunciadorVoz] Verbalizando: %s", texto)
+        subprocess.run(
+            [sys.executable, "-c", _CODIGO_HABLAR_SUBPROCESO, texto],
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            timeout=20,
+            check=False,
+        )
 
     def hablar(self, texto: str):
         while not self._cola.empty():
