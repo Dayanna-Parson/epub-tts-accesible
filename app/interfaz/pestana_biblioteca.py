@@ -682,6 +682,17 @@ class PestanaBiblioteca(wx.Panel):
         item_eliminar.Enable(etiqueta is not None)
         self.Bind(wx.EVT_MENU, lambda e: self.al_eliminar_etiqueta_seleccionada(), item_eliminar)
 
+        # Diagnóstico temporal (igual que en al_menu_contextual): deja
+        # constancia de si este método realmente se ejecuta y con qué
+        # ítems, para contrastarlo con lo que se ve/anuncia de verdad.
+        logger.warning(
+            "[PestanaBiblioteca] Menú contextual de etiquetas construido con %d ítems: %s "
+            "(etiqueta seleccionada=%s)",
+            len(menu.GetMenuItems()),
+            [item.GetItemLabelText() for item in menu.GetMenuItems()],
+            etiqueta["nombre"] if etiqueta else None,
+        )
+
         self.lista_etiquetas.PopupMenu(menu)
         menu.Destroy()
 
