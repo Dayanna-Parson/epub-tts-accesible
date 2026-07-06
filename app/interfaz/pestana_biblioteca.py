@@ -150,6 +150,11 @@ class PestanaBiblioteca(wx.Panel):
         self.arbol_categorias.Bind(wx.EVT_KEY_DOWN, self.al_tecla_arbol_raw)
         self.arbol_categorias.Bind(wx.EVT_TREE_END_LABEL_EDIT, self.al_fin_edicion_categoria)
         self.arbol_categorias.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.al_clic_derecho_arbol)
+        # EVT_TREE_ITEM_RIGHT_CLICK solo se dispara con clic de ratón — la
+        # tecla Menú/Shift+F10 (como usa NVDA) genera EVT_CONTEXT_MENU, que
+        # no estaba enlazado aquí. Por eso el árbol nunca mostraba su menú
+        # propio por teclado, solo el genérico del sistema.
+        self.arbol_categorias.Bind(wx.EVT_CONTEXT_MENU, self.al_menu_contextual_arbol)
         sizer_generos.Add(self.arbol_categorias, 1, wx.EXPAND | wx.ALL, 5)
 
         self.btn_nueva_categoria = wx.Button(
@@ -265,6 +270,7 @@ class PestanaBiblioteca(wx.Panel):
             self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1)
         )
         self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
+        self._temporizador_anuncio = None
 
     def _configurar_atajos(self):
         # Ctrl+O (apertura universal, contextual por pestaña) se gestiona a
@@ -351,9 +357,22 @@ class PestanaBiblioteca(wx.Panel):
             if wx.Window.FindFocus() is self._anunciador and control_previo:
                 control_previo.SetFocus()
 
+        # Si ya había un anuncio pendiente de restaurar el foco (por
+        # ejemplo, dos atajos de estado pulsados en sucesión rápida), se
+        # cancela — si no, el primero podía disparar su restauración
+        # DESPUÉS de que el segundo ya hubiera puesto el nuevo texto,
+        # cortando el anuncio del segundo mensaje a mitad de lectura.
+        if self._temporizador_anuncio is not None and self._temporizador_anuncio.IsRunning():
+            self._temporizador_anuncio.Stop()
+
         self._anunciador.SetValue(texto)
         self._anunciador.SetFocus()
-        wx.CallLater(300, _restaurar_foco)
+        # 450ms en vez de 300: con el foco ya asentado de verdad (antes se
+        # perdía y recuperaba con las peleas de foco), NVDA necesita algo
+        # más de margen para terminar de leer mensajes de estado más
+        # largos ("Quitado de leyendo ahora.") antes de que se le devuelva
+        # el foco a la lista.
+        self._temporizador_anuncio = wx.CallLater(450, _restaurar_foco)
 
     # ── Árbol de categorías (jerárquico) ─────────────────────────────────────
     #
