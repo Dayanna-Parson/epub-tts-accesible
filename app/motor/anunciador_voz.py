@@ -69,7 +69,7 @@ class AnunciadorVoz:
         proceso de Python nuevo por cada anuncio es más lento, pero es la
         forma fiable de que suene siempre y no solo las primeras veces.
         """
-        logger.warning("[AnunciadorVoz] Verbalizando: %s", texto)
+        logger.debug("[AnunciadorVoz] Verbalizando: %s", texto)
         subprocess.run(
             [sys.executable, "-c", _CODIGO_HABLAR_SUBPROCESO, texto],
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
