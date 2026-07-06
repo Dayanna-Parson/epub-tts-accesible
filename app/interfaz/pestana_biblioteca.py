@@ -339,9 +339,21 @@ class PestanaBiblioteca(wx.Panel):
 
     def _anunciar(self, texto):
         control_previo = wx.Window.FindFocus()
+
+        def _restaurar_foco():
+            # Solo devuelve el foco si sigue en el anunciador oculto — si
+            # el usuario ya navegó a otro control mientras tanto (por
+            # ejemplo, pulsando otro atajo o moviéndose con flechas antes
+            # de que pasaran los 300ms), forzar aquí el foco de vuelta a
+            # control_previo se lo quitaría de las manos sin que lo pidiera,
+            # obligando a insistir con flechas arriba/abajo para que el
+            # foco "se quedara quieto" — exactamente el síntoma reportado.
+            if wx.Window.FindFocus() is self._anunciador and control_previo:
+                control_previo.SetFocus()
+
         self._anunciador.SetValue(texto)
         self._anunciador.SetFocus()
-        wx.CallLater(300, lambda: control_previo.SetFocus() if control_previo else None)
+        wx.CallLater(300, _restaurar_foco)
 
     # ── Árbol de categorías (jerárquico) ─────────────────────────────────────
     #
