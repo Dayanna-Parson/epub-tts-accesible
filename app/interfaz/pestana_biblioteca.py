@@ -185,6 +185,13 @@ class PestanaBiblioteca(wx.Panel):
         self.subnotebook_izquierdo.Bind(
             wx.EVT_NOTEBOOK_PAGE_CHANGED, self.al_cambiar_subpestana_izquierda
         )
+        # Ctrl+Av/RePág no cambia de subpestaña por sí solo: al estar el
+        # subnotebook anidado dentro de una página del notebook principal,
+        # ese notebook exterior intercepta la combinación antes de que
+        # llegue aquí (por eso el notebook principal tampoco confía en el
+        # manejo nativo y reimplementa su propio Ctrl+Tab a mano en
+        # ventana_principal.py). Se captura aquí igual, a mano.
+        self.subnotebook_izquierdo.Bind(wx.EVT_KEY_DOWN, self.al_tecla_subnotebook_izquierdo)
 
         sizer_principal.Add(self.subnotebook_izquierdo, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -286,6 +293,13 @@ class PestanaBiblioteca(wx.Panel):
         # cambio. Entrar al contenido sigue siendo un Tab explícito.
         evento.Skip()
 
+    def al_tecla_subnotebook_izquierdo(self, evento):
+        codigo = evento.GetKeyCode()
+        if evento.ControlDown() and codigo in (wx.WXK_PAGEUP, wx.WXK_PAGEDOWN):
+            self.subnotebook_izquierdo.AdvanceSelection(codigo == wx.WXK_PAGEDOWN)
+            return
+        evento.Skip()
+
     # ── Propiedades para Tab cíclico (usadas por ventana_principal.py) ──────
 
     @property
@@ -319,19 +333,24 @@ class PestanaBiblioteca(wx.Panel):
         self.arbol_categorias.SetItemData(nodo_todas, ("todas", None))
 
         nodo_a_seleccionar = [nodo_todas]
-        self._construir_nodos_categoria(raiz, None, id_categoria_seleccionar, nodo_a_seleccionar)
+        conteos = self.gestor.contar_libros_por_categoria()
+        self._construir_nodos_categoria(raiz, None, id_categoria_seleccionar, nodo_a_seleccionar, conteos)
 
         self.arbol_categorias.ExpandAll()
         self.arbol_categorias.Thaw()
         self.arbol_categorias.SelectItem(nodo_a_seleccionar[0])
 
-    def _construir_nodos_categoria(self, nodo_padre, id_categoria_padre, id_buscado, resultado_ref):
+    def _construir_nodos_categoria(
+        self, nodo_padre, id_categoria_padre, id_buscado, resultado_ref, conteos
+    ):
         for categoria in self.gestor.listar_categorias_hijas(id_categoria_padre):
-            nodo = self.arbol_categorias.AppendItem(nodo_padre, categoria["nombre"])
+            total = conteos.get(categoria["id"], 0)
+            etiqueta = f"{categoria['nombre']} ({total} libro(s))"
+            nodo = self.arbol_categorias.AppendItem(nodo_padre, etiqueta)
             self.arbol_categorias.SetItemData(nodo, ("categoria", categoria["id"]))
             if id_buscado is not None and categoria["id"] == id_buscado:
                 resultado_ref[0] = nodo
-            self._construir_nodos_categoria(nodo, categoria["id"], id_buscado, resultado_ref)
+            self._construir_nodos_categoria(nodo, categoria["id"], id_buscado, resultado_ref, conteos)
 
     def _dato_nodo_seleccionado(self):
         # EVT_TREE_SEL_CHANGED puede dispararse durante el cierre de la app,
@@ -685,17 +704,6 @@ class PestanaBiblioteca(wx.Panel):
         # parte de los libros hasta reiniciar la app, sin ningún error.
         self.lista_libros.Refresh()
 
-        # Diagnóstico temporal: compara cuántos libros devolvió la consulta
-        # (dato real) frente a cuántos terminó mostrando el control (dato
-        # visual), para saber si un futuro caso de "lista vacía" es un
-        # problema de datos o de repintado — quitar una vez confirmado.
-        logger.warning(
-            "[PestanaBiblioteca] _cargar_libros: %d libro(s) de la consulta, "
-            "%d ítem(s) en el control tras Thaw (id_categoria=%s, id_etiqueta=%s)",
-            len(libros), self.lista_libros.GetItemCount(),
-            self._id_categoria_activa, self._id_etiqueta_activa,
-        )
-
         self.lbl_estado.SetLabel(f"{len(libros)} libro(s) en la biblioteca.")
 
     @staticmethod
@@ -868,8 +876,15 @@ class PestanaBiblioteca(wx.Panel):
         # _al_terminar_agrupamiento antes de que la etiqueta nueva tuviera
         # libros asignados — mostrando la lista filtrada y vacía por una
         # etiqueta recién creada sin contenido todavía.
+        # Igual que _cargar_arbol_categorias() de la línea de arriba, sin
+        # argumento: vuelve a "(Todas las etiquetas)" en vez de conservar
+        # la que estuviera activa. Si se preserva la etiqueta activa, tras
+        # importar más libros la lista de la derecha se queda mostrando el
+        # filtro estrecho de lo que fuera esa etiqueta (a veces vacía o
+        # con muy pocos libros), dando la falsa impresión de que faltan
+        # libros cuando en realidad solo faltaba ampliar el filtro.
         self._cargar_arbol_categorias()
-        self._cargar_lista_etiquetas(id_etiqueta_seleccionar=self._id_etiqueta_activa)
+        self._cargar_lista_etiquetas()
         self._cargar_libros()
         self.lista_libros.SetFocus()
 
