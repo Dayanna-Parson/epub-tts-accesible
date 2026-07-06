@@ -210,6 +210,18 @@ class GestorBiblioteca:
                 (id_padre,),
             ).fetchall()
 
+    def contar_libros_por_categoria(self) -> dict[int, int]:
+        """
+        Nº de libros asignados directamente a cada categoría (sin sumar
+        los de sus subcategorías) en una sola consulta, para mostrarlo
+        junto a cada nodo del árbol sin repetir un SELECT por nodo.
+        """
+        with self._conexion() as conexion:
+            filas = conexion.execute(
+                "SELECT id_categoria, COUNT(*) AS total FROM libro_categoria GROUP BY id_categoria"
+            ).fetchall()
+        return {fila["id_categoria"]: fila["total"] for fila in filas}
+
     def listar_etiquetas(self) -> list[sqlite3.Row]:
         with self._conexion() as conexion:
             return conexion.execute("SELECT id, nombre FROM etiquetas ORDER BY nombre").fetchall()
