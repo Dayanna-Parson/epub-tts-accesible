@@ -273,15 +273,40 @@ class PestanaBiblioteca(wx.Panel):
         id_buscar = wx.NewIdRef()
         id_info = wx.NewIdRef()
         id_favorito = wx.NewIdRef()
+        # Vía alternativa a las opciones de estado del menú contextual
+        # (Marcar como pendiente/leyendo ahora/leído), mientras se investiga
+        # por qué esas tres no aparecen ahí — Ctrl+Alt en vez de Ctrl+Shift
+        # para no chocar con Ctrl+Shift+P (Gestor de Proyectos, global).
+        id_pendiente = wx.NewIdRef()
+        id_leyendo = wx.NewIdRef()
+        id_leido = wx.NewIdRef()
 
         self.Bind(wx.EVT_MENU, lambda e: self.txt_filtro.SetFocus(), id=id_buscar)
         self.Bind(wx.EVT_MENU, self.al_anunciar_info_libro, id=id_info)
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, id=id_favorito)
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._alternar_estado_libro("en_pendientes", "pendiente", "pendientes"),
+            id=id_pendiente,
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._alternar_estado_libro("leyendo_ahora", "leyendo ahora", "leyendo ahora"),
+            id=id_leyendo,
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._alternar_estado_libro("leido", "leído", "leídos"),
+            id=id_leido,
+        )
 
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('F'), id_buscar),
             (wx.ACCEL_CTRL, ord('I'), id_info),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('F'), id_favorito),
+            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord('P'), id_pendiente),
+            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord('L'), id_leyendo),
+            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord('T'), id_leido),
         ]))
 
     def al_cambiar_subpestana_izquierda(self, evento):
