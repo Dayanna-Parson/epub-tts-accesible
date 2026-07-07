@@ -572,6 +572,9 @@ class VentanaPrincipal(wx.Frame):
         item_log = sub.Append(wx.ID_ANY, "Abrir carpeta de registros")
         self.Bind(wx.EVT_MENU, self.al_abrir_registros, item_log)
 
+        item_copiar_log = sub.Append(wx.ID_ANY, "Copiar registros al portapapeles")
+        self.Bind(wx.EVT_MENU, self.al_copiar_registros, item_copiar_log)
+
         menu.AppendSubMenu(sub, "Ayuda")
 
     def _menu_contextual_lectura(self):
@@ -855,7 +858,9 @@ class VentanaPrincipal(wx.Frame):
         """Abre la carpeta de registros con el explorador de archivos."""
         import subprocess
         from app.config_rutas import RAIZ
-        carpeta = os.path.join(RAIZ, "app", "registros")
+        # OJO: era "app/registros" (carpeta huérfana, distinta de donde
+        # iniciar_epub_tts.py escribe de verdad) — ver _RUTA_LOG ahí.
+        carpeta = os.path.join(RAIZ, "registros")
         os.makedirs(carpeta, exist_ok=True)
         try:
             os.startfile(carpeta)
@@ -864,6 +869,32 @@ class VentanaPrincipal(wx.Frame):
                 subprocess.Popen(["xdg-open", carpeta])
             except Exception as e:
                 wx.MessageBox(str(e), "Error al abrir carpeta de registros")
+
+    def al_copiar_registros(self, evento=None):
+        """
+        Copia el contenido de registros/app.log al portapapeles, para no
+        depender de que el usuario encuentre y adjunte el archivo a mano
+        (ruta fácil de confundir, y programas de sincronización en la nube
+        pueden interferir con verlo actualizado desde el explorador).
+        """
+        from app.config_rutas import RAIZ
+        ruta_log = os.path.join(RAIZ, "registros", "app.log")
+        try:
+            with open(ruta_log, "r", encoding="utf-8") as f:
+                contenido = f.read()
+        except Exception as e:
+            wx.MessageBox(f"No se pudo leer el registro:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(contenido))
+            wx.TheClipboard.Close()
+            reproducir(SUCCESS)
+            wx.MessageBox(
+                "Registros copiados al portapapeles. Ya puedes pegarlos donde quieras.",
+                "Registros copiados", wx.OK | wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox("No se pudo abrir el portapapeles.", "Error", wx.OK | wx.ICON_ERROR)
     # ANCLAJE_FIN: AYUDA
 
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS
