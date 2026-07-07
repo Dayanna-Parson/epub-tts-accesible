@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 RUTA_BIBLIOTECA = ruta_config("biblioteca.db")
 
-VERSION_ESQUEMA = 2
+VERSION_ESQUEMA = 3
 
 _ESQUEMA_SQL = """
 CREATE TABLE IF NOT EXISTS autores (
@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS categorias (
     id        INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre    TEXT NOT NULL COLLATE NOCASE,
     id_padre  INTEGER REFERENCES categorias(id) ON DELETE CASCADE,
+    orden     INTEGER,
     UNIQUE (nombre, id_padre)
 );
 
@@ -73,6 +74,7 @@ CREATE TABLE IF NOT EXISTS libro_autor (
 CREATE TABLE IF NOT EXISTS libro_categoria (
     id_libro      INTEGER NOT NULL REFERENCES libros(id) ON DELETE CASCADE,
     id_categoria  INTEGER NOT NULL REFERENCES categorias(id) ON DELETE CASCADE,
+    orden         INTEGER,
     PRIMARY KEY (id_libro, id_categoria)
 );
 
@@ -149,6 +151,31 @@ class GestorBiblioteca:
         with self._conexion() as conexion:
             conexion.executescript(_ESQUEMA_SQL)
             version_actual = conexion.execute("PRAGMA user_version;").fetchone()[0]
+            if version_actual < 3:
+                # CREATE TABLE IF NOT EXISTS no añade columnas nuevas a
+                # tablas que ya existían de antes (bases de datos reales
+                # con libros ya importados) — hace falta ALTER TABLE para
+                # las columnas "orden" nuevas, envuelto en try/except
+                # porque ALTER TABLE ADD COLUMN falla si ya existe (por
+                # ejemplo, en una base de datos creada de cero que ya
+                # nació con estas columnas desde _ESQUEMA_SQL).
+                for sentencia in (
+                    "ALTER TABLE categorias ADD COLUMN orden INTEGER",
+                    "ALTER TABLE libro_categoria ADD COLUMN orden INTEGER",
+                ):
+                    try:
+                        conexion.execute(sentencia)
+                    except sqlite3.OperationalError:
+                        pass
+                # A las filas ya existentes sin orden se les da uno según
+                # su orden actual (por id de creación), para no perder ni
+                # desordenar nada de golpe al actualizar.
+                conexion.execute(
+                    "UPDATE categorias SET orden = id WHERE orden IS NULL"
+                )
+                conexion.execute(
+                    "UPDATE libro_categoria SET orden = rowid WHERE orden IS NULL"
+                )
             if version_actual < VERSION_ESQUEMA:
                 conexion.execute(f"PRAGMA user_version = {VERSION_ESQUEMA};")
 
@@ -179,7 +206,9 @@ class GestorBiblioteca:
         if fila:
             return fila["id"]
         cursor = conexion.execute(
-            "INSERT INTO categorias (nombre, id_padre) VALUES (?, ?)", (nombre, id_padre)
+            "INSERT INTO categorias (nombre, id_padre, orden) VALUES "
+            "(?, ?, (SELECT COALESCE(MAX(orden), 0) + 1 FROM categorias WHERE id_padre IS ?))",
+            (nombre, id_padre, id_padre),
         )
         return cursor.lastrowid
 
@@ -200,15 +229,50 @@ class GestorBiblioteca:
     def listar_categorias_hijas(self, id_padre: Optional[int] = None) -> list[sqlite3.Row]:
         """
         Hijos directos de una categoría (o raíces del árbol si id_padre es
-        None), en el orden en que se crearon — no alfabético. La categoría
-        que la autora crea primero (ej. "Fantasía", su género principal)
-        debe seguir apareciendo primero aunque después cree "Distopía".
+        None). Por defecto, en el orden en que se crearon — no alfabético.
+        La categoría que la autora crea primero (ej. "Fantasía", su género
+        principal) debe seguir apareciendo primero aunque después cree
+        "Distopía" — pero mover_categoria() puede cambiar ese orden a mano.
         """
         with self._conexion() as conexion:
             return conexion.execute(
-                "SELECT id, nombre, id_padre FROM categorias WHERE id_padre IS ? ORDER BY id",
+                "SELECT id, nombre, id_padre, orden FROM categorias "
+                "WHERE id_padre IS ? ORDER BY (orden IS NULL), orden, id",
                 (id_padre,),
             ).fetchall()
+
+    def mover_categoria(self, id_categoria: int, direccion: int) -> bool:
+        """
+        Cambia el orden de id_categoria respecto a sus hermanas (mismo
+        id_padre), intercambiando su valor de "orden" con la vecina
+        inmediatamente anterior (direccion=-1) o siguiente (direccion=+1).
+        Devuelve False sin hacer nada si ya está en un extremo. Mismo
+        principio que _mover_nodo() en ventana_proyectos.py.
+        """
+        with self._conexion() as conexion:
+            fila = conexion.execute(
+                "SELECT id_padre, orden FROM categorias WHERE id = ?", (id_categoria,)
+            ).fetchone()
+            if fila is None:
+                return False
+            hermanas = conexion.execute(
+                "SELECT id, orden FROM categorias WHERE id_padre IS ? "
+                "ORDER BY (orden IS NULL), orden, id",
+                (fila["id_padre"],),
+            ).fetchall()
+            indices = [h["id"] for h in hermanas]
+            posicion = indices.index(id_categoria)
+            nueva_posicion = posicion + direccion
+            if nueva_posicion < 0 or nueva_posicion >= len(hermanas):
+                return False
+            vecina = hermanas[nueva_posicion]
+            conexion.execute(
+                "UPDATE categorias SET orden = ? WHERE id = ?", (vecina["orden"], id_categoria)
+            )
+            conexion.execute(
+                "UPDATE categorias SET orden = ? WHERE id = ?", (fila["orden"], vecina["id"])
+            )
+            return True
 
     def contar_libros_por_categoria(self) -> dict[int, int]:
         """
@@ -284,8 +348,9 @@ class GestorBiblioteca:
                 id_categoria = self.obtener_o_crear_categoria(conexion, parte, id_padre)
                 id_padre = id_categoria
             conexion.execute(
-                "INSERT OR IGNORE INTO libro_categoria (id_libro, id_categoria) VALUES (?, ?)",
-                (id_libro, id_categoria),
+                "INSERT OR IGNORE INTO libro_categoria (id_libro, id_categoria, orden) VALUES "
+                "(?, ?, (SELECT COALESCE(MAX(orden), 0) + 1 FROM libro_categoria WHERE id_categoria = ?))",
+                (id_libro, id_categoria, id_categoria),
             )
             return id_categoria
 
@@ -470,8 +535,9 @@ class GestorBiblioteca:
                 id_categoria = self.obtener_o_crear_categoria(conexion, parte, id_padre)
                 id_padre = id_categoria
             conexion.execute(
-                "INSERT OR IGNORE INTO libro_categoria (id_libro, id_categoria) VALUES (?, ?)",
-                (id_libro, id_categoria),
+                "INSERT OR IGNORE INTO libro_categoria (id_libro, id_categoria, orden) VALUES "
+                "(?, ?, (SELECT COALESCE(MAX(orden), 0) + 1 FROM libro_categoria WHERE id_categoria = ?))",
+                (id_libro, id_categoria, id_categoria),
             )
         return id_libro
 
@@ -576,6 +642,23 @@ class GestorBiblioteca:
                 ORDER BY (le.orden IS NULL), le.orden, l.titulo COLLATE NOCASE
             """
             parametros = [id_etiqueta] + parametros
+        elif id_categoria is not None:
+            # Igual que con id_etiqueta: se respeta el orden en que se
+            # fueron añadiendo los libros a esta categoría en concreto
+            # (no a sus subgéneros) en vez del alfabético — así añadir
+            # varios libros de golpe a un género no los deja
+            # "desordenados" frente al orden en que se importaron.
+            consulta = f"""
+                SELECT DISTINCT l.*, lc.orden AS orden_en_categoria
+                FROM libros l
+                LEFT JOIN libro_autor la ON la.id_libro = l.id
+                LEFT JOIN autores a ON a.id = la.id_autor
+                LEFT JOIN libro_categoria lc
+                    ON lc.id_libro = l.id AND lc.id_categoria = ?
+                {where}
+                ORDER BY (lc.orden IS NULL), lc.orden, l.titulo COLLATE NOCASE
+            """
+            parametros = [id_categoria] + parametros
         else:
             consulta = f"""
                 SELECT DISTINCT l.*

@@ -2,9 +2,11 @@
 import wx
 import os
 import re
+import json
 import logging
 import threading
 
+from app.config_rutas import ruta_config, CONFIG_DIR
 from app.motor.gestor_biblioteca import GestorBiblioteca
 from app.motor.escaner_biblioteca import EscanerBiblioteca, confirmar_agrupamiento_por_carpeta
 from app.motor.renombrador_biblioteca import (
@@ -142,7 +144,8 @@ class PestanaBiblioteca(wx.Panel):
             "Árbol de géneros y subgéneros. Flechas para navegar; seleccionar "
             "un nodo filtra la lista de libros por esa categoría (incluye "
             "subgéneros). F2 renombra, Supr elimina, Ctrl+X/Ctrl+V mueve un "
-            "género bajo otro, Menú o Shift+F10 para más opciones."
+            "género bajo otro, Ctrl+Arriba/Ctrl+Abajo lo reordena entre sus "
+            "hermanos, Menú o Shift+F10 para más opciones."
         )
         self.arbol_categorias.SetMinSize((220, 160))
         self.arbol_categorias.Bind(wx.EVT_TREE_SEL_CHANGED, self.al_seleccionar_categoria)
@@ -265,6 +268,12 @@ class PestanaBiblioteca(wx.Panel):
 
         self.SetSizer(sizer_principal)
 
+        # Tab desde el árbol/lista de etiquetas debe llegar directo a la
+        # lista de libros — es lo que se usa constantemente — en vez de
+        # pasar antes por los controles de filtro, que se usan mucho
+        # menos y quedan más lejos en el orden natural de creación.
+        self.lista_libros.MoveAfterInTabOrder(self.subnotebook_izquierdo)
+
         # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
         self._anunciador = wx.TextCtrl(
             self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1)
@@ -279,40 +288,15 @@ class PestanaBiblioteca(wx.Panel):
         id_buscar = wx.NewIdRef()
         id_info = wx.NewIdRef()
         id_favorito = wx.NewIdRef()
-        # Vía alternativa a las opciones de estado del menú contextual
-        # (Marcar como pendiente/leyendo ahora/leído), mientras se investiga
-        # por qué esas tres no aparecen ahí — Ctrl+Alt en vez de Ctrl+Shift
-        # para no chocar con Ctrl+Shift+P (Gestor de Proyectos, global).
-        id_pendiente = wx.NewIdRef()
-        id_leyendo = wx.NewIdRef()
-        id_leido = wx.NewIdRef()
 
         self.Bind(wx.EVT_MENU, lambda e: self.txt_filtro.SetFocus(), id=id_buscar)
         self.Bind(wx.EVT_MENU, self.al_anunciar_info_libro, id=id_info)
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, id=id_favorito)
-        self.Bind(
-            wx.EVT_MENU,
-            lambda e: self._alternar_estado_libro("en_pendientes", "pendiente", "pendientes"),
-            id=id_pendiente,
-        )
-        self.Bind(
-            wx.EVT_MENU,
-            lambda e: self._alternar_estado_libro("leyendo_ahora", "leyendo ahora", "leyendo ahora"),
-            id=id_leyendo,
-        )
-        self.Bind(
-            wx.EVT_MENU,
-            lambda e: self._alternar_estado_libro("leido", "leído", "leídos"),
-            id=id_leido,
-        )
 
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('F'), id_buscar),
             (wx.ACCEL_CTRL, ord('I'), id_info),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('F'), id_favorito),
-            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord('P'), id_pendiente),
-            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord('L'), id_leyendo),
-            (wx.ACCEL_CTRL | wx.ACCEL_ALT, ord('T'), id_leido),
         ]))
 
     def al_cambiar_subpestana_izquierda(self, evento):
@@ -444,7 +428,11 @@ class PestanaBiblioteca(wx.Panel):
             codigo = evento.GetKeyCode()
             if codigo in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
                 reproducir(LIST_NAV)
-            if codigo == wx.WXK_F2:
+            if evento.ControlDown() and codigo == wx.WXK_UP:
+                self._mover_categoria_seleccionada(-1)
+            elif evento.ControlDown() and codigo == wx.WXK_DOWN:
+                self._mover_categoria_seleccionada(1)
+            elif codigo == wx.WXK_F2:
                 if self._categoria_seleccionada_id() is not None:
                     self.arbol_categorias.EditLabel(self.arbol_categorias.GetSelection())
             elif codigo == wx.WXK_DELETE:
@@ -453,6 +441,17 @@ class PestanaBiblioteca(wx.Panel):
                 evento.Skip()
         except RuntimeError:
             pass
+
+    def _mover_categoria_seleccionada(self, direccion):
+        id_categoria = self._categoria_seleccionada_id()
+        if id_categoria is None:
+            self._anunciar("Selecciona primero un género o subgénero para moverlo.")
+            return
+        if self.gestor.mover_categoria(id_categoria, direccion):
+            reproducir(SUCCESS)
+            self._cargar_arbol_categorias(id_categoria_seleccionar=id_categoria)
+        else:
+            self._anunciar("Ya está en ese extremo, no se puede mover más.")
 
     def al_tecla_arbol_raw(self, evento):
         codigo = evento.GetKeyCode()
@@ -574,6 +573,14 @@ class PestanaBiblioteca(wx.Panel):
             item_renombrar,
         )
 
+        item_mover_arriba = menu.Append(wx.ID_ANY, "Mover arriba (Ctrl+Arriba)")
+        item_mover_arriba.Enable(id_categoria is not None)
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_categoria_seleccionada(-1), item_mover_arriba)
+
+        item_mover_abajo = menu.Append(wx.ID_ANY, "Mover abajo (Ctrl+Abajo)")
+        item_mover_abajo.Enable(id_categoria is not None)
+        self.Bind(wx.EVT_MENU, lambda e: self._mover_categoria_seleccionada(1), item_mover_abajo)
+
         item_cortar = menu.Append(wx.ID_ANY, "Cortar (Ctrl+X)")
         item_cortar.Enable(id_categoria is not None)
         self.Bind(wx.EVT_MENU, self.al_cortar_categoria, item_cortar)
@@ -588,6 +595,7 @@ class PestanaBiblioteca(wx.Panel):
         item_eliminar.Enable(id_categoria is not None)
         self.Bind(wx.EVT_MENU, self.al_eliminar_categoria, item_eliminar)
 
+        self._anadir_ayuda_y_salir(menu)
         self.arbol_categorias.PopupMenu(menu)
         menu.Destroy()
 
@@ -718,6 +726,7 @@ class PestanaBiblioteca(wx.Panel):
         item_eliminar.Enable(etiqueta is not None)
         self.Bind(wx.EVT_MENU, lambda e: self.al_eliminar_etiqueta_seleccionada(), item_eliminar)
 
+        self._anadir_ayuda_y_salir(menu)
         self.lista_etiquetas.PopupMenu(menu)
         menu.Destroy()
 
@@ -734,13 +743,14 @@ class PestanaBiblioteca(wx.Panel):
             solo_leyendo=(estado == "Leyendo ahora"),
             solo_leidos=(estado == "Leídos"),
         )
-        if self._id_etiqueta_activa is None:
-            # Sin una etiqueta activa, buscar_libros() ordena alfabéticamente
-            # por título — pero muchos libros heredan un número al principio
-            # del título original del archivo, y un orden alfabético puro
-            # coloca "10" antes que "2". El orden natural evita eso. Cuando
-            # sí hay una etiqueta activa, se respeta su orden de saga tal
-            # cual lo devuelve la base de datos.
+        if self._id_etiqueta_activa is None and self._id_categoria_activa is None:
+            # Sin etiqueta ni categoría activa, buscar_libros() ordena
+            # alfabéticamente por título — pero muchos libros heredan un
+            # número al principio del título original del archivo, y un
+            # orden alfabético puro coloca "10" antes que "2". El orden
+            # natural evita eso. Con etiqueta o categoría activa, se
+            # respeta el orden de saga/género tal cual lo devuelve la
+            # base de datos (el que se fue añadiendo).
             libros = sorted(libros, key=lambda l: _clave_orden_natural(l["titulo"]))
         self._libros_actuales = libros
 
@@ -795,10 +805,14 @@ class PestanaBiblioteca(wx.Panel):
     # ── Importación de carpetas ──────────────────────────────────────────────
 
     def al_importar_carpeta(self, evento):
-        with wx.DirDialog(self, "Seleccionar carpeta con libros para importar") as dlg:
+        with wx.DirDialog(
+            self, "Seleccionar carpeta con libros para importar",
+            defaultPath=self._cargar_ultima_carpeta_importada(),
+        ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
                 return
             carpeta = dlg.GetPath()
+        self._guardar_ultima_carpeta_importada(carpeta)
 
         usar_subcarpetas = wx.MessageBox(
             "¿Las subcarpetas de esta carpeta representan géneros y subgéneros?\n\n"
@@ -1376,6 +1390,51 @@ class PestanaBiblioteca(wx.Panel):
         item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")
         self.Bind(wx.EVT_MENU, lambda e: self._quitar_libro_seleccionado(), item_quitar)
 
+        self._anadir_ayuda_y_salir(menu)
         self.PopupMenu(menu)
         menu.Destroy()
+
+    def _anadir_ayuda_y_salir(self, menu):
+        """
+        Añade el separador + submenú Ayuda + Salir al final de un menú
+        contextual propio de Biblioteca (árbol, etiquetas o libro),
+        reutilizando el submenú compartido de VentanaPrincipal en vez de
+        duplicarlo — mismo principio que llevó a corregir el dispatcher
+        de _menu_contextual_biblioteca().
+        """
+        ventana_principal = self.padre_notebook.GetParent()
+        menu.AppendSeparator()
+        ventana_principal._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        ventana_principal.Bind(wx.EVT_MENU, ventana_principal.al_salir, item_salir)
+
+    def _cargar_ultima_carpeta_importada(self) -> str:
+        try:
+            ruta = ruta_config("ajustes.json")
+            if os.path.exists(ruta):
+                with open(ruta, "r", encoding="utf-8") as f:
+                    datos = json.load(f)
+                carpeta = datos.get("ultima_carpeta_importada_biblioteca", "")
+                if carpeta and os.path.isdir(carpeta):
+                    return carpeta
+        except Exception:
+            logger.exception("[PestanaBiblioteca] No se pudo leer la última carpeta importada")
+        return ""
+
+    def _guardar_ultima_carpeta_importada(self, carpeta: str):
+        try:
+            ruta = ruta_config("ajustes.json")
+            datos = {}
+            if os.path.exists(ruta):
+                with open(ruta, "r", encoding="utf-8") as f:
+                    datos = json.load(f)
+            datos["ultima_carpeta_importada_biblioteca"] = carpeta
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            ruta_temporal = ruta + ".tmp"
+            with open(ruta_temporal, "w", encoding="utf-8") as f:
+                json.dump(datos, f, ensure_ascii=False, indent=4)
+            os.replace(ruta_temporal, ruta)
+        except Exception:
+            logger.exception("[PestanaBiblioteca] No se pudo guardar la última carpeta importada")
 # ANCLAJE_FIN: DEFINICION_PESTANA_BIBLIOTECA
