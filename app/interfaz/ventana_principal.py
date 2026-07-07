@@ -575,6 +575,9 @@ class VentanaPrincipal(wx.Frame):
         item_copiar_log = sub.Append(wx.ID_ANY, "Copiar registros al portapapeles")
         self.Bind(wx.EVT_MENU, self.al_copiar_registros, item_copiar_log)
 
+        item_copiar_ultimo_error = sub.Append(wx.ID_ANY, "Copiar el último error al portapapeles")
+        self.Bind(wx.EVT_MENU, self.al_copiar_ultimo_error, item_copiar_ultimo_error)
+
         menu.AppendSubMenu(sub, "Ayuda")
 
     def _menu_contextual_lectura(self):
@@ -892,6 +895,41 @@ class VentanaPrincipal(wx.Frame):
             wx.MessageBox(
                 "Registros copiados al portapapeles. Ya puedes pegarlos donde quieras.",
                 "Registros copiados", wx.OK | wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox("No se pudo abrir el portapapeles.", "Error", wx.OK | wx.ICON_ERROR)
+
+    def al_copiar_ultimo_error(self, evento=None):
+        """
+        Copia al portapapeles solo el archivo del error más reciente, de
+        registros/errores/ — cada ERROR/CRITICAL se guarda ahí en su
+        propio archivo (ver _HandlerErrorIndividual en iniciar_epub_tts.py),
+        para no tener que buscarlo dentro del log combinado.
+        """
+        from app.config_rutas import RAIZ
+        carpeta = os.path.join(RAIZ, "registros", "errores")
+        try:
+            archivos = [os.path.join(carpeta, n) for n in os.listdir(carpeta)]
+        except Exception as e:
+            wx.MessageBox(f"No se pudo leer la carpeta de errores:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+        if not archivos:
+            wx.MessageBox("No hay ningún error registrado todavía.", "Sin errores", wx.OK | wx.ICON_INFORMATION)
+            return
+        ultimo = max(archivos, key=os.path.getmtime)
+        try:
+            with open(ultimo, "r", encoding="utf-8") as f:
+                contenido = f.read()
+        except Exception as e:
+            wx.MessageBox(f"No se pudo leer el error:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(contenido))
+            wx.TheClipboard.Close()
+            reproducir(SUCCESS)
+            wx.MessageBox(
+                f"Último error ({os.path.basename(ultimo)}) copiado al portapapeles.",
+                "Error copiado", wx.OK | wx.ICON_INFORMATION,
             )
         else:
             wx.MessageBox("No se pudo abrir el portapapeles.", "Error", wx.OK | wx.ICON_ERROR)
