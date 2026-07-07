@@ -140,7 +140,8 @@ except Exception as _e:
 
 # ── Hooks de pánico ──────────────────────────────────────────────────────────
 # Capturan cualquier excepción no controlada (hilo principal y threads de fondo)
-# y escriben el traceback completo en app/registros/app.log.
+# y escriben el traceback completo en registros/app.log (raíz del proyecto,
+# no dentro de app/ — ver _RUTA_LOG más arriba).
 
 def _manejador_excepcion_global(tipo, valor, traza):
     """Excepción no capturada en el hilo principal."""
