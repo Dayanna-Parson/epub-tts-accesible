@@ -485,62 +485,45 @@ class VentanaPrincipal(wx.Frame):
             self._menu_contextual_ajustes()
 
     def _menu_contextual_biblioteca(self):
-        """Menú contextual de la pestaña Biblioteca: delega en el propio panel,
-        que conoce el libro seleccionado, y añade Ayuda y Salir."""
+        """
+        Menú contextual de la pestaña Biblioteca: delega en el método
+        propio del control que tenga el foco en ese momento (árbol de
+        categorías, listado de etiquetas o listado de libros), en vez de
+        reconstruir aquí una copia paralela del menú del libro.
+
+        Antes este método duplicaba a mano el menú de al_menu_contextual()
+        (pestana_biblioteca.py) y SIEMPRE lo mostraba sin importar qué
+        control tuviera el foco realmente — por eso el árbol y el listado
+        de etiquetas nunca mostraban su propio menú (Nueva categoría,
+        Renombrar, Nueva etiqueta...) y siempre aparecían "Importar
+        carpeta"/Ayuda/Salir pegados a cualquier menú, y por qué las
+        opciones de pendiente/leyendo ahora/leído (añadidas solo en la
+        copia real) nunca llegaban a verse aquí.
+        """
+        pb = self.pestana_biblioteca
+        foco = wx.Window.FindFocus()
+
+        if foco is pb.arbol_categorias:
+            pb.al_menu_contextual_arbol(None)
+            return
+        if foco is pb.lista_etiquetas:
+            pb.al_menu_contextual_etiquetas(None)
+            return
+        if foco is pb.lista_libros:
+            pb.al_menu_contextual(None)
+            return
+
+        # Ningún control específico de la lista/árbol tiene el foco (por
+        # ejemplo, el botón "Importar carpeta..."): menú mínimo genérico.
         menu = wx.Menu()
-
         item_importar = menu.Append(wx.ID_ANY, "Importar carpeta...\tCtrl+O")
-        self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_importar_carpeta, item_importar)
-
-        libro = self.pestana_biblioteca._libro_seleccionado()
-        if libro is not None:
-            menu.AppendSeparator()
-
-            item_abrir = menu.Append(wx.ID_ANY, "Abrir en Lectura\tIntro")
-            self.Bind(
-                wx.EVT_MENU,
-                lambda e: self.pestana_biblioteca.al_abrir_libro_seleccionado(),
-                item_abrir,
-            )
-
-            item_favorito = menu.Append(
-                wx.ID_ANY,
-                "Quitar de favoritos" if libro["favorito"] else "Marcar como favorito",
-            )
-            self.Bind(wx.EVT_MENU, self.pestana_biblioteca.al_alternar_favorito, item_favorito)
-
-            menu.AppendSubMenu(
-                self.pestana_biblioteca.construir_menu_asignar_categoria(libro), "Añadir a categoría"
-            )
-            menu.AppendSubMenu(
-                self.pestana_biblioteca.construir_menu_asignar_etiqueta(libro), "Añadir a etiqueta"
-            )
-
-            item_quitar_cat = menu.Append(wx.ID_ANY, "Quitar de esta categoría")
-            item_quitar_cat.Enable(self.pestana_biblioteca._id_categoria_activa is not None)
-            self.Bind(
-                wx.EVT_MENU, self.pestana_biblioteca.al_quitar_de_categoria_actual, item_quitar_cat
-            )
-
-            item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo...\tF2")
-            self.Bind(
-                wx.EVT_MENU, self.pestana_biblioteca.al_renombrar_segun_metadatos, item_renombrar
-            )
-
-            item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")
-            self.Bind(
-                wx.EVT_MENU,
-                lambda e: self.pestana_biblioteca._quitar_libro_seleccionado(),
-                item_quitar,
-            )
-
+        self.Bind(wx.EVT_MENU, pb.al_importar_carpeta, item_importar)
         menu.AppendSeparator()
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
-
-        self.pestana_biblioteca.PopupMenu(menu)
+        self.PopupMenu(menu)
         menu.Destroy()
 
     def _menu_contextual_ajustes(self):
