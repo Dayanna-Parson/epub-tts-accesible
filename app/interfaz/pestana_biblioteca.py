@@ -558,6 +558,12 @@ class PestanaBiblioteca(wx.Panel):
             self._voz.hablar("No se puede mover ahí: crearía un ciclo o el destino es la misma categoría.")
 
     def al_menu_contextual_arbol(self, evento):
+        # Diagnóstico temporal: confirma si este método llega a ejecutarse
+        # en absoluto — quitar en cuanto se confirme la causa.
+        logger.warning(
+            "[PestanaBiblioteca] al_menu_contextual_arbol invocado (tipo de evento: %s)",
+            type(evento).__name__,
+        )
         id_categoria = self._categoria_seleccionada_id()
         menu = wx.Menu()
 
@@ -687,6 +693,12 @@ class PestanaBiblioteca(wx.Panel):
         dlg.Destroy()
 
     def al_menu_contextual_etiquetas(self, evento):
+        # Diagnóstico temporal: confirma si este método llega a ejecutarse
+        # en absoluto — quitar en cuanto se confirme la causa.
+        logger.warning(
+            "[PestanaBiblioteca] al_menu_contextual_etiquetas invocado (tipo de evento: %s)",
+            type(evento).__name__,
+        )
         etiqueta = self._etiqueta_seleccionada()
         menu = wx.Menu()
 
