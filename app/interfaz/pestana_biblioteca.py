@@ -558,12 +558,6 @@ class PestanaBiblioteca(wx.Panel):
             self._voz.hablar("No se puede mover ahí: crearía un ciclo o el destino es la misma categoría.")
 
     def al_menu_contextual_arbol(self, evento):
-        # Diagnóstico temporal: confirma si este método llega a ejecutarse
-        # en absoluto — quitar en cuanto se confirme la causa.
-        logger.warning(
-            "[PestanaBiblioteca] al_menu_contextual_arbol invocado (tipo de evento: %s)",
-            type(evento).__name__,
-        )
         id_categoria = self._categoria_seleccionada_id()
         menu = wx.Menu()
 
@@ -693,12 +687,6 @@ class PestanaBiblioteca(wx.Panel):
         dlg.Destroy()
 
     def al_menu_contextual_etiquetas(self, evento):
-        # Diagnóstico temporal: confirma si este método llega a ejecutarse
-        # en absoluto — quitar en cuanto se confirme la causa.
-        logger.warning(
-            "[PestanaBiblioteca] al_menu_contextual_etiquetas invocado (tipo de evento: %s)",
-            type(evento).__name__,
-        )
         etiqueta = self._etiqueta_seleccionada()
         menu = wx.Menu()
 
@@ -729,17 +717,6 @@ class PestanaBiblioteca(wx.Panel):
         item_eliminar = menu.Append(wx.ID_ANY, "Eliminar...\tSupr")
         item_eliminar.Enable(etiqueta is not None)
         self.Bind(wx.EVT_MENU, lambda e: self.al_eliminar_etiqueta_seleccionada(), item_eliminar)
-
-        # Diagnóstico temporal (igual que en al_menu_contextual): deja
-        # constancia de si este método realmente se ejecuta y con qué
-        # ítems, para contrastarlo con lo que se ve/anuncia de verdad.
-        logger.warning(
-            "[PestanaBiblioteca] Menú contextual de etiquetas construido con %d ítems: %s "
-            "(etiqueta seleccionada=%s)",
-            len(menu.GetMenuItems()),
-            [item.GetItemLabelText() for item in menu.GetMenuItems()],
-            etiqueta["nombre"] if etiqueta else None,
-        )
 
         self.lista_etiquetas.PopupMenu(menu)
         menu.Destroy()
@@ -1398,16 +1375,6 @@ class PestanaBiblioteca(wx.Panel):
 
         item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")
         self.Bind(wx.EVT_MENU, lambda e: self._quitar_libro_seleccionado(), item_quitar)
-
-        # Diagnóstico temporal: deja constancia exacta de qué ítems se
-        # construyeron de verdad en este menú, para compararlo con lo que
-        # NVDA anuncia — quitar en cuanto se confirme la causa de que
-        # "Marcar como pendiente"/"leyendo ahora"/"leído" no aparezcan.
-        logger.warning(
-            "[PestanaBiblioteca] Menú contextual de libro construido con %d ítems: %s",
-            len(menu.GetMenuItems()),
-            [item.GetItemLabelText() for item in menu.GetMenuItems()],
-        )
 
         self.PopupMenu(menu)
         menu.Destroy()
