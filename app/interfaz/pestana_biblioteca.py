@@ -708,12 +708,17 @@ class PestanaBiblioteca(wx.Panel):
         if etiqueta is not None:
             libros_de_la_etiqueta = self.gestor.buscar_libros(id_etiqueta=etiqueta["id"])
             etiqueta_menu = f"Asignar categoría a los {len(libros_de_la_etiqueta)} libro(s) de esta etiqueta"
+            estado_menu = f"Marcar los {len(libros_de_la_etiqueta)} libro(s) de esta etiqueta como"
             if libros_de_la_etiqueta:
                 menu.AppendSubMenu(
                     self.construir_menu_asignar_categoria_masivo(libros_de_la_etiqueta), etiqueta_menu
                 )
+                menu.AppendSubMenu(
+                    self._construir_menu_marcar_estado_masivo(libros_de_la_etiqueta), estado_menu
+                )
             else:
                 menu.Append(wx.ID_ANY, etiqueta_menu).Enable(False)
+                menu.Append(wx.ID_ANY, estado_menu).Enable(False)
 
         menu.AppendSeparator()
 
@@ -1015,6 +1020,35 @@ class PestanaBiblioteca(wx.Panel):
         self.gestor.establecer_bandera(libro["id"], campo, nuevo_valor)
         mensaje = f"Marcado como {nombre_al_marcar}." if nuevo_valor else f"Quitado de {nombre_al_quitar}."
         self._anunciar(mensaje)
+        self._cargar_libros()
+
+    def _construir_menu_marcar_estado_masivo(self, libros) -> wx.Menu:
+        """
+        Submenú para marcar de golpe el estado de lectura de todos los
+        libros de una etiqueta — útil para quien lee varios libros de una
+        saga a la vez (marcar toda la saga como "leyendo ahora") o para
+        dar por terminada una saga completa de una sola vez.
+        """
+        menu = wx.Menu()
+        opciones = [
+            ("en_pendientes", "Pendiente", "pendientes"),
+            ("leyendo_ahora", "Leyendo ahora", "leyendo ahora"),
+            ("leido", "Leído", "leídos"),
+        ]
+        for campo, etiqueta_item, nombre_plural in opciones:
+            item = menu.Append(wx.ID_ANY, etiqueta_item)
+            self.Bind(
+                wx.EVT_MENU,
+                lambda e, c=campo, n=nombre_plural: self._marcar_estado_libros_masivo(libros, c, n),
+                item,
+            )
+        return menu
+
+    def _marcar_estado_libros_masivo(self, libros, campo, nombre_plural):
+        for libro in libros:
+            self.gestor.establecer_bandera(libro["id"], campo, True)
+        reproducir(SUCCESS)
+        self._anunciar(f"{len(libros)} libro(s) marcados como {nombre_plural}.")
         self._cargar_libros()
 
     def al_abrir_libro_seleccionado(self, evento=None):
