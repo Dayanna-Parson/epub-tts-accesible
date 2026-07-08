@@ -428,9 +428,13 @@ class PestanaBiblioteca(wx.Panel):
             codigo = evento.GetKeyCode()
             if codigo in (wx.WXK_UP, wx.WXK_DOWN, wx.WXK_LEFT, wx.WXK_RIGHT):
                 reproducir(LIST_NAV)
-            if evento.ControlDown() and codigo == wx.WXK_UP:
+            # EVT_TREE_KEY_DOWN entrega un wx.TreeEvent, no un wx.KeyEvent
+            # — ControlDown() vive en el KeyEvent real, que hay que sacar
+            # aparte con GetKeyEvent().
+            ctrl = evento.GetKeyEvent().ControlDown()
+            if ctrl and codigo == wx.WXK_UP:
                 self._mover_categoria_seleccionada(-1)
-            elif evento.ControlDown() and codigo == wx.WXK_DOWN:
+            elif ctrl and codigo == wx.WXK_DOWN:
                 self._mover_categoria_seleccionada(1)
             elif codigo == wx.WXK_F2:
                 if self._categoria_seleccionada_id() is not None:
