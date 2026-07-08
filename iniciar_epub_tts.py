@@ -194,9 +194,12 @@ except Exception as _e:
 
 def _manejador_excepcion_global(tipo, valor, traza):
     """Excepción no capturada en el hilo principal."""
+    # No se llama a sys.__excepthook__ tras logger.critical: ese logger ya
+    # imprime el traceback en consola (vía _handler_consola) y lo escribe en
+    # app.log, así que reenviarlo al excepthook original duplicaba el mismo
+    # traceback una segunda vez, en crudo y sin la cabecera "CRASH NO CONTROLADO".
     mensaje = "".join(traceback.format_exception(tipo, valor, traza))
     logger.critical("CRASH NO CONTROLADO:\n%s", mensaje)
-    sys.__excepthook__(tipo, valor, traza)
 
 
 def _manejador_excepcion_hilo(args):
