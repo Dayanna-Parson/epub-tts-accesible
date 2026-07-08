@@ -112,9 +112,24 @@ class PestanaBiblioteca(wx.Panel):
         self._timer_progreso = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.al_temporizador_progreso, self._timer_progreso)
 
+        # Copia de seguridad de biblioteca.db una vez por sesión, en un
+        # hilo de fondo (comprimir cientos/miles de libros puede tardar
+        # y no debe congelar el arranque de la pestaña).
+        threading.Thread(
+            target=self._crear_backup_biblioteca_en_hilo, daemon=True
+        ).start()
+
         wx.CallAfter(self._cargar_arbol_categorias)
         wx.CallAfter(self._cargar_lista_etiquetas)
         wx.CallAfter(self._cargar_libros)
+
+    @staticmethod
+    def _crear_backup_biblioteca_en_hilo():
+        try:
+            from app.motor.gestor_backups import crear_backup_biblioteca
+            crear_backup_biblioteca()
+        except Exception:
+            logger.exception("[PestanaBiblioteca] Fallo al crear backup de biblioteca.db")
 
     # ── Construcción de la interfaz ─────────────────────────────────────────
 
@@ -447,13 +462,20 @@ class PestanaBiblioteca(wx.Panel):
             pass
 
     def _mover_categoria_seleccionada(self, direccion):
+        # Mismo patrón que _mover_nodo() en ventana_proyectos.py: sonido
+        # direccional (no un SUCCESS genérico) y anuncio con el nombre de
+        # lo movido, no solo "movido" a secas.
         id_categoria = self._categoria_seleccionada_id()
         if id_categoria is None:
             self._anunciar("Selecciona primero un género o subgénero para moverlo.")
             return
+        nombre = self.gestor.obtener_ruta_categoria(id_categoria)[-1]
         if self.gestor.mover_categoria(id_categoria, direccion):
-            reproducir(SUCCESS)
+            reproducir(MOVE_UP if direccion < 0 else MOVE_DOWN)
             self._cargar_arbol_categorias(id_categoria_seleccionar=id_categoria)
+            texto_direccion = "arriba" if direccion < 0 else "abajo"
+            self._anunciar(f"{nombre} movido {texto_direccion}.")
+            self._voz.hablar(f"{nombre} movido {texto_direccion}.")
         else:
             self._anunciar("Ya está en ese extremo, no se puede mover más.")
 

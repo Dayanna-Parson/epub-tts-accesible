@@ -75,4 +75,48 @@ def listar_backups() -> list:
         )
     except Exception:
         return []
+
+
+def crear_backup_biblioteca():
+    """
+    Copia de seguridad de biblioteca.db, con el mismo historial rotativo
+    (últimas _MAX_BACKUPS) que ya usan los proyectos. A diferencia de
+    proyectos.json (que se respalda en cada guardar() por ser pequeño),
+    esta se llama solo una vez por sesión, al arrancar la pestaña
+    Biblioteca — con cientos o miles de libros, comprimir la base de
+    datos entera en cada escritura individual (cada libro añadido, cada
+    cambio de estado...) sería demasiado costoso.
+    """
+    ruta_db = ruta_config("biblioteca.db")
+    if not os.path.exists(ruta_db):
+        return
+
+    try:
+        os.makedirs(_DIR_BACKUPS, exist_ok=True)
+        marca = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        nombre_zip = f"biblioteca_{marca}.zip"
+        ruta_zip = os.path.join(_DIR_BACKUPS, nombre_zip)
+        ruta_tmp = ruta_zip + ".tmp"
+
+        with zipfile.ZipFile(ruta_tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.write(ruta_db, arcname="biblioteca.db")
+
+        os.replace(ruta_tmp, ruta_zip)
+        _rotar_backups_antiguos_biblioteca()
+        logger.info("[Backups] Copia de biblioteca.db creada: %s", nombre_zip)
+
+    except Exception:
+        logger.exception("[Backups] Error al crear copia de seguridad de biblioteca.db")
+
+
+def _rotar_backups_antiguos_biblioteca():
+    try:
+        archivos = sorted(
+            f for f in os.listdir(_DIR_BACKUPS)
+            if f.startswith("biblioteca_") and f.endswith(".zip")
+        )
+        while len(archivos) > _MAX_BACKUPS:
+            os.remove(os.path.join(_DIR_BACKUPS, archivos.pop(0)))
+    except Exception:
+        logger.exception("[Backups] Error al rotar backups antiguos de biblioteca.db")
 # ANCLAJE_FIN: GESTOR_BACKUPS

@@ -77,10 +77,14 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
 
 # ANCLAJE_INICIO: PANEL_GENERAL
 class PanelGeneral(wx.ScrolledWindow):
-    def __init__(self, padre, config):
+    def __init__(self, padre, config, pestana_ajustes=None):
         super().__init__(padre, style=wx.VSCROLL)
         self.SetScrollRate(0, 20)
         self.config = config
+        # wx.GetTopLevelParent(self) llega hasta ventana_principal (el Frame),
+        # no hasta PestanaAjustes (un wx.Panel intermedio) — por eso se guarda
+        # aquí una referencia directa, en vez de subir por la jerarquía de ventanas.
+        self._pestana_ajustes = pestana_ajustes
         from app.motor.control_cuota import ControlCuota
         self.cuota = ControlCuota()
 
@@ -261,11 +265,17 @@ class PanelGeneral(wx.ScrolledWindow):
         self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
             self.combo_idioma_libro.GetSelection(), "es-ES"
         )
-        padre = wx.GetTopLevelParent(self)
-        if hasattr(padre, "guardar_config_en_archivo"):
-            padre.guardar_config_en_archivo()
+        if self._pestana_ajustes is not None:
+            self._pestana_ajustes.guardar_config_en_archivo()
 
-    def guardar_todo(self):
+    def sincronizar_config(self):
+        """Vuelca en self.config el valor actual de todos los controles del panel.
+
+        Se llama tanto desde el botón «Guardar» (guardar_todo) como desde
+        Ctrl+S (PestanaAjustes._al_guardar_global), para que la casilla de
+        actualizaciones y el resto de campos queden reflejados en self.config
+        aunque el usuario nunca haya pulsado el botón «Guardar» de este panel.
+        """
         self.config["segundos_salto"] = self.txt_salto.GetValue()
         self.config["pausa_entre_fragmentos_ms"] = self.spin_pausa.GetValue()
         self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
@@ -276,9 +286,11 @@ class PanelGeneral(wx.ScrolledWindow):
         self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
             self.combo_idioma_libro.GetSelection(), "es-ES"
         )
-        padre = wx.GetTopLevelParent(self)
-        if hasattr(padre, "guardar_config_en_archivo"):
-            padre.guardar_config_en_archivo()
+
+    def guardar_todo(self):
+        self.sincronizar_config()
+        if self._pestana_ajustes is not None:
+            self._pestana_ajustes.guardar_config_en_archivo()
         if hasattr(self, "txt_limites"):
             for clave, txt in self.txt_limites.items():
                 val = txt.GetValue()
@@ -1836,7 +1848,7 @@ class PestanaAjustes(wx.Panel):
         # --- Simplebook de habitaciones (inicialización temprana: evita punteros nulos) ---
         self.panel_derecho = wx.Simplebook(self.splitter)
 
-        self.pag_general     = PanelGeneral(self.panel_derecho, self.config)
+        self.pag_general     = PanelGeneral(self.panel_derecho, self.config, pestana_ajustes=self)
         self.pag_claves      = PanelClaves(self.panel_derecho, self.config)
         self.pag_azure       = PanelAzure(self.panel_derecho, self.config)
         self.pag_deepgram    = PanelDeepgram(self.panel_derecho, self.config)
@@ -1887,6 +1899,8 @@ class PestanaAjustes(wx.Panel):
     def _al_guardar_global(self, evento=None):
         """Ctrl+S: guarda las claves de PanelGeneral y sincroniza el slider de lectura."""
         try:
+            if hasattr(self, "pag_general"):
+                self.pag_general.sincronizar_config()
             ruta = self.ruta_config
             try:
                 with open(ruta, "r", encoding="utf-8") as f:
