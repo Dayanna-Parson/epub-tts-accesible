@@ -4,7 +4,7 @@ Este documento lo escribo yo misma para cualquier desarrollador o desarrolladora
 
 No pretende sustituir al código, pero sí evitar que tengas que abrirlo todo el rato para entender qué está pasando.
 
-<{tag_name}>
+---
 
 ### 1. Punto de partida y contexto
 
@@ -12,7 +12,7 @@ Esta aplicación es una app de escritorio para Windows, escrita en Python, pensa
 
 Está diseñada desde el principio para ser usable por personas ciegas, porque yo lo soy. Esto no es un añadido posterior: condiciona toda la app. La estructura, la interfaz, los flujos y muchas decisiones técnicas parten de cómo se usa un lector de pantalla en la práctica, durante sesiones largas de trabajo.
 
-<{tag_name}>
+---
 
 ### 2. Qué problema intenta resolver realmente
 
@@ -32,7 +32,7 @@ editar después en Reaper.
 
 La app nace para unificar y simplificar todo eso en un entorno de escritorio accesible.
 
-<{tag_name}>
+---
 
 ### 3. Vista general de la interfaz
 
@@ -40,7 +40,7 @@ La aplicación se organiza visualmente en tres pestañas, porque es la forma má
 
 Modo Lectura
 
-Modo Grabación (pendiente)
+Modo Grabación
 
 Ajustes
 
@@ -48,7 +48,7 @@ Además, hay un menú superior desde el que se accede a acciones generales como 
 
 La idea es que el usuario siempre sepa dónde está y qué puede hacer en cada momento, sin menús ocultos ni flujos confusos.
 
-<{tag_name}>
+---
 
 ### 4. Modo Lectura: qué ve y qué puede hacer el usuario
 
@@ -82,7 +82,7 @@ Libros recientes: desde el menú Archivo se pueden abrir los últimos libros usa
 
 La lectura se concibe como una experiencia continua, no como un simple botón de play.
 
-<{tag_name}>
+---
 
 ### 5. EPUB como base
 
@@ -108,7 +108,7 @@ mapea posiciones reales del texto.
 
 La interfaz nunca trabaja directamente con HTML crudo.
 
-<{tag_name}>
+---
 
 ### 6. El reproductor: núcleo de la app
 
@@ -126,7 +126,7 @@ asegurar que nunca se quede la app en silencio.
 
 El reproductor no conoce ni la interfaz ni el EPUB. Recibe texto y lo envía al motor correspondiente.
 
-<{tag_name}>
+---
 
 ### 7. Motores de síntesis de voz y su papel
 
@@ -144,7 +144,7 @@ Deepgram Aura-2: motor REST puro, pay-as-you-go. Recomendado como alternativa pr
 
 Si falla una API o no hay conexión, la app pasa automáticamente a voz local.
 
-<{tag_name}>
+---
 
 ### 8. Gestor de voces, favoritos y filtros
 
@@ -172,7 +172,7 @@ texto de búsqueda,
 
 favoritas.
 
-<{tag_name}>
+---
 
 ### 9. Control de cuota y costes
 
@@ -190,7 +190,7 @@ cambia automáticamente a voz local.
 
 Esto evita consumos inesperados y errores por exceso de peticiones.
 
-<{tag_name}>
+---
 
 ### 10. Ajustes
 
@@ -210,7 +210,7 @@ limpieza de caché.
 
 Toda la configuración se guarda en archivos JSON locales.
 
-<{tag_name}>
+---
 
 ### 11. Librerías utilizadas y por qué
 
@@ -236,13 +236,13 @@ BeautifulSoup: limpieza del HTML del EPUB.
 
 Dependencias técnicas internas (como h2) se mantienen en requirements, pero no son relevantes a nivel conceptual.
 
-<{tag_name}>
+---
 
 ### 12. Versión de Python
 
 La app se ha desarrollado y probado con Python 3.12.x en Windows. No se garantiza compatibilidad con versiones anteriores.
 
-<{tag_name}>
+---
 
 ### 13. Idioma del código
 
@@ -258,7 +258,7 @@ hace el código más legible,
 
 es coherente con la interfaz.
 
-<{tag_name}>
+---
 
 ### 14. Qué no forma parte del proyecto
 
@@ -268,7 +268,7 @@ No se clonan voces.
 
 No se intenta eludir límites de servicios TTS.
 
-<{tag_name}>
+---
 
 ### 15. Estado actual del proyecto
 
@@ -310,9 +310,25 @@ lectura sin pausas entre fragmentos de nube (modo_cola en cargar_texto()).
 
 nivel de consola elevado a WARNING: los mensajes de arranque no aparecen en la terminal ni son verbalizados por NVDA.
 
+Añadido en versiones posteriores (hasta v2.0.0):
+
+Gestor de Proyectos independiente, con árbol jerárquico, multicategoría, papelera y acceso directo a la carpeta de grabaciones con `Ctrl+Intro`,
+
+Divisor de EPUB integrado por capítulos, sin depender de herramientas externas,
+
+12 sonidos contextuales con doble motor (`wx.adv.Sound` y `winsound` de respaldo),
+
+soporte de voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante un proceso puente de 32 bits,
+
+navegación semántica por encabezados (`H` / `Shift+H`) y patrón `_anunciador` para verbalizaciones inmediatas sin mover el foco,
+
+árbol de navegación en Ajustes (`wx.TreeCtrl`), sustituyendo la disposición lineal anterior,
+
+sistema de actualizaciones automáticas completo (Script Clon): descarga, sustitución de archivos y reinicio sin perder configuración ni grabaciones.
+
 Nada pendiente en las funciones esenciales.
 
-<{tag_name}>
+---
 
 ### 16. Si vas a tocar el código
 
