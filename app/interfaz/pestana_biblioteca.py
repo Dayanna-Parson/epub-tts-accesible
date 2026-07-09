@@ -15,7 +15,7 @@ from app.motor.renombrador_biblioteca import (
     relocalizar_libro,
     reconciliar_carpeta_movida,
 )
-from app.interfaz.dialogos import DialogoArchivoNoEncontrado
+from app.interfaz.dialogos import DialogoArchivoNoEncontrado, DialogoAgruparCarpetas
 from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.reproductor_sonidos import (
     reproducir, SUCCESS, ERROR, LIST_NAV, MOVE_UP, MOVE_DOWN, CLEAR,
@@ -889,31 +889,55 @@ class PestanaBiblioteca(wx.Panel):
             self._voz.hablar(f"Procesando... {procesados} de {total} libros.")
 
     def _al_detectar_carpetas_agrupables(self, carpetas_candidatas: dict):
+        evaluadas = self._cargar_carpetas_evaluadas()
+        candidatas_nuevas = {
+            carpeta: titulos
+            for carpeta, titulos in carpetas_candidatas.items()
+            if os.path.normpath(carpeta) not in evaluadas
+        }
+        if not candidatas_nuevas:
+            return
+
         nombres_sugeridos = {
             carpeta: os.path.basename(os.path.normpath(carpeta))
-            for carpeta in carpetas_candidatas
+            for carpeta in candidatas_nuevas
         }
-        mensaje = "Se detectaron carpetas con varios libros. ¿Agrupar cada una con una etiqueta?\n\n"
-        mensaje += "\n".join(
-            f"· {nombres_sugeridos[carpeta]} ({len(titulos)} libros)"
-            for carpeta, titulos in carpetas_candidatas.items()
-        )
-        if wx.MessageBox(mensaje, "Agrupar por carpeta", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
-            # Entre que se confirma y se termina de etiquetar puede pasar un
-            # rato perceptible con muchas carpetas — sin este aviso, NVDA se
-            # queda en silencio y parece que la app se ha colgado. El
-            # etiquetado en sí se hace en un hilo de fondo (ver
-            # _agrupar_carpetas_en_hilo) para no bloquear la interfaz.
-            self._voz.hablar("Aplicando etiquetas, por favor espera...")
-            self._ultima_etiqueta_creada = next(iter(nombres_sugeridos.values()), None)
-            threading.Thread(
-                target=self._agrupar_carpetas_en_hilo,
-                args=(dict(carpetas_candidatas), dict(nombres_sugeridos)),
-                name="agrupar_por_carpeta",
-                daemon=True,
-            ).start()
-        else:
+        dlg = DialogoAgruparCarpetas(self, candidatas_nuevas, nombres_sugeridos)
+        resultado_modal = dlg.ShowModal()
+        if resultado_modal != wx.ID_OK:
+            # Diálogo cancelado por completo: no se registra ninguna
+            # carpeta como evaluada, se volverá a preguntar la próxima vez.
             self._ultima_etiqueta_creada = None
+            dlg.Destroy()
+            return
+
+        # Las carpetas mostradas (marcadas o no) quedan registradas como
+        # evaluadas: no se vuelve a preguntar por ellas en futuros
+        # escaneos, se hayan agrupado o no (sección 2.3.1).
+        self._marcar_carpetas_evaluadas(dlg.carpetas_mostradas)
+        carpetas_a_agrupar = dlg.resultado
+        dlg.Destroy()
+
+        if not carpetas_a_agrupar:
+            self._ultima_etiqueta_creada = None
+            return
+
+        # Entre que se confirma y se termina de etiquetar puede pasar un
+        # rato perceptible con muchas carpetas — sin este aviso, NVDA se
+        # queda en silencio y parece que la app se ha colgado. El
+        # etiquetado en sí se hace en un hilo de fondo (ver
+        # _agrupar_carpetas_en_hilo) para no bloquear la interfaz.
+        self._voz.hablar("Aplicando etiquetas, por favor espera...")
+        self._ultima_etiqueta_creada = next(iter(carpetas_a_agrupar.values()), None)
+        threading.Thread(
+            target=self._agrupar_carpetas_en_hilo,
+            args=(
+                {carpeta: candidatas_nuevas[carpeta] for carpeta in carpetas_a_agrupar},
+                carpetas_a_agrupar,
+            ),
+            name="agrupar_por_carpeta",
+            daemon=True,
+        ).start()
 
     def _agrupar_carpetas_en_hilo(self, carpetas_candidatas: dict, nombres_sugeridos: dict):
         """
@@ -1506,4 +1530,36 @@ class PestanaBiblioteca(wx.Panel):
             os.replace(ruta_temporal, ruta)
         except Exception:
             logger.exception("[PestanaBiblioteca] No se pudo guardar la última carpeta importada")
+
+    # ANCLAJE_INICIO: CARPETAS_AGRUPACION_EVALUADAS
+    _RUTA_CARPETAS_EVALUADAS = staticmethod(lambda: ruta_config("carpetas_agrupacion_evaluadas.json"))
+
+    def _cargar_carpetas_evaluadas(self) -> set:
+        """
+        Carpetas que ya se ofrecieron para agrupar por saga (aceptadas o
+        descartadas explícitamente), para no volver a preguntar por ellas
+        en escaneos posteriores (sección 2.3.1 de la planificación v3.0).
+        """
+        try:
+            ruta = self._RUTA_CARPETAS_EVALUADAS()
+            if os.path.exists(ruta):
+                with open(ruta, "r", encoding="utf-8") as f:
+                    return set(json.load(f))
+        except Exception:
+            logger.exception("[PestanaBiblioteca] No se pudo leer carpetas_agrupacion_evaluadas.json")
+        return set()
+
+    def _marcar_carpetas_evaluadas(self, carpetas):
+        try:
+            ruta = self._RUTA_CARPETAS_EVALUADAS()
+            evaluadas = self._cargar_carpetas_evaluadas()
+            evaluadas.update(os.path.normpath(carpeta) for carpeta in carpetas)
+            os.makedirs(CONFIG_DIR, exist_ok=True)
+            ruta_temporal = ruta + ".tmp"
+            with open(ruta_temporal, "w", encoding="utf-8") as f:
+                json.dump(sorted(evaluadas), f, ensure_ascii=False, indent=4)
+            os.replace(ruta_temporal, ruta)
+        except Exception:
+            logger.exception("[PestanaBiblioteca] No se pudo guardar carpetas_agrupacion_evaluadas.json")
+    # ANCLAJE_FIN: CARPETAS_AGRUPACION_EVALUADAS
 # ANCLAJE_FIN: DEFINICION_PESTANA_BIBLIOTECA

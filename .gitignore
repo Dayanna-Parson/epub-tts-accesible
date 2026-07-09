@@ -31,6 +31,7 @@ configuraciones/teclas_usuario.json
 configuraciones/voces_disponibles.json
 configuraciones/voces_conocidas.json
 configuraciones/voces_ultima_comprobacion.json
+configuraciones/carpetas_agrupacion_evaluadas.json
 # Nombres legacy (anterior al esquema de migración)
 configuraciones/config_general.json
 configuraciones/voces_favoritas.json
