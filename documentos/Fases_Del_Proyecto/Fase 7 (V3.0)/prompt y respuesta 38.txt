@@ -1,0 +1,17 @@
+prompt y respuesta 38
+
+malas noticias. sigue diciendo la 0 y 58 no ha habido ningún cambio, y no me a dado ningún error.  Y en las propiedades, la casilla de solo lectura está desmarcada
+Respuesta:
+Si el atributo de solo lectura ya estaba desmarcado y aun así nada se escribe, entonces sospecho que no es un problema del archivo — es que **la app que estás usando ahora mismo sigue siendo un proceso viejo**, arrancado antes de que yo añadiera esas líneas de diagnóstico al código. Un proceso ya en marcha nunca ve los cambios de un archivo aunque hagas `git pull` — solo los ve si lo cierras del todo y lo vuelves a abrir.
+
+¿Puedes hacer esto, en este orden exacto?
+
+1. Cierra la ventana de la app (si tienes una consola negra abierta de cuando la lanzaste, ciérrala también).
+2. Abre el Administrador de tareas y comprueba que no quede ningún proceso `python.exe` ni `pythonw.exe` relacionado con esto — si ves alguno, termínalo.
+3. Abre una consola **nueva** (no reutilices una vieja) y confirma que estás en la carpeta correcta.
+4. Ejecuta `git pull` ahí mismo y confírmame qué commit trae (el mensaje que imprime al final).
+5. Arranca la app desde esa misma consola nueva con `python iniciar_epub_tts.py`.
+6. Haz la prueba de los dos menús (Shift+F10 en el árbol de géneros y en el listado de etiquetas).
+7. Comprueba otra vez la fecha de modificación de `app.log` antes de mandármelo.
+
+Si after this la fecha sigue sin moverse ni un segundo, dime exactamente qué mensaje te dio el `git pull` (para confirmar que de verdad trajo cambios) y seguimos desde ahí.

@@ -1,0 +1,123 @@
+Prompt Y respuesta claude 3
+
+me gusta, hagamos ambas
+Mostrar acciones del mensaje
+Claude ha respondido: Módulo de limpieza de PDF (limpiadorpdf.
+Módulo de limpieza de PDF (limpiador_pdf.py, hermano de limpiador_lectura.py)
+Flujo: pdfplumber extrae texto página a página → pasa por un filtro de normalización antes de entrar a la tubería común de audio.
+Reglas del filtro, en orden:
+1. Detección de cabeceras/pies repetidos: durante la extracción, se guarda la primera y última línea de cada página en una lista temporal. Si una misma línea (o una muy similar, normalizando espacios/números) aparece en ≥ 70% de las páginas, se marca como cabecera/pie fijo y se descarta en todas las páginas siguientes. Esto captura títulos de capítulo repetidos en cada página y nombres de colección tipo "TifloTutos — Manual v3".
+2. Números de página sueltos: una línea que sea solo dígitos (o dígitos + guiones tipo "- 124 -") al principio o final de página se descarta directamente, sin necesidad de heurística de repetición.
+3. Unión de líneas rotas: si una línea no termina en . ! ? : ; ni en cierre de comillas/paréntesis, se asume que la frase continúa en la siguiente línea y se concatena con un espacio (no con salto de línea). Caso especial: si termina en guion de partición de palabra (ilusi- al final de línea), se une sin espacio y sin el guion.
+4. Notas al pie: líneas que empiezan por un número seguido de espacio y aparecen físicamente al final de la página, separadas del cuerpo por un salto notable, se extraen aparte y no se insertan en el flujo de lectura principal (se podrían guardar en metadatos_json como referencia, pero no se leen en voz).
+5. Salida: el texto limpio resultante, por página, se concatena en un único bloque de texto por capítulo/documento y se entrega a la misma tubería que ya usa limpiador_lectura.py para EPUB — mismo punto de entrada, mismo diccionario_pronunciacion.py, mismo motor de voz.
+Nota de arquitectura: el escaneo de PDF en la Biblioteca (paso 5 del escáner) solo extrae metadatos ligeros (título si existe en el PDF, o nombre de archivo como fallback, número de páginas). La limpieza pesada con pdfplumber completa solo se ejecuta cuando el usuario abre el libro en la pestaña Lectura o lo manda al Creador de Audiolibros — no durante el escaneo masivo, para no bloquear la importación de 500 archivos.
+Flujo de re-enrutado (archivo movido/borrado)
+1. Usuario pulsa Enter sobre un libro en la lista de la Biblioteca.
+2. Antes de cambiar de pestaña: os.path.exists(ruta_archivo) — comprobación instantánea, en el hilo principal (es una llamada de sistema, no I/O pesado de red).
+3. Si True: flujo normal — oculta Biblioteca, activa Lectura, carga ultimo_punto_lectura, foco al área de lectura.
+4. Si False: se dispara dialogo_localizar_manualmente (nuevo diálogo modal, siguiendo el patrón de tus diálogos en dialogos.py):
+• Anuncia con NVDA: "No se encontró el archivo en su ubicación original. Selecciona la nueva ubicación o elimina el libro de la biblioteca."
+• Dos botones accesibles: Localizar archivo (abre wx.FileDialog filtrado por la extensión original) y Eliminar de la biblioteca.
+• Si el usuario localiza el archivo: se valida que el nombre de archivo coincida razonablemente (mismo nombre exacto, o se avisa "el nombre no coincide, ¿continuar de todas formas?" para evitar que enlace el libro equivocado por error).
+• UPDATE libros SET ruta_archivo = ? WHERE id = ? y continúa el flujo normal de apertura sin que el usuario tenga que repetir la acción de pulsar Enter.
+• Si el usuario cancela el diálogo sin elegir ninguna opción: vuelve el foco a la lista de libros en Biblioteca, sin cambios.
+5. Caso adicional a contemplar: re-enrutado por lotes. Si el usuario movió una carpeta entera (no un solo libro), cada libro dispararía el diálogo uno por uno — tedioso con muchos archivos. Mejor diseño: al fallar la primera comprobación, ofrecer también un tercer botón "Volver a escanear una carpeta" que reutiliza el flujo del escáner (paso 4 de antes) pero esta vez casando por nombre de archivo en vez de por ruta completa, para reconciliar rutas movidas en bloque sin re-preguntar libro por libro.
+¿Seguimos con el Creador de Audiolibros y el calculador de presupuesto (Fase B), o prefieres cerrar antes el diseño de la pestaña Biblioteca al completo (menús contextuales, atajos, orden de tabulación exacto)?
+Mostrar acciones del mensaje
+Has dicho: ambas, sigue así, me gusta como está quedando!
+ambas, sigue así, me gusta como está quedando!
+Mostrar acciones del mensaje
+Claude ha respondido: Pestaña Biblioteca — diseño completo de interfaz
+Pestaña Biblioteca — diseño completo de interfaz
+Estructura de controles (orden de tabulación):
+1. TextCtrl de filtro rápido (Ctrl+F le da foco desde cualquier punto de la pestaña) — filtra en vivo por título/autor mientras escribes, sin necesidad de Enter.
+2. Casillas de filtro rápido en fila: Favoritos, Pendientes, Leyendo ahora, Leídos — checkboxes independientes, combinables (AND lógico entre las marcadas), anuncian "marcado/desmarcado" al navegar con flechas según tu checklist NVDA.
+3. TreeCtrl de categorías/etiquetas (panel izquierdo) — nodo raíz "Todos los libros", hijos = categorías, y una rama aparte "Etiquetas" con las sagas/colecciones. Mover con flechas filtra la lista automáticamente sin necesidad de Enter.
+4. ListCtrl en modo reporte (panel derecho, control principal) — columnas: Título, Autor, Formato, Estado. Orden por defecto: alfabético por título; Ctrl+Flecha en cabecera de columna reordena (patrón estándar wx).
+Atajos específicos de la pestaña:
+• Enter sobre un libro → abre en Lectura (o dispara re-enrutado si falta el archivo).
+• Ctrl+I (reutilizando tu patrón existente) → anuncia con _anunciador los metadatos completos del libro seleccionado sin moverse de la lista: "El juego de Ender, Orson Scott Card, EPUB, 40% leído".
+• Supr → quita el libro de la biblioteca (con diálogo de confirmación, nunca borra el archivo físico del disco — solo el registro en SQLite).
+• F5 → re-escanea la carpeta de origen del libro seleccionado (sirve como acceso directo al flujo de re-enrutado por lotes).
+• Ctrl+Shift+F → marca/desmarca favorito sobre el libro seleccionado sin salir de la lista.
+• Ctrl+N → importar carpeta nueva (dispara el escáner).
+Menú contextual (clic derecho / tecla Menú) sobre un libro:
+Abrir en Lectura · Enviar a Creador de Audiolibros · Marcar como favorito/pendiente/leyendo/leído · Añadir a etiqueta... (submenú con etiquetas existentes + "Nueva etiqueta") · Localizar archivo manualmente · Quitar de la biblioteca.
+Este último ítem — "Enviar a Creador de Audiolibros" — es el puente directo que resuelve el punto de flujo que señaló Gemini: no hace falta que las pestañas Biblioteca y Creador estén adyacentes en el notebook si hay una acción explícita que salta de una a otra llevando el libro seleccionado.
+ 
+Fase B — Creador de Audiolibros + calculador de presupuesto
+Entrada a la pestaña: o bien navegando manualmente y abriendo un EPUB/PDF con Ctrl+O, o bien llegando desde Biblioteca vía "Enviar a Creador de Audiolibros" (precarga el libro automáticamente).
+Controles principales:
+1. Info del libro cargado (solo lectura, anunciado al cargar).
+2. Selector de modo: Libro completo (un solo MP3) / Por capítulos (un MP3 por capítulo) — reutiliza tu troceador_epub.py existente para la segunda opción.
+3. Selector de voz/proveedor (mismo control que ya tienes en Grabación).
+4. Botón Calcular presupuesto — no automático, bajo demanda, para no lanzar cálculos pesados cada vez que cambias una opción.
+5. Botón Iniciar exportación (se habilita solo tras calcular presupuesto al menos una vez con la configuración actual).
+Flujo del calculador de presupuesto:
+1. Al pulsar "Calcular presupuesto", un hilo secundario recorre el texto ya limpio (EPUB vía limpiador_lectura.py, PDF vía el nuevo limpiador_pdf.py) y cuenta caracteres totales, sin generar audio.
+2. Aplica la tarifa por carácter/millón del proveedor seleccionado (tabla de tarifas ya existente en control_cuota.py o similar).
+3. Un único wx.MessageDialog (no 30 alertas por capítulo) con desglose:
+• Caracteres totales.
+• Coste estimado total.
+• Si es por capítulos: coste medio por capítulo (no un listado de 30 líneas — demasiado ruido).
+• Aviso si el coste o los caracteres superan el límite de cuota mensual configurado en Ajustes (control_cuota.py), con opción de continuar o cancelar.
+4. NVDA lo anuncia una sola vez al abrirse el diálogo modal (comportamiento nativo de ShowModal()), foco en el botón "Continuar" por defecto.
+5. Si el usuario confirma, arranca la exportación real en hilo de fondo, reutilizando la cola TTS y caché ya existentes en reproductor_voz.py — el Creador de Audiolibros no reinventa el motor de voz, solo orquesta llamadas por capítulo/documento completo.
+Progreso durante la exportación (aquí sí aplican los anuncios automáticos, como cerramos antes): NVDA anuncia por hitos — "Capítulo 3 de 12 completado" — no por página ni por carácter. Barra de progreso visual (wx.Gauge) en paralelo, actualizada vía wx.CallAfter desde el hilo de exportación.
+Nomenclatura de salida: reutiliza tu convención ya definida — 1. Capítulo uno.mp3, 2. Capítulo dos.mp3, o si es libro completo, Título del libro.mp3. Mismo estándar de 44100 Hz mono 320kbps que ya tienes fijado.
+¿Seguimos con la pestaña Asistente Gemini de Biblioteca (punto 5 de tu lista) o con el actualizador con ejecutable auxiliar precompilado?
+Mostrar acciones del mensaje
+Has dicho: me encanta!
+me encanta! pero, que pasa si en el probedor seleccionado, pues no queda lo suficiente para grabar, ya sea el capítulo o el libro completo? se me ocurre, que podría mirar, cual es la mas cercana, que tiene la cuota necesaria para grabar según la opción o el modo seleccionado!!! Y si, haz ambas
+Mostrar acciones del mensaje
+Claude ha respondido: Perfecto, esto ya me da justo lo que necesito: tiene_cuota(texto, proveedor) existe y es exactamente la pieza para construir el buscador de proveedor alternati…
+Leercontrol_cuota.py
+Perfecto, esto ya me da justo lo que necesito: tiene_cuota(texto, proveedor) existe y es exactamente la pieza para construir el buscador de proveedor alternativo.
+Ampliación del calculador de presupuesto: sugerencia automática de proveedor con cuota suficiente
+Dónde encaja: en el paso 2 del calculador de presupuesto (Fase B), justo después de calcular caracteres totales y antes de mostrar el diálogo de confirmación.
+Lógica de diseño:
+1. Se calcula caracteres_totales del libro/capítulo ya limpio (una sola vez, reutilizado para todos los proveedores — no se repite el conteo).
+2. Se consulta control_cuota.tiene_cuota(texto, proveedor_seleccionado). Si True, flujo normal: diálogo de presupuesto de siempre.
+3. Si False (cuota insuficiente para el proveedor elegido):
+• Se recorre la lista de proveedores de nube disponibles (los que tienen clave API configurada en claves_api.json, vía cargar_claves()) en un orden fijo de preferencia calidad→coste (por ejemplo: el mismo proveedor no cuenta, luego el resto en el orden que definas en Ajustes o uno por defecto).
+• Para cada uno, tiene_cuota(texto, proveedor) — el primero que devuelva True es la "alternativa más cercana con cuota suficiente".
+• Voz local/local_32 siempre tiene cuota infinita (999999999 en tu limites_defecto), así que siempre existe una alternativa en el peor caso — nunca se llega a un callejón sin salida.
+4. Diálogo de aviso (mismo patrón visual que tu "Escudo de Presupuesto Activo" ya existente en verificar_y_registrar, pero como decisión previa, no como corte a mitad de lectura):
+• "El proveedor Azure no tiene cuota suficiente para grabar este capítulo (necesita 45.000 caracteres, quedan 12.000). ¿Deseas usar Amazon Polly en su lugar (tiene cuota suficiente), o prefieres continuar con Azure y dividir la grabación en dos partes, usar la voz local, o cancelar?"
+• Opciones en el diálogo: Usar [proveedor alternativo sugerido] · Usar voz local · Dividir en partes que sí quepan en la cuota actual · Cancelar.
+5. Si elige "Dividir en partes": se calcula cuántos caracteres caben en la cuota restante, se corta el capítulo en el límite de frase más cercano (nunca a mitad de palabra), y se genera esa primera parte ahora; el resto queda marcado como pendiente para el próximo mes o para cuando amplíe cuota — reutilizando el mismo estado que ya usas para exportaciones parciales, si existe, o como nuevo estado parcial en el registro de exportación.
+6. Una vez resuelto, continúa al diálogo de presupuesto normal ya con el proveedor definitivo, mostrando el coste con ese proveedor corregido.
+Por qué antes del diálogo de presupuesto y no durante la exportación: así el usuario decide una sola vez, con toda la información, en vez de que la exportación se corte a mitad de camino (como hoy hace el escudo de presupuesto en lectura en vivo) — para un audiolibro completo eso sería muy frustrante, perder el trabajo ya hecho de 8 capítulos por quedarte sin cuota en el 9.
+ 
+Asistente Gemini de Biblioteca
+Ubicación: accesible con Ctrl+G desde la pestaña Biblioteca, abre un diálogo/panel de chat (no una pestaña nueva del notebook, para no romper tu estructura de 5 pestañas fijas).
+Diseño de datos:
+• Nueva tabla o archivo — aquí aplica tu propia regla ya asentada con Gemini: esto es un historial de conversación, pequeño, que no se consulta con filtros complejos → JSON ligero, no SQLite. Por libro, o global: configuraciones/chat_biblioteca.json, con estructura { "id_libro": [ {rol, texto, fecha}, ... ] }.
+• El contexto que se envía a la API de Gemini por cada consulta: título, autor, categoría/etiquetas y leido/en_pendientes/leyendo_ahora del libro activo (si el chat se abre con un libro seleccionado en la lista), más el historial reciente de esa conversación. No se manda el texto completo del libro (coste y limpieza innecesarios) — si el usuario quiere hablar del contenido, que lo mencione él mismo en el chat.
+Flujo de interfaz:
+1. Ctrl+G con un libro seleccionado en la lista → abre el diálogo con contexto de ese libro precargado, anunciado: "Asistente de biblioteca. Hablando sobre: El juego de Ender."
+2. Ctrl+G sin selección → modo general, sin contexto de libro específico (para pedir recomendaciones nuevas).
+3. Control principal: TextCtrl multilinea de entrada + ListBox o TextCtrl de solo lectura para el historial (mismo patrón de accesibilidad que un chat normal: cada respuesta nueva se anuncia sola, sin robar el foco del campo de entrada, usando el patrón _anunciador o simplemente que NVDA lea el nuevo contenido añadido al control de historial si tiene el rol de "live region" — en wx esto se simula añadiendo texto y usando SetInsertionPointEnd() + foco controlado).
+4. Llamada a la API de Gemini: siempre en hilo secundario (nunca desde el hilo principal, como manda tu regla), con indicador de "Pensando..." anunciado una vez al enviar, y el resultado llega vía wx.CallAfter.
+5. Clave API: mismo patrón cargar_claves()/guardar_claves(), nueva entrada en Ajustes para la clave de Gemini.
+ 
+Actualizador con ejecutable auxiliar precompilado
+Piezas nuevas:
+• bin/actualizador.exe — pequeño binario compilado (PyInstaller --onefile, igual que ya compilas auxiliar_sapi32.exe), incluido desde el día uno en el portable.
+• Recibe por argumentos: ruta de la carpeta temporal con la actualización ya descargada y verificada, y ruta raíz de la app.
+Flujo:
+1. comprobador_actualizaciones.py (ya existente) detecta versión nueva — sin cambios en esta parte.
+2. Con la app abierta: descarga el ZIP de GitHub a temp/actualizacion/, lo descomprime, verifica que la estructura de archivos esperada esté completa (lista de archivos/carpetas mínimos que debe traer el release).
+3. Si la verificación falla: aviso NVDA de error, se aborta, la app sigue funcionando normal como hoy.
+4. Si la verificación es correcta: diálogo de confirmación final ("Se reiniciará la aplicación para completar la actualización. ¿Continuar?"), y al aceptar:
+• Se lanza actualizador.exe pasándole --origen temp/actualizacion --destino <raíz_app> vía subprocess.Popen (proceso independiente, no hijo bloqueante).
+• La app principal se cierra inmediatamente (wx.Exit() o similar), liberando los locks de archivo de Windows.
+5. actualizador.exe (proceso separado, ya compilado, sin generar nada al vuelo):
+• Espera un instante corto a que el proceso principal libere los archivos (comprobación de PID o simple time.sleep corto).
+• Antes de mover nada, copia la carpeta app/ actual a temp/backup_previo/ (respaldo).
+• Mueve los archivos nuevos de temp/actualizacion/ a la raíz, sobrescribiendo.
+• Si cualquier paso lanza excepción: restaura temp/backup_previo/ sobre la raíz automáticamente (rollback real, dentro de un binario que el antivirus no mata a mitad de camino porque no es un script sospechoso al vuelo).
+• Relanza la app principal (subprocess.Popen del ejecutable principal) y se cierra a sí mismo.
+6. La app principal arranca de nuevo, y en el primer inicio tras la actualización, muestra el diálogo de novedades que ya tienes (dialogo_novedades.py) — sin cambios.
+Con esto quedan cerrados los 4 pilares de diseño de la Fase B/C que veníamos blindando. ¿Quieres que dejemos ya el plano completo por escrito en un solo documento de referencia (para no perder nada de lo decidido en esta sesión), o prefieres seguir directamente con la Fase D (distribución de pestañas y nombre comercial) y i18n?

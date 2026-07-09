@@ -1,0 +1,86 @@
+Prompt claude 14
+En la raíz de la carpeta aparecen estas dos carpetas vacías:
+
+"C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\proyectos"
+"C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\backups"
+
+Quiero que las copias de esos proyectos se guarden desde ahora en esta carpeta:
+"C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\configuraciones\proyectos_backup"
+
+¿Puedes comprobar que ya no se vuelvan a crear más, incluso cuando haga el portable? ¿Y cuando ejecuten este archivo `estructura_proyecto.txt`? ¿O este archivo no es necesario?
+
+A ver, empecemos por las categorías. Sigue sin estar el botón para crear subcategorías. Me he puesto sobre una categoría y, cuando he pulsado en "crear categoría", se sigue mostrando como categoría y no como subcategoría.
+
+Se me ocurre una solución para esto, a ver qué piensas tú... En el diálogo "crear nueva categoría", se podría poner un cuadro combinado o dos casillas de verificación: una para categoría y otra para subcategoría. Y, según dónde esté el foco, pues que se cree eso. Pero también hay que tener en cuenta dónde está el foco en el árbol. Además, no sé si es práctico.
+
+Además, ¿qué pasa si creamos una categoría, pero nos hemos equivocado (o lo que sea) y queremos que esa categoría recién creada sea una subcategoría?
+
+También sigo sin poder crear etiquetas nuevas o asignar otras a las actuales. Además, ¿qué pasa cuando en el diálogo pulsas en "sí" para que se creen etiquetas de forma automática? ¿Cómo hacemos para moverlas automáticamente a las categorías o subcategorías correspondientes?
+
+Además, no sé, ¡no me termina de convencer que esté todo junto en el árbol!
+
+Y, además, cuando añadimos una carpeta, en la lista salen todos los libros desordenados. Salen con los nombres de archivo (es decir, los nombres externos). Por ejemplo, imagínate que vienen numerados en orden, como "01 el hijo del rey.epub"; pues, cuando los importamos a la biblioteca, aparece todo desordenado. Así que necesito que también mires eso.
+
+Bien, otra cosa que tampoco me gusta (bueno, no me termina de convencer) es cómo están distribuidos los elementos en esta ventana de la biblioteca. ¿No deberían estar primero el árbol, después la lista y luego todo lo demás? No sé, no tengo ni idea; solo te lo pregunto porque quiero saber tu opinión sobre cómo priorizar lo más importante para el usuario.
+
+Ah, y además (te lo iba a decir antes): ahora sí que funciona la barra de progreso y NVDA me va diciendo "Libro X de Y" cuando se está importando una carpeta (no en la biblioteca). Pero lo que no me dice es cuándo se termina de importar los libros. También me sale otro diálogo para el tema de las etiquetas; si le doy a que sí, no me dice lo que está haciendo. Sé que termina porque NVDA me vuelve a hablar, pero en ese momento, entre que le digo que sí y se pone a ello hasta que termina, pasa un tiempo en el que NVDA se queda colgado y no sé qué está haciendo.
+
+Mira todos estos errores que me arroja la consola:
+
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] No se pudo inicializar pyttsx3
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\site-packages\pyttsx3\__init__.py", line 22, in init
+    eng = _activeEngines[driverName]
+          ~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\weakref.py", line 136, in __getitem__
+    o = self.data[key]()
+        ~~~~~~~~~^^^^^
+KeyError: None
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\site-packages\pyttsx3\drivers\sapi5.py", line 5, in <module>
+    from comtypes.gen import SpeechLib  # comtypes
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportError: cannot import name 'SpeechLib' from 'comtypes.gen' (unknown location)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\anunciador_voz.py", line 39, in _worker
+    motor = pyttsx3.init()
+            ^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\pyttsx3\__init__.py", line 24, in init
+    eng = Engine(driverName, debug)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\pyttsx3\engine.py", line 59, in __init__
+    self.proxy = driver.DriverProxy(weakref.proxy(self), self.driver_name, debug)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\pyttsx3\driver.py", line 41, in __init__
+    self._module = importlib.import_module(f"pyttsx3.drivers.{driverName}")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\importlib\__init__.py", line 90, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Program Files\Python312\Lib\site-packages\pyttsx3\drivers\sapi5.py", line 8, in <module>
+    engine = comtypes.client.CreateObject("SAPI.SpVoice")
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\comtypes\client\_create.py", line 99, in CreateObject
+    obj = comtypes.CoCreateInstance(clsid, clsctx=clsctx, interface=interface)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\comtypes\_post_coinit\misc.py", line 140, in CoCreateInstance
+    _CoCreateInstance(byref(clsid), punkouter, clsctx, byref(iid), byref(p))
+  File "_ctypes/callproc.c", line 1009, in GetResult
+OSError: [WinError -2147221008] No se ha llamado a CoInitialize
+^C¿Desea terminar el trabajo por lotes (S/N)?

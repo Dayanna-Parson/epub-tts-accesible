@@ -1,0 +1,6 @@
+Prompt 31
+
+el que te pasé fue el log anterior, a que me descargase los últimos cambios, pero vamos. que sigue todo prácticamente igual. Y si, me lee el nombre de categoría o etiqueta. Y, me puedes quitar que salgan los ---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Añadido a categoría fantasia. en la consola? creo que ya no hacen falta, porque el tema de la verbalización de voces, está arreglado!

@@ -1,0 +1,19 @@
+Respuesta claude 25
+
+Encontré la respuesta exacta a tu pregunta — y es un hallazgo importante. Miré cómo se comportan las pestañas de arriba (Biblioteca/Lectura/Grabación/Ajustes) y su código **no mueve el foco a ningún control** al cambiar de pestaña — se queda en la pestaña, tal cual el comportamiento nativo de Windows. Eso es justo lo que tú describes como "funciona como debe". Mi arreglo de la subpestaña Géneros/Sagas hacía lo contrario a propósito (saltar directo al árbol/lista), pensando que eso era lo que pedías — pero ahora queda claro que no: quieres que se comporte **igual** que las de arriba.
+
+Ya está corregido y subido — buen descanso mientras tanto voy a investigar en la web los otros dos problemas.
+
+Ya está. Antes de que descanses, un resumen de lo que encontré y ya arreglé mientras tanto:
+
+**El foco en las subpestañas — arreglado, y ya sé por qué pasaba solo ahí.** Miré cómo se comportan las pestañas de arriba (Biblioteca/Lectura/Grabación/Ajustes): su código, cuando cambias de pestaña, **no mueve el foco a ningún control** — se queda en la pestaña, tal cual el comportamiento nativo de Windows, y solo entras al contenido con un Tab explícito. Mi arreglo de Géneros/Sagas hacía justo lo contrario a propósito (forzar el salto al árbol/lista), pensando que era lo que querías. Ya lo revertí para que se comporte exactamente igual que las de arriba — sin saltos, solo con Tab. Subido.
+
+**Investigué en la web los otros dos, como me pediste:**
+
+1. **La voz que se callaba (pyttsx3).** Encontré la confirmación exacta de por qué mi primer intento ("motor nuevo por cada anuncio") no bastaba: `pyttsx3.init()` **no siempre crea un motor nuevo** — si el driver SAPI5 ya está en uso por otra instancia dentro del mismo proceso, te devuelve **esa misma instancia reciclada**, aunque tú creas que pediste una nueva. Por eso solo sonaban las dos primeras veces. Confirma que el arreglo que ya subí (hablar en un proceso de Python nuevo cada vez, no solo un "motor" nuevo) era el correcto, porque un proceso nuevo sí garantiza un SAPI5 limpio. — [pyttsx3 en PyPI](https://pypi.org/project/pyttsx3/), [driver sapi5.py en GitHub](https://github.com/nateshmbhat/pyttsx3/blob/master/pyttsx3/drivers/sapi5.py)
+
+2. **La lista que se queda vacía o a medias.** Encontré varios reportes de gente con el mismo síntoma exacto en wxPython: tras borrar y rellenar un `ListCtrl` de golpe, Windows a veces no repinta el control hasta que ocurre un evento externo (mover la ventana, un clic directo, un evento de "idle") — aunque los datos internos ya sean correctos. El `Refresh()` que añadí va en esa dirección, pero por lo que encontré, puede que no sea suficiente por sí solo; el foro menciona también engancharse al evento `EVT_IDLE` como solución más fiable en estos casos. Es la pista que voy a seguir si el diagnóstico que dejé en el log confirma que el dato SÍ está completo y solo falla el dibujado. — [ListCtrl not updating (wxpython-users)](https://wxpython-users.wxwidgets.narkive.com/VhG6vwUf/listctrl-not-updating), [discusión en discuss.wxpython.org](https://discuss.wxpython.org/t/wx-listctrl-refresh-segmentation-fault/34822)
+
+3. **El menú con ítems ausentes** — no encontré nada específico en foros que encaje con tu caso exacto; sigue siendo el más misterioso. El diagnóstico que dejé en el log de tu próxima prueba debería aclararlo del todo.
+
+Descansa. Cuando retomes, mándame el `app.log` de una prueba con el menú contextual y otra importando dos lotes de libros, y ataco esos dos con datos reales en vez de teoría.
