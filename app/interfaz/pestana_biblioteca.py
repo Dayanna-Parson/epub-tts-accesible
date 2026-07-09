@@ -1480,6 +1480,15 @@ class PestanaBiblioteca(wx.Panel):
         item_renombrar = menu.Append(wx.ID_ANY, "Renombrar archivo...\tF2")
         self.Bind(wx.EVT_MENU, self.al_renombrar_segun_metadatos, item_renombrar)
 
+        item_renombrar_pendientes = menu.Append(
+            wx.ID_ANY, "Renombrar todos los pendientes de revisión..."
+        )
+        item_renombrar_pendientes.SetHelpText(
+            "Renombra en bloque, según sus metadatos, todos los libros de la "
+            "biblioteca cuyo nombre de archivo no coincide con el título real."
+        )
+        self.Bind(wx.EVT_MENU, self.al_renombrar_todos_pendientes, item_renombrar_pendientes)
+
         item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")
         self.Bind(wx.EVT_MENU, lambda e: self._quitar_libro_seleccionado(), item_quitar)
 
