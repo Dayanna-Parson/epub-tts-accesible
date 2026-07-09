@@ -2,7 +2,7 @@
 
 Documento privado. Este texto está pensado para sustituir por completo al documento original extenso, en caso de que se pierda. No presupone ningún otro contexto.
 
-<{tag_name}>
+---
 
 ### 1. Punto de partida real (por qué empiezo a programar)
 
@@ -20,7 +20,7 @@ pero no tenía el lenguaje ni la estructura para explicarlo con precisión.
 
 Aprender a programar fue, en realidad, una consecuencia lógica: necesitaba convertir una intuición en un sistema concreto, desmontable y explicable.
 
-<{tag_name}>
+---
 
 ### 2. El problema real que quiero resolver
 
@@ -40,7 +40,7 @@ edición final en Reaper.
 
 Este flujo era frágil, lento y mentalmente agotador. Las herramientas existentes en Windows no cubrían esta necesidad de forma integrada ni accesible.
 
-<{tag_name}>
+---
 
 ### 3. Decisión de plataforma: escritorio y Windows
 
@@ -54,7 +54,7 @@ la accesibilidad real con lector de pantalla es más controlable.
 
 No es una elección ideológica, es una elección práctica.
 
-<{tag_name}>
+---
 
 ### 4. Elección de tecnología: wxPython
 
@@ -70,7 +70,7 @@ evita dependencias web que suelen romper accesibilidad.
 
 La prioridad nunca fue la estética, sino la fiabilidad y el control.
 
-<{tag_name}>
+---
 
 ### 5. Estructura final de la aplicación
 
@@ -80,7 +80,7 @@ La aplicación se divide en:
 
 Modo Lectura
 
-Modo Grabación (pendiente de implementar)
+Modo Grabación
 
 Ajustes
 
@@ -92,7 +92,7 @@ la navegación con lector de pantalla,
 
 la escalabilidad futura.
 
-<{tag_name}>
+---
 
 ### 6. Modo Lectura: más que leer
 
@@ -120,7 +120,7 @@ Además, desde el menú Archivo existe un submenú de Recientes, que permite abr
 
 La lectura se concibe como una experiencia continua y controlada, no como un simple play/stop.
 
-<{tag_name}>
+---
 
 ### 7. Formato EPUB como base
 
@@ -146,7 +146,7 @@ mapea posiciones reales del texto.
 
 Esto permite tanto la lectura como la producción posterior.
 
-<{tag_name}>
+---
 
 ### 8. El reproductor: núcleo lógico de la app
 
@@ -160,7 +160,7 @@ proteger al usuario frente a errores y costes.
 
 Gestiona estados explícitos (detenido, reproduciendo, pausado) y trata de forma distinta voces locales y de nube.
 
-<{tag_name}>
+---
 
 ### 9. Motores de voz soportados
 
@@ -178,7 +178,7 @@ Deepgram Aura-2: motor neuronal rápido, sin suscripción mensual fija.
 
 La voz local actúa siempre como paracaídas de seguridad.
 
-<{tag_name}>
+---
 
 ### 10. Gestión de voces y favoritos
 
@@ -202,7 +202,7 @@ reutilizarlas rápidamente,
 
 mantener consistencia entre sesiones.
 
-<{tag_name}>
+---
 
 ### 11. Filtros de voces
 
@@ -220,7 +220,7 @@ por favoritas.
 
 Esto permite manejar listas grandes de voces sin perderse.
 
-<{tag_name}>
+---
 
 ### 12. Control de cuota y costes
 
@@ -244,7 +244,7 @@ se pasa automáticamente a voz local.
 
 Esto protege al usuario de facturas inesperadas.
 
-<{tag_name}>
+---
 
 ### 13. Ajustes centralizados
 
@@ -266,7 +266,7 @@ un botón específico para eliminar la caché local.
 
 Toda la configuración se guarda en archivos locales claros y legibles.
 
-<{tag_name}>
+---
 
 ### 14. Diálogos y accesibilidad
 
@@ -280,7 +280,7 @@ mensajes claros,
 
 compatibilidad total con lectores de pantalla.
 
-<{tag_name}>
+---
 
 ### 15. Por qué el código está en español
 
@@ -298,7 +298,7 @@ es coherente con el público y la interfaz.
 
 No es una limitación técnica, sino una decisión consciente.
 
-<{tag_name}>
+---
 
 ### 16. Qué no forma parte del proyecto
 
@@ -310,7 +310,7 @@ No se persiguen atajos éticamente dudosos.
 
 El foco está en el uso responsable de TTS existentes.
 
-<{tag_name}>
+---
 
 ### 17. De los planes a la realidad
 
@@ -342,9 +342,19 @@ Lectura continua sin pausas entre fragmentos en la nube.
 
 Mensajes de arranque silenciados: NVDA ya no verbaliza textos técnicos de la consola al abrir la app.
 
+Versión 2.0.0:
+
+Gestor de Proyectos independiente, con árbol jerárquico, papelera y acceso directo a las grabaciones.
+
+Divisor de EPUB integrado, 12 sonidos contextuales y voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante un proceso puente.
+
+Árbol de navegación en Ajustes, navegación semántica por encabezados y verbalización inmediata sin mover el foco.
+
+Sistema de actualizaciones automáticas completo, con reinicio de la app sin perder configuración ni grabaciones.
+
 El criterio ha sido el mismo a lo largo de todo el proceso: que funcione, que sea accesible, que el coste sea transparente.
 
-<{tag_name}>
+---
 
 ### 18. Cierre personal
 

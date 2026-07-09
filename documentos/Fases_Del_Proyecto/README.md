@@ -1,16 +1,16 @@
-## 📘 TifloHistorias
+## 📘 Epub TTS Accesible
 
 Aplicación de escritorio accesible para leer libros EPUB y trabajar con audiolibros mediante síntesis de voz.
 
-<{tag_name}>
+---
 
-### ¿Qué es TifloHistorias?
+### ¿Qué es Epub TTS Accesible?
 
-TifloHistorias es una aplicación de escritorio para Windows, desarrollada en Python, pensada para que personas ciegas puedan leer y trabajar con libros EPUB de forma cómoda, controlada y accesible, utilizando distintos motores de síntesis de voz.
+Epub TTS Accesible es una aplicación de escritorio para Windows, desarrollada en Python, pensada para que personas ciegas puedan leer y trabajar con libros EPUB de forma cómoda, controlada y accesible, utilizando distintos motores de síntesis de voz.
 
 La aplicación nace de una necesidad real: poder leer libros largos y complejos en el PC, y preparar posteriormente audiolibros, sin depender de flujos frágiles ni de herramientas pensadas principalmente para móvil.
 
-<{tag_name}>
+---
 
 ### ¿Para quién está pensada?
 
@@ -22,11 +22,11 @@ Personas interesadas en la producción de audiolibros.
 
 Desarrolladores que quieran explorar un proyecto real de accesibilidad en Python.
 
-<{tag_name}>
+---
 
 ### Qué puedes hacer con la aplicación
 
-Con TifloHistorias puedes:
+Con Epub TTS Accesible puedes:
 
 abrir y leer libros en formato EPUB,
 
@@ -44,7 +44,7 @@ controlar el consumo de servicios TTS de pago,
 
 trabajar durante sesiones largas sin perder el contexto.
 
-<{tag_name}>
+---
 
 ### Interfaz y elementos principales
 
@@ -54,7 +54,7 @@ Pestañas
 
 Modo Lectura
 
-Modo Grabación (en desarrollo)
+Modo Grabación
 
 Ajustes
 
@@ -78,7 +78,7 @@ lectura continua con memoria de posición.
 
 Todo está pensado para poder usarse únicamente con teclado y lector de pantalla.
 
-<{tag_name}>
+---
 
 ### Síntesis de voz
 
@@ -96,11 +96,11 @@ Deepgram Aura-2 (recomendado como motor principal de nube, pay-as-you-go),
 
 Si no hay conexión a internet o se alcanza un límite de uso, la app cambia automáticamente a voz local.
 
-<{tag_name}>
+---
 
 ### Sistema de favoritos y filtros
 
-Para facilitar el uso cuando hay muchas voces disponibles, TifloHistorias incluye:
+Para facilitar el uso cuando hay muchas voces disponibles, Epub TTS Accesible incluye:
 
 un sistema de voces favoritas,
 
@@ -110,7 +110,7 @@ persistencia de las preferencias entre sesiones.
 
 Esto permite centrarse solo en las voces que realmente interesan.
 
-<{tag_name}>
+---
 
 ### Control de cuota y costes
 
@@ -126,7 +126,7 @@ cambio automático a voz local.
 
 El objetivo es evitar consumos inesperados y errores durante la reproducción.
 
-<{tag_name}>
+---
 
 ### Ajustes
 
@@ -144,11 +144,11 @@ limpieza de caché.
 
 Toda la configuración se guarda localmente.
 
-<{tag_name}>
+---
 
 ### Accesibilidad
 
-TifloHistorias está diseñada desde el principio para funcionar con lectores de pantalla:
+Epub TTS Accesible está diseñada desde el principio para funcionar con lectores de pantalla:
 
 controles nativos accesibles,
 
@@ -160,7 +160,7 @@ diálogos pensados para no perder el foco.
 
 No es una adaptación posterior, sino la base del proyecto.
 
-<{tag_name}>
+---
 
 ### Atajos de teclado
 
@@ -168,7 +168,7 @@ La aplicación utiliza atajos de teclado para facilitar la navegación y la repr
 
 ⚠️ Esta sección se completará cuando el conjunto de atajos esté definitivamente cerrado.
 
-<{tag_name}>
+---
 
 ### Manual de usuario
 
@@ -184,13 +184,13 @@ cómo interpretar los avisos de cuota,
 
 cómo preparar contenidos para audiolibros.
 
-<{tag_name}>
+---
 
 ### Estado actual del proyecto
 
-TifloHistorias es una aplicación completa y estable. Versión actual: 1.2.0.
+Epub TTS Accesible es una aplicación completa y estable. Versión actual: 2.0.0.
 
-modo lectura con voces de Azure, Amazon Polly, Deepgram y ElevenLabs,
+modo lectura con voces de Azure, Amazon Polly, Deepgram, ElevenLabs y SAPI5 (64 y 32 bits),
 
 modo grabación multivoz con etiquetas de personaje {{@voz}},
 
@@ -200,11 +200,17 @@ diccionario de pronunciación para todos los motores,
 
 control de cuota y avisos de gasto por proveedor,
 
-ajustes avanzados y actualizaciones automáticas desde la propia app.
+Gestor de Proyectos con árbol jerárquico, papelera y acceso directo a las grabaciones,
+
+divisor de EPUB integrado por capítulos,
+
+12 sonidos contextuales y navegación semántica por encabezados,
+
+ajustes avanzados en árbol de navegación y actualizaciones automáticas desde la propia app.
 
 silencio total en la consola al arrancar: NVDA no verbaliza textos técnicos de inicio.
 
-<{tag_name}>
+---
 
 ### Instalación y ejecución
 
@@ -212,7 +218,7 @@ Este proyecto está pensado principalmente para usuarios finales y desarrollador
 
 Las instrucciones técnicas de instalación, dependencias y entorno se encuentran en los archivos del repositorio (por ejemplo, requirements.txt).
 
-<{tag_name}>
+---
 
 ### Documentación
 
@@ -222,14 +228,8 @@ Las instrucciones técnicas de instalación, dependencias y entorno se encuentra
 
 📄 Documento 3: Presentación pública / README (este documento)
 
-<{tag_name}>
+---
 
 ### Licencia
 
-Por definir.
-
-<{tag_name}>
-
-### Estado del nombre
-
-El nombre TifloHistorias es provisional y puede cambiar en el futuro.
+Licencia No Comercial. Ver el archivo `LICENSE` en la raíz del repositorio.
