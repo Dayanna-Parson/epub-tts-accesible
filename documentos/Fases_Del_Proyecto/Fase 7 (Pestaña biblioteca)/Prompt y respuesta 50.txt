@@ -1,0 +1,66 @@
+Prompt y respuesta 50
+Claude ha respondido: Diccionario de reglas por libro/saga: dos opciones
+Ejecutado 2 comandos
+Diccionario de reglas por libro/saga: dos opciones
+Opción A — Menú contextual del libro/etiqueta (añadir "Reglas de pronunciación de este libro/saga" al menú contextual ya existente en Biblioteca)
+• ✅ Acceso directo desde donde ya estás trabajando: seleccionas el libro o la saga y ahí mismo gestionas sus reglas, sin cambiar de pestaña.
+• ✅ Deja claro de inmediato el alcance (estás en el contexto de "Alas de fuego", las reglas que añadas son solo para eso).
+• ❌ Duplica la interfaz del diccionario: tendrías que reconstruir la lista de "palabra → pronunciación" que ya existe en Ajustes, en un diálogo nuevo aparte, con su propio código de guardar/editar/eliminar.
+• ❌ Si algún día quieres ver TODAS tus reglas juntas (globales + de todas tus sagas) para revisarlas, no hay un sitio único donde mirarlas.
+Opción B — Pestaña dentro del diálogo de diccionario ya existente en Ajustes
+• ✅ Reutiliza la lista, los botones y el guardado que ya tienes hechos en PanelDiccionario — solo añade un selector de alcance (Global / Este libro / Esta saga) arriba de la lista ya existente, filtrando qué reglas se muestran.
+• ✅ Un único sitio para ver y gestionar todas las reglas, de cualquier alcance.
+• ❌ Para editar la regla de un libro concreto tienes que ir a Ajustes y elegirlo de una lista/combo, en vez de hacerlo desde donde estás leyendo o viendo la biblioteca — un paso más de navegación.
+Mi recomendación: Opción B, con un atajo directo desde el menú contextual del libro que abra Ajustes ya con ese libro preseleccionado en el selector de alcance. Así consigues lo mejor de las dos: reutilizas todo el código ya probado del diccionario (menos trabajo, menos riesgo de bugs nuevos) y mantienes un único sitio de gestión, pero sin perder el acceso rápido desde Biblioteca. Es además coherente con cómo ya tratas otras cosas en la app (Ajustes centraliza configuración; Biblioteca centraliza navegación de libros).
+¿Te vale así, o prefieres la A?
+Ahora creo las ramas para las fases restantes, todas partiendo de esta misma rama (así ya llevan dentro CLAUDE.md y planificacion_v3.md, y todo lo de Biblioteca ya construido, que Creador de Audiolibros necesita para "Enviar a Creador de Audiolibros"):
+Push realizadoclaude/fase7-creador-audiolibros
+Las 5 ramas están creadas y subidas, todas partiendo del estado actual (con CLAUDE.md y planificacion_v3.md ya dentro):
+• claude/fase7-creador-audiolibros — Fase B, sección 3 del documento
+• claude/fase7-actualizador-automatico — Fase C, sección 4
+• claude/fase7-asistente-biblioteca-gemini — Fase C, sección 6
+• claude/fase7-progreso-lectura-ritmo — Fase C, sección 5 (es pequeña, pero la dejo separada por si acaso)
+• claude/fase7-i18n-winget — Fase D, secciones 7.3 y 7.4
+En cada conversación nueva, cuando le digas a Claude que trabaje en una de esas ramas, con pedirle que lea CLAUDE.md y documentos/Fases_Del_Proyecto/Fase 7 (V3.0)/planificacion_v3.md debería bastar para que entienda el contexto sin que tengas que reexplicar nada.
+Nota: como todavía no he cerrado del todo la Fase A en esta rama, esas 5 ramas nuevas parten de un punto que incluye todo lo de Biblioteca hecho hasta ahora, pero no lo que quede pendiente de terminar aquí (como el diseño del diccionario por libro/saga, si decidimos añadirlo). Cuando cerremos esta rama, si quieres que actualice las otras 5 para que también tengan esos últimos cambios, dímelo y las rebaso.
+Mostrar acciones del mensaje
+Has dicho: perfecto, oye, me encanta tu recomendacín!
+perfecto, oye, me encanta tu recomendacín! y si, ya que estás actualiza eso también!
+Mostrar acciones del mensaje
+Claude ha respondido: Ya existe obtenerlibroporruta.
+Leer 3 archivos, ejecutado 5 comandos
+Ya existe obtener_libro_por_ruta. Reviso el esquema de libro_etiqueta para poder resolver "saga" de un libro, y luego implemento el CRUD de diccionario_reglas.
+Leer un archivo, ejecutado un comando
+obtener_etiquetas_de_libro ya existe — resuelve el caso "saga". Ahora añado el CRUD de diccionario_reglas al final de la clase.
+Ejecutado un comando, editado un archivo
+Ahora conecto la aplicación de estas reglas en limpiador_lectura.py, pasando la ruta del libro desde gestor_epub.py:
+Editadolimpiador_lectura.py+33-2
+Ahora paso ruta_epub desde gestor_epub.py:
+Editadogestor_epub.py+1-1
+Verifico que ruta_epub esté en scope en ese punto de la función:
+Ejecutadoun comando
+Correcto, es un parámetro de la función. Ahora la UI: extiendo PanelDiccionario en pestana_ajustes.py con el selector de alcance.
+Leer un archivo, ejecutado un comando, editado un archivo
+Ahora reemplazo la lógica de rellenar/añadir/eliminar para que despachen según el alcance activo:
+Editado un archivo, ejecutado un comando
+Bien, buscar_libros() sin argumentos devuelve todos alfabéticamente. Ahora conecto el acceso rápido desde el menú contextual de Biblioteca:
+Ejecutado 3 comandos, leer un archivo, editado un archivo
+Ahora añado el método abrir_diccionario_para_libro en PestanaAjustes, cerca de guardar_config_en_archivo:
+Leer un archivo, editado un archivo
+Ahora conecto el menú contextual de Biblioteca para llamar a esto, cambiando de pestaña:
+Leer un archivo, editado un archivo
+Ahora añado el método _al_abrir_reglas_pronunciacion, cerca de _continuar_apertura_libro:
+Editadopestana_biblioteca.py+10-0
+Ahora compilo todo y verifico:
+Ejecutadoun comando
+Ahora una prueba sintética del CRUD de reglas de diccionario y de la resolución por libro/saga:
+Ejecutado 2 comandos
+Todo funciona correctamente. Commit y push.
+Ejecutado 2 comandos
+Ahora actualizo las 5 ramas de las fases siguientes para que también incluyan esto:
+Push realizadoclaude/fase7-creador-audiolibros
+Listo, las 5 ramas están al día. Resumen de lo implementado:
+• Diccionario por libro/saga: diccionario_reglas ya tiene CRUD completo en GestorBiblioteca, un selector de Alcance (Global/Este libro/Esta saga) en el panel de Ajustes que reutiliza toda la interfaz de lista ya existente, y aplicación real durante la lectura (limpiar_para_lectura combina las reglas globales con las del libro/saga activos). Acceso directo desde "Reglas de pronunciación de este libro..." en el menú contextual de Biblioteca.
+• Probado con tests sintéticos: CRUD de reglas, combinación libro+saga, y aplicación real en limpiar_para_lectura con y sin libro indexado.
+• Las 5 ramas de las fases siguientes (Creador de Audiolibros, Actualizador, Asistente Gemini, Progreso de lectura, i18n/Winget) ya están sincronizadas con todo esto.
+Con esto la Fase A (Biblioteca) queda cerrada del todo: los 6 puntos pendientes están resueltos. ¿La damos por terminada y la dejamos lista para que la revises con NVDA, o quieres que mire algo más antes de cerrarla?
