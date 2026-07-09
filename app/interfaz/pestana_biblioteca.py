@@ -12,7 +12,10 @@ from app.motor.escaner_biblioteca import EscanerBiblioteca, confirmar_agrupamien
 from app.motor.renombrador_biblioteca import (
     renombrar_libro_segun_metadatos,
     renombrar_pendientes_por_lote,
+    relocalizar_libro,
+    reconciliar_carpeta_movida,
 )
+from app.interfaz.dialogos import DialogoArchivoNoEncontrado
 from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.reproductor_sonidos import (
     reproducir, SUCCESS, ERROR, LIST_NAV, MOVE_UP, MOVE_DOWN, CLEAR,
@@ -1073,10 +1076,7 @@ class PestanaBiblioteca(wx.Panel):
         if libro is None:
             return
         if not os.path.exists(libro["ruta_archivo"]):
-            self._anunciar(
-                "No se encontró el archivo en su ubicación. "
-                "Usa Renombrar (F2) o localízalo manualmente."
-            )
+            self._al_archivo_no_encontrado(libro)
             return
         if libro["formato"] != "epub":
             wx.MessageBox(
@@ -1104,6 +1104,49 @@ class PestanaBiblioteca(wx.Panel):
 
         self.gestor.establecer_bandera(libro["id"], "leyendo_ahora", True)
         reproducir(SUCCESS)
+
+    def _al_archivo_no_encontrado(self, libro):
+        """
+        Diálogo de re-enrutado (sección 2.4 de la planificación v3.0):
+        localizar el archivo manualmente, reconciliar en bloque una
+        carpeta movida, o eliminar el libro de la biblioteca.
+        """
+        extension = os.path.splitext(libro["ruta_archivo"])[1] or f".{libro['formato']}"
+        dlg = DialogoArchivoNoEncontrado(self, libro["titulo"], extension)
+        if dlg.ShowModal() != wx.ID_OK or dlg.accion is None:
+            dlg.Destroy()
+            return
+
+        if dlg.accion == "localizar":
+            if relocalizar_libro(self.gestor, libro["id"], dlg.ruta_localizada):
+                reproducir(SUCCESS)
+                self._anunciar("Archivo localizado. Abriendo el libro.")
+                self._cargar_libros()
+                libro_actualizado = self.gestor.obtener_libro(libro["id"])
+                dlg.Destroy()
+                if libro_actualizado is not None:
+                    self.al_abrir_libro_seleccionado()
+                return
+            reproducir(ERROR)
+            self._anunciar("No se pudo localizar el archivo indicado.")
+
+        elif dlg.accion == "reescanear":
+            reconciliados = reconciliar_carpeta_movida(self.gestor, dlg.carpeta_reescaneo)
+            reproducir(SUCCESS if reconciliados else ERROR)
+            self._anunciar(
+                f"{reconciliados} libro(s) reconciliados con la nueva carpeta."
+                if reconciliados else
+                "No se encontró ningún libro de la biblioteca en esa carpeta."
+            )
+            self._cargar_libros()
+
+        elif dlg.accion == "eliminar":
+            self.gestor.quitar_libro(libro["id"])
+            reproducir(SUCCESS)
+            self._anunciar("Libro quitado de la biblioteca.")
+            self._cargar_libros()
+
+        dlg.Destroy()
 
     def al_tecla_lista(self, evento):
         codigo = evento.GetKeyCode()
