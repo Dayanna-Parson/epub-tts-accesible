@@ -211,3 +211,106 @@ class DialogoExportacion(wx.Dialog):
         else:
             wx.MessageBox("La carpeta ya no existe.", "Error")
         self.EndModal(wx.ID_OK)
+
+
+# ANCLAJE_INICIO: DIALOGO_ARCHIVO_NO_ENCONTRADO
+class DialogoArchivoNoEncontrado(wx.Dialog):
+    """
+    Se muestra al intentar abrir un libro de la Biblioteca cuyo archivo
+    ya no está en la ruta indexada (movido o borrado). Ofrece tres
+    acciones (sección 2.4 de la planificación v3.0):
+      - Localizar archivo: elegir manualmente el nuevo archivo de ese libro.
+      - Volver a escanear una carpeta: reconciliar en bloque toda una
+        carpeta movida, casando por nombre de archivo.
+      - Eliminar de la biblioteca: quita el registro, nunca el archivo físico.
+
+    El resultado se expone en self.accion ("localizar" / "reescanear" /
+    "eliminar" / None) y, según el caso, en self.ruta_localizada o
+    self.carpeta_reescaneo. Quien instancie el diálogo decide qué hacer
+    con esa información tras ShowModal().
+    """
+
+    def __init__(self, padre, titulo_libro, extension_original):
+        super().__init__(padre, title="Archivo no encontrado", style=wx.DEFAULT_DIALOG_STYLE)
+
+        self.extension_original = extension_original
+        self.accion = None
+        self.ruta_localizada = None
+        self.carpeta_reescaneo = None
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        lbl = wx.StaticText(
+            self,
+            label=(
+                f"No se encontró el archivo de «{titulo_libro}» en su ubicación original.\n\n"
+                "¿Qué quieres hacer?"
+            ),
+        )
+        sizer.Add(lbl, 0, wx.ALL, 10)
+
+        self.btn_localizar = wx.Button(self, label="Localizar archivo...")
+        self.btn_localizar.SetHelpText(
+            "Elige manualmente dónde está ahora el archivo de este libro."
+        )
+        self.btn_localizar.Bind(wx.EVT_BUTTON, self.al_localizar)
+        sizer.Add(self.btn_localizar, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_reescanear = wx.Button(self, label="Volver a escanear una carpeta...")
+        self.btn_reescanear.SetHelpText(
+            "Si moviste toda una carpeta de libros, elige la nueva ubicación y se "
+            "reconciliarán en bloque todos los libros de la biblioteca que falten, "
+            "casando por nombre de archivo."
+        )
+        self.btn_reescanear.Bind(wx.EVT_BUTTON, self.al_reescanear)
+        sizer.Add(self.btn_reescanear, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_eliminar = wx.Button(self, label="Eliminar de la biblioteca")
+        self.btn_eliminar.SetHelpText(
+            "Quita el registro de este libro de la biblioteca. El archivo físico, "
+            "si existiera en algún sitio, no se borra."
+        )
+        self.btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar)
+        sizer.Add(self.btn_eliminar, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")
+        sizer.Add(self.btn_cancelar, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(sizer)
+        self.Fit()
+        self.CenterOnParent()
+        self.btn_localizar.SetFocus()
+
+    def al_localizar(self, evento):
+        comodin = f"Archivos ({self.extension_original})|*{self.extension_original}|Todos los archivos|*.*"
+        dlg = wx.FileDialog(
+            self, "Localizar el archivo del libro", wildcard=comodin,
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        )
+        if dlg.ShowModal() == wx.ID_OK:
+            self.accion = "localizar"
+            self.ruta_localizada = dlg.GetPath()
+            dlg.Destroy()
+            self.EndModal(wx.ID_OK)
+        else:
+            dlg.Destroy()
+
+    def al_reescanear(self, evento):
+        dlg = wx.DirDialog(self, "Selecciona la carpeta donde están ahora los libros")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.accion = "reescanear"
+            self.carpeta_reescaneo = dlg.GetPath()
+            dlg.Destroy()
+            self.EndModal(wx.ID_OK)
+        else:
+            dlg.Destroy()
+
+    def al_eliminar(self, evento):
+        if wx.MessageBox(
+            "¿Quitar este libro de la biblioteca?\n\nEl archivo no se borrará del disco, "
+            "solo su registro aquí.",
+            "Quitar de la biblioteca", wx.YES_NO | wx.ICON_QUESTION,
+        ) == wx.YES:
+            self.accion = "eliminar"
+            self.EndModal(wx.ID_OK)
+# ANCLAJE_FIN: DIALOGO_ARCHIVO_NO_ENCONTRADO
