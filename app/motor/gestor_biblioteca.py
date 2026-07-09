@@ -783,3 +783,78 @@ class GestorBiblioteca:
             return conexion.execute(
                 "SELECT * FROM libros WHERE titulo_revisado = 0 ORDER BY titulo COLLATE NOCASE"
             ).fetchall()
+
+    # ── Reglas de pronunciación por libro/saga ──────────────────────────────
+    # Las reglas de alcance "global" siguen viviendo en pronunciacion.json
+    # (DiccionarioPronunciacion) — esta tabla solo cubre "libro" y "saga",
+    # que necesitan quedar asociadas a un id_referencia concreto y por
+    # tanto encajan mejor en la base de datos que en un JSON plano.
+
+    def listar_reglas_diccionario(self, tipo_alcance: str, id_referencia: int) -> list[sqlite3.Row]:
+        if tipo_alcance not in ("libro", "saga"):
+            raise ValueError("tipo_alcance debe ser 'libro' o 'saga' aquí")
+        with self._conexion() as conexion:
+            return conexion.execute(
+                """
+                SELECT id, patron_origen, sustitucion FROM diccionario_reglas
+                WHERE tipo_alcance = ? AND id_referencia = ?
+                ORDER BY patron_origen COLLATE NOCASE
+                """,
+                (tipo_alcance, id_referencia),
+            ).fetchall()
+
+    def anadir_regla_diccionario(
+        self, patron_origen: str, sustitucion: str, tipo_alcance: str, id_referencia: int
+    ) -> int:
+        if tipo_alcance not in ("libro", "saga"):
+            raise ValueError("tipo_alcance debe ser 'libro' o 'saga' aquí")
+        with self._conexion() as conexion:
+            cursor = conexion.execute(
+                """
+                INSERT INTO diccionario_reglas (patron_origen, sustitucion, tipo_alcance, id_referencia)
+                VALUES (?, ?, ?, ?)
+                """,
+                (patron_origen, sustitucion, tipo_alcance, id_referencia),
+            )
+            return cursor.lastrowid
+
+    def actualizar_regla_diccionario(self, id_regla: int, patron_origen: str, sustitucion: str):
+        with self._conexion() as conexion:
+            conexion.execute(
+                "UPDATE diccionario_reglas SET patron_origen = ?, sustitucion = ? WHERE id = ?",
+                (patron_origen, sustitucion, id_regla),
+            )
+
+    def eliminar_regla_diccionario(self, id_regla: int):
+        with self._conexion() as conexion:
+            conexion.execute("DELETE FROM diccionario_reglas WHERE id = ?", (id_regla,))
+
+    def listar_reglas_diccionario_para_libro(self, id_libro: int) -> list[sqlite3.Row]:
+        """
+        Reglas aplicables a un libro concreto al leerlo: las suyas propias
+        (tipo_alcance='libro') más las de todas las sagas/etiquetas a las
+        que pertenezca (tipo_alcance='saga'). No incluye las globales,
+        que se aplican aparte desde DiccionarioPronunciacion.
+        """
+        etiquetas = self.obtener_etiquetas_de_libro(id_libro)
+        with self._conexion() as conexion:
+            filas = list(
+                conexion.execute(
+                    """
+                    SELECT id, patron_origen, sustitucion FROM diccionario_reglas
+                    WHERE tipo_alcance = 'libro' AND id_referencia = ?
+                    """,
+                    (id_libro,),
+                ).fetchall()
+            )
+            for etiqueta in etiquetas:
+                filas.extend(
+                    conexion.execute(
+                        """
+                        SELECT id, patron_origen, sustitucion FROM diccionario_reglas
+                        WHERE tipo_alcance = 'saga' AND id_referencia = ?
+                        """,
+                        (etiqueta["id"],),
+                    ).fetchall()
+                )
+        return filas
