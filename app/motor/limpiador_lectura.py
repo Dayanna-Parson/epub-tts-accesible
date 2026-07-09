@@ -1,4 +1,7 @@
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 
 # Singleton del diccionario de pronunciación — se crea la primera vez que se necesita
 _dic_pronunciacion = None
@@ -18,7 +21,31 @@ def recargar_diccionario_pronunciacion():
     _dic_pronunciacion = None
 
 
-def limpiar_para_lectura(texto):
+def _aplicar_reglas_de_biblioteca(texto: str, ruta_libro: str) -> str:
+    """
+    Reglas de pronunciación con alcance "libro" o "saga" (biblioteca.db),
+    por encima de las globales de pronunciacion.json. Si el libro no está
+    indexado en la Biblioteca (se abrió directamente desde Lectura, sin
+    pasar por Importar carpeta), no hay nada que aplicar y se ignora en
+    silencio — no es un error, es un libro fuera de la Biblioteca.
+    """
+    try:
+        from app.motor.gestor_biblioteca import GestorBiblioteca
+        gestor = GestorBiblioteca()
+        libro = gestor.obtener_libro_por_ruta(ruta_libro)
+        if libro is None:
+            return texto
+        for regla in gestor.listar_reglas_diccionario_para_libro(libro["id"]):
+            if not regla["patron_origen"]:
+                continue
+            patron = r"(?<!\w)" + re.escape(regla["patron_origen"]) + r"(?!\w)"
+            texto = re.sub(patron, regla["sustitucion"], texto)
+    except Exception:
+        logger.exception("[LimpiadorLectura] Error al aplicar reglas de diccionario de la Biblioteca")
+    return texto
+
+
+def limpiar_para_lectura(texto, ruta_libro=None):
     """
     Limpia el texto extraído de un EPUB para lectura accesible con NVDA.
 
@@ -77,7 +104,11 @@ def limpiar_para_lectura(texto):
 
     texto = texto.strip()
 
-    # Aplicar sustituciones de pronunciación definidas por el usuario
+    # Aplicar sustituciones de pronunciación definidas por el usuario:
+    # primero las globales, luego las de libro/saga si aplica (más
+    # específicas, así que van después y pueden refinar lo ya sustituido).
     texto = _obtener_diccionario().aplicar(texto)
+    if ruta_libro:
+        texto = _aplicar_reglas_de_biblioteca(texto, ruta_libro)
 
     return texto

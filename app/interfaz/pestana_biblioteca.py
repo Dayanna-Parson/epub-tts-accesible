@@ -1129,6 +1129,16 @@ class PestanaBiblioteca(wx.Panel):
         self.gestor.establecer_bandera(libro["id"], "leyendo_ahora", True)
         reproducir(SUCCESS)
 
+    def _al_abrir_reglas_pronunciacion(self, libro):
+        ventana_principal = self.padre_notebook.GetParent()
+        try:
+            from app.interfaz.ventana_principal import IDX_AJUSTES
+            self.padre_notebook.SetSelection(IDX_AJUSTES)
+            ventana_principal.pestana_ajustes.abrir_diccionario_para_libro(libro["id"])
+        except Exception:
+            logger.exception("[PestanaBiblioteca] No se pudo abrir el diccionario para el libro")
+            reproducir(ERROR)
+
     def _al_archivo_no_encontrado(self, libro):
         """
         Diálogo de re-enrutado (sección 2.4 de la planificación v3.0):
@@ -1488,6 +1498,19 @@ class PestanaBiblioteca(wx.Panel):
             "biblioteca cuyo nombre de archivo no coincide con el título real."
         )
         self.Bind(wx.EVT_MENU, self.al_renombrar_todos_pendientes, item_renombrar_pendientes)
+
+        item_reglas_pronunciacion = menu.Append(
+            wx.ID_ANY, "Reglas de pronunciación de este libro..."
+        )
+        item_reglas_pronunciacion.SetHelpText(
+            "Abre Ajustes en el diccionario de pronunciación, ya en alcance "
+            "'Este libro' y con este libro seleccionado."
+        )
+        self.Bind(
+            wx.EVT_MENU,
+            lambda e: self._al_abrir_reglas_pronunciacion(libro),
+            item_reglas_pronunciacion,
+        )
 
         item_quitar = menu.Append(wx.ID_ANY, "Quitar de la biblioteca")
         self.Bind(wx.EVT_MENU, lambda e: self._quitar_libro_seleccionado(), item_quitar)
