@@ -1,0 +1,76 @@
+Prompt y respuesta claude 8
+Claude ha respondido: Ahora añado la sección nueva sobre coherencia de título/nombre de archivo, después de la 2.
+Editadoplanificacion_v3.md+3-1
+Ahora añado la sección nueva sobre coherencia de título/nombre de archivo, después de la 2.6.
+Editadoplanificacion_v3.md+15-0
+Documento actualizado con la sección 2.7 completa, más el nuevo campo titulo_revisado en el esquema de la tabla libros. Voy a comitear el cambio.
+Commit realizado82eda83
+Actualizado, comiteado y subido. La sección 2.7 recoge el diseño completo: detección de discrepancias durante el escaneo, la nueva columna titulo_revisado, y el renombrado explícito (individual o por lotes) reutilizando el patrón de "bautizo" que ya tienes en Grabación — sin renombrados automáticos silenciosos.
+¿Alguna otra duda tras la lectura completa, o damos por cerrado el documento y pasamos a empezar a implementar?
+Mostrar acciones del mensaje
+Has dicho: mira, también estoy hablando con gemini, y me ha hecho muy buenas preguntas, en las que no habíamos reparadoo.
+mira, también estoy hablando con gemini, y me ha hecho muy buenas preguntas, en las que no habíamos reparadoo. Son las siguientes: 1. El gran peligro del "Renombrado Masivo por Lotes" (Sección 2.7)
+El plan dice que la app podrá renombrar de golpe en el disco (os.rename()) todos los archivos físicos cuyos nombres no coincidan con los metadatos.
+La pregunta: Si el usuario tiene esos EPUBs guardados en una carpeta sincronizada con OneDrive, iCloud o Dropbox, o si el antivirus decide bloquear el acceso mientras cambias el nombre a 40 archivos seguidos, os.rename() va a lanzar un error de permisos (PermissionError) a mitad del lote. Si esto pasa, la base de datos de SQLite se quedará desincronizada de los archivos reales en el disco. ¿Cómo vamos a controlar que un fallo en el renombrado de un archivo físico no corrompa el índice de la biblioteca?
+2. El foco relámpago del Asistente Gemini (Sección 6)
+Habéis diseñado que el Asistente Gemini se abra con Ctrl + G en un diálogo flotante desde la Biblioteca, y que se precargue con el contexto del libro seleccionado.  
+Consulta los detalles de la fuente. Abre el panel lateral.
+La pregunta: Cuando el usuario pulse Ctrl + G, NVDA va a verbalizar el cambio de ventana y los metadatos del libro. Pero el diálogo de chat necesita un historial que va a tardar unos milisegundos en cargar. ¿Dónde va a caer el foco inicial de NVDA exactamente? Si cae en el campo de texto para escribir, NVDA interrumpirá la lectura del contexto. Si cae en el historial, el usuario tendrá que tabular para poder escribir. ¿Cómo vas a estructurar el orden de tabulación relámpago aquí para que sea cómodo?  
+Consulta los detalles de la fuente. Abre el panel lateral.
+3. La trampa de las exportaciones cortadas por cuota (Sección 3.4)
+En el modo "Libro completo", si se corta por falta de cuota, el plan dice que la app guardará el carácter exacto del corte en la tabla exportaciones_pendientes para "retomar sin regrabar lo ya hecho".
+La pregunta: Los archivos MP3 no se pueden "retomar" simplemente pegando más audio al final del archivo de texto como si fuera un bloc de notas; requiere concatenación binaria de frames de audio o generar un archivo Parte 2.mp3. Si se genera una segunda parte, ¿cómo se le presenta eso al usuario de forma accesible en la carpeta de salida para que no sea un caos de archivos sueltos?
+¿Cómo tienes pensado resolver estos tres puntos antes de empezar la implementación?
+Mostrar más
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Excelentes preguntas de Gemini — son gaps reales que hay que cerrar antes de tocar código.
+Excelentes preguntas de Gemini — son gaps reales que hay que cerrar antes de tocar código. Voy una por una.
+1. Renombrado por lotes: nunca desincronizar la base de datos
+La clave es no tratarlo como una transacción de lote, sino como N operaciones atómicas independientes, cada una verificada antes de tocar SQLite:
+• Antes de empezar el lote, se comprueba os.access(carpeta, os.W_OK) sobre la carpeta contenedora — si no hay permiso de escritura, se avisa y no se intenta ni un solo archivo.
+• Por cada archivo: os.rename() dentro de un try/except. Solo si el rename tiene éxito (verificado además con os.path.exists(ruta_nueva)) se actualiza ruta_archivo, titulo y titulo_revisado = 1 en SQLite, como una escritura individual, no como parte de una transacción conjunta de 40 filas.
+• Si un archivo falla (permiso, bloqueo de OneDrive/antivirus, lo que sea): se captura la excepción, se registra con logger.exception(...), el libro se queda exactamente como estaba — mismo ruta_archivo original, titulo_revisado sigue en 0 — y el lote continúa con el siguiente archivo sin detenerse.
+• Al terminar: un resumen único, no 40 diálogos — "37 de 40 archivos renombrados. 3 no se pudieron renombrar (ver detalle)", con la lista de los fallidos y el motivo, para que el usuario los reintente cuando quiera.
+Con esto, el peor caso posible es "algunos libros se quedan sin renombrar" — nunca "la base de datos apunta a un archivo que ya no existe con ese nombre", porque el UPDATE de SQLite depende directamente del resultado verificado del os.rename(), archivo por archivo.
+2. Foco relámpago del Asistente Gemini
+El foco inicial va directo al campo de entrada de texto, no al historial. Es el patrón estándar de cualquier chat accesible: el usuario quiere poder escribir de inmediato sin tabular.
+El contexto del libro ("Hablando sobre: El juego de Ender") se anuncia con el patrón _anunciador ya establecido en tu app — un TextCtrl oculto que verbaliza y devuelve el foco, en este caso al campo de entrada en vez de al control previo. Así NVDA dice el contexto una vez, sin interrumpir nada, y el foco queda listo para escribir.
+El historial de conversación, si tarda milisegundos en cargar desde el JSON, se carga en el hilo principal (es una lectura de archivo pequeño, no requiere hilo secundario) antes de mostrar el diálogo — así cuando el diálogo aparece, historial y contexto ya están listos, no hay una carga visible a medias. Los mensajes nuevos que lleguen de la API (esos sí en hilo secundario) se añaden al control de historial sin robar el foco del campo de entrada — el usuario puede seguir escribiendo mientras llega la respuesta.
+3. Exportaciones cortadas por cuota: no es "pegar audio", son archivos completos separados
+Gemini tiene razón en señalar la ambigüedad del texto del documento — corrijo: nunca se concatenan bytes de audio a un MP3 existente. Cada "parte" es una exportación completa e independiente de un tramo de texto, generada de cero cuando el usuario decide continuar.
+Para que no sea un caos de archivos sueltos en la carpeta:
+• Nomenclatura fija y predecible: Título del libro (parte 1 de 2).mp3, y mientras la segunda no existe, no se crea ningún archivo "fantasma" — solo existe el registro en exportaciones_pendientes, invisible en el disco hasta que se genera de verdad.
+• Cuando el usuario retoma la exportación (desde el Creador de Audiolibros o desde el aviso en Biblioteca) y hay cuota suficiente, se genera Título del libro (parte 2 de 2).mp3 — ya sin ninguna marca de "pendiente", el "de 2" ya deja claro que es la segunda y última.
+• Si en el momento de cortar no se sabe aún cuántas partes harán falta en total (podría requerir una tercera si la cuota vuelve a agotarse), se nombra provisionalmente (parte 2 - pendiente).mp3 sin el total, y solo cuando se completa la última parte se renombran todas las anteriores para incluir el conteo final (de 2, de 3, etc.) — mismo mecanismo de renombrado seguro del punto 1, reutilizado aquí.
+• La lista de capítulos/partes con su estado ("Completado" / "Pendiente (sin cuota)") ya estaba diseñada como parte de la interfaz del Creador de Audiolibros (sección 3.4) — es ahí donde el usuario tiene la vista clara y accesible, no dependiendo de leer nombres de archivo sueltos en el Explorador.
+Voy a actualizar el documento con estas tres aclaraciones.
+Editadoplanificacion_v3.md+18-1
+Ahora la sección 6 (Asistente Gemini), añadiendo el detalle del foco relámpago.
+Editadoplanificacion_v3.md+7-0
+Documento actualizado con las tres respuestas. Comiteo y subo.
+Commit realizado8a9918c
+Los tres puntos están cerrados y subidos. Buenas preguntas de Gemini — las dos primeras eran gaps reales de robustez (concurrencia con SQLite y foco de NVDA), y la tercera era una imprecisión real en cómo estaba redactado el documento (sonaba a "pegar audio" cuando siempre fue "generar partes completas").
+¿Sigue revisando con Gemini y me traes más preguntas, o lo dejamos aquí y empezamos a implementar?
+Mostrar acciones del mensaje
+Sesión reanudada
+Has dicho: respuesta de gemini: ¡Eso es, Jacqui!
+respuesta de gemini: ¡Eso es, Jacqui! La respuesta de Claude es impecable y demuestra que trabajar en equipo da sus frutos. Ha resuelto los tres problemas de raíz con pura lógica de ingeniería robusta y, lo más importante, respetando al 100% los estándares de accesibilidad con NVDA.
+
+Analicemos rápidamente las soluciones que ha subido al commit de tu rama:
+
+* **Punto 1 (Renombrado atómico):** El uso de os.access(carpeta, os.W_OK) como escudo inicial es brillante. Hacer que el UPDATE de SQLite se ejecute **únicamente** si os.rename() da un éxito verificado por os.path.exists() elimina cualquier posibilidad de desincronización. La base de datos es ahora indestructible frente a bloqueos de OneDrive o antivirus.
+* 
+**Punto 2 (Foco en el Chat):** Cargar el JSON en el hilo principal antes de pintar el diálogo asegura que no haya desfases. Dejar el foco inicial en el campo de texto y usar tu patrón de TextCtrl oculto (_anunciador) para escupir el contexto de lectura de forma limpia es la forma más cómoda de interactuar con un lector de pantalla en un chat.
+
+
+* **Punto 3 (Partes de audio dinámicas):** Corregir la imprecisión de "pegar audio" por la generación de partes independientes con nomenclatura dinámica (parte 1 de 2, etc.) es la solución correcta. El hecho de que se renombre el conteo final de forma segura solo al terminar evita que queden archivos huérfanos o confusos en el disco.
+
+Por mi parte, tras estas aclaraciones y ver las modificaciones introducidas en el documento planificacion_v3.md, **el diseño técnico de la versión 3.0 está 100% blindado y cerrado**. No tengo más objeciones ni preguntas. Las suposiciones débiles han sido eliminadas.
+
+Tienes el mapa de ruta perfecto. Estás lista para abrir Claude Code (o tu editor) y empezar la fase de ejecución y picado de código sobre esta rama. ¡A por esa v3.0!
+Mostrar más
+Mostrar acciones del mensaje
+Claude ha respondido: Genial, con el visto bueno de Gemini el diseño queda cerrado.
+Genial, con el visto bueno de Gemini el diseño queda cerrado. El documento en documentos/Fases_Del_Proyecto/Fase 7 (V3.0)/planificacion_v3.md es ahora la referencia completa de la v3.0.
+Para empezar a implementar, lo lógico es arrancar por los cimientos: el esquema de biblioteca.db en config_rutas.py/nuevo gestor_biblioteca.py, y las funciones básicas de creación/acceso, antes de tocar ninguna pestaña. Cuando quieras que empecemos con eso, dímelo y nos ponemos manos a la obra con el primer bloque de código.

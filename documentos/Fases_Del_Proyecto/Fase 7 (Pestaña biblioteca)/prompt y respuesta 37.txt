@@ -1,0 +1,15 @@
+prompt y respuesta 37
+vale. lo acabo de hacer, pero, no se guardó nada. me sigue diciendo esto. Fecha de modificación  edición  07/07/2026 0:58  sólo lectura Y es que los dos menús siguen iguales`^
+respuesta:
+Encontré la causa real: el archivo está marcado como **"solo lectura"**. Si un archivo tiene ese atributo, Windows no deja que ningún programa escriba en él — así que aunque el código sí intente registrar el aviso, la escritura falla en silencio y por eso nunca se añade nada nuevo, aunque antes sí funcionara (algo lo puso en solo lectura hace poco, posiblemente OneDrive al terminar de sincronizar).
+
+Vamos a quitarle ese atributo. Es más fiable hacerlo por comando que buscando la casilla en una ventana de Propiedades:
+
+1. Pulsa **Windows + R**.
+2. Escribe exactamente esto y pulsa Enter:
+```
+cmd /k attrib -R "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\registros\app.log"
+```
+3. Se abrirá una ventana de consola negra un instante y ejecutará el comando. Si no da ningún error, ha funcionado (puedes cerrar esa ventana después).
+
+Después de eso, repite la prueba de los dos menús (Shift+F10 en el árbol y en el listado de etiquetas) y vuelve a comprobar la fecha de modificación del archivo — esta vez debería cambiar. Si sigue sin moverse, dímelo y probamos quitando el atributo desde las Propiedades del archivo en vez del comando.

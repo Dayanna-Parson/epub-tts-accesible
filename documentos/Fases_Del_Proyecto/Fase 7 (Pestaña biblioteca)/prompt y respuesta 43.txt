@@ -1,0 +1,22 @@
+prompt y respuesta 43
+
+genialllllllllllllllllllllllllllllllllllllll!!!!! Y, que mas habíamos dejado pendiente para cerrar esta fase, y continuar con lo siguiente?
+
+Respuesta:
+¡Genial que ya esté todo funcionando! Antes de nada, voy a limpiar los chivatos temporales que ya no hacen falta (el bug real ya está encontrado y arreglado, no tiene sentido dejarlos ahí registrando cada vez que abras un menú).
+
+Todos los chivatos temporales fuera. Commit y push.
+
+Ya está limpio y subido. Ahora, repasando toda la conversación, esto es lo que queda **pendiente de confirmar o decidir** antes de cerrar la fase:
+
+**Solo falta que confirmes (ya arreglado, sin código nuevo):**
+1. Ctrl+Av/RePág en las subpestañas Géneros/Sagas — lo arreglé pero nunca me confirmaste si ya funciona bien tras el último cambio.
+2. El "Autor: —" en los 848 libros que ya tenías importados desde antes — el arreglo solo aplica a libros que se escaneen de nuevo. Si no has vuelto a importar esa biblioteca completa desde que lo corregí, esos 848 seguirán mostrando "—" hasta que lo hagas.
+
+**Decisiones que me dejaste pendientes, sin tocar código todavía:**
+3. **Recordar la última carpeta usada** en los diálogos de importar/abrir — lo propusiste tú, nunca lo implementé.
+4. **Reordenar el tabulado** para que la lista de libros quede justo después del árbol/etiquetas al pulsar Tab, en vez de tener que pasar por los filtros de en medio.
+5. **Arrastrar y reordenar categorías** en el árbol de géneros (como ya se puede en la ventana de Proyectos).
+6. **Orden personalizado en la vista de Géneros** — dijiste que al añadir varios libros a un género se ven desordenados. La solución real necesita añadir una columna de orden a la base de datos (cambio de esquema), y quedó pendiente de que me dijeras si querías que lo hiciera.
+
+¿Con cuál seguimos, o prefieres que primero hagamos limpieza general (probar todo una vez más de un tirón) antes de meter más cosas nuevas?

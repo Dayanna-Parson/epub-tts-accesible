@@ -77,10 +77,14 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
 
 # ANCLAJE_INICIO: PANEL_GENERAL
 class PanelGeneral(wx.ScrolledWindow):
-    def __init__(self, padre, config):
+    def __init__(self, padre, config, pestana_ajustes=None):
         super().__init__(padre, style=wx.VSCROLL)
         self.SetScrollRate(0, 20)
         self.config = config
+        # wx.GetTopLevelParent(self) llega hasta ventana_principal (el Frame),
+        # no hasta PestanaAjustes (un wx.Panel intermedio) — por eso se guarda
+        # aquí una referencia directa, en vez de subir por la jerarquía de ventanas.
+        self._pestana_ajustes = pestana_ajustes
         from app.motor.control_cuota import ControlCuota
         self.cuota = ControlCuota()
 
@@ -261,11 +265,17 @@ class PanelGeneral(wx.ScrolledWindow):
         self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
             self.combo_idioma_libro.GetSelection(), "es-ES"
         )
-        padre = wx.GetTopLevelParent(self)
-        if hasattr(padre, "guardar_config_en_archivo"):
-            padre.guardar_config_en_archivo()
+        if self._pestana_ajustes is not None:
+            self._pestana_ajustes.guardar_config_en_archivo()
 
-    def guardar_todo(self):
+    def sincronizar_config(self):
+        """Vuelca en self.config el valor actual de todos los controles del panel.
+
+        Se llama tanto desde el botón «Guardar» (guardar_todo) como desde
+        Ctrl+S (PestanaAjustes._al_guardar_global), para que la casilla de
+        actualizaciones y el resto de campos queden reflejados en self.config
+        aunque el usuario nunca haya pulsado el botón «Guardar» de este panel.
+        """
         self.config["segundos_salto"] = self.txt_salto.GetValue()
         self.config["pausa_entre_fragmentos_ms"] = self.spin_pausa.GetValue()
         self.config["actualizar_automaticamente"] = self.chk_actualizar.GetValue()
@@ -276,9 +286,11 @@ class PanelGeneral(wx.ScrolledWindow):
         self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
             self.combo_idioma_libro.GetSelection(), "es-ES"
         )
-        padre = wx.GetTopLevelParent(self)
-        if hasattr(padre, "guardar_config_en_archivo"):
-            padre.guardar_config_en_archivo()
+
+    def guardar_todo(self):
+        self.sincronizar_config()
+        if self._pestana_ajustes is not None:
+            self._pestana_ajustes.guardar_config_en_archivo()
         if hasattr(self, "txt_limites"):
             for clave, txt in self.txt_limites.items():
                 val = txt.GetValue()
@@ -1442,11 +1454,40 @@ class PanelDiccionario(wx.Panel):
         from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
         self._dic = DiccionarioPronunciacion()
         self._pendiente = False
+        # id_libro a preseleccionar cuando se abre este panel desde el menú
+        # contextual de Biblioteca ("Reglas de pronunciación de este libro").
+        # Ver PestanaAjustes.abrir_diccionario_para_libro().
+        self._id_libro_a_preseleccionar = None
         self._construir_ui()
         wx.CallAfter(self._rellenar_lista)
 
     def _construir_ui(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # ANCLAJE_INICIO: SELECTOR_ALCANCE_DICCIONARIO
+        sz_alcance = wx.BoxSizer(wx.HORIZONTAL)
+        sz_alcance.Add(
+            wx.StaticText(self, label="Alcance:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5,
+        )
+        self.combo_alcance = wx.Choice(self, choices=["Global", "Este libro", "Esta saga"])
+        self.combo_alcance.SetSelection(0)
+        self.combo_alcance.SetHelpText(
+            "Global aplica a todos los libros. Este libro o Esta saga solo afectan "
+            "al libro o a la saga/etiqueta que elijas a la derecha, sin tocar el resto "
+            "de tu biblioteca."
+        )
+        self.combo_alcance.Bind(wx.EVT_CHOICE, self._al_cambiar_alcance)
+        sz_alcance.Add(self.combo_alcance, 0, wx.RIGHT, 15)
+
+        self.combo_referencia = wx.Choice(self, choices=[])
+        self.combo_referencia.SetHelpText(
+            "Elige el libro o la saga/etiqueta a la que se aplicarán las reglas de esta lista."
+        )
+        self.combo_referencia.Bind(wx.EVT_CHOICE, self._al_cambiar_referencia)
+        self.combo_referencia.Hide()
+        sz_alcance.Add(self.combo_referencia, 1)
+        sizer.Add(sz_alcance, 0, wx.EXPAND | wx.ALL, 8)
+        # ANCLAJE_FIN: SELECTOR_ALCANCE_DICCIONARIO
 
         sizer.Add(
             wx.StaticText(self, label="Palabras con pronunciación personalizada:"),
@@ -1518,13 +1559,85 @@ class PanelDiccionario(wx.Panel):
         self._pendiente = True
         evento.Skip()
 
+    # ── Alcance: Global (JSON) vs. Este libro / Esta saga (biblioteca.db) ──
+
+    def _alcance_actual(self) -> str:
+        return {0: "global", 1: "libro", 2: "saga"}[self.combo_alcance.GetSelection()]
+
+    def _al_cambiar_alcance(self, evento):
+        alcance = self._alcance_actual()
+        self.combo_referencia.Show(alcance != "global")
+        self.btn_guardar.Enable(alcance == "global")
+        self.Layout()
+        if alcance == "global":
+            self._rellenar_lista()
+            return
+        self._rellenar_combo_referencia(alcance)
+
+    def _rellenar_combo_referencia(self, alcance: str):
+        from app.motor.gestor_biblioteca import GestorBiblioteca
+        gestor = GestorBiblioteca()
+        self.combo_referencia.Clear()
+        self._referencias = []  # lista paralela: (id, nombre) por índice del combo
+        if alcance == "libro":
+            for libro in gestor.buscar_libros():
+                self._referencias.append((libro["id"], libro["titulo"]))
+        else:  # saga
+            for etiqueta in gestor.listar_etiquetas():
+                self._referencias.append((etiqueta["id"], etiqueta["nombre"]))
+        self.combo_referencia.Set([nombre for _id, nombre in self._referencias])
+
+        indice_preseleccion = 0
+        if alcance == "libro" and self._id_libro_a_preseleccionar is not None:
+            for i, (id_ref, _nombre) in enumerate(self._referencias):
+                if id_ref == self._id_libro_a_preseleccionar:
+                    indice_preseleccion = i
+                    break
+        self._id_libro_a_preseleccionar = None
+
+        if self._referencias:
+            self.combo_referencia.SetSelection(indice_preseleccion)
+            self._rellenar_lista()
+        else:
+            self.lista.DeleteAllItems()
+
+    def _al_cambiar_referencia(self, evento):
+        self._rellenar_lista()
+
+    def preseleccionar_libro(self, id_libro: int):
+        """Llamado desde Biblioteca para abrir este panel ya en alcance 'Este libro'."""
+        self._id_libro_a_preseleccionar = id_libro
+        self.combo_alcance.SetSelection(1)
+        self._al_cambiar_alcance(None)
+
     def _rellenar_lista(self):
         self.lista.Freeze()
         self.lista.DeleteAllItems()
-        for i, (original, pronunciacion) in enumerate(sorted(self._dic.obtener_tabla().items())):
-            self.lista.InsertItem(i, original)
-            self.lista.SetItem(i, 1, pronunciacion)
+        alcance = self._alcance_actual()
+        if alcance == "global":
+            for i, (original, pronunciacion) in enumerate(sorted(self._dic.obtener_tabla().items())):
+                self.lista.InsertItem(i, original)
+                self.lista.SetItem(i, 1, pronunciacion)
+        else:
+            self._reglas_mostradas = self._obtener_reglas_alcance_actual()
+            for i, regla in enumerate(self._reglas_mostradas):
+                self.lista.InsertItem(i, regla["patron_origen"])
+                self.lista.SetItem(i, 1, regla["sustitucion"])
         self.lista.Thaw()
+
+    def _referencia_seleccionada(self):
+        indice = self.combo_referencia.GetSelection()
+        if indice == wx.NOT_FOUND or not getattr(self, "_referencias", None):
+            return None
+        return self._referencias[indice][0]
+
+    def _obtener_reglas_alcance_actual(self):
+        id_referencia = self._referencia_seleccionada()
+        if id_referencia is None:
+            return []
+        from app.motor.gestor_biblioteca import GestorBiblioteca
+        gestor = GestorBiblioteca()
+        return gestor.listar_reglas_diccionario(self._alcance_actual(), id_referencia)
 
     def _al_seleccionar(self, evento):
         idx = evento.GetIndex()
@@ -1537,8 +1650,28 @@ class PanelDiccionario(wx.Panel):
         if not original or not pronunciacion:
             wx.MessageBox("Rellena los dos campos.", "Aviso")
             return
-        self._dic.anadir_entrada(original, pronunciacion)
-        self._pendiente = True
+
+        alcance = self._alcance_actual()
+        if alcance == "global":
+            self._dic.anadir_entrada(original, pronunciacion)
+            self._pendiente = True
+        else:
+            id_referencia = self._referencia_seleccionada()
+            if id_referencia is None:
+                wx.MessageBox("Elige primero un libro o una saga a la derecha.", "Aviso")
+                return
+            from app.motor.gestor_biblioteca import GestorBiblioteca
+            gestor = GestorBiblioteca()
+            existente = next(
+                (r for r in self._obtener_reglas_alcance_actual()
+                 if r["patron_origen"].lower() == original.lower()),
+                None,
+            )
+            if existente:
+                gestor.actualizar_regla_diccionario(existente["id"], original, pronunciacion)
+            else:
+                gestor.anadir_regla_diccionario(original, pronunciacion, alcance, id_referencia)
+
         self.txt_original.Clear()
         self.txt_pronunciacion.Clear()
         self._rellenar_lista()
@@ -1548,9 +1681,17 @@ class PanelDiccionario(wx.Panel):
         if idx == -1:
             wx.MessageBox("Selecciona una entrada de la lista.", "Aviso")
             return
-        original = self.lista.GetItemText(idx, 0)
-        self._dic.eliminar_entrada(original)
-        self._pendiente = True
+
+        alcance = self._alcance_actual()
+        if alcance == "global":
+            original = self.lista.GetItemText(idx, 0)
+            self._dic.eliminar_entrada(original)
+            self._pendiente = True
+        else:
+            regla = self._reglas_mostradas[idx]
+            from app.motor.gestor_biblioteca import GestorBiblioteca
+            GestorBiblioteca().eliminar_regla_diccionario(regla["id"])
+
         self._rellenar_lista()
 
     def _al_guardar_cambios(self, evento):
@@ -1836,7 +1977,7 @@ class PestanaAjustes(wx.Panel):
         # --- Simplebook de habitaciones (inicialización temprana: evita punteros nulos) ---
         self.panel_derecho = wx.Simplebook(self.splitter)
 
-        self.pag_general     = PanelGeneral(self.panel_derecho, self.config)
+        self.pag_general     = PanelGeneral(self.panel_derecho, self.config, pestana_ajustes=self)
         self.pag_claves      = PanelClaves(self.panel_derecho, self.config)
         self.pag_azure       = PanelAzure(self.panel_derecho, self.config)
         self.pag_deepgram    = PanelDeepgram(self.panel_derecho, self.config)
@@ -1887,6 +2028,8 @@ class PestanaAjustes(wx.Panel):
     def _al_guardar_global(self, evento=None):
         """Ctrl+S: guarda las claves de PanelGeneral y sincroniza el slider de lectura."""
         try:
+            if hasattr(self, "pag_general"):
+                self.pag_general.sincronizar_config()
             ruta = self.ruta_config
             try:
                 with open(ruta, "r", encoding="utf-8") as f:
@@ -1957,6 +2100,7 @@ class PestanaAjustes(wx.Panel):
 
         nodo_diccionario = self.arbol_cat.AppendItem(raiz, "Reglas del Diccionario")
         self._nodos[nodo_diccionario] = self._PAG_DICCIONARIO
+        self._nodo_diccionario = nodo_diccionario
 
         nodo_atajos = self.arbol_cat.AppendItem(raiz, "Atajos de Teclado")
         self._nodos[nodo_atajos] = self._PAG_ATAJOS
@@ -1972,6 +2116,16 @@ class PestanaAjustes(wx.Panel):
             primer_hijo, _ = self.arbol_cat.GetFirstChild(raiz)
             if primer_hijo.IsOk():
                 self.arbol_cat.SelectItem(primer_hijo)
+
+    def abrir_diccionario_para_libro(self, id_libro: int):
+        """
+        Acceso rápido desde el menú contextual de Biblioteca: navega al
+        nodo "Reglas del Diccionario" y lo deja ya en alcance "Este libro"
+        con el libro indicado preseleccionado.
+        """
+        self.arbol_cat.SelectItem(self._nodo_diccionario)
+        self.pag_diccionario.preseleccionar_libro(id_libro)
+        self.pag_diccionario.txt_original.SetFocus()
 
     # ANCLAJE_INICIO: NAVEGACION_ARBOL_TAB
     def _al_tecla_arbol(self, evento):

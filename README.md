@@ -1,126 +1,235 @@
-# Epub TTS Accesible
+## 📘 Epub TTS Accesible
 
-> Aplicación de escritorio accesible para Windows — lee libros EPUB y crea audiolibros multivoz con síntesis de voz neuronal.
-
-**Desarrollada por [Dayanna Parson (TifloTutos)](https://tiflotutos.com) · Versión 2.0.0**
+Aplicación de escritorio accesible para leer libros EPUB y trabajar con audiolibros mediante síntesis de voz.
 
 ---
 
-## ¿Qué es?
+### ¿Qué es Epub TTS Accesible?
 
-Epub TTS Accesible es una aplicación de escritorio para Windows, escrita en Python, pensada para que personas ciegas puedan leer y trabajar con libros EPUB de forma cómoda, controlada y accesible, utilizando distintos motores de síntesis de voz.
+Epub TTS Accesible es una aplicación de escritorio para Windows, desarrollada en Python, pensada para que personas ciegas puedan leer y trabajar con libros EPUB de forma cómoda, controlada y accesible, utilizando distintos motores de síntesis de voz.
 
-Nace de una necesidad real: poder leer libros largos en el PC y preparar audiolibros multivoz, sin depender de flujos frágiles ni de herramientas pensadas para móvil.
-
----
-
-## ¿Para quién está pensada?
-
-- Personas ciegas o con baja visión que usan lector de pantalla (NVDA).
-- Usuarios que quieran escuchar libros EPUB con TTS en Windows.
-- Personas interesadas en la producción de audiolibros.
-- Desarrolladoras que quieran explorar un proyecto real de accesibilidad en Python.
+La aplicación nace de una necesidad real: poder leer libros largos y complejos en el PC, y preparar posteriormente audiolibros, sin depender de flujos frágiles ni de herramientas pensadas principalmente para móvil.
 
 ---
 
-## Qué puedes hacer
+### ¿Para quién está pensada?
 
-- Abrir y leer libros en formato EPUB con navegación por índice.
-- Escuchar el contenido con distintas voces TTS, sin pausas entre fragmentos.
-- Pausar, reanudar y moverte por el texto con saltos configurables.
-- Consultar en qué página estás con Ctrl+I y saltar a cualquier página con Ctrl+G.
-- Añadir y gestionar marcadores.
-- Grabar audiolibros multivoz con etiquetas de personaje (`{{@narrador}}`, `{{@james}}`…).
-- Exportar en MP3 a 320 kbps, normalizado a 44 100 Hz para edición en DAW.
-- Corregir pronunciaciones incorrectas con el diccionario propio.
-- Controlar el consumo de cada API con límites y avisos automáticos.
-- Instalar actualizaciones directamente desde la propia aplicación.
+Personas ciegas o con baja visión que usan lector de pantalla.
+
+Usuarios que quieran escuchar libros EPUB con TTS en Windows.
+
+Personas interesadas en la producción de audiolibros.
+
+Desarrolladores que quieran explorar un proyecto real de accesibilidad en Python.
 
 ---
 
-## Síntesis de voz
+### Qué puedes hacer con la aplicación
 
-| Motor | Tipo | Notas |
-|---|---|---|
-| SAPI5 (64 bits) | Local | Siempre disponible, sin conexión ni coste |
-| SAPI5 (32 bits) | Local | Eloquence, RealSpeak y otras voces de CodeFactory — requiere `auxiliar_sapi32.exe` en `/bin/` (incluido en el portable) |
-| Microsoft Azure TTS | Nube | Motor neuronal principal |
-| Amazon Polly | Nube | Motor neuronal alternativo |
-| **Deepgram Aura-2** | Nube | **Recomendado** — pay-as-you-go, sin suscripción mensual fija |
-| ElevenLabs | Nube | Voces expresivas y multilingües |
+Con Epub TTS Accesible puedes:
 
-Si no hay conexión o se alcanza un límite de cuota, la app cambia automáticamente a voz local.
+abrir y leer libros en formato EPUB,
 
----
+navegar por el índice del libro,
 
-## Accesibilidad
+escuchar el contenido mediante distintas voces TTS,
 
-Diseñada desde el principio para funcionar con NVDA y lectores de pantalla:
+pausar, reanudar y moverte por el texto con saltos configurables,
 
-- Controles nativos de Windows, accesibles por definición.
-- Uso completo con teclado — ningún flujo requiere ratón.
-- Diálogos que no pierden el foco al cerrarse.
-- Sin ventanas de consola al arrancar: NVDA no verbaliza textos técnicos de inicio.
-- Respuestas vocales inmediatas: Ctrl+I anuncia la página actual sin mover el foco visible.
+añadir y gestionar marcadores,
+
+elegir qué voces usar mediante un sistema de favoritas,
+
+controlar el consumo de servicios TTS de pago,
+
+trabajar durante sesiones largas sin perder el contexto.
 
 ---
 
-## Atajos principales
+### Interfaz y elementos principales
 
-| Atajo | Acción |
-|---|---|
-| `Control + 1` | Modo Lectura |
-| `Control + 2` | Crear Audiolibro |
-| `Control + 3` | Ajustes |
-| `Control + O` | Abrir EPUB / carpeta |
-| `Control + P` | Reproducir / Pausar |
-| `Control + I` | Anunciar página actual (NVDA) |
-| `Control + G` | Saltar a página o porcentaje |
-| `Control + S` | Guardar ajustes (en pestaña Ajustes) |
-| `F1` | Abrir manual de usuario |
+La aplicación se organiza de forma clara y predecible:
 
----
+Pestañas
 
-## Estado actual
+Modo Lectura
 
-**Versión 2.0.0 — aplicación completa y estable.**
+Modo Grabación
 
-- Ajustes rediseñados con árbol de navegación (wx.TreeCtrl + wx.Simplebook).
-- Actualizaciones automáticas mediante Script Clon: descarga ZIP, reemplaza archivos y vuelve a arrancar.
-- Compatibilidad con voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante proceso puente.
-- Modo lectura con páginas virtuales dinámicas y salto directo por página o porcentaje.
-- Selector de escala de velocidad: porcentajes (0–100) o multiplicadores (0.5×–3.0×).
-- Modo Crear Audiolibro multivoz con etiquetas de personaje.
-- Exportación MP3 a 320 kbps, normalizado a 44 100 Hz.
-- Diccionario de pronunciación para todos los motores.
-- Control de cuota y avisos de gasto por proveedor.
-- Manual de usuario accesible integrado (`F1`).
+Ajustes
 
----
+Barra de menú
 
-## Manual de usuario
+opciones para abrir libros EPUB,
 
-Incluido en la aplicación. Ábrelo con **F1** desde cualquier pestaña, o abre directamente el archivo `ayuda.html`.
+acceso a libros recientes,
+
+posibilidad de borrar el historial.
+
+Modo Lectura
+
+controles de reproducción,
+
+selector de voces (basado en favoritas),
+
+gestión de marcadores mediante diálogos accesibles,
+
+lectura continua con memoria de posición.
+
+Todo está pensado para poder usarse únicamente con teclado y lector de pantalla.
 
 ---
 
-## Descarga
+### Síntesis de voz
 
-Visita la [página de releases](https://github.com/Dayanna-Parson/epub-tts-accesible/releases) para descargar la última versión.
+La aplicación permite escuchar los libros utilizando distintos motores de voz:
+
+voces locales mediante SAPI5,
+
+Microsoft Azure TTS,
+
+ElevenLabs,
+
+Amazon Polly,
+
+Deepgram Aura-2 (recomendado como motor principal de nube, pay-as-you-go),
+
+Si no hay conexión a internet o se alcanza un límite de uso, la app cambia automáticamente a voz local.
 
 ---
 
-## Documentación
+### Sistema de favoritos y filtros
 
-| Archivo | Contenido |
-|---|---|
-| [`novedades.txt`](novedades.txt) | Historial de cambios por versión |
-| [`ayuda.html`](ayuda.html) | Manual de usuario completo |
-| [`DEVELOPMENT.md`](DEVELOPMENT.md) | Guía técnica para desarrolladoras |
-| [`BITACORA_DE_DESARROLLO.md`](BITACORA_DE_DESARROLLO.md) | Historia del proyecto |
+Para facilitar el uso cuando hay muchas voces disponibles, Epub TTS Accesible incluye:
+
+un sistema de voces favoritas,
+
+filtros por idioma, proveedor, tipo de voz y texto,
+
+persistencia de las preferencias entre sesiones.
+
+Esto permite centrarse solo en las voces que realmente interesan.
 
 ---
 
-## Licencia
+### Control de cuota y costes
 
-Por definir.
+La aplicación incorpora un sistema de control de uso de servicios TTS:
+
+contadores mensuales por proveedor,
+
+límites configurables por el usuario,
+
+avisos al alcanzar un límite,
+
+cambio automático a voz local.
+
+El objetivo es evitar consumos inesperados y errores durante la reproducción.
+
+---
+
+### Ajustes
+
+Desde la pestaña de ajustes se pueden configurar, entre otras cosas:
+
+claves API,
+
+idioma del libro,
+
+tiempos de salto adelante y atrás,
+
+rutas de exportación,
+
+limpieza de caché.
+
+Toda la configuración se guarda localmente.
+
+---
+
+### Accesibilidad
+
+Epub TTS Accesible está diseñada desde el principio para funcionar con lectores de pantalla:
+
+controles nativos accesibles,
+
+flujos claros,
+
+uso completo con teclado,
+
+diálogos pensados para no perder el foco.
+
+No es una adaptación posterior, sino la base del proyecto.
+
+---
+
+### Atajos de teclado
+
+La aplicación utiliza atajos de teclado para facilitar la navegación y la reproducción.
+
+⚠️ Esta sección se completará cuando el conjunto de atajos esté definitivamente cerrado.
+
+---
+
+### Manual de usuario
+
+La aplicación incluye un manual de usuario en formato HTML accesible. Puedes abrirlo con F1 desde cualquier pestaña de la aplicación.
+
+cómo usar el modo lectura,
+
+cómo gestionar marcadores,
+
+cómo configurar las voces y el diccionario de pronunciación,
+
+cómo interpretar los avisos de cuota,
+
+cómo preparar contenidos para audiolibros.
+
+---
+
+### Estado actual del proyecto
+
+Epub TTS Accesible es una aplicación completa y estable. Versión actual: 2.0.0.
+
+modo lectura con voces de Azure, Amazon Polly, Deepgram, ElevenLabs y SAPI5 (64 y 32 bits),
+
+modo grabación multivoz con etiquetas de personaje {{@voz}},
+
+exportación MP3 a 320 kbps, normalizado a 44 100 Hz,
+
+diccionario de pronunciación para todos los motores,
+
+control de cuota y avisos de gasto por proveedor,
+
+Gestor de Proyectos con árbol jerárquico, papelera y acceso directo a las grabaciones,
+
+divisor de EPUB integrado por capítulos,
+
+12 sonidos contextuales y navegación semántica por encabezados,
+
+ajustes avanzados en árbol de navegación y actualizaciones automáticas desde la propia app.
+
+silencio total en la consola al arrancar: NVDA no verbaliza textos técnicos de inicio.
+
+---
+
+### Instalación y ejecución
+
+Este proyecto está pensado principalmente para usuarios finales y desarrolladores.
+
+Las instrucciones técnicas de instalación, dependencias y entorno se encuentran en los archivos del repositorio (por ejemplo, requirements.txt).
+
+---
+
+### Documentación
+
+📘 Documento 1: Visión personal del proyecto
+
+👩‍💻 Documento 2: Visión técnica completa para desarrolladores
+
+📄 Documento 3: Presentación pública / README (este documento)
+
+---
+
+### Licencia
+
+Licencia No Comercial. Ver el archivo `LICENSE` en la raíz del repositorio.

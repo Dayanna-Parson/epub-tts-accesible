@@ -1,0 +1,14 @@
+Prompt y respuesta 33
+
+si, es el log actual que se guarda en esa carpeta. Y es el único sitio donde se guarda. Así que hay algo que no está funcionando. Podrías mirarlo?
+
+Vale, gracias por confirmarlo — eso descarta que estés subiendo el archivo equivocado. Si el archivo es el correcto y aun así nunca cambia, el problema está en cómo se escribe, no en cuál archivo miras. Antes de tocar más código, tengo una sospecha concreta que quiero descartar primero.
+
+Tu carpeta del proyecto está dentro de `Documents`, que en Windows suele estar sincronizada con OneDrive por defecto. Eso puede causar justo este síntoma: un archivo que se reescribe muy seguido (como un log) puede quedarse "atascado" mostrando una versión antigua en caché mientras OneDrive gestiona la sincronización, aunque el proceso real de la app sí esté escribiendo en el disco correctamente.
+
+¿Puedes comprobar dos cosas rápidas?
+
+1. En el Explorador de archivos, ve a esa carpeta `registros` y mira si el icono de `app.log` tiene algún símbolo de nube o de sincronización (una nube, un check verde, una flecha circular). Si sí, es justo esto.
+2. Como prueba directa: abre la app, haz cualquier acción que sepamos que genera un aviso (por ejemplo, abre el menú contextual de un libro con Shift+F10 sobre el libro, que sabemos que sí funciona), y **sin cerrar la app**, mira en el Explorador si la fecha de modificación de `app.log` cambia en ese mismo instante. Si nunca cambia ni con la app abierta y usándola en vivo, es un problema de escritura real; si cambia pero luego "vuelve" a mostrar contenido viejo al reabrirlo, es casi seguro OneDrive.
+
+Dime qué ves y seguimos desde ahí — prefiero confirmar esto antes de seguir tocando código de logging a ciegas.

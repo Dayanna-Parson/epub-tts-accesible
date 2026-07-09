@@ -1,0 +1,25 @@
+prompt y respuesta 46
+muchísimas gracias, te mereces infinitas propinas jaja. Bueno. Puedes mirar el resto de apartados y sub apartados del árbol, en definitiva que se guarde bien toda la configuración correctamente?
+respuesta:
+Good, that one's legitimate — `ventana_principal` really does own `pestana_ajustes`. Now let's check the other three `GetTopLevelParent` call sites (1132, 1405, 1745) and the save mechanism inside `guardar_config_en_archivo` itself, plus how `PanelClaves.al_guardar` actually persists.
+
+Good — that's directly against `ventana` (Frame attributes), also legitimate. Fine.
+
+Same pattern (SAPI5 panel), fine. Now line 1745 (PanelAtajos) and the `guardar_config_en_archivo` internals:
+
+That uses its own `DiccionarioPronunciacion` class with explicit save — self-contained, unrelated to `self.config`. Let's check `guardar_config_en_archivo` itself and `PanelClaves.al_guardar` to confirm they're solid.
+
+Solid, atomic write. `PanelClaves.al_guardar`:
+
+That confirms `set_limite` writes its own file directly — self-contained, unaffected by the bug I fixed. Everything checks out. Let's verify the module still compiles and give the summary.
+
+No hay más cambios que hacer — revisé el resto del árbol de Ajustes rama por rama:
+
+- **Configuración General**: era la única rama con el bug (ya arreglado). El resto de sus campos (segundos de salto, pausa entre fragmentos, escala de velocidad, idioma del libro) comparten el mismo `self.config` y ahora se sincronizan igual antes de Ctrl+S, así que quedan cubiertos también.
+- **Límites de presupuesto** (dentro del mismo panel General): no pasan por `self.config` ni por el bug — usan `ControlCuota.set_limite()`, que escribe su propio archivo directamente al pulsar "Guardar". Independiente y correcto.
+- **Credenciales y API Keys**: usa `guardar_claves()` de `config_rutas.py`, lee los valores en vivo de los campos al pulsar "Guardar Todas las Claves". No usa `self.config` ni `wx.GetTopLevelParent`, no tiene el bug.
+- **Catálogos de Voces** (Azure, Deepgram, Polly, ElevenLabs, SAPI5): son navegadores de catálogo, no escriben en `self.config`; sus favoritas se guardan aparte en `voces_favoritas.json`/equivalente vía escritura atómica propia, sin pasar por el flujo roto.
+- **Reglas del Diccionario**: tiene su propia clase `DiccionarioPronunciacion` con guardado explícito a `pronunciacion.json`, totalmente independiente de `self.config`.
+- **Atajos de Teclado**: usa `guardar_atajo_usuario`/`eliminar_atajo_usuario`/`restablecer_todos` de `gestor_atajos.py`, cada acción se persiste al momento, sin pasar por `self.config` tampoco.
+
+En resumen: el único punto roto era `PanelGeneral` (por el `wx.GetTopLevelParent` mal resuelto), que ya corregí y subí. El resto de apartados usa cada uno su propio archivo con escritura atómica directa y no tenían ese problema. Toda la configuración persiste correctamente ahora.

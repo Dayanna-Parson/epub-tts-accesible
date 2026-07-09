@@ -1,0 +1,215 @@
+
+
+
+1. Mira, no es que NVDA lea dos veces lo mismo. simplemente , te estoy enseñando como lo lee. Como vas a leer ahora, cuando cambia de subpestaña, ya sea con flechas o con control av pag, o re pag, pues, el foco salta directamente al primer ítem. en los géneros, pues en vez de saltar a la pestaña, salta al árbol. Y en la pestaña Etiquetas y colecciones Pues también salta directamente a la lista .
+lista de pestañas
+Sagas y colecciones  pestaña  seleccionado
+árbol
+(Todas las categorías)
+Importar carpeta... (Ctrl+O)  botón
+Biblioteca  pestaña  seleccionado
+Géneros  pestaña  seleccionado.
+
+2. Si que hice gitpul, y este es el último commmit que tengo. de hecho, todo lo que te estoy enseñando en esta respuesta con NVDA es la última versión de mi app, la que estamos haciendo ambos.
+Mira, esto es lo último que me acabo de descargar:
+
+From github.com:Dayanna-Parson/epub-tts-accesible
+ * branch            claude/fase-7-v3-planning-tsz05n -> FETCH_HEAD
+   d6b3578..79cce0e  claude/fase-7-v3-planning-tsz05n -> origin/claude/fase-7-v3-planning-tsz05n
+Updating d6b3578..79cce0e
+Fast-forward
+ app/interfaz/pestana_biblioteca.py | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
+
+A, y, esto es lo que aparece en el listado de etiquetas.
+lista
+Contexto  menú
+Importar carpeta...	Ctrl+O  i
+Ayuda  submenú  a
+Salir  s
+
+Y esto, en la lista de cada etiqueta:
+lista
+Contexto  menú
+Importar carpeta...	Ctrl+O  i
+Abrir en Lectura	Intro  a
+Marcar como favorito  m
+Añadir a categoría  submenú  a
+Añadir a etiqueta  submenú  a
+Quitar de esta categoría  no disponible  q
+Renombrar archivo...	F2  r
+Quitar de la biblioteca  q
+Ayuda  submenú  a
+Salir  s
+Y me preguntaba, si se puede mover la lista al lado donde corresponda. por ej: en la pestaña géneros, la lista está casi al final, de hecho es el penúltimo elemento de la pestaña Y creo que devería estar seguido de cuando haces un tab desde la vista en árbol.
+Y en la otra pestaña de etiquetas y colecciones, pues pasa algo similar. Están muy lejos los resultados por decirlo de alguna manera.
+3.
+
+Carpeta:  edición  seleccionado sagas
+Seleccionar carpeta  botón
+Epub-TTS
+lista de pestañas
+Biblioteca  pestaña  seleccionado
+¿Crear categorías desde las subcarpetas?  diálogo  ¿Las subcarpetas de esta carpeta representan géneros y subgéneros?
+Ejemplo: «Fantasía/Fantasía épica/tu_libro.epub» crearía la categoría «Fantasía» con la subcategoría «Fantasía épica».
+
+Podrás renombrar o mover las categorías después. Si tus subcarpetas no son géneros (por ejemplo, son autores o sagas), elige No.
+Sí  botón  ALT+  S
+No  botón  ALT+  N
+pulsado
+Escaneo completado  diálogo  Se han añadido 848 libro(s) a la biblioteca.
+OK  botón
+pulsado
+
+
+(El primer mensaje, si que me lo vergaliza bien.
+Pero, el problema sigue con el segundo, no me verbaliza las etiquetas, y aunque ya no me dice panel, ni desconocido, pues se queda en silencio (Mudo) Y se que terminó porque se reproduce el sonido de éxito, y me dice, lista:
+Epub-TTS
+lista de pestañas
+lista de pestañas
+árbol
+(Todas las categorías)
+Agrupar por carpeta  diálogo  Se detectaron carpetas con varios libros. ¿Agrupar cada una con una etiqueta?
+· Alcatráz - Brandon Sanderson (6 libros)
+· Alquimia y Fae - Callie Hart (2 libros)
+· Amanecer rojo - Pierce Brown (6 libros)
+· anne Rice (9 libros)
+· Crónicas angélicas (2 libros)
+· Crónicas del Lobo (2 libros)
+· Crónicas Vampíricas (13 libros)
+· El Mesías (2 libros)
+· La Bella Durmiente (4 libros)
+· Las Brujas de Mayfair (3 libros)
+· Nuevas Historias de Vampiros (2 libros)
+· Arcontes - Kelly Dreams (10 libros)
+· Black Bird Academy - Stella Tack (3 libros)
+· Asesinato para principiantes - Holly Jackson (4 libros)
+· CABALLEROS DRAGÓN - Bianca DARC (5 libros)
+· Caraval - Stephanie Garber (6 libros)
+· Cazadora de hadas - Jennifer L. Armentrout (3 libros)
+· Cazadores de sombras - Cassandra Clare (20 libros)
+· Extra (2 libros)
+· Ciclo de Hainish - Ursula K. Le Guin (9 libros)
+· Ciudad medialuna - Sarah J. Maas (3 libros)
+· cosmere - Brandon Sanderson (12 libros)
+· Covenant - Jennifer L. Armentrout (11 libros)
+· Crave - Tracy Wolff (7 libros)
+· cruzados de las estrellas - Alan Somoza (18 libros)
+· Crónicas de la Nuncanoche - Jay Kristoff (3 libros)
+· Crónicas de la torre - Laura Gallego (4 libros)
+· Crónicas lunares - Marissa Meyer (8 libros)
+· De coronas y Gloria - Morgan Rice (8 libros)
+· De Dragones, Amor y Destino - Jenny Swan (6 libros)
+· De Sangre y Cenizas - Jennifer L. Armentrout (11 libros)
+· Delirium - Lauren_Oliver (2 libros)
+· destino y fuego - K. A. Tucker (3 libros)
+· Destrózame - Tahereh Mafi (11 libros)
+· Dragonlance - Margaret Weis & Tracy Hickman (81 libros)
+· divergente - Verónica Roth (3 libros)
+· El anillo del hechicero - Morgan Rice (17 libros)
+· el camino del acero - Morgan Rice (4 libros)
+· El cementerio de los libros olvidados - Carlos Ruiz Zafón (5 libros)
+· El Ciclo de la Luna Roja - Jose Antonio Cotrina (3 libros)
+· El ciclo de la puerta de la muerte - Margaret_Weis (7 libros)
+· El ciclo de Terramar - Ursula_K_Le_Guin (5 libros)
+· El corredor del laberinto - James Dashner (6 libros)
+· El círculo protector - Checo E. Martínez (8 libros)
+· el dador de los recuerdos - Lois Lowry (4 libros)
+· El detective loco (5 libros)
+· el diario de un vampiro - Morgan Rice (11 libros)
+· El día que se perdió la cordura - Javier Castillo (2 libros)
+· El Elfo Oscuro - R. Salvatore (4 libros)
+· El fin de los tiempos - Susan_Ee (3 libros)
+· El jardín químico - Lauren_DeStéfano (3 libros)
+· El Juego de Ender - Orson Scott Card (18 libros)
+· El portador de luz - Brent_Weeks (3 libros)
+· El problema de los tres cuerpos - Liu_Cixin (3 libros)
+· El proyecto Orfeo - Fran. J. Cabil (8 libros)
+· El segundo ocaso - Virginia Pérez de la Fuente (4 libros)
+· El príncipe de la niebla - Carlos Ruiz Zafón (3 libros)
+· El vals de la bruja - Belén Martínez (3 libros)
+· El Vatídico - Robin Hobb (4 libros)
+· Escolomancia - Naomi Novik (3 libros)
+· Escuadrón - Brandon Sanderson (5 libros)
+· Estaciones del Destino - Karolyn Ciseau (4 libros)
+· fuego - Joana Marcus (3 libros)
+· Fénix y Dragón - Lucía Cerezo (3 libros)
+· Harry Dresden (22 libros)
+· Invisible - Eloy Moreno (2 libros)
+· Heraldos de Valdemar - Mercedes Lackey (3 libros)
+· la asistenta - Freida McFadden (3 libros)
+· La Caída De Los Reinos - Morgan Rhodes (6 libros)
+· La chica de nieve - Javier Castillo (3 libros)
+· La decisión de la espada - I.M. Redwright (4 libros)
+· La espada de la verdad - Terry Goodkind (25 libros)
+· La espada infinita - Brandon Sanderson (2 libros)
+· La guerra de la amapola - R. F. Kuang (3 libros)
+· La hermandad de la Daga Negra - J. R. Ward (17 libros)
+· La primera ley - Joe Abercrombie (13 libros)
+· La leyenda de Camelot (3 libros)
+· la prisionera de oro - Raven Kennedy (6 libros)
+· La prometida - Kiera Cass (2 libros)
+· La Puerta Oscura - David Lozano Garbala (3 libros)
+· La Reina Roja - Victoria Aveyard (3 libros)
+· La rueda del tiempo - Robert Jordan y Brandon Sanderson (15 libros)
+· La saga de los confines - Liliana Bodoc (4 libros)
+· la saga Krosann - Sam Feuerbach (5 libros)
+· la selección - Kiera Cass (9 libros)
+· La tierra fragmentada - N. K. Jemisin (3 libros)
+· La Torre Oscura - Stephen King (8 libros)
+· Las Crónicas Akáshicas - Aitchison (7 libros)
+· Las Crónicas de La Bruja Negra - Laurie Forest (4 libros)
+· Las crónicas de Narnia - C. S. Lewis (8 libros)
+· Las doce puertas - Vicente Raga (10 libros)
+· Legend - Marie Lu (4 libros)
+· Lorris el elfo - Laura Gallego (3 libros)
+· Los Elementos Oscuros - Jennifer L. Armentrout (9 libros)
+· los feos - Scott_Westerfeld (4 libros)
+· Los habitantes del aire - Holly Black (3 libros)
+· los huesos verdes - Fonda Lee (3 libros)
+· Lux - Jennifer L. Armentrout (10 libros)
+· Los jóvenes de la élite - Marie Lu (3 libros)
+· Magos por casualidad - Laura Gallego (2 libros)
+· malaz - Steven_Erikson (16 libros)
+· Nightworld Academy - LJ Swallow (11 libros)
+· Nigromantes (2 libros)
+· Percy Jackson - Rick Riordan (40 libros)
+· Pol Gise (3 libros)
+· Powerless - Lauren Roberts (4 libros)
+· Ravenhold Academy - LJ Swallow (3 libros)
+· Reckoners - Brandon Sanderson (3 libros)
+· Retorno a Nela-Shur - David Monje Galisteo (5 libros)
+· Reinos de Nyaxia - Carissa Broadbent (2 libros)
+· Reyes y Hechiceros - Morgan Rice (6 libros)
+· Rubí de sangre - Raisa Martín Espinosa (3 libros)
+· Sangre de plata - Lucía G. Sobrado (3 libros)
+· Rivales divinos - Rebecca Ross (2 libros)
+· Silo - Hugh Howey (3 libros)
+· Skandar - A. F. Steadman (4 libros)
+· Skyhunter - Marie Lu (2 libros)
+· sombra y hueso - Leigh Bardugo (10 libros)
+· Suriel - Esmeralda Muñoz (2 libros)
+· The Seven Realms - Cinda Williams Chima (4 libros)
+· Tilogía Prehistoria (3 libros)
+· Trono de cristal - Sarah J. Maas (7 libros)
+· Time Keeper - Iria G. Parente & Selene M. Pascual (2 libros)
+· Un Reino en Llamas - Ela Valdecán (3 libros)
+· un trono para las hermanas - Morgan Rice (8 libros)
+· Valkiria Kross - Kian Noren (3 libros)
+· Warcross - Marie Lu (2 libros)
+· élite plateada (2 libros)
+Sí  botón  ALT+  S
+No  botón  ALT+  N
+Sí  botón  ALT+  S
+pulsado
+Epub-TTS
+lista de pestañas
+Biblioteca  pestaña  seleccionado
+lista
+A, se puede hacer que en cada diálogo que requiera abrir o buscar una carpeta, que recuerde la última usada?
+Y por último.
+4. La primera vez que se añaden una carpeta con varios libros y etiquetas como acabo de hacer, si funciona bien, y se actualiza.
+Pero, la segunda vez que e añadido mas libros, y e añadido  341 en total, pues las listas la primera lista con las etiquetas, si que se actualiza. Pero, la segunda lista que es la que contiene los libros, no. aparece vacía, sin contenido. Y tengo que cerrar la aplicación, y volverla a abrir, y entonces, si que aparecen.
+Y las otras dos cosas que pasan son las siguientes. Cuando añado un libro a una categoría, solo se muestra el primero que añadí, los otros no. Pero, no se si tiene que ver con lo que te acabo de decir, que las listas no se actualizan o que no se agregó bien y ya.
+El segundo, es en el árbol. Que no se pueden ni mover las categorías principales ni sus sub categorías, como si pasa y lo hace muy bien la ventana de proyectos
+Vale. Cuando he cerrado la app, y la e vuelto a abrir, si que se han mostrado bien el contenido de las etiqeutas, y en la pestaña géneros, si que se muestra ahora, todos los libros que e añadido.

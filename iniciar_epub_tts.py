@@ -39,9 +39,58 @@ _handler_consola.setFormatter(
     logging.Formatter("%(levelname)-8s  %(name)s  %(message)s")
 )
 
+
+class _HandlerErrorIndividual(logging.Handler):
+    """
+    Además del log combinado, cada ERROR/CRITICAL se escribe también en
+    su propio archivo dentro de registros/errores/, nombrado con la
+    fecha y hora — para poder abrir directamente el último fallo sin
+    tener que buscarlo dentro de un log largo con avisos de todo tipo
+    mezclados. Se conservan como máximo los últimos 20; los más
+    antiguos se borran solos.
+    """
+
+    _MAXIMO_ARCHIVOS = 20
+
+    def __init__(self, carpeta):
+        super().__init__(level=logging.ERROR)
+        self._carpeta = carpeta
+        os.makedirs(self._carpeta, exist_ok=True)
+        self.setFormatter(
+            logging.Formatter("%(asctime)s  %(levelname)-8s  %(name)s  %(message)s")
+        )
+
+    def emit(self, record):
+        try:
+            import datetime
+            marca = datetime.datetime.fromtimestamp(record.created).strftime("%Y-%m-%d_%H-%M-%S")
+            nombre = f"{marca}_{record.levelname.lower()}.log"
+            ruta = os.path.join(self._carpeta, nombre)
+            with open(ruta, "w", encoding="utf-8") as f:
+                f.write(self.format(record))
+            self._purgar_antiguos()
+        except Exception:
+            pass
+
+    def _purgar_antiguos(self):
+        archivos = sorted(
+            (os.path.join(self._carpeta, n) for n in os.listdir(self._carpeta)),
+            key=os.path.getmtime,
+        )
+        for ruta_vieja in archivos[:-self._MAXIMO_ARCHIVOS]:
+            try:
+                os.remove(ruta_vieja)
+            except OSError:
+                pass
+
+
+_handler_error_individual = _HandlerErrorIndividual(
+    os.path.join(_DIR_REGISTROS, "errores")
+)
+
 logging.basicConfig(
     level=logging.WARNING,
-    handlers=[_handler_archivo, _handler_consola],
+    handlers=[_handler_archivo, _handler_consola, _handler_error_individual],
 )
 
 # comtypes genera líneas INFO muy ruidosas sobre su caché interna — silenciar en archivo
@@ -140,13 +189,17 @@ except Exception as _e:
 
 # ── Hooks de pánico ──────────────────────────────────────────────────────────
 # Capturan cualquier excepción no controlada (hilo principal y threads de fondo)
-# y escriben el traceback completo en app/registros/app.log.
+# y escriben el traceback completo en registros/app.log (raíz del proyecto,
+# no dentro de app/ — ver _RUTA_LOG más arriba).
 
 def _manejador_excepcion_global(tipo, valor, traza):
     """Excepción no capturada en el hilo principal."""
+    # No se llama a sys.__excepthook__ tras logger.critical: ese logger ya
+    # imprime el traceback en consola (vía _handler_consola) y lo escribe en
+    # app.log, así que reenviarlo al excepthook original duplicaba el mismo
+    # traceback una segunda vez, en crudo y sin la cabecera "CRASH NO CONTROLADO".
     mensaje = "".join(traceback.format_exception(tipo, valor, traza))
     logger.critical("CRASH NO CONTROLADO:\n%s", mensaje)
-    sys.__excepthook__(tipo, valor, traza)
 
 
 def _manejador_excepcion_hilo(args):
