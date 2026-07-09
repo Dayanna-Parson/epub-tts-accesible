@@ -28,13 +28,13 @@ Así que empecé a aprender a programar.
 
 ---
 
-## El primer intento: Gemini y la Era de la Oscuridad
+## El primer intento: la Era de la Oscuridad
 
-Los primeros meses de desarrollo los pasé trabajando con Gemini como asistente de IA.
+Los primeros meses de desarrollo fueron un intento tras otro sin ningún método sólido detrás.
 
 No fue bien.
 
-El problema no era que Gemini no supiera programar. El problema era que no entendía el contexto acumulado. En cada sesión, había que reexplicar cómo funcionaba la app, qué ya estaba implementado, qué no debía tocarse. Y aun así, las respuestas llegaban con código que rompía cosas que ya funcionaban: funciones desaparecidas sin aviso, indentación incorrecta que hacía fallar Python en silencio, cambios que parecían razonables pero que introducían regresiones que tardaba días en encontrar.
+El problema no era falta de ideas. Era falta de una base estable sobre la que construir. Cada avance se sostenía sobre arena: no había una forma clara de documentar qué ya estaba implementado y qué no debía tocarse, y era fácil que un cambio rompiera algo que ya funcionaba sin que se notara hasta días después: funciones desaparecidas sin aviso, indentación incorrecta que hacía fallar Python en silencio, cambios que parecían razonables pero que introducían regresiones que tardaba días en encontrar.
 
 Hay problemas concretos que recuerdo con especial claridad:
 
@@ -54,11 +54,11 @@ No era rendición. Era reconocer que el método no estaba funcionando y que nece
 
 ---
 
-## El renacimiento: a finales de enero, con Claude
+## El renacimiento: a finales de enero
 
-A finales de enero retomé el proyecto. Esta vez con Claude.
+A finales de enero retomé el proyecto. Esta vez con un método distinto.
 
-La diferencia fue inmediata. No en velocidad, sino en calidad de la colaboración. El contexto se mantenía. Las decisiones previas se respetaban. Cuando decía "esto ya lo intentamos y no funcionó por X razón", esa información se incorporaba al razonamiento en lugar de ignorarse.
+La diferencia fue inmediata. No en velocidad, sino en disciplina. Cada decisión quedó documentada. Cuando algo ya se había intentado y no había funcionado por una razón concreta, esa razón quedaba anotada, así que el mismo error no se repetía dos veces.
 
 En dos semanas se arregló lo que en meses no había conseguido estabilizar:
 
@@ -151,7 +151,7 @@ La solución no fue threading (que en wxPython es un territorio peligroso para l
 
 ### Los textos de la interfaz
 
-En las últimas sesiones de Fase 4 se revisaron todos los textos visibles para el usuario: labels, helptexts, mensajes de diálogo. El objetivo era que sonaran naturales, coherentes y estándar para una app de escritorio, no generados por una IA.
+En las últimas sesiones de Fase 4 se revisaron todos los textos visibles para el usuario: labels, helptexts, mensajes de diálogo. El objetivo era que sonaran naturales, coherentes y estándar para una app de escritorio.
 
 "Nuevo hijo" pasó a "Nuevo subproyecto". "Restaurar eliminados" pasó a "Restaurar proyectos eliminados recientemente". Pequeños cambios que hacen que la app se sienta como algo hecho por personas, para personas.
 
@@ -193,7 +193,7 @@ Este proyecto empezó porque nadie había construido la herramienta que yo neces
 
 En algún punto dejó de ser solo eso. Se convirtió en la prueba de que podía construirla yo misma. Y en el proceso de construirla, entendí cosas sobre cómo funcionan los programas, sobre arquitectura de software, sobre accesibilidad y sobre mis propios límites que no habría aprendido de ninguna otra forma.
 
-La Era de la Oscuridad con Gemini fue frustrante. Pero también fue necesaria. Me enseñó a reconocer cuándo un enfoque no está funcionando, a parar a tiempo en lugar de seguir acumulando deuda técnica, y a ser más precisa al describir lo que quiero que haga el código.
+La Era de la Oscuridad fue frustrante. Pero también fue necesaria. Me enseñó a reconocer cuándo un enfoque no está funcionando, a parar a tiempo en lugar de seguir acumulando deuda técnica, y a ser más precisa al describir lo que quiero que haga el código.
 
 La Fase 4 es el resultado de todo eso. Una versión estable, accesible y lista para ser usada. Una herramienta que hace exactamente lo que imaginé aquel día en que decidí que si nadie la iba a construir, la construiría yo.
 
