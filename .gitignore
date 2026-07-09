@@ -70,4 +70,4 @@ configuraciones/proyectos_backup/
 # Copias de seguridad y proyectos locales de usuario
 backups/
 *.zip
-proyectos/
+proyectos/configuraciones/biblioteca.db

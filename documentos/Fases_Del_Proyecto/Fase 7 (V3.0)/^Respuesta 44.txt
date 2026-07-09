@@ -1,0 +1,63 @@
+^Respuesta 44
+
+Buena pregunta sobre por qué tardé tanto — te lo explico primero, y luego voy directo a todo lo que pides.
+
+**Por qué no lo encontré antes:** estuve buscando el bug solo dentro de `pestana_biblioteca.py`, porque ahí es donde vive todo el código de los menús "de verdad". Nunca se me ocurrió que `ventana_principal.py` tuviera su propio manejador global de Shift+F10 con máxima prioridad (`EVT_CHAR_HOOK`, que intercepta la tecla antes de que llegue a cualquier control) y que ESE fuera el que de verdad se ejecutaba. Solo lo encontré cuando dejé de mirar un archivo concreto y busqué "Shift+F10" en **todo** el proyecto — debí haber hecho eso desde el principio en vez de asumir dónde estaba el problema.
+
+Ahora, manos a la obra con todo lo demás.
+
+Añado un helper para acceder a la ventana principal, y lo uso en los tres menús.
+
+Ahora implemento "recordar la última carpeta usada".
+
+Añado `import json` y `ruta_config`, y los helpers atómicos.
+
+Ahora los helpers y su uso en `al_importar_carpeta`.
+
+Ahora los dos métodos helper, cerca de `_anadir_ayuda_y_salir`.
+
+Ahora reviso cómo `ventana_proyectos.py` implementa el arrastrar-y-soltar para replicarlo en el árbol de categorías.
+
+Implemento ahora el cambio de esquema para permitir orden personalizado, tanto de categorías entre sí como de libros dentro de un género.
+
+Ahora la migración para bases de datos ya existentes (como la tuya, con 848+ libros).
+
+Ahora subo `VERSION_ESQUEMA` a 3.
+
+Ahora actualizo las consultas para usar el nuevo orden.
+
+Ahora `mover_categoria`, y el `orden` automático al asignar libro a categoría.
+
+Ahora actualizo la asignación de categoría a libros para que use `orden` (así los libros añadidos después van al final, no alfabético).
+
+Ahora hago lo mismo en `_insertar_libro_en_conexion` (usado por el escaneo masivo).
+
+Ahora actualizo `buscar_libros` para que respete ese orden al filtrar por categoría.
+
+Ahora actualizo `_cargar_libros` en la interfaz para no reordenar alfabéticamente cuando hay una categoría activa (igual que ya hace con etiqueta).
+
+Ahora añado Ctrl+Arriba/Ctrl+Abajo para reordenar categorías, igual que en Proyectos.
+
+Añado también las opciones al menú contextual del árbol.
+
+Ahora verifico todo el esquema y las nuevas funciones con datos sintéticos antes de dar nada por bueno.
+
+Todo funciona correctamente. Ahora verifico la migración con una base de datos "vieja" (sin la columna `orden`, como la tuya real).
+
+Migración confirmada segura: tu base de datos real con 848+ libros se actualizará sola la próxima vez que abras la app, sin perder nada. Ahora hago un último `py_compile` de todos los archivos tocados y subo todo.
+
+Todo implementado, verificado y subido. Resumen de esta última ronda:
+
+**Hecho ahora mismo:**
+1. **Atajos Ctrl+Alt+P/L/T eliminados** — ya no hacen falta, el submenú funciona de verdad.
+2. **Ayuda y Salir añadidos** a los tres menús propios de Biblioteca (árbol, etiquetas, libro).
+3. **Recordar la última carpeta usada** al importar — guardado en `ajustes.json`.
+4. **Orden de tabulación arreglado** — la lista de libros va justo después del árbol/etiquetas.
+5. **Reordenar categorías** con Ctrl+Arriba/Ctrl+Abajo o desde el menú contextual (igual que en Proyectos — no era arrastrar con ratón, era esto).
+6. **Orden personalizado en Géneros** — los libros que añades a un género ahora se ven en el orden en que los fuiste añadiendo, no alfabético. Necesitó un cambio de esquema (columna `orden` nueva), con migración automática que probé contra una base de datos "vieja" simulando la tuya real — no pierde nada.
+
+**Lo único que queda de tu lado, no de código:**
+- Confirmar que Ctrl+Av/RePág en las subpestañas funciona bien ahora.
+- Re-escanear tu biblioteca real (o esperar a que la abras, la migración de la base de datos es automática) para que el "Autor: —" de los 848 libros antiguos se corrija, y para ver el nuevo orden en Géneros aplicado a tus libros reales.
+
+Con esto, sí — **Fase 7 cerrada** en cuanto a lo que teníamos en la lista. `git pull`, pruébalo todo con calma, y cuando estés lista dime y miramos qué sigue en la planificación de v3.0.

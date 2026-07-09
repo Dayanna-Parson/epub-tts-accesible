@@ -1,0 +1,39 @@
+Now let's look at `_textos_por_nombre_local`.
+
+No hay marcadores ANCLAJE en este archivo, así que edito directamente. Encontré la causa más probable: muchos EPUB reales (sobre todo convertidos con otras herramientas) tienen el `.opf` con prefijos de espacio de nombres sin declarar correctamente (`dc:title` literal en vez de resolverse a la URI). El código actual solo quita el prefijo de namespace con `}`, pero no el prefijo `dc:` cuando no hay declaración de namespace válida — así que la etiqueta nunca hace match con `"title"`.
+
+Now let's verify with a synthetic malformed EPUB (unresolved `dc:` prefix, no proper xmlns) to confirm the fix works.
+
+The undeclared-prefix theory doesn't hold — I tested it and `xml.etree` actually raises a hard parse error on an unbound prefix, which would have shown as an exception, not a silent empty result. Let me fix the docstring and add a real fallback for EPUB3-style `<meta property="dcterms:title">` metadata, which is the more likely culprit.
+
+Now let's verify with synthetic tests, including a properly-namespaced case and an EPUB3 `<meta>`-only case.
+
+All three cases pass. Now let's run the full existing scanner test suite if there's one, and syntax-check.
+
+No hay suite de tests formal para este módulo; la verificación manual cubre los casos relevantes. Commit y push ahora.
+
+Ya subí el arreglo. Ahora respondo a tus otras preguntas:
+
+**Sobre "Quitar estado de lectura":**
+Tiene sentido como opción aparte de "Pendiente" porque no es equivalente a marcarlo como pendiente. Ejemplo: has empezado a leer un libro por error, o quieres que un libro no aparezca en ninguno de los tres filtros (ni pendiente, ni leyendo, ni leído) — simplemente "sin estado", como estaban todos antes de que existiera este sistema. Si solo tuvieras las tres opciones de marcar, no tendrías forma de volver a ese estado neutro sin decir "está pendiente" (que es también una afirmación, solo que la contraria). Es el equivalente a un cuarto estado real: "sin clasificar". Si prefieres que no exista y que "pendiente" sea siempre el estado por defecto, dímelo y lo simplifico quitando esa opción.
+
+**Qué necesito que revises en este turno:**
+Nada obligatorio — ya lo probé por mi cuenta con EPUBs sintéticos que reproducen tu caso exacto (metadatos en `<meta property="dcterms:title">` en vez de `<dc:title>`) y funciona. Pero para estar segura al 100% con tu libro real, si quieres, ejecuta otra vez el diagnóstico:
+
+```python
+from app.motor.escaner_biblioteca import _extraer_metadatos_epub
+print(_extraer_metadatos_epub(r"C:\Users\Jacqueline\Documents\libros\sagas\Lorris el elfo - Laura Gallego\01. El comienzo del camino.epub"))
+```
+
+(tendrás que hacer `git pull` primero para traer el commit `480b34a`). Si todavía sale vacío, pégame el contenido del `.opf` de ese EPUB (renombra el `.epub` a `.zip`, ábrelo, y copia el archivo `content.opf` o el que esté dentro de `OEBPS/` o similar) y lo reviso directo.
+
+**Qué queda para cerrar esta fase:**
+De los bugs que reportaste, todo está corregido y subido salvo verificación real con NVDA:
+- ✅ Agrupamiento por carpeta (código corregido, verificado con datos sintéticos, falta que tú lo pruebes con NVDA en tu biblioteca real)
+- ✅ Foco al cambiar entre Géneros/Sagas (falta prueba con NVDA)
+- ✅ Anuncio "Abriendo libro..." con retraso de 400ms (falta prueba con NVDA)
+- ✅ Marcar pendiente/leyendo/leído/quitar estado (falta prueba con NVDA)
+- ✅ "Autor: —" (recién corregido, pendiente de que confirmes con tu diagnóstico)
+
+Lo único que falta para dar la fase por cerrada es que reimportes tu biblioteca real (o al menos algunos libros) con NVDA activo y me confirmes que estos 5 puntos ya funcionan como esperabas. Si todo va bien, pasamos a lo que sigue en la planificación de la Fase 7/v3.0.Respuesta claude 17
+

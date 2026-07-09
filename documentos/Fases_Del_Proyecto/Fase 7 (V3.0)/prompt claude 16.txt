@@ -1,0 +1,206 @@
+Mira, te voy a enseñar qué es lo que pasa cuando importo una carpeta para que lo veas. Cuando importo la carpeta, no se agregan; o sea, en la sección de las etiquetas no salen las etiquetas detectadas ni la nueva etiqueta que haya agregado. Además, sigue sin decirme "espera, por favor" al abrir un libro. Tampoco habla cuando añadimos las etiquetas: es como que el NVDA se queda callado y no dice "añadiendo etiquetas con...", sino que se queda en silencio y dice "desconocido, panel". Y, encima, a veces tengo que enfocar la ventana u otras veces tengo que pulsar el tabulador para que se enfoque donde están las etiquetas.
+
+Y me surge otra pregunta; en realidad, son tres cosas las que me pregunto. La primera: ¿para qué sirve ahora agruparlos? Bueno, más bien el árbol de los géneros y subgéneros. Si en realidad te sugiere las etiquetas de los libros que has añadido (es decir, de los nombres de las carpetas de los libros) y, si te pones a pensarlo, en el árbol no aparece ningún libro como tal, sino que solo aparecen los géneros. Por ejemplo, en "fantasía" no te aparecen directamente los libros de fantasía, sino solo el género "fantasía" y todas las categorías que hayas creado. Y luego, por otro lado, tienes las etiquetas. Eso es lo que ahora me está chocando. Échame una mano con eso, a ver qué podemos hacer, qué otra cosa se te ocurre o qué piensas.
+
+La segunda cosa es el tema de los filtros, porque siento que están ahí de decoración; no sé si realmente sirven para algo tal como están. ¿Tampoco se puede marcar un libro como leído, leyendo, etcétera? Todo esto me está generando mucha confusión.
+
+Seleccionar carpeta con libros para importar  diálogo
+Seleccionar carpeta  botón
+Carpeta:  edición  seleccionado Escritorio
+Vista Elementos  lista
+Galería  sin seleccionar  fila 1  columna 1
+Descargas  fila 2  columna 2
+Documentos  fila 3  columna 1
+Vista Elementos  lista
+atajos_data  sin seleccionar
+L. J. Smith
+libros
+Vista Elementos  lista
+Libros Autoconclusivos  sin seleccionar
+sagas
+Vista Elementos  lista
+Alcatráz - Brandon Sanderson  sin seleccionar
+Nombre  botón divisor  contraído  Ordenado (ascendente)
+Carpeta:  edición  seleccionado sagas
+Seleccionar carpeta  botón
+Epub-TTS
+lista de pestañas
+Biblioteca  pestaña  seleccionado
+¿Crear categorías desde las subcarpetas?  diálogo  ¿Las subcarpetas de esta carpeta representan géneros y subgéneros?
+Ejemplo: «Fantasía/Fantasía épica/tu_libro.epub» crearía la categoría «Fantasía» con la subcategoría «Fantasía épica».
+
+Podrás renombrar o mover las categorías después. Si tus subcarpetas no son géneros (por ejemplo, son autores o sagas), elige No.
+Sí  botón  ALT+  S
+No  botón  ALT+  N
+Epub-TTS
+lista de pestañas
+Biblioteca  pestaña  seleccionado
+Escaneo completado  diálogo  Se han añadido 848 libro(s) a la biblioteca.
+OK  botón
+Agrupar por carpeta  diálogo  Se detectaron carpetas con varios libros. ¿Agrupar cada una con una etiqueta?
+· Alcatráz - Brandon Sanderson (6 libros)
+· Alquimia y Fae - Callie Hart (2 libros)
+· Amanecer rojo - Pierce Brown (6 libros)
+· anne Rice (9 libros)
+· Crónicas angélicas (2 libros)
+· Crónicas del Lobo (2 libros)
+· Crónicas Vampíricas (13 libros)
+· El Mesías (2 libros)
+· La Bella Durmiente (4 libros)
+· Las Brujas de Mayfair (3 libros)
+· Nuevas Historias de Vampiros (2 libros)
+· Arcontes - Kelly Dreams (10 libros)
+· Asesinato para principiantes - Holly Jackson (4 libros)
+· Black Bird Academy - Stella Tack (3 libros)
+· CABALLEROS DRAGÓN - Bianca DARC (5 libros)
+· Caraval - Stephanie Garber (6 libros)
+· Cazadora de hadas - Jennifer L. Armentrout (3 libros)
+· Cazadores de sombras - Cassandra Clare (20 libros)
+· Extra (2 libros)
+· Ciclo de Hainish - Ursula K. Le Guin (9 libros)
+· Ciudad medialuna - Sarah J. Maas (3 libros)
+· cosmere - Brandon Sanderson (12 libros)
+· Covenant - Jennifer L. Armentrout (11 libros)
+· Crave - Tracy Wolff (7 libros)
+· cruzados de las estrellas - Alan Somoza (18 libros)
+· Crónicas de la Nuncanoche - Jay Kristoff (3 libros)
+· Crónicas de la torre - Laura Gallego (4 libros)
+· Crónicas lunares - Marissa Meyer (8 libros)
+· De coronas y Gloria - Morgan Rice (8 libros)
+· De Dragones, Amor y Destino - Jenny Swan (6 libros)
+· De Sangre y Cenizas - Jennifer L. Armentrout (11 libros)
+· Delirium - Lauren_Oliver (2 libros)
+· destino y fuego - K. A. Tucker (3 libros)
+· Destrózame - Tahereh Mafi (11 libros)
+· divergente - Verónica Roth (3 libros)
+· Dragonlance - Margaret Weis & Tracy Hickman (81 libros)
+· El anillo del hechicero - Morgan Rice (17 libros)
+· El cementerio de los libros olvidados - Carlos Ruiz Zafón (5 libros)
+· el camino del acero - Morgan Rice (4 libros)
+· El ciclo de la puerta de la muerte - Margaret_Weis (7 libros)
+· El Ciclo de la Luna Roja - Jose Antonio Cotrina (3 libros)
+· El ciclo de Terramar - Ursula_K_Le_Guin (5 libros)
+· El corredor del laberinto - James Dashner (6 libros)
+· El círculo protector - Checo E. Martínez (8 libros)
+· el dador de los recuerdos - Lois Lowry (4 libros)
+· El detective loco (5 libros)
+· el diario de un vampiro - Morgan Rice (11 libros)
+· El día que se perdió la cordura - Javier Castillo (2 libros)
+· El Elfo Oscuro - R. Salvatore (4 libros)
+· El fin de los tiempos - Susan_Ee (3 libros)
+· El jardín químico - Lauren_DeStéfano (3 libros)
+· El Juego de Ender - Orson Scott Card (18 libros)
+· El portador de luz - Brent_Weeks (3 libros)
+· El proyecto Orfeo - Fran. J. Cabil (8 libros)
+· El problema de los tres cuerpos - Liu_Cixin (3 libros)
+· El segundo ocaso - Virginia Pérez de la Fuente (4 libros)
+· El príncipe de la niebla - Carlos Ruiz Zafón (3 libros)
+· El vals de la bruja - Belén Martínez (3 libros)
+· El Vatídico - Robin Hobb (4 libros)
+· Escolomancia - Naomi Novik (3 libros)
+· Escuadrón - Brandon Sanderson (5 libros)
+· Estaciones del Destino - Karolyn Ciseau (4 libros)
+· fuego - Joana Marcus (3 libros)
+· Fénix y Dragón - Lucía Cerezo (3 libros)
+· Harry Dresden (22 libros)
+· Heraldos de Valdemar - Mercedes Lackey (3 libros)
+· Invisible - Eloy Moreno (2 libros)
+· la asistenta - Freida McFadden (3 libros)
+· La Caída De Los Reinos - Morgan Rhodes (6 libros)
+· La chica de nieve - Javier Castillo (3 libros)
+· La decisión de la espada - I.M. Redwright (4 libros)
+· La espada de la verdad - Terry Goodkind (25 libros)
+· La espada infinita - Brandon Sanderson (2 libros)
+· La guerra de la amapola - R. F. Kuang (3 libros)
+· La hermandad de la Daga Negra - J. R. Ward (17 libros)
+· La leyenda de Camelot (3 libros)
+· La primera ley - Joe Abercrombie (13 libros)
+· la prisionera de oro - Raven Kennedy (6 libros)
+· La prometida - Kiera Cass (2 libros)
+· La Puerta Oscura - David Lozano Garbala (3 libros)
+· La Reina Roja - Victoria Aveyard (3 libros)
+· La rueda del tiempo - Robert Jordan y Brandon Sanderson (15 libros)
+· La saga de los confines - Liliana Bodoc (4 libros)
+· la saga Krosann - Sam Feuerbach (5 libros)
+· la selección - Kiera Cass (9 libros)
+· La tierra fragmentada - N. K. Jemisin (3 libros)
+· La Torre Oscura - Stephen King (8 libros)
+· Las Crónicas Akáshicas - Aitchison (7 libros)
+· Las Crónicas de La Bruja Negra - Laurie Forest (4 libros)
+· Las crónicas de Narnia - C. S. Lewis (8 libros)
+· Las doce puertas - Vicente Raga (10 libros)
+· Legend - Marie Lu (4 libros)
+· Lorris el elfo - Laura Gallego (3 libros)
+· Los Elementos Oscuros - Jennifer L. Armentrout (9 libros)
+· los feos - Scott_Westerfeld (4 libros)
+· Los habitantes del aire - Holly Black (3 libros)
+· los huesos verdes - Fonda Lee (3 libros)
+· Los jóvenes de la élite - Marie Lu (3 libros)
+· Lux - Jennifer L. Armentrout (10 libros)
+· Magos por casualidad - Laura Gallego (2 libros)
+· malaz - Steven_Erikson (16 libros)
+· Nightworld Academy - LJ Swallow (11 libros)
+· Nigromantes (2 libros)
+· Percy Jackson - Rick Riordan (40 libros)
+· Pol Gise (3 libros)
+· Powerless - Lauren Roberts (4 libros)
+· Ravenhold Academy - LJ Swallow (3 libros)
+· Reckoners - Brandon Sanderson (3 libros)
+· Retorno a Nela-Shur - David Monje Galisteo (5 libros)
+· Reinos de Nyaxia - Carissa Broadbent (2 libros)
+· Reyes y Hechiceros - Morgan Rice (6 libros)
+· Rivales divinos - Rebecca Ross (2 libros)
+· Rubí de sangre - Raisa Martín Espinosa (3 libros)
+· Sangre de plata - Lucía G. Sobrado (3 libros)
+· Silo - Hugh Howey (3 libros)
+· Skandar - A. F. Steadman (4 libros)
+· Skyhunter - Marie Lu (2 libros)
+· sombra y hueso - Leigh Bardugo (10 libros)
+· Suriel - Esmeralda Muñoz (2 libros)
+· The Seven Realms - Cinda Williams Chima (4 libros)
+· Tilogía Prehistoria (3 libros)
+· Trono de cristal - Sarah J. Maas (7 libros)
+· Time Keeper - Iria G. Parente & Selene M. Pascual (2 libros)
+· Un Reino en Llamas - Ela Valdecán (3 libros)
+· un trono para las hermanas - Morgan Rice (8 libros)
+· Valkiria Kross - Kian Noren (3 libros)
+· Warcross - Marie Lu (2 libros)
+· élite plateada (2 libros)
+Sí  botón  ALT+  S
+Epub-TTS
+lista de pestañas
+Biblioteca  pestaña  seleccionado
+lista de pestañas
+Géneros  pestaña  seleccionado
+Biblioteca  pestaña  seleccionado
+lista de pestañas
+Géneros  pestaña  seleccionado
+Sagas y colecciones  pestaña  seleccionado
+Géneros  pestaña  seleccionado
+árbol
+(Todas las categorías)
+Nueva categoría... (F2 renombra, Supr elimina)  botón
+Buscar por título o autor (Ctrl+F):  edición  en blanco
+Estado:  cuadro combinado  Todos  contraído
+Solo favoritos  casilla de verificación  sin marcar
+lista
+01. El comienzo del camino; Autor: —; Formato: EPUB; Estado: Sin marcar
+02. El vuelo de la lechuza; Autor: —; Formato: EPUB; Estado: Sin marcar
+01. El comienzo del camino; Autor: —; Formato: EPUB; Estado: Sin marcar
+Importar carpeta... (Ctrl+O)  botón
+Biblioteca  pestaña  seleccionado
+lista de pestañas
+Géneros  pestaña  seleccionado
+Sagas y colecciones  pestaña  seleccionado
+lista
+(Todas las etiquetas)
+Nueva etiqueta... (F2 renombra, Supr elimina)  botón
+Buscar por título o autor (Ctrl+F):  edición  en blanco
+Estado:  cuadro combinado  Todos  contraído
+Solo favoritos  casilla de verificación  sin marcar
+lista
+01. El comienzo del camino; Autor: —; Formato: EPUB; Estado: Sin marcar
+02. El vuelo de la lechuza; Autor: —; Formato: EPUB; Estado: Sin marcar
+01. El comienzo del camino; Autor: —; Formato: EPUB; Estado: Sin marcar
+Como ves, no salen las etiquetas generadas
+

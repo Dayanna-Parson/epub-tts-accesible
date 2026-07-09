@@ -1,0 +1,14 @@
+Respuesta 36
+Este es el log correcto — encontré algo real en él. Primero lo importante: no hay ninguna línea de "Menú contextual construido" de hoy, así que la prueba de los menús que te pedí aún no está en este log (tendrás que repetirla). Pero encontré otro bug real y distinto: un choque repetido (más de 100 veces seguidas) el 3 de julio en el árbol de categorías. Lo reviso.
+
+Buenas noticias sobre ese hallazgo: revisé el código actual y **ese choque ya está arreglado**. El log de esa hora (3 de julio, la 18:11) muestra el error ocurriendo en la línea 285/278 de `pestana_biblioteca.py`, pero en el archivo actual esa misma función (`al_seleccionar_categoria` → `_categoria_seleccionada_id` → `_dato_nodo_seleccionado`) ya tiene desde antes un `try/except RuntimeError` puesto exactamente para este caso (árbol destruido al cerrar la app). Los números de línea no coinciden con el código de hoy, así que es un error de una versión más antigua — ya resuelto, no hace falta tocarlo.
+
+También vi, de pasada, otro fallo suelto sin relación con lo que estamos arreglando: el 4 de julio, en la pestaña Grabación, un `AttributeError: 'ListaVocesCheck' object has no attribute 'IsChecked'`. Lo dejo anotado pero no lo toco ahora — está fuera de lo que estamos revisando hoy (Biblioteca), y no quiero abrir un frente nuevo sin que me lo pidas.
+
+Sobre lo importante: en este log, la última línea es de esta madrugada ("Añadido a categoría fantasia", 00:58) y no hay ninguna línea `[PestanaBiblioteca] Menú contextual...` — así que **todavía no tengo la prueba de los dos menús con el código de hoy**. ¿Puedes hacer esto en una sola sesión, sin cerrar la app entre medias?
+
+1. Ve al árbol de géneros, selecciona una categoría, pulsa Shift+F10.
+2. Ve al listado de etiquetas, selecciona una etiqueta, pulsa Shift+F10.
+3. Cierra la app y mándame el `app.log` (ahora ya sabes encontrarlo bien).
+
+Con esas dos líneas de diagnóstico por fin sabré qué está pasando de verdad ahí.

@@ -1,0 +1,15 @@
+Respuesta 29
+
+Encontré una causa real y concreta para el árbol de géneros: revisé cómo está enlazado el menú contextual y **falta el manejador para el teclado**.
+
+Ahora actualizo `_anunciar` para cancelar el temporizador anterior y dar más margen a NVDA.
+
+¡Encontré uno real y concreto! Revisé cómo estaba conectado el menú del árbol de géneros y **faltaba la mitad del enlace**: solo reaccionaba al clic de ratón (`EVT_TREE_ITEM_RIGHT_CLICK`), nunca a la tecla Menú/Shift+F10 (`EVT_CONTEXT_MENU`) — que es justo la que usas tú. El propio texto de ayuda del control decía "Menú o Shift+F10 para más opciones", pero ese evento nunca estuvo conectado. Ya lo arreglé y subí.
+
+También corregí lo de "solo dice edición": cuando pulsabas dos atajos de estado seguidos, el primero cortaba a mitad de lectura el anuncio del segundo (el temporizador del primero disparaba después de que el segundo ya hubiera puesto su propio texto). Ahora se cancela el anterior antes de programar uno nuevo, y subí el margen de 300 a 450ms para que a NVDA le dé tiempo de terminar mensajes un poco más largos.
+
+Dos cosas que necesito que me aclares para terminar de resolver el resto:
+
+1. **El listado de etiquetas sigue mostrando solo lo genérico.** Aquí no until ahora he encontrado ningún bug de código (el enlace SÍ está bien puesto, a diferencia del árbol). Sospecho que puede ser esto: hace poco cambié a propósito que, al cambiar de subpestaña (Géneros ↔ Sagas), el foco **ya no entra solo** en la lista — te quedas en la pestaña y hace falta un Tab para entrar, tal como me pediste. Si abres Shift+F10 justo después de cambiar de subpestaña, **sin pulsar Tab antes**, el foco todavía está en la pestaña, no en la lista — y ahí sí saldría el menú genérico, sin que sea un bug. ¿Puedes probar entrando primero con Tab a la lista de etiquetas, confirmar que lees un nombre de etiqueta con las flechas, y ENTONCES probar Shift+F10?
+
+2. **Lo de que en el menú del libro salgan también "Importar/Ayuda/Salir" junto con las opciones correctas.** Para saber si esto es un bug o el comportamiento normal de NVDA, necesito que me digas: cuando ves esas opciones mezcladas, ¿las estás leyendo abriendo el menú con Shift+F10 y navegando con flechas dentro de él, o las estás viendo con la lista de elementos de NVDA (NVDA+F7, "Menús")? Si es lo segundo, es esperable que aparezcan mezcladas con la barra de menú de la aplicación — no sería un fallo de la app, sino de cómo NVDA agrupa esa vista.

@@ -1,0 +1,13 @@
+Me e ido al addministrador de tareas, y e cerrado el proceso de python, solo había uno. Me e descargado los cambios, e abierto la app, y bueno. lo e probado absolutamente todo, y sigue como siempre. Lo único que ha cambiado es que en la consola ahora me salen todos estos mensajes: ---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Escaneando carpeta, por favor espera...
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Se han añadido 848 libro(s) a la biblioteca.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Aplicando etiquetas, por favor espera...
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Etiquetas aplicadas.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Categoría fantasia creada.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Categoría ficcion creada.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Añadido a categoría fantasia.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Añadido a categoría fantasia. 
+Pero, de todos estos mensajes que me lanza, realmente, solo escucho dos con la voz de sapi. la primera vez que escanea la carpeta. y, cuando añado la primera categoría. Ya después de esos dos, pues nada. Está mudo!
+Lo siento, no puedo decirte nada más. Me siento frustrada

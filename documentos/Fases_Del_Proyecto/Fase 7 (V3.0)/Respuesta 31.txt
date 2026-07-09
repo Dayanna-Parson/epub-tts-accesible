@@ -1,0 +1,15 @@
+Respuesta 31
+
+Perfecto, y gracias por confirmar que sí lees el nombre antes de Shift+F10 — eso descarta el foco como causa, así que el bug de esos dos menús es real y está en otro sitio (necesito que reproduzcas con la versión ya actualizada para tener un log limpio). Mientras tanto, quito el ruido de la voz en consola.
+
+Listo, ya no verás "Verbalizando: ..." en la consola. Subido.
+
+Como el log que me pasaste era de antes de bajar los últimos cambios, todavía no tenemos una prueba fiable de si el arreglo del árbol (el binding que faltaba) funcionó o no. Y como confirmaste que el foco sí llega bien al nombre de la categoría/etiqueta antes de abrir el menú, descarto del todo la teoría del foco — el problema de esos dos menús es genuinamente otra cosa.
+
+¿Puedes hacer una prueba nueva ahora, ya con todo actualizado?
+1. `git pull` para traer los últimos cambios.
+2. Abre la app, ve al árbol de géneros, selecciona una categoría (que NVDA te lea el nombre), pulsa Shift+F10.
+3. Haz lo mismo en el listado de etiquetas.
+4. Pásame el `app.log` de esa sesión.
+
+Si el árbol ya funciona pero el listado de etiquetas sigue sin salir el menú correcto, eso me dice que el problema no es genérico de "controles dentro del subnotebook" sino algo específico de `lista_etiquetas` — y ahí seguimos investigando con datos frescos en vez de teorías viejas.
