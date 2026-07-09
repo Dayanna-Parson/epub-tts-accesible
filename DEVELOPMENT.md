@@ -117,7 +117,7 @@ Todo bloque de código que puede necesitar reemplazarse en el futuro está delim
 # ANCLAJE_FIN: NOMBRE_DEL_BLOQUE
 ```
 
-Esto sirve para dos cosas: primero, que se pueda encontrar el bloque exacto a sustituir sin necesidad de leer el archivo entero; segundo, que el historial de git deje claro qué bloque cambió y por qué.
+Esto sirve para dos cosas: primero, que un desarrollador (o asistente IA) pueda encontrar el bloque exacto a sustituir sin necesidad de leer el archivo entero; segundo, que el historial de git deje claro qué bloque cambió y por qué.
 
 **Regla:** Cuando entregues código nuevo, indica qué bloque ANCLAJE reemplaza. Nunca entregues un archivo entero sin contexto.
 
