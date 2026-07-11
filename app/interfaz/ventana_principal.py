@@ -9,6 +9,7 @@ from app.interfaz.pestana_biblioteca import PestanaBiblioteca
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
+from app.interfaz.pestana_creador_audiolibros import PestanaCreadorAudiolibros
 from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config
 from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS
@@ -19,13 +20,12 @@ _URL_GITHUB = "https://github.com/Dayanna-Parson/epub-tts-accesible"
 
 # ── Índices de pestaña del notebook ───────────────────────────────────────────
 # Centralizados aquí para no repetir números mágicos por todo el archivo.
-# Cuando se añada la pestaña "Creador de Audiolibros" (Fase 7), se inserta
-# entre IDX_LECTURA e IDX_GRABACION y solo hay que renumerar este bloque.
 IDX_BIBLIOTECA = 0
 IDX_LECTURA    = 1
-IDX_GRABACION  = 2
-IDX_AJUSTES    = 3
-NUM_PESTANAS   = 4
+IDX_CREADOR    = 2
+IDX_GRABACION  = 3
+IDX_AJUSTES    = 4
+NUM_PESTANAS   = 5
 
 # ── Helpers para traducir atajos de gestor_atajos al formato de wx ───────────
 def _mod_a_flag(mod_str):
@@ -93,11 +93,15 @@ class VentanaPrincipal(wx.Frame):
         self.pestana_lectura = PestanaLectura(self.notebook)
         self.notebook.AddPage(self.pestana_lectura, "Modo Lectura")
 
-        # Pestaña 3: Grabación multivoz
+        # Pestaña 3: Creador de Audiolibros
+        self.pestana_creador = PestanaCreadorAudiolibros(self.notebook)
+        self.notebook.AddPage(self.pestana_creador, "Creador de Audiolibros")
+
+        # Pestaña 4: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
         self.notebook.AddPage(self.pestana_grabacion, "Creación de fragmentos")
 
-        # Pestaña 4: Ajustes
+        # Pestaña 5: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
         self.notebook.AddPage(self.pestana_ajustes, "Ajustes")
 
@@ -176,12 +180,12 @@ class VentanaPrincipal(wx.Frame):
             self._mostrar_menu_contextual()
             return
 
-        # Ctrl+1 a Ctrl+4 → cambiar de pestaña directamente
+        # Ctrl+1 a Ctrl+5 → cambiar de pestaña directamente
         # Solo cuando el foco está dentro de la ventana principal (no en diálogos externos)
         if evento.ControlDown() and not evento.ShiftDown() and keycode in (
-            ord('1'), ord('2'), ord('3'), ord('4')
+            ord('1'), ord('2'), ord('3'), ord('4'), ord('5')
         ):
-            idx = keycode - ord('1')   # 0 a 3
+            idx = keycode - ord('1')   # 0 a 4
             self.notebook.SetSelection(idx)
             return
 
@@ -211,6 +215,9 @@ class VentanaPrincipal(wx.Frame):
         elif indice == IDX_LECTURA:
             primer = self.pestana_lectura.primer_control
             ultimo = self.pestana_lectura.ultimo_control
+        elif indice == IDX_CREADOR:
+            primer = self.pestana_creador.primer_control
+            ultimo = self.pestana_creador.ultimo_control
         elif indice == IDX_GRABACION:
             primer = self.pestana_grabacion.primer_control
             ultimo = self.pestana_grabacion.ultimo_control
@@ -479,6 +486,8 @@ class VentanaPrincipal(wx.Frame):
             self._menu_contextual_biblioteca()
         elif indice == IDX_LECTURA:
             self._menu_contextual_lectura()
+        elif indice == IDX_CREADOR:
+            self._menu_contextual_creador()
         elif indice == IDX_GRABACION:
             self._menu_contextual_grabacion()
         else:
@@ -524,6 +533,22 @@ class VentanaPrincipal(wx.Frame):
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
         self.PopupMenu(menu)
+        menu.Destroy()
+
+    def _menu_contextual_creador(self):
+        """
+        Menú contextual de Creador de Audiolibros. Sin selector de archivos
+        propio (flujo de entrada único: solo libros enviados desde
+        Biblioteca), así que por ahora se limita a Ayuda y Salir. Las
+        acciones propias de exportación se añadirán aquí cuando se conecte
+        el cableado real de la pestaña.
+        """
+        menu = wx.Menu()
+        self._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+        self.pestana_creador.PopupMenu(menu)
         menu.Destroy()
 
     def _menu_contextual_ajustes(self):
@@ -757,12 +782,16 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_INICIO: AYUDA
     def _al_ctrl_o_contextual(self, evento=None):
         """Ctrl+O: apertura contextual según la pestaña activa —
-        importar carpeta en Biblioteca, libro en Lectura, TXT en Grabación."""
+        importar carpeta en Biblioteca, libro en Lectura, TXT en Grabación.
+        En Creador de Audiolibros no abre nada propio: solo anuncia que hay
+        que enviar el libro desde Biblioteca (flujo de entrada único)."""
         indice = self.notebook.GetSelection()
         if indice == IDX_BIBLIOTECA:
             self.pestana_biblioteca.al_importar_carpeta(None)
         elif indice == IDX_LECTURA:
             self.pestana_lectura.al_cargar_libro(None)
+        elif indice == IDX_CREADOR:
+            self.pestana_creador.al_ctrl_o(None)
         elif indice == IDX_GRABACION:
             self.pestana_grabacion.al_examinar(None)
 
