@@ -959,10 +959,11 @@ class GrabadorAudio:
     ) -> dict:
         """
         Modo "por capítulos": un MP3 por capítulo, nombrado "1. Capítulo uno.mp3".
-        No hay cortes a mitad de contenido: cada capítulo se graba completo si
-        cabe en la cuota disponible; si no cabe, queda "pendiente_sin_cuota" y
-        se sigue evaluando el resto (un capítulo posterior más corto puede
-        caber aunque uno anterior no haya cabido).
+        Exportación estrictamente secuencial: en cuanto un capítulo no cabe en
+        la cuota disponible, el proceso se detiene ahí mismo y ese capítulo y
+        todos los siguientes quedan marcados como "pendiente_sin_cuota" — nunca
+        se salta uno para grabar uno posterior más corto, para no dejar un
+        audiolibro con huecos sueltos en medio.
 
         capitulos: lista de tuplas (titulo_capitulo, texto_capitulo).
 
@@ -986,19 +987,13 @@ class GrabadorAudio:
         estado_capitulos = []
         archivos_generados = []
         errores = []
+        detenido = False
 
         for i, (titulo_capitulo, texto_capitulo) in enumerate(capitulos):
-            if self._abortar:
-                logger.info("[GrabadorAudio] Exportación por capítulos abortada.")
-                estado_capitulos.append({
-                    "indice": i,
-                    "titulo": titulo_capitulo,
-                    "estado": "pendiente_sin_cuota",
-                    "ruta": None,
-                })
-                continue
-
-            if not control.tiene_cuota(texto_capitulo, proveedor):
+            if detenido or self._abortar or not control.tiene_cuota(texto_capitulo, proveedor):
+                if not detenido and self._abortar:
+                    logger.info("[GrabadorAudio] Exportación por capítulos abortada.")
+                detenido = True
                 estado_capitulos.append({
                     "indice": i,
                     "titulo": titulo_capitulo,
