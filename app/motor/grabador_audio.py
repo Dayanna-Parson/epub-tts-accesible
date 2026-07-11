@@ -30,6 +30,7 @@ import requests
 
 from app.config_rutas import ruta_config, RAIZ as _RAIZ
 from app.motor.procesador_etiquetas import limpiar_nombre_archivo
+from app.motor.control_cuota import ControlCuota
 
 logger = logging.getLogger(__name__)
 
@@ -772,6 +773,277 @@ class GrabadorAudio:
             os.remove(ruta_wav)
         else:
             os.rename(ruta_wav, ruta_salida)
+
+    # ------------------------------------------------------------------ #
+    # ANCLAJE_INICIO: EXPORTACION_AUDIOLIBROS_CREADOR
+    #
+    # Exportación silenciosa para el Creador de Audiolibros: volcado directo
+    # a disco, sin pasar por la cola interactiva de reproductor_voz.py (esa
+    # cola está pensada para lectura por altavoces con pausas/rebobinado, no
+    # para exportación masiva a máxima velocidad).
+    #
+    # Consulta de cuota exclusivamente silenciosa: solo se usan
+    # ControlCuota().tiene_cuota() y ControlCuota().registrar_gasto().
+    # Prohibido aquí verificar_y_registrar() (levanta wx.MessageBox).
+    #
+    # Esta capa no toca biblioteca.db ni exportaciones_pendientes: se
+    # limita a calcular, generar y devolver el estado de detención. La
+    # persistencia en SQLite la resuelve la capa superior (pestaña /
+    # gestor que llame a estos métodos).
+    # ------------------------------------------------------------------ #
+
+    def calcular_presupuesto(self, texto: str, proveedor: str) -> dict:
+        """
+        Cuenta caracteres y consulta la cuota de forma silenciosa, sin generar
+        audio ni registrar gasto. La capa superior usa esto para mostrar el
+        diálogo único de presupuesto (sección 3.2 de la planificación).
+        """
+        caracteres = len(texto)
+        cabe_en_cuota = ControlCuota().tiene_cuota(texto, proveedor)
+        return {"caracteres": caracteres, "cabe_en_cuota": cabe_en_cuota}
+
+    def obtener_carpeta_audiolibro(self, titulo_libro: str) -> str:
+        """
+        Carpeta exclusiva del Creador de Audiolibros, separada de la de
+        Grabación de Fragmentos: Grabaciones_Epub-TTS/Audiolibros/<Título>/.
+        """
+        titulo_limpio = limpiar_nombre_archivo(titulo_libro)
+        carpeta = os.path.join(CARPETA_RAIZ_GRABACIONES, "Audiolibros", titulo_limpio)
+        os.makedirs(carpeta, exist_ok=True)
+        return carpeta
+
+    def _buscar_punto_corte_por_cuota(self, texto: str, proveedor: str, control: ControlCuota) -> int:
+        """
+        Bisección silenciosa: encuentra el mayor N tal que el prefijo
+        texto[:N] todavía cabe en la cuota disponible, usando exclusivamente
+        control.tiene_cuota(). No genera audio ni registra gasto.
+        """
+        if control.tiene_cuota(texto, proveedor):
+            return len(texto)
+
+        bajo, alto = 0, len(texto)
+        while bajo < alto:
+            medio = (bajo + alto + 1) // 2
+            if control.tiene_cuota(texto[:medio], proveedor):
+                bajo = medio
+            else:
+                alto = medio - 1
+        return bajo
+
+    def _ajustar_punto_corte(self, texto: str, punto_bruto: int, fronteras_capitulo: list) -> int:
+        """
+        Ajusta el corte bruto (calculado solo por presupuesto de caracteres)
+        hacia atrás hasta un punto seguro:
+          1. La frontera de capítulo real más cercana que no supere el presupuesto.
+          2. Si no hay ninguna (el presupuesto no alcanza ni el primer capítulo
+             completo), el punto de frase más próximo.
+          3. Como último respaldo, el espacio más cercano — nunca a mitad de palabra.
+
+        fronteras_capitulo: lista de índices de carácter (dentro de `texto`)
+        donde empieza cada capítulo, calculada por la capa superior a partir
+        de troceador_epub.py. Este método no conoce la estructura del EPUB,
+        solo trabaja con los índices que recibe.
+        """
+        if punto_bruto <= 0:
+            return 0
+        if punto_bruto >= len(texto):
+            return len(texto)
+
+        candidatas = [f for f in (fronteras_capitulo or []) if 0 < f <= punto_bruto]
+        if candidatas:
+            return max(candidatas)
+
+        fragmento = texto[:punto_bruto]
+        coincidencias = list(re.finditer(r'[.!?…]["\'”’)\]]?\s+', fragmento))
+        if coincidencias:
+            return coincidencias[-1].end()
+
+        espacio = fragmento.rfind(' ')
+        return espacio + 1 if espacio > 0 else punto_bruto
+
+    def exportar_audiolibro_completo(
+        self,
+        texto: str,
+        fronteras_capitulo: list,
+        datos_voz: dict,
+        titulo_libro: str,
+        numero_parte: int = 1,
+        velocidad: int = 50,
+        volumen: int = 100,
+    ) -> dict:
+        """
+        Modo "libro completo": genera un único MP3. Si la cuota no alcanza
+        para todo el texto, corta en la frontera de capítulo o frase más
+        cercana (sin romper palabras) y guarda lo generado como parte
+        pendiente.
+
+        Returns:
+            dict con el estado de la exportación:
+              completo (bool), punto_corte (int|None), archivos_generados,
+              errores, carpeta_destino, numero_parte.
+        """
+        self._abortar = False
+        self._velocidad = max(0, min(100, int(velocidad)))
+        self._volumen = max(0, min(100, int(volumen)))
+        self._cargar_config()
+
+        proveedor = (
+            datos_voz.get('proveedor_id', 'local') if isinstance(datos_voz, dict) else 'local'
+        )
+        control = ControlCuota()
+
+        punto_bruto = self._buscar_punto_corte_por_cuota(texto, proveedor, control)
+        completo = punto_bruto >= len(texto)
+        punto_corte = None if completo else self._ajustar_punto_corte(texto, punto_bruto, fronteras_capitulo)
+        texto_a_generar = texto if completo else texto[:punto_corte]
+
+        carpeta_destino = self.obtener_carpeta_audiolibro(titulo_libro)
+
+        if not texto_a_generar.strip():
+            return {
+                "completo": False,
+                "punto_corte": 0,
+                "archivos_generados": [],
+                "errores": ["Sin cuota disponible para generar ni el primer fragmento."],
+                "carpeta_destino": carpeta_destino,
+                "numero_parte": numero_parte,
+            }
+
+        titulo_limpio = limpiar_nombre_archivo(titulo_libro)
+        if completo:
+            nombre_archivo = f"{titulo_limpio}.mp3"
+        else:
+            nombre_archivo = f"{titulo_limpio} (parte {numero_parte} - pendiente).mp3"
+        ruta_salida = os.path.join(carpeta_destino, nombre_archivo)
+
+        nombre_voz = datos_voz.get('nombre', 'sin nombre') if isinstance(datos_voz, dict) else 'sin voz'
+        if self.callback_progreso:
+            self.callback_progreso(0, 1, titulo_libro, nombre_voz)
+
+        errores = []
+        archivos_generados = []
+        if not self._abortar:
+            for intento in range(3):
+                try:
+                    self._grabar_fragmento(texto_a_generar, datos_voz, ruta_salida)
+                    archivos_generados.append(ruta_salida)
+                    control.registrar_gasto(texto_a_generar, proveedor)
+                    break
+                except Exception as e:
+                    logger.warning(
+                        f"[GrabadorAudio] Intento {intento + 1}/3 fallido al exportar "
+                        f"'{titulo_libro}': {e}"
+                    )
+                    if intento == 2:
+                        errores.append(f"{titulo_libro}: {e}")
+
+        if self.callback_progreso and archivos_generados:
+            self.callback_progreso(1, 1, titulo_libro, nombre_voz)
+
+        return {
+            "completo": completo and bool(archivos_generados),
+            "punto_corte": punto_corte if archivos_generados else 0,
+            "archivos_generados": archivos_generados,
+            "errores": errores,
+            "carpeta_destino": carpeta_destino,
+            "numero_parte": numero_parte,
+        }
+
+    def exportar_audiolibro_por_capitulos(
+        self,
+        capitulos: list,
+        datos_voz: dict,
+        titulo_libro: str,
+        velocidad: int = 50,
+        volumen: int = 100,
+    ) -> dict:
+        """
+        Modo "por capítulos": un MP3 por capítulo, nombrado "1. Capítulo uno.mp3".
+        No hay cortes a mitad de contenido: cada capítulo se graba completo si
+        cabe en la cuota disponible; si no cabe, queda "pendiente_sin_cuota" y
+        se sigue evaluando el resto (un capítulo posterior más corto puede
+        caber aunque uno anterior no haya cabido).
+
+        capitulos: lista de tuplas (titulo_capitulo, texto_capitulo).
+
+        Returns:
+            dict con capitulos (lista de estado por capítulo), archivos_generados,
+            errores, carpeta_destino.
+        """
+        self._abortar = False
+        self._velocidad = max(0, min(100, int(velocidad)))
+        self._volumen = max(0, min(100, int(volumen)))
+        self._cargar_config()
+
+        proveedor = (
+            datos_voz.get('proveedor_id', 'local') if isinstance(datos_voz, dict) else 'local'
+        )
+        nombre_voz = datos_voz.get('nombre', 'sin nombre') if isinstance(datos_voz, dict) else 'sin voz'
+        control = ControlCuota()
+
+        carpeta_destino = self.obtener_carpeta_audiolibro(titulo_libro)
+        total = len(capitulos)
+        estado_capitulos = []
+        archivos_generados = []
+        errores = []
+
+        for i, (titulo_capitulo, texto_capitulo) in enumerate(capitulos):
+            if self._abortar:
+                logger.info("[GrabadorAudio] Exportación por capítulos abortada.")
+                estado_capitulos.append({
+                    "indice": i,
+                    "titulo": titulo_capitulo,
+                    "estado": "pendiente_sin_cuota",
+                    "ruta": None,
+                })
+                continue
+
+            if not control.tiene_cuota(texto_capitulo, proveedor):
+                estado_capitulos.append({
+                    "indice": i,
+                    "titulo": titulo_capitulo,
+                    "estado": "pendiente_sin_cuota",
+                    "ruta": None,
+                })
+                continue
+
+            nombre_limpio = limpiar_nombre_archivo(titulo_capitulo)
+            nombre_arch = f"{i + 1}. {nombre_limpio}.mp3"
+            ruta_arch = os.path.join(carpeta_destino, nombre_arch)
+
+            generado = False
+            for intento in range(3):
+                try:
+                    self._grabar_fragmento(texto_capitulo, datos_voz, ruta_arch)
+                    control.registrar_gasto(texto_capitulo, proveedor)
+                    archivos_generados.append(ruta_arch)
+                    generado = True
+                    break
+                except Exception as e:
+                    logger.warning(
+                        f"[GrabadorAudio] Intento {intento + 1}/3 fallido "
+                        f"(capítulo {i + 1}, '{titulo_capitulo}'): {e}"
+                    )
+                    if intento == 2:
+                        errores.append(f"Capítulo {i + 1} ('{titulo_capitulo}'): {e}")
+
+            estado_capitulos.append({
+                "indice": i,
+                "titulo": titulo_capitulo,
+                "estado": "completado" if generado else "pendiente_sin_cuota",
+                "ruta": ruta_arch if generado else None,
+            })
+
+            if generado and self.callback_progreso:
+                self.callback_progreso(i + 1, total, titulo_capitulo, nombre_voz)
+
+        return {
+            "capitulos": estado_capitulos,
+            "archivos_generados": archivos_generados,
+            "errores": errores,
+            "carpeta_destino": carpeta_destino,
+        }
+    # ANCLAJE_FIN: EXPORTACION_AUDIOLIBROS_CREADOR
 
     # ------------------------------------------------------------------ #
     # Previsualización de voz (con altavoces)
