@@ -1,10 +1,12 @@
 import os
 import json
 import logging
+import threading
 
 import wx
 
 from app.config_rutas import ruta_config
+from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,12 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         self.libro_actual = None   # dict con id/titulo/autor/formato/ruta_archivo
         self.voz_actual = None     # dict de la voz por defecto (favorita o local)
+
+        self._calculando = False
+        self._exportando = False
+        self._resultado_presupuesto = None   # dict: modo_capitulos/capitulos/texto_completo/fronteras/presupuesto
+        self._grabador = None
+        self._gestor_biblioteca = None
 
         self._construir_interfaz()
         self._configurar_atajos()
@@ -106,7 +114,16 @@ class PestanaCreadorAudiolibros(wx.Panel):
         )
         self.btn_iniciar.Bind(wx.EVT_BUTTON, self.al_iniciar_exportacion)
         self.btn_iniciar.Enable(False)
-        hbox_botones.Add(self.btn_iniciar, 0)
+        hbox_botones.Add(self.btn_iniciar, 0, wx.RIGHT, 8)
+
+        self.btn_abortar = wx.Button(self, label="Abortar exportación")
+        self.btn_abortar.SetHelpText(
+            "Detiene la exportación en curso. Lo ya generado hasta ese punto se "
+            "conserva y queda registrado como pendiente para retomarlo más tarde."
+        )
+        self.btn_abortar.Bind(wx.EVT_BUTTON, self.al_abortar_exportacion)
+        self.btn_abortar.Enable(False)
+        hbox_botones.Add(self.btn_abortar, 0)
 
         sizer.Add(hbox_botones, 0, wx.EXPAND | wx.ALL, 8)
 
@@ -139,6 +156,16 @@ class PestanaCreadorAudiolibros(wx.Panel):
         sz_vol.Add(lbl_vol, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         sz_vol.Add(self.deslizador_volumen, 1)
         sizer.Add(sz_vol, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+        # ── Progreso de la exportación ────────────────────────────────────
+        box_prog = wx.StaticBox(self, label="Progreso")
+        sz_prog = wx.StaticBoxSizer(box_prog, wx.VERTICAL)
+        self.lbl_progreso = wx.StaticText(self, label="Estado: sin exportación en curso.")
+        self.gauge = wx.Gauge(self, range=100)
+        self.gauge.SetHelpText("Progreso de la exportación actual.")
+        sz_prog.Add(self.lbl_progreso, 0, wx.EXPAND | wx.ALL, 5)
+        sz_prog.Add(self.gauge, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+        sizer.Add(sz_prog, 0, wx.EXPAND | wx.ALL, 8)
 
         # ── Lista de capítulos (solo visible en modo "Por capítulos") ────
         box_caps = wx.StaticBox(self, label="Capítulos")
@@ -227,6 +254,11 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         self._habilitar_controles()
         self.btn_iniciar.Enable(False)
+        self._resultado_presupuesto = None
+        self._calculando = False
+        self._exportando = False
+        self.gauge.SetValue(0)
+        self.lbl_progreso.SetLabel("Estado: sin exportación en curso.")
 
         self._poblar_lista_capitulos([])
         self.Layout()
@@ -251,6 +283,12 @@ class PestanaCreadorAudiolibros(wx.Panel):
     def al_cambiar_modo(self, evento):
         por_capitulos = self.combo_modo.GetSelection() == 1
         self.sz_caps.ShowItems(por_capitulos)
+        # El presupuesto ya calculado corresponde al modo anterior — hay que
+        # recalcular antes de poder exportar con el modo nuevo.
+        self._resultado_presupuesto = None
+        self.btn_iniciar.Enable(False)
+        if not por_capitulos:
+            self._poblar_lista_capitulos([])
         self.Layout()
 
     # ------------------------------------------------------------------ #
@@ -348,20 +386,371 @@ class PestanaCreadorAudiolibros(wx.Panel):
         return None
 
     # ------------------------------------------------------------------ #
-    # Presupuesto / exportación — cableado real pendiente del siguiente paso
+    # Cálculo de presupuesto (hilo de fondo — extracción + conteo silencioso)
     # ------------------------------------------------------------------ #
 
     def al_calcular_presupuesto(self, evento):
-        # La extracción de texto limpio del libro (limpiador_lectura.py /
-        # limpiador_pdf.py) y el hilo de cálculo silencioso sobre
-        # GrabadorAudio.calcular_presupuesto() se conectan en el siguiente
-        # paso. Aquí solo existe la maqueta accesible del control.
-        self._anunciar("El cálculo de presupuesto se conectará en el siguiente paso.")
+        if not self.libro_actual or self._calculando or self._exportando:
+            return
+
+        formato = self.libro_actual.get("formato", "")
+        if formato != "epub":
+            reproducir(ERROR)
+            self._anunciar(
+                "El Creador de Audiolibros todavía solo admite libros EPUB. "
+                "El soporte de PDF llegará en un paso posterior."
+            )
+            return
+
+        self._calculando = True
+        self._resultado_presupuesto = None
+        self.btn_iniciar.Enable(False)
+        self.btn_calcular.Enable(False)
+        self.combo_modo.Enable(False)
+        self.lbl_progreso.SetLabel("Calculando presupuesto...")
+        self._anunciar("Calculando presupuesto...")
+
+        ruta_archivo = self.libro_actual["ruta_archivo"]
+        modo_capitulos = self.combo_modo.GetSelection() == 1
+        voz = self.voz_actual or {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
+        proveedor_id = voz.get("proveedor_id", "local")
+
+        threading.Thread(
+            target=self._hilo_calcular_presupuesto,
+            args=(ruta_archivo, modo_capitulos, proveedor_id),
+            daemon=True,
+        ).start()
+
+    def _hilo_calcular_presupuesto(self, ruta_archivo, modo_capitulos, proveedor_id):
+        try:
+            from app.motor.troceador_epub import TroceadorEpub
+            from app.motor.grabador_audio import GrabadorAudio
+
+            troceador = TroceadorEpub()
+            troceador.cargar(ruta_archivo)
+
+            if modo_capitulos:
+                capitulos = troceador.extraer_capitulos_texto()
+                texto_completo = None
+                fronteras = None
+                texto_para_contar = "".join(texto for _titulo, texto in capitulos)
+            else:
+                capitulos = None
+                texto_completo, fronteras = troceador.extraer_texto_completo_con_fronteras()
+                texto_para_contar = texto_completo
+
+            presupuesto = GrabadorAudio().calcular_presupuesto(texto_para_contar, proveedor_id)
+        except Exception as e:
+            logger.exception("[PestanaCreadorAudiolibros] Error al calcular presupuesto")
+            wx.CallAfter(self._al_error_presupuesto, str(e))
+            return
+
+        resultado = {
+            "modo_capitulos": modo_capitulos,
+            "capitulos": capitulos,
+            "texto_completo": texto_completo,
+            "fronteras": fronteras,
+            "presupuesto": presupuesto,
+            "proveedor_id": proveedor_id,
+        }
+        wx.CallAfter(self._al_presupuesto_calculado, resultado)
+
+    def _al_presupuesto_calculado(self, resultado: dict):
+        self._calculando = False
+        self._resultado_presupuesto = resultado
+        self.btn_calcular.Enable(True)
+        self.combo_modo.Enable(True)
+
+        if resultado["modo_capitulos"]:
+            self._poblar_lista_capitulos(resultado["capitulos"])
+
+        presupuesto = resultado["presupuesto"]
+        caracteres = presupuesto["caracteres"]
+        cabe = presupuesto["cabe_en_cuota"]
+        estado_cuota = "cabe en la cuota actual" if cabe else "NO cabe en la cuota actual del proveedor elegido"
+        mensaje = f"Presupuesto calculado: {caracteres} caracteres. Estado: {estado_cuota}."
+
+        self.lbl_progreso.SetLabel(mensaje)
+        self._anunciar(mensaje)
+        self.btn_iniciar.Enable(True)
+
+    def _al_error_presupuesto(self, error: str):
+        self._calculando = False
+        self.btn_calcular.Enable(True)
+        self.combo_modo.Enable(True)
+        reproducir(ERROR)
+        self.lbl_progreso.SetLabel(f"Error al calcular presupuesto: {error}")
+        self._anunciar(f"Error al calcular presupuesto: {error}")
+
+    # ------------------------------------------------------------------ #
+    # Exportación (hilo de fondo — un único hilo de exportación a la vez)
+    # ------------------------------------------------------------------ #
 
     def al_iniciar_exportacion(self, evento):
-        # Cableado real (hilo de exportación sobre grabador_audio.py,
-        # diálogo de proveedor alternativo si falta cuota) pendiente.
-        self._anunciar("La exportación se conectará en un paso posterior.")
+        if not self.libro_actual or self._exportando:
+            return
+        if not self._resultado_presupuesto:
+            self._anunciar("Calcula el presupuesto antes de iniciar la exportación.")
+            return
+
+        resultado = self._resultado_presupuesto
+        voz = self.voz_actual or {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
+        velocidad = self.deslizador_velocidad.GetValue()
+        volumen = self.deslizador_volumen.GetValue()
+
+        if not resultado["presupuesto"]["cabe_en_cuota"]:
+            self._abrir_dialogo_proveedor_alternativo(resultado, voz, velocidad, volumen)
+            return
+
+        self._arrancar_exportacion(voz, velocidad, volumen, resultado)
+
+    def _abrir_dialogo_proveedor_alternativo(self, resultado, voz_actual, velocidad, volumen):
+        from app.interfaz.dialogo_proveedor_alternativo import DialogoProveedorAlternativo
+
+        if resultado["modo_capitulos"]:
+            texto_a_exportar = "".join(texto for _titulo, texto in resultado["capitulos"])
+        else:
+            texto_a_exportar = resultado["texto_completo"]
+
+        nombre_proveedor_actual = DialogoProveedorAlternativo._NOMBRES_PROVEEDOR.get(
+            voz_actual.get("proveedor_id", ""), voz_actual.get("proveedor_id", "el proveedor actual")
+        )
+        modo_libro_completo = not resultado["modo_capitulos"]
+
+        dlg = DialogoProveedorAlternativo(
+            self, texto_a_exportar, nombre_proveedor_actual,
+            velocidad_actual=velocidad, modo_libro_completo=modo_libro_completo,
+        )
+        respuesta = dlg.ShowModal()
+
+        if respuesta != wx.ID_OK or not dlg.accion:
+            dlg.Destroy()
+            self._anunciar("Exportación cancelada.")
+            return
+
+        # La velocidad ajustada dentro del diálogo se sincroniza de vuelta al
+        # deslizador de esta pestaña — grabador_audio.py no lee el estado de
+        # reproductor_voz.py, así que el ritmo corregido tiene que viajar
+        # explícito hasta los métodos de exportación.
+        self.deslizador_velocidad.SetValue(dlg.velocidad_elegida)
+        velocidad_final = dlg.velocidad_elegida
+        accion = dlg.accion
+
+        if accion == "usar_alternativo":
+            nueva_voz = dict(dlg.voz_elegida)
+            nueva_voz["proveedor_id"] = dlg.proveedor_elegido
+            dlg.Destroy()
+            self._arrancar_exportacion(nueva_voz, velocidad_final, volumen, resultado)
+        elif accion == "usar_local":
+            dlg.Destroy()
+            self._arrancar_exportacion(
+                {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"},
+                velocidad_final, volumen, resultado,
+            )
+        elif accion == "dividir":
+            # El propio motor (grabador_audio.py) ya calcula el punto de
+            # corte por cuota y guarda la parte pendiente — "dividir" solo
+            # significa seguir adelante con el proveedor actual sin cambiar
+            # de voz.
+            dlg.Destroy()
+            self._arrancar_exportacion(voz_actual, velocidad_final, volumen, resultado)
+        else:
+            dlg.Destroy()
+            self._anunciar("Exportación cancelada.")
+
+    def _arrancar_exportacion(self, voz, velocidad, volumen, resultado):
+        from app.motor.grabador_audio import GrabadorAudio
+
+        self._exportando = True
+        self.btn_iniciar.Enable(False)
+        self.btn_calcular.Enable(False)
+        self.combo_modo.Enable(False)
+        self.btn_abortar.Enable(True)
+        self.gauge.SetValue(0)
+        self.lbl_progreso.SetLabel("Iniciando exportación...")
+        reproducir(REC_START)
+
+        self._grabador = GrabadorAudio(callback_progreso=self._callback_progreso_hilo)
+
+        threading.Thread(
+            target=self._ejecutar_exportacion,
+            args=(voz, velocidad, volumen, resultado),
+            daemon=True,
+        ).start()
+
+    def _ejecutar_exportacion(self, voz, velocidad, volumen, resultado):
+        titulo_libro = self.libro_actual.get("titulo", "Audiolibro")
+        proveedor = voz.get("proveedor_id", "local")
+        try:
+            if resultado["modo_capitulos"]:
+                salida = self._grabador.exportar_audiolibro_por_capitulos(
+                    resultado["capitulos"], voz, titulo_libro,
+                    velocidad=velocidad, volumen=volumen,
+                )
+            else:
+                salida = self._grabador.exportar_audiolibro_completo(
+                    resultado["texto_completo"], resultado["fronteras"], voz, titulo_libro,
+                    velocidad=velocidad, volumen=volumen,
+                )
+        except Exception as e:
+            logger.exception("[PestanaCreadorAudiolibros] Error durante la exportación")
+            wx.CallAfter(self._al_error_exportacion, str(e))
+            return
+
+        salida["modo_capitulos"] = resultado["modo_capitulos"]
+        salida["proveedor"] = proveedor
+        wx.CallAfter(self._al_terminar_exportacion, salida)
+
+    def _callback_progreso_hilo(self, actual, total, etiqueta, nombre_voz):
+        # Llamado desde el hilo de exportación — toda actualización de UI
+        # pasa por wx.CallAfter, sin excepción.
+        wx.CallAfter(self._actualizar_progreso_ui, actual, total, etiqueta)
+
+    def _actualizar_progreso_ui(self, actual: int, total: int, etiqueta: str):
+        pct = int((actual / total) * 100) if total > 0 else 0
+        self.gauge.SetValue(pct)
+        self.lbl_progreso.SetLabel(f"Exportando: {actual} de {total} — {etiqueta}")
+
+        if self.lista_capitulos.IsShown() and total > 1:
+            self._actualizar_estado_capitulo(actual - 1, self.ESTADO_COMPLETADO)
+
+        # Prohibido cantar porcentajes: solo se anuncia un hito completo por
+        # capítulo (modo "por capítulos"). En modo "libro completo" (total=1)
+        # el único anuncio es el de finalización, en _al_terminar_exportacion,
+        # para no duplicar el aviso.
+        if total > 1:
+            self._anunciar(f"Capítulo {actual} de {total} completado.")
+
+    def _al_terminar_exportacion(self, salida: dict):
+        self._exportando = False
+        self.btn_iniciar.Enable(True)
+        self.btn_calcular.Enable(True)
+        self.combo_modo.Enable(True)
+        self.btn_abortar.Enable(False)
+        self.gauge.SetValue(100)
+
+        errores = salida.get("errores", [])
+        if errores:
+            logger.warning(
+                "[PestanaCreadorAudiolibros] Errores durante la exportación: %s", errores
+            )
+
+        if salida["modo_capitulos"]:
+            self._finalizar_exportacion_capitulos(salida)
+        else:
+            self._finalizar_exportacion_completa(salida)
+
+    def _finalizar_exportacion_capitulos(self, salida: dict):
+        estados = salida.get("capitulos", [])
+        for c in estados:
+            estado_visual = self.ESTADO_COMPLETADO if c["estado"] == "completado" else self.ESTADO_SIN_CUOTA
+            self._actualizar_estado_capitulo(c["indice"], estado_visual)
+
+        pendientes = [c for c in estados if c["estado"] != "completado"]
+        completados = len(estados) - len(pendientes)
+        total = len(estados)
+
+        if pendientes:
+            self._registrar_pendiente_capitulos(pendientes[0]["indice"], salida.get("proveedor", "local"))
+            mensaje = (
+                f"Exportación detenida por falta de cuota. "
+                f"{completados} de {total} capítulos completados. Queda registrado como pendiente."
+            )
+            reproducir(ERROR)
+        else:
+            self._limpiar_pendientes_de_libro()
+            mensaje = f"Exportación finalizada. {total} capítulos completados."
+            reproducir(SUCCESS)
+
+        self.lbl_progreso.SetLabel(mensaje)
+        self._anunciar(mensaje)
+
+    def _finalizar_exportacion_completa(self, salida: dict):
+        if salida.get("completo"):
+            self._limpiar_pendientes_de_libro()
+            mensaje = "Exportación del libro completo finalizada."
+            reproducir(SUCCESS)
+        else:
+            self._registrar_pendiente_completo(salida)
+            mensaje = (
+                "Exportación detenida por falta de cuota. Se guardó una parte "
+                "pendiente para retomar más tarde."
+            )
+            reproducir(ERROR)
+
+        self.lbl_progreso.SetLabel(mensaje)
+        self._anunciar(mensaje)
+
+    def _al_error_exportacion(self, error: str):
+        self._exportando = False
+        self.btn_iniciar.Enable(True)
+        self.btn_calcular.Enable(True)
+        self.combo_modo.Enable(True)
+        self.btn_abortar.Enable(False)
+        reproducir(ERROR)
+        self.lbl_progreso.SetLabel(f"Error durante la exportación: {error}")
+        self._anunciar(f"Error durante la exportación: {error}")
+
+    def al_abortar_exportacion(self, evento):
+        if self._grabador:
+            self._grabador.abortar()
+        self.btn_abortar.Enable(False)
+        self.lbl_progreso.SetLabel("Cancelando exportación...")
+        # El hilo en curso detecta el aborto en el siguiente punto de control
+        # (frontera de capítulo, o antes de generar en modo completo) y
+        # termina llamando a _al_terminar_exportacion, que registra el
+        # pendiente si quedó algo sin generar.
+
+    # ------------------------------------------------------------------ #
+    # Persistencia de exportaciones pendientes en biblioteca.db
+    # ------------------------------------------------------------------ #
+
+    def _obtener_gestor_biblioteca(self):
+        if self._gestor_biblioteca is None:
+            from app.motor.gestor_biblioteca import GestorBiblioteca
+            self._gestor_biblioteca = GestorBiblioteca()
+        return self._gestor_biblioteca
+
+    def _limpiar_pendientes_de_libro(self):
+        try:
+            gestor = self._obtener_gestor_biblioteca()
+            gestor.eliminar_exportaciones_pendientes_de_libro(self.libro_actual["id"])
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] No se pudo limpiar pendientes del libro")
+
+    def _registrar_pendiente_capitulos(self, indice_capitulo_pendiente: int, proveedor: str):
+        try:
+            gestor = self._obtener_gestor_biblioteca()
+            id_libro = self.libro_actual["id"]
+            gestor.eliminar_exportaciones_pendientes_de_libro(id_libro)
+            gestor.registrar_exportacion_pendiente(
+                id_libro=id_libro,
+                modo="capitulos",
+                proveedor=proveedor,
+                capitulo_pendiente=indice_capitulo_pendiente,
+            )
+        except Exception:
+            logger.exception(
+                "[PestanaCreadorAudiolibros] No se pudo registrar el pendiente por capítulos"
+            )
+
+    def _registrar_pendiente_completo(self, salida: dict):
+        try:
+            gestor = self._obtener_gestor_biblioteca()
+            id_libro = self.libro_actual["id"]
+            gestor.eliminar_exportaciones_pendientes_de_libro(id_libro)
+            archivos = salida.get("archivos_generados") or []
+            gestor.registrar_exportacion_pendiente(
+                id_libro=id_libro,
+                modo="completo",
+                proveedor=salida.get("proveedor", "local"),
+                punto_corte=salida.get("punto_corte"),
+                ruta_parcial=archivos[0] if archivos else None,
+            )
+        except Exception:
+            logger.exception(
+                "[PestanaCreadorAudiolibros] No se pudo registrar el pendiente del libro completo"
+            )
 
     # ------------------------------------------------------------------ #
     # Anuncios de accesibilidad (patrón _anunciador)

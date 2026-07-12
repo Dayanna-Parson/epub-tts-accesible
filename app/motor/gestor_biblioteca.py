@@ -858,3 +858,55 @@ class GestorBiblioteca:
                     ).fetchall()
                 )
         return filas
+
+    # ANCLAJE_INICIO: EXPORTACIONES_PENDIENTES
+    # Persistencia de exportaciones del Creador de Audiolibros cortadas por
+    # falta de cuota o canceladas a medias (sección 3.4 de la planificación
+    # v3.0). El motor de exportación (grabador_audio.py) no toca SQLite —
+    # solo calcula y devuelve el punto de corte; esta capa es quien lo
+    # persiste, respetando la separación de responsabilidades ya acordada.
+
+    def registrar_exportacion_pendiente(
+        self,
+        id_libro: int,
+        modo: str,
+        proveedor: str,
+        punto_corte: Optional[int] = None,
+        capitulo_pendiente: Optional[int] = None,
+        ruta_parcial: Optional[str] = None,
+    ) -> int:
+        with self._conexion() as conexion:
+            cursor = conexion.execute(
+                """
+                INSERT INTO exportaciones_pendientes
+                    (id_libro, modo, proveedor, punto_corte, capitulo_pendiente, ruta_parcial)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (id_libro, modo, proveedor, punto_corte, capitulo_pendiente, ruta_parcial),
+            )
+            return cursor.lastrowid
+
+    def obtener_exportaciones_pendientes(self, id_libro: int) -> list[sqlite3.Row]:
+        with self._conexion() as conexion:
+            return conexion.execute(
+                "SELECT * FROM exportaciones_pendientes WHERE id_libro = ? ORDER BY id",
+                (id_libro,),
+            ).fetchall()
+
+    def eliminar_exportacion_pendiente(self, id_exportacion: int):
+        with self._conexion() as conexion:
+            conexion.execute(
+                "DELETE FROM exportaciones_pendientes WHERE id = ?", (id_exportacion,)
+            )
+
+    def eliminar_exportaciones_pendientes_de_libro(self, id_libro: int):
+        """
+        Limpia cualquier pendiente anterior de este libro antes de arrancar
+        una exportación nueva desde cero, para no acumular registros de
+        intentos ya abandonados junto a los de la exportación actual.
+        """
+        with self._conexion() as conexion:
+            conexion.execute(
+                "DELETE FROM exportaciones_pendientes WHERE id_libro = ?", (id_libro,)
+            )
+    # ANCLAJE_FIN: EXPORTACIONES_PENDIENTES

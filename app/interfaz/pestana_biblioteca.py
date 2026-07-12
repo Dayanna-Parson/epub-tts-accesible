@@ -1129,6 +1129,36 @@ class PestanaBiblioteca(wx.Panel):
         self.gestor.establecer_bandera(libro["id"], "leyendo_ahora", True)
         reproducir(SUCCESS)
 
+    def al_enviar_a_creador_audiolibros(self):
+        libro = self._libro_seleccionado()
+        if libro is None:
+            return
+        if not os.path.exists(libro["ruta_archivo"]):
+            self._al_archivo_no_encontrado(libro)
+            return
+
+        autores = self.gestor.obtener_autores_de_libro(libro["id"])
+        nombres_autores = ", ".join(a["nombre"] for a in autores)
+
+        datos_libro = {
+            "id": libro["id"],
+            "titulo": libro["titulo"],
+            "autor": nombres_autores,
+            "formato": libro["formato"],
+            "ruta_archivo": libro["ruta_archivo"],
+        }
+
+        ventana_principal = self.padre_notebook.GetParent()
+        try:
+            from app.interfaz.ventana_principal import IDX_CREADOR
+            self.padre_notebook.SetSelection(IDX_CREADOR)
+            ventana_principal.pestana_creador.cargar_libro(datos_libro)
+        except Exception:
+            logger.exception(
+                "[PestanaBiblioteca] No se pudo enviar el libro al Creador de Audiolibros"
+            )
+            reproducir(ERROR)
+
     def _al_abrir_reglas_pronunciacion(self, libro):
         ventana_principal = self.padre_notebook.GetParent()
         try:
@@ -1434,6 +1464,12 @@ class PestanaBiblioteca(wx.Panel):
 
         item_abrir = menu.Append(wx.ID_ANY, "Abrir en Lectura\tIntro")
         self.Bind(wx.EVT_MENU, lambda e: self.al_abrir_libro_seleccionado(), item_abrir)
+
+        item_creador = menu.Append(wx.ID_ANY, "Enviar a Creador de Audiolibros")
+        item_creador.SetHelpText(
+            "Cambia a la pestaña Creador de Audiolibros con este libro ya cargado."
+        )
+        self.Bind(wx.EVT_MENU, lambda e: self.al_enviar_a_creador_audiolibros(), item_creador)
 
         menu.AppendSeparator()
 
