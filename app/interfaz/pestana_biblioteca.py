@@ -1466,7 +1466,7 @@ class PestanaBiblioteca(wx.Panel):
         self.Bind(wx.EVT_MENU, lambda e: self.al_abrir_libro_seleccionado(), item_abrir)
 
         item_creador = menu.Append(wx.ID_ANY, "Enviar a Creador de Audiolibros")
-        item_creador.SetHelpText(
+        item_creador.SetHelp(
             "Cambia a la pestaña Creador de Audiolibros con este libro ya cargado."
         )
         self.Bind(wx.EVT_MENU, lambda e: self.al_enviar_a_creador_audiolibros(), item_creador)
@@ -1529,7 +1529,7 @@ class PestanaBiblioteca(wx.Panel):
         item_renombrar_pendientes = menu.Append(
             wx.ID_ANY, "Renombrar todos los pendientes de revisión..."
         )
-        item_renombrar_pendientes.SetHelpText(
+        item_renombrar_pendientes.SetHelp(
             "Renombra en bloque, según sus metadatos, todos los libros de la "
             "biblioteca cuyo nombre de archivo no coincide con el título real."
         )
@@ -1538,7 +1538,7 @@ class PestanaBiblioteca(wx.Panel):
         item_reglas_pronunciacion = menu.Append(
             wx.ID_ANY, "Reglas de pronunciación de este libro..."
         )
-        item_reglas_pronunciacion.SetHelpText(
+        item_reglas_pronunciacion.SetHelp(
             "Abre Ajustes en el diccionario de pronunciación, ya en alcance "
             "'Este libro' y con este libro seleccionado."
         )
