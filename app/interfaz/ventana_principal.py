@@ -187,6 +187,12 @@ class VentanaPrincipal(wx.Frame):
         ):
             idx = keycode - ord('1')   # 0 a 4
             self.notebook.SetSelection(idx)
+            # Sin esto, el foco de teclado se quedaba en el control que ya
+            # tuviera antes (a veces de una pestaña que acaba de ocultarse),
+            # así que el lector de pantalla anunciaba un control desconectado
+            # en vez de la pestaña nueva — mismo tratamiento que ya recibe
+            # Ctrl+Tab más abajo.
+            wx.CallAfter(self.notebook.SetFocus)
             return
 
         # Ctrl+Tab / Ctrl+Shift+Tab → cambiar de pestaña sin importar dónde
