@@ -61,17 +61,31 @@ class PestanaCreadorAudiolibros(wx.Panel):
     def _construir_interfaz(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
+        # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
+        # Creado aquí, al principio, para que no le quede ningún StaticBox con
+        # texto justo delante en el orden de creación/tabulación — MSAA puede
+        # "heredar" el título del grupo más cercano como nombre accesible de
+        # un control sin nombre propio si se crea justo después de uno.
+        self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
+        self._anunciador.SetName("Anuncios")
+        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
+        sizer.Add(self._anunciador, 0, wx.LEFT, 0)
+
         # ── Información del libro cargado ───────────────────────────────
+        # TextCtrl de solo lectura (no wx.StaticText): un StaticText suelto,
+        # sin un control focalizable justo después, nunca entra en el orden
+        # de tabulación y el lector de pantalla no lo alcanza salvo con el
+        # navegador de objetos. Mismo patrón que txt_ruta en pestana_grabacion.py.
         box_libro = wx.StaticBox(self, label="Libro")
         sz_libro = wx.StaticBoxSizer(box_libro, wx.VERTICAL)
-        self.lbl_libro = wx.StaticText(
-            self,
-            label=(
-                "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
-                "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
-            ),
+        lbl_libro_caption = wx.StaticText(self, label="Libro cargado:")
+        self.txt_libro = wx.TextCtrl(self, style=wx.TE_READONLY)
+        self.txt_libro.SetValue(
+            "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
+            "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
         )
-        sz_libro.Add(self.lbl_libro, 0, wx.EXPAND | wx.ALL, 5)
+        sz_libro.Add(lbl_libro_caption, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+        sz_libro.Add(self.txt_libro, 0, wx.EXPAND | wx.ALL, 5)
         sizer.Add(sz_libro, 0, wx.EXPAND | wx.ALL, 8)
 
         # ── Modo de exportación ──────────────────────────────────────────
@@ -89,12 +103,15 @@ class PestanaCreadorAudiolibros(wx.Panel):
         sizer.Add(hbox_modo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
         # ── Voz por defecto ───────────────────────────────────────────────
-        self.lbl_voz = wx.StaticText(self, label="Voz: comprobando favoritas...")
-        self.lbl_voz.SetHelpText(
+        lbl_voz_caption = wx.StaticText(self, label="Voz por defecto:")
+        self.txt_voz = wx.TextCtrl(self, style=wx.TE_READONLY)
+        self.txt_voz.SetValue("Comprobando favoritas...")
+        self.txt_voz.SetHelpText(
             "Voz que se usará para la exportación: la primera voz favorita marcada "
             "en Ajustes, o la voz local si no hay ninguna favorita guardada."
         )
-        sizer.Add(self.lbl_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        sizer.Add(lbl_voz_caption, 0, wx.LEFT | wx.RIGHT, 8)
+        sizer.Add(self.txt_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
         # ── Presupuesto / exportación ────────────────────────────────────
         hbox_botones = wx.BoxSizer(wx.HORIZONTAL)
@@ -160,10 +177,13 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # ── Progreso de la exportación ────────────────────────────────────
         box_prog = wx.StaticBox(self, label="Progreso")
         sz_prog = wx.StaticBoxSizer(box_prog, wx.VERTICAL)
-        self.lbl_progreso = wx.StaticText(self, label="Estado: sin exportación en curso.")
+        lbl_progreso_caption = wx.StaticText(self, label="Estado:")
+        self.txt_progreso = wx.TextCtrl(self, style=wx.TE_READONLY)
+        self.txt_progreso.SetValue("Sin exportación en curso.")
         self.gauge = wx.Gauge(self, range=100)
         self.gauge.SetHelpText("Progreso de la exportación actual.")
-        sz_prog.Add(self.lbl_progreso, 0, wx.EXPAND | wx.ALL, 5)
+        sz_prog.Add(lbl_progreso_caption, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
+        sz_prog.Add(self.txt_progreso, 0, wx.EXPAND | wx.ALL, 5)
         sz_prog.Add(self.gauge, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         sizer.Add(sz_prog, 0, wx.EXPAND | wx.ALL, 8)
 
@@ -182,11 +202,6 @@ class PestanaCreadorAudiolibros(wx.Panel):
         )
         self.sz_caps.Add(self.lista_capitulos, 1, wx.EXPAND | wx.ALL, 5)
         sizer.Add(self.sz_caps, 1, wx.EXPAND | wx.ALL, 8)
-
-        # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
-        self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        sizer.Add(self._anunciador, 0, wx.LEFT, 0)
 
         self.SetSizer(sizer)
 
@@ -250,7 +265,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         formato = datos_libro.get("formato", "").upper()
 
         descripcion = f"{titulo}" + (f" — {autor}" if autor else "") + (f" ({formato})" if formato else "")
-        self.lbl_libro.SetLabel(descripcion)
+        self.txt_libro.SetValue(descripcion)
 
         self._habilitar_controles()
         self.btn_iniciar.Enable(False)
@@ -258,10 +273,16 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._calculando = False
         self._exportando = False
         self.gauge.SetValue(0)
-        self.lbl_progreso.SetLabel("Estado: sin exportación en curso.")
+        self.txt_progreso.SetValue("Sin exportación en curso.")
 
         self._poblar_lista_capitulos([])
         self.Layout()
+
+        # Anuncio inmediato: sin esto, cargar un libro desde Biblioteca era
+        # silencioso para el lector de pantalla — el título quedaba escrito
+        # en el campo, pero nadie lo verbalizaba hasta que el usuario lo
+        # encontrara a mano.
+        self._anunciar(f"Libro cargado en el Creador de Audiolibros: {descripcion}")
 
     def al_ctrl_o(self, evento=None):
         """
@@ -362,9 +383,9 @@ class PestanaCreadorAudiolibros(wx.Panel):
         if self.voz_actual:
             nombre = self.voz_actual.get("nombre", "")
             proveedor = self.voz_actual.get("proveedor_id", "")
-            self.lbl_voz.SetLabel(f"Voz: {nombre} ({proveedor})")
+            self.txt_voz.SetValue(f"Voz: {nombre} ({proveedor})")
         else:
-            self.lbl_voz.SetLabel("Voz: local (SAPI5) — no hay ninguna voz marcada como favorita.")
+            self.txt_voz.SetValue("Voz: local (SAPI5) — no hay ninguna voz marcada como favorita.")
 
     def _buscar_primera_voz_favorita(self):
         ruta_favs = ruta_config("voces_favoritas.json")
@@ -407,7 +428,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.btn_iniciar.Enable(False)
         self.btn_calcular.Enable(False)
         self.combo_modo.Enable(False)
-        self.lbl_progreso.SetLabel("Calculando presupuesto...")
+        self.txt_progreso.SetValue("Calculando presupuesto...")
         self._anunciar("Calculando presupuesto...")
 
         ruta_archivo = self.libro_actual["ruta_archivo"]
@@ -470,7 +491,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         estado_cuota = "cabe en la cuota actual" if cabe else "NO cabe en la cuota actual del proveedor elegido"
         mensaje = f"Presupuesto calculado: {caracteres} caracteres. Estado: {estado_cuota}."
 
-        self.lbl_progreso.SetLabel(mensaje)
+        self.txt_progreso.SetValue(mensaje)
         self._anunciar(mensaje)
         self.btn_iniciar.Enable(True)
 
@@ -479,7 +500,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.btn_calcular.Enable(True)
         self.combo_modo.Enable(True)
         reproducir(ERROR)
-        self.lbl_progreso.SetLabel(f"Error al calcular presupuesto: {error}")
+        self.txt_progreso.SetValue(f"Error al calcular presupuesto: {error}")
         self._anunciar(f"Error al calcular presupuesto: {error}")
 
     # ------------------------------------------------------------------ #
@@ -567,7 +588,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.combo_modo.Enable(False)
         self.btn_abortar.Enable(True)
         self.gauge.SetValue(0)
-        self.lbl_progreso.SetLabel("Iniciando exportación...")
+        self.txt_progreso.SetValue("Iniciando exportación...")
         reproducir(REC_START)
 
         self._grabador = GrabadorAudio(callback_progreso=self._callback_progreso_hilo)
@@ -609,7 +630,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
     def _actualizar_progreso_ui(self, actual: int, total: int, etiqueta: str):
         pct = int((actual / total) * 100) if total > 0 else 0
         self.gauge.SetValue(pct)
-        self.lbl_progreso.SetLabel(f"Exportando: {actual} de {total} — {etiqueta}")
+        self.txt_progreso.SetValue(f"Exportando: {actual} de {total} — {etiqueta}")
 
         if self.lista_capitulos.IsShown() and total > 1:
             self._actualizar_estado_capitulo(actual - 1, self.ESTADO_COMPLETADO)
@@ -662,7 +683,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             mensaje = f"Exportación finalizada. {total} capítulos completados."
             reproducir(SUCCESS)
 
-        self.lbl_progreso.SetLabel(mensaje)
+        self.txt_progreso.SetValue(mensaje)
         self._anunciar(mensaje)
 
     def _finalizar_exportacion_completa(self, salida: dict):
@@ -678,7 +699,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             )
             reproducir(ERROR)
 
-        self.lbl_progreso.SetLabel(mensaje)
+        self.txt_progreso.SetValue(mensaje)
         self._anunciar(mensaje)
 
     def _al_error_exportacion(self, error: str):
@@ -688,14 +709,14 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.combo_modo.Enable(True)
         self.btn_abortar.Enable(False)
         reproducir(ERROR)
-        self.lbl_progreso.SetLabel(f"Error durante la exportación: {error}")
+        self.txt_progreso.SetValue(f"Error durante la exportación: {error}")
         self._anunciar(f"Error durante la exportación: {error}")
 
     def al_abortar_exportacion(self, evento):
         if self._grabador:
             self._grabador.abortar()
         self.btn_abortar.Enable(False)
-        self.lbl_progreso.SetLabel("Cancelando exportación...")
+        self.txt_progreso.SetValue("Cancelando exportación...")
         # El hilo en curso detecta el aborto en el siguiente punto de control
         # (frontera de capítulo, o antes de generar en modo completo) y
         # termina llamando a _al_terminar_exportacion, que registra el
