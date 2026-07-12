@@ -12,7 +12,7 @@ from app.interfaz.pestana_grabacion import PestanaGrabacion
 from app.interfaz.pestana_creador_audiolibros import PestanaCreadorAudiolibros
 from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config
-from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS, ERROR
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
@@ -173,11 +173,11 @@ class VentanaPrincipal(wx.Frame):
 
         # Tecla Menú (Applications key) → menú contextual de la pestaña activa
         if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
-            self._mostrar_menu_contextual()
+            self._mostrar_menu_contextual_seguro()
             return
         # Shift+F10 → ídem (alternativa universal para teclados sin tecla Menú)
         if keycode == wx.WXK_F10 and evento.ShiftDown():
-            self._mostrar_menu_contextual()
+            self._mostrar_menu_contextual_seguro()
             return
 
         # Ctrl+1 a Ctrl+5 → cambiar de pestaña directamente
@@ -201,30 +201,41 @@ class VentanaPrincipal(wx.Frame):
             evento.Skip()
             return
 
-        foco = self.FindFocus()
-        if foco is None:
-            evento.Skip()
-            return
+        # Todo el bloque de Tab cíclico queda blindado: un fallo al resolver
+        # primer_control/ultimo_control de una pestaña (por ejemplo, un
+        # atributo que aún no existe tras un cambio a medio terminar) no debe
+        # dejar el teclado sin Tab en el resto de la aplicación — se registra
+        # y se cede el evento al comportamiento por defecto de wx en vez de
+        # propagar la excepción hacia EVT_CHAR_HOOK.
+        try:
+            foco = self.FindFocus()
+            if foco is None:
+                evento.Skip()
+                return
 
-        shift = evento.ShiftDown()
-        indice = self.notebook.GetSelection()
+            shift = evento.ShiftDown()
+            indice = self.notebook.GetSelection()
 
-        if indice == IDX_BIBLIOTECA:
-            primer = self.pestana_biblioteca.primer_control
-            ultimo = self.pestana_biblioteca.ultimo_control
-        elif indice == IDX_LECTURA:
-            primer = self.pestana_lectura.primer_control
-            ultimo = self.pestana_lectura.ultimo_control
-        elif indice == IDX_CREADOR:
-            primer = self.pestana_creador.primer_control
-            ultimo = self.pestana_creador.ultimo_control
-        elif indice == IDX_GRABACION:
-            primer = self.pestana_grabacion.primer_control
-            ultimo = self.pestana_grabacion.ultimo_control
-        elif indice == IDX_AJUSTES:
-            primer = self.pestana_ajustes.arbol_cat
-            ultimo = self.pestana_ajustes.obtener_ultimo_control()
-        else:
+            if indice == IDX_BIBLIOTECA:
+                primer = self.pestana_biblioteca.primer_control
+                ultimo = self.pestana_biblioteca.ultimo_control
+            elif indice == IDX_LECTURA:
+                primer = self.pestana_lectura.primer_control
+                ultimo = self.pestana_lectura.ultimo_control
+            elif indice == IDX_CREADOR:
+                primer = self.pestana_creador.primer_control
+                ultimo = self.pestana_creador.ultimo_control
+            elif indice == IDX_GRABACION:
+                primer = self.pestana_grabacion.primer_control
+                ultimo = self.pestana_grabacion.ultimo_control
+            elif indice == IDX_AJUSTES:
+                primer = self.pestana_ajustes.arbol_cat
+                ultimo = self.pestana_ajustes.obtener_ultimo_control()
+            else:
+                evento.Skip()
+                return
+        except Exception:
+            logger.exception("[VentanaPrincipal] Fallo al resolver el Tab cíclico de la pestaña activa")
             evento.Skip()
             return
 
@@ -479,6 +490,21 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: HISTORIAL_RECIENTES
 
     # ANCLAJE_INICIO: MENUS_CONTEXTUALES
+    def _mostrar_menu_contextual_seguro(self):
+        """
+        Envoltorio defensivo alrededor de _mostrar_menu_contextual(): un
+        error al construir un menú contextual (por ejemplo, un atributo de
+        wx mal usado en algún ítem) no debe propagarse hasta
+        al_navegacion_tab_global(), vinculado a EVT_CHAR_HOOK del Frame —
+        un fallo sin capturar ahí deja sin Tab/Shift+F10/tecla Menú al resto
+        de la aplicación, no solo a la pestaña donde ocurrió.
+        """
+        try:
+            self._mostrar_menu_contextual()
+        except Exception:
+            logger.exception("[VentanaPrincipal] Error al mostrar el menú contextual")
+            reproducir(ERROR)
+
     def _mostrar_menu_contextual(self):
         """Muestra el menú contextual correspondiente a la pestaña activa."""
         indice = self.notebook.GetSelection()
