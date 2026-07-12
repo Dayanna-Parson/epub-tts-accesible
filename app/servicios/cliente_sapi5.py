@@ -17,13 +17,14 @@ class ClienteSapi5:
         # Control de hilo de lectura párrafo a párrafo
         self._detener_flag = False
         self._generacion_sapi = 0
+        self._volumen = 100   # último volumen elegido por el usuario (fijar_volumen)
         self._inicializar_motor()
 
     def _inicializar_motor(self):
         try:
             self.motor = comtypes.client.CreateObject("SAPI.SpVoice")
             self.motor.Rate = 0
-            self.motor.Volume = 100
+            self.motor.Volume = self._volumen
             self.conectado = True
         except Exception as e:
             logger.warning("[SAPI5] No se pudo inicializar el motor: %s", e)
@@ -104,7 +105,7 @@ class ClienteSapi5:
         if self.conectado:
             self._detener_flag = False
             try:
-                self.motor.Volume = 100
+                self.motor.Volume = self._volumen
                 self.motor.Speak(texto, SPF_ASYNC | SPF_IS_NOT_XML)
             except Exception as e:
                 logger.warning("[SAPI5] Error al hablar: %s", e)
@@ -148,7 +149,7 @@ class ClienteSapi5:
                 # Notificar posición al hilo principal (mueve cursor al párrafo)
                 wx.CallAfter(callback_progreso, pos)
                 try:
-                    self.motor.Volume = 100
+                    self.motor.Volume = self._volumen
                     self.motor.Speak(linea, SPF_ASYNC | SPF_IS_NOT_XML)
                     # Esperar fin de párrafo en intervalos de 100 ms
                     while not self._detener_flag and self._generacion_sapi == gen:
@@ -195,29 +196,38 @@ class ClienteSapi5:
             self._detener_flag = True
             try:
                 self.motor.Speak("", SPF_ASYNC | SPF_PURGEBEFORESPEAK)
-            except: pass
+            except Exception:
+                logger.exception("[SAPI5] Error al detener la reproducción")
 
     def pausar(self):
         if self.conectado:
-            try: self.motor.Pause()
-            except: pass
+            try:
+                self.motor.Pause()
+            except Exception:
+                logger.exception("[SAPI5] Error al pausar la reproducción")
 
     def reanudar(self):
         if self.conectado:
-            try: self.motor.Resume()
-            except: pass
+            try:
+                self.motor.Resume()
+            except Exception:
+                logger.exception("[SAPI5] Error al reanudar la reproducción")
 
     def fijar_velocidad(self, v):
         if self.conectado:
             try:
                 tasa = int((v / 5) - 10)
                 self.motor.Rate = max(-10, min(10, tasa))
-            except: pass
+            except Exception:
+                logger.exception("[SAPI5] Error al fijar la velocidad (valor recibido: %s)", v)
 
     def fijar_volumen(self, v):
+        self._volumen = int(v)
         if self.conectado:
-            try: self.motor.Volume = int(v)
-            except: pass
+            try:
+                self.motor.Volume = self._volumen
+            except Exception:
+                logger.exception("[SAPI5] Error al fijar el volumen (valor recibido: %s)", v)
 
     def cambiar_voz_por_nombre(self, nombre_objetivo):
         """
