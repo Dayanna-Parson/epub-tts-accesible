@@ -205,6 +205,25 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         self.SetSizer(sizer)
 
+        # Orden de tabulación forzado explícitamente. Confirmado con el
+        # Visor de voz de NVDA que, pese a construirse en este mismo orden,
+        # el Tab nativo saltaba directo de deslizador_volumen de vuelta a la
+        # pestaña sin pasar por txt_libro/txt_voz/txt_progreso/_anunciador
+        # (los TextCtrl de solo lectura) ni por lista_capitulos — ninguno
+        # deshabilitado ni oculto en ese punto, así que no dependía de
+        # nuestra propia lógica de habilitar/deshabilitar. Mismo remedio ya
+        # usado en pestana_biblioteca.py (lista_libros.MoveAfterInTabOrder).
+        self.txt_libro.MoveAfterInTabOrder(self._anunciador)
+        self.combo_modo.MoveAfterInTabOrder(self.txt_libro)
+        self.txt_voz.MoveAfterInTabOrder(self.combo_modo)
+        self.btn_calcular.MoveAfterInTabOrder(self.txt_voz)
+        self.btn_iniciar.MoveAfterInTabOrder(self.btn_calcular)
+        self.btn_abortar.MoveAfterInTabOrder(self.btn_iniciar)
+        self.deslizador_velocidad.MoveAfterInTabOrder(self.btn_abortar)
+        self.deslizador_volumen.MoveAfterInTabOrder(self.deslizador_velocidad)
+        self.txt_progreso.MoveAfterInTabOrder(self.deslizador_volumen)
+        self.lista_capitulos.MoveAfterInTabOrder(self.txt_progreso)
+
         # Oculta por defecto: el modo inicial es "Libro completo".
         self.sz_caps.ShowItems(False)
         self.Layout()
@@ -220,11 +239,11 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
     @property
     def primer_control(self):
-        return self.combo_modo
+        return self.txt_libro
 
     @property
     def ultimo_control(self):
-        return self.lista_capitulos if self.lista_capitulos.IsShown() else self.deslizador_volumen
+        return self.lista_capitulos if self.lista_capitulos.IsShown() else self.txt_progreso
 
     # ------------------------------------------------------------------ #
     # Habilitado / deshabilitado según haya libro cargado
