@@ -909,48 +909,68 @@ class PestanaLectura(wx.Panel):
 
     def _aplicar_escala_velocidad(self, escala: str, valor_guardado: int):
         """
-        Reconfigura el slider de velocidad según la escala activa y actualiza
-        la etiqueta y el texto de ayuda para que NVDA lo lea correctamente.
+        Actualiza la etiqueta y el texto de ayuda del slider de velocidad
+        según la escala activa, para que NVDA lo lea correctamente.
+
+        El slider SIEMPRE vive en el mismo rango 0–100 que se envía al
+        reproductor — antes, el modo "multiplicador" cambiaba el propio
+        rango del slider a 0–25 y dependía de obtener_velocidad_normalizada()
+        para reconvertirlo a 0–100 al aplicar la velocidad real, pero esa
+        función nunca se llamaba desde ningún sitio: el valor crudo del
+        slider (como mucho 25) se enviaba directo al motor, que lo trataba
+        como un porcentaje 0–100. Con eso, el máximo alcanzable en modo
+        "por puntos" (25) seguía siendo más lento que la velocidad normal
+        (50) — nunca se podía llegar ni a la velocidad neutra, muchísimo
+        menos a "más rápido". El modo "por puntos" es ahora solo una
+        relectura del mismo valor 0–100, calculada con la misma fórmula que
+        aplica realmente el motor (_multiplicador_desde_valor), así que lo
+        que se lee y lo que suena son siempre la misma cifra.
         """
+        self.deslizador_velocidad.SetMin(0)
+        self.deslizador_velocidad.SetMax(100)
+        self.deslizador_velocidad.SetValue(valor_guardado)
+
         if escala == "multiplicador":
-            self.deslizador_velocidad.SetMin(0)
-            self.deslizador_velocidad.SetMax(25)
-            self.deslizador_velocidad.SetValue(
-                min(25, max(0, round((valor_guardado / 100) * 12)))
-            )
-            self.lbl_velocidad.SetLabel("Velocidad (×):")
+            self.lbl_velocidad.SetLabel(f"Velocidad ({self._etiqueta_multiplicador(valor_guardado)}):")
             self.deslizador_velocidad.SetHelpText(
-                "Velocidad de lectura en multiplicadores. "
-                "0 = 0.5×, 12 = 1.75×, 25 = 3.0×. "
-                "Flechas: ±1 paso. RePág/AvPág: ±5 pasos."
+                "Velocidad de lectura en multiplicadores. 0.2× es la más lenta, "
+                "1.0× es la normal, 1.8× es la más rápida. "
+                "Flechas: ±1. RePág/AvPág: ±5."
             )
         else:
-            self.deslizador_velocidad.SetMin(0)
-            self.deslizador_velocidad.SetMax(100)
-            self.deslizador_velocidad.SetValue(valor_guardado)
             self.lbl_velocidad.SetLabel("Velocidad de lectura:")
             self.deslizador_velocidad.SetHelpText(
                 "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
                 "Flechas: ±1. RePág/AvPág: ±5."
             )
 
-    def obtener_velocidad_normalizada(self) -> int:
+    @staticmethod
+    def _multiplicador_desde_valor(v: int) -> float:
         """
-        Devuelve siempre un valor 0–100 independientemente de la escala activa,
-        para pasarlo al reproductor sin que este sepa nada de escalas.
+        Multiplicador real aproximado para un valor 0–100 de velocidad, con
+        la misma fórmula que aplican los motores de voz (tasa SSML
+        (v-50)*1.6%, saturada en ±80%): 50 → 1.0× exacto, 0 → 0.2×, 100 → 1.8×.
         """
-        ruta = ruta_config("ajustes.json")
-        escala = "porcentaje"
-        try:
-            with open(ruta, "r", encoding="utf-8") as f:
-                escala = json.load(f).get("escala_velocidad", "porcentaje")
-        except Exception:
-            pass
+        return 1 + (v - 50) * 0.016
 
-        val = self.deslizador_velocidad.GetValue()
-        if escala == "multiplicador":
-            return min(100, max(0, round(val * 100 / 25)))
-        return val
+    @classmethod
+    def _etiqueta_multiplicador(cls, v: int) -> str:
+        m = cls._multiplicador_desde_valor(v)
+        if v <= 5:
+            calificativo = " (Muy lenta)"
+        elif v <= 30:
+            calificativo = " (Lenta)"
+        elif 45 <= v <= 55:
+            calificativo = " (Normal)"
+        elif v >= 95:
+            calificativo = " (Máxima)"
+        elif v >= 70:
+            calificativo = " (Muy rápida)"
+        elif v >= 55:
+            calificativo = " (Rápida)"
+        else:
+            calificativo = ""
+        return f"{m:.2f}×{calificativo}"
     # ANCLAJE_FIN: SELECTOR_ESCALA_VELOCIDAD
 
     def al_buscar_usuario(self, e):
@@ -1187,17 +1207,12 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
 
     # ANCLAJE_INICIO: SLIDER_VELOCIDAD_SEMANTICO
-    # Tabla de escalones del modo multiplicador:
-    # índice 0–25 → valor real mostrado a NVDA
-    _ETIQUETAS_MULTIPLICADOR = {
-        0: "0.5× (Muy lenta)", 2: "0.6×", 4: "0.75× (Lenta)",
-        6: "0.9×",  8: "1.0× (Normal)", 10: "1.1×",
-        12: "1.25×", 14: "1.5× (Rápida)", 17: "1.75×",
-        20: "2.0× (Muy rápida)", 22: "2.5×", 25: "3.0× (Máxima)",
-    }
-
     def _al_slider_velocidad_cambio(self, evento):
-        """Actualiza SetHelpText con la etiqueta semántica en modo multiplicador."""
+        """
+        Actualiza la etiqueta con el multiplicador real en modo "por puntos".
+        Usa _etiqueta_multiplicador(), la misma fórmula que aplica realmente
+        el motor de voz — nunca una tabla aparte que pueda desincronizarse.
+        """
         ruta = ruta_config("ajustes.json")
         escala = "porcentaje"
         try:
@@ -1209,9 +1224,7 @@ class PestanaLectura(wx.Panel):
             evento.Skip()
             return
         val = self.deslizador_velocidad.GetValue()
-        # Buscar la etiqueta del escalón más cercano
-        escalon = min(self._ETIQUETAS_MULTIPLICADOR, key=lambda k: abs(k - val))
-        etiqueta = self._ETIQUETAS_MULTIPLICADOR[escalon]
+        etiqueta = self._etiqueta_multiplicador(val)
         self.deslizador_velocidad.SetHelpText(f"Velocidad: {etiqueta}")
         self.lbl_velocidad.SetLabel(f"Velocidad ({etiqueta}):")
         evento.Skip()

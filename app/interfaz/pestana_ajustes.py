@@ -194,14 +194,15 @@ class PanelGeneral(wx.ScrolledWindow):
         )
         self.combo_escala_vel = wx.ComboBox(
             self,
-            choices=["Porcentaje (0 – 100)", "Multiplicador por puntos (0.5× – 3.0×)"],
+            choices=["Porcentaje (0 – 100)", "Multiplicador por puntos (0.2× – 1.8×)"],
             style=wx.CB_READONLY,
         )
         self.combo_escala_vel.SetHelpText(
             "Elige cómo se muestra la velocidad en el deslizador de la pestaña Lectura. "
             "Porcentaje: valores del 0 al 100. "
-            "Multiplicador: etiquetas tipo 1.0× (Normal), 1.5× (Rápida), 2.0× (Muy rápida). "
-            "El motor de audio recibe siempre un valor normalizado 0-100."
+            "Multiplicador: etiquetas tipo 1.0× (Normal), 1.4× (Rápida), 1.8× (Muy rápida). "
+            "El motor de audio recibe siempre el mismo valor 0-100 del deslizador; "
+            "el multiplicador es solo su lectura equivalente."
         )
         _escala_guardada = self.config.get("escala_velocidad", "porcentaje")
         self.combo_escala_vel.SetSelection(0 if _escala_guardada == "porcentaje" else 1)
