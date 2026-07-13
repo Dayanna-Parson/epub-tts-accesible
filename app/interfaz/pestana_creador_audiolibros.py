@@ -101,6 +101,16 @@ class PestanaCreadorAudiolibros(wx.Panel):
         )
         sz_libro.Add(lbl_libro_caption, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
         sz_libro.Add(self.txt_libro, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_eliminar_libro = wx.Button(self, label="Eliminar libro cargado")
+        self.btn_eliminar_libro.SetHelpText(
+            "Quita el libro actual de esta pestaña, por si se cargó el libro "
+            "equivocado, sin afectar a la Biblioteca ni al archivo original."
+        )
+        self.btn_eliminar_libro.Bind(wx.EVT_BUTTON, self.al_eliminar_libro)
+        self.btn_eliminar_libro.Enable(False)
+        sz_libro.Add(self.btn_eliminar_libro, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+
         sizer.Add(sz_libro, 0, wx.EXPAND | wx.ALL, 8)
 
         # ── Modo de exportación ──────────────────────────────────────────
@@ -126,7 +136,15 @@ class PestanaCreadorAudiolibros(wx.Panel):
             "en Ajustes, o la voz local si no hay ninguna favorita guardada."
         )
         sizer.Add(lbl_voz_caption, 0, wx.LEFT | wx.RIGHT, 8)
-        sizer.Add(self.txt_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        sizer.Add(self.txt_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        self.btn_elegir_voz = wx.Button(self, label="Elegir voz...")
+        self.btn_elegir_voz.SetHelpText(
+            "Abre un diálogo para elegir manualmente el proveedor y la voz de "
+            "exportación, en vez de usar siempre la primera voz favorita."
+        )
+        self.btn_elegir_voz.Bind(wx.EVT_BUTTON, self.al_elegir_voz)
+        sizer.Add(self.btn_elegir_voz, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
         # ── Presupuesto / exportación ────────────────────────────────────
         hbox_botones = wx.BoxSizer(wx.HORIZONTAL)
@@ -229,9 +247,11 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # nuestra propia lógica de habilitar/deshabilitar. Mismo remedio ya
         # usado en pestana_biblioteca.py (lista_libros.MoveAfterInTabOrder).
         self.txt_libro.MoveAfterInTabOrder(self._anunciador)
-        self.combo_modo.MoveAfterInTabOrder(self.txt_libro)
+        self.btn_eliminar_libro.MoveAfterInTabOrder(self.txt_libro)
+        self.combo_modo.MoveAfterInTabOrder(self.btn_eliminar_libro)
         self.txt_voz.MoveAfterInTabOrder(self.combo_modo)
-        self.btn_calcular.MoveAfterInTabOrder(self.txt_voz)
+        self.btn_elegir_voz.MoveAfterInTabOrder(self.txt_voz)
+        self.btn_calcular.MoveAfterInTabOrder(self.btn_elegir_voz)
         self.btn_iniciar.MoveAfterInTabOrder(self.btn_calcular)
         self.btn_abortar.MoveAfterInTabOrder(self.btn_iniciar)
         self.deslizador_velocidad.MoveAfterInTabOrder(self.btn_abortar)
@@ -268,6 +288,8 @@ class PestanaCreadorAudiolibros(wx.Panel):
         return (
             self.combo_modo,
             self.btn_calcular,
+            self.btn_eliminar_libro,
+            self.btn_elegir_voz,
             self.deslizador_velocidad,
             self.deslizador_volumen,
             self.lista_capitulos,
@@ -317,6 +339,63 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # en el campo, pero nadie lo verbalizaba hasta que el usuario lo
         # encontrara a mano.
         self._anunciar(f"Libro cargado en el Creador de Audiolibros: {descripcion}")
+
+    def al_eliminar_libro(self, evento=None):
+        """
+        Quita el libro actual de esta pestaña (por ejemplo, si se cargó el
+        libro equivocado desde Biblioteca), sin tocar la Biblioteca ni el
+        archivo original. No tiene efecto si hay una exportación en curso.
+        """
+        if self._exportando:
+            self._anunciar("No se puede eliminar el libro mientras hay una exportación en curso.")
+            return
+
+        self.libro_actual = None
+        self.voz_actual = None
+        self._resultado_presupuesto = None
+        self._calculando = False
+
+        self.txt_libro.SetValue(
+            "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
+            "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
+        )
+        self.txt_voz.SetValue("Comprobando favoritas...")
+        self.txt_progreso.SetValue("Sin exportación en curso.")
+        self.gauge.SetValue(0)
+        self._poblar_lista_capitulos([])
+        self._deshabilitar_controles()
+        self.Layout()
+
+        self._anunciar("Libro eliminado del Creador de Audiolibros.")
+        wx.CallAfter(self._cargar_voz_por_defecto)
+
+    def al_elegir_voz(self, evento=None):
+        """
+        Abre un diálogo para elegir manualmente proveedor y voz, en vez de
+        depender siempre de la primera voz favorita detectada.
+        """
+        from app.interfaz.dialogo_elegir_voz import DialogoElegirVoz
+
+        dlg = DialogoElegirVoz(self)
+        respuesta = dlg.ShowModal()
+
+        if respuesta == wx.ID_OK and dlg.accion == "elegida":
+            voz = dict(dlg.voz_elegida)
+            voz["proveedor_id"] = dlg.proveedor_elegido
+            self.voz_actual = voz
+            nombre_proveedor = DialogoElegirVoz._NOMBRES_PROVEEDOR.get(dlg.proveedor_elegido, dlg.proveedor_elegido)
+            self.txt_voz.SetValue(f"Voz: {voz.get('nombre', '')} ({nombre_proveedor})")
+            self._anunciar(f"Voz seleccionada: {voz.get('nombre', '')}, {nombre_proveedor}.")
+            self._resultado_presupuesto = None
+            self.btn_iniciar.Enable(False)
+        elif respuesta == wx.ID_OK and dlg.accion == "local":
+            self.voz_actual = {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
+            self.txt_voz.SetValue("Voz: local (SAPI5)")
+            self._anunciar("Voz seleccionada: local, SAPI5.")
+            self._resultado_presupuesto = None
+            self.btn_iniciar.Enable(False)
+
+        dlg.Destroy()
 
     def al_ctrl_o(self, evento=None):
         """
