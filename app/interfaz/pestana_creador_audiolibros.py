@@ -11,6 +11,21 @@ from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR
 logger = logging.getLogger(__name__)
 
 
+class _TextoInformativoAccesible(wx.TextCtrl):
+    """
+    TextCtrl de solo lectura (wx.TE_READONLY) que sigue siendo alcanzable
+    con Tab. Comprobado con el Visor de voz de NVDA: wx excluye del orden
+    de tabulación real a los TextCtrl de solo lectura en esta pestaña —
+    ni MoveAfterInTabOrder lo corrige, porque no es un problema de orden,
+    es que wx no los trata como parada de teclado en absoluto. Se
+    sobreescribe AcceptsFocusFromKeyboard() para forzarlo, igual que
+    cualquier campo de solo lectura de una aplicación accesible.
+    """
+
+    def AcceptsFocusFromKeyboard(self):
+        return True
+
+
 # ANCLAJE_INICIO: PESTANA_CREADOR_AUDIOLIBROS
 class PestanaCreadorAudiolibros(wx.Panel):
     """
@@ -66,7 +81,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # texto justo delante en el orden de creación/tabulación — MSAA puede
         # "heredar" el título del grupo más cercano como nombre accesible de
         # un control sin nombre propio si se crea justo después de uno.
-        self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
+        self._anunciador = _TextoInformativoAccesible(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
         self._anunciador.SetName("Anuncios")
         self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
         sizer.Add(self._anunciador, 0, wx.LEFT, 0)
@@ -79,7 +94,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         box_libro = wx.StaticBox(self, label="Libro")
         sz_libro = wx.StaticBoxSizer(box_libro, wx.VERTICAL)
         lbl_libro_caption = wx.StaticText(self, label="Libro cargado:")
-        self.txt_libro = wx.TextCtrl(self, style=wx.TE_READONLY)
+        self.txt_libro = _TextoInformativoAccesible(self, style=wx.TE_READONLY)
         self.txt_libro.SetValue(
             "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
             "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
@@ -104,7 +119,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         # ── Voz por defecto ───────────────────────────────────────────────
         lbl_voz_caption = wx.StaticText(self, label="Voz por defecto:")
-        self.txt_voz = wx.TextCtrl(self, style=wx.TE_READONLY)
+        self.txt_voz = _TextoInformativoAccesible(self, style=wx.TE_READONLY)
         self.txt_voz.SetValue("Comprobando favoritas...")
         self.txt_voz.SetHelpText(
             "Voz que se usará para la exportación: la primera voz favorita marcada "
@@ -178,7 +193,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         box_prog = wx.StaticBox(self, label="Progreso")
         sz_prog = wx.StaticBoxSizer(box_prog, wx.VERTICAL)
         lbl_progreso_caption = wx.StaticText(self, label="Estado:")
-        self.txt_progreso = wx.TextCtrl(self, style=wx.TE_READONLY)
+        self.txt_progreso = _TextoInformativoAccesible(self, style=wx.TE_READONLY)
         self.txt_progreso.SetValue("Sin exportación en curso.")
         self.gauge = wx.Gauge(self, range=100)
         self.gauge.SetHelpText("Progreso de la exportación actual.")
