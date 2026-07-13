@@ -39,6 +39,15 @@ class ReproductorVoz:
         self.motor_activo = self.cliente_local
         self.tipo_motor_actual = "local"
         self.voz_actual = None
+        # Última velocidad/volumen elegidos desde la interfaz. Cada cliente
+        # (ClienteAzure, ClientePolly...) guarda su propio _velocidad/_volumen
+        # interno con su propio valor por defecto (50/100): al cambiar de
+        # motor_activo en fijar_voz(), ese cliente recién activado nunca había
+        # recibido el valor que el usuario ya tenía puesto en el deslizador,
+        # así que la lectura sonaba siempre "como al 50%" tras seleccionar o
+        # cambiar de voz. Se guardan aquí para poder reaplicarlos.
+        self._velocidad_actual = 50
+        self._volumen_actual = 100
         self.estado = "detenido"
         self._hilo_reproduccion = None
         # Contador de generación: cada nueva petición de síntesis incrementa este valor.
@@ -114,6 +123,23 @@ class ReproductorVoz:
                     self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
             # ANCLAJE_FIN: CONFIGURACION_VOZ_ACTIVA
 
+        self._reaplicar_velocidad_volumen()
+
+    def _reaplicar_velocidad_volumen(self):
+        """
+        Reaplica al motor_activo actual la velocidad/volumen que el usuario
+        ya tenía puestos en los deslizadores. Cada cliente (ClienteAzure,
+        ClientePolly...) guarda su propio estado interno con su propio valor
+        por defecto (50/100): sin esto, la lectura sonaba siempre "a mitad"
+        nada más cambiar de voz o de proveedor (manualmente o por cuota
+        agotada), sin importar dónde estuviera el deslizador. Se llama desde
+        cada punto de este archivo que reasigna self.motor_activo.
+        """
+        if hasattr(self.motor_activo, 'fijar_velocidad'):
+            self.motor_activo.fijar_velocidad(self._velocidad_actual)
+        if hasattr(self.motor_activo, 'fijar_volumen'):
+            self.motor_activo.fijar_volumen(self._volumen_actual)
+
 # ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
     def _elegir_motor_con_cuota(self, texto):
         """
@@ -145,6 +171,7 @@ class ReproductorVoz:
                     logger.info("[ReproductorVoz] '%s' sin cuota → usando '%s'", self.tipo_motor_actual, tipo)
                     self.motor_activo = motor
                     self.tipo_motor_actual = tipo
+                    self._reaplicar_velocidad_volumen()
                 return tipo
 
         # Ningún proveedor tiene cuota: caer a voz local
@@ -158,6 +185,7 @@ class ReproductorVoz:
         wx.CallAfter(_aviso_cuota_total)
         self.motor_activo = self.cliente_local
         self.tipo_motor_actual = "local"
+        self._reaplicar_velocidad_volumen()
         return "local"
 
     def cargar_texto(self, texto, callback_completado=None,
@@ -389,7 +417,9 @@ class ReproductorVoz:
     # ANCLAJE_FIN: COMANDOS_REPRODUCTOR
 
     def obtener_estado(self): return self.estado
-    def fijar_velocidad(self, v): 
+    def fijar_velocidad(self, v):
+        self._velocidad_actual = v
         if hasattr(self.motor_activo, 'fijar_velocidad'): self.motor_activo.fijar_velocidad(v)
     def fijar_volumen(self, v):
+        self._volumen_actual = v
         if hasattr(self.motor_activo, 'fijar_volumen'): self.motor_activo.fijar_volumen(v)
