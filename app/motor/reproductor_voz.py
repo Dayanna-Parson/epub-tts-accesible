@@ -135,6 +135,11 @@ class ReproductorVoz:
         agotada), sin importar dónde estuviera el deslizador. Se llama desde
         cada punto de este archivo que reasigna self.motor_activo.
         """
+        logger.warning(
+            "[ReproductorVoz] _reaplicar_velocidad_volumen: motor=%s (%s) velocidad=%s volumen=%s",
+            self.tipo_motor_actual, type(self.motor_activo).__name__,
+            self._velocidad_actual, self._volumen_actual,
+        )
         if hasattr(self.motor_activo, 'fijar_velocidad'):
             self.motor_activo.fijar_velocidad(self._velocidad_actual)
         if hasattr(self.motor_activo, 'fijar_volumen'):
@@ -419,6 +424,8 @@ class ReproductorVoz:
     def obtener_estado(self): return self.estado
     def fijar_velocidad(self, v):
         self._velocidad_actual = v
+        logger.warning("[ReproductorVoz] fijar_velocidad(%s) -> motor_activo=%s (%s)",
+                        v, self.tipo_motor_actual, type(self.motor_activo).__name__)
         if hasattr(self.motor_activo, 'fijar_velocidad'): self.motor_activo.fijar_velocidad(v)
     def fijar_volumen(self, v):
         self._volumen_actual = v

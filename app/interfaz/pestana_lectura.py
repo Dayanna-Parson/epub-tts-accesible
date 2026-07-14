@@ -3,12 +3,15 @@ import wx
 import os
 import json
 import time
+import logging
 import threading
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
 from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR
+
+logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
 
 # ── Tablas de traducción para etiquetas del combo de voz ─────────────────────
@@ -676,6 +679,8 @@ class PestanaLectura(wx.Panel):
 
     def al_cambiar_velocidad(self, evento):
         v = self.deslizador_velocidad.GetValue()
+        logger.warning("[Lectura] al_cambiar_velocidad: slider v=%s (min=%s max=%s)",
+                        v, self.deslizador_velocidad.GetMin(), self.deslizador_velocidad.GetMax())
         if hasattr(self.reproductor, 'fijar_velocidad'):
             self.reproductor.fijar_velocidad(v)
         self._guardar_ajuste_slider("velocidad_lectura", v)

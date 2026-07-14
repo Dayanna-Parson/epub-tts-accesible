@@ -217,7 +217,9 @@ class ClienteSapi5:
         if self.conectado:
             try:
                 tasa = int((v / 5) - 10)
-                self.motor.Rate = max(-10, min(10, tasa))
+                tasa = max(-10, min(10, tasa))
+                self.motor.Rate = tasa
+                logger.warning("[SAPI5] fijar_velocidad(%s) -> Rate=%s", v, tasa)
             except Exception:
                 logger.exception("[SAPI5] Error al fijar la velocidad (valor recibido: %s)", v)
 
