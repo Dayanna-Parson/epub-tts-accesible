@@ -1,9 +1,12 @@
+import logging
 import requests
 import sounddevice as sd
 import soundfile as sf
 import io
 import time
 from app.config_rutas import cargar_claves
+
+logger = logging.getLogger(__name__)
 
 _MAX_CACHE = 5  # Máximo de fragmentos de audio en caché por cliente
 
@@ -95,6 +98,7 @@ class ClienteAzure:
         texto_limpio = self._limpiar_texto_xml(texto)
         tasa = self._velocidad_a_tasa()
         nivel_vol = self._volumen_a_nivel()
+        logger.warning("[Azure] _llamar_api: self._velocidad=%s -> tasa SSML='%s'", self._velocidad, tasa)
 
         ssml = f"""
         <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{idioma_destino}'>
