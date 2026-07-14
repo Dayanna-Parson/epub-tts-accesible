@@ -81,7 +81,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # texto justo delante en el orden de creación/tabulación — MSAA puede
         # "heredar" el título del grupo más cercano como nombre accesible de
         # un control sin nombre propio si se crea justo después de uno.
-        self._anunciador = _TextoInformativoAccesible(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
+        self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
         self._anunciador.SetName("Anuncios")
         self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
         sizer.Add(self._anunciador, 0, wx.LEFT, 0)

@@ -90,6 +90,15 @@ class PanelProveedorIA(wx.Panel):
         self.ruta_favs = ruta_config("voces_favoritas.json")
         self.favoritos = self._cargar_favoritos()
         self._timer_busqueda = None
+        # Protege contra el "marcado en cascada": CheckItem() puede disparar
+        # sintéticamente EVT_LIST_ITEM_CHECKED en wxPython, igual que si el
+        # usuario marcara la casilla a mano. Sin este candado, cada
+        # reconstrucción de la lista (p. ej. al cambiar de proveedor en el
+        # diálogo del Creador de Audiolibros) volvía a "marcar como
+        # favorita" cada voz ya favorita a través de _al_marcar_favorito(),
+        # sin corromper datos por sí solo, pero dejando la puerta abierta a
+        # que cualquier CheckItem programático futuro sí lo haga.
+        self._poblando_lista = False
         self._construir_ui()
         wx.CallAfter(self.cargar_datos)
 
@@ -254,6 +263,7 @@ class PanelProveedorIA(wx.Panel):
     def filtrar_y_mostrar(self):
         # Freeze suspende el redibujado durante la inserción masiva (sin parpadeo)
         self.lista_voces.Freeze()
+        self._poblando_lista = True
         self.lista_voces.DeleteAllItems()
         self.mapa_indices = {}
 
@@ -304,6 +314,7 @@ class PanelProveedorIA(wx.Panel):
 
         # Thaw reactiva el redibujado y pinta todos los ítems de una sola pasada
         self.lista_voces.Thaw()
+        self._poblando_lista = False
 
     def _construir_nombre_enriquecido(self, voz):
         """
@@ -345,6 +356,10 @@ class PanelProveedorIA(wx.Panel):
             logger.exception("Error al guardar voces_favoritas.json")
 
     def _al_marcar_favorito(self, evento):
+        if self._poblando_lista:
+            # CheckItem() al poblar la lista dispara este mismo evento como si
+            # el usuario hubiera marcado la casilla a mano; se ignora aquí.
+            return
         voz = self.mapa_indices.get(evento.GetIndex())
         if voz:
             id_voz = voz.get("id")
@@ -354,6 +369,8 @@ class PanelProveedorIA(wx.Panel):
                 wx.CallAfter(self._notificar_pestanas)
 
     def _al_desmarcar_favorito(self, evento):
+        if self._poblando_lista:
+            return
         voz = self.mapa_indices.get(evento.GetIndex())
         if voz:
             id_voz = voz.get("id")
