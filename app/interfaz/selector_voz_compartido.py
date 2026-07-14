@@ -387,6 +387,8 @@ class PanelProveedorIA(wx.Panel):
                 ventana.pestana_grabacion._cargar_voces_disponibles()
             if hasattr(ventana, 'pestana_lectura') and hasattr(ventana.pestana_lectura, '_recargar_combo_voces'):
                 ventana.pestana_lectura._recargar_combo_voces()
+            if hasattr(ventana, 'pestana_creador') and hasattr(ventana.pestana_creador, '_recargar_voces_favoritas'):
+                ventana.pestana_creador._recargar_voces_favoritas()
         except Exception:
             logger.exception("Error al notificar cambio de favoritos a otras pestañas")
 

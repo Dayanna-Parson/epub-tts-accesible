@@ -10,6 +10,15 @@ from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR
 
 logger = logging.getLogger(__name__)
 
+_NOMBRES_PROVEEDOR = {
+    "azure":      "Azure Neural",
+    "polly":      "Amazon Polly",
+    "elevenlabs": "ElevenLabs",
+    "deepgram":   "Deepgram Aura-2",
+    "local":      "Local SAPI5",
+    "local_32":   "Local SAPI5 (32 bits)",
+}
+
 
 class _TextoInformativoAccesible(wx.TextCtrl):
     """
@@ -127,24 +136,24 @@ class PestanaCreadorAudiolibros(wx.Panel):
         hbox_modo.Add(self.combo_modo, 1)
         sizer.Add(hbox_modo, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
-        # ── Voz por defecto ───────────────────────────────────────────────
-        lbl_voz_caption = wx.StaticText(self, label="Voz por defecto:")
-        self.txt_voz = _TextoInformativoAccesible(self, style=wx.TE_READONLY)
-        self.txt_voz.SetValue("Comprobando favoritas...")
-        self.txt_voz.SetHelpText(
-            "Voz que se usará para la exportación: la primera voz favorita marcada "
-            "en Ajustes, o la voz local si no hay ninguna favorita guardada."
+        # ── Selector de voz/proveedor ────────────────────────────────────
+        # Control directo embebido en la propia pestaña (sección 3.1 de la
+        # planificación), no un campo de solo lectura con un botón que abre
+        # un diálogo aparte. Lista plana con el proveedor incluido en cada
+        # nombre — mismo criterio de navegación que PanelProveedorIA en
+        # Ajustes, sin filas de encabezado que NVDA pueda leer como si
+        # fueran una voz seleccionable.
+        lbl_voz_caption = wx.StaticText(self, label="Voz para la exportación:")
+        self.combo_voz = wx.Choice(self, choices=["Cargando voces favoritas..."])
+        self.combo_voz.SetSelection(0)
+        self.combo_voz.SetHelpText(
+            "Voz favorita que se usará para la exportación, de cualquier proveedor "
+            "configurado, incluidas las voces locales SAPI5. Marca tus favoritas "
+            "desde Ajustes; esta lista se actualiza sola."
         )
+        self.combo_voz.Bind(wx.EVT_CHOICE, self.al_cambiar_voz)
         sizer.Add(lbl_voz_caption, 0, wx.LEFT | wx.RIGHT, 8)
-        sizer.Add(self.txt_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
-
-        self.btn_elegir_voz = wx.Button(self, label="Elegir voz...")
-        self.btn_elegir_voz.SetHelpText(
-            "Abre un diálogo para elegir manualmente el proveedor y la voz de "
-            "exportación, en vez de usar siempre la primera voz favorita."
-        )
-        self.btn_elegir_voz.Bind(wx.EVT_BUTTON, self.al_elegir_voz)
-        sizer.Add(self.btn_elegir_voz, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        sizer.Add(self.combo_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
         # ── Presupuesto / exportación ────────────────────────────────────
         hbox_botones = wx.BoxSizer(wx.HORIZONTAL)
@@ -241,7 +250,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # Orden de tabulación forzado explícitamente. Confirmado con el
         # Visor de voz de NVDA que, pese a construirse en este mismo orden,
         # el Tab nativo saltaba directo de deslizador_volumen de vuelta a la
-        # pestaña sin pasar por txt_libro/txt_voz/txt_progreso/_anunciador
+        # pestaña sin pasar por txt_libro/combo_voz/txt_progreso/_anunciador
         # (los TextCtrl de solo lectura) ni por lista_capitulos — ninguno
         # deshabilitado ni oculto en ese punto, así que no dependía de
         # nuestra propia lógica de habilitar/deshabilitar. Mismo remedio ya
@@ -249,9 +258,8 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.txt_libro.MoveAfterInTabOrder(self._anunciador)
         self.btn_eliminar_libro.MoveAfterInTabOrder(self.txt_libro)
         self.combo_modo.MoveAfterInTabOrder(self.btn_eliminar_libro)
-        self.txt_voz.MoveAfterInTabOrder(self.combo_modo)
-        self.btn_elegir_voz.MoveAfterInTabOrder(self.txt_voz)
-        self.btn_calcular.MoveAfterInTabOrder(self.btn_elegir_voz)
+        self.combo_voz.MoveAfterInTabOrder(self.combo_modo)
+        self.btn_calcular.MoveAfterInTabOrder(self.combo_voz)
         self.btn_iniciar.MoveAfterInTabOrder(self.btn_calcular)
         self.btn_abortar.MoveAfterInTabOrder(self.btn_iniciar)
         self.deslizador_velocidad.MoveAfterInTabOrder(self.btn_abortar)
@@ -289,7 +297,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self.combo_modo,
             self.btn_calcular,
             self.btn_eliminar_libro,
-            self.btn_elegir_voz,
+            self.combo_voz,
             self.deslizador_velocidad,
             self.deslizador_volumen,
             self.lista_capitulos,
@@ -359,7 +367,6 @@ class PestanaCreadorAudiolibros(wx.Panel):
             "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
             "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
         )
-        self.txt_voz.SetValue("Comprobando favoritas...")
         self.txt_progreso.SetValue("Sin exportación en curso.")
         self.gauge.SetValue(0)
         self._poblar_lista_capitulos([])
@@ -367,35 +374,16 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.Layout()
 
         self._anunciar("Libro eliminado del Creador de Audiolibros.")
-        wx.CallAfter(self._cargar_voz_por_defecto)
 
-    def al_elegir_voz(self, evento=None):
-        """
-        Abre un diálogo para elegir manualmente proveedor y voz, en vez de
-        depender siempre de la primera voz favorita detectada.
-        """
-        from app.interfaz.dialogo_elegir_voz import DialogoElegirVoz
-
-        dlg = DialogoElegirVoz(self)
-        respuesta = dlg.ShowModal()
-
-        if respuesta == wx.ID_OK and dlg.accion == "elegida":
-            voz = dict(dlg.voz_elegida)
-            voz["proveedor_id"] = dlg.proveedor_elegido
-            self.voz_actual = voz
-            nombre_proveedor = DialogoElegirVoz._NOMBRES_PROVEEDOR.get(dlg.proveedor_elegido, dlg.proveedor_elegido)
-            self.txt_voz.SetValue(f"Voz: {voz.get('nombre', '')} ({nombre_proveedor})")
-            self._anunciar(f"Voz seleccionada: {voz.get('nombre', '')}, {nombre_proveedor}.")
-            self._resultado_presupuesto = None
-            self.btn_iniciar.Enable(False)
-        elif respuesta == wx.ID_OK and dlg.accion == "local":
-            self.voz_actual = {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
-            self.txt_voz.SetValue("Voz: local (SAPI5)")
-            self._anunciar("Voz seleccionada: local, SAPI5.")
-            self._resultado_presupuesto = None
-            self.btn_iniciar.Enable(False)
-
-        dlg.Destroy()
+    def al_cambiar_voz(self, evento):
+        idx = self.combo_voz.GetSelection()
+        if idx == wx.NOT_FOUND or idx >= len(self._voces_disponibles):
+            return
+        self.voz_actual = self._voces_disponibles[idx]
+        # El presupuesto ya calculado corresponde a la voz anterior (proveedor
+        # distinto = cuota y coste distintos) — hay que recalcular.
+        self._resultado_presupuesto = None
+        self.btn_iniciar.Enable(False)
 
     def al_ctrl_o(self, evento=None):
         """
@@ -483,31 +471,65 @@ class PestanaCreadorAudiolibros(wx.Panel):
             evento.Skip()
 
     # ------------------------------------------------------------------ #
-    # Voz por defecto: primera favorita guardada, o voz local como respaldo
+    # Selector de voz: todas las favoritas de todos los proveedores,
+    # incluidas las voces locales SAPI5 marcadas como favoritas en Ajustes
+    # (comparten el mismo voces_favoritas.json que las de nube).
     # ------------------------------------------------------------------ #
 
     def _cargar_voz_por_defecto(self):
+        self._recargar_voces_favoritas()
+
+    def _recargar_voces_favoritas(self):
+        """
+        Repuebla combo_voz con las voces favoritas actuales. Se llama al
+        crear la pestaña y cada vez que el usuario cambia sus favoritas en
+        Ajustes (vía _notificar_pestanas en selector_voz_compartido.py y
+        PanelSapi5), para que el selector nunca quede desactualizado.
+        """
         try:
-            self.voz_actual = self._buscar_primera_voz_favorita()
+            self._voces_disponibles = self._buscar_voces_favoritas()
         except Exception:
-            logger.exception("[PestanaCreadorAudiolibros] Error al cargar la voz por defecto")
+            logger.exception("[PestanaCreadorAudiolibros] Error al cargar voces favoritas")
+            self._voces_disponibles = []
+
+        seleccion_previa = self.voz_actual
+
+        if not self._voces_disponibles:
+            self.combo_voz.Set(["Sin voces favoritas — marca alguna en Ajustes"])
+            self.combo_voz.SetSelection(0)
+            self.combo_voz.Enable(False)
             self.voz_actual = None
+            return
 
-        if self.voz_actual:
-            nombre = self.voz_actual.get("nombre", "")
-            proveedor = self.voz_actual.get("proveedor_id", "")
-            self.txt_voz.SetValue(f"Voz: {nombre} ({proveedor})")
-        else:
-            self.txt_voz.SetValue("Voz: local (SAPI5) — no hay ninguna voz marcada como favorita.")
+        etiquetas = [
+            f"{voz.get('nombre', '')} ({_NOMBRES_PROVEEDOR.get(voz.get('proveedor_id', ''), voz.get('proveedor_id', ''))})"
+            for voz in self._voces_disponibles
+        ]
+        self.combo_voz.Set(etiquetas)
 
-    def _buscar_primera_voz_favorita(self):
+        # Conserva la voz ya elegida si sigue estando entre las favoritas
+        # (por ejemplo, tras desmarcar una favorita distinta en Ajustes).
+        indice = 0
+        if seleccion_previa:
+            for i, voz in enumerate(self._voces_disponibles):
+                if voz.get("id") == seleccion_previa.get("id") and voz.get("proveedor_id") == seleccion_previa.get("proveedor_id"):
+                    indice = i
+                    break
+
+        self.combo_voz.SetSelection(indice)
+        self.combo_voz.Enable(bool(self.libro_actual))
+        self.voz_actual = self._voces_disponibles[indice]
+
+    def _buscar_voces_favoritas(self):
         ruta_favs = ruta_config("voces_favoritas.json")
         if not os.path.exists(ruta_favs):
-            return None
+            return []
         with open(ruta_favs, "r", encoding="utf-8") as f:
             favoritos = json.load(f)
         if not favoritos:
-            return None
+            return []
+
+        resultado = []
 
         from app.motor.cliente_nube_voces import GestorVoces
         todas = GestorVoces().obtener_todas_las_voces()
@@ -516,8 +538,30 @@ class PestanaCreadorAudiolibros(wx.Panel):
                 if voz.get("id") in favoritos:
                     entrada = dict(voz)
                     entrada["proveedor_id"] = proveedor_id
-                    return entrada
-        return None
+                    resultado.append(entrada)
+
+        try:
+            from app.servicios.cliente_sapi5 import ClienteSapi5
+            for voz in ClienteSapi5().obtener_voces():
+                if voz.get("id") in favoritos:
+                    resultado.append(dict(voz))
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] Error al cargar voces locales SAPI5")
+
+        try:
+            from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
+            bridge = ClienteSapi32Bridge()
+            if bridge.conectado:
+                for voz in bridge.obtener_voces():
+                    if voz.get("id") in favoritos:
+                        entrada = dict(voz)
+                        entrada.setdefault("proveedor_id", "local_32")
+                        resultado.append(entrada)
+                bridge.cerrar()
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] Error al cargar voces locales SAPI5 de 32 bits")
+
+        return resultado
 
     # ------------------------------------------------------------------ #
     # Cálculo de presupuesto (hilo de fondo — extracción + conteo silencioso)
@@ -603,6 +647,14 @@ class PestanaCreadorAudiolibros(wx.Panel):
         cabe = presupuesto["cabe_en_cuota"]
         estado_cuota = "cabe en la cuota actual" if cabe else "NO cabe en la cuota actual del proveedor elegido"
         mensaje = f"Presupuesto calculado: {caracteres} caracteres. Estado: {estado_cuota}."
+
+        try:
+            from app.motor.control_cuota import ControlCuota
+            coste, es_aproximado = ControlCuota().estimar_coste_dolares(resultado["proveedor_id"], caracteres)
+            if coste is not None and es_aproximado and coste > 0:
+                mensaje += f" Coste estimado con tarifa de referencia: unos {coste} dólares (puede no ser exacto)."
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] Error al estimar el coste del presupuesto")
 
         self.txt_progreso.SetValue(mensaje)
         self._anunciar(mensaje)

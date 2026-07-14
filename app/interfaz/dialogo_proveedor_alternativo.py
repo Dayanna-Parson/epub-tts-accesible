@@ -227,12 +227,38 @@ class DialogoProveedorAlternativo(wx.Dialog):
 
         clase_panel = self._PANELES_PROVEEDOR[clave]
         self._panel_voces = clase_panel(self.panel_contenedor, {})
+        # "Solo favoritas" activado por defecto en este contexto (sección 3.3
+        # de la planificación): cargar_datos() todavía no ha corrido —
+        # SetValue() no dispara EVT_CHECKBOX, así que el primer filtrado ya
+        # sale con este estado. Si el proveedor alternativo no tiene ninguna
+        # favorita, _al_datos_cargados lo detecta y lo desmarca sin bloquear.
+        self._panel_voces.chk_solo_favs.SetValue(True)
         self.sizer_contenedor.Add(self._panel_voces, 1, wx.EXPAND)
         self.panel_contenedor.Layout()
         self.GetSizer().Layout()
         self.Fit()
 
         wx.CallAfter(self._sincronizar_velocidad_panel)
+        wx.CallLater(200, self._comprobar_favoritas_vacias, self._panel_voces)
+
+    def _comprobar_favoritas_vacias(self, panel_voces):
+        """
+        Si tras cargar el catálogo del proveedor alternativo "Solo favoritas"
+        no deja ninguna voz visible, se desmarca automáticamente y se avisa,
+        para no dejar al usuario atascado ante una lista vacía sin explicación.
+        """
+        if (
+            self._panel_voces is not panel_voces
+            or not panel_voces.chk_solo_favs.IsChecked()
+            or panel_voces.lista_voces.GetItemCount() > 0
+        ):
+            return
+        panel_voces.chk_solo_favs.SetValue(False)
+        panel_voces.filtrar_y_mostrar()
+        self._anunciador.SetValue(
+            "Este proveedor no tiene voces favoritas guardadas. Se muestran todas sus voces."
+        )
+        self._anunciador.SetFocus()
 
     def _sincronizar_velocidad_panel(self):
         # PanelProveedorIA no aplica velocidad por defecto en su preescucha
