@@ -6,7 +6,7 @@ import threading
 import wx
 
 from app.config_rutas import ruta_config
-from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR
+from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR, PROGRESS
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +71,8 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._resultado_presupuesto = None   # dict: modo_capitulos/capitulos/texto_completo/fronteras/presupuesto
         self._grabador = None
         self._gestor_biblioteca = None
+        self._reproductor_preescucha = None
+        self._voces_disponibles = []
 
         self._construir_interfaz()
         self._configurar_atajos()
@@ -153,7 +155,20 @@ class PestanaCreadorAudiolibros(wx.Panel):
         )
         self.combo_voz.Bind(wx.EVT_CHOICE, self.al_cambiar_voz)
         sizer.Add(lbl_voz_caption, 0, wx.LEFT | wx.RIGHT, 8)
-        sizer.Add(self.combo_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+        sizer.Add(self.combo_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+
+        self.btn_escuchar_voz = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar_voz.SetHelpText(
+            "Reproduce una muestra corta con la voz seleccionada arriba, a la "
+            "velocidad y volumen configurados en esta pestaña. Púlsalo de nuevo "
+            "para detener la reproducción."
+        )
+        self.btn_escuchar_voz.Bind(wx.EVT_BUTTON, self.al_escuchar_voz)
+        sizer.Add(self.btn_escuchar_voz, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+        id_preescucha = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, self.al_escuchar_voz, id=id_preescucha)
+        self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_ALT, ord('P'), id_preescucha)]))
 
         # ── Presupuesto / exportación ────────────────────────────────────
         hbox_botones = wx.BoxSizer(wx.HORIZONTAL)
@@ -259,7 +274,8 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.btn_eliminar_libro.MoveAfterInTabOrder(self.txt_libro)
         self.combo_modo.MoveAfterInTabOrder(self.btn_eliminar_libro)
         self.combo_voz.MoveAfterInTabOrder(self.combo_modo)
-        self.btn_calcular.MoveAfterInTabOrder(self.combo_voz)
+        self.btn_escuchar_voz.MoveAfterInTabOrder(self.combo_voz)
+        self.btn_calcular.MoveAfterInTabOrder(self.btn_escuchar_voz)
         self.btn_iniciar.MoveAfterInTabOrder(self.btn_calcular)
         self.btn_abortar.MoveAfterInTabOrder(self.btn_iniciar)
         self.deslizador_velocidad.MoveAfterInTabOrder(self.btn_abortar)
@@ -298,6 +314,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self.btn_calcular,
             self.btn_eliminar_libro,
             self.combo_voz,
+            self.btn_escuchar_voz,
             self.deslizador_velocidad,
             self.deslizador_volumen,
             self.lista_capitulos,
@@ -385,6 +402,43 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._resultado_presupuesto = None
         self.btn_iniciar.Enable(False)
 
+    def al_escuchar_voz(self, evento=None):
+        """
+        Preescucha (Alt+P) de la voz elegida en combo_voz, a la velocidad y
+        volumen configurados en esta pestaña — para poder comprobar cómo
+        suena antes de lanzar una exportación larga.
+        """
+        if not self.voz_actual:
+            reproducir(ERROR)
+            self._anunciar("No hay ninguna voz favorita seleccionada para escuchar.")
+            return
+
+        if self._reproductor_preescucha is None:
+            from app.motor.reproductor_voz import ReproductorVoz
+            self._reproductor_preescucha = ReproductorVoz()
+
+        if self._reproductor_preescucha.obtener_estado() == "reproduciendo":
+            self._reproductor_preescucha.detener()
+            self.btn_escuchar_voz.SetLabel("Escuchar muestra (Alt+P)")
+            return
+
+        nombre = self.voz_actual.get("nombre", "")
+        try:
+            self._reproductor_preescucha.fijar_voz(self.voz_actual)
+            self._reproductor_preescucha.fijar_velocidad(self.deslizador_velocidad.GetValue())
+            self._reproductor_preescucha.fijar_volumen(self.deslizador_volumen.GetValue())
+            texto = f"Hola, mi nombre es {nombre}. Esta es una muestra de voz para el audiolibro."
+            self.btn_escuchar_voz.SetLabel("Detener preescucha (Alt+P)")
+            self._reproductor_preescucha.cargar_texto(texto, callback_completado=self._al_terminar_preescucha)
+        except Exception as e:
+            self.btn_escuchar_voz.SetLabel("Escuchar muestra (Alt+P)")
+            reproducir(ERROR)
+            logger.exception("[PestanaCreadorAudiolibros] Error en la preescucha de voz")
+            self._anunciar(f"Error al reproducir la muestra: {e}")
+
+    def _al_terminar_preescucha(self):
+        wx.CallAfter(self.btn_escuchar_voz.SetLabel, "Escuchar muestra (Alt+P)")
+
     def al_ctrl_o(self, evento=None):
         """
         Ctrl+O contextual en esta pestaña: nunca abre un selector propio.
@@ -409,9 +463,35 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # recalcular antes de poder exportar con el modo nuevo.
         self._resultado_presupuesto = None
         self.btn_iniciar.Enable(False)
-        if not por_capitulos:
+        if por_capitulos:
+            # Se muestran los títulos de los capítulos de inmediato, sin
+            # esperar a "Calcular presupuesto" — antes la lista se quedaba
+            # vacía hasta calcular el presupuesto, lo que parecía un fallo.
+            self._cargar_titulos_capitulos()
+        else:
             self._poblar_lista_capitulos([])
         self.Layout()
+
+    def _cargar_titulos_capitulos(self):
+        if not self.libro_actual or self.libro_actual.get("formato", "") != "epub":
+            return
+        ruta_archivo = self.libro_actual["ruta_archivo"]
+        threading.Thread(
+            target=self._hilo_cargar_titulos_capitulos,
+            args=(ruta_archivo,),
+            daemon=True,
+        ).start()
+
+    def _hilo_cargar_titulos_capitulos(self, ruta_archivo):
+        try:
+            from app.motor.troceador_epub import TroceadorEpub
+            troceador = TroceadorEpub()
+            troceador.cargar(ruta_archivo)
+            capitulos = troceador.extraer_capitulos_texto()
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] Error al cargar títulos de capítulos")
+            return
+        wx.CallAfter(self._poblar_lista_capitulos, capitulos)
 
     # ------------------------------------------------------------------ #
     # Lista de capítulos: inserción masiva protegida y actualización silenciosa
@@ -795,17 +875,35 @@ class PestanaCreadorAudiolibros(wx.Panel):
     def _actualizar_progreso_ui(self, actual: int, total: int, etiqueta: str):
         pct = int((actual / total) * 100) if total > 0 else 0
         self.gauge.SetValue(pct)
-        self.txt_progreso.SetValue(f"Exportando: {actual} de {total} — {etiqueta}")
 
-        if self.lista_capitulos.IsShown() and total > 1:
+        por_capitulos = self.lista_capitulos.IsShown()
+
+        if por_capitulos and total > 1:
+            self.txt_progreso.SetValue(f"Exportando: {actual} de {total} — {etiqueta}")
             self._actualizar_estado_capitulo(actual - 1, self.ESTADO_COMPLETADO)
+            mensaje = f"Capítulo {actual} de {total} completado."
+        elif not por_capitulos and total > 1:
+            # Modo "libro completo": total aquí son los trozos internos en los
+            # que se dividió el texto por límite del proveedor, no capítulos
+            # reales del libro — sin esta señal, un libro largo se quedaba sin
+            # ninguna actualización de progreso hasta el final.
+            self.txt_progreso.SetValue(f"Generando audio: fragmento {actual} de {total}.")
+            mensaje = None
+        else:
+            mensaje = None
+
+        # Tic sonoro de progreso en cada fragmento intermedio — el aviso final
+        # ya lo cubre reproducir(SUCCESS)/reproducir(ERROR) al terminar, así
+        # que aquí se omite para no solaparse con él.
+        if total > 1 and actual < total:
+            reproducir(PROGRESS)
 
         # Prohibido cantar porcentajes: solo se anuncia un hito completo por
-        # capítulo (modo "por capítulos"). En modo "libro completo" (total=1)
-        # el único anuncio es el de finalización, en _al_terminar_exportacion,
-        # para no duplicar el aviso.
-        if total > 1:
-            self._anunciar(f"Capítulo {actual} de {total} completado.")
+        # capítulo real. En modo "libro completo" no se verbaliza cada
+        # fragmento interno (serían demasiados avisos sin valor para el
+        # usuario) — el progreso se sigue por el tic sonoro y la barra.
+        if mensaje:
+            self._anunciar(mensaje)
 
     def _al_terminar_exportacion(self, salida: dict):
         self._exportando = False
