@@ -34,6 +34,11 @@ from app.motor.control_cuota import ControlCuota
 
 logger = logging.getLogger(__name__)
 
+
+class _ExportacionAbortada(Exception):
+    """Señal interna: el usuario pidió abortar mientras se generaba un trozo."""
+    pass
+
 # ── ffmpeg portable (bin/ffmpeg.exe junto a la raíz del proyecto) ─────────────
 # Si existe bin/ffmpeg.exe, se configura pydub para usarlo automáticamente.
 # El usuario solo necesita copiar ffmpeg.exe en esa carpeta; no hace falta
@@ -339,11 +344,22 @@ class GrabadorAudio:
     # Grabación de un fragmento (con chunking automático)
     # ------------------------------------------------------------------ #
 
-    def _grabar_fragmento(self, texto: str, datos_voz, ruta_salida: str):
+    def _grabar_fragmento(self, texto: str, datos_voz, ruta_salida: str, callback_progreso_trozo=None):
         """
         Punto de entrada por fragmento.
         Si el texto supera el límite del proveedor, lo divide en trozos,
         genera cada trozo en un archivo temporal y los concatena.
+
+        callback_progreso_trozo(trozo_actual, total_trozos): opcional, llamado
+        tras generar cada trozo cuando el texto se dividió en varios — permite
+        que el llamador anime una barra de progreso durante fragmentos largos
+        (p. ej. el libro completo en el Creador de Audiolibros) en vez de
+        quedarse sin ninguna señal hasta que termina todo.
+
+        Comprueba self._abortar antes de generar cada trozo y lanza
+        _ExportacionAbortada si el usuario pidió detener la exportación —
+        antes este bucle no se podía interrumpir hasta terminar el fragmento
+        completo, dejando "Cancelando..." congelado en la interfaz.
         """
         if not datos_voz:
             raise Exception("Sin voz asignada para esta etiqueta.")
@@ -364,12 +380,16 @@ class GrabadorAudio:
                 archivos_tmp = []
                 try:
                     for j, trozo in enumerate(trozos):
+                        if self._abortar:
+                            raise _ExportacionAbortada()
                         fd, ruta_tmp = tempfile.mkstemp(
                             suffix='.mp3', prefix=f'tfh_trozo{j:03d}_'
                         )
                         os.close(fd)
                         archivos_tmp.append(ruta_tmp)
                         self._llamar_motor(trozo, datos_voz, ruta_tmp, proveedor)
+                        if callback_progreso_trozo:
+                            callback_progreso_trozo(j + 1, len(trozos))
                     self._concatenar_audios(archivos_tmp, ruta_salida)
                 finally:
                     for tmp in archivos_tmp:
@@ -380,6 +400,8 @@ class GrabadorAudio:
                             pass
                 return
 
+        if self._abortar:
+            raise _ExportacionAbortada()
         self._llamar_motor(texto, datos_voz, ruta_salida, proveedor)
 
     def _llamar_motor(self, texto: str, datos_voz, ruta_salida: str, proveedor: str):
@@ -920,14 +942,26 @@ class GrabadorAudio:
         if self.callback_progreso:
             self.callback_progreso(0, 1, titulo_libro, nombre_voz)
 
+        def _al_progreso_trozo(actual_trozo, total_trozos):
+            if self.callback_progreso:
+                self.callback_progreso(actual_trozo, total_trozos, titulo_libro, nombre_voz)
+
         errores = []
         archivos_generados = []
+        abortada = False
         if not self._abortar:
             for intento in range(3):
                 try:
-                    self._grabar_fragmento(texto_a_generar, datos_voz, ruta_salida)
+                    self._grabar_fragmento(
+                        texto_a_generar, datos_voz, ruta_salida,
+                        callback_progreso_trozo=_al_progreso_trozo,
+                    )
                     archivos_generados.append(ruta_salida)
                     control.registrar_gasto(texto_a_generar, proveedor)
+                    break
+                except _ExportacionAbortada:
+                    logger.info("[GrabadorAudio] Exportación de libro completo abortada por el usuario.")
+                    abortada = True
                     break
                 except Exception as e:
                     logger.warning(
