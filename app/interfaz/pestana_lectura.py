@@ -458,8 +458,14 @@ class PestanaLectura(wx.Panel):
         caracteres del bloque, garantizando fragmentos compactos sin silabear.
         Retorna lista de (texto_fragmento, pos_inicio_global).
         """
-        MAX_CHARS = 200
-        VENTANA = 200  # ventana hacia atrás para buscar puntos de corte naturales
+        # Fragmentos más grandes = menos costuras por audiolibro. Con 200
+        # caracteres (una o dos frases) cada unión de fragmento dependía de
+        # que la precarga del siguiente ganara la carrera contra la
+        # reproducción del actual; con una API lenta, perder esa carrera
+        # obligaba a sintetizar en el momento y sonaba como una pausa
+        # aleatoria ajena a la puntuación real del texto.
+        MAX_CHARS = 500
+        VENTANA = 250  # ventana hacia atrás para buscar puntos de corte naturales
         resultado = []
         restante = texto
         pos_actual = pos_base
