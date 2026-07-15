@@ -447,6 +447,33 @@ class GrabadorAudio:
     # Concatenación sin re-muestreo
     # ------------------------------------------------------------------ #
 
+    def _recortar_silencio_extremos(self, segmento, umbral_db=-40, margen_ms=60):
+        """
+        Recorta el silencio de sobra al principio y al final de un trozo de
+        audio, dejando un margen natural de `margen_ms`.
+
+        Cuando un texto largo se divide en varios trozos por el límite de
+        caracteres del proveedor (_grabar_fragmento), cada trozo se sintetiza
+        como un audio independiente. Varios proveedores añaden su propio
+        silencio de entrada/salida a cada síntesis; al concatenar varios
+        trozos ese silencio se suma en cada punto de unión, y como el corte
+        cae por número de caracteres (no por frase), el resultado son
+        pausas que no se corresponden con la puntuación real del texto.
+        Recortar el silencio de cada trozo antes de unirlos evita que se
+        acumule en cada costura.
+        """
+        try:
+            from pydub import silence as pydub_silence
+            inicio = pydub_silence.detect_leading_silence(segmento, silence_threshold=umbral_db)
+            fin = pydub_silence.detect_leading_silence(segmento.reverse(), silence_threshold=umbral_db)
+            inicio = max(0, inicio - margen_ms)
+            fin = max(0, fin - margen_ms)
+            if len(segmento) - fin > inicio:
+                return segmento[inicio: len(segmento) - fin]
+        except Exception:
+            logger.debug("[GrabadorAudio] No se pudo recortar silencio de un trozo; se usa sin recortar.")
+        return segmento
+
     def _concatenar_audios(self, archivos: list, ruta_salida: str):
         """
         Une varios MP3 en uno solo.
@@ -470,7 +497,8 @@ class GrabadorAudio:
             segmentos = []
             for arch in archivos_validos:
                 try:
-                    segmentos.append(AudioSegment.from_file(arch, format='mp3'))
+                    seg = AudioSegment.from_file(arch, format='mp3')
+                    segmentos.append(self._recortar_silencio_extremos(seg))
                 except Exception as e:
                     logger.debug(
                         f"[GrabadorAudio] pydub no leyó {os.path.basename(arch)}: {e}"
