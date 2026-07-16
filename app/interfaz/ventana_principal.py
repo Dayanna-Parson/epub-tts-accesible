@@ -644,7 +644,7 @@ class VentanaPrincipal(wx.Frame):
         menu = wx.Menu()
 
         # Abrir libro
-        item_abrir = menu.Append(wx.ID_ANY, "Abrir libro EPUB")
+        item_abrir = menu.Append(wx.ID_ANY, "Cargar libro")
         self.Bind(wx.EVT_MENU, self.al_abrir_archivo, item_abrir)
 
         # Submenú libros recientes
