@@ -750,28 +750,32 @@ class GrabadorAudio:
         # en la comunidad de AWS): a veces recorta la última sílaba de la
         # última palabra del texto enviado, sin relación con cómo se
         # concatenan los trozos después — es el propio audio devuelto por
-        # Polly el que ya viene corto. El remedio documentado es añadir una
-        # pausa SSML al final para que el motor termine de articular la
-        # última palabra antes de cortar la síntesis.
+        # Polly el que ya viene corto. Confirmado también en lectura en vivo
+        # (cliente_polly.py, sin trozeado ni concatenación de por medio), lo
+        # que descarta que sea un problema de _recortar_silencio_extremos.
         #
-        # Dos ajustes sobre el primer intento (un <break> fijo de 400ms
-        # dentro de <prosody>): 1) un <break> anidado dentro de <prosody
-        # rate="+X%"> se acelera junto con el resto del texto, así que a
-        # velocidades altas esos 400ms reales se quedaban en mucho menos
-        # tiempo de servidor — se mueve fuera de <prosody> para que la pausa
-        # sea siempre real, sin importar la velocidad. 2) además se amplía
-        # con la propia velocidad como margen de seguridad extra: cuanto más
-        # rápido, más tiempo de pausa (hasta 1000 ms al máximo de velocidad).
-        # El silencio de sobra se recorta después en _recortar_silencio_extremos
-        # sin arriesgar la palabra real, que ya quedó completa antes de la pausa.
+        # El <break> SSML (aunque esté fuera de <prosody>, como se dejó en el
+        # primer intento) deja de ser suficiente a velocidades altas: el
+        # servidor de Polly parece truncar el búfer de renderizado antes de
+        # que la pausa termine, sin importar cuánto dure. El remedio que sí
+        # funciona de forma consistente es textual, no de temporización:
+        # puntos suspensivos reales al final del texto obligan al motor
+        # fonético a seguir articulando la última palabra real antes de
+        # llegar a esos puntos. Se mantiene además el <break> fuera de
+        # <prosody> como margen extra a velocidades altas, ya que no
+        # perjudica. El silencio de sobra (puntos + break) se recorta
+        # después en _recortar_silencio_extremos sin arriesgar la palabra
+        # real, que ya quedó completa antes de la pausa.
         cola_ssml = ""
+        sufijo_standard = ""
         if motor == 'standard':
+            sufijo_standard = " ..."
             pct_velocidad = max(0, min(80, int((self._velocidad - 50) * 1.6)))
             break_ms = min(1000, 400 + int(pct_velocidad * 7.5))
             cola_ssml = f"<break time='{break_ms}ms'/>"
         ssml_text = (
             f"<speak><prosody rate='{tasa}' volume='{nivel_vol}'>"
-            f"{texto_limpio}"
+            f"{texto_limpio}{sufijo_standard}"
             f"</prosody>{cola_ssml}</speak>"
         )
 

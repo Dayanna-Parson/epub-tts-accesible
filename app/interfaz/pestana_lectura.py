@@ -6,6 +6,7 @@ import time
 import logging
 import threading
 from app.motor.gestor_epub import extraer_datos_epub
+from app.motor.gestor_pdf import extraer_datos_pdf
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
@@ -1005,16 +1006,28 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_FIN: NAVEGACION_TEXTO_Y_SALTOS
 
     def al_cargar_libro(self, evento):
-        """Abre el explorador de archivos para seleccionar un libro EPUB."""
-        with wx.FileDialog(self, "Seleccionar EPUB", wildcard="Archivos EPUB (*.epub)|*.epub", style=wx.FD_OPEN) as dlg:
-            if dlg.ShowModal() == wx.ID_OK: 
+        """Abre el explorador de archivos para seleccionar un libro EPUB o PDF."""
+        with wx.FileDialog(
+            self, "Seleccionar libro",
+            wildcard="Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf",
+            style=wx.FD_OPEN,
+        ) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
                 self.cargar_epub_desde_ruta(dlg.GetPath())
 
     # ANCLAJE_INICIO: GESTION_DATOS_LIBRO
     def cargar_epub_desde_ruta(self, ruta):
+        """
+        Pese al nombre (histórico, mantenido para no romper las llamadas ya
+        existentes desde Biblioteca y VentanaPrincipal), admite tanto EPUB
+        como PDF — el formato se decide por la extensión del archivo y se
+        delega en el extractor correspondiente (extraer_datos_epub /
+        extraer_datos_pdf), que devuelven la misma forma de datos.
+        """
         self.guardar_datos_libro()
         try:
-            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados, self.spans_estilo = extraer_datos_epub(ruta)
+            extractor = extraer_datos_pdf if ruta.lower().endswith('.pdf') else extraer_datos_epub
+            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados, self.spans_estilo = extractor(ruta)
 
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
@@ -1042,7 +1055,7 @@ class PestanaLectura(wx.Panel):
 
         except Exception as e:
             reproducir(ERROR)
-            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
+            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro.\n\nDetalle: {e}", "Error al cargar el libro")
 
     def _construir_arbol_indice(self, padre, nodos):
         for n in nodos:
