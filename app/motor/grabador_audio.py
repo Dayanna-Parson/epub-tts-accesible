@@ -752,14 +752,27 @@ class GrabadorAudio:
         # concatenan los trozos después — es el propio audio devuelto por
         # Polly el que ya viene corto. El remedio documentado es añadir una
         # pausa SSML al final para que el motor termine de articular la
-        # última palabra antes de cortar la síntesis; ese silencio de sobra
-        # se recorta luego en _recortar_silencio_extremos sin arriesgar la
-        # palabra real, que ya quedó completa antes de la pausa.
-        cola_ssml = "<break time='400ms'/>" if motor == 'standard' else ""
+        # última palabra antes de cortar la síntesis.
+        #
+        # Dos ajustes sobre el primer intento (un <break> fijo de 400ms
+        # dentro de <prosody>): 1) un <break> anidado dentro de <prosody
+        # rate="+X%"> se acelera junto con el resto del texto, así que a
+        # velocidades altas esos 400ms reales se quedaban en mucho menos
+        # tiempo de servidor — se mueve fuera de <prosody> para que la pausa
+        # sea siempre real, sin importar la velocidad. 2) además se amplía
+        # con la propia velocidad como margen de seguridad extra: cuanto más
+        # rápido, más tiempo de pausa (hasta 1000 ms al máximo de velocidad).
+        # El silencio de sobra se recorta después en _recortar_silencio_extremos
+        # sin arriesgar la palabra real, que ya quedó completa antes de la pausa.
+        cola_ssml = ""
+        if motor == 'standard':
+            pct_velocidad = max(0, min(80, int((self._velocidad - 50) * 1.6)))
+            break_ms = min(1000, 400 + int(pct_velocidad * 7.5))
+            cola_ssml = f"<break time='{break_ms}ms'/>"
         ssml_text = (
             f"<speak><prosody rate='{tasa}' volume='{nivel_vol}'>"
-            f"{texto_limpio}{cola_ssml}"
-            f"</prosody></speak>"
+            f"{texto_limpio}"
+            f"</prosody>{cola_ssml}</speak>"
         )
 
         # OGG Vorbis / 24000 Hz → sin «efecto teléfono»

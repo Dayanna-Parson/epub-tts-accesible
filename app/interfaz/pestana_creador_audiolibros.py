@@ -494,20 +494,34 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self._poblar_lista_capitulos([])
         self.Layout()
 
+    @staticmethod
+    def _obtener_troceador(formato: str):
+        """
+        Instancia el troceador adecuado según el formato del libro.
+        TroceadorEpub y TroceadorPdf comparten la misma interfaz pública
+        (cargar / extraer_capitulos_texto / extraer_texto_completo_con_fronteras),
+        así que el resto del código no necesita distinguir el formato.
+        """
+        if formato == "pdf":
+            from app.motor.troceador_pdf import TroceadorPdf
+            return TroceadorPdf()
+        from app.motor.troceador_epub import TroceadorEpub
+        return TroceadorEpub()
+
     def _cargar_titulos_capitulos(self):
-        if not self.libro_actual or self.libro_actual.get("formato", "") != "epub":
+        formato = self.libro_actual.get("formato", "") if self.libro_actual else ""
+        if not self.libro_actual or formato not in ("epub", "pdf"):
             return
         ruta_archivo = self.libro_actual["ruta_archivo"]
         threading.Thread(
             target=self._hilo_cargar_titulos_capitulos,
-            args=(ruta_archivo,),
+            args=(ruta_archivo, formato),
             daemon=True,
         ).start()
 
-    def _hilo_cargar_titulos_capitulos(self, ruta_archivo):
+    def _hilo_cargar_titulos_capitulos(self, ruta_archivo, formato):
         try:
-            from app.motor.troceador_epub import TroceadorEpub
-            troceador = TroceadorEpub()
+            troceador = self._obtener_troceador(formato)
             troceador.cargar(ruta_archivo)
             capitulos = troceador.extraer_capitulos_texto()
         except Exception:
@@ -689,11 +703,10 @@ class PestanaCreadorAudiolibros(wx.Panel):
             return
 
         formato = self.libro_actual.get("formato", "")
-        if formato != "epub":
+        if formato not in ("epub", "pdf"):
             reproducir(ERROR)
             self._anunciar(
-                "El Creador de Audiolibros todavía solo admite libros EPUB. "
-                "El soporte de PDF llegará en un paso posterior."
+                f"El Creador de Audiolibros no admite el formato «{formato}»."
             )
             return
 
@@ -730,16 +743,15 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         threading.Thread(
             target=self._hilo_calcular_presupuesto,
-            args=(ruta_archivo, modo_capitulos, proveedor_id, indices_incluidos),
+            args=(ruta_archivo, formato, modo_capitulos, proveedor_id, indices_incluidos),
             daemon=True,
         ).start()
 
-    def _hilo_calcular_presupuesto(self, ruta_archivo, modo_capitulos, proveedor_id, indices_incluidos):
+    def _hilo_calcular_presupuesto(self, ruta_archivo, formato, modo_capitulos, proveedor_id, indices_incluidos):
         try:
-            from app.motor.troceador_epub import TroceadorEpub
             from app.motor.grabador_audio import GrabadorAudio
 
-            troceador = TroceadorEpub()
+            troceador = self._obtener_troceador(formato)
             troceador.cargar(ruta_archivo)
 
             if modo_capitulos:
