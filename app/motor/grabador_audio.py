@@ -746,9 +746,19 @@ class GrabadorAudio:
         texto_limpio = self._limpiar_xml(texto)
         tasa      = self._velocidad_a_tasa_ssml(self._velocidad)
         nivel_vol = self._volumen_a_nivel_ssml(self._volumen)
+        # El motor "standard" de Polly tiene un problema conocido (reportado
+        # en la comunidad de AWS): a veces recorta la última sílaba de la
+        # última palabra del texto enviado, sin relación con cómo se
+        # concatenan los trozos después — es el propio audio devuelto por
+        # Polly el que ya viene corto. El remedio documentado es añadir una
+        # pausa SSML al final para que el motor termine de articular la
+        # última palabra antes de cortar la síntesis; ese silencio de sobra
+        # se recorta luego en _recortar_silencio_extremos sin arriesgar la
+        # palabra real, que ya quedó completa antes de la pausa.
+        cola_ssml = "<break time='400ms'/>" if motor == 'standard' else ""
         ssml_text = (
             f"<speak><prosody rate='{tasa}' volume='{nivel_vol}'>"
-            f"{texto_limpio}"
+            f"{texto_limpio}{cola_ssml}"
             f"</prosody></speak>"
         )
 
