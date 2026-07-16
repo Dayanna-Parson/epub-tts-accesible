@@ -1439,7 +1439,7 @@ class PanelAtajos(wx.Panel):
         sb_fijos = wx.StaticBox(self, label="Atajos fijos del menú (no configurables)")
         sz_fijos = wx.StaticBoxSizer(sb_fijos, wx.VERTICAL)
         _FIJOS = [
-            ("Ctrl+A",       "Abrir libro EPUB (menú Archivo)"),
+            ("Ctrl+A",       "Cargar libro (menú Archivo)"),
             ("Ctrl+T",       "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
             ("Ctrl+Shift+P", "Abrir gestor de proyectos (menú Proyectos)"),
             ("Ctrl+B",       "Buscar en el texto (pestaña Lectura)"),
