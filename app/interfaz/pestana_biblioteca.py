@@ -1102,14 +1102,6 @@ class PestanaBiblioteca(wx.Panel):
         if not os.path.exists(libro["ruta_archivo"]):
             self._al_archivo_no_encontrado(libro)
             return
-        if libro["formato"] != "epub":
-            wx.MessageBox(
-                "La lectura de archivos PDF todavía no está conectada a la pestaña "
-                "Lectura. Por ahora solo se pueden abrir libros EPUB desde aquí.",
-                "Formato no disponible todavía", wx.OK | wx.ICON_INFORMATION,
-            )
-            return
-
         self._voz.hablar("Abriendo libro, por favor espera...")
         self._anunciar("Abriendo libro, por favor espera...")
 

@@ -151,10 +151,22 @@ class ClientePolly:
 
         import xml.sax.saxutils
         texto_escaped = xml.sax.saxutils.escape(texto)
+        # El motor "standard" de Polly tiene un problema documentado en la
+        # comunidad de AWS: recorta la última sílaba de la última palabra del
+        # propio audio que devuelve. Un <break> (aunque esté fuera de
+        # <prosody>) no basta a velocidades altas — el servidor parece
+        # truncar el búfer de renderizado antes de que la pausa termine.
+        # El remedio que sí funciona de forma consistente es textual, no de
+        # temporización: añadir puntos suspensivos reales al final del
+        # texto obliga al motor fonético a seguir articulando la última
+        # palabra real antes de llegar a esos puntos, en vez de cortar justo
+        # al terminarla. Solo para "standard"; el resto de motores no lo
+        # necesita.
+        sufijo_standard = " ..." if motor == "standard" else ""
         ssml = (
             "<speak>"
             f"<prosody rate='{tasa}'>"
-            f"{texto_escaped}"
+            f"{texto_escaped}{sufijo_standard}"
             "</prosody>"
             "</speak>"
         )
