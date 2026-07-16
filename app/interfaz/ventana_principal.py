@@ -373,10 +373,12 @@ class VentanaPrincipal(wx.Frame):
         """Restaura el estado de sesión desde ajustes.json."""
         config = self._cargar_config_general()
 
-        # Restaurar pestaña activa
-        ultima_pestana = config.get("ultima_pestana", IDX_BIBLIOTECA)
-        if isinstance(ultima_pestana, int) and 0 <= ultima_pestana < NUM_PESTANAS:
-            self.notebook.SetSelection(ultima_pestana)
+        # La pestaña activa ya no se restaura desde la sesión anterior: el
+        # arranque siempre aterriza en Biblioteca (IDX_BIBLIOTECA), para que
+        # NVDA llegue directo a los libros en vez de a la última pestaña
+        # usada (a veces Ajustes), sea cual sea. self.notebook ya empieza en
+        # la página 0 por orden de construcción, así que no hace falta
+        # ningún SetSelection() explícito aquí.
 
         # Restaurar estado del checkbox "Dividir por etiquetas"
         dividir = config.get("dividir_por_etiqueta", True)

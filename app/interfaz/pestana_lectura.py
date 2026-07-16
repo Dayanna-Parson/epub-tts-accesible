@@ -685,7 +685,7 @@ class PestanaLectura(wx.Panel):
 
     def al_cambiar_velocidad(self, evento):
         v = self.deslizador_velocidad.GetValue()
-        logger.warning("[Lectura] al_cambiar_velocidad: slider v=%s (min=%s max=%s)",
+        logger.debug("[Lectura] al_cambiar_velocidad: slider v=%s (min=%s max=%s)",
                         v, self.deslizador_velocidad.GetMin(), self.deslizador_velocidad.GetMax())
         if hasattr(self.reproductor, 'fijar_velocidad'):
             self.reproductor.fijar_velocidad(v)

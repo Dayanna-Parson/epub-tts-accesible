@@ -92,25 +92,39 @@ def _leer_categorias_sapi(motor, comtypes_client):
 
 
 def _hilo_parrafos(motor, texto, pos_offset, gen, estado):
-    """Hilo de fondo: habla párrafo a párrafo y emite eventos de progreso."""
-    pos = pos_offset
-    for linea in texto.split("\n"):
-        if estado["detener"] or estado["generacion"] != gen:
-            return
-        if linea.strip():
-            _enviar({"evento": "progreso", "pos": pos})
-            try:
-                motor.Volume = 100
-                motor.Speak(linea, _SPF_ASYNC | _SPF_IS_NOT_XML)
-                while not estado["detener"] and estado["generacion"] == gen:
-                    if motor.WaitUntilDone(100):
-                        break
-            except Exception as e:
-                _enviar({"evento": "error", "msg": str(e)})
-        pos += len(linea) + 1  # +1 por el \n que split elimina
+    """
+    Hilo de fondo: habla párrafo a párrafo y emite eventos de progreso.
 
-    if not estado["detener"] and estado["generacion"] == gen:
-        _enviar({"evento": "completado"})
+    El objeto COM `motor` (SAPI.SpVoice) se crea en main(), en el hilo
+    principal del proceso auxiliar. COM exige que cada hilo que vaya a usar
+    un objeto COM llame a CoInitialize() antes de tocarlo — sin esto,
+    motor.Speak() desde este hilo secundario fallaba con
+    "No se ha llamado a CoInitialize." y las voces de 32 bits (Eloquence,
+    RealSpeak) se quedaban mudas.
+    """
+    import comtypes
+    comtypes.CoInitialize()
+    try:
+        pos = pos_offset
+        for linea in texto.split("\n"):
+            if estado["detener"] or estado["generacion"] != gen:
+                return
+            if linea.strip():
+                _enviar({"evento": "progreso", "pos": pos})
+                try:
+                    motor.Volume = 100
+                    motor.Speak(linea, _SPF_ASYNC | _SPF_IS_NOT_XML)
+                    while not estado["detener"] and estado["generacion"] == gen:
+                        if motor.WaitUntilDone(100):
+                            break
+                except Exception as e:
+                    _enviar({"evento": "error", "msg": str(e)})
+            pos += len(linea) + 1  # +1 por el \n que split elimina
+
+        if not estado["detener"] and estado["generacion"] == gen:
+            _enviar({"evento": "completado"})
+    finally:
+        comtypes.CoUninitialize()
 
 
 def main():

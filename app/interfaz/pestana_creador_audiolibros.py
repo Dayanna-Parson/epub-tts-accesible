@@ -915,19 +915,36 @@ class PestanaCreadorAudiolibros(wx.Panel):
             daemon=True,
         ).start()
 
+    def _obtener_nombre_saga(self):
+        """
+        Primera etiqueta de Biblioteca del libro actual, si tiene alguna —
+        se usa como subcarpeta para agrupar automáticamente los libros de
+        una misma saga en la carpeta de audiolibros exportados.
+        """
+        if not self.libro_actual or not self.libro_actual.get("id"):
+            return None
+        try:
+            gestor = self._obtener_gestor_biblioteca()
+            etiquetas = gestor.obtener_etiquetas_de_libro(self.libro_actual["id"])
+            return etiquetas[0]["nombre"] if etiquetas else None
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] Error al obtener la saga del libro")
+            return None
+
     def _ejecutar_exportacion(self, voz, velocidad, volumen, resultado):
         titulo_libro = self.libro_actual.get("titulo", "Audiolibro")
         proveedor = voz.get("proveedor_id", "local")
+        nombre_saga = self._obtener_nombre_saga()
         try:
             if resultado["modo_capitulos"]:
                 salida = self._grabador.exportar_audiolibro_por_capitulos(
                     resultado["capitulos"], voz, titulo_libro,
-                    velocidad=velocidad, volumen=volumen,
+                    velocidad=velocidad, volumen=volumen, nombre_saga=nombre_saga,
                 )
             else:
                 salida = self._grabador.exportar_audiolibro_completo(
                     resultado["texto_completo"], resultado["fronteras"], voz, titulo_libro,
-                    velocidad=velocidad, volumen=volumen,
+                    velocidad=velocidad, volumen=volumen, nombre_saga=nombre_saga,
                 )
         except Exception as e:
             logger.exception("[PestanaCreadorAudiolibros] Error durante la exportación")
@@ -1066,7 +1083,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         carpeta = self._ultima_carpeta
         if not carpeta or not os.path.exists(carpeta):
             titulo = self.libro_actual.get("titulo", "Audiolibro") if self.libro_actual else "Audiolibro"
-            carpeta = GrabadorAudio().obtener_carpeta_audiolibro(titulo)
+            carpeta = GrabadorAudio().obtener_carpeta_audiolibro(titulo, nombre_saga=self._obtener_nombre_saga())
         if not os.path.exists(carpeta):
             carpeta = CARPETA_RAIZ_GRABACIONES
 

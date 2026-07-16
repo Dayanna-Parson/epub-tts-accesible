@@ -390,7 +390,7 @@ class GrabadorAudio:
                         self._llamar_motor(trozo, datos_voz, ruta_tmp, proveedor)
                         if callback_progreso_trozo:
                             callback_progreso_trozo(j + 1, len(trozos))
-                    self._concatenar_audios(archivos_tmp, ruta_salida)
+                    self._concatenar_audios(archivos_tmp, ruta_salida, proveedor=proveedor)
                 finally:
                     for tmp in archivos_tmp:
                         try:
@@ -447,10 +447,22 @@ class GrabadorAudio:
     # Concatenación sin re-muestreo
     # ------------------------------------------------------------------ #
 
-    def _recortar_silencio_extremos(self, segmento, umbral_db=-40, margen_ms=60):
+    # Umbral (dBFS) y margen (ms) de recorte de silencio por proveedor.
+    # El motor "standard" de Polly (Conchita, Enrique, Miguel, Penélope...)
+    # termina las palabras con una caída de volumen más suave que las voces
+    # neuronales; con el umbral por defecto (-40 dBFS) el detector confundía
+    # esa caída con silencio real y se comía la última sílaba en cada
+    # costura de trozo. Umbral más estricto (más negativo) y margen mayor
+    # para no recortar sonido real.
+    _RECORTE_SILENCIO_POR_PROVEEDOR = {
+        "polly": {"umbral_db": -50, "margen_ms": 120},
+    }
+    _RECORTE_SILENCIO_DEFECTO = {"umbral_db": -40, "margen_ms": 60}
+
+    def _recortar_silencio_extremos(self, segmento, proveedor=None):
         """
         Recorta el silencio de sobra al principio y al final de un trozo de
-        audio, dejando un margen natural de `margen_ms`.
+        audio, dejando un margen natural configurado por proveedor.
 
         Cuando un texto largo se divide en varios trozos por el límite de
         caracteres del proveedor (_grabar_fragmento), cada trozo se sintetiza
@@ -462,6 +474,11 @@ class GrabadorAudio:
         Recortar el silencio de cada trozo antes de unirlos evita que se
         acumule en cada costura.
         """
+        ajuste = self._RECORTE_SILENCIO_POR_PROVEEDOR.get(
+            (proveedor or "").lower(), self._RECORTE_SILENCIO_DEFECTO
+        )
+        umbral_db = ajuste["umbral_db"]
+        margen_ms = ajuste["margen_ms"]
         try:
             from pydub import silence as pydub_silence
             inicio = pydub_silence.detect_leading_silence(segmento, silence_threshold=umbral_db)
@@ -474,7 +491,7 @@ class GrabadorAudio:
             logger.debug("[GrabadorAudio] No se pudo recortar silencio de un trozo; se usa sin recortar.")
         return segmento
 
-    def _concatenar_audios(self, archivos: list, ruta_salida: str):
+    def _concatenar_audios(self, archivos: list, ruta_salida: str, proveedor=None):
         """
         Une varios MP3 en uno solo.
         Intenta pydub+ffmpeg (320k, preserva sample rate).
@@ -498,7 +515,7 @@ class GrabadorAudio:
             for arch in archivos_validos:
                 try:
                     seg = AudioSegment.from_file(arch, format='mp3')
-                    segmentos.append(self._recortar_silencio_extremos(seg))
+                    segmentos.append(self._recortar_silencio_extremos(seg, proveedor=proveedor))
                 except Exception as e:
                     logger.debug(
                         f"[GrabadorAudio] pydub no leyó {os.path.basename(arch)}: {e}"
@@ -852,13 +869,22 @@ class GrabadorAudio:
         cabe_en_cuota = ControlCuota().tiene_cuota(texto, proveedor)
         return {"caracteres": caracteres, "cabe_en_cuota": cabe_en_cuota}
 
-    def obtener_carpeta_audiolibro(self, titulo_libro: str) -> str:
+    def obtener_carpeta_audiolibro(self, titulo_libro: str, nombre_saga: str = None) -> str:
         """
         Carpeta exclusiva del Creador de Audiolibros, separada de la de
         Grabación de Fragmentos: Grabaciones_Epub-TTS/Audiolibros/<Título>/.
+
+        Si `nombre_saga` viene informado (etiqueta de Biblioteca del libro),
+        se intercala una subcarpeta con ese nombre para agrupar los libros
+        de una misma saga automáticamente:
+        Grabaciones_Epub-TTS/Audiolibros/<Saga>/<Título>/.
         """
         titulo_limpio = limpiar_nombre_archivo(titulo_libro)
-        carpeta = os.path.join(CARPETA_RAIZ_GRABACIONES, "Audiolibros", titulo_limpio)
+        partes = [CARPETA_RAIZ_GRABACIONES, "Audiolibros"]
+        if nombre_saga:
+            partes.append(limpiar_nombre_archivo(nombre_saga))
+        partes.append(titulo_limpio)
+        carpeta = os.path.join(*partes)
         os.makedirs(carpeta, exist_ok=True)
         return carpeta
 
@@ -920,6 +946,7 @@ class GrabadorAudio:
         numero_parte: int = 1,
         velocidad: int = 50,
         volumen: int = 100,
+        nombre_saga: str = None,
     ) -> dict:
         """
         Modo "libro completo": genera un único MP3. Si la cuota no alcanza
@@ -947,7 +974,7 @@ class GrabadorAudio:
         punto_corte = None if completo else self._ajustar_punto_corte(texto, punto_bruto, fronteras_capitulo)
         texto_a_generar = texto if completo else texto[:punto_corte]
 
-        carpeta_destino = self.obtener_carpeta_audiolibro(titulo_libro)
+        carpeta_destino = self.obtener_carpeta_audiolibro(titulo_libro, nombre_saga=nombre_saga)
 
         if not texto_a_generar.strip():
             return {
@@ -1018,6 +1045,7 @@ class GrabadorAudio:
         titulo_libro: str,
         velocidad: int = 50,
         volumen: int = 100,
+        nombre_saga: str = None,
     ) -> dict:
         """
         Modo "por capítulos": un MP3 por capítulo, nombrado "1. Capítulo uno.mp3".
@@ -1044,7 +1072,7 @@ class GrabadorAudio:
         nombre_voz = datos_voz.get('nombre', 'sin nombre') if isinstance(datos_voz, dict) else 'sin voz'
         control = ControlCuota()
 
-        carpeta_destino = self.obtener_carpeta_audiolibro(titulo_libro)
+        carpeta_destino = self.obtener_carpeta_audiolibro(titulo_libro, nombre_saga=nombre_saga)
         total = len(capitulos)
         estado_capitulos = []
         archivos_generados = []
