@@ -1015,11 +1015,17 @@ class PestanaCreadorAudiolibros(wx.Panel):
         por_capitulos = self.lista_capitulos.IsShown()
 
         if por_capitulos and total > 1:
+            # La exportación por capítulos ahora genera varios a la vez en
+            # paralelo, así que "actual" es solo un contador de cuántos
+            # llevan (no necesariamente en el mismo orden del libro) — la
+            # fila a actualizar se busca por título, no por posición.
             self.txt_progreso.SetValue(f"Exportando: {actual} de {total} — {etiqueta}")
-            self._actualizar_estado_capitulo(self._fila_real_capitulo(actual - 1), self.ESTADO_COMPLETADO)
+            fila = self._fila_por_titulo_capitulo(etiqueta)
+            if fila is not None:
+                self._actualizar_estado_capitulo(fila, self.ESTADO_COMPLETADO)
             # Solo se anuncia por voz y con tic sonoro un hito real: un
             # capítulo del libro terminado.
-            self._anunciar(f"Capítulo {actual} de {total} completado.")
+            self._anunciar(f"Capítulo completado ({actual} de {total}): {etiqueta}.")
             reproducir(PROGRESS)
         elif not por_capitulos and total > 1:
             # Modo "libro completo": total aquí son los trozos internos en los
@@ -1057,6 +1063,20 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self._finalizar_exportacion_capitulos(salida)
         else:
             self._finalizar_exportacion_completa(salida)
+
+    def _fila_por_titulo_capitulo(self, titulo: str):
+        """
+        Busca en lista_capitulos la fila cuyo título (columna 1) coincide
+        con `titulo`. Se usa para el progreso en vivo de la exportación por
+        capítulos, ahora en paralelo — el orden de finalización ya no
+        corresponde a la posición en el libro, así que no se puede asumir
+        por índice como antes. Devuelve None si no encuentra coincidencia
+        (no debería pasar en uso normal; se ignora sin romper la UI).
+        """
+        for i in range(self.lista_capitulos.GetItemCount()):
+            if self.lista_capitulos.GetItemText(i, 1) == titulo:
+                return i
+        return None
 
     def _fila_real_capitulo(self, indice_filtrado: int) -> int:
         """

@@ -26,7 +26,9 @@ import re
 import json
 import logging
 import tempfile
+import threading
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.config_rutas import ruta_config, RAIZ as _RAIZ
 from app.motor.procesador_etiquetas import limpiar_nombre_archivo
@@ -38,6 +40,12 @@ logger = logging.getLogger(__name__)
 class _ExportacionAbortada(Exception):
     """Señal interna: el usuario pidió abortar mientras se generaba un trozo."""
     pass
+
+
+# Trozos/capítulos generados en paralelo por exportación. Un valor moderado
+# aprovecha la espera de red de las APIs de nube sin disparar límites de
+# tasa de los proveedores ni saturar la CPU con voces locales.
+_MAX_WORKERS_EXPORTACION = 4
 
 # ── ffmpeg portable (bin/ffmpeg.exe junto a la raíz del proyecto) ─────────────
 # Si existe bin/ffmpeg.exe, se configura pydub para usarlo automáticamente.
@@ -380,34 +388,89 @@ class GrabadorAudio:
             if len(trozos) > 1:
                 logger.info(
                     f"[GrabadorAudio] Texto largo ({len(texto)} chars) dividido "
-                    f"en {len(trozos)} trozos para {proveedor}."
+                    f"en {len(trozos)} trozos para {proveedor}, generados en paralelo "
+                    f"(hasta {min(_MAX_WORKERS_EXPORTACION, len(trozos))} a la vez)."
                 )
-                archivos_tmp = []
-                try:
-                    for j, trozo in enumerate(trozos):
-                        if self._abortar:
-                            raise _ExportacionAbortada()
-                        fd, ruta_tmp = tempfile.mkstemp(
-                            suffix='.mp3', prefix=f'tfh_trozo{j:03d}_'
-                        )
-                        os.close(fd)
-                        archivos_tmp.append(ruta_tmp)
-                        self._llamar_motor(trozo, datos_voz, ruta_tmp, proveedor)
-                        if callback_progreso_trozo:
-                            callback_progreso_trozo(j + 1, len(trozos))
-                    self._concatenar_audios(archivos_tmp, ruta_salida, proveedor=proveedor)
-                finally:
-                    for tmp in archivos_tmp:
-                        try:
-                            if os.path.exists(tmp):
-                                os.remove(tmp)
-                        except Exception:
-                            pass
+                self._generar_trozos_en_paralelo(
+                    trozos, datos_voz, ruta_salida, proveedor, callback_progreso_trozo
+                )
                 return
 
         if self._abortar:
             raise _ExportacionAbortada()
         self._llamar_motor(texto, datos_voz, ruta_salida, proveedor)
+
+    def _generar_trozos_en_paralelo(
+        self, trozos: list, datos_voz, ruta_salida: str, proveedor: str,
+        callback_progreso_trozo=None,
+    ):
+        """
+        Genera los trozos de un fragmento largo en paralelo con un
+        ThreadPoolExecutor, en vez de uno detrás de otro — aprovecha la
+        espera de red de las APIs de nube (o el reparto entre instancias de
+        motor local independientes para SAPI5) para acortar el tiempo total
+        de exportación.
+
+        La numeración de los archivos temporales es atómica por índice de
+        trozo (archivos_tmp[j], no por orden de llegada), así que el orden
+        de finalización de los hilos es irrelevante: _concatenar_audios()
+        siempre recibe la lista en el orden real del texto, sin importar
+        qué hilo terminó primero. El progreso reportado sí es por orden de
+        finalización (cuántos van completados, no cuál en concreto), que es
+        lo único que le interesa a la barra de progreso.
+
+        Si algún trozo falla (incluido el aborto del usuario), se cancelan
+        los trozos pendientes que aún no habían empezado y se relanza el
+        error una vez terminan los que ya estaban en marcha — sin dejar
+        hilos sueltos ni archivos temporales huérfanos.
+        """
+        total = len(trozos)
+        archivos_tmp = [None] * total
+        lock = threading.Lock()
+        contador = {"completados": 0}
+        excepcion_pendiente = None
+
+        def _generar(indice, trozo):
+            if self._abortar:
+                raise _ExportacionAbortada()
+            fd, ruta_tmp = tempfile.mkstemp(suffix='.mp3', prefix=f'tfh_trozo{indice:03d}_')
+            os.close(fd)
+            self._llamar_motor(trozo, datos_voz, ruta_tmp, proveedor)
+            return ruta_tmp
+
+        max_workers = min(_MAX_WORKERS_EXPORTACION, total)
+        try:
+            with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="grabador_trozo") as executor:
+                futuros = {executor.submit(_generar, j, trozo): j for j, trozo in enumerate(trozos)}
+                for futuro in as_completed(futuros):
+                    indice = futuros[futuro]
+                    try:
+                        archivos_tmp[indice] = futuro.result()
+                    except Exception as e:
+                        if excepcion_pendiente is None:
+                            excepcion_pendiente = e
+                            for f in futuros:
+                                f.cancel()
+                        continue
+                    if excepcion_pendiente is None:
+                        with lock:
+                            contador["completados"] += 1
+                            n = contador["completados"]
+                        if callback_progreso_trozo:
+                            callback_progreso_trozo(n, total)
+
+            if excepcion_pendiente is not None:
+                raise excepcion_pendiente
+
+            self._concatenar_audios(archivos_tmp, ruta_salida, proveedor=proveedor)
+        finally:
+            for tmp in archivos_tmp:
+                if tmp:
+                    try:
+                        if os.path.exists(tmp):
+                            os.remove(tmp)
+                    except Exception:
+                        pass
 
     def _llamar_motor(self, texto: str, datos_voz, ruta_salida: str, proveedor: str):
         """Despacha al motor correspondiente según el proveedor."""
@@ -1085,11 +1148,22 @@ class GrabadorAudio:
     ) -> dict:
         """
         Modo "por capítulos": un MP3 por capítulo, nombrado "1. Capítulo uno.mp3".
-        Exportación estrictamente secuencial: en cuanto un capítulo no cabe en
-        la cuota disponible, el proceso se detiene ahí mismo y ese capítulo y
-        todos los siguientes quedan marcados como "pendiente_sin_cuota" — nunca
-        se salta uno para grabar uno posterior más corto, para no dejar un
-        audiolibro con huecos sueltos en medio.
+
+        La decisión de qué capítulos caben en la cuota disponible sigue
+        siendo estrictamente secuencial y en orden (fase 1, abajo): en
+        cuanto uno no cabe, ese capítulo y todos los siguientes quedan
+        "pendiente_sin_cuota" — nunca se salta uno para grabar uno
+        posterior más corto, para no dejar huecos sueltos en el audiolibro.
+        Esa comprobación es aritmética pura (ControlCuota.tiene_cuota no
+        hace ninguna llamada de red), así que recorrerla entera es
+        prácticamente instantánea incluso con cientos de capítulos.
+
+        La generación real del audio (fase 2, la lenta) sí se hace en
+        paralelo con un ThreadPoolExecutor: cada capítulo incluido escribe
+        directamente a su propio archivo numerado ("1. Título.mp3", "2. ...")
+        — el nombre depende del índice fijo del capítulo, nunca del orden en
+        que terminan los hilos, así que no hace falta ningún paso de
+        reordenación posterior.
 
         capitulos: lista de tuplas (titulo_capitulo, texto_capitulo).
 
@@ -1110,53 +1184,94 @@ class GrabadorAudio:
 
         carpeta_destino = self.obtener_carpeta_audiolibro(titulo_libro, nombre_saga=nombre_saga)
         total = len(capitulos)
-        estado_capitulos = []
-        archivos_generados = []
-        errores = []
-        detenido = False
 
+        # ── Fase 1: qué capítulos caben en la cuota, en orden ────────────
+        incluidos = []   # lista de (indice, titulo, texto)
+        estado_capitulos = [None] * total
         for i, (titulo_capitulo, texto_capitulo) in enumerate(capitulos):
-            if detenido or self._abortar or not control.tiene_cuota(texto_capitulo, proveedor):
-                if not detenido and self._abortar:
-                    logger.info("[GrabadorAudio] Exportación por capítulos abortada.")
-                detenido = True
-                estado_capitulos.append({
-                    "indice": i,
-                    "titulo": titulo_capitulo,
-                    "estado": "pendiente_sin_cuota",
-                    "ruta": None,
-                })
-                continue
+            if self._abortar or not control.tiene_cuota(texto_capitulo, proveedor):
+                estado_capitulos[i] = {
+                    "indice": i, "titulo": titulo_capitulo,
+                    "estado": "pendiente_sin_cuota", "ruta": None,
+                }
+                # A partir de aquí todo el resto queda pendiente también,
+                # se agoten o no realmente su cuota individual — es la misma
+                # regla de "sin huecos" que antes, solo que ahora se marca
+                # de una vez en vez de comprobar cada uno.
+                for j in range(i + 1, total):
+                    estado_capitulos[j] = {
+                        "indice": j, "titulo": capitulos[j][0],
+                        "estado": "pendiente_sin_cuota", "ruta": None,
+                    }
+                break
+            incluidos.append((i, titulo_capitulo, texto_capitulo))
+        else:
+            pass
 
+        if self._abortar:
+            logger.info("[GrabadorAudio] Exportación por capítulos abortada antes de generar audio.")
+
+        # ── Fase 2: generación en paralelo de los capítulos incluidos ────
+        archivos_generados = [None] * total
+        errores = []
+        lock = threading.Lock()
+
+        def _generar_capitulo(indice, titulo_capitulo, texto_capitulo):
+            if self._abortar:
+                return indice, titulo_capitulo, None, "Exportación abortada por el usuario."
             nombre_limpio = limpiar_nombre_archivo(titulo_capitulo)
-            nombre_arch = f"{i + 1}. {nombre_limpio}.mp3"
+            nombre_arch = f"{indice + 1}. {nombre_limpio}.mp3"
             ruta_arch = os.path.join(carpeta_destino, nombre_arch)
 
-            generado = False
+            ultimo_error = None
             for intento in range(3):
+                if self._abortar:
+                    return indice, titulo_capitulo, None, "Exportación abortada por el usuario."
                 try:
                     self._grabar_fragmento(texto_capitulo, datos_voz, ruta_arch)
-                    control.registrar_gasto(texto_capitulo, proveedor)
-                    archivos_generados.append(ruta_arch)
-                    generado = True
-                    break
+                    with lock:
+                        control.registrar_gasto(texto_capitulo, proveedor)
+                    return indice, titulo_capitulo, ruta_arch, None
                 except Exception as e:
+                    ultimo_error = e
                     logger.warning(
                         f"[GrabadorAudio] Intento {intento + 1}/3 fallido "
-                        f"(capítulo {i + 1}, '{titulo_capitulo}'): {e}"
+                        f"(capítulo {indice + 1}, '{titulo_capitulo}'): {e}"
                     )
-                    if intento == 2:
-                        errores.append(f"Capítulo {i + 1} ('{titulo_capitulo}'): {e}")
+            return indice, titulo_capitulo, None, str(ultimo_error)
 
-            estado_capitulos.append({
-                "indice": i,
-                "titulo": titulo_capitulo,
-                "estado": "completado" if generado else "pendiente_sin_cuota",
-                "ruta": ruta_arch if generado else None,
-            })
+        if incluidos:
+            max_workers = min(_MAX_WORKERS_EXPORTACION, len(incluidos))
+            with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="grabador_capitulo") as executor:
+                futuros = [
+                    executor.submit(_generar_capitulo, i, titulo, texto)
+                    for i, titulo, texto in incluidos
+                ]
+                completados = 0
+                for futuro in as_completed(futuros):
+                    indice, titulo_capitulo, ruta_arch, error = futuro.result()
+                    if ruta_arch:
+                        estado_capitulos[indice] = {
+                            "indice": indice, "titulo": titulo_capitulo,
+                            "estado": "completado", "ruta": ruta_arch,
+                        }
+                        archivos_generados[indice] = ruta_arch
+                    else:
+                        estado_capitulos[indice] = {
+                            "indice": indice, "titulo": titulo_capitulo,
+                            "estado": "pendiente_sin_cuota", "ruta": None,
+                        }
+                        if error and "abortada" not in error:
+                            errores.append(f"Capítulo {indice + 1} ('{titulo_capitulo}'): {error}")
 
-            if generado and self.callback_progreso:
-                self.callback_progreso(i + 1, total, titulo_capitulo, nombre_voz)
+                    completados += 1
+                    if self.callback_progreso:
+                        # "completados" (cuántos van, no cuál en concreto) es
+                        # lo único que tiene sentido reportar cuando varios
+                        # capítulos terminan en paralelo y no en orden.
+                        self.callback_progreso(completados, len(incluidos), titulo_capitulo, nombre_voz)
+
+        archivos_generados = [a for a in archivos_generados if a]
 
         return {
             "capitulos": estado_capitulos,

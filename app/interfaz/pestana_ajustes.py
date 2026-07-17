@@ -1,5 +1,6 @@
 import wx
 import os
+import re
 import json
 import logging
 import webbrowser
@@ -849,6 +850,18 @@ class PanelAzure(PanelProveedorIA):
         hbox.Add(self.combo_caracteristica, 0)
         sizer.Add(hbox, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
+    @staticmethod
+    def _normalizar_id(texto: str) -> str:
+        """
+        Quita guiones, dos puntos, guiones bajos y espacios antes de
+        comparar, y pasa a minúsculas. El id técnico de Azure (ShortName)
+        combina estos separadores de forma inconsistente entre familias de
+        voces (p. ej. "MaiVoice2", "Mai-Voice", "Dragon HD") — sin esta
+        normalización, "MaiVoice" no coincidía con variantes que llevan
+        separador, y el filtro se quedaba con la lista vacía.
+        """
+        return re.sub(r'[\s\-_:]', '', texto or '').lower()
+
     def _obtener_filtros_extra(self, voz):
         if not hasattr(self, 'combo_caracteristica'):
             return True
@@ -858,7 +871,7 @@ class PanelAzure(PanelProveedorIA):
         clave_buscada = self._CARACTERISTICAS_ETIQUETA.get(etiqueta)
         if clave_buscada is None:
             return True
-        id_voz = voz.get("id", "").lower()
+        id_voz = self._normalizar_id(voz.get("id", ""))
         if clave_buscada == "neural":
             # "Neural" como filtro genérico: cualquier voz que NO tenga
             # ninguna de las otras características más específicas.
