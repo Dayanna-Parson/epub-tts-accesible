@@ -217,6 +217,14 @@ class PanelGeneral(wx.ScrolledWindow):
         self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
         sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
 
+        self.btn_borrar_recientes = wx.Button(self, label="Borrar historial de libros recientes")
+        self.btn_borrar_recientes.SetHelpText(
+            "Vacía la lista de «Libros Recientes» del menú de la pestaña Lectura. "
+            "No borra ningún archivo, solo el atajo a los últimos libros abiertos."
+        )
+        self.btn_borrar_recientes.Bind(wx.EVT_BUTTON, self._al_borrar_recientes)
+        sizer.Add(self.btn_borrar_recientes, 0, wx.ALL, 10)
+
         self.btn_limpiar = wx.Button(self, label="Limpiar caché")
         self.btn_limpiar.SetHelpText(
             "Elimina carpetas __pycache__, archivos .tmp y audio temporal."
@@ -281,6 +289,16 @@ class PanelGeneral(wx.ScrolledWindow):
         self.sincronizar_config()
         if self._pestana_ajustes is not None:
             self._pestana_ajustes.guardar_config_en_archivo()
+
+    def _al_borrar_recientes(self, evento):
+        ventana = wx.GetTopLevelParent(self)
+        if not hasattr(ventana, 'al_borrar_recientes'):
+            return
+        if not ventana.archivos_recientes:
+            reproducir(ERROR)
+            wx.MessageBox("El historial de libros recientes ya está vacío.", "Info")
+            return
+        ventana.al_borrar_recientes(evento)
         if hasattr(self, "txt_limites"):
             for clave, txt in self.txt_limites.items():
                 val = txt.GetValue()
@@ -790,8 +808,63 @@ class PanelClaves(wx.ScrolledWindow):
 
 # ANCLAJE_INICIO: PANEL_AZURE
 class PanelAzure(PanelProveedorIA):
+    """
+    Panel de Azure Neural. Añade un combo de características (Neural,
+    Multilingüe, Dragon, MaiVoice, Flash) mediante los ganchos
+    _construir_controles_extra y _obtener_filtros_extra — mismo patrón que
+    PanelPolly. Azure no expone estas características como un campo propio
+    en la API de voces; se detectan por palabras clave en el id de la voz
+    (p. ej. "es-ES-XimenaMultilingualNeural", "en-US-Emma2:DragonHDLatestNeural").
+    """
+
+    _CARACTERISTICAS_ETIQUETA = {
+        "Multilingüe": "multilingual",
+        "Dragon":      "dragon",
+        "MaiVoice":    "maivoice",
+        "Flash":       "flash",
+        "Neural":      "neural",
+    }
+
     def __init__(self, padre, config):
         super().__init__(padre, config, "azure", "Azure Neural")
+
+    def _construir_controles_extra(self, sizer):
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        hbox.Add(
+            wx.StaticText(self, label="Característica:"),
+            0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
+        )
+        self.combo_caracteristica = wx.ComboBox(
+            self,
+            style=wx.CB_READONLY,
+            choices=["Todas"] + list(self._CARACTERISTICAS_ETIQUETA.keys()),
+        )
+        self.combo_caracteristica.SetSelection(0)
+        self.combo_caracteristica.SetHelpText(
+            "Filtra las voces de Azure por características detectadas en su "
+            "nombre técnico: Multilingüe (varios idiomas), Dragon (calidad HD "
+            "más reciente), MaiVoice, Flash (baja latencia) o Neural genérica."
+        )
+        self.combo_caracteristica.Bind(wx.EVT_COMBOBOX, self._al_filtrar)
+        hbox.Add(self.combo_caracteristica, 0)
+        sizer.Add(hbox, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
+
+    def _obtener_filtros_extra(self, voz):
+        if not hasattr(self, 'combo_caracteristica'):
+            return True
+        etiqueta = self.combo_caracteristica.GetValue()
+        if etiqueta == "Todas":
+            return True
+        clave_buscada = self._CARACTERISTICAS_ETIQUETA.get(etiqueta)
+        if clave_buscada is None:
+            return True
+        id_voz = voz.get("id", "").lower()
+        if clave_buscada == "neural":
+            # "Neural" como filtro genérico: cualquier voz que NO tenga
+            # ninguna de las otras características más específicas.
+            otras = [v for k, v in self._CARACTERISTICAS_ETIQUETA.items() if v != "neural"]
+            return not any(c in id_voz for c in otras)
+        return clave_buscada in id_voz
 # ANCLAJE_FIN: PANEL_AZURE
 
 

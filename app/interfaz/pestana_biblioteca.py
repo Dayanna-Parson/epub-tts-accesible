@@ -137,6 +137,31 @@ class PestanaBiblioteca(wx.Panel):
     # ── Construcción de la interfaz ─────────────────────────────────────────
 
     def _configurar_interfaz(self):
+        sizer_general = wx.BoxSizer(wx.VERTICAL)
+
+        # ── Barra de herramientas fija de importación (siempre visible) ──
+        # Antes vivía al final de la columna derecha, dentro de un sizer que
+        # podía quedar recortado fuera del área visible según el tamaño de
+        # la ventana (la lista de libros, con proporción 1, se quedaba con
+        # todo el espacio disponible y empujaba estos botones fuera). Al ir
+        # en su propia fila fija en la parte superior de toda la pestaña,
+        # con proporción 0, nunca se oculta ni se recorta.
+        sizer_importar = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
+        self.btn_importar.Bind(wx.EVT_BUTTON, self.al_importar_carpeta)
+        sizer_importar.Add(self.btn_importar, 0, wx.ALL, 5)
+        self.btn_importar_archivo = wx.Button(self, label="Importar libro...")
+        self.btn_importar_archivo.SetHelpText(
+            "Añade un único archivo EPUB o PDF a la Biblioteca, sin escanear "
+            "toda una carpeta."
+        )
+        self.btn_importar_archivo.Bind(wx.EVT_BUTTON, self.al_importar_archivo)
+        sizer_importar.Add(self.btn_importar_archivo, 0, wx.ALL, 5)
+        self.barra_progreso = wx.Gauge(self, range=100)
+        self.barra_progreso.Hide()
+        sizer_importar.Add(self.barra_progreso, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_general.Add(sizer_importar, 0, wx.EXPAND)
+
         sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
 
         # ── Panel izquierdo: sub-pestañas Géneros / Sagas ────────────────
@@ -272,32 +297,23 @@ class PestanaBiblioteca(wx.Panel):
         self.lbl_estado = wx.StaticText(self, label="")
         sizer_derecho.Add(self.lbl_estado, 0, wx.ALL, 5)
 
-        # Botón de importación + barra de progreso (visual, oculta hasta escanear)
-        sizer_importar = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
-        self.btn_importar.Bind(wx.EVT_BUTTON, self.al_importar_carpeta)
-        sizer_importar.Add(self.btn_importar, 0, wx.ALL, 5)
-        self.btn_importar_archivo = wx.Button(self, label="Importar libro...")
-        self.btn_importar_archivo.SetHelpText(
-            "Añade un único archivo EPUB o PDF a la Biblioteca, sin escanear "
-            "toda una carpeta."
-        )
-        self.btn_importar_archivo.Bind(wx.EVT_BUTTON, self.al_importar_archivo)
-        sizer_importar.Add(self.btn_importar_archivo, 0, wx.ALL, 5)
-        self.barra_progreso = wx.Gauge(self, range=100)
-        self.barra_progreso.Hide()
-        sizer_importar.Add(self.barra_progreso, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_derecho.Add(sizer_importar, 0, wx.EXPAND)
-
         sizer_principal.Add(sizer_derecho, 3, wx.EXPAND)
 
-        self.SetSizer(sizer_principal)
+        sizer_general.Add(sizer_principal, 1, wx.EXPAND)
+        self.SetSizer(sizer_general)
 
         # Tab desde el árbol/lista de etiquetas debe llegar directo a la
         # lista de libros — es lo que se usa constantemente — en vez de
         # pasar antes por los controles de filtro, que se usan mucho
         # menos y quedan más lejos en el orden natural de creación.
         self.lista_libros.MoveAfterInTabOrder(self.subnotebook_izquierdo)
+
+        # Los botones de importación se construyeron primero (para quedar
+        # arriba visualmente, ver comentario más arriba), pero se mantienen
+        # al FINAL del orden de tabulación — son una acción puntual, no lo
+        # que más se usa — igual que antes de moverlos a la barra fija.
+        self.btn_importar.MoveAfterInTabOrder(self.lista_libros)
+        self.btn_importar_archivo.MoveAfterInTabOrder(self.btn_importar)
 
         # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
         self._anunciador = wx.TextCtrl(
@@ -348,7 +364,7 @@ class PestanaBiblioteca(wx.Panel):
 
     @property
     def ultimo_control(self):
-        return self.btn_importar
+        return self.btn_importar_archivo
 
     # ── Anuncios de accesibilidad ────────────────────────────────────────────
 
