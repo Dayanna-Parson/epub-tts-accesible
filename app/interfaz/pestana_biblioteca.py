@@ -8,7 +8,7 @@ import threading
 
 from app.config_rutas import ruta_config, CONFIG_DIR
 from app.motor.gestor_biblioteca import GestorBiblioteca
-from app.motor.escaner_biblioteca import EscanerBiblioteca, confirmar_agrupamiento_por_carpeta
+from app.motor.escaner_biblioteca import EscanerBiblioteca, confirmar_agrupamiento_por_carpeta, _procesar_archivo
 from app.motor.renombrador_biblioteca import (
     renombrar_libro_segun_metadatos,
     renombrar_pendientes_por_lote,
@@ -277,6 +277,13 @@ class PestanaBiblioteca(wx.Panel):
         self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
         self.btn_importar.Bind(wx.EVT_BUTTON, self.al_importar_carpeta)
         sizer_importar.Add(self.btn_importar, 0, wx.ALL, 5)
+        self.btn_importar_archivo = wx.Button(self, label="Importar libro...")
+        self.btn_importar_archivo.SetHelpText(
+            "Añade un único archivo EPUB o PDF a la Biblioteca, sin escanear "
+            "toda una carpeta."
+        )
+        self.btn_importar_archivo.Bind(wx.EVT_BUTTON, self.al_importar_archivo)
+        sizer_importar.Add(self.btn_importar_archivo, 0, wx.ALL, 5)
         self.barra_progreso = wx.Gauge(self, range=100)
         self.barra_progreso.Hide()
         sizer_importar.Add(self.barra_progreso, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
@@ -869,6 +876,42 @@ class PestanaBiblioteca(wx.Panel):
             al_fallar=lambda error: wx.CallAfter(self._al_fallar_escaneo, error),
         )
         self.escaner.iniciar(carpeta, usar_subcarpetas_como_categorias=usar_subcarpetas)
+
+    def al_importar_archivo(self, evento=None):
+        """
+        Añade un único archivo EPUB o PDF a la Biblioteca, sin pasar por el
+        escáner de carpetas (pensado para 500 libros a la vez, no para uno
+        suelto). Reutiliza _procesar_archivo() y insertar_libros_lote(), la
+        misma lógica de extracción de metadatos e inserción que usa
+        EscanerBiblioteca, para no duplicarla.
+        """
+        with wx.FileDialog(
+            self, "Seleccionar libro a importar",
+            wildcard="Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf",
+            style=wx.FD_OPEN,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            ruta = dlg.GetPath()
+
+        if ruta in self.gestor.obtener_rutas_indexadas():
+            reproducir(ERROR)
+            self._anunciar("Ese libro ya está en la Biblioteca.")
+            return
+
+        resultado = _procesar_archivo(ruta)
+        if resultado is None:
+            reproducir(ERROR)
+            wx.MessageBox(
+                "No se pudieron leer los metadatos de ese archivo.",
+                "Error al importar", wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        self.gestor.insertar_libros_lote([resultado])
+        reproducir(SUCCESS)
+        self._anunciar(f"Libro añadido a la Biblioteca: {resultado['titulo']}.")
+        self._cargar_libros()
 
     def _al_progresar_escaneo(self, procesados, total):
         # Solo actualiza el estado visual (Gauge + etiqueta) aquí — esto se

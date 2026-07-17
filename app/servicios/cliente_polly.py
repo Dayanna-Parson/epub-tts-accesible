@@ -88,6 +88,14 @@ class ClientePolly:
         # Caché de fragmentos ya descargados (reutiliza audio al saltar atrás)
         self._cache_frags = {}
         self._cache_lru = []
+        # Cliente boto3 reutilizado entre llamadas: crear boto3.client() carga
+        # y analiza los modelos de servicio la primera vez que se usa en el
+        # proceso (más lento), y esa carga se repetía en cada síntesis al
+        # crear un cliente nuevo cada vez. Se cachea aquí, indexado por las
+        # credenciales/región usadas, para detectar si el usuario las cambió
+        # en Ajustes sin tener que reiniciar la app.
+        self._cliente_boto3 = None
+        self._cliente_boto3_credenciales = None
 
     def _cargar_config(self):
         return cargar_claves()
@@ -151,32 +159,29 @@ class ClientePolly:
 
         import xml.sax.saxutils
         texto_escaped = xml.sax.saxutils.escape(texto)
-        # El motor "standard" de Polly tiene un problema documentado en la
-        # comunidad de AWS: recorta la última sílaba de la última palabra del
-        # propio audio que devuelve. Un <break> (aunque esté fuera de
-        # <prosody>) no basta a velocidades altas — el servidor parece
-        # truncar el búfer de renderizado antes de que la pausa termine.
-        # El remedio que sí funciona de forma consistente es textual, no de
-        # temporización: añadir puntos suspensivos reales al final del
-        # texto obliga al motor fonético a seguir articulando la última
-        # palabra real antes de llegar a esos puntos, en vez de cortar justo
-        # al terminarla. Solo para "standard"; el resto de motores no lo
-        # necesita.
-        sufijo_standard = " ..." if motor == "standard" else ""
+        # (El relleno textual/SSML que se probó aquí para el motor "standard"
+        # se retiró: diagnóstico cruzado confirmó que el audio que devuelve
+        # Polly ya viene completo — el corte ocurría en el reproductor en
+        # vivo, no en la síntesis. Ver el margen de seguridad tras sd.wait()
+        # en hablar(), más abajo.)
         ssml = (
             "<speak>"
             f"<prosody rate='{tasa}'>"
-            f"{texto_escaped}{sufijo_standard}"
+            f"{texto_escaped}"
             "</prosody>"
             "</speak>"
         )
 
-        cliente = boto3.client(
-            "polly",
-            region_name=region,
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-        )
+        credenciales_actuales = (access_key, secret_key, region)
+        if self._cliente_boto3 is None or self._cliente_boto3_credenciales != credenciales_actuales:
+            self._cliente_boto3 = boto3.client(
+                "polly",
+                region_name=region,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+            )
+            self._cliente_boto3_credenciales = credenciales_actuales
+        cliente = self._cliente_boto3
 
         respuesta = None
         for intento in range(2):
@@ -230,6 +235,16 @@ class ClientePolly:
         if not self._parado:
             sd.play(data, fs)
             sd.wait()
+            # Diagnóstico confirmado: sd.wait() puede volver antes de que el
+            # hardware termine de vaciar físicamente su búfer. A velocidades
+            # altas el siguiente fragmento arranca casi de inmediato, y su
+            # sd.play() interrumpe la cola de audio del anterior, cortando su
+            # última sílaba — reproducido de forma consistente con las voces
+            # estándar de Polly a partir de ~1.16×, pero es un problema del
+            # reproductor en vivo, no del audio que devuelve la API (por eso
+            # el MP3 exportado siempre sonaba completo).
+            if not self._parado:
+                time.sleep(0.12)
 
     def preparar(self, texto, datos_voz):
         """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe.

@@ -125,6 +125,11 @@ class VentanaPrincipal(wx.Frame):
         self.archivos_recientes = []
         self.ruta_recientes = ruta_config("historial_epub.json")
         self.cargar_historial_recientes()
+        # Ruta resaltada en el submenú "Libros Recientes" mientras está abierto
+        # (ver EVT_MENU_HIGHLIGHT_ALL en _menu_contextual_lectura) — permite
+        # borrar la entrada resaltada con Supr sin navegar hasta "Borrar
+        # historial".
+        self._reciente_resaltada_ruta = None
 
         # TXT recientes — archivo independiente historial_grabacion.json
         self.txt_recientes = []
@@ -160,16 +165,35 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: CONFIGURACION_MENUS
 
     # ANCLAJE_INICIO: EVENTOS_GLOBALES
+    def _al_resaltar_reciente(self, evento):
+        self._reciente_resaltada_ruta = self._rutas_por_id_reciente.get(evento.GetMenuId())
+        evento.Skip()
+
     def al_navegacion_tab_global(self, evento):
         """
         Gestiona:
           - Tab cíclico accesible (bucle dentro de cada pestaña).
           - Tecla Menú / Shift+F10: abre el menú contextual de la pestaña activa.
+          - Supr sobre un libro resaltado del submenú "Libros Recientes":
+            lo borra del historial sin tener que navegar hasta "Borrar
+            historial". Depende de que EVT_CHAR_HOOK llegue al Frame también
+            mientras un menú nativo está en seguimiento — si en la práctica
+            no ocurriera así en Windows, esta comprobación simplemente nunca
+            se cumple y Supr no tiene efecto aquí (sin romper nada más).
 
         Vinculado al Frame en lugar de a cada Panel individual para evitar
         interferencias con eventos internos de controles hijo como el TreeCtrl.
         """
         keycode = evento.GetKeyCode()
+
+        if keycode == wx.WXK_DELETE and self._reciente_resaltada_ruta:
+            ruta = self._reciente_resaltada_ruta
+            if ruta in self.archivos_recientes:
+                self.archivos_recientes.remove(ruta)
+                self._guardar_recientes()
+                self._reciente_resaltada_ruta = None
+                reproducir(CLICK)
+            return
 
         # Tecla Menú (Applications key) → menú contextual de la pestaña activa
         if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
@@ -649,11 +673,14 @@ class VentanaPrincipal(wx.Frame):
 
         # Submenú libros recientes
         sub_rec = wx.Menu()
+        self._reciente_resaltada_ruta = None
+        self._rutas_por_id_reciente = {}
         if self.archivos_recientes:
             for i, ruta in enumerate(self.archivos_recientes):
                 nombre = os.path.basename(ruta)
                 id_item = wx.NewIdRef()
                 sub_rec.Append(id_item, f"{i+1}. {nombre}")
+                self._rutas_por_id_reciente[int(id_item)] = ruta
                 self.Bind(
                     wx.EVT_MENU,
                     lambda e, p=ruta: self.abrir_libro_reciente(p),
@@ -663,6 +690,9 @@ class VentanaPrincipal(wx.Frame):
             id_borrar = wx.NewIdRef()
             sub_rec.Append(id_borrar, "Borrar historial")
             self.Bind(wx.EVT_MENU, self.al_borrar_recientes, id=id_borrar)
+            # Registra qué entrada está resaltada mientras el submenú está
+            # abierto, para poder borrarla con Supr (ver al_navegacion_tab_global).
+            sub_rec.Bind(wx.EVT_MENU_HIGHLIGHT_ALL, self._al_resaltar_reciente)
         else:
             sub_rec.Append(wx.ID_ANY, "(Vacío)").Enable(False)
         menu.AppendSubMenu(sub_rec, "Libros Recientes")

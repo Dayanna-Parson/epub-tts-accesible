@@ -107,6 +107,11 @@ class GrabadorAudio:
         self.callback_progreso = callback_progreso
         self._abortar = False
         self.config = {}
+        # Cliente boto3 de Polly reutilizado entre trozos de la misma
+        # exportación — crear boto3.client() por trozo repetía la carga de
+        # los modelos de servicio en cada llamada.
+        self._cliente_polly_boto3 = None
+        self._cliente_polly_credenciales = None
         self._ultima_carpeta = None
         self._velocidad = 50
         self._volumen = 100
@@ -736,12 +741,16 @@ class GrabadorAudio:
                 motor = m
                 break
 
-        cliente = boto3.client(
-            'polly',
-            region_name=region,
-            aws_access_key_id=access_key,
-            aws_secret_access_key=secret_key,
-        )
+        credenciales_actuales = (access_key, secret_key, region)
+        if self._cliente_polly_boto3 is None or self._cliente_polly_credenciales != credenciales_actuales:
+            self._cliente_polly_boto3 = boto3.client(
+                'polly',
+                region_name=region,
+                aws_access_key_id=access_key,
+                aws_secret_access_key=secret_key,
+            )
+            self._cliente_polly_credenciales = credenciales_actuales
+        cliente = self._cliente_polly_boto3
 
         texto_limpio = self._limpiar_xml(texto)
         tasa      = self._velocidad_a_tasa_ssml(self._velocidad)

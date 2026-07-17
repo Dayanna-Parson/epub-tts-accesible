@@ -1,4 +1,5 @@
 import logging
+import time
 import requests
 import sounddevice as sd
 import soundfile as sf
@@ -155,6 +156,13 @@ class ClienteAzure:
         if not self._parado:
             sd.play(data, fs)
             sd.wait()
+            # sd.wait() puede volver antes de que el hardware de audio termine
+            # de vaciar físicamente su búfer (más notorio a velocidades altas,
+            # donde el siguiente fragmento arranca casi de inmediato) — sin
+            # este margen, sd.play() del fragmento siguiente puede interrumpir
+            # la cola de audio del anterior y comerse su última sílaba.
+            if not self._parado:
+                time.sleep(0.12)
 
     def preparar(self, texto, datos_voz):
         """

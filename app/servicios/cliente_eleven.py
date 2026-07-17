@@ -1,3 +1,4 @@
+import time
 import requests
 import sounddevice as sd
 import soundfile as sf
@@ -84,6 +85,12 @@ class ClienteEleven:
         if not self._parado:
             sd.play(data, fs_efectiva)
             sd.wait()
+            # Margen de seguridad: sd.wait() puede volver antes de que el
+            # hardware termine de vaciar físicamente su búfer, sobre todo a
+            # velocidades altas — sin esto, el sd.play() del fragmento
+            # siguiente puede cortar la última sílaba del anterior.
+            if not self._parado:
+                time.sleep(0.12)
 
     def preparar(self, texto, datos_voz):
         """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe.
