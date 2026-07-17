@@ -1,5 +1,6 @@
 import io
 import time
+import numpy as np
 import sounddevice as sd
 import soundfile as sf
 from app.config_rutas import cargar_claves
@@ -211,6 +212,16 @@ class ClientePolly:
 
         audio_bytes = respuesta["AudioStream"].read()
         data, fs = sf.read(io.BytesIO(audio_bytes))
+
+        if motor == "standard":
+            # El margen tras sd.wait() no basta: el hardware de audio puede
+            # cortar el flujo igual si el búfer llega casi vacío. La única
+            # protección infalible es que el propio array de audio termine
+            # en silencio real: se añaden 400ms de ceros al final ANTES de
+            # entregarlo a sounddevice, así el hardware nunca corta la
+            # última sílaba real porque ya no hay nada real que cortar.
+            relleno = np.zeros((int(fs * 0.4),) + data.shape[1:], dtype=data.dtype)
+            data = np.concatenate([data, relleno], axis=0)
 
         if self._volumen != 100:
             data = data * (self._volumen / 100.0)

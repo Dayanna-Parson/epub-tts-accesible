@@ -66,6 +66,12 @@ class ReproductorVoz:
         # Proveedores suspendidos esta sesión por error de cuota (402 / plan agotado).
         # Se limpian cuando el usuario cambia de voz manualmente.
         self._proveedores_suspendidos = set()
+        # Proveedores que ya mostraron el aviso de error de red/API esta
+        # sesión — evita una ventana modal por cada fragmento fallido (con
+        # una API caída a mitad de lectura, eso podía disparar un aviso tras
+        # otro y dar la sensación de que la app se había colgado). Se limpia
+        # al cambiar de voz manualmente, igual que las suspensiones de cuota.
+        self._proveedores_con_aviso_red = set()
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
@@ -81,6 +87,7 @@ class ReproductorVoz:
         self.detener()
         # El usuario elige voz manualmente: resetear suspensiones de cuota
         self._proveedores_suspendidos.clear()
+        self._proveedores_con_aviso_red.clear()
         self.voz_actual = datos_voz
         
         proveedor = datos_voz.get("proveedor_id", "local").lower()
@@ -292,8 +299,20 @@ class ReproductorVoz:
                         try: self.cliente_local.hablar(texto)
                         except Exception: pass
                 else:
-                    # Error de red/API real: activar voz local con mensaje de error
-                    wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+                    # Error de red/API real (voz inexistente, timeout, región
+                    # sin esa voz nueva...): aviso accesible una sola vez por
+                    # proveedor y sesión — repetirlo en cada fragmento fallido
+                    # (p. ej. toda una lectura con la API caída) se sentía
+                    # como que la app se quedaba colgada esperando que se
+                    # cerraran ventanas modales una tras otra.
+                    proveedor = self.tipo_motor_actual
+                    primera_vez = proveedor not in self._proveedores_con_aviso_red
+                    self._proveedores_con_aviso_red.add(proveedor)
+                    if primera_vez:
+                        wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+                    elif not self._detenido_intencionalmente:
+                        try: self.cliente_local.hablar(texto)
+                        except Exception: pass
 
         # Solo actualizar el estado y encadenar el callback si:
         # 1. Esta generación sigue siendo la activa (no se inició otra síntesis)

@@ -130,9 +130,25 @@ class ClienteAzure:
                     self._sesion = requests.Session()
                     continue
                 raise
+            except requests.exceptions.RequestException as e:
+                # Cualquier otro fallo de la librería requests (SSL, lectura
+                # cortada, redirecciones...) que no fuera Timeout ni
+                # ConnectionError se dejaba escapar sin capturar aquí, y
+                # `response` se quedaba en None sin más contexto que "sin
+                # respuesta" — ahora queda su propio mensaje.
+                raise Exception(f"Error de conexión con Azure: {e}")
 
         if response is None or response.status_code != 200:
-            codigo = response.status_code if response else "sin respuesta"
+            if response is not None:
+                # El cuerpo de la respuesta de Azure suele decir la causa
+                # exacta (p. ej. voz no disponible en esa región) — útil
+                # sobre todo con voces nuevas que puede que aún no estén
+                # habilitadas en todas las regiones/suscripciones.
+                detalle = response.text[:200] if response.text else ""
+                codigo = f"{response.status_code} — {detalle}" if detalle else str(response.status_code)
+            else:
+                codigo = "sin respuesta"
+            logger.warning("[Azure] Fallo de síntesis: %s", codigo)
             raise Exception(f"Error Azure: {codigo}")
 
         data, fs = sf.read(io.BytesIO(response.content))
