@@ -76,6 +76,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._voces_disponibles = []
         self._ultima_carpeta = None
         self._poblando_capitulos = False
+        self._ultimo_decimo_anunciado = -1   # progreso hablado cada 10% en modo "Libro completo"
 
         self._construir_interfaz()
         self._configurar_atajos()
@@ -819,9 +820,43 @@ class PestanaCreadorAudiolibros(wx.Panel):
         except Exception:
             logger.exception("[PestanaCreadorAudiolibros] Error al estimar el coste del presupuesto")
 
+        mensaje += f" {self._estimar_duracion_texto(caracteres)}"
+
         self.txt_progreso.SetValue(mensaje)
         self._anunciar(mensaje)
         self.btn_iniciar.Enable(True)
+
+    # Caracteres por minuto a velocidad normal (posición 50 del deslizador),
+    # basado en un ritmo de lectura en voz alta habitual (~150 palabras por
+    # minuto, ~6 caracteres por palabra con espacios).
+    _CARACTERES_POR_MINUTO_BASE = 900
+
+    def _estimar_duracion_texto(self, caracteres: int) -> str:
+        """
+        Estima cuánto durará el audio final (y, a la vez, aproximadamente
+        cuánto tardará en generarse con voces locales) a partir del volumen
+        de caracteres y la velocidad del deslizador. Con voces de nube el
+        tiempo de generación real depende además de la latencia de cada API,
+        así que esta cifra es la duración del AUDIO, no un cronómetro exacto
+        de la exportación.
+        """
+        v = self.deslizador_velocidad.GetValue()
+        multiplicador = 1 + (v - 50) * 0.016
+        cpm = self._CARACTERES_POR_MINUTO_BASE * max(0.2, multiplicador)
+        minutos_totales = caracteres / cpm if cpm > 0 else 0
+
+        horas = int(minutos_totales // 60)
+        minutos = int(round(minutos_totales % 60))
+        if minutos == 60:
+            horas += 1
+            minutos = 0
+
+        if horas > 0:
+            duracion = f"{horas} h {minutos} min"
+        else:
+            duracion = f"{minutos} min"
+
+        return f"Duración estimada del audio: {duracion}."
 
     def _al_error_presupuesto(self, error: str):
         self._calculando = False
@@ -917,6 +952,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.btn_abortar.Enable(True)
         self.gauge.SetValue(0)
         self.txt_progreso.SetValue("Iniciando exportación...")
+        self._ultimo_decimo_anunciado = -1
         reproducir(REC_START)
 
         self._grabador = GrabadorAudio(callback_progreso=self._callback_progreso_hilo)
@@ -988,10 +1024,17 @@ class PestanaCreadorAudiolibros(wx.Panel):
         elif not por_capitulos and total > 1:
             # Modo "libro completo": total aquí son los trozos internos en los
             # que se dividió el texto por límite del proveedor, no capítulos
-            # reales — es ruido de implementación, no información útil para
-            # el usuario. Solo se mueve la barra en silencio, sin texto de
-            # estado ni tic sonoro ni anuncio por cada trozo.
-            pass
+            # reales — es ruido de implementación, así que no se anuncia por
+            # cada trozo ni se actualiza el texto de estado con esa cifra.
+            # En su lugar se anuncia el progreso real por hitos de 10%, igual
+            # que el modo por capítulos anuncia por hito de capítulo.
+            decimo_actual = pct // 10
+            if decimo_actual > self._ultimo_decimo_anunciado:
+                self._ultimo_decimo_anunciado = decimo_actual
+                if decimo_actual > 0:
+                    self.txt_progreso.SetValue(f"Exportación al {decimo_actual * 10}%.")
+                    self._anunciar(f"Exportación al {decimo_actual * 10}%.")
+                    reproducir(PROGRESS)
 
     def _al_terminar_exportacion(self, salida: dict):
         self._exportando = False
