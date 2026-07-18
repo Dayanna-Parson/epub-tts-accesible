@@ -6,10 +6,10 @@ Léelo entero antes de tocar nada. Estas reglas no son sugerencias.
 
 ## Identidad del proyecto
 
-**Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
+**Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB y PDF en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
 
 - Desarrolladora: Dayanna Parson (TifloTutos · tiflotutos.com)
-- Versión actual: 2.0.0
+- Versión actual: 3.0.0
 - Python 3.12+ · wxPython 4.2+ · Windows como plataforma principal
 
 ---
@@ -62,29 +62,38 @@ No añadas dependencias sin justificación explícita. Cada librería nueva es u
 ```
 app/
 ├── interfaz/
-│   ├── ventana_principal.py      # Ventana raíz. Notebook 3 pestañas. Menú contextual.
-│   ├── pestana_lectura.py        # Modo Lectura: EPUB + TTS + marcadores
-│   ├── pestana_grabacion.py      # Modo Grabación: etiquetas multivoz + exportación
+│   ├── ventana_principal.py      # Ventana raíz. Notebook de pestañas. Menú contextual.
+│   ├── pestana_biblioteca.py     # Biblioteca: importar EPUB/PDF, géneros, sagas, buscador
+│   ├── pestana_lectura.py        # Modo Lectura: EPUB/PDF + TTS + marcadores
+│   ├── pestana_creador_audiolibros.py  # Creador de Audiolibros: exportación completa/por capítulos
+│   ├── pestana_grabacion.py      # Grabación de Fragmentos: etiquetas multivoz + exportación
 │   ├── pestana_ajustes.py        # Ajustes: claves API, voces, atajos, cuota
-│   ├── ventana_proyectos.py      # Gestor de proyectos (ventana independiente, no modal)
+│   ├── ventana_proyectos.py      # Gestor de proyectos de Grabación (ventana independiente, no modal)
+│   ├── selector_voz_compartido.py  # ListaVocesCheck + PanelProveedorIA: catálogo de voces reutilizable
+│   ├── dialogo_proveedor_alternativo.py  # Cuota insuficiente al exportar: cambia de proveedor o voz local
 │   ├── dialogo_troceador.py      # División de EPUB por capítulos
 │   ├── dialogo_voces_nuevas.py   # Notificación de voces nuevas
 │   ├── dialogo_novedades.py      # Novedades de versión
 │   ├── dialogos.py               # Diálogos compartidos: marcadores, confirmaciones
 │   └── ui_recursos.py            # Helper para iconos con fallback a wx.ArtProvider
 ├── motor/
+│   ├── gestor_biblioteca.py      # CRUD sobre biblioteca.db: libros, categorías, etiquetas, pendientes
+│   ├── escaner_biblioteca.py     # Escaneo de carpetas en hilo de fondo, extracción de metadatos
+│   ├── renombrador_biblioteca.py # Renombrado de archivos según metadatos reales
 │   ├── gestor_epub.py            # Abre EPUB, limpia HTML, reconstruye índice
-│   ├── gestor_proyectos.py       # Lógica de proyectos. Persistencia en proyectos.json
+│   ├── gestor_pdf.py             # Extrae texto/índice de PDF (fitz) para Lectura, misma forma que gestor_epub
+│   ├── gestor_proyectos.py       # Lógica de proyectos de Grabación. Persistencia en proyectos.json
 │   ├── gestor_atajos.py          # Atajos de teclado configurables
-│   ├── grabador_audio.py         # Grabación + concatenación FFmpeg + exportación MP3
+│   ├── grabador_audio.py         # Grabación silenciosa a archivo: fragmentos y audiolibros completos
 │   ├── procesador_etiquetas.py   # Parsea {{@voz}} y fragmenta para grabación
-│   ├── reproductor_voz.py        # Cola TTS asíncrona. Orquesta todos los motores.
+│   ├── reproductor_voz.py        # Cola TTS asíncrona interactiva. Orquesta todos los motores.
 │   ├── reproductor_sonidos.py    # 12 efectos contextuales. Caché en RAM.
 │   ├── cliente_nube_voces.py     # Descarga listas de voces desde cada API
 │   ├── verificador_voces_nuevas.py  # Detecta voces nuevas con cooldown de 24h
 │   ├── comprobador_actualizaciones.py  # Versioning semver contra GitHub
-│   ├── control_cuota.py          # Contadores mensuales por proveedor con autoreset
+│   ├── control_cuota.py          # Contadores mensuales por proveedor con autoreset + coste estimado
 │   ├── troceador_epub.py         # Divide EPUB por anclas HTML
+│   ├── troceador_pdf.py          # Divide PDF por su índice de contenidos (o por página si no tiene)
 │   ├── limpiador_lectura.py      # Limpieza de texto para TTS
 │   └── diccionario_pronunciacion.py  # Sustituciones fonéticas locales para todos los motores
 ├── servicios/
@@ -105,7 +114,8 @@ Archivos de configuración (en `/configuraciones/`):
 |---|---|---|
 | `claves_api.json` | Claves de Azure, Polly, ElevenLabs, Deepgram | Sí |
 | `ajustes.json` | Velocidad, volumen, tiempos, favoritas, límites de cuota | No |
-| `proyectos.json` | Jerarquía completa de proyectos | No |
+| `biblioteca.db` | SQLite: libros, categorías, etiquetas/sagas, exportaciones pendientes | Sí |
+| `proyectos.json` | Jerarquía completa de proyectos de Grabación de Fragmentos | No |
 | `pronunciacion.json` | Reglas del diccionario de pronunciación | No |
 | `voces_conocidas.json` | IDs de voces ya vistas (historial para filtro «solo nuevas») | No |
 
@@ -242,11 +252,13 @@ Las etiquetas de personaje siguen el formato `{{@nombre}}`. El texto tras cada e
 
 En modo "Dividir por etiquetas", los archivos se nombran `1. Narr.mp3`, `2. James.mp3` (no `001_narr.mp3`).
 
+Los audiolibros generados desde el Creador de Audiolibros van en `Grabaciones_Epub-TTS/Audiolibros/<Título>/` (o `Audiolibros/<Saga>/<Título>/` si el libro tiene alguna etiqueta en Biblioteca), separados de las carpetas de Grabación de Fragmentos. En modo "Libro completo" el archivo es `<Título>.mp3`; en "Por capítulos", `1. Capítulo uno.mp3`, `2. ...`. Si una exportación se corta por cuota o corte de conexión, la continuación se numera como parte: `<Título> (parte 2).mp3` (o `... (parte 2 - pendiente).mp3` si vuelve a cortarse).
+
 ---
 
-## Próximos motores previstos
+## Motor local previsto
 
-**Piper TTS**: motor local de alta calidad para sustituir SAPI5 como motor local principal. Open source, sin conexión, modelos en español. La arquitectura de `/app/servicios/` está preparada para añadir `cliente_piper.py` siguiendo el patrón de los clientes existentes.
+Se descartó **Piper TTS** como candidato a motor local de alta calidad. SAPI5 (64 y 32 bits vía puente) sigue siendo el único motor local de la app y así se queda.
 
 ---
 

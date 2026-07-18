@@ -352,6 +352,16 @@ Divisor de EPUB integrado, 12 sonidos contextuales y voces SAPI5 de 32 bits (Elo
 
 Sistema de actualizaciones automáticas completo, con reinicio de la app sin perder configuración ni grabaciones.
 
+Versión 3.0.0:
+
+Pestaña Biblioteca, con importación de carpetas y de libros sueltos, organización por géneros y sagas.
+
+Soporte de PDF además de EPUB, en Lectura y en el nuevo Creador de Audiolibros.
+
+Creador de Audiolibros: exportación de un libro completo o por capítulos, con presupuesto de coste y duración, exportación en paralelo y reanudación de exportaciones cortadas por cuota o corte de conexión.
+
+Piper TTS, previsto desde hacía tiempo como motor local futuro, queda descartado. SAPI5 sigue siendo, y se queda siendo, el único motor local.
+
 El criterio ha sido el mismo a lo largo de todo el proceso: que funcione, que sea accesible, que el coste sea transparente.
 
 ---
