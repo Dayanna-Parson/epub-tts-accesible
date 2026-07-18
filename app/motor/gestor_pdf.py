@@ -45,14 +45,33 @@ def extraer_datos_pdf(ruta_pdf):
     except Exception as e:
         raise Exception(f"Error al leer el formato PDF: {e}")
 
+    # Cada página se limpia individualmente (en vez de concatenar todo en
+    # crudo y limpiar una sola vez al final) para poder registrar el offset
+    # de inicio de cada página ya sobre el texto definitivo. Antes las
+    # posiciones se calculaban sobre el texto sin limpiar y no se
+    # reubicaban después (a diferencia de gestor_epub.py, donde sí se
+    # reubican buscando el propio texto del encabezado) porque el título de
+    # un marcador de PDF no siempre aparece literal en el cuerpo de la
+    # página — limpiando página a página se evita el problema de raíz: la
+    # posición registrada ya es la definitiva, sin necesidad de reubicar nada.
     texto_completo = ""
-    posiciones_inicio_pagina = []  # índice = página 0-based, valor = offset en texto_completo (crudo)
+    posiciones_inicio_pagina = []  # índice = página 0-based, valor = offset en texto_completo (ya limpio)
 
     for num in range(documento.page_count):
-        posiciones_inicio_pagina.append(len(texto_completo))
         texto_pagina = documento[num].get_text("text")
-        if texto_pagina and texto_pagina.strip():
-            texto_completo += texto_pagina.strip() + "\n\n"
+        texto_limpio_pagina = (
+            limpiar_para_lectura(texto_pagina, ruta_libro=ruta_pdf).strip()
+            if texto_pagina and texto_pagina.strip() else ""
+        )
+        if texto_limpio_pagina:
+            if texto_completo:
+                texto_completo += "\n\n"
+            posiciones_inicio_pagina.append(len(texto_completo))
+            texto_completo += texto_limpio_pagina
+        else:
+            # Página sin texto (portada, imagen escaneada...): su "inicio"
+            # coincide con la posición actual, no aporta contenido propio.
+            posiciones_inicio_pagina.append(len(texto_completo))
 
     toc = documento.get_toc()  # [[nivel, titulo, pagina_1_based], ...]
 
@@ -102,13 +121,9 @@ def extraer_datos_pdf(ruta_pdf):
             posiciones_capitulos[titulo] = offset
             posiciones_encabezados.append({"nivel": 1, "texto": titulo, "pos": offset})
 
-    # Limpieza final para lectura accesible con NVDA — igual que gestor_epub.py.
-    # A diferencia del EPUB, aquí no se reubican encabezados tras la limpieza
-    # buscando su propio texto (el título de un marcador PDF no siempre
-    # aparece literal en el cuerpo de la página); las posiciones se calculan
-    # sobre el texto crudo, con un margen de imprecisión aceptable frente a
-    # no tener navegación por capítulo en absoluto.
-    texto_completo = limpiar_para_lectura(texto_completo, ruta_libro=ruta_pdf)
-
+    # El texto ya salió limpio página a página (ver el bucle de arriba), así
+    # que las posiciones registradas en posiciones_capitulos/posiciones_encabezados
+    # son exactas sobre texto_completo — a diferencia de antes, no hace
+    # falta ningún paso de limpieza global ni de reubicación posterior.
     return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados, []
 # ANCLAJE_FIN: GESTOR_PDF
