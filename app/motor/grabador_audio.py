@@ -1086,8 +1086,14 @@ class GrabadorAudio:
             }
 
         titulo_limpio = limpiar_nombre_archivo(titulo_libro)
-        if completo:
+        if completo and numero_parte <= 1:
             nombre_archivo = f"{titulo_limpio}.mp3"
+        elif completo:
+            # Parte 2 o posterior que sí llega a terminar el texto que le
+            # tocaba: se mantiene la etiqueta de parte para no generar un
+            # archivo "{titulo}.mp3" a secas que dé a entender que es el
+            # libro entero cuando en realidad es solo la continuación.
+            nombre_archivo = f"{titulo_limpio} (parte {numero_parte}).mp3"
         else:
             nombre_archivo = f"{titulo_limpio} (parte {numero_parte} - pendiente).mp3"
         ruta_salida = os.path.join(carpeta_destino, nombre_archivo)

@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import logging
 import subprocess
@@ -77,6 +78,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._ultima_carpeta = None
         self._poblando_capitulos = False
         self._ultimo_decimo_anunciado = -1   # progreso hablado cada 10% en modo "Libro completo"
+        self._pendiente_actual = None   # fila de exportaciones_pendientes del libro cargado, si hay alguna
 
         self._construir_interfaz()
         self._configurar_atajos()
@@ -125,6 +127,16 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.btn_eliminar_libro.Bind(wx.EVT_BUTTON, self.al_eliminar_libro)
         self.btn_eliminar_libro.Enable(False)
         sz_libro.Add(self.btn_eliminar_libro, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
+
+        self.btn_retomar_pendiente = wx.Button(self, label="Retomar exportación pendiente")
+        self.btn_retomar_pendiente.SetHelpText(
+            "Continúa una exportación que se quedó a medias por falta de cuota "
+            "o un corte de conexión, sin regrabar lo que ya se generó."
+        )
+        self.btn_retomar_pendiente.Bind(wx.EVT_BUTTON, self.al_retomar_exportacion)
+        self.btn_retomar_pendiente.Enable(False)
+        self.btn_retomar_pendiente.Hide()
+        sz_libro.Add(self.btn_retomar_pendiente, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
         sizer.Add(sz_libro, 0, wx.EXPAND | wx.ALL, 8)
 
@@ -292,7 +304,8 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # usado en pestana_biblioteca.py (lista_libros.MoveAfterInTabOrder).
         self.txt_libro.MoveAfterInTabOrder(self._anunciador)
         self.btn_eliminar_libro.MoveAfterInTabOrder(self.txt_libro)
-        self.combo_modo.MoveAfterInTabOrder(self.btn_eliminar_libro)
+        self.btn_retomar_pendiente.MoveAfterInTabOrder(self.btn_eliminar_libro)
+        self.combo_modo.MoveAfterInTabOrder(self.btn_retomar_pendiente)
         self.combo_voz.MoveAfterInTabOrder(self.combo_modo)
         self.btn_escuchar_voz.MoveAfterInTabOrder(self.combo_voz)
         self.btn_calcular.MoveAfterInTabOrder(self.btn_escuchar_voz)
@@ -382,11 +395,191 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._poblar_lista_capitulos([])
         self.Layout()
 
+        self._comprobar_exportacion_pendiente()
+
         # Anuncio inmediato: sin esto, cargar un libro desde Biblioteca era
         # silencioso para el lector de pantalla — el título quedaba escrito
         # en el campo, pero nadie lo verbalizaba hasta que el usuario lo
         # encontrara a mano.
-        self._anunciar(f"Libro cargado en el Creador de Audiolibros: {descripcion}")
+        mensaje = f"Libro cargado en el Creador de Audiolibros: {descripcion}"
+        if self._pendiente_actual:
+            mensaje += " Hay una exportación pendiente de completar para este libro."
+        self._anunciar(mensaje)
+
+    def _comprobar_exportacion_pendiente(self):
+        """
+        Comprueba si el libro recién cargado tiene una exportación a medias
+        (registrada al detenerse por falta de cuota o un corte de conexión)
+        y muestra el botón "Retomar exportación pendiente" si la hay.
+        """
+        self._pendiente_actual = None
+        self.btn_retomar_pendiente.Hide()
+        self.btn_retomar_pendiente.Enable(False)
+        try:
+            gestor = self._obtener_gestor_biblioteca()
+            pendientes = gestor.obtener_exportaciones_pendientes(self.libro_actual["id"])
+            if pendientes:
+                self._pendiente_actual = pendientes[0]
+                self.btn_retomar_pendiente.Show()
+                self.btn_retomar_pendiente.Enable(True)
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] Error al comprobar exportaciones pendientes")
+        self.Layout()
+
+    # ------------------------------------------------------------------ #
+    # Retomar una exportación pendiente (cuota agotada o corte de conexión)
+    # ------------------------------------------------------------------ #
+
+    def al_retomar_exportacion(self, evento=None):
+        if not self._pendiente_actual or not self.libro_actual:
+            return
+        if self._exportando or self._calculando:
+            self._anunciar("Ya hay una operación en curso.")
+            return
+        if not self.voz_actual:
+            reproducir(ERROR)
+            self._anunciar("Elige una voz favorita antes de retomar la exportación.")
+            return
+
+        pendiente = self._pendiente_actual
+        modo = pendiente["modo"]
+
+        if modo == "capitulos":
+            self.combo_modo.SetSelection(1)
+            self.sz_caps.ShowItems(True)
+            self.Layout()
+            capitulo_pendiente = pendiente["capitulo_pendiente"] or 0
+            self._anunciar("Cargando capítulos para retomar la exportación...")
+            self._cargar_titulos_capitulos(
+                al_terminar=lambda: self._preparar_checkboxes_retomar(capitulo_pendiente)
+            )
+        elif modo == "completo":
+            self._retomar_exportacion_completa(pendiente)
+        else:
+            logger.warning("[PestanaCreadorAudiolibros] Modo de pendiente desconocido: %s", modo)
+
+    def _preparar_checkboxes_retomar(self, capitulo_pendiente: int):
+        """
+        Tras recargar los títulos de capítulos para retomar una exportación,
+        desmarca (excluye) los que ya se generaron en el intento anterior —
+        su índice de libro es menor que `capitulo_pendiente`, guardado como
+        posición REAL del libro, no de una lista filtrada — y los marca como
+        "Completado (ya existe)" para que quede claro que no se van a
+        regrabar. El resto queda marcado, listo para "Calcular presupuesto"
+        e "Iniciar exportación" como una exportación normal.
+        """
+        self._poblando_capitulos = True
+        try:
+            for i in range(self.lista_capitulos.GetItemCount()):
+                if i < capitulo_pendiente:
+                    self.lista_capitulos.CheckItem(i, False)
+                    self.lista_capitulos.SetItem(i, 2, "Completado (ya existe)")
+                else:
+                    self.lista_capitulos.CheckItem(i, True)
+                    self.lista_capitulos.SetItem(i, 2, self.ESTADO_PENDIENTE)
+        finally:
+            self._poblando_capitulos = False
+        self._anunciar(
+            f"Capítulos cargados. Los primeros {capitulo_pendiente} ya estaban completados y "
+            "quedan excluidos. Pulsa Calcular presupuesto para continuar con el resto."
+        )
+
+    def _retomar_exportacion_completa(self, pendiente):
+        formato = self.libro_actual.get("formato", "")
+        if formato not in ("epub", "pdf"):
+            reproducir(ERROR)
+            self._anunciar(f"El Creador de Audiolibros no admite el formato «{formato}».")
+            return
+
+        self.combo_modo.SetSelection(0)
+        self.sz_caps.ShowItems(False)
+        self.Layout()
+
+        self._calculando = True
+        self.btn_retomar_pendiente.Enable(False)
+        self.txt_progreso.SetValue("Preparando la continuación de la exportación...")
+        self._anunciar("Preparando la continuación de la exportación...")
+
+        threading.Thread(
+            target=self._hilo_retomar_completo,
+            args=(pendiente,),
+            daemon=True,
+        ).start()
+
+    def _hilo_retomar_completo(self, pendiente):
+        try:
+            ruta_archivo = self.libro_actual["ruta_archivo"]
+            formato = self.libro_actual.get("formato", "")
+            troceador = self._obtener_troceador(formato)
+            troceador.cargar(ruta_archivo)
+            texto_completo, fronteras = troceador.extraer_texto_completo_con_fronteras()
+
+            punto_corte = pendiente["punto_corte"] or 0
+            texto_restante = texto_completo[punto_corte:]
+            # Las fronteras de capítulo del texto original ya no valen tal
+            # cual para el texto recortado: se recalculan en relativo, solo
+            # con las que caen dentro del tramo que queda por generar.
+            fronteras_restantes = [f - punto_corte for f in fronteras if f >= punto_corte]
+
+            if not texto_restante.strip():
+                wx.CallAfter(self._al_error_presupuesto, "No queda texto pendiente por generar.")
+                return
+
+            numero_parte = self._siguiente_numero_parte(pendiente)
+            wx.CallAfter(
+                self._arrancar_retomar_completo,
+                texto_restante, fronteras_restantes, numero_parte, punto_corte,
+            )
+        except Exception as e:
+            logger.exception("[PestanaCreadorAudiolibros] Error al preparar la continuación")
+            wx.CallAfter(self._al_error_presupuesto, str(e))
+
+    def _siguiente_numero_parte(self, pendiente) -> int:
+        """
+        Calcula el número de parte para la continuación mirando qué archivos
+        "(parte N...)" ya existen en la carpeta del libro — más robusto que
+        llevar la cuenta en la base de datos, porque no depende de que se
+        haya registrado bien cada intento anterior.
+        """
+        try:
+            titulo_libro = self.libro_actual.get("titulo", "Audiolibro")
+            from app.motor.grabador_audio import GrabadorAudio
+            carpeta = GrabadorAudio().obtener_carpeta_audiolibro(
+                titulo_libro, nombre_saga=self._obtener_nombre_saga()
+            )
+            maximo = 1
+            if os.path.isdir(carpeta):
+                for nombre in os.listdir(carpeta):
+                    m = re.search(r"\(parte (\d+)", nombre)
+                    if m:
+                        maximo = max(maximo, int(m.group(1)))
+            return maximo + 1
+        except Exception:
+            logger.exception("[PestanaCreadorAudiolibros] Error al calcular el número de parte")
+            return 2
+
+    def _arrancar_retomar_completo(self, texto_restante, fronteras_restantes, numero_parte, base_offset):
+        self._calculando = False
+        self.btn_retomar_pendiente.Enable(True)
+
+        resultado = {
+            "modo_capitulos": False,
+            "capitulos": None,
+            "indices_originales": None,
+            "texto_completo": texto_restante,
+            "fronteras": fronteras_restantes,
+            "numero_parte": numero_parte,
+            "base_offset": base_offset,
+            "proveedor_id": self.voz_actual.get("proveedor_id", "local"),
+        }
+        self._resultado_presupuesto = resultado
+
+        velocidad = self.deslizador_velocidad.GetValue()
+        volumen = self.deslizador_volumen.GetValue()
+        mensaje = f"Continuando la exportación como parte {numero_parte}."
+        self.txt_progreso.SetValue(mensaje)
+        self._anunciar(mensaje)
+        self._arrancar_exportacion(self.voz_actual, velocidad, volumen, resultado)
 
     def al_eliminar_libro(self, evento=None):
         """
@@ -410,6 +603,9 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.txt_progreso.SetValue("Sin exportación en curso.")
         self.gauge.SetValue(0)
         self._poblar_lista_capitulos([])
+        self._pendiente_actual = None
+        self.btn_retomar_pendiente.Hide()
+        self.btn_retomar_pendiente.Enable(False)
         self._deshabilitar_controles()
         self.Layout()
 
@@ -509,18 +705,18 @@ class PestanaCreadorAudiolibros(wx.Panel):
         from app.motor.troceador_epub import TroceadorEpub
         return TroceadorEpub()
 
-    def _cargar_titulos_capitulos(self):
+    def _cargar_titulos_capitulos(self, al_terminar=None):
         formato = self.libro_actual.get("formato", "") if self.libro_actual else ""
         if not self.libro_actual or formato not in ("epub", "pdf"):
             return
         ruta_archivo = self.libro_actual["ruta_archivo"]
         threading.Thread(
             target=self._hilo_cargar_titulos_capitulos,
-            args=(ruta_archivo, formato),
+            args=(ruta_archivo, formato, al_terminar),
             daemon=True,
         ).start()
 
-    def _hilo_cargar_titulos_capitulos(self, ruta_archivo, formato):
+    def _hilo_cargar_titulos_capitulos(self, ruta_archivo, formato, al_terminar=None):
         try:
             troceador = self._obtener_troceador(formato)
             troceador.cargar(ruta_archivo)
@@ -529,6 +725,8 @@ class PestanaCreadorAudiolibros(wx.Panel):
             logger.exception("[PestanaCreadorAudiolibros] Error al cargar títulos de capítulos")
             return
         wx.CallAfter(self._poblar_lista_capitulos, capitulos)
+        if al_terminar:
+            wx.CallAfter(al_terminar)
 
     # ------------------------------------------------------------------ #
     # Lista de capítulos: inserción masiva protegida y actualización silenciosa
@@ -993,6 +1191,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
                 salida = self._grabador.exportar_audiolibro_completo(
                     resultado["texto_completo"], resultado["fronteras"], voz, titulo_libro,
                     velocidad=velocidad, volumen=volumen, nombre_saga=nombre_saga,
+                    numero_parte=resultado.get("numero_parte", 1),
                 )
         except Exception as e:
             logger.exception("[PestanaCreadorAudiolibros] Error durante la exportación")
@@ -1101,7 +1300,12 @@ class PestanaCreadorAudiolibros(wx.Panel):
         total = len(estados)
 
         if pendientes:
-            self._registrar_pendiente_capitulos(pendientes[0]["indice"], salida.get("proveedor", "local"))
+            # Se guarda la fila REAL del libro (no la posición dentro de la
+            # lista filtrada de esta sesión) — así retomar más tarde no
+            # depende de recordar qué capítulos estaban marcados/desmarcados
+            # cuando se exportó por última vez.
+            fila_real_pendiente = self._fila_real_capitulo(pendientes[0]["indice"])
+            self._registrar_pendiente_capitulos(fila_real_pendiente, salida.get("proveedor", "local"))
             mensaje = (
                 f"Exportación detenida por falta de cuota. "
                 f"{completados} de {total} capítulos completados. Queda registrado como pendiente."
@@ -1214,11 +1418,22 @@ class PestanaCreadorAudiolibros(wx.Panel):
             id_libro = self.libro_actual["id"]
             gestor.eliminar_exportaciones_pendientes_de_libro(id_libro)
             archivos = salida.get("archivos_generados") or []
+            # Si esta exportación ya era la continuación de una anterior, el
+            # punto_corte que devuelve GrabadorAudio es relativo al texto
+            # RECORTADO que se le pasó (desde el punto de corte anterior),
+            # no al libro completo — hay que sumarle el punto de partida de
+            # esta tanda para que una futura reanudación corte en el sitio
+            # correcto sobre el texto original.
+            base = (self._resultado_presupuesto or {}).get("base_offset", 0) or 0
+            punto_corte_relativo = salida.get("punto_corte")
+            punto_corte_absoluto = (
+                base + punto_corte_relativo if punto_corte_relativo is not None else None
+            )
             gestor.registrar_exportacion_pendiente(
                 id_libro=id_libro,
                 modo="completo",
                 proveedor=salida.get("proveedor", "local"),
-                punto_corte=salida.get("punto_corte"),
+                punto_corte=punto_corte_absoluto,
                 ruta_parcial=archivos[0] if archivos else None,
             )
         except Exception:
