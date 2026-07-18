@@ -36,15 +36,19 @@ La app nace para unificar y simplificar todo eso en un entorno de escritorio acc
 
 ### 3. Vista general de la interfaz
 
-La aplicación se organiza visualmente en tres pestañas, porque es la forma más clara y accesible de separar usos:
+La aplicación se organiza visualmente en pestañas, porque es la forma más clara y accesible de separar usos:
+
+Biblioteca
 
 Modo Lectura
 
-Modo Grabación
+Creador de Audiolibros
+
+Grabación de Fragmentos
 
 Ajustes
 
-Además, hay un menú superior desde el que se accede a acciones generales como abrir libros o gestionar recientes.
+Además, hay un menú superior desde el que se accede a acciones generales como cargar libros o gestionar recientes.
 
 La idea es que el usuario siempre sepa dónde está y qué puede hacer en cada momento, sin menús ocultos ni flujos confusos.
 
@@ -325,6 +329,22 @@ navegación semántica por encabezados (`H` / `Shift+H`) y patrón `_anunciador`
 árbol de navegación en Ajustes (`wx.TreeCtrl`), sustituyendo la disposición lineal anterior,
 
 sistema de actualizaciones automáticas completo (Script Clon): descarga, sustitución de archivos y reinicio sin perder configuración ni grabaciones.
+
+Añadido en v3.0.0 (Fase 7):
+
+Pestaña Biblioteca: importación de carpetas y de libros sueltos (EPUB y PDF), organización por géneros y por sagas/etiquetas, buscador. Persistencia en `biblioteca.db` (SQLite), no en JSON, para poder manejar colecciones grandes con consultas relacionales,
+
+Soporte de PDF además de EPUB, tanto en Lectura como en el nuevo Creador de Audiolibros, vía PyMuPDF (`fitz`),
+
+Creador de Audiolibros: exportación de un libro completo a un único MP3 o dividido por capítulos, con calculador de presupuesto (caracteres, coste estimado, duración prevista), selector de voz favorita embebido con preescucha, exclusión de capítulos antes de exportar, carpetas de salida organizadas por saga, exportación en paralelo con `ThreadPoolExecutor` y reanudación de exportaciones cortadas por cuota o corte de conexión,
+
+filtro de características en las voces de Azure (Multilingüe, Dragon, MaiVoice, Flash),
+
+corrección de fondo del puente SAPI5 de 32 bits (cada hilo que habla crea y usa su propia instancia del motor COM, sin compartir punteros entre hilos),
+
+silencio digital real al final de cada síntesis de Amazon Polly (motor estándar) para evitar el corte de la última sílaba a velocidades altas.
+
+Piper TTS, que figuraba como motor local previsto desde la Fase 4, queda descartado explícitamente.
 
 Nada pendiente en las funciones esenciales.
 

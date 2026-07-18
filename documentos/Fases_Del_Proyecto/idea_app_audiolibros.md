@@ -90,3 +90,6 @@ Deepgram Aura-2 integrado como motor de síntesis recomendado. Diccionario de pr
 
 **Versión 2.0.0:**
 Gestor de Proyectos, divisor de EPUB integrado, 12 sonidos contextuales, voces SAPI5 de 32 bits (Eloquence, RealSpeak), árbol de navegación en Ajustes y actualizaciones automáticas completas.
+
+**Versión 3.0.0 (julio 2026):**
+La pieza que le faltaba a esta idea original: el Creador de Audiolibros. Exportación de un libro completo de la Biblioteca a MP3, en un único archivo o dividido por capítulos, con presupuesto de coste y duración, exportación en paralelo y reanudación ante cortes. Junto a esto, la pestaña Biblioteca (organización de EPUB y PDF por géneros y sagas) y soporte de PDF en Lectura. Piper TTS, que llevaba tiempo como motor local previsto, se descarta explícitamente.
