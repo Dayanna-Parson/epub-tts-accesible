@@ -39,9 +39,12 @@
         </ul>
         <strong>Correcciones:</strong>
         <ul>
-            <li><strong>Voces SAPI5 de 32 bits (Eloquence, RealSpeak)</strong> ya no se quedan mudas de forma intermitente.</li>
+            <li><strong>Voces SAPI5 de 32 bits (Eloquence, RealSpeak)</strong> ya no se quedan mudas de forma intermitente, y ya se pueden usar de verdad para exportar audiolibros (antes se enrutaban por error al motor de 64 bits).</li>
             <li><strong>Amazon Polly (voces estándar)</strong> ya no se come la última sílaba de la palabra a velocidades altas.</li>
             <li><strong>La velocidad «por puntos» (multiplicador)</strong> en Lectura vuelve a funcionar en todo su rango.</li>
+            <li><strong>Exportación de audiolibro sin audio real:</strong> un WAV con cabecera pero sin sonido dentro ya no se da por válido; ahora se comprueba la duración real del audio generado.</li>
+            <li><strong>«Usar voz local»</strong> (al agotarse la cuota de nube) ya deja elegir cualquier voz SAPI5 instalada, en vez de usar siempre la voz predeterminada del sistema.</li>
+            <li><strong>Biblioteca</strong> marca ahora los libros con un audiolibro a medias, con un filtro dedicado para encontrarlos.</li>
         </ul>
     </div>
 </section>
@@ -115,6 +118,7 @@
         <li><strong>Importar libro...:</strong> añade un único archivo suelto, sin escanear nada más.</li>
         <li><strong>Árbol de géneros</strong> y <strong>lista de sagas/etiquetas</strong> a la izquierda, para filtrar la lista de libros de la derecha.</li>
         <li><strong>Control + F:</strong> buscar por título o autor.</li>
+        <li><strong>Filtro de Estado:</strong> Todos, Pendientes de leer, Leyendo ahora, Leídos o Audiolibros a medias — esta última opción muestra solo los libros con una exportación de audiolibro cortada por falta de cuota o un corte de conexión, sin tener que recordar cuál era el último libro que estabas exportando. La columna Estado de la lista también marca «Audiolibro a medias» junto al estado de lectura del libro.</li>
         <li>Desde el menú contextual de un libro (tecla Menú o Mayús+F10) puedes abrirlo en Lectura o enviarlo al Creador de Audiolibros.</li>
     </ul>
 </section>
@@ -150,6 +154,7 @@
         <li><strong>Retomar exportación pendiente:</strong> si una exportación se cortó por falta de cuota o un corte de conexión, este botón aparece automáticamente al volver a cargar el libro, y continúa exactamente donde se quedó.</li>
         <li><strong>Abrir carpeta:</strong> va directo a la carpeta de salida del audiolibro en el Explorador.</li>
     </ul>
+    <p>Si se agota la cuota de todos los proveedores de nube a mitad de una exportación, aparece un diálogo con varias salidas: usar otro proveedor, dividir en partes, o <strong>usar voz local</strong> — esta última opción incluye un desplegable con todas tus voces SAPI5 instaladas (64 y 32 bits, incluidas Eloquence y RealSpeak) para elegir con cuál seguir.</p>
     <p>Los audiolibros se guardan en <code>Grabaciones_Epub-TTS/Audiolibros/&lt;Título&gt;/</code> (o dentro de una subcarpeta con el nombre de la saga, si el libro tiene alguna etiqueta asignada en Biblioteca).</p>
 </section>
 

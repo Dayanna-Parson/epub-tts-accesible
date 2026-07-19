@@ -512,9 +512,14 @@ Las voces de CodeFactory (Eloquence, RealSpeak) son motores COM de 32 bits. Un p
 
 → {"cmd": "detener"}
 → {"cmd": "salir"}
+
+→ {"cmd": "exportar_archivo", "texto": "...", "ruta_wav": "...", "voz_nombre": "...", "rate": 0, "volume": 100}
+← {"evento": "exportado", "exito": true/false, "msg": "..."}
 ```
 
-`ClienteSapi32Bridge` expone exactamente la misma interfaz pública que `ClienteSapi5`. `reproductor_voz.py` enruta según `proveedor_id`: `"local"` → `cliente_sapi5`, `"local_32"` → `cliente_sapi32_bridge`.
+`exportar_archivo` es síncrono (bloquea el bucle de comandos del auxiliar hasta terminar de escribir el WAV con `SpFileStream`, igual que `_grabar_sapi5` hace con el motor de 64 bits) — pensado para exportación silenciosa desde el Creador de Audiolibros, no para lectura interactiva.
+
+`ClienteSapi32Bridge` expone exactamente la misma interfaz pública que `ClienteSapi5`. `reproductor_voz.py` enruta según `proveedor_id`: `"local"` → `cliente_sapi5`, `"local_32"` → `cliente_sapi32_bridge`. `grabador_audio.py` hace lo mismo para exportación: `_llamar_motor()` enruta `proveedor_id == "local_32"` a `_grabar_sapi5_32()` (que usa `exportar_archivo` sobre una instancia de `ClienteSapi32Bridge` cacheada en `self._bridge_sapi32`, cerrada explícitamente con `GrabadorAudio.cerrar()` al terminar cada exportación), y cualquier otro proveedor local a `_grabar_sapi5()` de 64 bits.
 
 **Para compilar el auxiliar** (una sola vez, en un entorno Python 32 bits):
 ```

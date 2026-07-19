@@ -316,4 +316,26 @@ Justo después llegó la reanudación de exportaciones pendientes: si una export
 
 Piper TTS, que llevaba desde la Fase 4 en la lista de "próximos motores", se descarta explícitamente en esta fase. SAPI5 sigue siendo, y se queda siendo, el único motor local de la app.
 
+### El audiolibro sin sonido
+
+Con la fase ya cerrada y publicada, las pruebas reales de uso encontraron un puñado de bugs que ninguna revisión de código hubiera detectado sin escucharlos.
+
+El primero, el más serio: exportar un audiolibro con voz local podía dejar un archivo "generado" con éxito, pero completamente mudo. La comprobación de que el audio estuviera bien solo miraba si el archivo pesaba más de cero bytes, y un WAV con cabecera pero sin fotogramas de audio pasa esa prueba sin más. Se cambió por una comprobación real: abrir el WAV y medir su duración de verdad. Si sale en silencio, ahora es un error, no un archivo válido.
+
+Relacionado con esto, un botón que llevaba tiempo roto sin que nadie lo notara: "Usar voz local", el que aparece cuando se agota la cuota de todos los proveedores de nube, siempre grababa con la voz predeterminada del sistema. Por debajo se le pasaba un dict genérico sin ningún id real, así que nunca podía encontrar ninguna voz instalada por su nombre. Se le añadió un desplegable de verdad con todas las voces SAPI5 (64 y 32 bits) para elegir.
+
+Y las voces de 32 bits (Eloquence, RealSpeak) elegidas para exportar tenían un problema más de fondo: `_llamar_motor()` las enrutaba, por defecto, al mismo motor de 64 bits que usan Elena, Pablo y Laura — un motor que nunca puede encontrarlas, porque son un proceso auxiliar aparte. Exportar con Eloquence, hasta ahora, siempre acababa hablando con la voz por defecto sin ningún aviso. Se le dio al proceso auxiliar de 32 bits un comando nuevo, `exportar_archivo`, que sintetiza directo a WAV igual que hace el motor de 64 bits, y se enrutó `local_32` ahí en vez de al motor equivocado.
+
+### El desbordamiento al unir trozos de distinta calidad
+
+Un error de consola nuevo, tras arreglar lo anterior: `'L' format requires 0 <= number <= 4294967295` al concatenar los trozos de un fragmento largo con Amazon Polly. La causa era que solo se normalizaba a 44100 Hz/mono el resultado final de la unión, no cada trozo individual antes de unirlo. El motor "generative" de Polly puede devolver un trozo con una frecuencia o profundidad de bits distinta a la de otro trozo del mismo fragmento, y el reajuste interno de pydub al pegarlos podía calcular mal el tamaño combinado. Ya se recuperaba solo con un respaldo (unir los MP3 en bytes crudos), así que no llegaba a romper la exportación, pero dejaba ese ruido feo en el log. Ahora cada trozo se normaliza antes de recortarle el silencio y antes de unirlo.
+
+### "¿Dónde estaba grabando?"
+
+La última pieza de esta ronda no fue un bug de audio, sino de orientación: no había ninguna forma de saber, desde Biblioteca, qué libro tenía una exportación de audiolibro a medias sin abrir el Creador de Audiolibros y comprobarlo a mano. La columna Estado solo hablaba de lectura (leído, leyendo, pendiente de leer). Se añadió un estado nuevo, "Audiolibro a medias", y un filtro dedicado para encontrarlos todos de un vistazo — con una consulta nueva a `exportaciones_pendientes` que no existía hasta ahora (`obtener_ids_libros_con_exportacion_pendiente`).
+
+De paso, con el nuevo filtro al lado, el viejo "Pendientes" (un estado de lectura, "quiero leerlo pronto") se prestaba a confundirse con una exportación pendiente. Se renombró a "Pendiente de leer" en todos los sitios donde aparecía.
+
+Y un bug de accesibilidad puro, encontrado al describir la pantalla con el visor de voz de NVDA: el buscador, el filtro de Estado y "Solo favoritos" habían quedado descolgados al final del orden de tabulación de toda la pestaña, después incluso de los botones de importar, por un `MoveAfterInTabOrder()` que solo reposicionaba la lista de libros y los botones, dando por hecho que los filtros —creados antes— se quedarían en su sitio sin más. No era así: al mover la lista, los filtros que nadie tocó explícitamente quedaron sueltos al final de todo. Se encadenó el orden completo a mano.
+
 — Dayanna Parson, julio de 2026

@@ -76,6 +76,46 @@ Correcciones
   vez por proveedor y sesión, y la lectura sigue con la voz local sin
   más interrupciones.
 
+- Exportación de audiolibro «generada» sin ningún sonido dentro (SAPI5):
+  Un WAV con cabecera pero sin fotogramas de audio pasaba la
+  comprobación de tamaño de archivo sin más, así que un fallo de
+  síntesis silencioso se daba por exportación válida. Ahora se
+  comprueba la duración real del audio generado; si sale en silencio,
+  se avisa como error en vez de dar el archivo por bueno. Además, las
+  exportaciones con voz local (SAPI5 64 y 32 bits) se fuerzan a
+  generarse siempre en serie, nunca en paralelo, para no arriesgar
+  varios objetos COM de voz creándose a la vez.
+
+- El botón «Usar voz local» al agotarse la cuota siempre grababa con la
+  voz predeterminada del sistema, sin dejar elegir otra: ahora ofrece
+  un desplegable con todas las voces SAPI5 instaladas (64 y 32 bits).
+
+- Las voces SAPI5 de 32 bits (Eloquence, RealSpeak) elegidas para
+  exportar un audiolibro se enrutaban por error al motor de 64 bits,
+  que nunca las encuentra, y acababan hablando con la voz por defecto
+  sin ningún aviso. El Creador de Audiolibros ya sabe exportar de
+  verdad con voces de 32 bits a través del proceso auxiliar.
+
+- Desbordamiento ocasional al unir varios trozos de audio de distinta
+  frecuencia de muestreo o profundidad de bits (por ejemplo, el motor
+  «generative» de Amazon Polly frente a otro trozo): cada trozo se
+  normaliza ahora antes de unirlo, no solo el resultado final.
+
+- Biblioteca: los libros con una exportación de audiolibro cortada por
+  falta de cuota o corte de conexión ahora se marcan como «Audiolibro
+  a medias» en la columna Estado, con un filtro dedicado para
+  encontrarlos sin tener que recordar cuál era el último libro que se
+  estaba exportando.
+
+- Biblioteca: el orden de tabulación del buscador, el filtro de Estado
+  y «Solo favoritos» se había quedado descolgado al final de la
+  pestaña (después incluso de los botones de importar); ahora van en
+  su sitio, justo antes de la lista de libros.
+
+- El estado de lectura «Pendiente» se renombra a «Pendiente de leer»
+  en Biblioteca, para no confundirlo con una exportación de audiolibro
+  pendiente.
+
 ───────────────────────────────────────────────────────────────────────────
 
 === v2.0.0 (24/06/2026) ===
