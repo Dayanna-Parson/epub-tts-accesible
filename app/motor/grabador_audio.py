@@ -140,6 +140,11 @@ class GrabadorAudio:
         self._ultima_carpeta = None
         self._velocidad = 50
         self._volumen = 100
+        # Puente de 32 bits reutilizado entre trozos de la misma exportación
+        # (arrancar el proceso auxiliar por trozo sería absurdamente lento).
+        # Como local_32 siempre se exporta en serie (ver _max_workers_para),
+        # una sola instancia compartida es segura.
+        self._bridge_sapi32 = None
 
     # ------------------------------------------------------------------ #
     # Configuración
@@ -497,6 +502,8 @@ class GrabadorAudio:
             self._grabar_elevenlabs(texto, datos_voz, ruta_salida)
         elif 'polly' in proveedor:
             self._grabar_polly(texto, datos_voz, ruta_salida)
+        elif proveedor == 'local_32':
+            self._grabar_sapi5_32(texto, datos_voz, ruta_salida)
         else:
             self._grabar_sapi5(texto, datos_voz, ruta_salida)
 
@@ -974,6 +981,73 @@ class GrabadorAudio:
             logger.info(f"[SAPI5] MP3 320k: {os.path.basename(ruta_salida)}")
         except Exception as e:
             logger.warning(f"[SAPI5] Conversión WAV→MP3 no disponible: {e}")
+
+        if convertido:
+            os.remove(ruta_wav)
+        else:
+            os.rename(ruta_wav, ruta_salida)
+
+    def _grabar_sapi5_32(self, texto: str, datos_voz, ruta_salida: str):
+        """
+        Genera audio con una voz SAPI5 de 32 bits (Eloquence, RealSpeak...)
+        a través del proceso puente. Antes, cualquier voz local_32 elegida
+        para exportar se enrutaba por error a _grabar_sapi5 (motor de 64
+        bits), que nunca encuentra esas voces y termina hablando con la
+        voz predeterminada del sistema en vez de la elegida.
+        """
+        if self._bridge_sapi32 is None:
+            from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
+            self._bridge_sapi32 = ClienteSapi32Bridge()
+
+        if not self._bridge_sapi32.conectado:
+            raise Exception(
+                "El proceso auxiliar de 32 bits (auxiliar_sapi32.exe) no está "
+                "disponible. No se puede exportar con esta voz."
+            )
+
+        nombre_voz = (
+            datos_voz.get('nombre', '') if isinstance(datos_voz, dict) else str(datos_voz)
+        )
+        base = ruta_salida.rsplit('.', 1)[0]
+        ruta_wav = base + '_tmp.wav'
+        rate = int((self._velocidad / 5) - 10)
+
+        exito, mensaje_error = self._bridge_sapi32.exportar_archivo(
+            texto, ruta_wav, voz_nombre=nombre_voz, rate=rate, volume=self._volumen,
+        )
+        if not exito:
+            raise Exception(f"Error SAPI5 (32 bits) al escribir audio: {mensaje_error}")
+
+        # Misma comprobación real de audio que en la voz de 64 bits: un WAV
+        # con cabecera pero sin fotogramas no es un fallo que el auxiliar
+        # pueda detectar por sí solo.
+        if not os.path.exists(ruta_wav):
+            raise Exception("SAPI5 (32 bits) no generó ningún archivo de audio.")
+        try:
+            import wave
+            with wave.open(ruta_wav, 'rb') as w:
+                n_frames = w.getnframes()
+                framerate = w.getframerate() or 1
+                duracion_seg = n_frames / framerate
+        except Exception as e:
+            raise Exception(f"El archivo de audio de SAPI5 (32 bits) no es un WAV válido: {e}")
+        duracion_minima_esperada = max(0.3, len(texto.strip()) * 0.01)
+        if n_frames == 0 or duracion_seg < duracion_minima_esperada:
+            raise Exception(
+                f"SAPI5 (32 bits) generó un archivo sin audio real "
+                f"({duracion_seg:.2f}s para {len(texto)} caracteres)."
+            )
+
+        convertido = False
+        try:
+            from pydub import AudioSegment
+            audio = AudioSegment.from_wav(ruta_wav)
+            audio = audio.set_frame_rate(44100).set_channels(1)
+            audio.export(ruta_salida, format='mp3', bitrate='320k')
+            convertido = True
+            logger.info(f"[SAPI5-32] MP3 320k: {os.path.basename(ruta_salida)}")
+        except Exception as e:
+            logger.warning(f"[SAPI5-32] Conversión WAV→MP3 no disponible: {e}")
 
         if convertido:
             os.remove(ruta_wav)
