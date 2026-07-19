@@ -177,6 +177,20 @@ class GrabadorAudio:
     def abortar(self):
         self._abortar = True
 
+    def cerrar(self):
+        """
+        Cierra el proceso auxiliar de 32 bits si se llegó a abrir para esta
+        exportación. Antes se dejaba morir solo por recolección de basura
+        del objeto GrabadorAudio, lo que podía dejar auxiliar_sapi32.exe
+        colgado un rato de más entre una exportación y la siguiente.
+        """
+        if self._bridge_sapi32 is not None:
+            try:
+                self._bridge_sapi32.cerrar()
+            except Exception:
+                logger.exception("[GrabadorAudio] Error al cerrar el puente de 32 bits")
+            self._bridge_sapi32 = None
+
     def obtener_ultima_carpeta(self) -> str:
         return self._ultima_carpeta
 
@@ -232,6 +246,7 @@ class GrabadorAudio:
                 fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total
             )
 
+        self.cerrar()
         return archivos, errores, subcarpeta
 
     # ------------------------------------------------------------------ #
@@ -1255,6 +1270,7 @@ class GrabadorAudio:
         if self.callback_progreso and archivos_generados:
             self.callback_progreso(1, 1, titulo_libro, nombre_voz)
 
+        self.cerrar()
         return {
             "completo": completo and bool(archivos_generados),
             "punto_corte": punto_corte if archivos_generados else 0,
@@ -1400,6 +1416,7 @@ class GrabadorAudio:
 
         archivos_generados = [a for a in archivos_generados if a]
 
+        self.cerrar()
         return {
             "capitulos": estado_capitulos,
             "archivos_generados": archivos_generados,
