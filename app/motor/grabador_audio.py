@@ -607,6 +607,16 @@ class GrabadorAudio:
             for arch in archivos_validos:
                 try:
                     seg = AudioSegment.from_file(arch, format='mp3')
+                    # Normalizar cada trozo ANTES de unirlo, no solo el
+                    # resultado final: si dos trozos llegan con distinta
+                    # frecuencia de muestreo o profundidad de bits (p. ej.
+                    # el motor "generative" de Polly frente a otro trozo),
+                    # el reajuste interno de pydub al concatenarlos
+                    # (AudioSegment.append) puede calcular mal el tamaño de
+                    # los datos combinados y provocar un desbordamiento al
+                    # exportar ("'L' format requires..."). Uniformar antes
+                    # evita depender de ese reajuste automático.
+                    seg = seg.set_frame_rate(44100).set_channels(1)
                     segmentos.append(self._recortar_silencio_extremos(seg, proveedor=proveedor))
                 except Exception as e:
                     logger.debug(
@@ -614,12 +624,9 @@ class GrabadorAudio:
                     )
 
             if segmentos:
-                # Usar el primer segmento real como base evita que AudioSegment.empty()
-                # (44100 Hz / 2 ch por defecto) contamine los metadatos del resultado.
                 combined = segmentos[0]
                 for seg in segmentos[1:]:
                     combined += seg
-                combined = combined.set_frame_rate(44100).set_channels(1)
                 combined.export(ruta_salida, format='mp3', bitrate='320k')
                 logger.info(
                     f"[GrabadorAudio] Concatenado 320k: {os.path.basename(ruta_salida)}"
