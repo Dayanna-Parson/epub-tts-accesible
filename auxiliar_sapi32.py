@@ -18,6 +18,7 @@ Protocolo de comandos (stdin, una línea JSON por comando):
     {"cmd": "reanudar"}
     {"cmd": "fijar_velocidad", "valor": 50}
     {"cmd": "fijar_volumen",   "valor": 100}
+    {"cmd": "exportar_archivo", "texto": "...", "ruta_wav": "...", "voz_nombre": "...", "rate": 0, "volume": 100}
     {"cmd": "salir"}
 
 Protocolo de eventos (stdout, una línea JSON por evento):
@@ -26,6 +27,7 @@ Protocolo de eventos (stdout, una línea JSON por evento):
     {"evento": "voz_cambiada", "exito": true}
     {"evento": "progreso",     "pos": 123}
     {"evento": "completado"}
+    {"evento": "exportado",    "exito": true/false, "msg": "..."}
     {"evento": "error",        "msg": "..."}
 """
 
@@ -274,6 +276,32 @@ def main():
                 estado["volume"] = vol
             except Exception:
                 pass
+
+        elif accion == "exportar_archivo":
+            # Exportación silenciosa a WAV para el Creador de Audiolibros.
+            # Se ejecuta en el hilo principal, con su propio objeto COM
+            # recién creado (mismo motivo que _hilo_parrafos: nunca
+            # compartir un puntero COM entre hilos ni con el `motor`
+            # interactivo). El Creador de Audiolibros llama a esto siempre
+            # en serie (nunca en paralelo) para las voces de 32 bits, así
+            # que bloquear aquí no retrasa nada más.
+            ruta_wav = cmd.get("ruta_wav", "")
+            texto_exportar = cmd.get("texto", "")
+            try:
+                motor_export = comtypes.client.CreateObject("SAPI.SpVoice")
+                motor_export.Rate = cmd.get("rate", 0)
+                motor_export.Volume = cmd.get("volume", 100)
+                voz_nombre = cmd.get("voz_nombre", "")
+                if voz_nombre:
+                    _seleccionar_voz(motor_export, voz_nombre, comtypes.client)
+                stream = comtypes.client.CreateObject("SAPI.SpFileStream")
+                stream.Open(ruta_wav, 3)  # SSFMCreateForWrite = 3
+                motor_export.AudioOutputStream = stream
+                motor_export.Speak(texto_exportar, 0)  # SPF_SYNC = 0
+                stream.Close()
+                _enviar({"evento": "exportado", "exito": True})
+            except Exception as e:
+                _enviar({"evento": "exportado", "exito": False, "msg": str(e)})
 
 
 if __name__ == "__main__":

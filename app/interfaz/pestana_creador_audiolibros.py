@@ -1156,6 +1156,10 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.btn_abortar.Enable(True)
         self.gauge.SetValue(0)
         self.txt_progreso.SetValue("Iniciando exportación...")
+        # SetValue por sí solo no lo verbaliza NVDA si el foco no está en
+        # este control — antes tocaba ir a mirar el cuadro para saber que
+        # había arrancado. Con _anunciar se escucha de inmediato.
+        self._anunciar("Iniciando exportación...")
         self._ultimo_decimo_anunciado = -1
         reproducir(REC_START)
 
@@ -1229,8 +1233,14 @@ class PestanaCreadorAudiolibros(wx.Panel):
             if fila is not None:
                 self._actualizar_estado_capitulo(fila, self.ESTADO_COMPLETADO)
             # Solo se anuncia por voz y con tic sonoro un hito real: un
-            # capítulo del libro terminado.
-            self._anunciar(f"Capítulo completado ({actual} de {total}): {etiqueta}.")
+            # capítulo del libro terminado. El último capítulo generado NO
+            # significa que la exportación ya terminó — todavía queda
+            # cerrar archivos, registrar pendientes, etc. — así que se
+            # avisa de que sigue en curso en vez de sonar a "ya está".
+            if actual >= total:
+                self._anunciar(f"Último capítulo generado ({etiqueta}). Finalizando exportación...")
+            else:
+                self._anunciar(f"Capítulo completado ({actual} de {total}): {etiqueta}.")
             reproducir(PROGRESS)
         elif not por_capitulos and total > 1:
             # Modo "libro completo": total aquí son los trozos internos en los
@@ -1242,7 +1252,16 @@ class PestanaCreadorAudiolibros(wx.Panel):
             decimo_actual = pct // 10
             if decimo_actual > self._ultimo_decimo_anunciado:
                 self._ultimo_decimo_anunciado = decimo_actual
-                if decimo_actual > 0:
+                if decimo_actual >= 10:
+                    # Llegar al último trozo generado no es lo mismo que
+                    # terminar: todavía falta cerrar el archivo final. Antes
+                    # esto decía "al 100%" y sonaba a que ya estaba, cuando
+                    # en realidad tocaba esperar en silencio a la campanita.
+                    mensaje = "Último bloque generado. Finalizando exportación..."
+                    self.txt_progreso.SetValue(mensaje)
+                    self._anunciar(mensaje)
+                    reproducir(PROGRESS)
+                elif decimo_actual > 0:
                     self.txt_progreso.SetValue(f"Exportación al {decimo_actual * 10}%.")
                     self._anunciar(f"Exportación al {decimo_actual * 10}%.")
                     reproducir(PROGRESS)
