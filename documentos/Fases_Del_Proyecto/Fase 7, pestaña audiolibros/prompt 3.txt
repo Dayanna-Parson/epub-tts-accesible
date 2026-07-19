@@ -1,0 +1,9 @@
+prompt 3
+Ajustes comprobado y funcionando en runtime. El traslado de código ha sido limpio.  
+Ahora vamos con el Paso 2: Modificar grabador_audio.py. Olvídate de la pestaña por ahora; necesitamos dejar la lógica del motor lista. Modifica grabador_audio.py para implementar lo siguiente:  
+1.
+Método de cálculo de presupuesto: Un método que reciba el texto limpio del libro o capítulo y devuelva el conteo total de caracteres de forma silenciosa, permitiendo comprobar de antemano si cabrá en el saldo mensual configurado mediante ControlCuota().tiene_cuota().  
+2.
+Gestión de corte por cuota: Adapta el flujo de grabación masiva para que, si tiene_cuota() determina que el saldo se va a agotar a mitad de camino, el motor calcule el punto exacto de corte (en la frontera de capítulo o frase más cercana sin romper palabras). Al detenerse por falta de cuota, debe guardar lo generado con la nomenclatura de archivos parciales (parte 1 - pendiente) y retornar una estructura o diccionario de estado con el punto exacto donde se detuvo (carácter o índice de capítulo). Nota: No metas lógica de SQLite ni conexiones a biblioteca.db dentro de este archivo; el motor solo calcula, procesa y devuelve el estado de detención, la persistencia en la base de datos la manejará la capa superior.  
+3.
+Uso estricto de consultas silenciosas: Asegúrate de que todo este flujo use exclusivamente tiene_cuota() y registrar_gasto() de ControlCuota. Prohibido llamar a métodos que levanten interfaces o alertas asíncronas.  

@@ -1,0 +1,104 @@
+prompt 26
+
+Estoy mucho mas contenta que ayer! Ya se porqué y me acabo de dar cuenta ahora mismo! te voy a mandar el log, que e  hecho todas las pruebas que me has pedido!
+Bueno. ¡Ya se que pasa con las etiquetas! Y no es ni problema de windows, ni problema de sql. Lo que pasa es, que al agregar libros nuevos o varios libros a las categorías, el foco, se queda, o en la categoría que lo hallamos dejado previamente, y por eso no mostraba mas que un libro. (aunque tengo que seguir haciendo pruebas, pero creo que va mas por donde digo)
+Eso pasa cuando cambiamos de pestaña. entre género, y etiquetas.
+Y lo otro que pasa, es que aunque estemos añadiendo mas libros, el foco se queda en la lista de etiquetas, pero, en la última que enfocamos.
+Y por eso a veces, solo muestra uno, o mas...
+Lo siento, no se muy bien como explicarlo!
+Básicamente, Creo que si no estamos enfocando en el caso de en la pestaña género, un género o sub que hallamos creado, pues creo que cada vez que añadamos algo, a alguno. pues el foco se tendría que quedar, justo arriba del todo, en donde dice, todos los géneros.
+Y con la otra pestaña, pues igual, pero, en todas las etiquetas
+A, y pasa algo curioso, pero en la lista de libros, o en este caso, en la lista de etiquetas, perdón en la otra lista la última, esa doonde salen los títulos de los libros. la voy a llamar para no confundirnos, el contenido vale? y a la otra, el listado de etiquetas.
+Pues bueno. en la pespestaña géneros, cuando añado varios libros, en el contenido, se muestra todo desordenado, y no sigue el órden específico en el que los añadí.
+Y también me gustaría que en el árbol sobre todo, cuando enfoquemos un género o subgénero que hallamos creado, que diga el número de libros que contiene. Así de un vistazo, se cuantos tengo agrupados
+
+A, y mas buenas noticias, ahora si que se escuchan perfectamente todos los mensajes con la voz de sapi!!!!A. Pero, como verás, Todavía los menúes siguen igual. Allí no ha habido ningún cambio.
+Y otra cosa que quiero que arregles. Ahora si que funciona como quiero lo de las subpestañas. Pero, Cuando pulso control av pag, o re pag, el foco sigue teniendo el comportamiento anterior, y no va a la pestaña correspondiente
+
+Bien. aquí te voy a pegar dos resultados de consola. El primero, es previo a borrar la base de datos:
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 848 libro(s) de la consulta, 848 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 848 libro(s) de la consulta, 848 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 2 libro(s) de la consulta, 2 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 848 libro(s) de la consulta, 848 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 2 libro(s) de la consulta, 2 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=None)
+
+---------------------------------------------------
+   PROGRAMA CERRADO O FINALIZADO
+   (Si ves un error arriba, leelo ahora)
+---------------------------------------------------
+Presione una tecla para continuar . . .
+
+Y el segundo, es cuando borré la base de datos, para importar solo dos carpetas mas pequeñas, para hacer las pruebas que te acabo de comentar:
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Escaneando carpeta, por favor espera...
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Se han añadido 6 libro(s) a la biblioteca.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Aplicando etiquetas, por favor espera...
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Etiquetas aplicadas.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Categoría fantasia creada.
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Categoría ficción creada.
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Añadido a categoría fantasia.
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 1 libro(s) de la consulta, 1 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 1 libro(s) de la consulta, 1 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 1 libro(s) de la consulta, 1 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 1 libro(s) de la consulta, 1 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 1 libro(s) de la consulta, 1 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Añadido a categoría fantasia.
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 2 libro(s) de la consulta, 2 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Escaneando carpeta, por favor espera...
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 2 libro(s) de la consulta, 2 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Se han añadido 10 libro(s) a la biblioteca.
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Aplicando etiquetas, por favor espera...
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 2 libro(s) de la consulta, 2 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 10 libro(s) de la consulta, 10 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=2)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Etiquetas aplicadas.
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 16 libro(s) de la consulta, 16 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 10 libro(s) de la consulta, 10 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=2)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Añadido a categoría fantasia.
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 1 libro(s) de la consulta, 1 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=2)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=2)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 10 libro(s) de la consulta, 10 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=2)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 10 libro(s) de la consulta, 10 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=2)
+WARNING   app.motor.anunciador_voz  [AnunciadorVoz] Verbalizando: Añadido a categoría fantasia.
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 2 libro(s) de la consulta, 2 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=2)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 0 libro(s) de la consulta, 0 ítem(s) en el control tras Thaw (id_categoria=2, id_etiqueta=2)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 10 libro(s) de la consulta, 10 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=2)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 10 libro(s) de la consulta, 10 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=2)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 6 libro(s) de la consulta, 6 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=1)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 16 libro(s) de la consulta, 16 ítem(s) en el control tras Thaw (id_categoria=None, id_etiqueta=None)
+WARNING   app.interfaz.pestana_biblioteca  [PestanaBiblioteca] _cargar_libros: 4 libro(s) de la consulta, 4 ítem(s) en el control tras Thaw (id_categoria=1, id_etiqueta=None)

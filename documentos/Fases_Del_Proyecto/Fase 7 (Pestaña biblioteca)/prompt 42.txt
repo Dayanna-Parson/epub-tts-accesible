@@ -1,0 +1,33 @@
+prompt 42
+
+vale. pero, porqué no tendría sentido, marcar una etiqueta que tiene varios libros enteros como pendientes, leídos, leyendo, aunque eso quizás lo entiendo, porque yo no soy de las personas que leen mas de un libro a la vez!. Pero, conozco gente que si hace eso aunque yo no me veo capaz! Y si, también ya que estás, revisa y añade lo del punto 3. 3. ¿Afecta a otros menús o pestañas futuras? — no, el cambio fue solo en el dispatcher de Biblioteca. Pero tu pregunta es buena: podría haber el mismo patrón duplicado en Lectura/Grabación/Ajustes sin que lo hayamos notado porque ahí sí "parecían" funcionar. Si quieres que lo revise para confirmar, lo hago en otra ronda. Y una pregunta. el log también tiene lo de la copia de seguridad que implementé por alla de la primera versión? que se borraba lo mas viejo? y o crees que es mejor dividir el log, para que cada vez que halla algún error, pues solo se guarde eso en achivos individuales? Para cuando necesite revisarlo rápido? y así poder solucionarlo lo mas rápido que pueda
+respuesta 42
+Buen punto sobre lo de los estados en bloque — tienes razón, aunque tú no leas varios a la vez, otra gente sí. Vamos con todo lo que pides.
+
+Ya revisé Lectura, Grabación y Ajustes: ninguna tiene menú contextual propio por control (nada de `EVT_CONTEXT_MENU` en esos archivos) — el menú de `ventana_principal.py` es el único que existe para esas pestañas, no una copia duplicada de otro. Confirmado: no hay el mismo problema escondido ahí.
+
+Ahora añado lo del estado en bloque para etiquetas.
+
+Ahora implemento los métodos auxiliares, cerca de `_alternar_estado_libro`.
+
+Ahora voy con lo del log — primero confirmo la rotación, luego implemento los archivos individuales por error.
+
+Verifico rápido que el handler funciona correctamente con una prueba aislada.
+
+Mejoro el nombre de archivo para que sea legible (fecha y hora en vez de un número de época), y confirmo con la prueba que ya funciona bien.
+
+Ahora añado el ítem de menú para abrir esa carpeta directamente.
+
+Ahora lo añado al submenú de Ayuda.
+
+Todo hecho y subido. Resumen:
+
+**1. Estados de lectura en bloque para etiquetas — añadido.** En el listado de etiquetas, junto a "Asignar categoría a los N libros de esta etiqueta", ahora hay "Marcar los N libro(s) de esta etiqueta como..." con Pendiente/Leyendo ahora/Leído. Marca toda la saga de golpe — perfecto para la gente que lees varios libros a la vez, o para cuando termines una saga entera.
+
+**2. Lectura/Grabación/Ajustes — revisado, están limpios.** Ninguna de esas tres pestañas tiene su propio menú contextual por control (nada de `EVT_CONTEXT_MENU` en esos archivos): el menú de `ventana_principal.py` es el único que existe ahí, no hay una copia duplicada escondida como pasaba en Biblioteca. No hace falta tocar nada.
+
+**3. Sí, el log ya tenía copia de seguridad rotativa** — confirmé la configuración: cuando `app.log` llega a 2 MB, se renombra a `app.log.1`, el `.1` pasa a `.2`, etc., y el más viejo (`.3`) se borra solo. Eso ya lo tenías bien desde antes.
+
+**4. Errores en archivos individuales — implementado.** Ahora, además del log combinado de siempre, cada error se guarda **también** por separado en `registros/errores/`, con nombre de fecha y hora (por ejemplo `2026-07-07_14-23-01_error.log`), y solo se guardan los últimos 20 (los más viejos se borran solos). Añadí un botón nuevo en Ayuda: **"Copiar el último error al portapapeles"** — copia directamente el fallo más reciente, sin tener que buscar nada ni abrir carpetas.
+
+`git pull` cuando puedas y ya tienes todo listo para la próxima vez que algo falle — mucho más rápido de diagnosticar.

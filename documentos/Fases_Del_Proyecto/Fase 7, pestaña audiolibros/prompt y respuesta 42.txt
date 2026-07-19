@@ -1,0 +1,77 @@
+prompt y respuesta 42
+
+Claude ha respondido: Pusheado.
+Buscado código, ejecutado 3 comandos, leer un archivo, editado un archivo
+Pusheado. Diagnóstico rápido: eso no era un cierre inesperado de la app — es ruido de consola, no un crash real. El programa ya capturaba el error y seguía con el respaldo de unir los MP3 en bytes crudos (por eso el banner de cierre aparece normal, sin más rastro de fallo).
+Causa real: al unir los trozos de un fragmento largo, _concatenar_audios solo normalizaba a 44100 Hz/mono el resultado final, no cada trozo antes de unirlo. Con Polly, el motor "generative" (Lucía) puede devolver un trozo con distinta frecuencia/profundidad de bits que otro trozo del mismo fragmento, y cuando pydub intenta reajustarlos internamente para pegarlos, a veces calcula mal el tamaño combinado y revienta al exportar — de ahí el 'L' format requires.... Ya lo capturabas y caías al respaldo, pero quedaba ese aviso feo en el log.
+Arreglo: ahora cada trozo se normaliza a 44100 Hz/mono antes de recortarle el silencio y antes de unirlo, así todos llegan al punto de unión con el mismo formato y pydub no tiene que reajustar nada raro. Con esto el audio final también debería sonar mejor (antes, aunque el archivo salía bien gracias al fallback, la unión de bytes crudos no recorta silencios ni re-codifica).
+Como siempre, no puedo probarlo en Windows real — cuando puedas, repite esa exportación con Polly generative y mira si el log ya no muestra ese warning ni el "Exception ignored".
+Mostrar acciones del mensaje
+Sesión reanudada
+Has dicho: listo, ya funciona mejor!
+listo, ya funciona mejor! Solo queda una cosa mas que no termina de funcionar. Mira esto: lista de pestañas
+Sagas y colecciones  pestaña  seleccionado
+lista
+(Todas las etiquetas)
+Nueva etiqueta... (F2 renombra, Supr elimina)  botón
+lista
+Espejismo; Autor: Hugh Howey; Formato: EPUB; Estado: Leyendo, Audiolibro a medias
+Importar carpeta... (Ctrl+O)  botón
+Importar libro...  botón
+Biblioteca  pestaña  seleccionado
+lista de pestañas
+Sagas y colecciones  pestaña  seleccionado
+lista
+(Todas las etiquetas)
+Nueva etiqueta... (F2 renombra, Supr elimina)  botón
+lista
+Espejismo; Autor: Hugh Howey; Formato: EPUB; Estado: Leyendo, Audiolibro a medias
+Importar carpeta... (Ctrl+O)  botón
+Importar libro...  botón
+Buscar por título o autor (Ctrl+F):  edición  en blanco
+Importar libro...  botón
+Importar carpeta... (Ctrl+O)  botón
+Importar libro...  botón
+Biblioteca  pestaña  seleccionado
+lista de pestañas
+Sagas y colecciones  pestaña  seleccionado
+lista
+(Todas las etiquetas)
+Nueva etiqueta... (F2 renombra, Supr elimina)  botón
+lista
+Espejismo; Autor: Hugh Howey; Formato: EPUB; Estado: Leyendo, Audiolibro a medias
+Importar carpeta... (Ctrl+O)  botón
+Importar libro...  botón
+Buscar por título o autor (Ctrl+F):  edición  en blanco
+Estado:  cuadro combinado  Audiolibros a medias  contraído
+Leídos
+Leyendo ahora
+Pendientes
+Todos
+Solo favoritos  casilla de verificación  sin marcar
+Estado:  cuadro combinado  Todos  contraído
+Solo favoritos  casilla de verificación  sin marcar
+Estado:  cuadro combinado  Todos  contraído
+Buscar por título o autor (Ctrl+F):  edición  en blanco
+Importar libro...  botón
+Importar carpeta... (Ctrl+O)  botón
+lista como ves, lo de buscar los filtros y el botón para favoritos, solo sale, cuando pulso flecha abajo en los botones de importar. Y crees que donde están los filtros están bien? o los quieres reeubicar en otro sitio? pues para que todo tenga mas cooherencia? para el usuario? que navegue con tab o con ratón? como suele estar distrubido una ventana así, en una aplicación como esta? o al menos, en la biblioteca?
+Mostrar más
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Encontré el bug.
+Leerpestana_biblioteca.py
+Encontré el bug. El código intentaba forzar un orden de tabulación pero solo movía la lista y los botones de importar, dejando los filtros (búsqueda, Estado, favoritos) sin reubicar — como se crean antes de la lista pero después el código mueve la lista justo tras el subnotebook, los filtros quedan "sueltos" al final, después de los botones de importar. Lo arreglo encadenando el orden completo explícitamente.
+Editadopestana_biblioteca.py+12-10
+Compilo y comparto también mi opinión sobre la ubicación de los filtros.
+Ejecutado 2 comandos
+Ya arreglado y pusheado. El bug: el código reordenaba a mano solo la lista de libros y los botones de importar, pero daba por hecho que el buscador, el combo de Estado y "Solo favoritos" —al haberse creado antes— quedarían delante sin más. Al mover la lista justo después del subnotebook de géneros/sagas, esos tres controles de filtro se quedaron descolgados al final del todo, después incluso de los botones de importar. Por eso solo salían al bajar con la flecha desde "Importar libro...". Ahora encadené el orden completo a mano: subpestañas → buscar → estado → favoritos → lista → importar carpeta → importar archivo.
+Sobre dónde van los filtros — mi opinión: el sitio ya es el correcto (justo encima de la lista que filtran, antes de tocarla), y el orden de tabulación que dejé (buscar → estado → favoritos → lista) es el estándar en apps de escritorio accesibles: primero los controles que acotan qué vas a ver, luego el contenido acotado. No los movería de columna ni de panel — el problema nunca fue la ubicación visual, era solo el orden de tabulación roto por ese MoveAfterInTabOrder incompleto. Con el arreglo, tanto Tab como el ratón deberían sentirse coherentes: visualmente están arriba de la lista, y ahora también se recorren en ese mismo orden con teclado.
+Mostrar acciones del mensaje
+Has dicho: vale.
+vale. Y el filtro de pendientes tiene sentido?
+Mostrar acciones del mensaje
+Claude ha respondido: Sí, tiene sentido y no lo tocaría.
+Ejecutadoun comando
+Sí, tiene sentido y no lo tocaría. Es un estado de lectura independiente de todo lo que hemos estado arreglando: en_pendientes es un marcador manual tipo "quiero leerlo pronto" (lo activas tú desde el menú contextual con "Marcar como pendiente"), distinto de "Leyendo ahora" (ya lo abriste) y "Leído" (lo terminaste). Es tu pila de "próximos a leer", una cosa completamente distinta del nuevo "Audiolibro a medias" (que es sobre exportación cortada, no sobre lectura).
+Donde sí podría confundir un poco es en el nombre: con el nuevo filtro "Audiolibros a medias" al lado, "Pendientes" a secas podría malinterpretarse como "audiolibro pendiente". Si quieres más claridad, puedo renombrarlo a algo como "Pendientes de leer" en el combo y en el texto de Estado — sin tocar la lógica, solo la etiqueta. ¿Lo cambio?

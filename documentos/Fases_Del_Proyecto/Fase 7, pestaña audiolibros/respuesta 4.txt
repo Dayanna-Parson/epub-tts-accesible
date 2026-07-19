@@ -1,0 +1,29 @@
+respuesta 4
+
+Primero corrijo el punto 1 en `grabador_audio.py` — el bucle debe detenerse en el primer capítulo sin cuota, marcando ese y todos los siguientes como pendientes.
+
+Verifico rápido el comportamiento secuencial con un test aislado.
+
+Corregido y verificado. Ahora construyo el diálogo de proveedor alternativo. Reviso `get_info_uso` (para saldo disponible) y la lista de proveedores/etiquetas legibles usadas en el resto de la app.
+
+Compilo y hago una prueba de humo del cálculo de proveedores disponibles (sin abrir UI real).
+
+Solo faltan más stubs de wx en mi arnés de prueba, no un problema real del código. Añado los que faltan.
+
+Importa correctamente y la lógica de disponibilidad/orden por saldo funciona como se pidió. Registro los cambios.
+
+## Resumen
+
+**1. Corrección secuencial en `grabador_audio.py`** — `exportar_audiolibro_por_capitulos` ahora usa una bandera `detenido` que, en cuanto un capítulo no tiene cuota, marca ese y **todos los siguientes** como `pendiente_sin_cuota` sin evaluarlos individualmente. Verificado con test: un capítulo corto tras uno que no cupo queda pendiente en vez de grabarse.
+
+**2. `dialogo_proveedor_alternativo.py` (nuevo)** — `DialogoProveedorAlternativo(wx.Dialog)`:
+- `_calcular_proveedores_disponibles()`: recorre `cargar_claves()`, filtra por configurado + `tiene_cuota()` silencioso, calcula saldo con `get_info_uso()` y ordena descendente. Probado: con Azure agotado y Polly con saldo, ElevenLabs/Deepgram sin configurar → solo Polly aparece, primero.
+- `wx.Choice` con formato `"Nombre (Disponible: N caracteres)"`, preseleccionado en el de mayor saldo; deshabilitado con mensaje si no hay ninguno.
+- Al cambiar de proveedor, destruye/reconstruye el panel embebido con la subclase correcta de `PanelProveedorIA` (`PanelAzure`/`PanelPolly`/`PanelElevenLabs`/`PanelDeepgram`), heredando favoritas/filtro/preescucha sin duplicar código.
+- Slider de velocidad propio (flechas ±1 nativas, RePág/AvPág ±5 igual que en Grabación), sincronizado contra `panel._reproductor.fijar_velocidad()` para que Alt+P lo respete, sin tocar el componente compartido.
+- Botones: Usar alternativo (valida voz seleccionada), Usar voz local, Dividir en partes (solo si `modo_libro_completo`), Cancelar.
+- Foco: `combo_proveedores` recibe el foco inicial tras el anuncio (`_anunciador`); al cerrar, `_cerrar()` restaura el foco al control que tenía el foco antes de abrir el diálogo.
+
+Importa y ejecuta correctamente en un arnés con `wx` simulado (no hay entorno gráfico aquí para probarlo en runtime real con NVDA — eso lo confirmarás tú en Windows). Commit `628dc39` pusheado.
+
+¿Seguimos con el esqueleto de `pestana_creador_audiolibros.py` que orquesta todo esto (calculador de presupuesto, lista de capítulos, integración con este diálogo), o hay algo más que quieras ajustar del diálogo primero?

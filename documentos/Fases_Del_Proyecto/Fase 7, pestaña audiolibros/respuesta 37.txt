@@ -1,0 +1,22 @@
+Ahora reviso `_grabar_fragmento` completo antes de reescribirlo:
+
+Ahora reescribo `_grabar_fragmento` para paralelizar la generación de trozos:
+
+Ahora añado el nuevo método `_generar_trozos_en_paralelo`, justo después de `_grabar_fragmento`:
+
+Ahora añado el helper `_fila_por_titulo_capitulo`, junto a `_fila_real_capitulo`:
+
+Bien, intacto. Ahora reviso el resto de `exportar_audiolibro_completo` para confirmar que el manejo de aborto (`_ExportacionAbortada`) sigue funcionando con la nueva ruta paralela:
+
+Bien, sin duplicados. Ejecuto una compilación final de todo el proyecto y hago commit/push.
+
+Ya está subido. Resumen:
+
+**Filtro MaiVoice/Flash corregido**: el problema era que comparaba el id técnico tal cual, sin normalizar separadores (guiones, dos puntos, guiones bajos), que varían según la familia de voz. Ahora normalizo (quito separadores, minúsculas) antes de comparar, así que debería agrupar bien independientemente de cómo Microsoft puntúe exactamente el nombre.
+
+**Exportación en paralelo, implementada**:
+- **Libro completo**: los trozos internos (por límite de caracteres del proveedor) se generan ahora hasta 4 a la vez con `ThreadPoolExecutor`. La numeración de archivos temporales es atómica por índice de trozo, no por orden de llegada — así `_concatenar_audios` siempre los une en el orden real del texto sin importar qué hilo termine primero, tal como pediste.
+- **Por capítulos**: separé la lógica en dos fases. La decisión de qué capítulos caben en la cuota sigue siendo estrictamente secuencial y en orden (es aritmética pura, sin red, así que es casi instantánea recorrerla entera). Solo la generación real del audio se paraleliza — cada capítulo escribe a su propio archivo numerado por su índice fijo, así que no hace falta reordenar nada después.
+- Progreso y verbalizaciones cada 10%/por capítulo siguen pasando por `wx.CallAfter`, ahora contando cuántos capítulos/trozos van completados (en vez de asumir que terminan en el mismo orden del libro, que ya no es cierto con varios hilos a la vez). Tuve que ajustar la actualización en vivo de la lista de capítulos para que busque la fila por título en vez de por posición, por la misma razón.
+
+Como con los cambios de audio, no puedo escuchar ni cronometrar esto yo misma — te pido que pruebes con un libro de tamaño real y me confirmes: que el orden final del audio/capítulos es correcto, que el progreso se ve coherente, y sobre todo si notas una reducción real de tiempo de exportación frente a antes.

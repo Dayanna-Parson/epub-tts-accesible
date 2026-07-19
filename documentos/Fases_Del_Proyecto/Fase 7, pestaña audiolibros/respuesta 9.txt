@@ -1,0 +1,69 @@
+respuesta 9:
+
+Es un informe grande con varios problemas reales. Voy a triarlos y arreglar primero las regresiones graves de accesibilidad (las más urgentes), diagnosticar el bug de Ctrl+número, y dejar claro qué queda para después. Antes de tocar nada, reviso el patrón que ya usa `pestana_grabacion.py` para mostrar información de estado de forma accesible, y los atajos de Lectura para RePág/AvPág.
+
+Encontré la causa raíz de los problemas de accesibilidad — está en mi propio código de `pestana_creador_audiolibros.py` — y también un bug real (aunque preexistente, no introducido por mí) en Ctrl+número. Los de la pestaña Lectura (velocidad que no cambia el ritmo real, RePág/AvPág saltando a Biblioteca) están en `pestana_lectura.py`, que no he tocado en ninguna sesión — son bugs preexistentes, no regresiones mías.
+
+Ahora edito `_construir_interfaz` para convertir los tres campos en `TextCtrl` de solo lectura (con su etiqueta explícita delante, igual que hace `pestana_grabacion.py`) y muevo el `_anunciador` al principio para que no herede el nombre accesible de "Capítulos".
+
+Ahora reescribo el bloque completo de `_construir_interfaz` con las correcciones: `_anunciador` al principio, y los tres campos informativos como `TextCtrl` de solo lectura con etiqueta explícita delante.
+
+Ahora quito el bloque duplicado del `_anunciador` que quedó al final (ya lo movimos al principio):
+
+Ahora reviso que no queden referencias sueltas a los nombres antiguos, y añado el anuncio que faltaba al cargar el libro (la causa de "no sé lo que dice porque el lector salta").
+
+Limpio, sin residuos. Ahora localizo `cargar_libro` para añadir el anuncio inmediato:
+
+Ahora corrijo `cargar_libro`: añado el anuncio inmediato del libro cargado y quito el prefijo redundante "Estado:" (la etiqueta ya lo dice).
+
+Ahora corrijo el bug de Ctrl+número en `ventana_principal.py` (no movía el foco al notebook, a diferencia de Ctrl+Tab):
+
+Compilo todo y verifico con el arnés que la reestructuración de controles sigue siendo correcta.
+
+Bien. Registro estos cambios y luego respondo con el diagnóstico completo del resto de puntos.
+
+Corregido y pusheado. Resumen del diagnóstico completo de tu reporte:
+
+## Arreglado ahora
+
+1. **Accesibilidad rota en Creador de Audiolibros** (la causa raíz de todo el bloque de síntomas que describes): los campos "Libro", "Voz por defecto" y "Progreso" eran `wx.StaticText` sueltos — sin un control focalizable justo detrás, nunca entran en el orden de tabulación, por eso NVDA/JAWS solo los veían con el navegador de objetos. Los convertí en `TextCtrl` de solo lectura reales (mismo patrón que ya usa Grabación), y moví el `_anunciador` oculto para que deje de heredar "Capítulos" como nombre accesible (por eso salía ese texto tan raro "Capítulos, edición sólo lectura, Presupuesto calculado...").
+2. **"Cuando cargo el libro no sé lo que dice"**: `cargar_libro()` nunca llamaba a `_anunciar()`. Ahora sí, en cuanto llega el libro desde Biblioteca.
+3. **Ctrl+número lee un control aleatorio**: confirmado — `Ctrl+1..5` cambiaba de pestaña pero no movía el foco de teclado al notebook (a diferencia de `Ctrl+Tab`, que sí lo hacía). Ya corregido, mismo tratamiento en ambos.
+
+## Diagnosticado pero no tocado (no son código mío)
+
+- **Velocidad de lectura no cambia el ritmo real / desliza raro (0.7×, 32%)** y **RePág/AvPág saltando a la subpestaña de Biblioteca en Modo Lectura**: están en `pestana_lectura.py`, archivo que no he editado en ninguna sesión de este trabajo — son bugs preexistentes, no regresiones de mis cambios. Los investigo en el siguiente turno si quieres.
+
+## Preguntas para priorizar lo que falta
+
+Perfecto, dejamos Ctrl+1..5 tal cual (ya corregido) y me meto de lleno en los bugs de Modo Lectura. Investigo primero antes de tocar nada.
+
+`logger` ya existe en el módulo. Corrijo los `except: pass` silenciosos en `fijar_velocidad`/`fijar_volumen`, que violan la regla explícita de CLAUDE.md y probablemente están tragándose el error real que impide que el ritmo cambie.
+
+Encontré otro bug real y concreto: `hablar()` y `_hilo_parrafos()` en `cliente_sapi5.py` fuerzan `self.motor.Volume = 100` **en cada párrafo**, machacando lo que el usuario haya puesto en el deslizador. Lo corrijo guardando el volumen elegido en vez de un valor fijo.
+
+Ahora `fijar_volumen` debe guardar ese valor en `self._volumen`, no solo aplicarlo una vez:
+
+Todos consistentes. Compilo y verifico sintaxis.
+
+## Resultado de la investigación de Modo Lectura
+
+**Bug confirmado y corregido**: en `cliente_sapi5.py`, `hablar()` y `_hilo_parrafos()` fijaban `self.motor.Volume = 100` **antes de cada párrafo**, sin condición — así que en cuanto arrancaba el siguiente párrafo, tu volumen elegido se pisaba de vuelta a 100. Ahora se guarda en `self._volumen` y se reaplica ese valor, no una constante.
+
+**Sobre la velocidad**: no encontré un bug simétrico tan claro en el código (el `Rate` de SAPI5 no se resetea por párrafo como pasaba con `Volume`). Lo que sí encontré y corregí es que `fijar_velocidad()` tenía un `except: pass` desnudo que podía tragarse silenciosamente cualquier fallo real al aplicar el cambio de ritmo — ahora queda registrado en el log. **Necesito que vuelvas a probar** y, si sigue sin moverse, mires `registros/errores/` por si aparece algo como `[SAPI5] Error al fijar la velocidad` — eso me daría la causa exacta.
+
+**Sobre RePág/AvPág saltando a Biblioteca**: mi diagnóstico es que el foco de teclado se queda "atascado" dentro del subnotebook de Biblioteca cuando cambias a Lectura por una vía que no sea `Ctrl+Tab` (que sí mueve el foco explícitamente). Es un comportamiento cruzado entre pestañas y no quiero tocarlo a ciegas porque hay una decisión de diseño deliberada (`pestana_biblioteca.py` documenta explícitamente que cambiar de pestaña *no* debe mover el foco, para no interrumpir la navegación con flechas) que un arreglo apresurado podría romper.
+PreguntadoRepro RePag/AvPagDetenido
+The question tool call didn't go through. Quick recap of where things stand:
+Fixed and pushed (commit d1dd977 and earlier this session):
+• Crash on context menu (MenuItem.SetHelpText)
+• Tab-cycle global hardened with try/except
+• Creador de Audiolibros accessibility (status fields now real TextCtrl, _anunciador no longer mislabeled, book-load now announced)
+• Ctrl+1..5 now moves keyboard focus like Ctrl+Tab does
+• SAPI5 volume being silently reset to 100 every paragraph — fixed
+• SAPI5 silent except: pass blocks now log real errors
+Still open, needs your input to proceed safely:
+1. RePág/AvPág jumping to Biblioteca's subtab instead of moving the Lectura slider — my working theory is that keyboard focus stays stuck inside Biblioteca's subnotebook when you switch to Lectura by some path other than Ctrl+Tab (which explicitly moves focus; other paths like clicking a tab or menu actions don't). Before I touch this, I need to know the exact trigger, because pestana_biblioteca.py has a deliberate design decision not to steal focus on tab-change, and a rushed fix could break that.
+2. Velocidad slider in Lectura — I fixed the silent-exception swallowing and logged real errors, but couldn't find a reset bug symmetric to the volume one. Need you to retest and check registros/errores/ for a [SAPI5] Error al fijar la velocidad entry if it's still stuck.
+3. Deferred features (per your earlier answer, prioritized after Lectura bugs): botones Importar/Eliminar libro en Creador de Audiolibros, preparar soporte PDF.
+Could you tell me: does the RePág/AvPág issue happen every time you enter Lectura, or specifically when you were in Biblioteca's tree/subtabs right before switching? That's the detail I need to fix it without risking the arrow-key navigation that already works well in Biblioteca.

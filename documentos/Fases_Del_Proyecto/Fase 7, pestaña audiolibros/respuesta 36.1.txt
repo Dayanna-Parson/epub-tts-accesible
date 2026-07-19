@@ -1,0 +1,25 @@
+Ahora quito el bloque antiguo (duplicado) al final y ajusto `SetSizer`/orden de tabulación:
+
+Actualizo `ultimo_control` para que apunte al último botón real:
+
+Ahora revierto la construcción del submenú a su versión simple (sin el rastreo de resaltado):
+
+Ahora el handler, reutilizando `al_borrar_recientes` de `VentanaPrincipal`:
+
+Ahora actualizo `fijar_voz` para limpiar este set también, y el manejo de error en `_procesar_voz_neuronal`:
+
+Perfecto, es exactamente el patrón a seguir. Implemento `PanelAzure` con el mismo mecanismo, detectando la característica desde el `id` de la voz:
+
+Compilación completa de todo el conjunto de archivos tocados:
+
+Ya está subido. Resumen de los 4 puntos:
+
+1. **Polly, solución definitiva**: tenías razón, la temporización no basta. Ahora se añaden 400ms de silencio digital real (ceros en el array de audio) al final, antes de mandarlo a `sounddevice.play()`. Ya no hay nada real en el borde del búfer que el hardware pueda cortar.
+
+2. **Botones de Biblioteca**: los moví a una barra fija en la parte superior de la pestaña, fuera de la columna que se puede recortar según el tamaño de ventana. El orden de tabulación no cambia (siguen siendo lo último, como antes).
+
+3. **Supr en recientes**: confirmado tu diagnóstico, lo revertí. "Borrar historial" sigue en el submenú de siempre, y añadí un botón "Borrar historial de libros recientes" en Ajustes, con confirmación y aviso si ya está vacío.
+
+4. **Azure**: nuevo combo "Característica" en el panel de Azure (Multilingüe, Dragon, MaiVoice, Flash, Neural), detectado por palabras clave en el id técnico de cada voz. Y sobre el log de "sin respuesta": amplié la captura de errores en `cliente_azure.py` para que incluya el cuerpo real de la respuesta de Azure cuando falla (ahí suele estar la causa exacta con voces nuevas), y en `reproductor_voz.py` el aviso de error de red ya no se repite en cada fragmento fallido — solo una vez por sesión y proveedor, cayendo a voz local en silencio después, en vez de encadenar ventanas modales que daban sensación de colgazo.
+
+Pendiente de tu prueba: si te vuelve a fallar una voz de Azure como "maivoice 2", el mensaje de error ahora debería traer más detalle — mándame el log si pasa, así vemos la causa real en vez de "sin respuesta".

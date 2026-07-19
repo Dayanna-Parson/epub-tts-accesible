@@ -1,0 +1,3 @@
+prompt 29
+
+Mira, sigue igual. Pero ahora, además, cuando ejecuto alguno de los 3 atajos para cambiar el estado, NVDA solo dice edición... pero, ahora no dice como está en qué estado está. Y además, porqué cuando me pongo en el listado de etiquetas, me salen las 3 opciones, de importar carpeta, ayuda sub menú, y salir? a, en la pestaña géneros también me sale igual, en el árbol. Y tanto en el contenido de el género, como en el listado del contenido de cada etiqueta, me sale el otro menú, con añadir favorito, añadir a categoría submenú, añadir a etiqueta submenú, quitar categoría, o quitar de la biblioteca. Y también salen las otras tres opciones, de ayuda importar y salir

@@ -1,0 +1,48 @@
+prompt y respuesta 38
+
+Has dicho: gracias, mira, te voy a enviar la info de mi sistema por si te sirve de algo!
+info de mi sistema.txt
+gracias, mira, te voy a enviar la info de mi sistema por si te sirve de algo! aunque en realidad, puede que mi app solo la utilice yo, o en algún momento, lo haga alguien mas...
+Mostrar acciones del mensaje
+Claude ha respondido: Gracias por los datos.
+Gracias por los datos. Tu equipo (i7-13620H, 10 núcleos / 16 hilos, 16 GB RAM) va sobrado para lo que hace la app — ni de lejos es el cuello de botella. El límite de 4 exportaciones en paralelo que puse no es por falta de potencia tuya: es porque con voces de nube el límite real es cuánta gente en paralelo aceptan sin quejarse las APIs de Azure/Polly/etc. (límites de tasa por cuenta), no tu procesador. Con SAPI5 local, que sí depende de tu CPU, tus 16 hilos disponibles dejan mucho margen por debajo de ese límite de 4, así que no deberías notar ningún cuello de botella por hardware en ningún caso.
+Sobre lo de "puede que solo la use yo, o alguien más en algún momento": tiene sentido diseñarla pensando en que otras personas ciegas puedan usarla algún día sin que tengas que ajustar nada a mano — y es justo lo que ya estamos haciendo (nada de lo construido depende de tu hardware concreto). Si en algún momento la compartes con alguien con un equipo mucho más modesto, avísame: el único ajuste que tendría sentido revisar entonces sería bajar ese límite de 4 hilos si su conexión a internet fuera muy limitada, nada más.
+¿Sigues con las pruebas del paralelismo, o hay algo más que quieras que mire mientras tanto?
+Mostrar acciones del mensaje
+Has dicho: y has visto el log?
+y has visto el log? ese último error de azure? con las nuevas voces, maivoice2? que por cierto? esas 53 voces nuevas me han llegado hoy... Y son sorprendentes! que es ese nuevo modelo?
+Mostrar acciones del mensaje
+Claude ha respondido: Sí, vi la línea del log — es esta:
+Ejecutadoun comando
+Sí, vi la línea del log — es esta:
+2026-07-17 20:29:24,770  WARNING  [Azure] Fallo de síntesis: 400
+2026-07-17 20:29:24,775  WARNING  Error en voz neuronal (azure): Error Azure: 400
+Copiar código
+El detalle que añadí (el cuerpo de la respuesta) vino vacío esta vez, así que no puedo decirte la causa exacta con precisión — pero un 400 sin cuerpo en la API de síntesis de Azure casi siempre significa que el SSML enviado referencia un nombre de voz (ShortName) que el servidor no reconoce como válido para tu clave/región en ese momento. Con voces recién lanzadas es un patrón muy típico: Microsoft las anuncia, pero tardan un tiempo en habilitarse en todas las regiones o en todos los niveles de suscripción, así que tu clave puede no tener acceso todavía aunque la voz ya exista globalmente.
+Sobre qué es MaiVoice2 en concreto: aquí tengo que ser honesta contigo — no tengo información fiable sobre ese modelo. Es tan nuevo (lo dices tú misma, te llegó hoy) que cae fuera de lo que sé con certeza; no quiero inventarte detalles técnicos sobre una familia de voces que no he podido verificar. Si quieres, puedo buscarte la documentación oficial de Microsoft sobre "MaiVoice" para ver qué dicen ellos exactamente (arquitectura, qué lo diferencia de las voces Neural/Dragon anteriores, disponibilidad por región) — dime si te sirve y lo consulto.
+Lo que sí puedo hacer ahora mismo: revisar contigo el nombre técnico exacto (ShortName) que estás intentando usar para MaiVoice2 y comprobar si tu región/clave lo soporta, si me lo pasas o me dices cómo aparece en la lista de voces de Ajustes.
+Mostrar acciones del mensaje
+Sesión reanudada
+Has dicho: mira, no te lo vas a creer, pero todo funciona muy bien!
+mira, no te lo vas a creer, pero todo funciona muy bien! y esto es lo que me dijo gemini. Estás de acuerdo? o quieres hacer otra cosa antes? o varias a la vez? ¡Por fin ha llegado el motor multihilo, Jacqui! Claude ha estructurado la paralelización exactamente como se lo exigimos: separando la aritmética de la cuota (que sigue siendo secuencial para no dar errores) de las descargas reales, que ahora se ejecutan hasta 4 a la vez con el ThreadPoolExecutor. Además, ha corregido el filtro normalizando los nombres para cazar MaiVoice y Flash de forma infalible.
+Antes de lanzar las campanas al vuelo, baja los cambios a tu entorno local con Git Bash:
+Bash
+git fetch origin
+git merge origin/claude/audiobook-creator-tab-design-zmckzo
+La Guía de Testeo Crítico (Fase 7)
+Al haber metido mano en la sincronización de hilos, el peligro real ya no es que falle la interfaz, sino que los archivos temporales se mezclen. Necesito que hagas estas tres comprobaciones de forma muy estricta:
+
+1. La prueba de ordenación en Modo Completo: Elige un libro, pon el modo "Libro completo" y expórtalo. Al escuchar el MP3 resultante, fíjate milimétricamente en las transiciones (donde antes se cortaban los bloques de caracteres). Asegúrate de que el libro mantiene el orden perfecto del texto y que no se ha colado un párrafo adelantado porque su hilo terminara de descargar antes.
+2. La prueba de ordenación en Modo Capítulos: Haz lo mismo exportando por capítulos. Comprueba que el capítulo 2 va después del 1 y antes del 3 en el resultado final, y verifica que la lista de la interfaz se va actualizando de forma coherente aunque los hilos terminen en desorden.
+3. Cronómetro en mano: Compara visualmente el tiempo. Con 4 descargas simultáneas, un libro que antes tardaba 4 minutos en descargarse e hilarse ahora debería estar listo en poco más de un minuto. ¡Dime si notas ese subidón de velocidad!
+4. Filtro de Azure: Entra en Ajustes y comprueba si al seleccionar MaiVoice o Flash ya aparecen listadas sus 53 voces correspondientes.
+
+Pruébalo a fondo, Jacqui. Si el orden del audiolibro es perfecto y la velocidad ha multiplicado, habremos terminado oficialmente el motor de la Fase 7.
+El siguiente paso inmediato, para mantener tu meta de mediados de agosto, será pedirle a Claude la lógica de reanudación de exportaciones caídas para que la app sea un tanque indestructible contra los cortes de internet. ¡Cuéntame qué tal vuela ese motor en paralelo!
+Mostrar más
+Mostrar acciones del mensaje
+Claude ha respondido: Sí, estoy de acuerdo con Gemini en todo — es exactamente el plan correcto y el testeo que propone es el adecuado: ordenación en ambos modos y cronómetro son la…
+Sí, estoy de acuerdo con Gemini en todo — es exactamente el plan correcto y el testeo que propone es el adecuado: ordenación en ambos modos y cronómetro son las dos cosas que de verdad importan verificar tras meter hilos en paralelo.
+Un matiz sobre el punto 3 (velocidad): con 4 en paralelo no esperes una división limpia por 4 del tiempo total — depende de cuántos trozos/capítulos tenga tu libro y de la latencia de cada API, así que puede que notes una mejora notable pero no necesariamente exacta de "×4". Si ves algo mucho más modesto (por ejemplo, ×1.5 o ×2) no es necesariamente un fallo, puede ser normal según cómo se reparta el trabajo entre los 4 hilos.
+Mientras pruebas esos 4 puntos, la reanudación de exportaciones caídas por corte de internet que propone Gemini como siguiente paso me parece el objetivo correcto para después — pero antes de que me ponga a construir eso, dime cuando termines el testeo de hoy: si algo del paralelismo falla (sobre todo el orden), lo arreglamos primero antes de construir nada nuevo encima de una base que aún no está confirmada como sólida.
+¿Empiezas por el testeo y me vas contando, o prefieres que vaya adelantando algo de la reanudación mientras tú pruebas?

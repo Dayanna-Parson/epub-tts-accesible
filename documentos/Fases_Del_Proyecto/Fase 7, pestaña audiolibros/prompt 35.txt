@@ -1,0 +1,17 @@
+prompt 35
+Cuando termina el bloque de caracteres predefinido, pues se corta en la última sílaba de la última palabra.
+Te voy a poner solo un ejémplo:
+mayoría (may)
+o camiseta, como (camis)
+Y se corta sin mas, y sigue con el resto del bloque...
+Lo siento, no se muy bien como explicarlo.
+Pero, e probado a grabar con la misma voz, y si que lo hace perfecto! no se notan esos cortes bruscos. No se como lo hace la verdad.
+Solo pasa en la lectura en tiempo real.
+Y hablando de la pestaña lectura, se puede hacer que cuando el foco esté en el submenú de libros recientes, y esté sobre algún libro, simplemente que con pulsar la tecla suprimir, pues solo se borre ese libro, sin tener que subir o bajar hasta el botón borrar historial?
+Una pregunta:
+Cres sinceramente que sería buena idea y porqué, cuando abrimos un libro en la pestaña lectura, pues poderlo enviar directamente a la pestaña creación de audiolibros? o es mejor dejarlo como está ahora, pestaña lectura para leer en tiempo real, y creación de audiolibros, pues solo para grabarlos después?
+A. Y en la pestaña creación de audiolibros, pues en el modo completo, cuando se está grabando un libro, no dice nada. solo se que lo está grabando, porque escucho la barra de progreso... Y en cambio, cuando selecciono el modo capítulos, si que dice, que va por capítulo x de X, cada cierto tiempo!
+A, y pasa algo curioso con la voz de Conchita, pero solo en la parte de preescucha. cuando pulso el botón o el atajo, da un error que no se cual es. Pero, cuando selecciono otra voz, y vuelvo a ella, si que me deja preescucharla...
+A.
+Y en la pestaña bilioteca, también me preguntaba, y no se porqué no lo vimos antes!. Poner un diálogo para importar un solo archivo, en vez de una carpeta entera.
+Y que mas podemos pedirle que haga en este turno de los pendientes o de lo que el me fue preguntando... De los caminos que me proporcioonó?

@@ -1,0 +1,28 @@
+Prompt y respuesta 19
+
+Has dicho: Espera, como antes de que guía a comentar una cosa sobre la velocidad de las voces.
+Espera, como antes de que guía a comentar una cosa sobre la velocidad de las voces. Como sabes, en la versión creo que es la 2.0, me parece, eh, puse que el ajuste eh general eh puedes elegir o como está por defecto eh la velocidad en porcentaje de 0 a 100 o la velocidad por puntos, por ejemplo, 1.0 sería la velocidad normal, ¿verdad? Después 1.1, 1.2, etcétera. El máximo de momento sería 3.0. Eso está bien, ¿verdad? Bueno, pues como sabes, cuando eh seleccionamos esa velocidad y la ponemos predeterminada, ahí también es cuando me funciona y cuando ya te demostré hace varios mensajes atrás cómo se comportaba, que se comportaba de una forma extraña. Así que primero me gustaría que mirases eso, a ver qué está pasando. Según Gemini, eh estás aplicando mal las matemáticas o algo similar.
+Mostrar acciones del mensaje
+Claude ha respondido: Encontré el bug real, y es serio: hay dos sistemas de conversión independientes y contradictorios para el modo "por puntos" (multiplicador).
+Ejecutado un comando, leer 2 archivos
+Encontré el bug real, y es serio: hay dos sistemas de conversión independientes y contradictorios para el modo "por puntos" (multiplicador). Voy a revisar todo el flujo antes de corregirlo.
+Ejecutadoun comando
+¡Ahí está! Confirmado con grep: obtener_velocidad_normalizada() — la función que debería convertir el valor del slider en modo "multiplicador" (rango 0-25) de vuelta a 0-100 — nunca se llama desde ningún sitio. al_cambiar_velocidad lee self.deslizador_velocidad.GetValue() directamente y lo manda tal cual al motor. Eso significa que en modo "por puntos", el slider (0-25) manda su valor crudo como si fuera un porcentaje 0-100 — así que el máximo alcanzable (25) todavía da pct=(25-50)*1.6=-40%, siempre más lento que lo normal, nunca llega ni a la velocidad neutra. Coincide exactamente con "muevo al 80% y no va más rápido."
+Voy a rediseñarlo eliminando el doble rango: el slider siempre vive en 0-100 (el mismo valor real que se manda al motor), y el modo "por puntos" pasa a ser solo una relectura cosmética calculada con la fórmula real, no una tabla aparte que puede desincronizarse.
+Leer un archivo, editado un archivo
+Ahora corrijo _al_slider_velocidad_cambio para que use la misma fórmula (elimino la tabla vieja, ya obsoleta e inconsistente):
+Leer un archivo, editado un archivo
+Reviso si el mismo problema existe también en el selector de escala por defecto en Ajustes.
+Leerpestana_ajustes.py
+El texto de ayuda aquí ya decía "El motor de audio recibe siempre un valor normalizado 0-100" — confirma que ese SIEMPRE fue el diseño previsto; simplemente no estaba implementado así. Corrijo también el rango prometido en la etiqueta (0.5×–3.0× no es alcanzable con la fórmula real; el rango honesto es 0.2×–1.8×):
+Editadopestana_ajustes.py+4-3
+Ahora compilo y verifico con un test aislado que la conversión es correcta y consistente.
+Ejecutado 6 comandos
+Verificado matemáticamente. Registro y pusheo.
+Commit realizadod03afeb
+Encontrado y corregido — Gemini tenía razón
+El bug exacto: en modo "velocidad por puntos", el slider cambiaba su propio rango a 0-25, y dependía de una función obtener_velocidad_normalizada() para reconvertir eso a 0-100 antes de aplicarlo al motor de voz. Esa función nunca se llamaba desde ningún sitio (confirmado con grep, cero usos). El valor crudo del slider (máximo 25) se mandaba directo al motor, que lo trata como un porcentaje 0-100. Resultado: el máximo alcanzable en modo "por puntos" (25) seguía dando una tasa más lenta que la normal — el slider nunca podía llegar ni a velocidad neutra, y mucho menos a "más rápido". De ahí que moverlo al 80/100 no cambiara nada perceptible: estabas siempre en el mismo tramo (lento) del rango real.
+El rediseño: el slider ahora vive siempre en el mismo rango 0-100 que se envía al motor, sin importar qué escala estés viendo. El modo "por puntos" es ahora solo una relectura cosmética de ese mismo valor, calculada con la fórmula que realmente aplican los motores de voz — así que lo que ves y lo que suena son garantizadamente el mismo número, no dos sistemas que puedan desincronizarse. También corregí el rango que se prometía en Ajustes: era 0.5×–3.0×, matemáticamente imposible con la fórmula real (saturada en ±80%); el rango honesto es 0.2×–1.8×, con 50 = 1.00× exacto (Normal).
+Verificado con test: 50→1.00× (Normal), 0→0.20× (Muy lenta), 100→1.80× (Máxima). Commit d03afeb pusheado.
+Cuando puedas probarlo: cambia a escala "multiplicador por puntos" en Ajustes, pon el slider en el centro (50) y confirma que suena a velocidad normal, y muévelo a los extremos para confirmar que sí notas el cambio.
+Mostrar acciones del mensaje

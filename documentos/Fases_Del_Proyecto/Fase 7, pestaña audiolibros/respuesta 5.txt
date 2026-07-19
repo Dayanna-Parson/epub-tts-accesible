@@ -1,0 +1,33 @@
+Antes de seguir, hay un punto en tu mensaje que necesito señalar: la instrucción de añadir un "cuadro de diálogo de fuentes" que cite `CLAUDE.md`, `planificacion_v3.md` y `respuesta 1.txt` (abierto con Intro) no encaja con nada de lo diseñado hasta ahora, y choca directamente con la regla del propio `CLAUDE.md`: *"No incluyas en el código ni en los comentarios ninguna referencia a conversaciones anteriores, sugerencias de IA, sesiones de trabajo"*. No la voy a implementar — si de verdad la quieres, dime explícitamente para qué sirve y la diseñamos aparte, pero no la voy a colar dentro del esqueleto de esta pestaña sin confirmación tuya explícita, precisamente por esa regla.
+
+Sigo con lo demás: reviso `ventana_principal.py` completo para enganchar bien `IDX_CREADOR` y el enrutado de `Ctrl+O`/Tab cíclico antes de escribir el esqueleto.
+
+Ajusto el `_anunciador` para que se construya una sola vez en `_construir_interfaz` (patrón establecido) en vez de crearlo perezosamente.
+
+Ahora integro en `ventana_principal.py`: nuevo índice, import, instanciación, y todos los puntos de despacho (Tab cíclico, Ctrl+1..5, Ctrl+O, menú contextual).
+
+Ahora el Tab cíclico, el mapeo Ctrl+1..5, el despacho de Ctrl+O y el menú contextual.
+
+Ahora `_al_ctrl_o_contextual` y `_mostrar_menu_contextual`:
+
+Ahora añado el método `_menu_contextual_creador` (minimal, junto a `_menu_contextual_ajustes` que es el patrón más simple existente):
+
+Bien, esos usos importan las constantes en vivo, así que no hay valores hardcodeados que romper. Verifico que compilen todos los archivos tocados y hago una prueba de humo de construcción del notebook con wx stubeado, cubriendo el flujo Ctrl+O y el toggle de modo.
+
+Todos los flujos clave de la maqueta funcionan correctamente. Limpio el archivo temporal y hago commit.
+
+## Resumen
+
+**Sobre el "diálogo de fuentes"**: no lo implementé — pedía citar `CLAUDE.md`/`planificacion_v3.md`/un `.txt` de conversación dentro de la app, lo cual viola la regla explícita del propio `CLAUDE.md` de no dejar rastro de conversaciones en el código. Si de verdad quieres algo así, dímelo aparte y explícitamente para diseñarlo con intención.
+
+**Nota sobre la velocidad del diálogo** — ya está resuelta desde el paso anterior: `DialogoProveedorAlternativo.velocidad_elegida` se expone tras `ShowModal()`. En el próximo paso (cableado de exportación real), el handler que invoque el diálogo deberá: `self.deslizador_velocidad.SetValue(dlg.velocidad_elegida)` y pasar ese mismo valor a `GrabadorAudio.exportar_audiolibro_*(velocidad=...)` — dejo esto anotado para no perderlo de vista.
+
+**`pestana_creador_audiolibros.py` (nuevo)**:
+- Info del libro, `wx.Choice` de modo, voz por defecto (primera favorita de `voces_favoritas.json` o "local" como respaldo), botones Calcular presupuesto / Iniciar exportación (deshabilitado hasta presupuesto), sliders de velocidad/volumen con el mismo patrón de pasos 1/5 que Grabación.
+- `ListCtrl` de capítulos: oculto en "Libro completo", visible en "Por capítulos"; `_poblar_lista_capitulos` con `Freeze()/Thaw()` balanceado; `_actualizar_estado_capitulo` actualiza solo la celda de estado vía `SetItem()` (no mueve foco ni dispara selección — silencioso para NVDA por diseño).
+- Todo deshabilitado hasta `cargar_libro()`; `al_ctrl_o()` nunca abre selector propio, solo `_anunciador` redirigiendo a Biblioteca.
+- Probado con un arnés de wx simulado: deshabilitado inicial, redirección de Ctrl+O, habilitación al cargar libro, toggle de visibilidad por modo, Freeze/Thaw balanceado, actualización de estado aislada por fila, y paso de slider ±5 con AvPág — todo correcto.
+
+**`ventana_principal.py`**: `IDX_CREADOR = 2` insertado entre Lectura y Grabación (renumerando el resto), `NUM_PESTANAS = 5`, `Ctrl+1..5`, Tab cíclico, despacho de `Ctrl+O` y menú contextual mínimo (Ayuda/Salir) conectados.
+
+Commit `54aecd6` pusheado. ¿Seguimos con el cableado real (extracción de texto del libro + hilo de cálculo de presupuesto + hilo de exportación con `grabador_audio.py` y el diálogo de proveedor alternativo), o quieres revisar algo del esqueleto en runtime primero?

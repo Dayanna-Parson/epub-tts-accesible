@@ -1,0 +1,193 @@
+prompt X
+A ver.
+el ciclo circular de tabulaciones, el control tab y también funciona lo de moverse por números... con control 1 a 4
+No me termina de convencer lo de las casillas.... Podrías mirar como está eso en bookworm? se me ocurre que en vez de casillas así en una fila, no sería mas limpio un cuadro combinado? con todos los filtros? A, A, y cuando importo una carpeta, como la carpeta sagas completa, pues pasan dos cosas. agarra el nombre del metadato del libro, en vez del archivo de fuera. Y además, en la lista, pues se importan todos desordenados, y no como bienen en la carpeta.
+Además, hay que tener en cuenta, que cuando hagamos el árbol de categorías, y no se que pintan las etiquetas, y los filtros... Pues, pensaba también en categorizarlos en géneros. y ponerles subcategorías, como hijos del árbol. por ej. Imagina que tienes el género fantasía. y como es muy grande y tienes varios libros que si, son de fantasía, pero, a su vez, pertenecen a otro subgénero de fantasía, como por ej, la fantasía épica, o la fantasía urbana entre otras. Y también puede pasar, que un libro tenga múltiples géneros y o subgéneros. Aunque no es tan común.
+A, y También añade que con la tecla f2, que también sirba para reenombrar libros. Y pues mas hallá de eso, todos los diálogos funcionan muy bien.
+
+mira la consola:
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\Destrózame - Tahereh Mafi\07. Encuéntrame.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 71, in _extraer_metadatos_epub
+    autores = [a[0].strip() for a in autores_meta if a[0].strip()]
+                                                     ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\Destrózame - Tahereh Mafi\11. Créeme.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 71, in _extraer_metadatos_epub
+    autores = [a[0].strip() for a in autores_meta if a[0].strip()]
+                                                     ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\el diario de un vampiro - Morgan Rice\04. Destinada.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 65, in _extraer_metadatos_epub
+    libro = epub.read_epub(ruta_archivo, options={"ignore_ncx": True})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1817, in read_epub
+    book = reader.load()
+           ^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1463, in load
+    self._load()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1763, in _load
+    self._load_opf_file()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1732, in _load_opf_file
+    self._load_manifest()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1601, in _load_manifest
+    ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1470, in read_file
+    return self.zf.read(name)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1571, in read
+    with self.open(name, "r", pwd) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1608, in open
+    zinfo = self.getinfo(name)
+            ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1536, in getinfo
+    raise KeyError(
+KeyError: "There is no item named 'OEBPS/Images/autor.jpg' in the archive"
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\el diario de un vampiro - Morgan Rice\05. Deseada.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 65, in _extraer_metadatos_epub
+    libro = epub.read_epub(ruta_archivo, options={"ignore_ncx": True})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1817, in read_epub
+    book = reader.load()
+           ^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1463, in load
+    self._load()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1763, in _load
+    self._load_opf_file()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1732, in _load_opf_file
+    self._load_manifest()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1601, in _load_manifest
+    ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1470, in read_file
+    return self.zf.read(name)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1571, in read
+    with self.open(name, "r", pwd) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1608, in open
+    zinfo = self.getinfo(name)
+            ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1536, in getinfo
+    raise KeyError(
+KeyError: "There is no item named 'OEBPS/Images/autor.jpg' in the archive"
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\el diario de un vampiro - Morgan Rice\06. Comprometida.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 65, in _extraer_metadatos_epub
+    libro = epub.read_epub(ruta_archivo, options={"ignore_ncx": True})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1817, in read_epub
+    book = reader.load()
+           ^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1463, in load
+    self._load()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1763, in _load
+    self._load_opf_file()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1732, in _load_opf_file
+    self._load_manifest()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1601, in _load_manifest
+    ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1470, in read_file
+    return self.zf.read(name)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1571, in read
+    with self.open(name, "r", pwd) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1608, in open
+    zinfo = self.getinfo(name)
+            ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1536, in getinfo
+    raise KeyError(
+KeyError: "There is no item named 'OEBPS/Images/autor.jpg' in the archive"
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\el diario de un vampiro - Morgan Rice\07. Jurada.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 65, in _extraer_metadatos_epub
+    libro = epub.read_epub(ruta_archivo, options={"ignore_ncx": True})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1817, in read_epub
+    book = reader.load()
+           ^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1463, in load
+    self._load()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1763, in _load
+    self._load_opf_file()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1732, in _load_opf_file
+    self._load_manifest()
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1601, in _load_manifest
+    ei.content = self.read_file(zip_path.join(self.opf_dir, ei.get_name()))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\site-packages\ebooklib\epub.py", line 1470, in read_file
+    return self.zf.read(name)
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1571, in read
+    with self.open(name, "r", pwd) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1608, in open
+    zinfo = self.getinfo(name)
+            ^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\zipfile\__init__.py", line 1536, in getinfo
+    raise KeyError(
+KeyError: "There is no item named 'OEBPS/Images/autor.jpg' in the archive"
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\Lorris el elfo - Laura Gallego\01. El comienzo del camino.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 71, in _extraer_metadatos_epub
+    autores = [a[0].strip() for a in autores_meta if a[0].strip()]
+                                                     ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\Lorris el elfo - Laura Gallego\02. El vuelo de la lechuza.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 71, in _extraer_metadatos_epub
+    autores = [a[0].strip() for a in autores_meta if a[0].strip()]
+                                                     ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\Magos por casualidad - Laura Gallego\Heroes Por Casualidad.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 71, in _extraer_metadatos_epub
+    autores = [a[0].strip() for a in autores_meta if a[0].strip()]
+                                                     ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
+ERROR     app.motor.escaner_biblioteca  [EscanerBiblioteca] No se pudo leer metadatos de: C:\Users\Jacqueline\Documents\libros\sagas\Magos por casualidad - Laura Gallego\Mago Por Casualidad.epub
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 100, in _procesar_archivo
+    metadatos = _extraer_metadatos_epub(ruta_archivo)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\motor\escaner_biblioteca.py", line 71, in _extraer_metadatos_epub
+    autores = [a[0].strip() for a in autores_meta if a[0].strip()]
+                                                     ^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
