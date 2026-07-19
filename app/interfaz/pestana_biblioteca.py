@@ -271,7 +271,7 @@ class PestanaBiblioteca(wx.Panel):
         sizer_filtro_estado.Add(
             wx.StaticText(self, label="Estado:"), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5
         )
-        self._ESTADOS_FILTRO = ["Todos", "Pendientes", "Leyendo ahora", "Leídos", "Audiolibros a medias"]
+        self._ESTADOS_FILTRO = ["Todos", "Pendientes de leer", "Leyendo ahora", "Leídos", "Audiolibros a medias"]
         self.combo_estado = wx.Choice(self, choices=self._ESTADOS_FILTRO)
         self.combo_estado.SetSelection(0)
         self.combo_estado.Bind(wx.EVT_CHOICE, self.al_cambiar_filtro)
@@ -794,7 +794,7 @@ class PestanaBiblioteca(wx.Panel):
             id_categoria=self._id_categoria_activa,
             id_etiqueta=self._id_etiqueta_activa,
             solo_favoritos=self.chk_favoritos.GetValue(),
-            solo_pendientes=(estado == "Pendientes"),
+            solo_pendientes=(estado == "Pendientes de leer"),
             solo_leyendo=(estado == "Leyendo ahora"),
             solo_leidos=(estado == "Leídos"),
         )
@@ -845,7 +845,7 @@ class PestanaBiblioteca(wx.Panel):
         if libro["leyendo_ahora"]:
             partes.append("Leyendo")
         elif libro["en_pendientes"]:
-            partes.append("Pendiente")
+            partes.append("Pendiente de leer")
         elif libro["leido"]:
             partes.append("Leído")
         if not libro["titulo_revisado"]:
@@ -1145,7 +1145,7 @@ class PestanaBiblioteca(wx.Panel):
         """
         menu = wx.Menu()
         opciones = [
-            ("en_pendientes", "Pendiente", "pendientes"),
+            ("en_pendientes", "Pendiente de leer", "pendientes de leer"),
             ("leyendo_ahora", "Leyendo ahora", "leyendo ahora"),
             ("leido", "Leído", "leídos"),
         ]
@@ -1542,11 +1542,13 @@ class PestanaBiblioteca(wx.Panel):
 
         item_pendiente = menu.Append(
             wx.ID_ANY,
-            "Quitar de pendientes" if libro["en_pendientes"] else "Marcar como pendiente",
+            "Quitar de pendientes de leer" if libro["en_pendientes"] else "Marcar como pendiente de leer",
         )
         self.Bind(
             wx.EVT_MENU,
-            lambda e: self._alternar_estado_libro("en_pendientes", "pendiente", "pendientes"),
+            lambda e: self._alternar_estado_libro(
+                "en_pendientes", "pendiente de leer", "pendientes de leer"
+            ),
             item_pendiente,
         )
 
