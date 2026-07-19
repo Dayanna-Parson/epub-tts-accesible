@@ -303,16 +303,18 @@ class PestanaBiblioteca(wx.Panel):
         sizer_general.Add(sizer_principal, 1, wx.EXPAND)
         self.SetSizer(sizer_general)
 
-        # Tab desde el árbol/lista de etiquetas debe llegar directo a la
-        # lista de libros — es lo que se usa constantemente — en vez de
-        # pasar antes por los controles de filtro, que se usan mucho
-        # menos y quedan más lejos en el orden natural de creación.
-        self.lista_libros.MoveAfterInTabOrder(self.subnotebook_izquierdo)
-
-        # Los botones de importación se construyeron primero (para quedar
-        # arriba visualmente, ver comentario más arriba), pero se mantienen
-        # al FINAL del orden de tabulación — son una acción puntual, no lo
-        # que más se usa — igual que antes de moverlos a la barra fija.
+        # Orden de tabulación explícito, de principio a fin: subpestañas de
+        # géneros/sagas → filtros (buscar, estado, favoritos) → lista de
+        # libros → botones de importación al final (acción puntual, no lo
+        # que más se usa). Antes solo se reposicionaban la lista y los
+        # botones de importar, así que los filtros —creados antes que la
+        # lista, pero nunca movidos— quedaban descolgados al final del
+        # todo, después de los botones de importar, en vez de justo
+        # delante de la lista donde tiene sentido encontrarlos.
+        self.txt_filtro.MoveAfterInTabOrder(self.subnotebook_izquierdo)
+        self.combo_estado.MoveAfterInTabOrder(self.txt_filtro)
+        self.chk_favoritos.MoveAfterInTabOrder(self.combo_estado)
+        self.lista_libros.MoveAfterInTabOrder(self.chk_favoritos)
         self.btn_importar.MoveAfterInTabOrder(self.lista_libros)
         self.btn_importar_archivo.MoveAfterInTabOrder(self.btn_importar)
 
