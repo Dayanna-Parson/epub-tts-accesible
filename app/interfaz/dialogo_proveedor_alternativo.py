@@ -165,6 +165,23 @@ class DialogoProveedorAlternativo(wx.Dialog):
         sz_vel.Add(self.slider_velocidad, 1)
         sizer.Add(sz_vel, 0, wx.EXPAND | wx.ALL, 10)
 
+        # 3b. Voz local SAPI5 para "Usar voz local" — antes se usaba siempre
+        # la voz predeterminada del sistema (sin dejar elegir ninguna otra),
+        # porque se le pasaba a GrabadorAudio un dict genérico sin id real.
+        sz_local = wx.BoxSizer(wx.HORIZONTAL)
+        lbl_local = wx.StaticText(self, label="Voz local para «Usar voz local»:")
+        self.combo_voz_local = wx.Choice(self, choices=["Cargando voces locales..."])
+        self.combo_voz_local.SetSelection(0)
+        self.combo_voz_local.SetHelpText(
+            "Voz SAPI5 (64 o 32 bits) que se usará si pulsas «Usar voz local». "
+            "Incluye todas las voces instaladas en tu equipo, no solo las favoritas."
+        )
+        sz_local.Add(lbl_local, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        sz_local.Add(self.combo_voz_local, 1)
+        sizer.Add(sz_local, 0, wx.EXPAND | wx.ALL, 10)
+        self._voces_locales = []
+        wx.CallAfter(self._cargar_voces_locales)
+
         # 4. Botonera de acciones.
         sz_botones = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -178,7 +195,8 @@ class DialogoProveedorAlternativo(wx.Dialog):
 
         self.btn_usar_local = wx.Button(self, label="Usar voz local")
         self.btn_usar_local.SetHelpText(
-            "Continúa la exportación con la voz local (SAPI5), sin coste ni límite de cuota."
+            "Continúa la exportación con la voz local SAPI5 elegida en el combo de "
+            "arriba, sin coste ni límite de cuota."
         )
         self.btn_usar_local.Bind(wx.EVT_BUTTON, self._al_usar_local)
         sz_botones.Add(self.btn_usar_local, 0, wx.RIGHT, 8)
@@ -345,8 +363,47 @@ class DialogoProveedorAlternativo(wx.Dialog):
         self.velocidad_elegida = self.slider_velocidad.GetValue()
         self._cerrar(wx.ID_OK)
 
+    def _cargar_voces_locales(self):
+        """
+        Carga todas las voces SAPI5 instaladas (64 y 32 bits), no solo las
+        favoritas — a diferencia del selector principal del Creador de
+        Audiolibros, aquí interesa poder elegir cualquier voz local
+        disponible en el sistema en el momento en que falta cuota.
+        """
+        voces = []
+        try:
+            from app.servicios.cliente_sapi5 import ClienteSapi5
+            voces.extend(ClienteSapi5().obtener_voces())
+        except Exception:
+            logger.exception("[DialogoProveedorAlternativo] Error al cargar voces SAPI5 de 64 bits")
+        try:
+            from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
+            bridge = ClienteSapi32Bridge()
+            if bridge.conectado:
+                ids_existentes = {v.get("id") for v in voces}
+                for v in bridge.obtener_voces():
+                    if v.get("id") not in ids_existentes:
+                        voces.append(v)
+                bridge.cerrar()
+        except Exception:
+            logger.exception("[DialogoProveedorAlternativo] Error al cargar voces SAPI5 de 32 bits")
+
+        self._voces_locales = voces
+        if voces:
+            self.combo_voz_local.Set([v.get("nombre", "") for v in voces])
+            self.combo_voz_local.SetSelection(0)
+        else:
+            self.combo_voz_local.Set(["No se encontró ninguna voz SAPI5 instalada"])
+            self.combo_voz_local.SetSelection(0)
+            self.btn_usar_local.Enable(False)
+
     def _al_usar_local(self, evento):
         self.accion = "usar_local"
+        idx = self.combo_voz_local.GetSelection()
+        if self._voces_locales and 0 <= idx < len(self._voces_locales):
+            self.voz_elegida = dict(self._voces_locales[idx])
+        else:
+            self.voz_elegida = {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
         self.velocidad_elegida = self.slider_velocidad.GetValue()
         self._cerrar(wx.ID_OK)
 

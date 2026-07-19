@@ -1124,11 +1124,17 @@ class PestanaCreadorAudiolibros(wx.Panel):
             dlg.Destroy()
             self._arrancar_exportacion(nueva_voz, velocidad_final, volumen, resultado)
         elif accion == "usar_local":
+            # dlg.voz_elegida ya trae la voz local real elegida en el combo
+            # del diálogo (con su id de verdad) — antes se mandaba un dict
+            # genérico sin id, y GrabadorAudio no encontraba ninguna voz que
+            # coincidiera con ese nombre, así que siempre acababa usando la
+            # voz predeterminada del sistema sin que hubiera forma de elegir.
+            voz_local = dict(dlg.voz_elegida) if dlg.voz_elegida else {
+                "proveedor_id": "local", "nombre": "Voz local (SAPI5)",
+            }
+            voz_local.setdefault("proveedor_id", "local")
             dlg.Destroy()
-            self._arrancar_exportacion(
-                {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"},
-                velocidad_final, volumen, resultado,
-            )
+            self._arrancar_exportacion(voz_local, velocidad_final, volumen, resultado)
         elif accion == "dividir":
             # El propio motor (grabador_audio.py) ya calcula el punto de
             # corte por cuota y guarda la parte pendiente — "dividir" solo
