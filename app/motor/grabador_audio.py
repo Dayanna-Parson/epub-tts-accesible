@@ -44,8 +44,25 @@ class _ExportacionAbortada(Exception):
 
 # Trozos/capítulos generados en paralelo por exportación. Un valor moderado
 # aprovecha la espera de red de las APIs de nube sin disparar límites de
-# tasa de los proveedores ni saturar la CPU con voces locales.
+# tasa de los proveedores.
 _MAX_WORKERS_EXPORTACION = 4
+
+
+def _max_workers_para(proveedor: str) -> int:
+    """
+    SAPI5 local (64 y 32 bits) se exporta siempre en serie, nunca en
+    paralelo: cada llamada crea su propio objeto COM (SAPI.SpVoice), y con
+    varios hilos generando a la vez se detectaron archivos "generados" sin
+    ningún audio real dentro, sin ninguna excepción que lo delatara — un
+    problema de fondo de COM entre hilos que no se puede diagnosticar ni
+    verificar sin acceso directo a Windows. Además, paralelizar SAPI5 no
+    aporta nada: no hay espera de red que aprovechar, es puro cómputo local.
+    Los proveedores de nube sí se benefician (la espera es de red) y siguen
+    en paralelo.
+    """
+    if proveedor in ("local", "local_32"):
+        return 1
+    return _MAX_WORKERS_EXPORTACION
 
 # ── ffmpeg portable (bin/ffmpeg.exe junto a la raíz del proyecto) ─────────────
 # Si existe bin/ffmpeg.exe, se configura pydub para usarlo automáticamente.
@@ -388,8 +405,8 @@ class GrabadorAudio:
             if len(trozos) > 1:
                 logger.info(
                     f"[GrabadorAudio] Texto largo ({len(texto)} chars) dividido "
-                    f"en {len(trozos)} trozos para {proveedor}, generados en paralelo "
-                    f"(hasta {min(_MAX_WORKERS_EXPORTACION, len(trozos))} a la vez)."
+                    f"en {len(trozos)} trozos para {proveedor} "
+                    f"(hasta {min(_max_workers_para(proveedor), len(trozos))} a la vez)."
                 )
                 self._generar_trozos_en_paralelo(
                     trozos, datos_voz, ruta_salida, proveedor, callback_progreso_trozo
@@ -438,7 +455,7 @@ class GrabadorAudio:
             self._llamar_motor(trozo, datos_voz, ruta_tmp, proveedor)
             return ruta_tmp
 
-        max_workers = min(_MAX_WORKERS_EXPORTACION, total)
+        max_workers = min(_max_workers_para(proveedor), total)
         try:
             with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="grabador_trozo") as executor:
                 futuros = {executor.submit(_generar, j, trozo): j for j, trozo in enumerate(trozos)}
@@ -921,8 +938,31 @@ class GrabadorAudio:
         except Exception as e:
             raise Exception(f"Error SAPI5 al escribir audio: {e}")
 
-        if not os.path.exists(ruta_wav) or os.path.getsize(ruta_wav) == 0:
-            raise Exception("SAPI5 no generó datos de audio.")
+        # Comprobación real de audio, no solo de tamaño de archivo: un WAV
+        # con cabecera pero sin fotogramas de audio (silencio total) ocupa
+        # más de 0 bytes y pasaba esta comprobación sin más — el archivo
+        # final quedaba "generado" con éxito pero sin ningún sonido dentro,
+        # sin ningún error que lo delatara.
+        if not os.path.exists(ruta_wav):
+            raise Exception("SAPI5 no generó ningún archivo de audio.")
+        try:
+            import wave
+            with wave.open(ruta_wav, 'rb') as w:
+                n_frames = w.getnframes()
+                framerate = w.getframerate() or 1
+                duracion_seg = n_frames / framerate
+        except Exception as e:
+            raise Exception(f"El archivo de audio de SAPI5 no es un WAV válido: {e}")
+        # Margen generoso: incluso a la voz más rápida, un texto no vacío
+        # tarda un mínimo perceptible en pronunciarse. Menos de eso es señal
+        # de que SAPI5 no llegó a hablar de verdad (voz no encontrada,
+        # motor en un estado inconsistente entre hilos, etc.).
+        duracion_minima_esperada = max(0.3, len(texto.strip()) * 0.01)
+        if n_frames == 0 or duracion_seg < duracion_minima_esperada:
+            raise Exception(
+                f"SAPI5 generó un archivo sin audio real "
+                f"({duracion_seg:.2f}s para {len(texto)} caracteres)."
+            )
 
         convertido = False
         try:
@@ -1247,7 +1287,7 @@ class GrabadorAudio:
             return indice, titulo_capitulo, None, str(ultimo_error)
 
         if incluidos:
-            max_workers = min(_MAX_WORKERS_EXPORTACION, len(incluidos))
+            max_workers = min(_max_workers_para(proveedor), len(incluidos))
             with ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="grabador_capitulo") as executor:
                 futuros = [
                     executor.submit(_generar_capitulo, i, titulo, texto)
