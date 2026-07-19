@@ -893,6 +893,19 @@ class GestorBiblioteca:
                 (id_libro,),
             ).fetchall()
 
+    def obtener_ids_libros_con_exportacion_pendiente(self) -> set[int]:
+        """
+        IDs de todos los libros con al menos una exportación de audiolibro
+        a medias, sin importar el proveedor ni el modo — para poder
+        marcarlos en la Biblioteca y no depender de recordar cuál era el
+        último libro que se estaba exportando.
+        """
+        with self._conexion() as conexion:
+            filas = conexion.execute(
+                "SELECT DISTINCT id_libro FROM exportaciones_pendientes"
+            ).fetchall()
+        return {fila["id_libro"] for fila in filas}
+
     def eliminar_exportacion_pendiente(self, id_exportacion: int):
         with self._conexion() as conexion:
             conexion.execute(

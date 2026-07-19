@@ -101,6 +101,7 @@ class PestanaBiblioteca(wx.Panel):
         self.gestor = GestorBiblioteca()
         self.escaner = None
         self._libros_actuales = []
+        self._ids_audiolibro_pendiente = set()
         self._id_categoria_activa = None
         self._id_etiqueta_activa = None
         self._categoria_en_portapapeles = None
@@ -270,7 +271,7 @@ class PestanaBiblioteca(wx.Panel):
         sizer_filtro_estado.Add(
             wx.StaticText(self, label="Estado:"), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5
         )
-        self._ESTADOS_FILTRO = ["Todos", "Pendientes", "Leyendo ahora", "Leídos"]
+        self._ESTADOS_FILTRO = ["Todos", "Pendientes", "Leyendo ahora", "Leídos", "Audiolibros a medias"]
         self.combo_estado = wx.Choice(self, choices=self._ESTADOS_FILTRO)
         self.combo_estado.SetSelection(0)
         self.combo_estado.Bind(wx.EVT_CHOICE, self.al_cambiar_filtro)
@@ -795,6 +796,9 @@ class PestanaBiblioteca(wx.Panel):
             solo_leyendo=(estado == "Leyendo ahora"),
             solo_leidos=(estado == "Leídos"),
         )
+        self._ids_audiolibro_pendiente = self.gestor.obtener_ids_libros_con_exportacion_pendiente()
+        if estado == "Audiolibros a medias":
+            libros = [l for l in libros if l["id"] in self._ids_audiolibro_pendiente]
         if self._id_etiqueta_activa is None and self._id_categoria_activa is None:
             # Sin etiqueta ni categoría activa, buscar_libros() ordena
             # alfabéticamente por título — pero muchos libros heredan un
@@ -812,7 +816,9 @@ class PestanaBiblioteca(wx.Panel):
         self.lista_libros.DeleteAllItems()
         for indice, libro in enumerate(libros):
             nombres_autores = ", ".join(autores_por_libro.get(libro["id"], [])) or "—"
-            estado_txt = self._describir_estado(libro)
+            estado_txt = self._describir_estado(
+                libro, libro["id"] in self._ids_audiolibro_pendiente
+            )
 
             self.lista_libros.InsertItem(indice, libro["titulo"])
             self.lista_libros.SetItem(indice, 1, nombres_autores)
@@ -830,7 +836,7 @@ class PestanaBiblioteca(wx.Panel):
         self.lbl_estado.SetLabel(f"{len(libros)} libro(s) en la biblioteca.")
 
     @staticmethod
-    def _describir_estado(libro) -> str:
+    def _describir_estado(libro, tiene_audiolibro_pendiente=False) -> str:
         partes = []
         if libro["favorito"]:
             partes.append("Favorito")
@@ -842,6 +848,8 @@ class PestanaBiblioteca(wx.Panel):
             partes.append("Leído")
         if not libro["titulo_revisado"]:
             partes.append("Título sin revisar")
+        if tiene_audiolibro_pendiente:
+            partes.append("Audiolibro a medias")
         return ", ".join(partes) if partes else "Sin marcar"
 
     def al_cambiar_filtro(self, evento):
@@ -1101,7 +1109,8 @@ class PestanaBiblioteca(wx.Panel):
             return
         autores = self.gestor.obtener_autores_de_libro(libro["id"])
         nombres_autores = ", ".join(a["nombre"] for a in autores) or "autor desconocido"
-        estado = self._describir_estado(libro)
+        pendiente = bool(self.gestor.obtener_exportaciones_pendientes(libro["id"]))
+        estado = self._describir_estado(libro, pendiente)
         self._anunciar(
             f"{libro['titulo']}, {nombres_autores}, {libro['formato'].upper()}, {estado}."
         )
