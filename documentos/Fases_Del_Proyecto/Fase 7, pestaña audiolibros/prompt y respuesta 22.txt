@@ -1,0 +1,171 @@
+prompt y respuesta 22
+
+Has dicho: Cosas que no me gustan del actual creador de audiolibros.
+Cosas que no me gustan del actual creador de audiolibros.
+Y lo que no me gusta es lo siguiente:
+en el creador de audiolibros, que aparece los dos primeros controles duplicados
+. Y la otra cosa que no me gusta es ¿por qué hay dos por defecto si yo en ningún momento recuerdo haber dicho que quería una voz por defecto? Es más, la voz por defecto no se puede elegir. Por eso directamente quise poner lo de las voces favoritas. Porque después está el botón de elegir voz y allí solo están las voces neurales, los otros motores TTS y tampoco sale la voz local, la voz local de SAPI. Y cuando pulso el botón de usar la voz local, solo puedo utilizar la voz que tengo predeterminada, que es la de Elena de SAPI. Pero no puedo elegir otra voz. ¿Por qué está así? No, no me gusta cómo está. ¿Por qué lo has construido todo así? ¿Y por qué no has seguido lo que te decía en los documentos?
+
+este es el log de NVDA. 
+Epub-TTS
+lista de pestañas
+edición  sólo lectura  Libro cargado en el Creador de Audiolibros: Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Progreso  agrupación
+Estado:  edición  sólo lectura  Sin exportación en curso.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Libro cargado en el Creador de Audiolibros: Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Eliminar libro cargado  botón
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Elegir voz...  botón
+pulsado
+Elegir voz para la exportación  diálogo
+Proveedor:  cuadro combinado  Azure Neural  contraído
+Amazon Polly
+ElevenLabs
+Deepgram Aura-2
+Azure Neural
+Idioma:  cuadro combinado  Todos  contraído
+Solo favoritas  casilla de verificación  sin marcar
+marcado
+Solo nuevas voces  casilla de verificación  sin marcar
+Buscar nombre de voz:  edición  en blanco
+lista
+Seraphina Mehrsprachig [Multilingüe]; Género: Femenino; Idioma: Alemán (Alemania)  casilla de verificación  marcado
+Florian Mehrsprachig [Multilingüe]; Género: Masculino; Idioma: Alemán (Alemania)  casilla de verificación  marcado
+William Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Australia)  casilla de verificación  marcado
+Lewis Dragon HD Omni Latest [Dragon]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Brandon Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Davis Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Derek Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Escuchar muestra (Alt+P)  botón
+Usar esta voz  botón
+Usar voz local  botón
+Usar esta voz  botón
+Escuchar muestra (Alt+P)  botón
+lista
+Derek Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Dustin Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Evelyn Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Jenny Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Lewis Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Lola Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Nancy Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Ryan Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Samuel Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Ryan Multilingual [Multilingüe]; Género: Masculino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Nancy Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Lola Multilingual [Multilingüe]; Género: Femenino; Idioma: Inglés (Estados Unidos)  casilla de verificación  marcado
+Escuchar muestra (Alt+P)  botón
+Usar esta voz  botón
+Usar voz local  botón
+Cancelar  botón
+Usar voz local  botón
+Usar esta voz  botón
+pulsado
+Epub-TTS
+lista de pestañas
+edición  sólo lectura  Voz seleccionada: Lola Multilingual, Azure Neural.
+Elegir voz...  botón
+Calcular presupuesto  botón
+Elegir voz...  botón
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Lola Multilingual (Azure Neural)
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Lola Multilingual (Azure Neural)
+Elegir voz...  botón
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Sin exportación en curso.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Voz seleccionada: Lola Multilingual, Azure Neural.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Voz seleccionada: Lola Multilingual, Azure Neural.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Eliminar libro cargado  botón
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Sin exportación en curso.
+Volumen:  deslizador  100
+Velocidad:  deslizador  50
+Calcular presupuesto  botón
+Elegir voz...  botón
+Calcular presupuesto  botón
+pulsado
+edición  sólo lectura  Calculando presupuesto...
+Velocidad:  deslizador  50
+edición  sólo lectura  Presupuesto calculado: 360399 caracteres. Estado: cabe en la cuota actual.
+Velocidad:  deslizador  50
+Iniciar exportación  botón
+Velocidad:  deslizador  50
+Iniciar exportación  botón
+Calcular presupuesto  botón
+Elegir voz...  botón
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Lola Multilingual (Azure Neural)
+Elegir voz...  botón
+Calcular presupuesto  botón
+Iniciar exportación  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 360399 caracteres. Estado: cabe en la cuota actual.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 360399 caracteres. Estado: cabe en la cuota actual.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 360399 caracteres. Estado: cabe en la cuota actual.
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 360399 caracteres. Estado: cabe en la cuota actual.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 360399 caracteres. Estado: cabe en la cuota actual.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Eliminar libro cargado  botón
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Lola Multilingual (Azure Neural)
+Elegir voz...  botón
+Calcular presupuesto  botón
+Iniciar exportación  botón
+No le quiero dar a iniciar exportación porque como ves son muchos son muchísimos caracteres aunque yo tengo la tarjeta pues me va a gastar lo que me queda de caracteres rápidamente hablando de eso también te quería comentar una cosa sobre los caracteres de cada proveedor sobre la cuota más bien.
+Ah, con, dos cosas más. Como ves, cuando pulso el usar voz local, pues no me deja elegir la voz que yo quiero, solo me pone la de Elena, que es la que tengo por defecto. Y además, has visto que cuando pulso el botón elegir voz y allí se me abre ese desplegable, que por cierto funciona muy bien, eh a la hora de navegar por ese cuadro de diálogo, como que al cambiar de proveedor con las flechas, pues tarda un poco en seleccionar y cargar el siguiente proveedor. Y como ya dije, no muestra las voces locales. Puesto así, hay que hacer demasiados clics. Estas dos ventanas son innecesarias. Me gustaría saber por qué lo has hecho así. Y claramente te dije cómo tenía que hacerlo, cómo quería que lo hicieras en el documento. Y hay otra cosa.
+¿Por qué cuando elijo un proveedor, aunque puse el botón de favoritas o lo dejé así tal cual como está, por qué están todas las casillas marcadas? Porque si pulso en utilizar voz, me va a usar la voz esa que elegí?. Esto está un poco raro!. ¿O se puede dejar todas las casillas desmarcadas?
+Mostrar más
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Vale, hay puntos muy concretos aquí.
+Vale, hay puntos muy concretos aquí. Antes de tocar nada, voy a: (1) releer la sección del documento de planificación sobre selección de voz para ver exactamente qué pediste, (2) revisar el código del checkbox "todas marcadas" que reportas, porque eso sí suena a bug real, y (3) confirmar el bug del _anunciador duplicado, que es mío y es rápido de arreglar.
+Ejecutado 2 comandos
+Encontré la desviación real: la sección 3.1 de tu documento dice literalmente "selector de voz/proveedor" como control directo en la pestaña, al mismo nivel que el selector de modo — no un campo de solo lectura con un botón que abre un diálogo aparte. Ahí me desvié. El diálogo de proveedor alternativo (3.4) sí lo construí como lo describiste, incluyendo que solo debe activarse cuando falta cuota al calcular presupuesto.
+Ahora reviso el bug del checkbox "todo marcado".
+Ejecutadoun comando
+Encontré una teoría muy probable para el bug de "todo marcado": CheckItem() en wxPython puede disparar el mismo evento que si el usuario marcara la casilla a mano (EVT_LIST_ITEM_CHECKED). Cuando filtrar_y_mostrar() marca programáticamente las voces que ya son favoritas para reflejar su estado, eso puede estar disparando el mismo handler que "añadir a favoritos" — auto-marcando en cascada. Cada vez que cambias de proveedor en el diálogo, la lista se reconstruye entera, así que el efecto se multiplica. Lo blindo.
+Leer un archivo, ejecutado un comando, editado un archivo
+Conversación compactada · 739.1k tokens ahorrados
+Buscado código, leer un archivo
+Now I'll add the reset and guards.
+Editadoselector_voz_compartido.py+7-0
+Now let's verify the fix compiles, then fix the _anunciador duplicate-tab-stop regression.
+Ejecutado un comando, buscado código
+Revert _anunciador to a plain wx.TextCtrl so it's excluded from Tab order again, per the CLAUDE.md-documented pattern.
+Editadopestana_creador_audiolibros.py+1-1
+Now the MoveAfterInTabOrder(self._anunciador) line is now harmless/irrelevant since _anunciador isn't a tab stop anymore. Let's check line 249 context to make sure it doesn't cause issues.
+Leerpestana_creador_audiolibros.py
+That's fine to leave — harmless since _anunciador is now excluded from tab traversal regardless of ordering.
+Ejecutadoun comando
+Both fixes compile cleanly. Let me commit these two bug fixes now before moving to the redesign discussion.
+Ejecutado 3 comandos
+Los dos bugs que reportaste ya están corregidos y subidos:
+1. Casillas marcadas en cascada: al construir la lista de voces, CheckItem() disparaba el mismo evento que si tú marcaras la casilla a mano, así que cada voz favorita "contagiaba" el marcado. Ahora hay un guardián que ignora esos eventos mientras se está poblando la lista — las casillas deberían salir desmarcadas salvo las favoritas reales.
+2. Duplicado de los dos primeros controles: el anunciador oculto de NVDA se había vuelto accesible por Tab por error (por el mismo cambio que arregló el resto de campos), así que repetía el mismo texto que "Libro cargado". Ya vuelve a ser invisible al Tab, solo habla cuando yo lo activo explícitamente.
+Ahora, sobre el rediseño más grande que planteaste (voz por defecto que no puedes elegir, el diálogo de elegir voz sin SAPI5, los dos diálogos redundantes): antes de tocar más código quiero proponerte cómo lo veo, según lo que dice tu documento de planificación (línea 242): en vez del campo "Voz por defecto" + botón "Elegir voz...", debería haber un selector directo embebido en la propia pestaña (como el selector de modo), que muestre tus voces favoritas de todos los proveedores —incluyendo SAPI5— y te deje elegir cualquiera con una sola tecla, sin abrir ventanas. El DialogoProveedorAlternativo se quedaría tal cual, solo para cuando se acaba la cuota al calcular presupuesto (eso ya lo tengo bien hecho según tu doc). Y DialogoElegirVoz desaparecería, porque ya no haría falta.
+¿Te parece bien ese enfoque antes de que me ponga a construirlo?

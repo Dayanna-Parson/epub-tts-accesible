@@ -1,0 +1,23 @@
+prompt y respuesta 40
+
+lo acabo de hacer, y no se porqué me sigue diciendo la misma fecha y hora. no cambia. uff, me estoy frustrando otra vez
+Respuesta:
+
+Encontré algo enorme. Hay manejadores de teclado que interceptan Shift+F10 directamente, en dos sitios distintos — podrían estar robándole la pulsación al menú de verdad antes de que llegue a generarse.
+
+FOUND IT. La causa raíz real: `ventana_principal.py` tiene su **propio menú contextual duplicado y desactualizado**, enganchado globalmente a Shift+F10 en toda la ventana — y ese es el que realmente se ejecuta, no ninguno de los métodos de `pestana_biblioteca.py` que llevo días instrumentando. Por eso nunca aparecía nada en el log: estaba mirando el archivo equivocado por completo.
+
+Confirmado: ninguno de los tres depende de `evento` salvo mi propio diagnóstico, que funciona igual con `None`. Compilo y subo.
+
+No te frustres más — encontré la causa real, y estaba totalmente fuera del sitio donde llevaba días buscando.
+
+**El problema de verdad:** Shift+F10 en toda la ventana está enganchado, con máxima prioridad, a un solo manejador global en `ventana_principal.py` (no en `pestana_biblioteca.py`, donde yo llevaba días metiendo chivatos). Ese manejador, para la pestaña Biblioteca, llamaba a un método (`_menu_contextual_biblioteca`) que **reconstruía a mano una copia paralela del menú**, siempre la misma, sin importar si tenías el foco en el árbol, en el listado de etiquetas o en la lista de libros. Esa copia:
+- Nunca incluía las opciones de pendiente/leyendo ahora/leído (esas solo se añadieron en el método "de verdad", que esta copia nunca llamaba).
+- Nunca mostraba el menú propio del árbol ni el de etiquetas (Nueva categoría, Renombrar, Nueva etiqueta...).
+- Siempre pegaba "Importar carpeta/Ayuda/Salir" a todo, fuera cual fuera el control activo.
+
+Y por eso ninguno de los avisos que puse estos días en el log aparecía nunca: ese código nunca se ejecutaba, estaba mirando al archivo equivocado.
+
+**Ya está corregido.** Ese método ahora simplemente mira qué control tiene el foco en ese momento y llama directamente al método real correspondiente — ya no hay dos copias del mismo menú que mantener sincronizadas.
+
+`git pull` y prueba otra vez los tres menús (árbol, etiquetas, libro) — esta vez debería ser un cambio de verdad, no solo otro chivato más.

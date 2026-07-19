@@ -1,0 +1,259 @@
+A ver, vamos por partes. He encontrado varias cosas que no terminan de funcionar bien. La primera es que ahora sí me muestra perfectamente los menús y puedo navegar bien por ellos. He probado a entrar en la biblioteca y ponerme sobre un libro; he pulsado la tecla Aplicaciones y he seleccionado "Enviar a la pestaña Creador de audiolibros". Aquí hay otro problema: se envía perfectamente, pero, en mi caso —y funciona igual con todos los lectores, como JAWS—, solo me muestra esto y, cuando cargo el libro, no sé lo que dice porque el lector salta y, además, solo me muestra como si tabulara. Lo siguiente es que solo si navego con el navegador de objetos me muestra la información en forma de ventanas, y no sé por qué, ya que tendría que mostrarme la interfaz directamente. Es como si esa parte no fuera accesible; me muestra el título del libro, el progreso, el presupuesto, etcétera. El otro problema, del que no me di cuenta antes, es que cuando reproduzco un libro en la pestaña de lectura —lo voy a mostrar exactamente—, aunque previamente en los ajustes haya configurado la velocidad por puntos, no lo muestra bien. Primero, no se refleja correctamente y, aunque mueva el deslizador —que, por cierto, no sé por qué empieza en 0.7 y marca un 32%—, al llegar al 80% debería ir más rápido, pero no es así. Aunque mueva el deslizador, la voz suena igual, como si estuviera al 50%; no se mueve, no hace absolutamente nada. Te lo voy a enseñar.
+Y además, faltarían dos botones mas. uno para importar un libro directamente, y otro para eliminar el libro actual, por si me equivoqué de libro
+A, y también deja preparada para que también funcione con pdf
+
+Mira, ahora vas a ver como me lee toda la interfaz el NVDA.
+No es que halla cosas duplicadas.
+Simplemente, voy navegando de delante haciea a trás.
+árbol
+Volumen:  deslizador  100
+Modo Lectura  pestaña  seleccionado
+árbol
+Volumen:  deslizador  100
+Modo Lectura  pestaña  seleccionado
+Creador de Audiolibros  pestaña  seleccionado
+Capítulos  edición  sólo lectura  en blanco
+Creador de Audiolibros  pestaña  seleccionado
+Modo Lectura  pestaña  seleccionado
+Biblioteca  pestaña  seleccionado
+lista de pestañas
+Géneros  pestaña  seleccionado
+árbol
+(Todas las categorías)
+lista
+(Todas las etiquetas)
+(Todas las etiquetas)
+Cazadores de sombras - Cassandra Clare
+Nueva etiqueta... (F2 renombra, Supr elimina)  botón
+lista
+Ciudad de hueso; Autor: Cassandra Clare; Formato: EPUB; Estado: Leyendo
+Ciudad de ceniza; Autor: Cassandra Clare; Formato: EPUB; Estado: Leyendo
+Ciudad de hueso; Autor: Cassandra Clare; Formato: EPUB; Estado: Leyendo
+Contexto  menú
+Abrir en Lectura	Intro  a
+Enviar a Creador de Audiolibros  e
+Marcar como favorito  m
+Marcar como pendiente  m
+Quitar de leyendo ahora  q
+Marcar como leído  m
+Añadir a categoría  submenú  a
+Quitar de esta categoría  no disponible  q
+Añadir a etiqueta  submenú  a
+Quitar de esta etiqueta  q
+Renombrar archivo...	F2  r
+Renombrar todos los pendientes de revisión...  r
+Reglas de pronunciación de este libro...  r
+Quitar de la biblioteca  q
+Ayuda  submenú  a
+Salir  s
+Abrir en Lectura	Intro  a
+Enviar a Creador de Audiolibros  e
+Epub-TTS
+lista de pestañas
+Capítulos  edición  sólo lectura  en blanco
+Volumen:  deslizador  100
+Creador de Audiolibros  pestaña  seleccionado
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Creador de Audiolibros  pestaña  seleccionado
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Modo de exportación:  ventana
+Voz: Seraphina Mehrsprachig (azure)  ventana
+Voz: Seraphina Mehrsprachig (azure)
+Último
+Sin objetos dentro
+Voz: Seraphina Mehrsprachig (azure)  ventana
+Calcular presupuesto  ventana
+Calcular presupuesto  botón
+Sin objetos dentro
+Último
+Calcular presupuesto  ventana
+Iniciar exportación  ventana  no disponible
+Abortar exportación  ventana  no disponible
+Iniciar exportación  ventana  no disponible
+Calcular presupuesto  ventana
+Calcular presupuesto  botón
+Último
+Sin objetos dentro
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Velocidad:  deslizador  50
+Calcular presupuesto  botón
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+pulsado
+Capítulos  edición  sólo lectura  Calculando presupuesto...
+Velocidad:  deslizador  50
+Capítulos  edición  sólo lectura  Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Velocidad:  deslizador  50
+Velocidad:  ventana
+panel
+Último
+Primero
+panel  ventana
+lista de pestañas
+Biblioteca  pestaña
+Sin objetos dentro
+Volumen:  deslizador  100
+Velocidad:  deslizador  50
+Iniciar exportación  botón
+Calcular presupuesto  botón
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Volumen:  deslizador  100
+Volumen:  ventana
+Progreso  ventana
+Volumen:  ventana
+Progreso  ventana
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  barra de progreso  0%
+Último
+Sin objetos dentro
+Último
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Capítulos  ventana
+Capítulos  edición  sólo lectura  Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Sin objetos dentro
+Último
+Creador de Audiolibros  pestaña  seleccionado
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+Iniciar exportación  botón
+Velocidad:  deslizador  50
+Último
+Velocidad:  ventana
+Volumen:  ventana
+Volumen:  ventana
+Progreso  ventana
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Progreso  ventana
+Progreso  agrupación
+Sin objetos dentro
+Último
+Último
+Progreso  ventana
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Capítulos  ventana
+Último
+Último
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.  ventana
+Progreso  ventana
+Volumen:  ventana
+Volumen:  ventana
+Velocidad:  ventana
+Velocidad:  ventana
+Abortar exportación  ventana  no disponible
+Iniciar exportación  ventana
+Abortar exportación  ventana  no disponible
+Iniciar exportación  ventana
+Calcular presupuesto  ventana
+Voz: Seraphina Mehrsprachig (azure)  ventana
+Modo de exportación:  ventana
+Modo de exportación:  ventana
+Ciudad de hueso — Cassandra Clare (EPUB)  ventana
+Libro  ventana
+Primero
+Ciudad de hueso — Cassandra Clare (EPUB)  ventana
+Ciudad de hueso — Cassandra Clare (EPUB)
+Primero
+Sin objetos dentro
+Último
+Ciudad de hueso — Cassandra Clare (EPUB)  ventana
+Ciudad de hueso — Cassandra Clare (EPUB)
+Último
+Primero
+Primero
+Ciudad de hueso — Cassandra Clare (EPUB)  ventana
+Libro  ventana
+Libro  agrupación  Ciudad de hueso — Cassandra Clare (EPUB)
+Sin objetos dentro
+Último
+Libro  ventana
+Ciudad de hueso — Cassandra Clare (EPUB)  ventana
+Modo de exportación:  ventana
+Modo de exportación:  ventana
+Voz: Seraphina Mehrsprachig (azure)  ventana
+Calcular presupuesto  ventana
+Voz: Seraphina Mehrsprachig (azure)  ventana
+Voz: Seraphina Mehrsprachig (azure)
+Voz: Seraphina Mehrsprachig (azure)
+Clic izquierdo
+Volumen:  deslizador  100
+Creador de Audiolibros  pestaña  seleccionado
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+Iniciar exportación  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Velocidad (×):  deslizador  8
+Detener (Ctrl+D)  botón
+pulsado
+Velocidad (×):  deslizador  8
+12
+Velocidad (0.6×):
+16
+Velocidad (0.75× (Lenta)):
+20
+24
+Velocidad (0.9×):
+28
+32
+Velocidad (1.0× (Normal)):
+36
+40
+Velocidad (1.1×):
+44
+48
+Velocidad (1.25×):
+52
+56
+Velocidad (1.5× (Rápida)):
+60
+64
+Velocidad (1.75×):
+68
+72
+76
+Velocidad (2.0× (Muy rápida)):
+80
+84
+88
+Velocidad (2.5×):
+92
+96
+Velocidad (3.0× (Máxima)):
+100
+80
+Velocidad (2.0× (Muy rápida)):
+60
+Velocidad (1.5× (Rápida)):
+40
+Velocidad (1.1×):
+20
+Velocidad (0.75× (Lenta)):
+0
+Velocidad (0.5× (Muy lenta)):
+20
+Velocidad (0.75× (Lenta)):
+40
+Velocidad (1.1×):
+60
+Velocidad (1.5× (Rápida)):
+80
+Velocidad (2.0× (Muy rápida)):
+100
+Velocidad (3.0× (Máxima)):
+lista
+Ciudad de hueso; Autor: Cassandra Clare; Formato: EPUB; Estado: Leyendo
+lista de pestañas
+árbol
+(Todas las categorías)
+Nueva etiqueta... (F2 renombra, Supr elimina)  botón
+árbol
+(Todas las categorías)
+Y dos cosas más que he notado. En la pestaña de lectura, los controles de avance y retroceso ya no se mueven de 5 en 5 como antes, sino que van a la subpestaña de la biblioteca. Y también he encontrado otro problema: al pulsar Control + Tab, sí me lee correctamente las pestañas, pero, sin embargo, al pulsar Control más los números, no. Me lee aleatoriamente cualquier control y tengo que hacer Shift + Tab para volver a las pestañas y pulsar la flecha derecha. Y otra pregunta: ¿es mejor dejarlo así, con Control + Tab para moverse por las pestañas, y quitar el Control del 1 al 5 para que así lo podamos usar para otras cosas?

@@ -1,0 +1,22 @@
+prompt claude 21
+
+lista de pestañas
+Géneros  pestaña  seleccionado
+árbol
+Distopía
+Importar carpeta... (Ctrl+O)  botón
+Biblioteca  pestaña  seleccionado
+lista de pestañas
+Géneros  pestaña  seleccionado
+lista
+Libros Autoconclusivos
+Sagas y colecciones  pestaña  seleccionado
+árbol
+Distopía
+Como ves, no se ha arreglado. me he ido a otro género, y cuando muevo de pestaña, pues como ves, el foco se sigue llendo al primer elemento, y no a la pestaña donde estoy moviendo la flecha.
+A, e borrado todos los cachés que me pedías.
+A, también sigue sin funcionar lo de que cuando añado libros nuevos, y si esos libros los quiero añadir a una categoría, pues cuando me voy a la categoría, solo muestra el primero que agregué. los otros no.
+Y tengo que reiniciar la app, y ahí es cuando se muestran todos los libros que he añadido a las categorías.
+2. Opciones de marcar pendiente/leyendo/leído ausentes del menú, y también falta "Quitar de esta etiqueta" — confirmé que el código está en el archivo (por eso también me extraña que falte "Quitar de esta etiqueta", que es más antiguo y no toqué hoy). Esto huele a bytecode viejo en caché de Python, no a un fallo real del código. ¿Puedes borrar las carpetas __pycache__ dentro de app/interfaz/ y app/motor/ en tu copia y volver a abrir la app? Si con eso siguen sin aparecer, avísame y reviso más a fondo.
+3. Silencio en "Aplicando etiquetas..." — sigue pendiente el diagnóstico: ¿el archivo app.log que me pasaste tiene alguna línea con [AnunciadorVoz] Verbalizando: cerca de la hora en que hiciste esa prueba? Si no aparece ninguna, el mensaje nunca llegó a intentar hablarse (hay que investigar el hilo); si aparece pero no la oíste, es un problema de audio/motor de voz, no de la app.
+Y todo esto sigue igual, sin cambios.

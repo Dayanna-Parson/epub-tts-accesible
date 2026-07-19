@@ -1,0 +1,11 @@
+prompt y respuesta 6
+Pero, una pregunta. el atajo control o, no entra en conflicto con precisamente el de la pestaña lectura que es para abrir un libro en la pestaña lectura? Y, creo que es mejor, que en vez de un atajo, esto pues mejor en la pestaña creacion o creador de audiolibros, pues perdón, poner desde la pestaña biblioteca pues en el menú contextual para mandarlo a la pestaña creación de audiolibros. Ya que directamente no tiene sentido desde la pestaña lectura creo yo, porque la pestaña lectura pues sirve para leer en tiempo real....
+Respuesta:
+
+No hay conflicto: `Ctrl+O` ya es contextual por pestaña desde antes de esta sesión — `_al_ctrl_o_contextual()` en `ventana_principal.py` mira `notebook.GetSelection()` y decide qué hacer según la pestaña activa. En Lectura abre el selector de EPUB; en Biblioteca importa carpeta; en Grabación abre TXT. Añadir la rama de Creador de Audiolibros no le quita nada a Lectura — cada una sigue haciendo lo suyo, exactamente igual que ya conviven Biblioteca/Lectura/Grabación hoy sin pisarse.
+
+Lo que sí puse en el Creador de Audiolibros es solo un aviso por voz cuando pulsas Ctrl+O *estando en esa pestaña* ("ve a Biblioteca y usa Enviar a Creador de Audiolibros"): no abre nada, solo redirige. No sustituye al menú contextual — es un acompañamiento por si alguien prueba el atajo por costumbre.
+
+Y coincido en tu segundo punto: eso ya era el plan desde el principio de esta sesión ("flujo de entrada único: solo libros de la Biblioteca") — el mecanismo real de envío es el menú contextual de Biblioteca ("Enviar a Creador de Audiolibros"), no un atajo. Ese punto concreto del menú contextual de Biblioteca **todavía no está cableado** — hasta ahora solo dejé listo el método público `pestana_creador.cargar_libro(datos_libro)` que lo recibiría.
+
+¿Quieres que lo conecte ahora? Sería: añadir la opción "Enviar a Creador de Audiolibros" al menú contextual de `pestana_biblioteca.py` (junto a "Abrir en Lectura", etc.), que tome el libro seleccionado en la lista, cambie a `IDX_CREADOR` y llame a `self.pestana_creador.cargar_libro(...)`.

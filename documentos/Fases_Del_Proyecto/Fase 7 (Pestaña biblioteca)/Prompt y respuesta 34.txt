@@ -1,0 +1,27 @@
+Prompt y respuesta 34
+
+Si, de hecho está sincronizado con one drive. Pero, lo raro es que en la carpeta que es esta: "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\registros\app.log" pero dice que la fecha de midificación es el 25 de junio. Y recuerda que no veo. soy ciega. Así que, no se porqué no se están guardando todos los nuevos errores, y todas las cosas que me pides. Y solo está ese archivo en la carpeta. no se guarda ninguno mas
+
+respuesta:
+¡Ahí está, encontrado! Mira la ruta que me diste con atención: **tiene un `\app\` de más**.
+
+Tú has estado mirando:
+`C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\registros\app.log`
+
+Pero la ruta correcta, donde escribe la app actual, es (sin `\app\` en medio):
+`C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\registros\app.log`
+
+Es una carpeta `registros` distinta, un nivel más arriba — hermana de la carpeta `app`, no dentro de ella. El archivo que llevas subiéndome todo este tiempo es un log antiguo y huérfano de una versión anterior de la app (de ahí que se quedara congelado el 25 de junio: desde entonces el código ya no escribe ahí, escribe en la carpeta de arriba).
+
+Y encontré por qué te confundiste: hay un comentario desactualizado en el propio código que dice la ruta incorrecta. Lo corrijo para que no vuelva a pasar.
+
+Ya está corregido y subido. Ahora, para que puedas llegar tú misma a la carpeta correcta con NVDA sin depender de mí cada vez:
+
+**Ruta correcta** (una carpeta más arriba de donde mirabas):
+```
+C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\registros\app.log
+```
+
+Para llegar ahí con el teclado: abre el Explorador de archivos, pulsa `Alt+D` (o `Ctrl+L`) para ir a la barra de direcciones, escribe esa ruta completa tal cual, y pulsa Enter. Debería abrirte directamente la carpeta `registros` con el archivo `app.log` dentro (sin pasar por la carpeta `app`).
+
+Cuando puedas, abre la app, haz las mismas pruebas de siempre (Shift+F10 en el árbol de géneros y en el listado de etiquetas), y súbeme el `app.log` de **esa** ruta. Ahora sí debería tener contenido de hoy, incluidos los avisos que dejé puestos — y por fin vamos a poder ver de verdad qué está pasando con esos dos menús.

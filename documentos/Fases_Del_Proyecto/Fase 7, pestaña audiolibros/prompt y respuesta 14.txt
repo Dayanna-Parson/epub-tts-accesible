@@ -1,0 +1,38 @@
+prompt y respuesta 14
+
+Has dicho: como sabes soy ciega.
+Ver imagen adjunta 1
+Ver imagen adjunta 2
+Ver imagen adjunta 3
+Ver imagen adjunta 4
+Ver imagen adjunta 5
+como sabes soy ciega. Pero, e podido sacar varias capturas, espero que te ayuden. Y esto es como me lee NVDA Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Creador de Audiolibros  pestaña  seleccionado
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Creador de Audiolibros  pestaña  seleccionado
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Creador de Audiolibros  pestaña  seleccionado
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Esto es oro — ahora tengo evidencia exacta, no una teoría.
+Esto es oro — ahora tengo evidencia exacta, no una teoría. Tu log confirma que el Tab solo llega a 4 controles (combo_modo, btn_calcular, deslizador_velocidad, deslizador_volumen) y salta directo de vuelta a la pestaña. Nunca llega a txt_libro, txt_voz, txt_progreso ni al _anunciador — y estos tres campos de texto nunca están deshabilitados ni ocultos, así que no debería pasar. wx los está dejando fuera del orden de tabulación real por alguna razón que no depende de nuestro código de habilitar/deshabilitar.
+Voy a forzar la cadena de tabulación explícitamente con MoveAfterInTabOrder() — técnica que ya se usa con éxito en este mismo proyecto (pestana_biblioteca.py) para resolver exactamente este tipo de problema.
+Leer un archivo, editado un archivo
+Actualizo primer_control/ultimo_control para que coincidan con la cadena real:
+Leer un archivo, editado un archivo, ejecutado 3 comandos
+Verificado. Registro el fix.
+Commit realizadoda6b5f2
+Commit da6b5f2 pusheado
+Lo que encontré con tu log: solo con Tab puro, sin navegador de objetos, el foco pasaba por combo_modo → btn_calcular → deslizador_velocidad → deslizador_volumen y saltaba directo de vuelta a la pestaña — nunca llegaba a txt_libro, txt_voz, txt_progreso (los TextCtrl de solo lectura) ni al _anunciador, aunque ninguno estaba deshabilitado ni oculto en ese punto. Eso explica exactamente lo que describías: esos campos solo eran visibles con el navegador de objetos, porque literalmente nunca entraban en la cadena de tabulación real de wx en esta pestaña concreta.
+El arreglo: forcé la cadena de tabulación completa con MoveAfterInTabOrder() — la misma técnica que ya usa pestana_biblioteca.py para lista_libros cuando tuvo un problema similar. Ahora la cadena explícita es: _anunciador → txt_libro → combo_modo → txt_voz → btn_calcular → btn_iniciar → btn_abortar → deslizador_velocidad → deslizador_volumen → txt_progreso → lista_capitulos.
+Por favor, después de bajar este commit (git pull), repite exactamente la misma prueba: abre el Visor de voz de NVDA, entra a Creador de Audiolibros con un libro cargado, y pulsa solo Tab varias veces seguidas. Si ahora sí anuncia "Libro cargado: ...", "Voz por defecto: ...", "Estado: ..." en el recorrido normal, confirmamos que era esto. Si sigue sin aparecer alguno, dime exactamente cuál falta y seguimos desde ahí con la misma evidencia de log — eso es lo que de verdad me hizo avanzar esta vez, mucho mejor que yo adivinando.
+Sobre las voces favoritas / diálogo de proveedor alternativo y la velocidad multi-proveedor: los dejo pendientes hasta que confirmes que el pull de este commit realmente cambia algo, dado lo que pasó la última vez.

@@ -1,0 +1,14 @@
+prompt 35.1
+
+Tengo el diagnóstico definitivo de las voces estándar de Polly tras realizar pruebas cruzadas: ¡En las grabaciones a archivo MP3 la última palabra se escucha perfecta y completa! El corte brusco (ej: "mayoría" se corta en "may") ocurre ÚNICAMENTE en la lectura en tiempo real (pestaña de Lectura) cuando el slider de velocidad supera la posición 60.
+
+Esto demuestra que el fallo no es del SSML ni de Amazon, sino del reproductor en vivo ('reproductor_voz.py'). Al ir rápido, el hilo de lectura en vivo detecta que el texto terminó y corta la reproducción del búfer de audio antes de que los altavoces terminen de emitir las últimas sílabas físicas. Modifica el flujo de reproducción en vivo para que espere estrictamente a que el canal de audio se vacíe por completo antes de detener el fragmento o saltar al siguiente.
+
+Con esto claro, vamos a resolver los siguientes puntos de usabilidad y frentes pendientes de la Fase B de forma limpia:
+
+1. Importar archivo único en Biblioteca: Añade en la pestaña de Biblioteca un botón (o una opción de menú) para "Importar libro..." mediante un 'wx.FileDialog' clásico, permitiendo añadir a la base de datos un único archivo (.epub o .pdf) de forma directa sin obligar a escanear una carpeta entera.
+2. Eliminar recientes con Suprimir: En la 'VentanaPrincipal', dentro del submenú de libros recientes, vincula el evento de teclado 'wx.WXK_DELETE' (Suprimir) para que, si el foco está sobre un libro del historial, se elimine directamente esa entrada sin necesidad de navegar hasta el botón general de borrar historial.
+3. Progreso hablado en Libro Completo: En el Creador de Audiolibros, dentro del modo "Libro completo", haz que el '_anunciador' verbalice el progreso por voz cada 10% de avance (ej: "Exportación al 10%", "20%..."), tal como ya hace de forma natural el modo por capítulos.
+4. Bug de preescucha con Conchita: Revisa el manejador de 'al_escuchar_voz' en la preescucha del Creador. Al seleccionar por primera vez a Conchita (o voces estándar específicas) da un error silencioso de inicialización que se desbloquea si cambias de voz y regresas a ella. Asegura la limpieza del estado del reproductor secundario.
+
+5. Estimación de tiempo de grabación: En la pestaña del Creador de Audiolibros, haz que al pulsar "Calcular presupuesto" (además del coste estimado y los caracteres) el sistema calcule y verbalice a través del '_anunciador' una estimación de cuánto tiempo tardará en grabarse el libro o cuánto durará el audio final resultante, basándose en el volumen de caracteres y la velocidad seleccionada en el deslizador.

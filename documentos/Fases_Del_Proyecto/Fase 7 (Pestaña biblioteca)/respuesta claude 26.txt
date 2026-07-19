@@ -1,0 +1,25 @@
+respuesta claude 26
+
+Leí tu log con calma — y tu diagnóstico de las etiquetas es exactamente correcto, coincide con lo que muestran los números. Voy a arreglarlo junto con lo de Ctrl+Av/RePág.
+
+Ahora el atajo Ctrl+Av/RePág para la subpestaña.
+
+Ahora añado el método manejador.
+
+Ahora actualizo la construcción del árbol para mostrar el conteo.
+
+Ahora quito los diagnósticos temporales del menú que ya no hacen falta (confirmó que la voz y la lógica de datos están bien; dejo el del menú porque ese sigue sin resolverse) y elimino el de `_cargar_libros` ya que confirmó que datos y control siempre coincidían.
+
+¡Buenas tardes! Tu diagnóstico de las etiquetas era exactamente correcto — el log lo confirma número por número.
+
+**Etiquetas — no era un bug de datos, era justo lo que dijiste.** Miré tu log línea por línea: la consulta y lo que se mostraba en pantalla **siempre coincidieron** (nunca hubo un solo caso de "la consulta trae 6 pero el control muestra menos"). El problema real era el que tú describiste: después de escanear, la lista de etiquetas se quedaba en la que tuvieras activa (a veces una recién creada con pocos libros, o incluso 0), y eso parecía "faltan libros" cuando en realidad solo faltaba volver a "(Todas las etiquetas)". Ya lo corregí: ahora, al terminar un escaneo, la lista de etiquetas vuelve a "Todas" igual que ya hacía el árbol de géneros. Buen ojo, ese hallazgo era tuyo.
+
+**Ctrl+Av/RePág en las subpestañas — corregido.** Tenías razón en que no cambiaba de subpestaña. La causa: el subnotebook de Géneros/Sagas está anidado dentro de una página del notebook principal, y ese notebook exterior "se quedaba" con la combinación de teclas antes de que llegara al de dentro — el mismo motivo por el que el notebook principal tampoco confía en el comportamiento nativo para Ctrl+Tab y lo captura a mano. Hice lo mismo aquí.
+
+**Número de libros en el árbol — hecho.** Cada género/subgénero ahora muestra cuántos libros tiene asignados directamente, por ejemplo "Fantasía (12 libro(s))".
+
+**Sobre el orden desordenado en la vista de Géneros** — esto es real pero necesita más trabajo del que puedo hacer sobre la marcha: las etiquetas (sagas) ya tienen una columna en la base de datos para recordar el orden en que añadiste cada libro, pero las categorías (géneros) no la tienen todavía — habría que añadirla. Es un cambio de esquema, no algo que quiera improvisar. Si quieres que lo haga iré con cuidado y te aviso antes.
+
+**El menú sigue igual, sin novedad tuya sobre eso en este mensaje** — dejé el diagnóstico en el log activo (el que lista los ítems reales del menú). En cuanto puedas reproducirlo y pases ese trozo del `app.log`, lo ataco con datos reales.
+
+¿Quieres que continúe ahora con el orden de categorías (el cambio de esquema), o prefieres primero volver a probar todo esto y me cuentas cómo va?

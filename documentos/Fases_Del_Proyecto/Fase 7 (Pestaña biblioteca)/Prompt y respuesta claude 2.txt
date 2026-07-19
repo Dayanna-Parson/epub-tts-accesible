@@ -1,0 +1,189 @@
+Prompt y respuesta claude 2
+
+Hola claude, primero, necesito que crees una rama para esta sesión, donde trabajaremos en ella, y construiremos la fase 7, la v3 de mi app. Y por el momento, no quiero que escribas nada de código. Quiero, que luego de crear la rama llamada fase 7V3. Quiero que te léas el archivo claude.md. y que también te leas estos dos archivos que te adjunto en este mensaje. Son conversaciones con el chat de claude y gemini, sobre esta versión... Quiero que me des tu opinión, y como lo hacemos! Necesitas que te pase el repo del lector bookworm?
+Mostrar acciones del mensaje
+Sesión inicializada
+Claude ha respondido: Voy a leer los archivos ya cargados y crear la rama, sin escribir código todavía.
+Voy a leer los archivos ya cargados y crear la rama, sin escribir código todavía.
+Checked git status and current branch
+Ya estamos en la rama claude/fase-7-v3-planning-tsz05n (la que me indicaron para esta sesión), limpia y sin cambios pendientes. Ya leí el CLAUDE.md (contexto del sistema) y los dos archivos que adjuntaste: la conversación con Gemini sobre el diseño de la v3.0, y la lista de "cosas para la v3.0".
+Mi opinión, directa:
+Gemini tiene razón en casi todo, y son los puntos correctos para blindar antes de tocar código:
+1. SQLite para Biblioteca/Diccionario, JSON para Ajustes — totalmente de acuerdo. Encaja con tu propia regla del CLAUDE.md de escritura atómica; SQLite te la da gratis con transacciones.
+2. Escaneo en hilo de fondo con wx.CallAfter — no es opcional, es literalmente una regla ya escrita en tu CLAUDE.md ("Hilos: wxPython no es thread-safe"). Bookworm hace esto igual.
+3. PDF necesita un parser de limpieza propio — correcto, y encaja como módulo hermano de tu limpiador_lectura.py existente.
+4. Anuncios de progreso: no automáticos en Lectura, sí en Creador de Audiolibros — coincide con lo que ya decidiste en la v2.0 (Ctrl+I bajo demanda). Buena decisión, no lo toques.
+5. Actualizador con ejecutable auxiliar precompilado, no .bat al vuelo — esto es importante y coincide con el patrón que ya usas para SAPI32 (proceso puente compilado). Mismo patrón, reutilizable.
+Sobre Bookworm: no hace falta que me pases el repo. Gemini ya te dio bien la razón — es un lector de pantalla open source muy conocido, conozco su patrón general (SQLite + wxPython + TreeCtrl de estanterías + ListCtrl de reportes). Pero si en algún momento del diseño de la interfaz de la pestaña Biblioteca quieres que compare literalmente cómo Bookworm resuelve algo muy específico de foco o navegación, ahí sí ayudaría tenerlo — no para copiar código, sino para contrastar decisiones de UX con NVDA. Tú decides si lo pasas cuando lleguemos a ese punto; por ahora no lo necesito.
+Un punto que añadiría yo, no cubierto por Gemini: el Asistente Gemini de Biblioteca (punto 5 de tu lista) implica una llamada de red desde dentro de la app — hay que decidir ahora, no después, cómo se gestiona esa clave API (mismo patrón cargar_claves()/guardar_claves() que ya tienes) y qué pasa con NVDA si la respuesta tarda (announcer de "pensando..." vs. silencio). Lo dejamos pendiente para cuando toquemos esa fase.
+¿Seguimos cerrando el diseño exactamente donde lo dejaste con Gemini — el flujo del escáner en segundo plano — o prefieres que primero repasemos juntos el orden completo de fases (A→D) y prioricemos qué se diseña primero?
+Mostrar acciones del mensaje
+Has dicho: me da igual, ¿por donde te gustaría empezar?
+me da igual, ¿por donde te gustaría empezar? a por cierto, aquí tienes el link a su repo para que lo tengas a mano. https://github.com/blindpandas/bookworm.git
+Mostrar acciones del mensaje
+Claude ha respondido: models.
+Navegado la web, usado una herramienta
+models.py es justo lo que necesito para ver el esquema real. Voy a leerlo.
+Obtenidohttps://raw.githubusercontent.com/blindpandas/bookworm/master/bookworm/bookshelf/local_bookshelf/models.py
+Muy revelador. Esto es información real de Bookworm, útil y confirma/matiza varias cosas que asumimos con Gemini. Resumo lo importante:
+Lo que Bookworm hace realmente (no lo que supusimos):
+• Usa APSW (otro binding de SQLite, más rápido que el sqlite3 estándar) con peewee como ORM, en modo WAL (Write-Ahead Logging) y foreign_keys activadas. Eso es más sofisticado que el sqlite3.connect() a pelo que planeábamos.
+• No guarda estanterías como tabla separada "estanterias" — usa Category (categorías) y Tag (etiquetas), ambas con relación muchos-a-muchos con Document vía tablas de unión (DocumentAuthor, DocumentTag). Es decir: separaron "categoría" (una sola, tipo género) de "etiquetas" (varias, libres) — más flexible que nuestra única tabla estanterias.
+• Tienen Author, Category, Format, Tag como tablas normalizadas separadas, no como texto suelto en Document. Eso evita duplicar strings ("Pedro Urvi" escrito 40 veces) y permite filtrar rápido.
+• El campo metadata es JSON dentro de la fila SQLite — hito importante: mezclan JSON y SQL cuando conviene, exactamente lo que hablábamos con Gemini de "cada formato para lo suyo", pero a nivel de columna, no de archivo completo.
+• Tienen in_reading_list y is_currently_reading como booleanos separados de favorited — una idea que no habíamos contemplado: diferenciar "quiero leer" de "leyendo ahora" de "favorito".
+• Usan FTS5 (Full-Text Search de SQLite) con una tabla DocumentFTSIndex — búsqueda de texto completo dentro de los libros, indexada de forma nativa. Esto es un plus que ni Gemini ni yo habíamos propuesto y que con 500 EPUBs podría ser muy útil ("buscar en qué libro mencioné tal cosa").
+• Tienen sistema de migraciones versionado (de la tabla v1→v2) — coherente con que usan alembic en el repo raíz.
+• Page con eliminación en cascada ligada a Document — sugiere que indexan contenido por página, no solo metadatos.
+Mi valoración: no necesitamos copiar su complejidad (APSW+peewee+alembic+FTS5 es mucho para tu escala de 500 libros), pero hay 3 ideas de oro que sí adoptaría:
+1. Separar favorito / en_lista_pendiente / leyendo_ahora en vez de solo leido booleano.
+2. Normalizar autores como tabla propia en vez de texto libre repetido (ya lo teníamos con la idea de estanterías, extenderlo a autor).
+3. Considerar FTS5 nativo de SQLite para búsqueda de texto — es gratis, ya viene en sqlite3 de Python, y con tus 500 EPUBs sería un diferencial fuerte.
+¿Quieres que incorpore estos 3 ajustes al esquema de tablas que ya habías cerrado con Gemini y lo dejemos como diseño definitivo, o prefieres que primero miremos database.py para ver cómo gestionan la conexión/hilos (relevante para tu regla de wx.CallAfter)?
+Mostrar acciones del mensaje
+Has dicho: genial, haz ambas cosas!
+genial, haz ambas cosas!. Y si ves cosas en el repo que están implementadas de una forma diferente, o crees que hay cosas que pueden funcionar mejor en mi app, que como estaba hasta ahora, pues creo que sería buena idea que lo contemplemos.
+Mostrar acciones del mensaje
+Claude ha respondido: Aquí tienes el diseño consolidado con lo aprendido del repo real, más un comparativo de qué adoptar, qué descartar y qué mejorar respecto a lo que ya tenías.
+Navegado la web
+Aquí tienes el diseño consolidado con lo aprendido del repo real, más un comparativo de qué adoptar, qué descartar y qué mejorar respecto a lo que ya tenías.
+1. Esquema de base de datos definitivo (biblioteca.db)
+autores
+  id, nombre (único, indexado)
+categorias                    -- sustituye a "estanterias" como concepto único por libro
+  id, nombre (único)
+etiquetas                     -- NUEVO: libres, muchos-a-muchos, para sagas/colecciones personalizadas
+  id, nombre (único)
+libros
+  id
+  ruta_archivo (único)
+  titulo
+  formato                     -- 'epub' | 'pdf'
+  id_categoria (FK, nullable) -- una sola categoría/género principal
+  fecha_añadido
+  ultimo_punto_lectura
+  metadatos_json               -- JSON embebido: portada, idioma, editorial, lo que no merece columna propia
+  favorito        (bool)
+  en_pendientes    (bool)      -- NUEVO, inspirado en in_reading_list
+  leyendo_ahora    (bool)      -- NUEVO, inspirado en is_currently_reading
+  leido            (bool)
+libro_autor        -- unión N:N (un libro puede tener varios autores)
+  id_libro, id_autor
+libro_etiqueta      -- unión N:N (sagas, colecciones personalizadas superpuestas)
+  id_libro, id_etiqueta
+diccionario_reglas  -- igual que lo cerrado con Gemini
+  id, patron_origen, sustitucion, tipo_alcance('global'|'libro'|'saga'), id_referencia
+Copiar código
+Cambios frente a lo cerrado con Gemini:
+• autor deja de ser texto suelto en libros → tabla autores + unión. Evita "Pedro Urvi" repetido 40 veces y permite filtrar por autor con índice, no con LIKE.
+• estanterias se divide en dos conceptos: categorias (uno por libro, tipo género) y etiquetas (varios por libro, tipo saga/colección). Es más expresivo que una sola tabla intermedia genérica.
+• leido se desdobla en favorito / en_pendientes / leyendo_ahora / leido — cuatro estados independientes en vez de uno solo.
+• Se añade metadatos_json como columna JSON dentro de SQLite (SQLite soporta JSON1 de forma nativa) para datos secundarios que no necesitan ser consultables (portada en base64, idioma, editorial). Así no inflamos el esquema con columnas que casi nunca se filtran.
+Lo que decido NO copiar de Bookworm:
+• No usaré APSW ni peewee (ORM). Tu CLAUDE.md pide dependencias justificadas y portabilidad simple; el sqlite3 nativo de Python + SQL directo encaja mejor con tu patrón de "una función que dejas programada y te olvidas".
+• No usaré alembic para migraciones. Con un solo desarrollador y una base de datos que tú controlas, basta un pequeño control de versión manual (PRAGMA user_version + un bloque de migración si cambia el esquema entre versiones de la app).
+• FTS5 full-text de contenido completo lo dejo como posible mejora de v3.1, no v3.0: indexar el texto completo de 500 EPUBs añade complejidad y espacio en disco que no es prioritario frente al resto del plan. Lo apunto para no perderlo.
+2. Concurrencia y hilos: mejora real sobre lo planeado
+Bookworm no usa un solo hilo de fondo para escanear, usa ThreadPoolExecutor(max_workers=8). Para tus 500 EPUBs, eso importa: leer metadatos con EbookLib/BeautifulSoup es I/O-bound (abrir zip, parsear XML), así que paralelizar con un pool de 8 hilos en vez de un único hilo secuencial reducirá el tiempo de escaneo inicial de forma notable, sin romper tu regla de nunca tocar UI fuera del hilo principal — cada worker sigue reportando a wx.CallAfter para el progreso.
+Diseño ajustado: un hilo coordinador lanza el ThreadPoolExecutor, cada worker extrae metadatos y devuelve el resultado; el coordinador agrupa resultados y hace una sola inserción por lotes (executemany) a SQLite cada N libros, en vez de una escritura por libro. Menos contención en el archivo .db, más rápido.
+También conviene activar PRAGMA journal_mode=WAL explícitamente al abrir la conexión — Bookworm no lo mostró en el fragmento que pude leer, pero es el estándar recomendado para exactamente tu escenario (lectura en la pestaña Lectura + escritura de progreso en Creador de Audiolibros simultáneas) y es gratis activarlo.
+3. Interfaz: estructura de ventana mejorada
+El diseño que cerramos con Gemini (búsqueda → árbol → lista, 3 paradas) sigue siendo válido, pero Bookworm añade un matiz útil: separan panel izquierdo (categorías vía Treebook) de panel derecho (filtro + lista de resultados), como paneles independientes en vez de todo apilado verticalmente. Para NVDA esto es indiferente en cuanto a orden de tabulación (sigue siendo lineal), pero visualmente es más claro para usuarios con baja visión que también usen tu app. Lo adoptaría como estructura de SplitterWindow o paneles fijos:
+Panel izquierdo: árbol de categorías/etiquetas (TreeCtrl)
+Panel derecho:
+  - TextCtrl de filtro rápido (Ctrl+F)
+  - ListCtrl en modo reporte con los libros filtrados
+Copiar código
+Otro detalle a copiar: filtrado en vivo por teclado sobre el ListCtrl (escribes y filtra sin salir del control), que complementa al TextCtrl de búsqueda explícito. Encaja con tu patrón de accesibilidad "menos foco perdido, más control inmediato".
+Y pila de navegación (__source_navigation_stack) para "Alt+Izquierda = retroceder" al navegar por categorías — útil si en el futuro anidas categorías (saga → sub-saga), aunque para tu volumen probablemente no lo necesites en v3.0, lo dejo anotado como posible v3.1.
+Resumen de decisión
+Adoptar: tabla autores normalizada, split de leido en 4 estados, ThreadPoolExecutor para el escaneo, WAL mode explícito, panel izquierdo/derecho en la ventana.
+Descartar: APSW/peewee/alembic (sobre-ingeniería para tu escala), FTS5 y navegación anidada (aplazar a v3.1).
+¿Seguimos ahora con el diseño del flujo del escáner de carpetas con este ThreadPoolExecutor, o prefieres que primero cerremos del todo el esquema SQL exacto (tipos de columna, índices) antes de pasar a flujo?
+Mostrar acciones del mensaje
+Has dicho: como quieras
+como quieras
+Mostrar acciones del mensaje
+Claude ha respondido: Voy a cerrar primero el SQL exacto con tipos e índices, y luego el flujo del escáner — es el orden lógico antes de tocar código.
+Voy a cerrar primero el SQL exacto con tipos e índices, y luego el flujo del escáner — es el orden lógico antes de tocar código.
+Esquema SQL definitivo
+PRAGMA journal_mode = WAL;
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE autores (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre  TEXT NOT NULL UNIQUE COLLATE NOCASE
+);
+
+CREATE TABLE categorias (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre  TEXT NOT NULL UNIQUE COLLATE NOCASE
+);
+
+CREATE TABLE etiquetas (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre  TEXT NOT NULL UNIQUE COLLATE NOCASE
+);
+
+CREATE TABLE libros (
+    id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+    ruta_archivo          TEXT NOT NULL UNIQUE,
+    titulo                TEXT NOT NULL,
+    formato               TEXT NOT NULL CHECK (formato IN ('epub', 'pdf')),
+    id_categoria          INTEGER REFERENCES categorias(id) ON DELETE SET NULL,
+    fecha_añadido         TEXT NOT NULL DEFAULT (datetime('now')),
+    ultimo_punto_lectura  INTEGER NOT NULL DEFAULT 0,
+    metadatos_json        TEXT,
+    favorito              INTEGER NOT NULL DEFAULT 0 CHECK (favorito IN (0,1)),
+    en_pendientes         INTEGER NOT NULL DEFAULT 0 CHECK (en_pendientes IN (0,1)),
+    leyendo_ahora         INTEGER NOT NULL DEFAULT 0 CHECK (leyendo_ahora IN (0,1)),
+    leido                 INTEGER NOT NULL DEFAULT 0 CHECK (leido IN (0,1))
+);
+
+CREATE TABLE libro_autor (
+    id_libro   INTEGER NOT NULL REFERENCES libros(id) ON DELETE CASCADE,
+    id_autor   INTEGER NOT NULL REFERENCES autores(id) ON DELETE CASCADE,
+    PRIMARY KEY (id_libro, id_autor)
+);
+
+CREATE TABLE libro_etiqueta (
+    id_libro    INTEGER NOT NULL REFERENCES libros(id) ON DELETE CASCADE,
+    id_etiqueta INTEGER NOT NULL REFERENCES etiquetas(id) ON DELETE CASCADE,
+    PRIMARY KEY (id_libro, id_etiqueta)
+);
+
+CREATE TABLE diccionario_reglas (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    patron_origen  TEXT NOT NULL,
+    sustitucion    TEXT NOT NULL,
+    tipo_alcance   TEXT NOT NULL CHECK (tipo_alcance IN ('global','libro','saga')),
+    id_referencia  INTEGER
+);
+
+-- Índices para los filtros que realmente vas a usar en la pestaña Biblioteca
+CREATE INDEX idx_libros_categoria   ON libros(id_categoria);
+CREATE INDEX idx_libros_favorito    ON libros(favorito);
+CREATE INDEX idx_libros_pendientes  ON libros(en_pendientes);
+CREATE INDEX idx_libros_leyendo     ON libros(leyendo_ahora);
+CREATE INDEX idx_libros_leido       ON libros(leido);
+CREATE INDEX idx_libro_autor_autor  ON libro_autor(id_autor);
+CREATE INDEX idx_libro_etiq_etiq    ON libro_etiqueta(id_etiqueta);
+CREATE INDEX idx_dicc_alcance       ON diccionario_reglas(tipo_alcance, id_referencia);
+Copiar código
+Notas de diseño:
+• ruta_archivo UNIQUE evita duplicados si el usuario reimporta la misma carpeta.
+• ON DELETE CASCADE en las tablas de unión: si borras un libro, sus relaciones de autor/etiqueta se limpian solas — nada de filas huérfanas.
+• ON DELETE SET NULL en id_categoria: si borras una categoría, los libros no se borran, solo quedan sin categoría.
+• COLLATE NOCASE en nombres: evita duplicar "Pedro Urvi" y "pedro urvi" como autores distintos.
+• Los CHECK en booleanos son gratis y documentan la intención sin necesitar comentarios.
+Flujo del escáner en segundo plano
+1. Usuario pulsa "Importar carpeta" → wx.DirDialog. Se guarda la ruta elegida.
+2. Un hilo coordinador (threading.Thread) arranca de inmediato; la UI queda libre. wx.CallAfter anuncia con el patrón _anunciador: "Escaneando carpeta...".
+3. El coordinador hace os.walk para listar solo las rutas candidatas (.epub, .pdf) — esto es rápido, es solo listar, no parsear.
+4. Descarta de la lista las rutas que ya existan en libros.ruta_archivo (consulta única SELECT ruta_archivo FROM libros, comparación en memoria) — así una reimportación no duplica ni reprocesa.
+5. Reparte las rutas nuevas entre un ThreadPoolExecutor(max_workers=8). Cada worker abre el EPUB/PDF, extrae título/autor/portada con tu gestor_epub.py (o el nuevo módulo PDF) y devuelve una tupla de datos — no toca SQLite directamente.
+6. El coordinador acumula resultados y hace inserciones por lotes (executemany, cada ~50 libros) dentro de una única transacción — mucho más rápido que 500 commits sueltos.
+7. Cada lote insertado dispara wx.CallAfter para actualizar el contador visible y, cada 50 libros, un anuncio NVDA discreto: "50 libros indexados...".
+8. Al terminar: wx.CallAfter final — "Escaneo completado. 500 libros añadidos.", refresca el ListCtrl con Freeze()/Thaw(), foco a la lista.
+9. Si un archivo falla al parsear (EPUB corrupto, PDF protegido), se loguea con logger.exception(...) y se salta — nunca se detiene el escaneo completo por un archivo malo.
+¿Seguimos con el módulo de limpieza de PDF, o prefieres cerrar antes el flujo de re-enrutado (cuando un libro se movió de carpeta y os.path.exists da False)?

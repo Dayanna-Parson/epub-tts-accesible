@@ -1,0 +1,19 @@
+Now rewrite `_hilo_parrafos` to own a private COM object instead of sharing the main thread's:
+
+Now update `main()` to track voice/rate/volume in `estado`, use the shared `_seleccionar_voz` helper, and stop passing `motor` into `_hilo_parrafos`:
+
+Now update `fijar_velocidad`/`fijar_volumen` to also write into `estado` so new speaking threads pick up the current settings:
+
+Let's also do a quick full syntax sweep and review the final auxiliar_sapi32.py for correctness:
+
+This looks correct. Let's commit and push.
+
+Ya está subido. Te explico lo que encontré en cada caso, porque tu (o Gemini) teníais razón en sospechar que el parche anterior era insuficiente:
+
+**SAPI32/CoInitialize — causa real más profunda de lo que pensé la primera vez:**
+Mi primer parche llamaba a `CoInitialize()` en el hilo que habla, pero eso no basta. SAPI.SpVoice es un objeto COM de "apartamento simple" (STA): un puntero creado en el hilo principal **no se puede usar de forma fiable desde otro hilo**, aunque ese otro hilo llame a `CoInitialize()` — falta el "marshaling" (el traspaso correcto del objeto entre apartamentos de Windows), y por eso fallaba de forma intermitente con el mismo error. La solución correcta, y la que aplican en la comunidad de comtypes/pywin32 para este patrón exacto, es: **nunca compartir un puntero COM entre hilos** — cada hilo crea y destruye su propio objeto COM de principio a fin. Ahora el hilo que habla crea su propia instancia de `SAPI.SpVoice`, y el hilo principal solo le pasa datos normales de Python (nombre de voz, velocidad, volumen), que sí son seguros de compartir. Recompílalo con el mismo comando de siempre y pruébalo.
+
+**Polly estándar — no era mi recorte de silencio, era la propia API:**
+Investigué el patrón: "AWS Polly standard engine cuts off last word/syllable" es un problema documentado en la comunidad de AWS, no relacionado con cómo yo concateno los trozos. El motor `standard` a veces devuelve el audio ya recortado por el lado de Amazon. El remedio que se usa habitualmente es añadir una pausa SSML (`<break time="400ms"/>`) al final del texto enviado, para darle margen al motor a terminar de articular antes de cortar la síntesis — ya lo apliqué, solo para el motor `standard` (neural/generative/long-form no lo necesitan). Ese silencio extra de sobra se recorta después con el ajuste que ya tenía específico para Polly, así que no debería notarse como una pausa añadida.
+
+Cuando recompiles y pruebes ambas cosas, avísame con el resultado (o el log si algo sigue fallando) antes de que sigamos con la paralelización de la exportación que comentamos.

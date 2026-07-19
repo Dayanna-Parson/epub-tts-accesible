@@ -1,0 +1,60 @@
+Respuesta claude 13
+
+Mucho que resolver — voy a investigar primero cómo funciona `_hablar` (la voz SAPI que usas en Grabación, que es más fiable que el truco de foco), y los otros bugs de carpetas, antes de tocar nada.
+
+Encontrado: `iniciar_epub_tts.py` crea `configuraciones/proyectos_backup/` al arrancar, pero `gestor_backups.py` guarda los backups reales en `backups/` fuera de `configuraciones/` — nunca escribe en la carpeta que se pre-crea. Por eso una queda vacía y la otra (la que sí se usa) está fuera. Lo arreglo.
+
+Bien, solo queda en el comentario. Ahora reviso el diálogo del divisor de EPUB para la numeración confusa de capítulos.
+
+Ahora reviso la numeración del divisor de EPUB — encontré que el número SÍ está pensado deliberadamente para coincidir con el nombre del archivo de salida (`03_Capitulo.txt` ↔ ítem "03" de la lista), documentado explícitamente en el código de v2.0. No es un bug, es una decisión de diseño previa. Te lo explico al final con una alternativa.
+
+Ahora implemento la voz SAPI (pyttsx3) en Biblioteca, replicando el mecanismo de Proyectos que sí funciona de forma fiable.
+
+Ahora integro esto en `pestana_biblioteca.py`, sustituyendo/complementando `_anunciar` por `_hablar` en los puntos que fallaban.
+
+Ahora los anuncios de categoría (creación, renombrado, eliminación, cortar/pegar) y la apertura de libro:
+
+Ahora la apertura de libro con `Enter`, y las asignaciones de categoría:
+
+Ahora arreglo el submenú de categorías: las categorías "hoja" (sin subcategorías todavía) no ofrecían la opción de crear una subcategoría dentro de ellas.
+
+Voy a añadir también las etiquetas al árbol (rama aparte, como estaba en el documento original), ya que confirmas que no hay forma de asignarlas manualmente. Primero el motor:
+
+Bien, ya tiene `ON DELETE CASCADE`. Ahora actualizo `__init__`, `_cargar_libros`, y los manejadores del árbol para distinguir categoría/etiqueta.
+
+Ahora actualizo `al_tecla_arbol`, `al_fin_edicion_categoria`, `al_eliminar_categoria` y `al_menu_contextual_arbol` para soportar etiquetas también:
+
+Ahora reemplazo estos manejadores para soportar el tipo de nodo (categoría o etiqueta) correctamente:
+
+Ahora `al_eliminar_categoria` → renombrado a `al_eliminar_nodo_arbol`, soportando ambos tipos:
+
+Ahora `al_menu_contextual_arbol` para mostrar opciones correctas según el tipo de nodo, y añadir "Nueva etiqueta":
+
+Ahora añado el submenú "Añadir a etiqueta" para los libros, siguiendo el mismo patrón que categorías pero sin jerarquía:
+
+Ahora actualizo el menú contextual de la lista para incluir el submenú de etiquetas:
+
+Ahora actualizo el menú global de `ventana_principal.py`:
+
+Todo funciona correctamente. Comiteo este bloque grande.
+
+Comiteado y subido. Ahora te respondo lo que quedó pendiente de aclarar:
+
+## Categorías vs. sagas — tu diseño exacto ya funciona
+
+Confirmado con pruebas: puedes tener "Fantasía" con libros asignados directamente a ella, Y "Fantasía épica"/"Fantasía urbana" como subcategorías con sus propios libros — un libro en "Fantasía épica" también aparece al filtrar por "Fantasía" (incluye descendientes). Eso ya estaba bien. Lo que faltaba de verdad era: (1) crear subcategoría dentro de una categoría recién creada sin hijos — corregido; (2) asignar etiquetas manualmente — no existía en absoluto, ya está.
+
+**Para sagas**: usa **etiquetas**, no categorías. Las categorías son solo género. Autoconclusivos sin saga simplemente no llevan etiqueta — no necesitan tratamiento especial.
+
+Bookworm no resuelve esto mejor que nosotros — no tiene jerarquía de género en absoluto, solo categoría plana + etiqueta plana. Lo que ya tienes (género jerárquico + etiqueta plana para sagas) es más completo que lo suyo.
+
+## Numeración del divisor de EPUB
+
+No es un bug — es intencional desde la v2.0: el número de la lista (`03  Capítulo 1`) está pensado para coincidir exactamente con el nombre del archivo de salida (`03_Capitulo_1.txt`), documentado así en el código. El problema es que cuando el EPUB tiene portada/sinopsis antes del primer capítulo real, la posición (3) no coincide con el número que el propio capítulo lleva en su título ("Capítulo 1"). Quitar el número de la lista rompería esa correspondencia útil con el archivo de salida. Alternativa: mostrar además el nombre del archivo que se generará, así verías ambos números y por qué difieren. ¿Prefieres eso, o quitar el número de la lista y aceptar que ya no se corresponda visualmente con el archivo de salida?
+
+## Pendiente sin tocar (para que no se pierda)
+
+- **"Carpeta proyectos"**: no encontré ningún código que cree esa carpeta física — solo `proyectos.json` dentro de `configuraciones/`. ¿Puedes confirmarme el nombre exacto y dónde aparece la próxima vez que la veas?
+- **Exclusión de texto no deseado** (tabla de contenidos, etc.) en el Creador de Audiolibros: buena idea, la anoto para cuando construyamos esa pestaña — aún no existe.
+
+¿Pruebas esto y seguimos?

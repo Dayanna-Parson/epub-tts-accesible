@@ -1,0 +1,29 @@
+prompt 30
+
+Tengo varias dudas y hay algunas cosas que no me gustan. Bueno, ahora sí que funcionan bien las pausas donde deben. Solo que hay algo curioso que pasa con las voces estándar de Amazon Polly (Conchita, Enrique, Miguel y Penélope): cuando termina un bloque (ahora lo pusiste de 500 caracteres, ¿no?), se come la última sílaba de la palabra y hace un extraño corte. Pero solo pasa con estas cuatro voces de este motor; ¡el resto funciona espectacular!
+
+Ahora no sé si es tan buena idea lo de los dos modos: audiolibro completo o por capítulos. Porque cuando selecciono el modo por capítulos y sale la lista, marco los que no quiero y luego busco la voz. Por cierto, la voz de SAPI, concretamente la de Eloquence, me ha dado problemas: al pulsar en vista previa, tanto con el atajo como con las teclas de espacio o intro, no se escuchaba nada. 
+ (Aquí te pongo el log, y ya que estás, quita de la consola los warnings)
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+WARNING   app.motor.reproductor_voz  [ReproductorVoz] _reaplicar_velocidad_volumen: motor=local (ClienteSapi5) velocidad=50 volumen=100
+WARNING   app.servicios.cliente_sapi5  [SAPI5] fijar_velocidad(50) -> Rate=0
+WARNING   app.motor.reproductor_voz  [ReproductorVoz] fijar_velocidad(100) -> motor_activo=local (ClienteSapi5)
+WARNING   app.servicios.cliente_sapi5  [SAPI5] fijar_velocidad(100) -> Rate=10
+WARNING   app.motor.reproductor_voz  [ReproductorVoz] _reaplicar_velocidad_volumen: motor=local (ClienteSapi5) velocidad=100 volumen=100
+WARNING   app.servicios.cliente_sapi5  [SAPI5] fijar_velocidad(100) -> Rate=10
+WARNING   app.motor.reproductor_voz  [ReproductorVoz] _reaplicar_velocidad_volumen: motor=local_32 (ClienteSapi32Bridge) velocidad=50 volumen=100
+WARNING   app.motor.reproductor_voz  [ReproductorVoz] fijar_velocidad(61) -> motor_activo=local_32 (ClienteSapi32Bridge)
+WARNING   app.servicios.cliente_sapi32_bridge  [SAPI32] Error del auxiliar: (-2147221008, 'No se ha llamado a CoInitialize.', (None, None, None, 0, None))
+
+
+
+
+Y, bueno, también me preguntaba si eso de dividir los libros por capítulos en un audiolibro (tener los capítulos separados) es buena idea, porque no sé si es mejor eso o que sea un libro único y ya. La verdad, lo he probado, y no me termina de gustar. Pero bueno, ya me dirás qué opinas.
+
+Ah, y otra pregunta: cuando grabo un libro o creo un audiolibro, si pertenece a una saga que está indicada en una etiqueta, ¿los libros de esa saga se guardan juntos o cada uno en una subcarpeta? Se supone que se podría configurar para que los libros que pertenecen a una saga estén juntos en una carpeta y no se creen subcarpetas innecesariamente.
+
+Y otra cosa que me preguntaba es la siguiente: ¿por qué tarda tanto tiempo en exportar un libro? Si tardara segundos, daría igual si el libro es largo o corto, pero tarda muchísimo tiempo, y eso que mi ordenador es bueno. Me pregunto si se podría hacer algo con el procesador; por ejemplo, que Python utilizara automáticamente el procesador de la persona o las características de su ordenador. Eso ya me lo dirás tú. Entiendo que las voces neuronales de los otros motores tarden más porque se tienen que descargar de la nube y demás, pero no entiendo por qué las voces SAPI locales tardan tanto. Deberían tardar muchísimo menos y ser súper rápidas, ya que están en el propio ordenador.
+Y otra cosa que me he percatado es al iniciar la app se abre en la pestaña Ajustes. Y se tendría que abrir en la primera pestaña, la pestaña de biblioteca.

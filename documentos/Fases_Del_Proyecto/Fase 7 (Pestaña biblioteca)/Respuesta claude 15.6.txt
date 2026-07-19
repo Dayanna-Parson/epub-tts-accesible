@@ -1,0 +1,17 @@
+Prespuesta claude 15.6
+
+Gemini acierta en el diagnóstico general pero está evaluando una versión desactualizada del código — varios de esos puntos ya los corregí con una causa raíz distinta (y más precisa) en los dos últimos commits, antes de que le pasaras el prompt. Te aclaro punto por punto y luego implemento su mejor idea (el sub-notebook para categorías/etiquetas, que es mejor que mi propuesta de agruparlas bajo un título).
+
+**Punto 1 (orden alfabético)**: ya arreglado en la raíz — cambié `listar_categorias_hijas` para ordenar por orden de creación (`ORDER BY id`), no alfabéticamente. La sugerencia de Gemini (`EnsureVisible`+`SelectItem` sobre el nodo nuevo) es un parche visual que no arregla el orden real de la lista — con mi fix ya no hace falta, porque "Fantasía" se queda primera de verdad, no solo enfocada.
+
+**Punto 2 (silencio en el segundo anuncio)**: el diagnóstico de Gemini (foco atrapado en el diálogo, o el control de 1×1 borrado) aplica al truco viejo de `_anunciador` — pero esos anuncios ya no usan ese mecanismo, uso `pyttsx3` hablando directamente, sin tocar el foco en absoluto. La causa real que encontré es distinta: es un bug documentado de `pyttsx3` con el driver SAPI5 — reutilizar la misma instancia del motor para varios anuncios seguidos falla en silencio a partir del segundo, sin ningún error. Ya lo arreglé creando una instancia nueva por cada frase.
+
+**Punto 4 (submenús directos)**: ya implementado, incluida la versión masiva para etiquetas completas.
+
+**Punto 5 ("Abriendo libro")**: probablemente sea el mismo bug del punto 2 (era el segundo o tercer anuncio de la sesión, así que también se quedaba mudo). Debería oírse ya con el commit anterior — confírmamelo cuando lo pruebes.
+
+**Punto 3 (categorías/etiquetas separadas)**: aquí Gemini propone algo mejor que mi idea de agruparlas bajo un título — un mini-notebook de sub-pestañas dentro del panel izquierdo (Géneros / Sagas), así ocupan el mismo lugar en pantalla y en tu mapa mental, en vez de ser dos controles distintos uno debajo del otro. Lo implemento ahora.
+
+Comiteado y subido. Ahora "Géneros" y "Sagas y colecciones" son dos pestañas de un mismo sub-notebook, en el mismo lugar de la pantalla, alternables con `Ctrl+RePág`/`Ctrl+AvPág` — igual que ya haces entre las pestañas principales de la app.
+
+Resumen de dónde quedamos: orden del árbol por creación ✓, silencio de voz por bug de pyttsx3 ✓, texto del diálogo simplificado ✓, submenús directos con subcategorías ✓ (individual y masivo por etiqueta), y ahora la agrupación visual Géneros/Sagas ✓. Pendiente de que confirmes tras probar: si "Abriendo libro..." ya se oye, y cómo se siente la nueva disposición de sub-pestañas.

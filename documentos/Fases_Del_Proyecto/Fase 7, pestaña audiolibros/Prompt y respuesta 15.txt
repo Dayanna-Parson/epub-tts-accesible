@@ -1,0 +1,9 @@
+Prompt y respuesta 15
+
+vale, ahora lo prubo. pero, dime por favor, si te sirvieron las capturas que te pasé! los .jpg
+Mostrar acciones del mensaje
+Claude ha respondido: Sí, las miré.
+Sí, las miré. Sinceramente no me aportaron mucho más allá de lo que ya me diste en texto: las dos primeras capturas son la ventana del Visualizador de Voz de NVDA con el mismo tipo de texto que me pegaste después (referencias a "objeto de referencia", rectángulos, "Enmarcado lista de pestañas", etc. — eso es el modo de descripción de objetos de NVDA, no información de layout que yo pueda interpretar visualmente). Las otras capturas son un pop-up de notificación de Chrome (un anuncio de Casa del Libro) que no tiene relación con la app.
+Lo que realmente me permitió encontrar el bug fue el log limpio de Tab que escribiste al final (el de "Modo de exportación: cuadro combinado... Calcular presupuesto botón... Velocidad: deslizador 50... Volumen: deslizador 100... Creador de Audiolibros pestaña seleccionado" repetido) — esa secuencia exacta, en orden, es la que me mostró qué controles faltaban.
+Así que para próximas veces: como no puedo ver la pantalla de forma útil (ni tú tampoco necesitas mirarla), lo que más me sirve de ti es exactamente eso — el texto tal cual lo lee NVDA, pulsando solo Tab, en orden, desde el principio de la pestaña hasta el final. Las capturas de pantalla no me ayudan casi nada en este proyecto salvo que hubiera algo puramente visual que un vidente tuviera que confirmar.
+Avísame cuando hayas probado el pull de hoy.

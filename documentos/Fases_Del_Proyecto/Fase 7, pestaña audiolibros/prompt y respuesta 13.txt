@@ -1,0 +1,22 @@
+prompt y respuesta 13
+
+Has dicho: mira, ya desde hace muchas versiones, pues, utilizo estos dos archivos para ejecutar mi app: esto te vale?
+iniciar_epub_tts.py
+INICIAR_APP.bat
+mira, ya desde hace muchas versiones, pues, utilizo estos dos archivos para ejecutar mi app:  esto te vale? lo he hecho desde git bash: 
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-creador-audiolibros)
+$ python -c "import app.interfaz.pestana_creador_audiolibros as m, inspect; print(inspect.getsourcefile(m)); print('txt_libro' in open(inspect.getsourcefile(m), encoding='utf-8').read())"
+C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_creador_audiolibros.py
+True
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-creador-audiolibros)
+$
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Bien — eso descarta el problema de sincronización de raíz: confirmado que python iniciarepubtts.
+Bien — eso descarta el problema de sincronización de raíz: confirmado que python iniciar_epub_tts.py desde esa misma carpeta importa exactamente el archivo con mi corrección. Así que el código correcto SÍ se está ejecutando, y el problema es real. Mi diagnóstico anterior (StaticText vs TextCtrl) puede haber sido insuficiente o directamente equivocado. Voy a revisar el código de construcción de la interfaz línea por línea buscando un bug estructural real, y también te voy a pedir algo que resolvería esto mucho más rápido.
+Leerpestana_creador_audiolibros.py
+He revisado la construcción de la pestaña línea por línea y estructuralmente sigue el mismo patrón que usan las demás pestañas que sí te funcionan bien (Biblioteca, Lectura, Grabación) — StaticBox creado antes que sus hijos, SetSizer() y Layout() en el orden correcto. No encuentro un bug obvio de maquetación solo leyendo el código, así que en vez de arriesgarme a una cuarta corrección a ciegas, necesito ver/oír exactamente lo que tú ves.
+Dos cosas, por favor:
+1. Una captura de pantalla de la pestaña Creador de Audiolibros (con un libro ya cargado). "Ventanitas pequeñas separadas" suena a un problema visual de maquetación que una imagen resuelve al instante, y es algo que no puedo reproducir aquí sin un Windows con pantalla real.
+2. Un log de voz de NVDA nuevo y limpio: abre el Visor de voz de NVDA (menú NVDA → Herramientas → Visor de voz), entra a la pestaña Creador de Audiolibros con un libro cargado, y pulsa solo Tab (nada de navegador de objetos) varias veces seguidas desde el principio de la pestaña hasta el final. Cópiame ese fragmento tal cual. Quiero confirmar si con Tab puro ahora sí llega a "Libro cargado", "Voz por defecto" y "Estado" — si no llega, el problema es distinto de lo que pensaba y necesito saberlo exactamente para no volver a fallar el diagnóstico.

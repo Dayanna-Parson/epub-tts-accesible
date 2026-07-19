@@ -1,0 +1,33 @@
+respuesta 8
+
+Confirmado, `wx.MenuItem` no tiene `SetHelpText` (eso existe en controles, no en ítems de menú; el equivalente real sería `SetHelp()`). Lo elimino sin más, ya que el texto del ítem ya es descriptivo.
+
+Estos dos son un bug preexistente (commit `47a8511`, anterior a esta sesión) del mismo tipo — los corrijo también para eliminar la causa raíz por completo, usando `SetHelp()` que sí existe en `wx.MenuItem` y preserva el texto (aparece en la barra de estado, no como tooltip):
+
+Por consistencia con los otros dos ítems, restauro el texto de ayuda en "Enviar a Creador de Audiolibros" usando `SetHelp()` (el método real):
+
+Reviso si cometí el mismo error en otros archivos de esta sesión (diálogo de proveedor alternativo, menú de Creador en `ventana_principal.py`) o en el resto del repo.
+
+Bien — todas esas son sobre controles reales (`wx.Choice`, `wx.Slider`, `wx.Button`, `wx.Gauge`, `wx.ListCtrl`), donde `SetHelpText` sí existe. Ningún otro caso sobre `MenuItem`. Confirmo la ausencia de `_menu_contextual_creador` con este problema:
+
+Limpio, sin el problema. Ahora blindo `al_navegacion_tab_global`, que es el método que quedaba expuesto a cualquier fallo en un menú contextual de cualquier pestaña.
+
+Ahora añado `_mostrar_menu_contextual_seguro`, que envuelve el despacho del menú contextual sin dejar excepciones sin capturar:
+
+Ahora reviso `_mostrar_dialogo_voces_nuevas` u otros usos de `Shift+F10`/tecla Menú que llamaban directamente a `_mostrar_menu_contextual` sin pasar por el envoltorio, y verifico que no quede ninguna otra ruta directa sin blindar.
+
+Único punto de llamada, correctamente envuelto. Compilo todo y verifico la parte 2 (el sizer de `pestana_creador_audiolibros.py`).
+
+Todo el sizer está bien construido — `SetSizer`, `Layout()` y todos los `Add()` presentes y en orden correcto. No hay un bug real de renderizado en `pestana_creador_audiolibros.py`; el problema visual reportado era un efecto colateral del bucle de crashes por el `AttributeError`, ya eliminado. Verifico con el arnés existente que la pestaña se sigue construyendo íntegra:
+
+Confirmado: el sizer se construye completo, con los 9 bloques (libro, modo, voz, botones, velocidad, volumen, progreso, capítulos, anunciador) — no había un bug de renderizado real. Registro los cambios.
+
+## Resumen
+
+**Causa raíz real**: `wx.MenuItem` no tiene `SetHelpText()` (eso solo existe en controles de ventana como `wx.Button`/`wx.Slider`/etc.) — el método correcto para un ítem de menú es `SetHelp()`. Corregido en el ítem que añadí ("Enviar a Creador de Audiolibros") y en **dos casos preexistentes del mismo error, de antes de esta sesión** (commit `47a8511`, "Renombrar todos los pendientes de revisión..." y "Reglas de pronunciación de este libro..."), que habrían crasheado igual en cuanto se abriera ese menú. Te aviso de esto porque no lo introduje yo, pero sí lo corregí ya que es la misma clase de bug.
+
+**Blindaje del Tab global**: `al_navegacion_tab_global` está en `EVT_CHAR_HOOK` del `Frame`, así que cualquier excepción sin capturar ahí (como este `AttributeError`, disparado por Shift+F10/tecla Menú) tumbaba el teclado de navegación de **toda** la app, no solo de Biblioteca — coincide exactamente con el log que mandaste. Añadí `_mostrar_menu_contextual_seguro()` con try/except, y envolví también la resolución de `primer_control`/`ultimo_control` del Tab cíclico, con `logger.exception()` + `evento.Skip()` como salida segura.
+
+**Sobre el "sizer roto"**: lo comprobé con un arnés de wx simulado — el sizer de `pestana_creador_audiolibros.py` no tenía ningún fallo real; se construye completo con sus 9 bloques (libro, modo, voz, botones, velocidad, volumen, progreso, capítulos, anunciador). Lo que viste como controles "invisibles" era efecto colateral del bucle de crashes, no un bug de maquetación separado.
+
+Commit `cbcf306` pusheado. Cuando puedas probarlo en Windows con NVDA, confirmamos que el menú contextual de Biblioteca y el Tab cíclico ya no rompen nada.

@@ -1,0 +1,11 @@
+A pesar de haber sacado la pausa SSML fuera de la etiqueta 'prosody', Amazon Polly estándar (Conchita, Enrique, Miguel, Penélope) se sigue comiendo la última sílaba cuando la velocidad es rápida (a partir de la posición 60 del slider). El tiempo dinámico no es suficiente porque el servidor trunca el renderizado del búfer antes de tiempo.
+He descubierto un dato crítico: el problema de las voces estándar de Amazon Polly (Conchita, Enrique, Miguel, Penélope) comiéndose la última sílaba a velocidades altas (slider > 60) ocurre TANTO al exportar el audiolibro como al leer en tiempo real en la pestaña de Lectura.
+
+Esto descarta por completo que el fallo sea del método '_recortar_silencio_extremos' o de la concatenación de archivos. El problema está en la prisa del búfer de reproducción al procesar los fragmentos de texto secuenciales cuando el motor va rápido.
+
+Vamos a solucionarlo de raíz de forma global para todo el cliente de Polly estándar:
+1. Modifica directamente el método que prepara el SSML o el texto dentro de 'cliente_polly.py' (o donde gestiones el envío a AWS Polly). 
+2. Específicamente para el motor 'standard', inyecta una amortiguación fonética al final del texto de cada bloque (por ejemplo, tres puntos suspensivos "..." o un espacio en blanco forzado) justo antes de cerrar el SSML. Esto obligará al motor fonético de Amazon a mantener el canal de voz abierto y terminar de articular la última sílaba real antes de dar por cerrado el fragmento, solucionando el problema tanto en vivo como en las grabaciones.
+
+Además, ¿porqué no soporta la pestaña lectura los pdf? recuerda también mirar y replicar como lo hace bookworm.
+Y recuerda siempre responder en castellano.

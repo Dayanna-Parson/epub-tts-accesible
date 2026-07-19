@@ -1,0 +1,35 @@
+Now fix it by calling `CoInitialize()` inside `_hilo_parrafos` (the thread that touches the COM object):
+
+Now thread `proveedor` through to the trim function, with a gentler default for Polly:
+
+Now update the call site inside `_concatenar_audios` to pass `proveedor` through:
+
+Now thread `nombre_saga` through the two export methods:
+
+Now the `exportar_audiolibro_por_capitulos` method:
+
+Now update `pestana_creador_audiolibros.py` to fetch and pass the saga tag:
+
+Now #4: startup focus on Biblioteca tab, not Ajustes. Let's check `ventana_principal.py` startup logic.
+
+Good enough — no explicit initial-focus override elsewhere that would fight this. Now #5: downgrade the noisy WARNING logs to DEBUG.
+
+Now check `pestana_lectura.py`'s diagnostic warning line too:
+
+All compiles cleanly. Let's also check the other `_concatenar_audios` call site (multivoz recording) still works with the new optional `proveedor` param:
+
+Good, backward-compatible (defaults to `None` → default trim settings). Let's commit and push all five fixes.
+
+Ya está subido. Las cinco correcciones del reporte:
+
+1. **SAPI32/Eloquence mudo**: encontré exactamente la causa que decía el log — el objeto COM de SAPI se crea en el hilo principal del proceso auxiliar, pero `motor.Speak()` se llamaba desde un hilo secundario (`_hilo_parrafos`) que nunca inicializaba COM. Ahora ese hilo llama a `comtypes.CoInitialize()` al empezar y `CoUninitialize()` al terminar. **Importante**: este archivo (`auxiliar_sapi32.py`) se compila aparte a `bin/auxiliar_sapi32.exe` con Python de 32 bits — el cambio ya está en el código fuente, pero necesitas recompilarlo (el comando está en la cabecera del archivo) y sustituir el .exe en `/bin/` para que el arreglo surta efecto.
+
+2. **Polly estándar comiéndose sílabas**: añadí un umbral y margen de recorte específico para Polly (más estricto y con más margen) distinto del resto de proveedores, ya que sus voces estándar apagan el volumen más suavemente al final de la palabra.
+
+3. **Carpetas por saga**: si el libro tiene alguna etiqueta en Biblioteca, ahora se crea automáticamente `Audiolibros/<Saga>/<Título>/` en vez de todo suelto en `Audiolibros/`.
+
+4. **Arranque en Biblioteca**: quité la restauración de "última pestaña usada" — ahora siempre empieza en Biblioteca, sin importar dónde estuvieras la última vez.
+
+5. **Logs**: bajé a DEBUG los `logger.warning()` de diagnóstico que puse yo misma para cazar el bug de velocidad (ya resuelto), así que `app.log` deja de llenarse con eso.
+
+¿Puedes probar la recompilación del auxiliar de 32 bits cuando puedas, y confirmarme si Eloquence ya suena? Es el único de estos cinco que no puedo verificar sin que tú recompiles el .exe.

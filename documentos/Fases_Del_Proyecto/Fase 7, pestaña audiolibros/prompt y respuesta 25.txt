@@ -1,0 +1,20 @@
+prompt y respuesta 25
+
+Has dicho: Prefiero la lista plana con el proobedor en el nombre.
+Prefiero la lista plana con el proobedor en el nombre.
+sobre la segunda pregunta, pues realmente no se que hacer, porque no voy a estar mirando cada día la documentación de cada api, Porque primero son cuatro APIS y segundo. Las empresas de estas APIS no te. No te avisan ¿De cuándo actualizaron la documentación o pusieron nuevos precios? Y tampoco. Te avisan ni por correo ni por ningún otro sitio. Es una sorpresa, jaja. Que si no estás atenta, pues te la cuelan un poco, ja, ja.
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Tiene sentido tu preocupación, y creo que hay un punto medio razonable: opción 1, pero con red de seguridad para que el número nunca te engañe.
+Tiene sentido tu preocupación, y creo que hay un punto medio razonable: opción 1, pero con red de seguridad para que el número nunca te engañe.
+Lo que propongo en concreto:
+• En Ajustes, un campo "Precio estimado por millón de caracteres" por proveedor, con un valor de partida que pongas tú ahora (una sola vez).
+• Junto a cada precio, un campo de solo texto "Actualizado el: [fecha]" que se rellena solo con la fecha en que tú lo edites — así, si pasan seis meses sin tocarlo, al menos sabes que ese número puede estar desfasado en vez de creer que es exacto.
+• En el aviso de presupuesto, el texto no dirá "esto te costará X€" a secas — dirá algo como "coste estimado: ~X€ (según precio configurado el DD/MM/AAAA, puede no ser exacto)". Así el número te sirve para decidir sin que sea una promesa de factura.
+• No voy a intentar leer las páginas de precios de las 4 APIs automáticamente ni avisarte de cambios — eso sería una promesa que no puedo cumplir de forma fiable (cada proveedor cambia su web sin aviso, como bien dices), así que sería falsa seguridad. Mejor ser honesta con la fecha que fingir estar siempre actualizada.
+Con esto te quitas de encima el "no sé qué hacer" sin comprarte un problema de datos falsos. ¿Lo dejamos así?
+Con las dos decisiones ya tomadas (lista plana con proveedor en el nombre + precio estimado editable con fecha), me pongo a construir:
+1. El selector directo embebido en la pestaña (lista plana, favoritas de todos los proveedores incluida local).
+2. El ajuste de precio/fecha por proveedor y el aviso de coste estimado en el calculador de presupuesto.
+3. Eliminar DialogoElegirVoz y ajustar DialogoProveedorAlternativo para que no salte si la voz activa ya es local.
+¿Empiezo por el selector embebido o prefieres que vayamos primero por el tema del precio/cuota ya que lo acabamos de cerrar?

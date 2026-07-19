@@ -1,0 +1,12 @@
+Prompt 2
+He analizado tu propuesta de diseño para la Fase B y tiene varios fallos de lógica y puntos ciegos críticos que debemos corregir antes de que escribas una sola línea de código:  
+1.
+Separación total de motores: No puedes usar la cola ni la infraestructura de reproductor_voz.py para el Creador de Audiolibros. Ese componente está diseñado para la lectura interactiva por altavoces (pausas, rebobinado, cursor). El Creador necesita un volcado directo a disco a la máxima velocidad posible, y para eso debemos vitaminar y extender grabador_audio.py, que ya gestiona de forma silenciosa el chunking de textos largos, reintentos y la codificación limpia a MP3 con FFmpeg portable.  
+2.
+Conflicto de Escudo de Cuota: reproductor_voz.py invoca verificar_y_registrar() de control_cuota.py, lo que dispara diálogos wx.MessageBox asíncronos en medio de la lectura. Si procesamos un audiolibro masivo ahí, la interfaz lanzará alertas en bucle al agotar la cuota. El Creador debe usar exclusivamente consultas silenciosas con tiene_cuota() y registrar el gasto de forma controlada.  
+3.
+No dupliques buscadores: Olvídate del 'diálogo ligero de búsqueda' para la pestaña del Creador mediante Ctrl+O. Ya tenemos una pestaña Biblioteca excelente con filtros y búsquedas sobre SQLite. Si la pestaña del Creador está vacía, el atajo o la acción lógica debe anunciar al usuario (mediante el patrón _anunciador) que vaya a la Biblioteca (Ctrl+1) y envíe el libro desde el menú contextual. Menos código, mejor accesibilidad.  
+4.
+Foco en el ListCtrl de capítulos: Las actualizaciones en vivo de los estados de los capítulos no deben ametrallar a NVDA con eventos de accesibilidad mientras el usuario está encima de la lista. El progreso se monitoriza de forma discreta con la wx.Gauge y anuncios verbales limpios únicamente al terminar cada capítulo completo.  
+Para proceder con orden, vamos a empezar por el paso 1 de la arquitectura: la abstracción del selector de voces. Extrae el bloque de voces favoritas, filtros y preescucha de PanelProveedorIA en pestana_ajustes.py hacia un componente independiente en app/interfaz/selector_voz_compartido.py.  
+Muestra únicamente el bloque de código afectado bajo su correspondiente sistema de ANCLAJE. Dime cuando estés listo.

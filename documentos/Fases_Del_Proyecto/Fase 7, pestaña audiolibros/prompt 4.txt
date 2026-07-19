@@ -1,0 +1,11 @@
+prompt 4
+
+1. Corrección en modo por capítulos: La exportación debe ser estrictamente secuencial. Si un capítulo no cabe en la cuota, el proceso debe detenerse inmediatamente y marcar ese capítulo y todos los siguientes como pendientes ("pendiente_sin_cuota"), en lugar de saltárselos para buscar capítulos más cortos adelante. No queremos audiolibros incompletos con capítulos salteados.
+
+2. Diseño del Diálogo de Proveedor Alternativo (wx.Dialog): Implementa la lógica e interfaz de este diálogo intermedio que se activará cuando el proveedor actual no tenga cuota suficiente para el presupuesto calculado. Debe cumplir estas reglas:
+   - Buscar qué proveedores configurados sí tienen cuota suficiente para el texto.
+   - Mostrar los proveedores disponibles en un cuadro combinado (wx.Choice). Para que sea totalmente accesible con el lector de pantalla (NVDA), cada elemento de la lista debe incluir el nombre del proveedor y su saldo disponible formateado al lado, obtenido de ControlCuota (ejemplo: "Amazon Polly (Disponible: 850.000 caracteres)"). Preselecciona por defecto en el control el proveedor que tenga más saldo disponible.
+   - Opciones accesibles claras: Botón para usar el proveedor alternativo seleccionado, usar la voz local, dividir en partes (solo habilitado si estamos en modo libro completo) o cancelar.
+   - Al cambiar de proveedor en el wx.Choice, el diálogo debe actualizar e incrustar abajo el componente compartido PanelProveedorIA (de selector_voz_compartido.py) para heredar de forma nativa su lista de voces, filtro de favoritas y la preescucha con Alt+P sin duplicar código.
+   - Gestión de ritmo/audio: El diálogo debe incluir un único control deslizante (slider) de velocidad independiente, con pasos de 1 (flechas) y 5 (RePág/AvPág) para accesibilidad. Al abrirse o cambiar de proveedor, se sincronizará por defecto con el valor de la ventana principal, pero debe permitirme ajustarlo dentro del diálogo si la voz alternativa requiere otro ritmo. La preescucha (Alt+P) aplicará la velocidad de este slider. Al aceptar el diálogo, este valor se devolverá a la ventana principal para actualizar su control.
+   - UX Accesible: El orden del foco debe dejar lo importante a mano (primero el selector wx.Choice), gestionar el retorno del foco al cerrarse y anunciar el estado inicial con el patrón _anunciador.

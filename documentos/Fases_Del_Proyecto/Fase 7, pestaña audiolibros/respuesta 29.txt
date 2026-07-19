@@ -1,0 +1,43 @@
+respuesta 29
+
+Claude ha respondido: Good, obtenercarpetaaudiolibro already exists.
+Ejecutado un comando, buscado código
+Good, obtener_carpeta_audiolibro already exists. Let's check pestana_grabacion.py's "Abrir Carpeta" button implementation to mirror it exactly.
+Buscado código, leer un archivo
+Now let's implement everything. First, add "Abrir carpeta" button + tracking of the last output folder in pestana_creador_audiolibros.py:
+Leer un archivo, editado un archivo
+Now let's look at the botonera section (Presupuesto/exportación) to add the button there, and check the chapter-list building UI to add checkboxes:
+Leer un archivo, editado un archivo
+Now add tab order, dependent-controls list entry, and the handler + carpeta tracking:
+Editadopestana_creador_audiolibros.py+3-1
+Now add _ultima_carpeta tracking and the al_abrir_carpeta handler. Let's check where the export result gives the output folder:
+Ejecutado un comando, editado 2 archivos, buscado código, leer un archivo
+Now add the handler and update _al_terminar_exportacion to save the folder path:
+Leer un archivo, editado un archivo
+Now add the al_abrir_carpeta handler, near al_abortar_exportacion:
+Ejecutado un comando, leer un archivo, editado un archivo
+Now let's quiet the internal fragment noise per her feedback — no text, no sound tick for internal chunk progress in "Libro completo" mode, just the silent gauge:
+Ejecutado 2 comandos, leer un archivo, editado un archivo
+Add _poblando_capitulos init flag:
+Editado un archivo, leer un archivo, ejecutado un comando
+Now add the _fila_real_capitulo helper and use it in _finalizar_exportacion_capitulos/_registrar_pendiente_capitulos:
+Leer 3 archivos, editado 2 archivos, ejecutado 2 comandos, buscado código
+Now add the _recortar_silencio_extremos helper method:
+Editadograbador_audio.py+27-0
+Now for the Lectura live-reading pauses, increase the fragment size to reduce chunk-boundary frequency (and give slow APIs more prefetch headroom):
+Leer un archivo, editado un archivo, ejecutado 2 comandos
+Now let's commit and push, then answer her remaining questions (planning-doc check on "por capítulos" mode, and the pending-items list).
+Ejecutado 3 comandos
+Ya está subido todo. Repasando tus preguntas:
+¿"Por capítulos" no tiene sentido tal como está? Revisé el documento: sí está bien fundamentado (línea 275) — un MP3 por capítulo, con reanudación si se corta la cuota a mitad de libro. Lo que le faltaba, y que no estaba en el documento pero es una mejora razonable, era justo lo que pediste: poder excluir capítulos basura. Ya está: la lista de capítulos ahora tiene casillas, todos empiezan incluidos, desmarcas los que no quieras (índice, dedicatoria, agradecimientos...) antes de "Calcular presupuesto", y esos quedan fuera tanto del presupuesto como de la exportación final.
+Ruido del progreso: quité el texto "fragmento X de Y" y el sonido en cada trozo interno del modo "Libro completo" — eso era ruido de la implementación (cómo se trocea por límite de caracteres del proveedor), no capítulos reales. Ahora la barra avanza en silencio y solo se anuncia/suena en hitos reales del modo por capítulos.
+Botón "Abrir carpeta": añadido, igual que en Grabación.
+Las pausas raras: encontré una explicación sólida y coherente con tu teoría. Cuando un texto se trocea por límite de caracteres (no por frase), cada trozo se sintetiza como un audio independiente, y varios proveedores añaden su propio silencio al principio/final de cada síntesis. Al unir los trozos, ese silencio se suma en cada costura — como el corte no coincide con la puntuación real, suena como una pausa aleatoria. Hice dos cambios:
+• En el MP3 exportado: recorto el silencio sobrante de cada trozo antes de unirlos.
+• En Lectura en tiempo real: subí el tamaño de fragmento de 200 a 500 caracteres, para que haya menos costuras por audiolibro y más margen para que la precarga del siguiente fragmento gane la carrera contra APIs lentas.
+No pude probarlo con audio real (no tengo forma de escuchar aquí), así que te pido que lo pruebes tú con un capítulo corto antes de gastar cuota en un libro completo — dime si las pausas mejoran o si siguen sonando igual de raras, y si es lo segundo, afinamos el margen o busco otra causa.
+Qué queda pendiente de la Fase B (repasando el documento contra lo ya hecho):
+• Reanudar exportaciones pendientes por falta de cuota (la sección 3.4 lo describe: pegar tramos como partes nuevas, no reabrir el MP3) — el guardado en exportaciones_pendientes ya existe, pero no he construido la pantalla/flujo para retomar esas partes desde la interfaz.
+• Soporte de PDF en el Creador de Audiolibros (ahora mismo solo admite EPUB, lo dice el propio mensaje de error si lo intentas).
+• El acceso desde el menú contextual de Biblioteca a la carpeta de una exportación pendiente (línea 290 del documento).
+¿Seguimos con la reanudación de pendientes, con PDF, o prefieres que primero confirmes lo de las pausas antes de abrir otro frente?
