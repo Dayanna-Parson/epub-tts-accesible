@@ -633,6 +633,25 @@ class PanelGeneral(wx.ScrolledWindow):
         reproducir(SUCCESS)
         ruta_extraida = resultado.get("ruta_extraida")
 
+        from app.config_rutas import RAIZ
+        ruta_exe = os.path.join(RAIZ, "bin", "actualizador.exe")
+
+        if not os.path.isfile(ruta_exe):
+            # Todavía no se ha compilado/copiado actualizador.exe a bin/ — es
+            # el caso esperado mientras se prueba solo la descarga/verificación
+            # (Fase C en desarrollo). Se avisa sin ambigüedad y sin cerrar la
+            # app, dejando temp/actualizacion/ intacto para poder revisarlo.
+            reproducir(ERROR)
+            wx.MessageBox(
+                "Descarga y verificación completadas correctamente en:\n"
+                f"«{ruta_extraida}».\n\n"
+                f"El instalador auxiliar todavía no está disponible en:\n{ruta_exe}\n\n"
+                "No se instalará nada. Los archivos ya verificados se conservan "
+                "en temp/actualizacion/ para que puedas revisarlos.",
+                "Instalador no disponible", wx.OK | wx.ICON_WARNING,
+            )
+            return
+
         respuesta = wx.MessageBox(
             "Descarga y verificación completadas correctamente.\n\n"
             "Para instalarla, la aplicación se cerrará y un proceso auxiliar "
@@ -650,11 +669,15 @@ class PanelGeneral(wx.ScrolledWindow):
     def _lanzar_actualizador_auxiliar(self, ruta_extraida: str):
         """
         Lanza bin/actualizador.exe como proceso independiente con --origen
-        apuntando a la versión ya verificada y --destino a la raíz de la
-        instalación actual, y cierra la app para liberar los archivos que
-        el auxiliar va a reemplazar.
+        apuntando a la versión ya verificada, --destino a la raíz de la
+        instalación actual, --pid de este proceso (para que el auxiliar
+        espere a que cierre antes de tocar archivos) y --lanzador (más
+        --python si la app corre en modo desarrollo) para que el auxiliar
+        sepa relanzarla sin depender de INICIAR_APP.bat. Cierra la app para
+        liberar los archivos que el auxiliar va a reemplazar.
         """
         import subprocess
+        import sys
         from app.config_rutas import RAIZ
 
         ruta_exe = os.path.join(RAIZ, "bin", "actualizador.exe")
@@ -669,14 +692,30 @@ class PanelGeneral(wx.ScrolledWindow):
             GestorDescargaActualizacion().limpiar()
             return
 
+        if getattr(sys, "frozen", False):
+            # Build congelada con PyInstaller: sys.executable ya es el propio
+            # epubtts.exe, se relanza directamente sin intérprete.
+            lanzador = sys.executable
+            interprete = ""
+        else:
+            # Modo desarrollo: se relanza el script de entrada con el mismo
+            # intérprete de Python que está ejecutando esta sesión.
+            lanzador = os.path.join(RAIZ, "iniciar_epub_tts.py")
+            interprete = sys.executable
+
+        argumentos = [
+            ruta_exe,
+            "--origen", ruta_extraida,
+            "--destino", RAIZ,
+            "--pid", str(os.getpid()),
+            "--lanzador", lanzador,
+        ]
+        if interprete:
+            argumentos += ["--python", interprete]
+
         try:
             subprocess.Popen(
-                [
-                    ruta_exe,
-                    "--origen", ruta_extraida,
-                    "--destino", RAIZ,
-                    "--pid", str(os.getpid()),
-                ],
+                argumentos,
                 creationflags=subprocess.CREATE_NO_WINDOW,
                 close_fds=True,
             )
