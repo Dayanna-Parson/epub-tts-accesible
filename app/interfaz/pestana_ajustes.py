@@ -631,14 +631,65 @@ class PanelGeneral(wx.ScrolledWindow):
             return
 
         reproducir(SUCCESS)
-        wx.MessageBox(
-            "Descarga y verificación completadas correctamente en "
-            f"«{resultado.get('ruta_extraida')}».\n\n"
-            "El lanzamiento de actualizador.exe se conectará en un paso posterior.",
-            "Verificación correcta", wx.OK | wx.ICON_INFORMATION,
+        ruta_extraida = resultado.get("ruta_extraida")
+
+        respuesta = wx.MessageBox(
+            "Descarga y verificación completadas correctamente.\n\n"
+            "Para instalarla, la aplicación se cerrará y un proceso auxiliar "
+            "independiente (actualizador.exe) hará el cambio con respaldo "
+            "automático. ¿Instalar ahora?",
+            "Verificación correcta", wx.YES_NO | wx.ICON_QUESTION,
         )
-        from app.motor.actualizador_descarga import GestorDescargaActualizacion
-        GestorDescargaActualizacion().limpiar()
+        if respuesta != wx.YES:
+            from app.motor.actualizador_descarga import GestorDescargaActualizacion
+            GestorDescargaActualizacion().limpiar()
+            return
+
+        self._lanzar_actualizador_auxiliar(ruta_extraida)
+
+    def _lanzar_actualizador_auxiliar(self, ruta_extraida: str):
+        """
+        Lanza bin/actualizador.exe como proceso independiente con --origen
+        apuntando a la versión ya verificada y --destino a la raíz de la
+        instalación actual, y cierra la app para liberar los archivos que
+        el auxiliar va a reemplazar.
+        """
+        import subprocess
+        from app.config_rutas import RAIZ
+
+        ruta_exe = os.path.join(RAIZ, "bin", "actualizador.exe")
+        if not os.path.isfile(ruta_exe):
+            reproducir(ERROR)
+            wx.MessageBox(
+                f"No se encontró el instalador auxiliar en:\n{ruta_exe}\n\n"
+                "La actualización no se puede instalar automáticamente en este portable.",
+                "Instalador no disponible", wx.OK | wx.ICON_ERROR,
+            )
+            from app.motor.actualizador_descarga import GestorDescargaActualizacion
+            GestorDescargaActualizacion().limpiar()
+            return
+
+        try:
+            subprocess.Popen(
+                [
+                    ruta_exe,
+                    "--origen", ruta_extraida,
+                    "--destino", RAIZ,
+                    "--pid", str(os.getpid()),
+                ],
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                close_fds=True,
+            )
+        except Exception as exc:
+            logger.exception("No se pudo lanzar actualizador.exe")
+            reproducir(ERROR)
+            wx.MessageBox(
+                f"No se pudo iniciar el instalador auxiliar:\n{exc}",
+                "Error al instalar", wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        wx.CallAfter(wx.GetTopLevelParent(self).Close)
     # ANCLAJE_FIN: ACTUALIZADOR_DESCARGA_VERIFICACION_FASE_C
 # ANCLAJE_FIN: PANEL_GENERAL
 
