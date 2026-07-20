@@ -184,6 +184,23 @@ class PanelGeneral(wx.ScrolledWindow):
         )
         sizer_updates.Add(self.lbl_progreso, 0, wx.ALL, 5)
 
+        # ANCLAJE_INICIO: BOTON_PRUEBA_ACTUALIZADOR_FASE_C
+        # Botón temporal de desarrollo, independiente del flujo de producción
+        # de arriba (btn_buscar_updates). Prueba en aislamiento el nuevo
+        # gestor de descarga/verificación a temp/actualizacion/ (Fase C).
+        # Se retira cuando el flujo completo con actualizador.exe sustituya
+        # al bloque ACTUALIZADOR_SCRIPT_CLON.
+        self.btn_probar_descarga_nueva = wx.Button(
+            self, label="Probar descarga y verificación (Fase C)"
+        )
+        self.btn_probar_descarga_nueva.SetHelpText(
+            "Descarga la última versión a temp/actualizacion/ y verifica su estructura, "
+            "sin instalar nada. Herramienta de desarrollo de la Fase C."
+        )
+        self.btn_probar_descarga_nueva.Bind(wx.EVT_BUTTON, self._al_probar_descarga_nueva)
+        sizer_updates.Add(self.btn_probar_descarga_nueva, 0, wx.ALL, 5)
+        # ANCLAJE_FIN: BOTON_PRUEBA_ACTUALIZADOR_FASE_C
+
         sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
 
         # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD_AJUSTES
@@ -583,6 +600,46 @@ class PanelGeneral(wx.ScrolledWindow):
 
         wx.CallAfter(wx.GetTopLevelParent(self).Close)
     # ANCLAJE_FIN: ACTUALIZADOR_SCRIPT_CLON
+
+    # ANCLAJE_INICIO: ACTUALIZADOR_DESCARGA_VERIFICACION_FASE_C
+    def _al_probar_descarga_nueva(self, evento=None):
+        from app.motor.actualizador_descarga import GestorDescargaActualizacion
+
+        self.btn_probar_descarga_nueva.Disable()
+        wx.CallAfter(self.lbl_progreso.SetLabel, "Iniciando descarga de prueba...")
+
+        gestor = GestorDescargaActualizacion()
+        gestor.descargar_y_verificar_en_hilo(
+            callback_resultado=lambda r: wx.CallAfter(self._al_resultado_descarga_nueva, r),
+            callback_progreso=lambda msg, pct: wx.CallAfter(self.lbl_progreso.SetLabel, msg),
+        )
+
+    def _al_resultado_descarga_nueva(self, resultado: dict):
+        self.btn_probar_descarga_nueva.Enable()
+        wx.CallAfter(self.lbl_progreso.SetLabel, "")
+
+        if not resultado.get("ok"):
+            logger.warning(
+                "Verificación de la descarga de prueba fallida: %s",
+                resultado.get("error"),
+            )
+            reproducir(ERROR)
+            wx.MessageBox(
+                f"No se pudo verificar la actualización descargada:\n{resultado.get('error')}",
+                "Verificación fallida", wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        reproducir(SUCCESS)
+        wx.MessageBox(
+            "Descarga y verificación completadas correctamente en "
+            f"«{resultado.get('ruta_extraida')}».\n\n"
+            "El lanzamiento de actualizador.exe se conectará en un paso posterior.",
+            "Verificación correcta", wx.OK | wx.ICON_INFORMATION,
+        )
+        from app.motor.actualizador_descarga import GestorDescargaActualizacion
+        GestorDescargaActualizacion().limpiar()
+    # ANCLAJE_FIN: ACTUALIZADOR_DESCARGA_VERIFICACION_FASE_C
 # ANCLAJE_FIN: PANEL_GENERAL
 
 
