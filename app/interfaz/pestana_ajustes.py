@@ -941,7 +941,7 @@ class PanelClaves(wx.ScrolledWindow):
             indice = self.combo_ge_modelo.FindString(id_modelo)
         self.combo_ge_modelo.SetSelection(indice)
 
-    def al_guardar(self, evento):
+    def al_guardar(self, evento, mensaje="Claves guardadas en claves_api.json."):
         seleccion_ge = self.combo_ge_modelo.GetStringSelection()
         claves = {
             "azure": {
@@ -963,33 +963,33 @@ class PanelClaves(wx.ScrolledWindow):
         guardar_claves(claves)
         if evento:
             reproducir(SUCCESS)
-            wx.MessageBox("Claves guardadas en claves_api.json.", "Éxito")
+            wx.MessageBox(mensaje, "Éxito")
 
     def al_borrar_azure(self, evento):
         self.txt_az_key.Clear()
         self.txt_az_region.Clear()
-        self.al_guardar(None)
+        self.al_guardar(evento, "Clave de Azure borrada.")
 
     def al_borrar_polly(self, evento):
         self.txt_po_key.Clear()
         self.txt_po_secret.Clear()
         self.txt_po_region.Clear()
-        self.al_guardar(None)
+        self.al_guardar(evento, "Clave de Amazon Polly borrada.")
 
     def al_borrar_elevenlabs(self, evento):
         self.txt_el_key.Clear()
-        self.al_guardar(None)
+        self.al_guardar(evento, "Clave de ElevenLabs borrada.")
 
     def al_borrar_deepgram(self, evento):
         self.txt_dg_key.Clear()
-        self.al_guardar(None)
+        self.al_guardar(evento, "Clave de Deepgram borrada.")
 
     def al_borrar_gemini(self, evento):
         self.txt_ge_key.Clear()
         while self.combo_ge_modelo.GetCount() > 1:
             self.combo_ge_modelo.Delete(1)
         self.combo_ge_modelo.SetSelection(0)
-        self.al_guardar(None)
+        self.al_guardar(evento, "Clave de Gemini borrada.")
 
     def al_comprobar_gemini(self, evento):
         from app.servicios.cliente_gemini import listar_modelos

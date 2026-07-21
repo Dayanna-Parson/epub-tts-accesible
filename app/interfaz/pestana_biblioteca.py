@@ -864,6 +864,14 @@ class PestanaBiblioteca(wx.Panel):
 
     def _libro_seleccionado(self):
         indice = self.lista_libros.GetFirstSelected()
+        if indice == -1:
+            # Tras recargar la lista (Freeze/DeleteAllItems/Thaw en
+            # _cargar_libros), puede quedar un ítem con el foco de
+            # teclado pero sin marca de selección — GetFirstSelected()
+            # no lo ve, GetFocusedItem() sí. Sin este respaldo, abrir el
+            # Asistente de Biblioteca con un libro visiblemente
+            # enfocado podía acabar en modo general por error.
+            indice = self.lista_libros.GetFocusedItem()
         if indice == -1 or indice >= len(self._libros_actuales):
             return None
         return self._libros_actuales[indice]
@@ -1143,10 +1151,54 @@ class PestanaBiblioteca(wx.Panel):
                 "categoria": nombres_categoria,
                 "estado": self._describir_estado(libro, pendiente),
             }
+        elif self._id_etiqueta_activa is not None:
+            # Sin libro concreto seleccionado pero con una saga activa en
+            # el panel izquierdo (lista_etiquetas): se manda esa saga como
+            # contexto en vez de caer directo a modo general.
+            contexto_libro = self._contexto_saga(self._id_etiqueta_activa)
+        elif self._id_categoria_activa is not None:
+            contexto_libro = self._contexto_categoria(self._id_categoria_activa)
 
         dlg = DialogoAsistenteBiblioteca(self, contexto_libro)
         dlg.ShowModal()
         dlg.Destroy()
+
+    def _resumen_titulos(self, libros, limite=15):
+        titulos = [l["titulo"] for l in libros]
+        resumen = f"{len(titulos)} libro(s): " + ", ".join(titulos[:limite])
+        if len(titulos) > limite:
+            resumen += ", ..."
+        return resumen
+
+    def _contexto_saga(self, id_etiqueta):
+        nombre = next(
+            (e["nombre"] for e in self._etiquetas_indice if e["id"] == id_etiqueta), None
+        )
+        if nombre is None:
+            return None
+        libros = self.gestor.buscar_libros(id_etiqueta=id_etiqueta)
+        return {
+            "id_libro": f"etiqueta:{id_etiqueta}",
+            "titulo": f"Saga: {nombre}",
+            "autor": None,
+            "categoria": None,
+            "estado": self._resumen_titulos(libros),
+        }
+
+    def _contexto_categoria(self, id_categoria):
+        try:
+            nodo = self.arbol_categorias.GetSelection()
+            nombre = self.arbol_categorias.GetItemText(nodo).rsplit(" (", 1)[0]
+        except RuntimeError:
+            return None
+        libros = self.gestor.buscar_libros(id_categoria=id_categoria)
+        return {
+            "id_libro": f"categoria:{id_categoria}",
+            "titulo": f"Género: {nombre}",
+            "autor": None,
+            "categoria": None,
+            "estado": self._resumen_titulos(libros),
+        }
     # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA
 
     def al_alternar_favorito(self, evento):
