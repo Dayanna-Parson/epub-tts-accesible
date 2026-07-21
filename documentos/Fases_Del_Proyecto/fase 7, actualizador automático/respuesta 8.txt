@@ -1,0 +1,3 @@
+respuesta 8
+
+Perfecto, cerramos la Fase C aquí. Te espero en la rama de Biblioteca/Gemini para arrancar la Sección 6 (Asistente con `Ctrl+G`) cuando me confirmes desde ahí.

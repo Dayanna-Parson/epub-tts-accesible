@@ -1,0 +1,25 @@
+respuesta 7
+
+Ahora pruebo que el comando de PyInstaller que voy a integrar en `crear_portable.py` compila `auxiliar_actualizador.py` sin errores (en este sandbox Linux generará un binario ELF, no un `.exe`, pero valida que la sintaxis y las dependencias del script están bien):
+
+Compila sin errores. Limpio los archivos de prueba y ejecuto el binario para confirmar que `--help`/args funcionan:
+
+Ahora actualizo el resto de la numeración de pasos y añado la llamada en el flujo principal:
+
+Funciona correctamente: genera `bin/actualizador` (equivalente Linux; en Windows con `pip install pyinstaller` producirá `bin/actualizador.exe`). Limpio los artefactos de la prueba:
+
+Commit y push:
+
+Subido (commit `64581ee`). Resumen:
+
+**`crear_portable.py`** — nuevo paso `compilar_actualizador()` (bloque `ANCLAJE_INICIO/FIN: COMPILACION_ACTUALIZADOR_AUXILIAR`), insertado entre la compilación de la app principal y la copia de recursos:
+- Ejecuta `PyInstaller --noconfirm --noconsole --onefile --name=actualizador --distpath=bin/ ... auxiliar_actualizador.py`.
+- A diferencia de `auxiliar_sapi32.exe` (necesita Python de 32 bits aparte, sigue siendo manual), `actualizador.exe` comparte arquitectura con la app principal, así que se compila con el mismo `sys.executable` — se automatiza sin problema.
+- Si `auxiliar_actualizador.py` no existiera, avisa y sigue (no rompe el empaquetado); si PyInstaller falla, aborta con el mismo criterio que ya usa `ejecutar_pyinstaller()` para el exe principal.
+- Renumeré los pasos impresos de `[1/6]` a `[1/7]`.
+
+**`bin/INSTRUCCIONES.txt`** — nota aclarando que `actualizador.exe` no requiere colocación manual, a diferencia de ffmpeg/sapi32.
+
+**Probado aquí** (Linux, con PyInstaller instalado en el sandbox): el comando compila `auxiliar_actualizador.py` sin errores y el binario resultante responde correctamente a `--help` con los cinco argumentos (`--origen/--destino/--pid/--lanzador/--python`). No pude generar un `.exe` real de Windows desde aquí, pero la sintaxis del comando y las dependencias del script quedan validadas — en tu máquina Windows, al correr `python crear_portable.py`, debería aparecer `bin/actualizador.exe` listo.
+
+Cuando corras `crear_portable.py` en Windows y confirmes que `bin/actualizador.exe` se genera y el ciclo completo (descarga → verificación → instalación → rollback si falla → relanzamiento) funciona de extremo a extremo con NVDA, avísame y entonces sí retiramos `ACTUALIZADOR_SCRIPT_CLON`. Mientras tanto, quedo pendiente de que fusiones esta rama con la de Biblioteca/Gemini para seguir con el Asistente `Ctrl+G`.

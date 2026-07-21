@@ -1,0 +1,13 @@
+¡Probado en mi máquina Windows real con NVDA y el resultado ha sido perfecto!
+He pulsado el botón 'Probar descarga y verificación (Fase C)':
+1. 
+Realizó la descarga y descompresión en temp/actualizacion/epub-tts-accesible-main.
+2. 
+Verificó la estructura correctamente.
+3. 
+Al no estar bin/actualizador.exe compilado, reprodujo el sonido de aviso/error y me abrió el MessageBox explicativo ('Instalador no disponible') sin cerrar la app ni romper nada.
+4. 
+NVDA verbalizó todo el diálogo con total claridad.
+La lógica de descarga, descompresión y aviso en hilo secundario queda verificada.
+Damos por terminado este paso. Recuerda que no debemos borrar aún el bloque legado del .bat hasta que el actualizador ejecutable esté compilado y probado completo.
+¿Cuál es la siguiente tarea o bloque según la planificación de la v3.0 que nos toca empezar ahora?

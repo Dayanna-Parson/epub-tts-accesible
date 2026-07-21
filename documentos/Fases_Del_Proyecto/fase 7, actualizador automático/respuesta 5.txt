@@ -1,0 +1,18 @@
+respuesta 5
+
+Verifico que compile correctamente:
+
+Commit y push:
+
+Subido (commit `ea07459`). Resumen de los dos cambios:
+
+1. **Argumentos completos al auxiliar**: `_lanzar_actualizador_auxiliar` ahora arma `--lanzador` (y `--python` si aplica) además de `--origen`/`--destino`/`--pid`:
+   - Si `sys.frozen` (build congelada con PyInstaller): `--lanzador <sys.executable>`, sin `--python`.
+   - Si modo desarrollo: `--lanzador <RAIZ>/iniciar_epub_tts.py` + `--python <sys.executable>` (el intérprete que ya está corriendo).
+
+2. **Aviso claro sin bloquear la prueba**: la comprobación de `bin/actualizador.exe` se hace justo después de la verificación exitosa, **antes** de preguntar "¿Instalar ahora?". Si el `.exe` no está compilado todavía:
+   - `reproducir(ERROR)` + `wx.MessageBox` (icono de aviso) explicando que la descarga se verificó bien pero el instalador no está disponible.
+   - No cierra la app, no borra `temp/actualizacion/` — lo deja intacto para que puedas inspeccionar los archivos verificados en disco.
+   - Solo si el `.exe` sí existe, sigue el flujo normal de confirmación e instalación.
+
+Compilé el archivo (`py_compile`) sin errores. Ya puedes darle al botón "Probar descarga y verificación (Fase C)" en tu rama de Windows: debería descargar, verificar la estructura y avisarte de forma clara que falta `actualizador.exe`, sin ningún traceback feo ni cierre inesperado.
