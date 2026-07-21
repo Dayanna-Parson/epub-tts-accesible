@@ -30,10 +30,26 @@ def _clave_api():
     return cargar_claves().get("gemini", {}).get("api_key", "").strip()
 
 
+# Aunque soporten generateContent, estas variantes son especializadas
+# (texto a voz, generación de imagen/vídeo, embeddings...) y no sirven
+# para una conversación de varios turnos: Gemini responde 400
+# "Multiturn chat is not enabled for models/..." si se les habla como a
+# un modelo de chat normal. Se descartan por nombre para no ofrecerlas
+# nunca como candidatas, ni en el modo automático ni en el combo manual
+# de Ajustes.
+_FRAGMENTOS_NO_CHAT = ("tts", "image", "imagen", "embedding", "aqa", "veo", "learnlm")
+
+
+def _es_modelo_chat_de_texto(nombre: str) -> bool:
+    nombre_min = nombre.lower()
+    return not any(fragmento in nombre_min for fragmento in _FRAGMENTOS_NO_CHAT)
+
+
 def listar_modelos() -> list:
     """
     Consulta GET /v1beta/models y devuelve los nombres de modelo (sin el
-    prefijo "models/") que soportan generateContent. Se llama en cada
+    prefijo "models/") que soportan generateContent y sirven para chat de
+    texto de varios turnos (ver _FRAGMENTOS_NO_CHAT). Se llama en cada
     comprobación de clave para que la lista se actualice sola cuando Google
     publique modelos nuevos, sin tocar código.
     """
@@ -50,9 +66,12 @@ def listar_modelos() -> list:
         datos = resp.json()
         for modelo in datos.get("models", []):
             metodos = modelo.get("supportedGenerationMethods", [])
-            if "generateContent" in metodos:
-                nombre = modelo.get("name", "")
-                modelos.append(nombre.split("/", 1)[-1] if "/" in nombre else nombre)
+            if "generateContent" not in metodos:
+                continue
+            nombre = modelo.get("name", "")
+            nombre = nombre.split("/", 1)[-1] if "/" in nombre else nombre
+            if _es_modelo_chat_de_texto(nombre):
+                modelos.append(nombre)
         token_pagina = datos.get("nextPageToken")
         if not token_pagina:
             break
@@ -84,7 +103,10 @@ def _candidatos_automaticos(modelos, analisis_profundo=False) -> list:
          vigente).
       2. El resto de modelos cuyo nombre contiene "flash"/"pro", del
          número de versión más alto al más bajo.
-      3. Cualquier otro modelo con generateContent, como último recurso.
+      3. Si el objetivo era Flash, los modelos "pro" (y viceversa) —
+         por si la cuota del día se agotó para toda la familia Flash,
+         algo que sí puede pasar en la capa gratuita.
+      4. Cualquier otro modelo con generateContent, como último recurso.
     enviar_mensaje() los prueba en este orden y sigue al siguiente si uno
     devuelve 404 (retirado) o 429 (cuota agotada para ese modelo en
     concreto — en la capa gratuita cada modelo tiene su propia cuota).
@@ -92,15 +114,22 @@ def _candidatos_automaticos(modelos, analisis_profundo=False) -> list:
     if not modelos:
         raise ValueError("La cuenta de Gemini no tiene modelos disponibles.")
     objetivo = "pro" if analisis_profundo else "flash"
+    otro_objetivo = "flash" if analisis_profundo else "pro"
     alias = f"gemini-{objetivo}-latest"
 
+    def _coincidencias(fragmento):
+        return sorted(
+            (m for m in modelos if fragmento in m.lower() and m not in candidatos),
+            key=_version_de_modelo, reverse=True,
+        )
+
     candidatos = [alias] if alias in modelos else []
-    coincidencias = sorted(
-        (m for m in modelos if objetivo in m.lower() and m not in candidatos),
+    candidatos += _coincidencias(objetivo)
+    candidatos += _coincidencias(otro_objetivo)
+    candidatos += sorted(
+        (m for m in modelos if m not in candidatos),
         key=_version_de_modelo, reverse=True,
     )
-    candidatos += coincidencias
-    candidatos += [m for m in modelos if m not in candidatos]
     return candidatos
 # ANCLAJE_FIN: CLIENTE_GEMINI_LISTA_MODELOS
 
