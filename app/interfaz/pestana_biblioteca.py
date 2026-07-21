@@ -328,22 +328,23 @@ class PestanaBiblioteca(wx.Panel):
     def _configurar_atajos(self):
         # Ctrl+O (apertura universal, contextual por pestaña) se gestiona a
         # nivel de VentanaPrincipal y llama a al_importar_carpeta() desde
-        # allí — no se duplica aquí para no pisar el atajo global.
+        # allí — no se duplica aquí para no pisar el atajo global. Ctrl+Shift+B
+        # (Asistente de Biblioteca) también se gestiona a nivel de
+        # VentanaPrincipal (AcceleratorTable del Frame, con prioridad sobre
+        # los de cualquier panel hijo) para que funcione desde cualquier
+        # pestaña, no solo con el foco dentro de Biblioteca.
         id_buscar = wx.NewIdRef()
         id_info = wx.NewIdRef()
         id_favorito = wx.NewIdRef()
-        id_asistente = wx.NewIdRef()
 
         self.Bind(wx.EVT_MENU, lambda e: self.txt_filtro.SetFocus(), id=id_buscar)
         self.Bind(wx.EVT_MENU, self.al_anunciar_info_libro, id=id_info)
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, id=id_favorito)
-        self.Bind(wx.EVT_MENU, self.al_abrir_asistente_biblioteca, id=id_asistente)
 
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('F'), id_buscar),
             (wx.ACCEL_CTRL, ord('I'), id_info),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('F'), id_favorito),
-            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('B'), id_asistente),
         ]))
 
     def al_cambiar_subpestana_izquierda(self, evento):
@@ -1660,6 +1661,7 @@ class PestanaBiblioteca(wx.Panel):
         """
         ventana_principal = self.padre_notebook.GetParent()
         menu.AppendSeparator()
+        ventana_principal._agregar_item_asistente_biblioteca(menu)
         ventana_principal._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")

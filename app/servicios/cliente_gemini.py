@@ -59,19 +59,30 @@ def listar_modelos() -> list:
     return modelos
 
 
-def _elegir_modelo_automatico(modelos, analisis_profundo=False):
+def _candidatos_automaticos(modelos, analisis_profundo=False) -> list:
     """
     Modo "Automático": Flash para preguntas rápidas, Pro para análisis
-    profundos. Si no encuentra ninguno con ese nombre, usa el primero que
-    haya devuelto la API (siempre soporta generateContent).
+    profundos. Google va retirando versiones concretas (p. ej.
+    "gemini-2.5-flash") aunque sigan apareciendo un tiempo en /models, así
+    que en vez de devolver un único nombre y cruzar los dedos, se devuelve
+    una lista de candidatos en orden de preferencia:
+      1. El alias estable "gemini-flash-latest"/"gemini-pro-latest", si la
+         cuenta lo tiene (Google lo mantiene apuntando siempre al modelo
+         vigente).
+      2. El resto de modelos cuyo nombre contiene "flash"/"pro".
+      3. Cualquier otro modelo con generateContent, como último recurso.
+    enviar_mensaje() los prueba en este orden y sigue al siguiente si uno
+    devuelve 404.
     """
     if not modelos:
         raise ValueError("La cuenta de Gemini no tiene modelos disponibles.")
     objetivo = "pro" if analisis_profundo else "flash"
-    for nombre in modelos:
-        if objetivo in nombre.lower():
-            return nombre
-    return modelos[0]
+    alias = f"gemini-{objetivo}-latest"
+
+    candidatos = [alias] if alias in modelos else []
+    candidatos += [m for m in modelos if objetivo in m.lower() and m not in candidatos]
+    candidatos += [m for m in modelos if m not in candidatos]
+    return candidatos
 # ANCLAJE_FIN: CLIENTE_GEMINI_LISTA_MODELOS
 
 
@@ -111,8 +122,11 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
 
     datos_gemini = cargar_claves().get("gemini", {})
     modelo_elegido = modelo or datos_gemini.get("modelo", "auto")
-    if not modelo_elegido or modelo_elegido == "auto":
-        modelo_elegido = _elegir_modelo_automatico(listar_modelos(), analisis_profundo)
+    modo_automatico = not modelo_elegido or modelo_elegido == "auto"
+    candidatos_modelo = (
+        _candidatos_automaticos(listar_modelos(), analisis_profundo)
+        if modo_automatico else [modelo_elegido]
+    )
 
     contenidos = []
     contexto_texto = _construir_contexto_libro(contexto_libro)
@@ -131,10 +145,32 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
     if busqueda_web:
         cuerpo["tools"] = [{"google_search": {}}]
 
-    url = f"{_URL_BASE}/models/{modelo_elegido}:generateContent"
-    resp = requests.post(url, params={"key": api_key}, json=cuerpo, timeout=_TIMEOUT)
-    resp.raise_for_status()
-    datos = resp.json()
+    datos = None
+    ultimo_error = None
+    for indice, nombre_modelo in enumerate(candidatos_modelo):
+        url = f"{_URL_BASE}/models/{nombre_modelo}:generateContent"
+        resp = requests.post(url, params={"key": api_key}, json=cuerpo, timeout=_TIMEOUT)
+        if resp.status_code == 404 and modo_automatico and indice < len(candidatos_modelo) - 1:
+            # En modo automático, un modelo listado pero ya retirado no debe
+            # tumbar la conversación: se prueba el siguiente candidato.
+            logger.warning("Modelo Gemini '%s' devolvió 404, probando el siguiente candidato", nombre_modelo)
+            continue
+        try:
+            resp.raise_for_status()
+        except requests.HTTPError as e:
+            logger.error("Error de Gemini con el modelo '%s': %s", nombre_modelo, resp.text)
+            ultimo_error = e
+            break
+        datos = resp.json()
+        break
+
+    if datos is None:
+        if ultimo_error is not None:
+            raise ultimo_error
+        raise ValueError(
+            "Ninguno de los modelos disponibles de Gemini respondió. "
+            "Prueba a comprobar la clave de nuevo en Ajustes para actualizar la lista."
+        )
 
     candidatos = datos.get("candidates", [])
     if not candidatos:

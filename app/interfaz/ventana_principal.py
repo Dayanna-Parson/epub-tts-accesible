@@ -292,6 +292,27 @@ class VentanaPrincipal(wx.Frame):
         )
         self._ventana_proyectos.Show()
 
+    # ANCLAJE_INICIO: ABRIR_ASISTENTE_BIBLIOTECA_GLOBAL
+    def al_abrir_asistente_biblioteca_global(self, evento=None):
+        """
+        Abre el Asistente de Biblioteca desde cualquier pestaña. Delega en
+        el método propio de PestanaBiblioteca (que arma el contexto del
+        libro seleccionado, si lo hay) en vez de duplicar esa lógica aquí.
+        """
+        self.pestana_biblioteca.al_abrir_asistente_biblioteca(None)
+
+    def _agregar_item_asistente_biblioteca(self, menu):
+        """
+        Añade la entrada del Asistente de Biblioteca a un menú contextual.
+        Compartido por todos los menús contextuales de la aplicación (igual
+        que _submenu_ayuda) para que el asistente sea accesible desde
+        cualquier pestaña, no solo desde Biblioteca.
+        """
+        item = menu.Append(wx.ID_ANY, "Asistente de Biblioteca (Gemini)...\tCtrl+Shift+B")
+        self.Bind(wx.EVT_MENU, self.al_abrir_asistente_biblioteca_global, item)
+        menu.AppendSeparator()
+    # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA_GLOBAL
+
     def al_abrir_txt_grabacion(self, evento):
         """Activa la pestaña Grabación y llama al método Examinar del panel."""
         self.notebook.SetSelection(IDX_GRABACION)
@@ -562,6 +583,7 @@ class VentanaPrincipal(wx.Frame):
         item_importar = menu.Append(wx.ID_ANY, "Importar carpeta...\tCtrl+O")
         self.Bind(wx.EVT_MENU, pb.al_importar_carpeta, item_importar)
         menu.AppendSeparator()
+        self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
@@ -578,6 +600,7 @@ class VentanaPrincipal(wx.Frame):
         el cableado real de la pestaña.
         """
         menu = wx.Menu()
+        self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
@@ -588,6 +611,7 @@ class VentanaPrincipal(wx.Frame):
     def _menu_contextual_ajustes(self):
         """Menú contextual de la pestaña Ajustes: solo Ayuda y Salir."""
         menu = wx.Menu()
+        self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
@@ -678,6 +702,7 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
 
         menu.AppendSeparator()
+        self._agregar_item_asistente_biblioteca(menu)
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
@@ -722,6 +747,7 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, item_proy)
 
         menu.AppendSeparator()
+        self._agregar_item_asistente_biblioteca(menu)
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
@@ -803,6 +829,10 @@ class VentanaPrincipal(wx.Frame):
             "marcadores":        lambda: self.pestana_lectura.al_abrir_marcadores(None),
             "buscar":            lambda: self.pestana_lectura.iniciar_busqueda(),
             "ir_porcentaje":     lambda: self.pestana_lectura.iniciar_ir_a_pagina(),
+            # Sin restricción de pestaña (no está en _ATAJOS_SOLO_LECTURA):
+            # el Asistente de Biblioteca debe abrirse desde cualquier parte
+            # de la aplicación, no solo con Biblioteca activa.
+            "asistente_biblioteca": lambda: self.al_abrir_asistente_biblioteca_global(),
         }
         if clave in _ACCIONES:
             if clave in _ATAJOS_SOLO_LECTURA and not en_lectura:
