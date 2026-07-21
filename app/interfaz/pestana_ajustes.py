@@ -863,6 +863,44 @@ class PanelClaves(wx.ScrolledWindow):
         sz_dg.Add(hb_dg, 0, wx.ALL, 5)
         sizer.Add(sz_dg, 0, wx.EXPAND | wx.ALL, 10)
 
+        # ANCLAJE_INICIO: PANEL_CLAVES_GEMINI
+        sb_ge = wx.StaticBox(self, label="Google Gemini (Asistente de Biblioteca)")
+        sz_ge = wx.StaticBoxSizer(sb_ge, wx.VERTICAL)
+        sz_ge.Add(wx.StaticText(self, label="API Key de Gemini (AI Studio):"), 0, wx.ALL, 2)
+        self.txt_ge_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
+        self.txt_ge_key.SetHelpText(
+            "Clave API de Google AI Studio para el Asistente de Biblioteca. "
+            "Google cambia periódicamente el formato de estas claves (por ejemplo, "
+            "de prefijo AIza a prefijo AQ.), así que se guarda tal cual la pegues, "
+            "sin comprobar formato ni longitud."
+        )
+        sz_ge.Add(self.txt_ge_key, 0, wx.EXPAND | wx.ALL, 5)
+        sz_ge.Add(wx.StaticText(self, label="Modelo a usar:"), 0, wx.ALL, 2)
+        self.combo_ge_modelo = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Automático"])
+        self.combo_ge_modelo.SetHelpText(
+            "Automático elige el modelo según la consulta: Flash para preguntas rápidas "
+            "y Pro para análisis profundos. La lista se completa con los modelos reales "
+            "de tu cuenta al comprobar la clave."
+        )
+        self.combo_ge_modelo.SetSelection(0)
+        sz_ge.Add(self.combo_ge_modelo, 0, wx.EXPAND | wx.ALL, 5)
+        hb_ge = wx.BoxSizer(wx.HORIZONTAL)
+        btn_ge_web = wx.Button(self, label="Conseguir clave Gemini")
+        btn_ge_web.SetHelpText("Abre el navegador en Google AI Studio para crear o copiar tu clave.")
+        btn_ge_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aistudio.google.com/apikey"))
+        btn_ge_check = wx.Button(self, label="Comprobar clave y listar modelos Gemini")
+        btn_ge_check.SetHelpText("Guarda la clave, la verifica contra Gemini y actualiza la lista de modelos disponibles.")
+        btn_ge_check.Bind(wx.EVT_BUTTON, self.al_comprobar_gemini)
+        btn_ge_del = wx.Button(self, label="Borrar clave Gemini")
+        btn_ge_del.SetHelpText("Borra la API Key de Gemini guardada en la aplicación.")
+        btn_ge_del.Bind(wx.EVT_BUTTON, self.al_borrar_gemini)
+        hb_ge.Add(btn_ge_web, 0, wx.RIGHT, 5)
+        hb_ge.Add(btn_ge_check, 0, wx.RIGHT, 5)
+        hb_ge.Add(btn_ge_del, 0)
+        sz_ge.Add(hb_ge, 0, wx.ALL, 5)
+        sizer.Add(sz_ge, 0, wx.EXPAND | wx.ALL, 10)
+        # ANCLAJE_FIN: PANEL_CLAVES_GEMINI
+
         self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
         self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
         sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER | wx.ALL, 15)
@@ -888,8 +926,23 @@ class PanelClaves(wx.ScrolledWindow):
         self.txt_el_key.SetValue(d_el.get("api_key", ""))
         d_dg = claves.get("deepgram", {})
         self.txt_dg_key.SetValue(d_dg.get("api_key", ""))
+        d_ge = claves.get("gemini", {})
+        self.txt_ge_key.SetValue(d_ge.get("api_key", ""))
+        self._fijar_modelo_gemini(d_ge.get("modelo", "auto"))
+
+    def _fijar_modelo_gemini(self, id_modelo):
+        # "auto" (o vacío) siempre es la primera entrada del combo.
+        if not id_modelo or id_modelo == "auto":
+            self.combo_ge_modelo.SetSelection(0)
+            return
+        indice = self.combo_ge_modelo.FindString(id_modelo)
+        if indice == wx.NOT_FOUND:
+            self.combo_ge_modelo.Append(id_modelo)
+            indice = self.combo_ge_modelo.FindString(id_modelo)
+        self.combo_ge_modelo.SetSelection(indice)
 
     def al_guardar(self, evento):
+        seleccion_ge = self.combo_ge_modelo.GetStringSelection()
         claves = {
             "azure": {
                 "key": self.txt_az_key.GetValue().strip(),
@@ -902,6 +955,10 @@ class PanelClaves(wx.ScrolledWindow):
             },
             "elevenlabs": {"api_key": self.txt_el_key.GetValue().strip()},
             "deepgram": {"api_key": self.txt_dg_key.GetValue().strip()},
+            "gemini": {
+                "api_key": self.txt_ge_key.GetValue().strip(),
+                "modelo": "auto" if seleccion_ge in ("", "Automático") else seleccion_ge,
+            },
         }
         guardar_claves(claves)
         if evento:
@@ -926,6 +983,34 @@ class PanelClaves(wx.ScrolledWindow):
     def al_borrar_deepgram(self, evento):
         self.txt_dg_key.Clear()
         self.al_guardar(None)
+
+    def al_borrar_gemini(self, evento):
+        self.txt_ge_key.Clear()
+        while self.combo_ge_modelo.GetCount() > 1:
+            self.combo_ge_modelo.Delete(1)
+        self.combo_ge_modelo.SetSelection(0)
+        self.al_guardar(None)
+
+    def al_comprobar_gemini(self, evento):
+        from app.servicios.cliente_gemini import listar_modelos
+        self.al_guardar(None)
+        seleccion_previa = self.combo_ge_modelo.GetStringSelection()
+        wx.BeginBusyCursor()
+        try:
+            modelos = listar_modelos()
+            wx.EndBusyCursor()
+            while self.combo_ge_modelo.GetCount() > 1:
+                self.combo_ge_modelo.Delete(1)
+            for id_modelo in modelos:
+                self.combo_ge_modelo.Append(id_modelo)
+            self._fijar_modelo_gemini(seleccion_previa)
+            reproducir(SUCCESS)
+            wx.MessageBox(f"Clave de Gemini válida. Modelos disponibles: {len(modelos)}.", "Info")
+        except Exception as e:
+            wx.EndBusyCursor()
+            logger.exception("Error al comprobar la clave de Gemini")
+            reproducir(ERROR)
+            wx.MessageBox(f"Error: {e}", "Error")
 
     def al_comprobar(self, evento, proveedor=None):
         from app.motor.cliente_nube_voces import GestorVoces
