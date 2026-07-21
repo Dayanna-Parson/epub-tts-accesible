@@ -97,6 +97,7 @@ app/
 │   ├── cliente_nube_voces.py     # Descarga listas de voces desde cada API
 │   ├── verificador_voces_nuevas.py # Detecta voces nuevas con cooldown de 24h
 │   ├── comprobador_actualizaciones.py # Versioning semver contra GitHub
+│   ├── actualizador_descarga.py   # Fase C: descarga y verifica la versión nueva en temp/actualizacion/
 │   ├── control_cuota.py          # Contadores mensuales por proveedor con autoreset + coste estimado
 │   ├── troceador_epub.py         # Divide EPUB por anclas HTML. TOC jerárquico y plano.
 │   ├── troceador_pdf.py          # Divide PDF por su índice de contenidos (o por página si no tiene)
@@ -112,6 +113,8 @@ app/
 
 auxiliar_sapi32.py                # Script 32 bits independiente. Compilar con Python 32 bits + PyInstaller.
                                   # Resultado: bin/auxiliar_sapi32.exe (incluido en el portable).
+auxiliar_actualizador.py           # Fase C: instalador auxiliar de actualizaciones (backup + rollback).
+                                  # Resultado: bin/actualizador.exe, compilado automáticamente por crear_portable.py.
 ```
 
 ---
@@ -661,5 +664,22 @@ data = np.concatenate([data, relleno], axis=0)
 ```
 
 400 ms de silencio digital real (ceros) al final del array de audio, para que el hardware nunca tenga sonido real que cortar en el borde. Además, un margen de 120 ms tras `sd.wait()` en los cuatro clientes de nube (Azure, Polly, ElevenLabs, Deepgram), por si acaso, ya que el mismo mecanismo de fondo podía en teoría afectar a cualquiera de ellos.
+
+### Actualizador automático (Fase C): ejecutable auxiliar compilado en vez de script al vuelo
+
+La v2.0 generaba un `.bat` al vuelo (`ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py`) para reemplazar los archivos de la app y reiniciarla, porque Windows bloquea la sobrescritura de archivos mientras el proceso que los tiene abiertos sigue vivo. Ese enfoque tiene dos problemas de fondo: un script generado dinámicamente dispara heurísticas de antivirus con más facilidad que un ejecutable fijo, y si el propio `.bat` es bloqueado o eliminado a mitad de proceso no hay ninguna forma de recuperarse — la app ya está cerrada.
+
+**Arquitectura nueva, mismo patrón que el puente SAPI32:**
+
+- `app/motor/actualizador_descarga.py` (`GestorDescargaActualizacion`) descarga el ZIP del release a `temp/actualizacion/`, lo descomprime y verifica que la estructura esperada (`app/`, `iniciar_epub_tts.py`, `recursos/version.json`) esté completa **antes de tocar la instalación actual**. Si falta algo, limpia `temp/actualizacion/` y aborta sin cambiar nada.
+- `auxiliar_actualizador.py` — script independiente, compilado a `bin/actualizador.exe` (con PyInstaller, misma arquitectura que la app — a diferencia de `auxiliar_sapi32.py`, no necesita un intérprete de 32 bits aparte, así que `crear_portable.py` lo compila automáticamente en cada empaquetado). Recibe `--origen/--destino/--pid/--lanzador/--python` por línea de comandos.
+
+**Tres decisiones de diseño, para no repetir los mismos errores del script al vuelo:**
+
+1. **Backup por copia verificada, nunca por movimiento.** Cada entrada de la instalación actual que va a reemplazarse se copia primero (`shutil.copytree`/`copy2`) a `temp/backup_previo/`, y se verifica que la copia sea idéntica (árbol de archivos + tamaños con `filecmp`) antes de tocar nada en el destino. Mover directamente entre carpetas falla con más frecuencia bajo inspección de un antivirus o un lector de pantalla — copiar y verificar es más lento pero mucho más seguro.
+2. **Rollback automático por entrada.** Si cualquier paso falla (incluida la propia verificación del backup), se revierte automáticamente lo ya reemplazado a partir de los respaldos ya verificados, incluida la entrada que se estaba reemplazando en ese momento — nunca queda una instalación a medias.
+3. **Espera de cierre por WinAPI, relanzamiento sin `.bat`.** `auxiliar_actualizador.py` espera a que el proceso de la app (su `--pid`) termine con `OpenProcess`/`WaitForSingleObject` (`ctypes`, con timeout), no parseando la salida de `tasklist`. Para relanzar la app no depende de `INICIAR_APP.bat`: recibe `--lanzador` (más `--python` si la app corre en modo desarrollo) desde la propia app, que sabe si está congelada con PyInstaller o corriendo desde código fuente; si no recibe `--lanzador`, autodetecta `epubtts.exe` o `iniciar_epub_tts.py` en `--destino`.
+
+**Estado a fecha de este documento:** implementado y probado con simulaciones de instalación correcta, fallo a mitad de una entrada y fallo de verificación del backup (rollback correcto en los tres casos). Probado también en Windows real con NVDA el tramo de descarga/verificación/aviso de instalador no disponible. Pendiente: validar en Windows real el ciclo completo de instalación con `bin/actualizador.exe` ya compilado (backup, reemplazo, rollback ante fallo real, relanzamiento). Hasta que esa validación se confirme, `ACTUALIZADOR_SCRIPT_CLON` sigue siendo el sistema activo en producción y no se retira.
 
 ---

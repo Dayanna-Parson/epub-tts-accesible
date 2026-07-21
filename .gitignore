@@ -62,6 +62,9 @@ build/
 *.spec
 actualizador.bat
 
+# ── Actualizador automático (Fase C): descarga y respaldo en tiempo de ejecución ──
+temp/
+
 # ── Caché de audio (generada en tiempo de ejecución) ─────────────────────────
 app/motor/cache/
 
