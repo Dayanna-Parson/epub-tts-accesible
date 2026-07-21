@@ -55,13 +55,28 @@ _DEFAULTS_EMBEBIDOS = {
 
 
 def _asegurar_defaults():
-    """Escribe _DEFAULTS_EMBEBIDOS en disco si el archivo no existe o está vacío."""
+    """
+    Escribe _DEFAULTS_EMBEBIDOS en disco si el archivo no existe o está
+    vacío. Si ya existe, añade las claves de _DEFAULTS_EMBEBIDOS que
+    todavía no estén en el archivo (un atajo nuevo incorporado en una
+    versión posterior de la app) sin tocar las que ya hubiera — antes,
+    una instalación con teclas_predeterminadas.json ya creado se quedaba
+    para siempre sin los atajos añadidos después de esa primera escritura
+    (así estuvo Ctrl+Shift+B, del Asistente de Biblioteca, sin activarse
+    en instalaciones ya en uso).
+    """
     if os.path.exists(_RUTA_DEFAULTS):
         try:
             with open(_RUTA_DEFAULTS, 'r', encoding='utf-8') as f:
                 contenido = f.read().strip()
-            if contenido and json.loads(contenido):
+            datos = json.loads(contenido) if contenido else {}
+            faltantes = {k: v for k, v in _DEFAULTS_EMBEBIDOS.items() if k not in datos}
+            if not faltantes:
                 return
+            datos.update(faltantes)
+            with open(_RUTA_DEFAULTS, 'w', encoding='utf-8') as f:
+                json.dump(datos, f, ensure_ascii=False, indent=4)
+            return
         except Exception:
             pass
     os.makedirs(os.path.dirname(_RUTA_DEFAULTS), exist_ok=True)

@@ -1,5 +1,6 @@
 # ANCLAJE_INICIO: CLIENTE_GEMINI
 import logging
+import re
 
 import requests
 
@@ -59,20 +60,34 @@ def listar_modelos() -> list:
     return modelos
 
 
+def _version_de_modelo(nombre: str) -> float:
+    """
+    Extrae el primer número de versión del nombre ("gemini-2.5-flash" → 2.5,
+    "gemini-3-pro" → 3.0). Sin número reconocible, se manda al final.
+    """
+    coincidencia = re.search(r"(\d+(?:\.\d+)?)", nombre)
+    return float(coincidencia.group(1)) if coincidencia else -1.0
+
+
 def _candidatos_automaticos(modelos, analisis_profundo=False) -> list:
     """
     Modo "Automático": Flash para preguntas rápidas, Pro para análisis
-    profundos. Google va retirando versiones concretas (p. ej.
-    "gemini-2.5-flash") aunque sigan apareciendo un tiempo en /models, así
-    que en vez de devolver un único nombre y cruzar los dedos, se devuelve
-    una lista de candidatos en orden de preferencia:
+    profundos, y siempre la versión más reciente sin nombres escritos a
+    fuego en el código — se calcula en cada llamada a partir de lo que
+    devuelva /v1beta/models en ese momento, así que si Google publica
+    mañana una versión nueva, se usa sin tocar nada aquí. Google también
+    va retirando versiones concretas (p. ej. "gemini-2.5-flash") aunque
+    sigan apareciendo un tiempo en /models, así que en vez de un único
+    nombre se devuelve una lista de candidatos en orden de preferencia:
       1. El alias estable "gemini-flash-latest"/"gemini-pro-latest", si la
          cuenta lo tiene (Google lo mantiene apuntando siempre al modelo
          vigente).
-      2. El resto de modelos cuyo nombre contiene "flash"/"pro".
+      2. El resto de modelos cuyo nombre contiene "flash"/"pro", del
+         número de versión más alto al más bajo.
       3. Cualquier otro modelo con generateContent, como último recurso.
     enviar_mensaje() los prueba en este orden y sigue al siguiente si uno
-    devuelve 404.
+    devuelve 404 (retirado) o 429 (cuota agotada para ese modelo en
+    concreto — en la capa gratuita cada modelo tiene su propia cuota).
     """
     if not modelos:
         raise ValueError("La cuenta de Gemini no tiene modelos disponibles.")
@@ -80,7 +95,11 @@ def _candidatos_automaticos(modelos, analisis_profundo=False) -> list:
     alias = f"gemini-{objetivo}-latest"
 
     candidatos = [alias] if alias in modelos else []
-    candidatos += [m for m in modelos if objetivo in m.lower() and m not in candidatos]
+    coincidencias = sorted(
+        (m for m in modelos if objetivo in m.lower() and m not in candidatos),
+        key=_version_de_modelo, reverse=True,
+    )
+    candidatos += coincidencias
     candidatos += [m for m in modelos if m not in candidatos]
     return candidatos
 # ANCLAJE_FIN: CLIENTE_GEMINI_LISTA_MODELOS
@@ -145,15 +164,25 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
     if busqueda_web:
         cuerpo["tools"] = [{"google_search": {}}]
 
+    # 404 (modelo retirado) y 429 (cuota agotada) pasan al siguiente
+    # candidato en modo automático: en la capa gratuita cada modelo tiene
+    # su propia cuota, así que un 429 en uno no implica que otro también
+    # esté agotado. Cualquier otro código (401 clave inválida, 400
+    # petición mal formada...) no tiene sentido reintentarlo con otro
+    # modelo y se propaga tal cual.
+    _CODIGOS_REINTENTABLES = (404, 429)
+
     datos = None
     ultimo_error = None
     for indice, nombre_modelo in enumerate(candidatos_modelo):
         url = f"{_URL_BASE}/models/{nombre_modelo}:generateContent"
         resp = requests.post(url, params={"key": api_key}, json=cuerpo, timeout=_TIMEOUT)
-        if resp.status_code == 404 and modo_automatico and indice < len(candidatos_modelo) - 1:
-            # En modo automático, un modelo listado pero ya retirado no debe
-            # tumbar la conversación: se prueba el siguiente candidato.
-            logger.warning("Modelo Gemini '%s' devolvió 404, probando el siguiente candidato", nombre_modelo)
+        es_ultimo = indice == len(candidatos_modelo) - 1
+        if resp.status_code in _CODIGOS_REINTENTABLES and modo_automatico and not es_ultimo:
+            logger.warning(
+                "Modelo Gemini '%s' devolvió %s, probando el siguiente candidato",
+                nombre_modelo, resp.status_code,
+            )
             continue
         try:
             resp.raise_for_status()
@@ -166,6 +195,12 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
 
     if datos is None:
         if ultimo_error is not None:
+            if ultimo_error.response is not None and ultimo_error.response.status_code == 429:
+                raise ValueError(
+                    "Se agotó la cuota gratuita de Gemini para todos los modelos disponibles. "
+                    "Consulta tu plan y facturación en https://ai.google.dev/gemini-api/docs/rate-limits, "
+                    "o espera a que se renueve la cuota."
+                )
             raise ultimo_error
         raise ValueError(
             "Ninguno de los modelos disponibles de Gemini respondió. "
