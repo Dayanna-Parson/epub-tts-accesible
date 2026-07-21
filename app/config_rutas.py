@@ -28,12 +28,15 @@ else:
 CONFIG_DIR = os.path.join(RAIZ, "configuraciones")
 
 # Valores por defecto neutros para claves_api.json (sin secretos reales)
+# ANCLAJE_INICIO: CLAVES_DEFAULT_GEMINI
 _CLAVES_DEFAULT = {
     "azure":       {"key": "", "region": ""},
     "polly":       {"access_key": "", "secret_key": "", "region": ""},
     "elevenlabs":  {"api_key": ""},
     "deepgram":    {"api_key": ""},
+    "gemini":      {"api_key": "", "modelo": "auto"},
 }
+# ANCLAJE_FIN: CLAVES_DEFAULT_GEMINI
 
 
 def ruta_config(nombre_archivo):
