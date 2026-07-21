@@ -44,6 +44,13 @@ _DEFAULTS_EMBEBIDOS = {
         "modificador": "Ctrl",
         "tecla": "G",
     },
+    # ANCLAJE_INICIO: ATAJO_ASISTENTE_BIBLIOTECA
+    "asistente_biblioteca": {
+        "descripcion": "Asistente de Biblioteca (Gemini)",
+        "modificador": "Ctrl+Shift",
+        "tecla": "B",
+    },
+    # ANCLAJE_FIN: ATAJO_ASISTENTE_BIBLIOTECA
 }
 
 
