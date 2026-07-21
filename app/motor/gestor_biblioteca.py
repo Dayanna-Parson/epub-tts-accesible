@@ -710,6 +710,61 @@ class GestorBiblioteca:
                 (id_libro,),
             ).fetchall()
 
+    # ANCLAJE_INICIO: RESUMEN_BIBLIOTECA_ASISTENTE
+    def resumen_para_asistente(self, limite_top=5, limite_sagas=10) -> dict:
+        """
+        Agregados de biblioteca.db para el contexto del Asistente de
+        Biblioteca en modo general (sin libro/saga/categoría concretos
+        seleccionados): total de libros, conteos por estado, autores y
+        géneros más frecuentes, y sagas con su número de libros. Se
+        calcula al vuelo en cada apertura del chat —directamente sobre el
+        estado actual de la base de datos—, así que altas y bajas de
+        libros se reflejan solas sin necesidad de mantener nada
+        sincronizado aparte.
+        """
+        with self._conexion() as conexion:
+            total = conexion.execute("SELECT COUNT(*) AS n FROM libros").fetchone()["n"]
+            estados = conexion.execute(
+                "SELECT SUM(favorito) AS favoritos, SUM(leido) AS leidos, "
+                "SUM(en_pendientes) AS pendientes, SUM(leyendo_ahora) AS leyendo "
+                "FROM libros"
+            ).fetchone()
+            autores = conexion.execute(
+                """
+                SELECT a.nombre, COUNT(*) AS total FROM autores a
+                JOIN libro_autor la ON la.id_autor = a.id
+                GROUP BY a.id ORDER BY total DESC, a.nombre LIMIT ?
+                """,
+                (limite_top,),
+            ).fetchall()
+            generos = conexion.execute(
+                """
+                SELECT c.nombre, COUNT(*) AS total FROM categorias c
+                JOIN libro_categoria lc ON lc.id_categoria = c.id
+                GROUP BY c.id ORDER BY total DESC, c.nombre LIMIT ?
+                """,
+                (limite_top,),
+            ).fetchall()
+            sagas = conexion.execute(
+                """
+                SELECT e.nombre, COUNT(*) AS total FROM etiquetas e
+                JOIN libro_etiqueta le ON le.id_etiqueta = e.id
+                GROUP BY e.id ORDER BY total DESC, e.nombre LIMIT ?
+                """,
+                (limite_sagas,),
+            ).fetchall()
+        return {
+            "total": total,
+            "favoritos": estados["favoritos"] or 0,
+            "leidos": estados["leidos"] or 0,
+            "pendientes": estados["pendientes"] or 0,
+            "leyendo": estados["leyendo"] or 0,
+            "autores_frecuentes": [dict(a) for a in autores],
+            "generos_frecuentes": [dict(g) for g in generos],
+            "sagas": [dict(s) for s in sagas],
+        }
+    # ANCLAJE_FIN: RESUMEN_BIBLIOTECA_ASISTENTE
+
     # ── Actualización de estado ─────────────────────────────────────────────
 
     def actualizar_punto_lectura(self, id_libro: int, posicion: int):

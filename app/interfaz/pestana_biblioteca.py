@@ -1146,6 +1146,7 @@ class PestanaBiblioteca(wx.Panel):
             pendiente = bool(self.gestor.obtener_exportaciones_pendientes(libro["id"]))
             contexto_libro = {
                 "id_libro": libro["id"],
+                "tipo": "libro",
                 "titulo": libro["titulo"],
                 "autor": nombres_autores,
                 "categoria": nombres_categoria,
@@ -1158,6 +1159,16 @@ class PestanaBiblioteca(wx.Panel):
             contexto_libro = self._contexto_saga(self._id_etiqueta_activa)
         elif self._id_categoria_activa is not None:
             contexto_libro = self._contexto_categoria(self._id_categoria_activa)
+        else:
+            # Modo totalmente general: sin libro, saga ni categoría
+            # concretos, se manda un resumen agregado de toda la
+            # Biblioteca (géneros y autores más frecuentes, sagas,
+            # conteos de favoritos/leídos/pendientes) para que el
+            # asistente conozca los gustos del usuario incluso sin
+            # selección. Se calcula al vuelo desde biblioteca.db en cada
+            # apertura, así que altas y bajas de libros ya se reflejan
+            # solas, sin nada que mantener sincronizado aparte.
+            contexto_libro = self._contexto_resumen_biblioteca()
 
         dlg = DialogoAsistenteBiblioteca(self, contexto_libro)
         dlg.ShowModal()
@@ -1179,6 +1190,7 @@ class PestanaBiblioteca(wx.Panel):
         libros = self.gestor.buscar_libros(id_etiqueta=id_etiqueta)
         return {
             "id_libro": f"etiqueta:{id_etiqueta}",
+            "tipo": "saga",
             "titulo": f"Saga: {nombre}",
             "autor": None,
             "categoria": None,
@@ -1194,10 +1206,38 @@ class PestanaBiblioteca(wx.Panel):
         libros = self.gestor.buscar_libros(id_categoria=id_categoria)
         return {
             "id_libro": f"categoria:{id_categoria}",
+            "tipo": "categoria",
             "titulo": f"Género: {nombre}",
             "autor": None,
             "categoria": None,
             "estado": self._resumen_titulos(libros),
+        }
+
+    def _contexto_resumen_biblioteca(self):
+        resumen = self.gestor.resumen_para_asistente()
+        if resumen["total"] == 0:
+            return None
+        partes = [
+            f"{resumen['total']} libro(s) en total "
+            f"({resumen['favoritos']} favorito(s), {resumen['leidos']} leído(s), "
+            f"{resumen['pendientes']} pendiente(s), {resumen['leyendo']} en curso)."
+        ]
+        if resumen["generos_frecuentes"]:
+            nombres = ", ".join(f"{g['nombre']} ({g['total']})" for g in resumen["generos_frecuentes"])
+            partes.append(f"Géneros más frecuentes: {nombres}.")
+        if resumen["autores_frecuentes"]:
+            nombres = ", ".join(f"{a['nombre']} ({a['total']})" for a in resumen["autores_frecuentes"])
+            partes.append(f"Autores más frecuentes: {nombres}.")
+        if resumen["sagas"]:
+            nombres = ", ".join(f"{s['nombre']} ({s['total']})" for s in resumen["sagas"])
+            partes.append(f"Sagas en la Biblioteca: {nombres}.")
+        return {
+            "id_libro": None,
+            "tipo": "resumen",
+            "titulo": "tu Biblioteca",
+            "autor": None,
+            "categoria": None,
+            "estado": " ".join(partes),
         }
     # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA
 

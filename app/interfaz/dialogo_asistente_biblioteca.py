@@ -34,6 +34,7 @@ import threading
 import wx
 
 from app.motor import gestor_chat_biblioteca as chat
+from app.motor import gestor_prompts_asistente as prompts
 from app.motor.limpiador_markdown_chat import limpiar_markdown
 from app.motor.reproductor_sonidos import reproducir, SUCCESS, ERROR, CLEAR
 from app.servicios.cliente_gemini import enviar_mensaje
@@ -63,6 +64,24 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self._ultimo_mensaje_asistente = ""
 
         sizer = wx.BoxSizer(wx.VERTICAL)
+
+        # ANCLAJE_INICIO: ASISTENTE_SELECTOR_PROMPT
+        sizer_prompt = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_prompt.Add(wx.StaticText(self, label="Estilo del asistente:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        self.combo_prompt = wx.ComboBox(self, style=wx.CB_READONLY)
+        self.combo_prompt.SetHelpText(
+            "Plantilla de instrucciones que sigue el asistente en esta conversación."
+        )
+        self.combo_prompt.Bind(wx.EVT_COMBOBOX, self.al_cambiar_prompt)
+        sizer_prompt.Add(self.combo_prompt, 1, wx.RIGHT, 5)
+        self.btn_editar_prompts = wx.Button(self, label="Editar prompts...")
+        self.btn_editar_prompts.SetHelpText(
+            "Crea, edita o borra las plantillas de prompt de sistema del asistente."
+        )
+        self.btn_editar_prompts.Bind(wx.EVT_BUTTON, self.al_editar_prompts)
+        sizer_prompt.Add(self.btn_editar_prompts, 0)
+        sizer.Add(sizer_prompt, 0, wx.EXPAND | wx.ALL, 8)
+        # ANCLAJE_FIN: ASISTENTE_SELECTOR_PROMPT
 
         self.historial_ctrl = wx.TextCtrl(
             self, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
@@ -130,8 +149,34 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
 
         self.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_global)
 
+        self._recargar_combo_prompt()
         self._cargar_historial_previo()
         wx.CallAfter(self._anunciar_contexto_inicial)
+
+    # ── Plantillas de prompt de sistema ──────────────────────────────────────
+
+    def _recargar_combo_prompt(self):
+        nombres = [p["nombre"] for p in prompts.listar_prompts()]
+        self.combo_prompt.Set(nombres)
+        activo = prompts.obtener_prompt_activo()["nombre"]
+        if activo in nombres:
+            self.combo_prompt.SetStringSelection(activo)
+        elif nombres:
+            self.combo_prompt.SetSelection(0)
+
+    def al_cambiar_prompt(self, evento):
+        prompts.fijar_prompt_activo(self.combo_prompt.GetStringSelection())
+
+    def al_editar_prompts(self, evento):
+        from app.interfaz.dialogo_editar_prompt import DialogoEditarPrompt
+
+        dlg = DialogoEditarPrompt(self, self.combo_prompt.GetStringSelection())
+        dlg.ShowModal()
+        cambios = dlg.cambios_realizados
+        dlg.Destroy()
+        if cambios:
+            self._recargar_combo_prompt()
+            self.txt_entrada.SetFocus()
 
     # ── Carga de historial (hilo principal, archivo pequeño) ────────────────
 
@@ -197,17 +242,19 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self._anunciar("Pensando...")
 
         historial_previo = chat.cargar_historial(self.id_libro)[:-1]
+        instruccion_sistema = prompts.obtener_prompt_activo()["texto"]
 
         threading.Thread(
             target=self._pedir_respuesta_en_hilo,
-            args=(historial_previo, mensaje),
+            args=(historial_previo, mensaje, instruccion_sistema),
             daemon=True,
         ).start()
 
-    def _pedir_respuesta_en_hilo(self, historial_previo, mensaje):
+    def _pedir_respuesta_en_hilo(self, historial_previo, mensaje, instruccion_sistema):
         try:
             respuesta = enviar_mensaje(
                 historial_previo, mensaje, contexto_libro=self.contexto_libro,
+                instruccion_sistema=instruccion_sistema,
             )
             respuesta = limpiar_markdown(respuesta)
             wx.CallAfter(self._al_recibir_respuesta, respuesta)

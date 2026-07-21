@@ -13,7 +13,7 @@ _TIMEOUT = 30
 
 # Instrucción de sistema: pide a Gemini que se apoye en la búsqueda web para no
 # alucinar datos sobre libros (tramas, autores, ediciones, disponibilidad).
-_INSTRUCCION_SISTEMA = (
+INSTRUCCION_SISTEMA_DEFECTO = (
     "Eres el Asistente de Biblioteca de una aplicación de audiolibros para "
     "personas ciegas. Ayudas con recomendaciones, dudas sobre autores, tramas "
     "y ediciones de libros. Cuando cites datos concretos (argumento, autor, año, "
@@ -135,6 +135,14 @@ def _candidatos_automaticos(modelos, analisis_profundo=False) -> list:
 
 
 # ANCLAJE_INICIO: CLIENTE_GEMINI_ENVIO_MENSAJE
+_ENCABEZADOS_CONTEXTO = {
+    "libro": "Libro seleccionado en la Biblioteca:",
+    "saga": "Saga seleccionada en la Biblioteca:",
+    "categoria": "Género/categoría seleccionado en la Biblioteca:",
+    "resumen": "Resumen de la Biblioteca del usuario (tenlo en cuenta para tus recomendaciones):",
+}
+
+
 def _construir_contexto_libro(contexto_libro):
     if not contexto_libro:
         return None
@@ -149,11 +157,13 @@ def _construir_contexto_libro(contexto_libro):
         partes.append(f"Estado de lectura: {contexto_libro['estado']}")
     if not partes:
         return None
-    return "Libro seleccionado en la Biblioteca:\n" + "\n".join(partes)
+    encabezado = _ENCABEZADOS_CONTEXTO.get(contexto_libro.get("tipo", "libro"), _ENCABEZADOS_CONTEXTO["libro"])
+    return encabezado + "\n" + "\n".join(partes)
 
 
 def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
-                    modelo=None, analisis_profundo=False, busqueda_web=True) -> str:
+                    modelo=None, analisis_profundo=False, busqueda_web=True,
+                    instruccion_sistema=None) -> str:
     """
     Envía un mensaje a Gemini con el historial previo y, si lo hay, el
     contexto del libro seleccionado (solo metadatos, nunca el texto del
@@ -161,6 +171,10 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
 
     historial: lista de dicts {"rol": "usuario"|"asistente", "texto": str},
     ya cargada desde chat_biblioteca.json por gestor_chat_biblioteca.
+
+    instruccion_sistema: texto de la plantilla activa (ver
+    gestor_prompts_asistente.py); si es None, se usa
+    INSTRUCCION_SISTEMA_DEFECTO.
 
     Se llama siempre desde un hilo secundario (ver DIALOGO_ASISTENTE_BIBLIOTECA).
     """
@@ -187,7 +201,7 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
     contenidos.append({"role": "user", "parts": [{"text": mensaje_usuario}]})
 
     cuerpo = {
-        "system_instruction": {"parts": [{"text": _INSTRUCCION_SISTEMA}]},
+        "system_instruction": {"parts": [{"text": instruccion_sistema or INSTRUCCION_SISTEMA_DEFECTO}]},
         "contents": contenidos,
     }
     if busqueda_web:
