@@ -19,3 +19,7 @@ Para qué sirve:
   no podrán convertir correctamente a MP3.
 
 Nota: estos archivos (.exe) están excluidos de git (.gitignore).
+
+actualizador.exe (instalador auxiliar de actualizaciones) no necesita
+colocarse aquí a mano: crear_portable.py lo compila automáticamente
+desde auxiliar_actualizador.py en cada empaquetado del portable.
