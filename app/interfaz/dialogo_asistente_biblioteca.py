@@ -35,6 +35,7 @@ import wx
 
 from app.motor import gestor_chat_biblioteca as chat
 from app.motor.limpiador_markdown_chat import limpiar_markdown
+from app.motor.notificador_uia import anunciar_en_vivo
 from app.motor.reproductor_sonidos import reproducir, SUCCESS, ERROR, CLEAR
 from app.servicios.cliente_gemini import enviar_mensaje
 
@@ -150,12 +151,16 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
     # ── Anuncios sin robar el campo de entrada de forma permanente ──────────
 
     def _anunciar(self, texto):
-        # Igual que el patrón _anunciador del resto de la app, pero
-        # devolviendo siempre el foco al campo de entrada (no al control
-        # previo a abrir el diálogo): es el único control al que el chat
-        # debe volver tras cualquier anuncio. El toque de foco es
-        # necesario para que NVDA detecte el cambio de valor; el texto ya
-        # escrito en txt_entrada no se pierde porque SetFocus() no lo toca.
+        # Primero se intenta una notificación UIA "en vivo" (ver
+        # notificador_uia.py): NVDA la lee sin que el foco se mueva en
+        # ningún momento, ni siquiera brevemente. Si no está disponible
+        # (Windows antiguo, DLL ausente...) se recurre al patrón
+        # _anunciador de toda la vida: toque de foco brevísimo al control
+        # oculto y vuelta al campo de entrada — el texto ya escrito no se
+        # pierde porque SetFocus() no lo toca.
+        if anunciar_en_vivo(self.historial_ctrl.GetHandle(), texto):
+            return
+
         if self._temporizador_anuncio is not None and self._temporizador_anuncio.IsRunning():
             self._temporizador_anuncio.Stop()
 
