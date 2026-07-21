@@ -1,0 +1,12 @@
+respuesta 6
+
+¡Excelente, gracias por probarlo tan a fondo! Confirmado: seguimos sin tocar el bloque legado del `.bat` hasta que `actualizador.exe` esté compilado y probado en el ciclo completo.
+
+Según `planificacion_v3.md`, dentro de la Fase C todavía quedan dos bloques que no hemos tocado:
+
+- **Sección 5 — Progreso de lectura y ritmo**: en realidad es solo confirmar que el criterio de la v2.0 (sin anuncios automáticos en Lectura, solo `Ctrl+I` e "ir a página") se mantiene sin cambios — no requiere código nuevo, es una decisión ya cerrada.
+- **Sección 6 — Asistente de Biblioteca (Gemini)**: `Ctrl+G` desde Biblioteca, diálogo de chat con contexto del libro, historial en `chat_biblioteca.json`, llamada a la API en hilo secundario. Esto sí es una pieza nueva de peso.
+
+Pero ojo: la Sección 6 depende de la pestaña **Biblioteca** (Fase A), que según el documento es un desarrollo previo (`libros`, `categorias`, etc. en `biblioteca.db`) del que no he visto código en el repo todavía.
+
+Antes de decidir por dónde seguir, dime: **¿la Fase A (Biblioteca) y la Fase B (Creador de Audiolibros) ya están implementadas en otra rama/versión previa, o el orden real que quieres seguir es distinto al del documento** (por ejemplo, cerrar primero el actualizador con el `.exe` compilado, y dejar Biblioteca/Asistente Gemini para después)?

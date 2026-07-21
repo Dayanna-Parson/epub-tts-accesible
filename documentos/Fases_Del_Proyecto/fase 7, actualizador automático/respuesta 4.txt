@@ -1,0 +1,19 @@
+respuesta 4
+
+Ahora rescribo el archivo completo con las tres correcciones.
+
+Ahora pruebo la lógica corregida: instalación con éxito, backup íntegro verificado, y rollback con fallo simulado.
+
+Vuelvo a correr las pruebas para confirmar que el fix del rollback funciona:
+
+Todo pasa. Commit de las correcciones (solo `auxiliar_actualizador.py`, sin tocar `pestana_ajustes.py` ni el código legado):
+
+Subido (commit `64007b3`). Resumen de las tres correcciones en `auxiliar_actualizador.py`:
+
+1. **Relanzamiento sin `.bat`**: nuevo `--lanzador` (con `--python` opcional si es un `.py`), que la app decide según su propio modo de ejecución (congelada o desarrollo). Si no se pasa, autodetecta `epubtts.exe` o `iniciar_epub_tts.py` en `--destino`. Nada de `INICIAR_APP.bat` en la lógica del auxiliar.
+2. **Backup por copia verificada**: `_copiar_entrada` (copytree/copy2) + `_verificar_copia_integra` (compara árbol de archivos y tamaños) antes de tocar nada en destino. Solo si el respaldo es íntegro se borra la entrada vieja y se copia la nueva.
+3. **Espera de PID real**: `OpenProcess`/`WaitForSingleObject` por `ctypes`, con timeout — nada de parsear `tasklist`. En un sistema sin WinAPI (como este entorno de pruebas) lo detecta y sigue sin bloquear.
+
+Reprobé los tres escenarios: instalación correcta, fallo a mitad de una entrada (rollback restaura desde el respaldo), y fallo en la propia verificación del respaldo (aborta sin tocar destino). Todo pasó.
+
+No toqué `pestana_ajustes.py` ni `ACTUALIZADOR_SCRIPT_CLON` en este commit, tal como pediste. Quedo a la espera de que me digas cuándo seguir (siguiente paso natural sería, cuando tú lo autorices, actualizar la llamada en `pestana_ajustes.py` para pasar `--lanzador`/`--python` correctamente).

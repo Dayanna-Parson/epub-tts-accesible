@@ -1,0 +1,44 @@
+prompt y respuesta 2
+
+Has dicho: pues.
+pues... Que me recomiendas?
+Mostrar acciones del mensaje
+Claude ha respondido: Mi recomendación: que convivan durante el desarrollo, pero marcando ya el bloque viejo como obsoleto, y solo lo retiro cuando el nuevo actualizador.
+Mi recomendación: que convivan durante el desarrollo, pero marcando ya el bloque viejo como obsoleto, y solo lo retiro cuando el nuevo actualizador.exe esté compilado y probado de verdad en Windows con NVDA.
+Razón: el ejecutable auxiliar hay que compilarlo aparte (como auxiliar_sapi32.exe) y no puedo probarlo en este entorno Linux — el rollback de sobrescritura real solo se valida en tu máquina Windows. Si borro el .bat ahora y algo falla en la compilación o en la prueba final, te quedas sin ningún camino de actualización funcionando mientras tanto. Convivir un tiempo es reversible y barato; borrar de más y descubrir un fallo después, no.
+En concreto:
+1. Ahora: construyo la lógica nueva de descarga/verificación en temp/actualizacion/ como módulo independiente, sin tocar el .bat todavía.
+2. Cuando el flujo completo (descarga → verificación → actualizador.exe → backup/rollback) esté compilado y probado por ti en Windows real, entonces elimino el bloque ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON y el código muerto de descargar_actualizacion()/descargar_en_hilo() en comprobador_actualizaciones.py en un commit aparte, documentado como tal.
+¿Seguimos así? Si estás de acuerdo, empiezo ya con el punto 1 (descarga + verificación de estructura en temp/actualizacion/).
+Mostrar acciones del mensaje
+Has dicho: si, estoy de acuerdo!
+si, estoy de acuerdo!!!
+Mostrar acciones del mensaje
+Claude ha respondido: Ahora un test rápido con un ZIP falso para validar la lógica de descarga/verificación sin depender de red real.
+Ejecutado un comando, creado un archivo
+Ahora un test rápido con un ZIP falso para validar la lógica de descarga/verificación sin depender de red real.
+Ejecutado 2 comandos
+He creado app/motor/actualizador_descarga.py con el bloque ANCLAJE_INICIO/FIN: ACTUALIZADOR_DESCARGA (archivo nuevo, no reemplaza nada existente todavía).
+Qué hace:
+• GestorDescargaActualizacion.descargar_y_verificar() limpia y descarga el ZIP a temp/actualizacion/ (nueva carpeta, separada de la bin/actualizacion legada), lo descomprime y verifica que existan app/, iniciar_epub_tts.py y recursos/version.json dentro de la carpeta raíz del ZIP.
+• Si falta cualquiera de esos tres, borra temp/actualizacion/ por completo y devuelve {"ok": False, "error": "..."} sin tocar la instalación actual.
+• Si todo está, devuelve {"ok": True, "ruta_extraida": "<ruta a la carpeta ya descomprimida>"}.
+• descargar_y_verificar_en_hilo(callback_resultado, callback_progreso) lo lanza en hilo daemon, mismo patrón que comprobador_actualizaciones.py.
+Probado con ZIPs simulados en memoria (uno completo, uno con recursos/version.json faltante), sin red real:
+• Caso completo → ok: True, carpeta extraída existe en disco.
+• Caso incompleto → ok: False, mensaje señala el archivo que falta, y temp/actualizacion/ queda limpio (verificado que no existe tras el fallo).
+No he tocado nada de ventana_principal.py ni pestana_ajustes.py todavía — este módulo aún no está conectado a la interfaz.
+Siguiente paso propuesto: conectar este gestor a la UI — botón/flujo que llama a descargar_y_verificar_en_hilo, muestra progreso, y si falla avisa por NVDA (¿con el patrón _anunciador o con wx.MessageBox + sonido ERROR, tal como ya usa _al_resultado_actualizacion?). ¿Cómo quieres que se anuncie el aviso de fallo — igual que los errores de conexión que ya maneja pestana_ajustes.py (MessageBox + sonido), o prefieres el patrón _anunciador para no interrumpir con un modal?
+Ejecutado 3 comandos, usado 3 herramientas
+Mostrar acciones del mensaje
+Se recibió un evento de GitHub
+Claude ha respondido: Ya está subido y con PR: https://github.
+Ya está subido y con PR: https://github.com/Dayanna-Parson/epub-tts-accesible/pull/8 (borrador). Me quedo suscrito para vigilar CI y comentarios.
+Usado 2 herramientas
+Mostrar acciones del mensaje
+Se recibió un evento de GitHub
+Claude ha respondido: No hay CI configurada en este repo y no hay comentarios de revisión pendientes en el PR #8.
+Usado 3 herramientas
+No hay CI configurada en este repo y no hay comentarios de revisión pendientes en el PR #8. Programo un check-in silencioso más adelante y sigo con el siguiente paso cuando me digas.
+Usó ScheduleWakeup
+¿Seguimos con el siguiente paso — conectar GestorDescargaActualizacion a la interfaz (botón/flujo, progreso, y el aviso de fallo por NVDA)? Sigo esperando tu decisión sobre si usar _anunciador o wx.MessageBox + sonido ERROR para ese aviso de fallo.

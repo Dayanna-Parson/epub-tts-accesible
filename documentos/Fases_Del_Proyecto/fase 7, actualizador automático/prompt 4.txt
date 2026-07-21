@@ -1,0 +1,12 @@
+prompt 4
+
+Todavía no vamos a probar la compilación ni a retirar nada del código legado. Antes de mover más ficheros o tocar la interfaz, hay cuatro puntos críticos en la lógica de auxiliar_actualizador.py que deben quedar corregidos y blindados:
+1. 
+Elimina la dependencia de INICIAR_APP.bat: No todas las instalaciones usan un .bat para arrancar. El actualizador debe saber relanzar el ejecutable principal de la app (o el script de entrada si está en modo desarrollo) directamente según el argumento que se le pase o la ruta de destino.
+2. 
+Copia de seguridad en lugar de mover directo: Usar move entre carpetas en Windows cuando hay antivirus o lectores de pantalla inspeccionando el sistema provoca errores de Acceso denegado. La estrategia para el backup debe ser copiar (shutil.copytree/copy2), verificar que el backup está íntegro en temp/backup_previo/, y solo entonces realizar el reemplazo en el destino.
+3. 
+Espera de PID robusta: Nada de parsear texto de tasklist. Implementa una espera activa en Python puro que verifique con un tiempo límite (timeout) si el PID de la aplicación realmente ha finalizado antes de tocar una sola carpeta.
+4. 
+Cero retirada de código legado: La ruta del .bat y ACTUALIZADOR_SCRIPT_CLON no se van a tocar ni un milímetro hasta que actualizador.exe esté corregido, compilado y probado por mí en Windows real con NVDA.
+Corrige primero la lógica de auxiliar_actualizador.py con estas tres garantías (relanzamiento directo, backup por copia segura y espera de PID real)
