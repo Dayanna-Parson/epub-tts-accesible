@@ -24,6 +24,7 @@ import logging
 import wx
 
 from app.motor import gestor_chat_biblioteca as chat
+from app.motor.limpiador_markdown_chat import limpiar_markdown
 from app.motor.reproductor_sonidos import reproducir, SUCCESS, ERROR
 from app.servicios.cliente_gemini import enviar_mensaje
 
@@ -145,6 +146,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             respuesta = enviar_mensaje(
                 historial_previo, mensaje, contexto_libro=self.contexto_libro,
             )
+            respuesta = limpiar_markdown(respuesta)
             wx.CallAfter(self._al_recibir_respuesta, respuesta)
         except Exception as e:
             logger.exception("Error al consultar al Asistente de Biblioteca (Gemini)")
