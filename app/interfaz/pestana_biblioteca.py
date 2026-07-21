@@ -332,15 +332,18 @@ class PestanaBiblioteca(wx.Panel):
         id_buscar = wx.NewIdRef()
         id_info = wx.NewIdRef()
         id_favorito = wx.NewIdRef()
+        id_asistente = wx.NewIdRef()
 
         self.Bind(wx.EVT_MENU, lambda e: self.txt_filtro.SetFocus(), id=id_buscar)
         self.Bind(wx.EVT_MENU, self.al_anunciar_info_libro, id=id_info)
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, id=id_favorito)
+        self.Bind(wx.EVT_MENU, self.al_abrir_asistente_biblioteca, id=id_asistente)
 
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('F'), id_buscar),
             (wx.ACCEL_CTRL, ord('I'), id_info),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('F'), id_favorito),
+            (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('B'), id_asistente),
         ]))
 
     def al_cambiar_subpestana_izquierda(self, evento):
@@ -1116,6 +1119,34 @@ class PestanaBiblioteca(wx.Panel):
         self._anunciar(
             f"{libro['titulo']}, {nombres_autores}, {libro['formato'].upper()}, {estado}."
         )
+
+    # ANCLAJE_INICIO: ABRIR_ASISTENTE_BIBLIOTECA
+    def al_abrir_asistente_biblioteca(self, evento):
+        from app.interfaz.dialogo_asistente_biblioteca import DialogoAsistenteBiblioteca
+
+        libro = self._libro_seleccionado()
+        contexto_libro = None
+        if libro is not None:
+            autores = self.gestor.obtener_autores_de_libro(libro["id"])
+            nombres_autores = ", ".join(a["nombre"] for a in autores) or None
+            categorias = self.gestor.obtener_categorias_de_libro(libro["id"])
+            etiquetas = self.gestor.obtener_etiquetas_de_libro(libro["id"])
+            nombres_categoria = ", ".join(
+                c["nombre"] for c in list(categorias) + list(etiquetas)
+            ) or None
+            pendiente = bool(self.gestor.obtener_exportaciones_pendientes(libro["id"]))
+            contexto_libro = {
+                "id_libro": libro["id"],
+                "titulo": libro["titulo"],
+                "autor": nombres_autores,
+                "categoria": nombres_categoria,
+                "estado": self._describir_estado(libro, pendiente),
+            }
+
+        dlg = DialogoAsistenteBiblioteca(self, contexto_libro)
+        dlg.ShowModal()
+        dlg.Destroy()
+    # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA
 
     def al_alternar_favorito(self, evento):
         libro = self._libro_seleccionado()
