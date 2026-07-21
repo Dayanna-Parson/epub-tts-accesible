@@ -5,16 +5,27 @@ import json
 import logging
 
 logger = logging.getLogger(__name__)
+from app.interfaz.pestana_biblioteca import PestanaBiblioteca
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
+from app.interfaz.pestana_creador_audiolibros import PestanaCreadorAudiolibros
 from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config
-from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS, ERROR
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
 _URL_GITHUB = "https://github.com/Dayanna-Parson/epub-tts-accesible"
+
+# ── Índices de pestaña del notebook ───────────────────────────────────────────
+# Centralizados aquí para no repetir números mágicos por todo el archivo.
+IDX_BIBLIOTECA = 0
+IDX_LECTURA    = 1
+IDX_CREADOR    = 2
+IDX_GRABACION  = 3
+IDX_AJUSTES    = 4
+NUM_PESTANAS   = 5
 
 # ── Helpers para traducir atajos de gestor_atajos al formato de wx ───────────
 def _mod_a_flag(mod_str):
@@ -74,15 +85,23 @@ class VentanaPrincipal(wx.Frame):
         # 1. Configurar Panel de Pestañas (Notebook)
         self.notebook = wx.Notebook(self)
 
-        # Pestaña 1: Lectura
+        # Pestaña 1: Biblioteca
+        self.pestana_biblioteca = PestanaBiblioteca(self.notebook)
+        self.notebook.AddPage(self.pestana_biblioteca, "Biblioteca")
+
+        # Pestaña 2: Lectura
         self.pestana_lectura = PestanaLectura(self.notebook)
         self.notebook.AddPage(self.pestana_lectura, "Modo Lectura")
 
-        # Pestaña 2: Grabación multivoz
+        # Pestaña 3: Creador de Audiolibros
+        self.pestana_creador = PestanaCreadorAudiolibros(self.notebook)
+        self.notebook.AddPage(self.pestana_creador, "Creador de Audiolibros")
+
+        # Pestaña 4: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
         self.notebook.AddPage(self.pestana_grabacion, "Creación de fragmentos")
-        
-        # Pestaña 3: Ajustes
+
+        # Pestaña 5: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
         self.notebook.AddPage(self.pestana_ajustes, "Ajustes")
 
@@ -154,42 +173,75 @@ class VentanaPrincipal(wx.Frame):
 
         # Tecla Menú (Applications key) → menú contextual de la pestaña activa
         if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
-            self._mostrar_menu_contextual()
+            self._mostrar_menu_contextual_seguro()
             return
         # Shift+F10 → ídem (alternativa universal para teclados sin tecla Menú)
         if keycode == wx.WXK_F10 and evento.ShiftDown():
-            self._mostrar_menu_contextual()
+            self._mostrar_menu_contextual_seguro()
             return
 
-        # Ctrl+1 / Ctrl+2 / Ctrl+3 → cambiar de pestaña directamente
+        # Ctrl+1 a Ctrl+5 → cambiar de pestaña directamente
         # Solo cuando el foco está dentro de la ventana principal (no en diálogos externos)
-        if evento.ControlDown() and keycode in (ord('1'), ord('2'), ord('3')):
-            idx = keycode - ord('1')   # 0, 1 ó 2
+        if evento.ControlDown() and not evento.ShiftDown() and keycode in (
+            ord('1'), ord('2'), ord('3'), ord('4'), ord('5')
+        ):
+            idx = keycode - ord('1')   # 0 a 4
             self.notebook.SetSelection(idx)
+            # Sin esto, el foco de teclado se quedaba en el control que ya
+            # tuviera antes (a veces de una pestaña que acaba de ocultarse),
+            # así que el lector de pantalla anunciaba un control desconectado
+            # en vez de la pestaña nueva — mismo tratamiento que ya recibe
+            # Ctrl+Tab más abajo.
+            wx.CallAfter(self.notebook.SetFocus)
+            return
+
+        # Ctrl+Tab / Ctrl+Shift+Tab → cambiar de pestaña sin importar dónde
+        # esté el foco dentro de la ventana principal (nunca afecta a
+        # diálogos ni ventanas secundarias, que gestionan su propio Tab).
+        if keycode == wx.WXK_TAB and evento.ControlDown():
+            self.notebook.AdvanceSelection(not evento.ShiftDown())
+            wx.CallAfter(self.notebook.SetFocus)
             return
 
         if keycode != wx.WXK_TAB:
             evento.Skip()
             return
 
-        foco = self.FindFocus()
-        if foco is None:
-            evento.Skip()
-            return
+        # Todo el bloque de Tab cíclico queda blindado: un fallo al resolver
+        # primer_control/ultimo_control de una pestaña (por ejemplo, un
+        # atributo que aún no existe tras un cambio a medio terminar) no debe
+        # dejar el teclado sin Tab en el resto de la aplicación — se registra
+        # y se cede el evento al comportamiento por defecto de wx en vez de
+        # propagar la excepción hacia EVT_CHAR_HOOK.
+        try:
+            foco = self.FindFocus()
+            if foco is None:
+                evento.Skip()
+                return
 
-        shift = evento.ShiftDown()
-        indice = self.notebook.GetSelection()
+            shift = evento.ShiftDown()
+            indice = self.notebook.GetSelection()
 
-        if indice == 0:
-            primer = self.pestana_lectura.primer_control
-            ultimo = self.pestana_lectura.ultimo_control
-        elif indice == 1:
-            primer = self.pestana_grabacion.primer_control
-            ultimo = self.pestana_grabacion.ultimo_control
-        elif indice == 2:
-            primer = self.pestana_ajustes.arbol_cat
-            ultimo = self.pestana_ajustes.obtener_ultimo_control()
-        else:
+            if indice == IDX_BIBLIOTECA:
+                primer = self.pestana_biblioteca.primer_control
+                ultimo = self.pestana_biblioteca.ultimo_control
+            elif indice == IDX_LECTURA:
+                primer = self.pestana_lectura.primer_control
+                ultimo = self.pestana_lectura.ultimo_control
+            elif indice == IDX_CREADOR:
+                primer = self.pestana_creador.primer_control
+                ultimo = self.pestana_creador.ultimo_control
+            elif indice == IDX_GRABACION:
+                primer = self.pestana_grabacion.primer_control
+                ultimo = self.pestana_grabacion.ultimo_control
+            elif indice == IDX_AJUSTES:
+                primer = self.pestana_ajustes.arbol_cat
+                ultimo = self.pestana_ajustes.obtener_ultimo_control()
+            else:
+                evento.Skip()
+                return
+        except Exception:
+            logger.exception("[VentanaPrincipal] Fallo al resolver el Tab cíclico de la pestaña activa")
             evento.Skip()
             return
 
@@ -209,7 +261,7 @@ class VentanaPrincipal(wx.Frame):
     def al_cambiar_pestana(self, evento):
         reproducir(CLICK)   # PRIMERO — feedback antes de cualquier procesado visual
         indice = evento.GetSelection()
-        if indice == 0:
+        if indice == IDX_LECTURA:
             # Refrescar AcceleratorTable en caso de que el usuario haya cambiado atajos
             self._configurar_aceleradores_globales()
         self._guardar_sesion()
@@ -242,7 +294,7 @@ class VentanaPrincipal(wx.Frame):
 
     def al_abrir_txt_grabacion(self, evento):
         """Activa la pestaña Grabación y llama al método Examinar del panel."""
-        self.notebook.SetSelection(1)
+        self.notebook.SetSelection(IDX_GRABACION)
         ruta_previa = self.pestana_grabacion.ruta_txt_actual
         self.pestana_grabacion.al_examinar(None)
         ruta_nueva = self.pestana_grabacion.ruta_txt_actual
@@ -250,19 +302,19 @@ class VentanaPrincipal(wx.Frame):
             self.agregar_txt_a_recientes(ruta_nueva)
 
     def al_abrir_archivo(self, evento):
-        self.notebook.SetSelection(0)
+        self.notebook.SetSelection(IDX_LECTURA)
         self.pestana_lectura.al_cargar_libro(None)
 
     def al_abrir_marcadores(self, evento):
-        if self.notebook.GetSelection() == 0:
+        if self.notebook.GetSelection() == IDX_LECTURA:
             self.pestana_lectura.iniciar_marcadores()
 
     def al_buscar(self, evento):
-        if self.notebook.GetSelection() == 0:
+        if self.notebook.GetSelection() == IDX_LECTURA:
             self.pestana_lectura.iniciar_busqueda()
 
     def al_ir_a_porcentaje(self, evento):
-        if self.notebook.GetSelection() == 0:
+        if self.notebook.GetSelection() == IDX_LECTURA:
             self.pestana_lectura.iniciar_ir_a_pagina()
 
     def al_salir(self, evento):
@@ -274,6 +326,15 @@ class VentanaPrincipal(wx.Frame):
                 self.pestana_lectura.al_detener(None)
         except Exception:
             logger.warning("Error al detener la reproducción durante el cierre", exc_info=True)
+
+        # Desconectar EVT_TREE_SEL_CHANGED antes de destruir: puede
+        # dispararse durante el cierre y acceder a objetos C++ ya liberados
+        # (mismo problema ya resuelto para el árbol de ventana_proyectos.py).
+        try:
+            self.pestana_biblioteca.arbol_categorias.Unbind(wx.EVT_TREE_SEL_CHANGED)
+        except Exception:
+            pass
+
         self._guardar_sesion()
         self.Destroy()
     # ANCLAJE_FIN: EVENTOS_GLOBALES
@@ -312,10 +373,12 @@ class VentanaPrincipal(wx.Frame):
         """Restaura el estado de sesión desde ajustes.json."""
         config = self._cargar_config_general()
 
-        # Restaurar pestaña activa
-        ultima_pestana = config.get("ultima_pestana", 0)
-        if isinstance(ultima_pestana, int) and 0 <= ultima_pestana <= 2:
-            self.notebook.SetSelection(ultima_pestana)
+        # La pestaña activa ya no se restaura desde la sesión anterior: el
+        # arranque siempre aterriza en Biblioteca (IDX_BIBLIOTECA), para que
+        # NVDA llegue directo a los libros en vez de a la última pestaña
+        # usada (a veces Ajustes), sea cual sea. self.notebook ya empieza en
+        # la página 0 por orden de construcción, así que no hace falta
+        # ningún SetSelection() explícito aquí.
 
         # Restaurar estado del checkbox "Dividir por etiquetas"
         dividir = config.get("dividir_por_etiqueta", True)
@@ -363,7 +426,7 @@ class VentanaPrincipal(wx.Frame):
 
     def _abrir_txt_reciente(self, ruta: str):
         if os.path.exists(ruta):
-            self.notebook.SetSelection(1)
+            self.notebook.SetSelection(IDX_GRABACION)
             self.pestana_grabacion.cargar_txt_desde_ruta(ruta)
             self.agregar_txt_a_recientes(ruta)
         else:
@@ -424,7 +487,7 @@ class VentanaPrincipal(wx.Frame):
 
     def abrir_libro_reciente(self, ruta):
         if os.path.exists(ruta):
-            self.notebook.SetSelection(0)
+            self.notebook.SetSelection(IDX_LECTURA)
             self.pestana_lectura.cargar_epub_desde_ruta(ruta)
         else:
             wx.MessageBox("El archivo ya no existe", "Error")
@@ -435,15 +498,92 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: HISTORIAL_RECIENTES
 
     # ANCLAJE_INICIO: MENUS_CONTEXTUALES
+    def _mostrar_menu_contextual_seguro(self):
+        """
+        Envoltorio defensivo alrededor de _mostrar_menu_contextual(): un
+        error al construir un menú contextual (por ejemplo, un atributo de
+        wx mal usado en algún ítem) no debe propagarse hasta
+        al_navegacion_tab_global(), vinculado a EVT_CHAR_HOOK del Frame —
+        un fallo sin capturar ahí deja sin Tab/Shift+F10/tecla Menú al resto
+        de la aplicación, no solo a la pestaña donde ocurrió.
+        """
+        try:
+            self._mostrar_menu_contextual()
+        except Exception:
+            logger.exception("[VentanaPrincipal] Error al mostrar el menú contextual")
+            reproducir(ERROR)
+
     def _mostrar_menu_contextual(self):
         """Muestra el menú contextual correspondiente a la pestaña activa."""
         indice = self.notebook.GetSelection()
-        if indice == 0:
+        if indice == IDX_BIBLIOTECA:
+            self._menu_contextual_biblioteca()
+        elif indice == IDX_LECTURA:
             self._menu_contextual_lectura()
-        elif indice == 1:
+        elif indice == IDX_CREADOR:
+            self._menu_contextual_creador()
+        elif indice == IDX_GRABACION:
             self._menu_contextual_grabacion()
         else:
             self._menu_contextual_ajustes()
+
+    def _menu_contextual_biblioteca(self):
+        """
+        Menú contextual de la pestaña Biblioteca: delega en el método
+        propio del control que tenga el foco en ese momento (árbol de
+        categorías, listado de etiquetas o listado de libros), en vez de
+        reconstruir aquí una copia paralela del menú del libro.
+
+        Antes este método duplicaba a mano el menú de al_menu_contextual()
+        (pestana_biblioteca.py) y SIEMPRE lo mostraba sin importar qué
+        control tuviera el foco realmente — por eso el árbol y el listado
+        de etiquetas nunca mostraban su propio menú (Nueva categoría,
+        Renombrar, Nueva etiqueta...) y siempre aparecían "Importar
+        carpeta"/Ayuda/Salir pegados a cualquier menú, y por qué las
+        opciones de pendiente/leyendo ahora/leído (añadidas solo en la
+        copia real) nunca llegaban a verse aquí.
+        """
+        pb = self.pestana_biblioteca
+        foco = wx.Window.FindFocus()
+
+        if foco is pb.arbol_categorias:
+            pb.al_menu_contextual_arbol(None)
+            return
+        if foco is pb.lista_etiquetas:
+            pb.al_menu_contextual_etiquetas(None)
+            return
+        if foco is pb.lista_libros:
+            pb.al_menu_contextual(None)
+            return
+
+        # Ningún control específico de la lista/árbol tiene el foco (por
+        # ejemplo, el botón "Importar carpeta..."): menú mínimo genérico.
+        menu = wx.Menu()
+        item_importar = menu.Append(wx.ID_ANY, "Importar carpeta...\tCtrl+O")
+        self.Bind(wx.EVT_MENU, pb.al_importar_carpeta, item_importar)
+        menu.AppendSeparator()
+        self._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+        self.PopupMenu(menu)
+        menu.Destroy()
+
+    def _menu_contextual_creador(self):
+        """
+        Menú contextual de Creador de Audiolibros. Sin selector de archivos
+        propio (flujo de entrada único: solo libros enviados desde
+        Biblioteca), así que por ahora se limita a Ayuda y Salir. Las
+        acciones propias de exportación se añadirán aquí cuando se conecte
+        el cableado real de la pestaña.
+        """
+        menu = wx.Menu()
+        self._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+        self.pestana_creador.PopupMenu(menu)
+        menu.Destroy()
 
     def _menu_contextual_ajustes(self):
         """Menú contextual de la pestaña Ajustes: solo Ayuda y Salir."""
@@ -491,6 +631,12 @@ class VentanaPrincipal(wx.Frame):
         item_log = sub.Append(wx.ID_ANY, "Abrir carpeta de registros")
         self.Bind(wx.EVT_MENU, self.al_abrir_registros, item_log)
 
+        item_copiar_log = sub.Append(wx.ID_ANY, "Copiar registros al portapapeles")
+        self.Bind(wx.EVT_MENU, self.al_copiar_registros, item_copiar_log)
+
+        item_copiar_ultimo_error = sub.Append(wx.ID_ANY, "Copiar el último error al portapapeles")
+        self.Bind(wx.EVT_MENU, self.al_copiar_ultimo_error, item_copiar_ultimo_error)
+
         menu.AppendSubMenu(sub, "Ayuda")
 
     def _menu_contextual_lectura(self):
@@ -498,7 +644,7 @@ class VentanaPrincipal(wx.Frame):
         menu = wx.Menu()
 
         # Abrir libro
-        item_abrir = menu.Append(wx.ID_ANY, "Abrir libro EPUB")
+        item_abrir = menu.Append(wx.ID_ANY, "Cargar libro")
         self.Bind(wx.EVT_MENU, self.al_abrir_archivo, item_abrir)
 
         # Submenú libros recientes
@@ -648,7 +794,7 @@ class VentanaPrincipal(wx.Frame):
             )
             return
 
-        en_lectura = self.notebook.GetSelection() == 0
+        en_lectura = self.notebook.GetSelection() == IDX_LECTURA
         _ATAJOS_SOLO_LECTURA = {"buscar", "marcadores", "ir_porcentaje"}
 
         _ACCIONES = {
@@ -669,11 +815,18 @@ class VentanaPrincipal(wx.Frame):
 
     # ANCLAJE_INICIO: AYUDA
     def _al_ctrl_o_contextual(self, evento=None):
-        """Ctrl+O: abre libro en Lectura o carpeta de grabaciones en Grabación."""
+        """Ctrl+O: apertura contextual según la pestaña activa —
+        importar carpeta en Biblioteca, libro en Lectura, TXT en Grabación.
+        En Creador de Audiolibros no abre nada propio: solo anuncia que hay
+        que enviar el libro desde Biblioteca (flujo de entrada único)."""
         indice = self.notebook.GetSelection()
-        if indice == 0:
+        if indice == IDX_BIBLIOTECA:
+            self.pestana_biblioteca.al_importar_carpeta(None)
+        elif indice == IDX_LECTURA:
             self.pestana_lectura.al_cargar_libro(None)
-        elif indice == 1:
+        elif indice == IDX_CREADOR:
+            self.pestana_creador.al_ctrl_o(None)
+        elif indice == IDX_GRABACION:
             self.pestana_grabacion.al_examinar(None)
 
     def _al_abrir_ayuda_global(self, evento=None):
@@ -771,7 +924,9 @@ class VentanaPrincipal(wx.Frame):
         """Abre la carpeta de registros con el explorador de archivos."""
         import subprocess
         from app.config_rutas import RAIZ
-        carpeta = os.path.join(RAIZ, "app", "registros")
+        # OJO: era "app/registros" (carpeta huérfana, distinta de donde
+        # iniciar_epub_tts.py escribe de verdad) — ver _RUTA_LOG ahí.
+        carpeta = os.path.join(RAIZ, "registros")
         os.makedirs(carpeta, exist_ok=True)
         try:
             os.startfile(carpeta)
@@ -780,6 +935,67 @@ class VentanaPrincipal(wx.Frame):
                 subprocess.Popen(["xdg-open", carpeta])
             except Exception as e:
                 wx.MessageBox(str(e), "Error al abrir carpeta de registros")
+
+    def al_copiar_registros(self, evento=None):
+        """
+        Copia el contenido de registros/app.log al portapapeles, para no
+        depender de que el usuario encuentre y adjunte el archivo a mano
+        (ruta fácil de confundir, y programas de sincronización en la nube
+        pueden interferir con verlo actualizado desde el explorador).
+        """
+        from app.config_rutas import RAIZ
+        ruta_log = os.path.join(RAIZ, "registros", "app.log")
+        try:
+            with open(ruta_log, "r", encoding="utf-8") as f:
+                contenido = f.read()
+        except Exception as e:
+            wx.MessageBox(f"No se pudo leer el registro:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(contenido))
+            wx.TheClipboard.Close()
+            reproducir(SUCCESS)
+            wx.MessageBox(
+                "Registros copiados al portapapeles. Ya puedes pegarlos donde quieras.",
+                "Registros copiados", wx.OK | wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox("No se pudo abrir el portapapeles.", "Error", wx.OK | wx.ICON_ERROR)
+
+    def al_copiar_ultimo_error(self, evento=None):
+        """
+        Copia al portapapeles solo el archivo del error más reciente, de
+        registros/errores/ — cada ERROR/CRITICAL se guarda ahí en su
+        propio archivo (ver _HandlerErrorIndividual en iniciar_epub_tts.py),
+        para no tener que buscarlo dentro del log combinado.
+        """
+        from app.config_rutas import RAIZ
+        carpeta = os.path.join(RAIZ, "registros", "errores")
+        try:
+            archivos = [os.path.join(carpeta, n) for n in os.listdir(carpeta)]
+        except Exception as e:
+            wx.MessageBox(f"No se pudo leer la carpeta de errores:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+        if not archivos:
+            wx.MessageBox("No hay ningún error registrado todavía.", "Sin errores", wx.OK | wx.ICON_INFORMATION)
+            return
+        ultimo = max(archivos, key=os.path.getmtime)
+        try:
+            with open(ultimo, "r", encoding="utf-8") as f:
+                contenido = f.read()
+        except Exception as e:
+            wx.MessageBox(f"No se pudo leer el error:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            return
+        if wx.TheClipboard.Open():
+            wx.TheClipboard.SetData(wx.TextDataObject(contenido))
+            wx.TheClipboard.Close()
+            reproducir(SUCCESS)
+            wx.MessageBox(
+                f"Último error ({os.path.basename(ultimo)}) copiado al portapapeles.",
+                "Error copiado", wx.OK | wx.ICON_INFORMATION,
+            )
+        else:
+            wx.MessageBox("No se pudo abrir el portapapeles.", "Error", wx.OK | wx.ICON_ERROR)
     # ANCLAJE_FIN: AYUDA
 
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS

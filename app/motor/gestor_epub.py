@@ -259,7 +259,7 @@ def extraer_datos_epub(ruta_epub):
             datos_indice.append(datos_nodo)
 
     # Limpieza final: eliminar artefactos de formato y líneas vacías para NVDA
-    texto_completo = limpiar_para_lectura(texto_completo)
+    texto_completo = limpiar_para_lectura(texto_completo, ruta_libro=ruta_epub)
 
     # Recalcular posiciones de encabezados en el texto ya limpiado.
     # limpiar_para_lectura colapsa \n\n → \n, desplazando todas las posiciones

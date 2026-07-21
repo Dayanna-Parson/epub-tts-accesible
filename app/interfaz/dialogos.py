@@ -211,3 +211,222 @@ class DialogoExportacion(wx.Dialog):
         else:
             wx.MessageBox("La carpeta ya no existe.", "Error")
         self.EndModal(wx.ID_OK)
+
+
+# ANCLAJE_INICIO: DIALOGO_AGRUPAR_CARPETAS
+class DialogoAgruparCarpetas(wx.Dialog):
+    """
+    Confirmación editable del agrupamiento sugerido por carpeta (sección
+    2.3.1 de la planificación v3.0): una fila por carpeta detectada, con
+    casilla para incluirla o excluirla y el nombre de etiqueta propuesto
+    editable antes de confirmar. Se usa una lista + botón "Renombrar"
+    (mismo patrón ya establecido en DialogoMarcadores) en vez de edición
+    en línea, para que sea navegable con lector de pantalla sin importar
+    cuántas carpetas haya (una usuaria real llegó a tener más de 100 a
+    la vez).
+
+    Tras ShowModal() == wx.ID_OK, self.resultado es un dict
+    {carpeta: nombre_etiqueta} solo con las filas que quedaron marcadas.
+    self.carpetas_mostradas siempre contiene TODAS las carpetas que se
+    ofrecieron en este diálogo (marcadas o no), para que quien lo use
+    pueda registrarlas como "ya evaluadas" y no se vuelva a preguntar
+    por ellas en futuros escaneos, se hayan agrupado o no.
+    """
+
+    def __init__(self, padre, carpetas_candidatas: dict, nombres_sugeridos: dict):
+        super().__init__(
+            padre, title="Agrupar por carpeta",
+            style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
+        )
+        self.carpetas_candidatas = carpetas_candidatas
+        self._carpetas_orden = list(carpetas_candidatas.keys())
+        self._nombres = dict(nombres_sugeridos)
+        self.resultado = None
+        self.carpetas_mostradas = list(self._carpetas_orden)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        lbl = wx.StaticText(
+            self,
+            label=(
+                "Se detectaron carpetas con varios libros. Marca las que quieras "
+                "agrupar con una etiqueta de saga/colección; puedes editar el "
+                "nombre de cada una antes de confirmar."
+            ),
+        )
+        sizer.Add(lbl, 0, wx.ALL, 10)
+
+        self.lista = wx.ListCtrl(
+            self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL, size=(480, 260),
+        )
+        self.lista.InsertColumn(0, "Etiqueta propuesta", width=300)
+        self.lista.InsertColumn(1, "Libros", width=80)
+        self.lista.EnableCheckBoxes(True)
+        self._rellenar_lista()
+        self.lista.Bind(wx.EVT_LIST_KEY_DOWN, self.al_tecla_lista)
+        sizer.Add(self.lista, 1, wx.EXPAND | wx.ALL, 10)
+
+        self.btn_renombrar = wx.Button(self, label="Renombrar etiqueta seleccionada")
+        self.btn_renombrar.Bind(wx.EVT_BUTTON, self.al_renombrar)
+        sizer.Add(self.btn_renombrar, 0, wx.ALL, 5)
+
+        sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_aceptar = wx.Button(self, wx.ID_OK, "Agrupar las marcadas")
+        self.btn_aceptar.Bind(wx.EVT_BUTTON, self.al_aceptar)
+        self.btn_aceptar.SetDefault()
+        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")
+        sizer_botones.Add(self.btn_aceptar, 0, wx.ALL, 5)
+        sizer_botones.Add(self.btn_cancelar, 0, wx.ALL, 5)
+        sizer.Add(sizer_botones, 0, wx.ALIGN_CENTER | wx.ALL, 5)
+
+        self.SetSizer(sizer)
+        self.Fit()
+        self.CenterOnParent()
+        self.lista.SetFocus()
+
+    def _rellenar_lista(self):
+        self.lista.DeleteAllItems()
+        for indice, carpeta in enumerate(self._carpetas_orden):
+            self.lista.InsertItem(indice, self._nombres[carpeta])
+            self.lista.SetItem(indice, 1, str(len(self.carpetas_candidatas[carpeta])))
+            self.lista.CheckItem(indice, True)
+        if self.lista.GetItemCount() > 0:
+            self.lista.Select(0)
+            self.lista.Focus(0)
+
+    def al_tecla_lista(self, evento):
+        if evento.GetKeyCode() == wx.WXK_F2:
+            self.al_renombrar(evento)
+            return
+        evento.Skip()
+
+    def al_renombrar(self, evento):
+        indice = self.lista.GetFirstSelected()
+        if indice == wx.NOT_FOUND:
+            return
+        carpeta = self._carpetas_orden[indice]
+        dlg = wx.TextEntryDialog(
+            self, "Nombre de la etiqueta:", "Renombrar etiqueta",
+            value=self._nombres[carpeta],
+        )
+        if dlg.ShowModal() == wx.ID_OK:
+            nuevo_nombre = dlg.GetValue().strip()
+            if nuevo_nombre:
+                self._nombres[carpeta] = nuevo_nombre
+                self.lista.SetItem(indice, 0, nuevo_nombre)
+        dlg.Destroy()
+        self.lista.SetFocus()
+        self.lista.Select(indice)
+        self.lista.Focus(indice)
+
+    def al_aceptar(self, evento):
+        self.resultado = {
+            carpeta: self._nombres[carpeta]
+            for indice, carpeta in enumerate(self._carpetas_orden)
+            if self.lista.IsItemChecked(indice)
+        }
+        self.EndModal(wx.ID_OK)
+# ANCLAJE_FIN: DIALOGO_AGRUPAR_CARPETAS
+
+
+# ANCLAJE_INICIO: DIALOGO_ARCHIVO_NO_ENCONTRADO
+class DialogoArchivoNoEncontrado(wx.Dialog):
+    """
+    Se muestra al intentar abrir un libro de la Biblioteca cuyo archivo
+    ya no está en la ruta indexada (movido o borrado). Ofrece tres
+    acciones (sección 2.4 de la planificación v3.0):
+      - Localizar archivo: elegir manualmente el nuevo archivo de ese libro.
+      - Volver a escanear una carpeta: reconciliar en bloque toda una
+        carpeta movida, casando por nombre de archivo.
+      - Eliminar de la biblioteca: quita el registro, nunca el archivo físico.
+
+    El resultado se expone en self.accion ("localizar" / "reescanear" /
+    "eliminar" / None) y, según el caso, en self.ruta_localizada o
+    self.carpeta_reescaneo. Quien instancie el diálogo decide qué hacer
+    con esa información tras ShowModal().
+    """
+
+    def __init__(self, padre, titulo_libro, extension_original):
+        super().__init__(padre, title="Archivo no encontrado", style=wx.DEFAULT_DIALOG_STYLE)
+
+        self.extension_original = extension_original
+        self.accion = None
+        self.ruta_localizada = None
+        self.carpeta_reescaneo = None
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        lbl = wx.StaticText(
+            self,
+            label=(
+                f"No se encontró el archivo de «{titulo_libro}» en su ubicación original.\n\n"
+                "¿Qué quieres hacer?"
+            ),
+        )
+        sizer.Add(lbl, 0, wx.ALL, 10)
+
+        self.btn_localizar = wx.Button(self, label="Localizar archivo...")
+        self.btn_localizar.SetHelpText(
+            "Elige manualmente dónde está ahora el archivo de este libro."
+        )
+        self.btn_localizar.Bind(wx.EVT_BUTTON, self.al_localizar)
+        sizer.Add(self.btn_localizar, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_reescanear = wx.Button(self, label="Volver a escanear una carpeta...")
+        self.btn_reescanear.SetHelpText(
+            "Si moviste toda una carpeta de libros, elige la nueva ubicación y se "
+            "reconciliarán en bloque todos los libros de la biblioteca que falten, "
+            "casando por nombre de archivo."
+        )
+        self.btn_reescanear.Bind(wx.EVT_BUTTON, self.al_reescanear)
+        sizer.Add(self.btn_reescanear, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_eliminar = wx.Button(self, label="Eliminar de la biblioteca")
+        self.btn_eliminar.SetHelpText(
+            "Quita el registro de este libro de la biblioteca. El archivo físico, "
+            "si existiera en algún sitio, no se borra."
+        )
+        self.btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar)
+        sizer.Add(self.btn_eliminar, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")
+        sizer.Add(self.btn_cancelar, 0, wx.EXPAND | wx.ALL, 5)
+
+        self.SetSizer(sizer)
+        self.Fit()
+        self.CenterOnParent()
+        self.btn_localizar.SetFocus()
+
+    def al_localizar(self, evento):
+        comodin = f"Archivos ({self.extension_original})|*{self.extension_original}|Todos los archivos|*.*"
+        dlg = wx.FileDialog(
+            self, "Localizar el archivo del libro", wildcard=comodin,
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
+        )
+        if dlg.ShowModal() == wx.ID_OK:
+            self.accion = "localizar"
+            self.ruta_localizada = dlg.GetPath()
+            dlg.Destroy()
+            self.EndModal(wx.ID_OK)
+        else:
+            dlg.Destroy()
+
+    def al_reescanear(self, evento):
+        dlg = wx.DirDialog(self, "Selecciona la carpeta donde están ahora los libros")
+        if dlg.ShowModal() == wx.ID_OK:
+            self.accion = "reescanear"
+            self.carpeta_reescaneo = dlg.GetPath()
+            dlg.Destroy()
+            self.EndModal(wx.ID_OK)
+        else:
+            dlg.Destroy()
+
+    def al_eliminar(self, evento):
+        if wx.MessageBox(
+            "¿Quitar este libro de la biblioteca?\n\nEl archivo no se borrará del disco, "
+            "solo su registro aquí.",
+            "Quitar de la biblioteca", wx.YES_NO | wx.ICON_QUESTION,
+        ) == wx.YES:
+            self.accion = "eliminar"
+            self.EndModal(wx.ID_OK)
+# ANCLAJE_FIN: DIALOGO_ARCHIVO_NO_ENCONTRADO

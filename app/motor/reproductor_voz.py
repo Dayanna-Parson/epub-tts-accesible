@@ -39,6 +39,15 @@ class ReproductorVoz:
         self.motor_activo = self.cliente_local
         self.tipo_motor_actual = "local"
         self.voz_actual = None
+        # Última velocidad/volumen elegidos desde la interfaz. Cada cliente
+        # (ClienteAzure, ClientePolly...) guarda su propio _velocidad/_volumen
+        # interno con su propio valor por defecto (50/100): al cambiar de
+        # motor_activo en fijar_voz(), ese cliente recién activado nunca había
+        # recibido el valor que el usuario ya tenía puesto en el deslizador,
+        # así que la lectura sonaba siempre "como al 50%" tras seleccionar o
+        # cambiar de voz. Se guardan aquí para poder reaplicarlos.
+        self._velocidad_actual = 50
+        self._volumen_actual = 100
         self.estado = "detenido"
         self._hilo_reproduccion = None
         # Contador de generación: cada nueva petición de síntesis incrementa este valor.
@@ -57,6 +66,12 @@ class ReproductorVoz:
         # Proveedores suspendidos esta sesión por error de cuota (402 / plan agotado).
         # Se limpian cuando el usuario cambia de voz manualmente.
         self._proveedores_suspendidos = set()
+        # Proveedores que ya mostraron el aviso de error de red/API esta
+        # sesión — evita una ventana modal por cada fragmento fallido (con
+        # una API caída a mitad de lectura, eso podía disparar un aviso tras
+        # otro y dar la sensación de que la app se había colgado). Se limpia
+        # al cambiar de voz manualmente, igual que las suspensiones de cuota.
+        self._proveedores_con_aviso_red = set()
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
@@ -72,6 +87,7 @@ class ReproductorVoz:
         self.detener()
         # El usuario elige voz manualmente: resetear suspensiones de cuota
         self._proveedores_suspendidos.clear()
+        self._proveedores_con_aviso_red.clear()
         self.voz_actual = datos_voz
         
         proveedor = datos_voz.get("proveedor_id", "local").lower()
@@ -114,6 +130,28 @@ class ReproductorVoz:
                     self.cliente_local.cambiar_voz_por_nombre(nombre_voz)
             # ANCLAJE_FIN: CONFIGURACION_VOZ_ACTIVA
 
+        self._reaplicar_velocidad_volumen()
+
+    def _reaplicar_velocidad_volumen(self):
+        """
+        Reaplica al motor_activo actual la velocidad/volumen que el usuario
+        ya tenía puestos en los deslizadores. Cada cliente (ClienteAzure,
+        ClientePolly...) guarda su propio estado interno con su propio valor
+        por defecto (50/100): sin esto, la lectura sonaba siempre "a mitad"
+        nada más cambiar de voz o de proveedor (manualmente o por cuota
+        agotada), sin importar dónde estuviera el deslizador. Se llama desde
+        cada punto de este archivo que reasigna self.motor_activo.
+        """
+        logger.debug(
+            "[ReproductorVoz] _reaplicar_velocidad_volumen: motor=%s (%s) velocidad=%s volumen=%s",
+            self.tipo_motor_actual, type(self.motor_activo).__name__,
+            self._velocidad_actual, self._volumen_actual,
+        )
+        if hasattr(self.motor_activo, 'fijar_velocidad'):
+            self.motor_activo.fijar_velocidad(self._velocidad_actual)
+        if hasattr(self.motor_activo, 'fijar_volumen'):
+            self.motor_activo.fijar_volumen(self._volumen_actual)
+
 # ANCLAJE_INICIO: FLUJO_PRINCIPAL_SINTESIS
     def _elegir_motor_con_cuota(self, texto):
         """
@@ -145,6 +183,7 @@ class ReproductorVoz:
                     logger.info("[ReproductorVoz] '%s' sin cuota → usando '%s'", self.tipo_motor_actual, tipo)
                     self.motor_activo = motor
                     self.tipo_motor_actual = tipo
+                    self._reaplicar_velocidad_volumen()
                 return tipo
 
         # Ningún proveedor tiene cuota: caer a voz local
@@ -158,6 +197,7 @@ class ReproductorVoz:
         wx.CallAfter(_aviso_cuota_total)
         self.motor_activo = self.cliente_local
         self.tipo_motor_actual = "local"
+        self._reaplicar_velocidad_volumen()
         return "local"
 
     def cargar_texto(self, texto, callback_completado=None,
@@ -259,8 +299,20 @@ class ReproductorVoz:
                         try: self.cliente_local.hablar(texto)
                         except Exception: pass
                 else:
-                    # Error de red/API real: activar voz local con mensaje de error
-                    wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+                    # Error de red/API real (voz inexistente, timeout, región
+                    # sin esa voz nueva...): aviso accesible una sola vez por
+                    # proveedor y sesión — repetirlo en cada fragmento fallido
+                    # (p. ej. toda una lectura con la API caída) se sentía
+                    # como que la app se quedaba colgada esperando que se
+                    # cerraran ventanas modales una tras otra.
+                    proveedor = self.tipo_motor_actual
+                    primera_vez = proveedor not in self._proveedores_con_aviso_red
+                    self._proveedores_con_aviso_red.add(proveedor)
+                    if primera_vez:
+                        wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
+                    elif not self._detenido_intencionalmente:
+                        try: self.cliente_local.hablar(texto)
+                        except Exception: pass
 
         # Solo actualizar el estado y encadenar el callback si:
         # 1. Esta generación sigue siendo la activa (no se inició otra síntesis)
@@ -389,7 +441,11 @@ class ReproductorVoz:
     # ANCLAJE_FIN: COMANDOS_REPRODUCTOR
 
     def obtener_estado(self): return self.estado
-    def fijar_velocidad(self, v): 
+    def fijar_velocidad(self, v):
+        self._velocidad_actual = v
+        logger.debug("[ReproductorVoz] fijar_velocidad(%s) -> motor_activo=%s (%s)",
+                        v, self.tipo_motor_actual, type(self.motor_activo).__name__)
         if hasattr(self.motor_activo, 'fijar_velocidad'): self.motor_activo.fijar_velocidad(v)
     def fijar_volumen(self, v):
+        self._volumen_actual = v
         if hasattr(self.motor_activo, 'fijar_volumen'): self.motor_activo.fijar_volumen(v)

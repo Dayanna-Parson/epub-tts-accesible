@@ -1,0 +1,16 @@
+prompt 38
+
+mira estos errores al grabar con la voz de polly.
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+[Polly] Conexión establecida | 0.86s | Motor: generative | Voz: Lucia | 72 chars
+WARNING   urllib3.connectionpool  Connection pool is full, discarding connection: polly.us-east-1.amazonaws.com. Connection pool size: 10
+WARNING   urllib3.connectionpool  Connection pool is full, discarding connection: polly.us-east-1.amazonaws.com. Connection pool size: 10
+WARNING   urllib3.connectionpool  Connection pool is full, discarding connection: polly.us-east-1.amazonaws.com. Connection pool size: 10
+WARNING   urllib3.connectionpool  Connection pool is full, discarding connection: polly.us-east-1.amazonaws.com. Connection pool size: 10
+WARNING   urllib3.connectionpool  Connection pool is full, discarding connection: polly.us-east-1.amazonaws.com. Connection pool size: 10
+WARNING   urllib3.connectionpool  Connection pool is full, discarding connection: polly.us-east-1.amazonaws.com. Connection pool size: 10
+
+---------------------------------------------------

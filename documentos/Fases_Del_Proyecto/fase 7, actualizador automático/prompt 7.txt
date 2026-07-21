@@ -1,0 +1,15 @@
+prompt 7
+"Te aclaro cómo está organizado el proyecto y cómo cerramos este punto:
+1. 
+Fases en ramas independientes: La Biblioteca (Fase A) y el Creador de Audiolibros (Fase B) no los ves en esta rama porque cada fase de la v3.0 se ha trabajado en su propia rama aislada. Todo está implementado y funcionando en sus respectivas ramas.
+2. 
+Sección 5 (Progreso de lectura y ritmo): Queda confirmada y cerrada sin código nuevo, tal como fija la especificación (consulta manual con Ctrl+I, 'ir a página' y sin anuncios automáticos por página).
+3. 
+Cierre de compilación de la Fase C: Antes de cambiar de rama para el Asistente de Gemini, vamos a dejar lista la compilación de auxiliar_actualizador.py.
+Para que actualizador.exe se genere de forma idéntica a auxiliar_sapi32.exe:
+• 
+Prepara la configuración/comando de PyInstaller para compilar auxiliar_actualizador.py a bin/actualizador.exe (modo onefile, noconsole, etc.).
+• 
+Si existe un script de empaquetado/compilación en el proyecto (o en la raíz), integra la instrucción para que al compilar la app portable se genere también bin/actualizador.exe de forma automática.
+Una vez tengamos esto listo, fusionaré esta rama del actualizador con la de Gemini/Biblioteca para arrancar con el Asistente con Ctrl+G sobre el código real de la Biblioteca.
+Prepara la parte de compilación de auxiliar_actualizador.py y me comentas."

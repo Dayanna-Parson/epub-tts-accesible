@@ -1,0 +1,2201 @@
+prompt 12
+
+
+Vale. El problema de la pestaña biblioteca, es que solo tarda en cargar, (no sabría decirte cuanto tiempo, solo que tarda en dibujarse, ya que NVDA se queda callado pensando unos segundos quezás) eso, al abrir la ap, o al cambiar de pestaña, pero solo pasa con esta. con el resto no.
+Sobre las categorías, no hay ningún botón ni en la interfaz, ni en el menú contextual para crear una nueva categoría. Y además, solo sale, al pulsar en el menú, añadir a categoría, y sale este texto, que no me gusta. ...o escribe una ruta nueva (Género > Subgénero, opcional):  edición  en blanco
+Y así si que se crea. A por cierto, error de accesibilidad, bueno, hay dos.
+cuando está escaneando la carpeta, y cuando está añadiendo cada libro, pues ni sapi dice lo que está haciendo, ni menos NVDA tampoco lo verbaliza.
+Y cuando creeas la categoría, tampoco te dice, categoría X creada
+Solo reproduce el sonido de éxito.
+A, y otro error, pero este es más molesto aún, es, que cuando se termina de escanear y de añadir todos los libros, aparece una ventana de solo lectura, que tapa toda la app, y en donde dice: se han añadido X libros. Y no hay manera de cerrarla. Solo se cierrra, pues cerrando con alt f4 toda la app, y volbiéndola a abrir de forma manual, lo cual es vastante molesto. Si quieres, podrías simplemente con un diálogo emergente, mostrar los libros que se agregaron y ya. Creo que sería mas simple eso, que mostrar esa ventana no?
+
+A, porqué en todos los libros dice esto? Imperio de fuego azul (Saga Fénix & Dragón 1); Autor: Lucía Cerezo; Formato: EPUB; Estado: Título sin revisar
+Me refiero a lo último, Estado, título sin revisar
+A. Y se me acaba de ocurrir una mejora para la opción añadir a categoría.
+En vez de que se abra la ventana, con las opciones del arbol con las categorías, que por cierto, solo se puede seleccionar una, y pensaba en decirte que añadieses casillas para marcar varias y desmarcar! y ese cuadro para crear categoría nueva, que tal si mejor simplificamos todo eso, añadiendo un submenú que diga, añadir categoría submenú, y que el primer elemento sea crear categoría, y luego, todas las categorías y sub categorías? pero claro. Como haría para seleccionar varias? Bueno, ya me cuentas que ventajas le ves a cada una, y que me recomiendas!
+Y me acabo de dar cuenta de otra cosa.
+Que cuando pulso enter en algún libro, NVDA no dice nada, solo se reproduce el sonido de cuando se cambia de pestaña, y aquí deverían de pasar dos cosas. Que NVDA diga, abriendo libro, por favor, espera... Y que cuando se abra, suene el sonido de éxito en vez de el de cambio de pestaña.
+A, y se me olvidaba, mira todos estos errores que arroja la consola. Me puedes explicar porqué?
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 285, in al_seleccionar_categoria
+    self._id_categoria_activa = self._categoria_seleccionada_id()
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 278, in _categoria_seleccionada_id
+    nodo = self.arbol_categorias.GetSelection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: wrapped C/C++ object of type TreeCtrl has been deleted
+

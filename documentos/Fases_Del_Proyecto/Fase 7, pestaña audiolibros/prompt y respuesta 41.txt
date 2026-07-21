@@ -1,0 +1,107 @@
+prompt y respuesta 41
+Has dicho: Hola, mira.
+Hola, mira. Puede ser que no hallas hecho el diálogo de libros pendientes de grabar? porque e grabado un libro, y como me decía que no tenía cuota suficiente, ni en el de polly, ni en ningún otro, pues bueno. He empezado a grabar igual, y en la capeta sale primera parte. pero, es como si no tuviese audio. Y además, cuando me sale el diálogo de que no hay cuota en ninguno, que use la voz local! Pues, me graba con la voz de elena, y no me deja elegir otra voz. Solo está ese botón de usar voz local. Y en windows no se puede predertminar tampoco porque como es de 32, pues no aparece. y solo aparecen, la de elena, pablo y laura. Y claro. tampoco se hasta donde grabó, porque como te decía antes, pues ese archivo no tiene audio. Y además, como se que libro estoy grabando.... Porque en la biblioteca, solo sale el estado... ya sabes. leído, leyendo etc... Y tengo que abrir el último libro que estaba grabando para seguir
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Añado un combo de voces locales al diálogo:
+Ejecutado 2 comandos, leer un archivo
+Añado un combo de voces locales al diálogo:
+Editado un archivo, leer un archivo
+Ahora añado _cargar_voces_locales y actualizo _al_usar_local:
+Editado un archivo, ejecutado un comando
+Bien, ya tiene logger. Ahora actualizo pestana_creador_audiolibros.py para usar dlg.voz_elegida en vez del placeholder falso:
+Ejecutado 2 comandos, editado un archivo
+Ahora corrijo la paralelización para que no incluya SAPI5 local (motivo: riesgo real de COM entre hilos que no puedo verificar, y no aporta beneficio ya que no hay espera de red que aprovechar):
+Ejecutado un comando, leer un archivo, editado un archivo
+Ahora actualizo los dos sitios donde se calcula max_workers:
+Editado un archivo, leer un archivo
+Ahora el segundo sitio (capítulos):
+Leer un archivo, ejecutado un comando, editado un archivo
+Conversación compactada · 746.0k tokens ahorrados
+Ejecutadoun comando
+Compiles clean. Committing and pushing the three fixes now.
+Ejecutado 3 comandos
+Pushed. Now onto the fourth request: visibility of books with a pending audiobook export in Biblioteca. Let me look at the current "Estado" column logic and the pending-exports table.
+Buscado código, leer 3 archivos, ejecutado un comando
+Good, there's already a cargar_libro(datos_libro) public method. Now let's check how Biblioteca opens a book into a tab (e.g., double-click / context menu "Abrir en...") to reuse the same mechanism for jumping to Creador de Audiolibros.
+Ejecutadoun comando
+There's already al_enviar_a_creador_audiolibros() that does exactly this. So the visibility feature just needs: (1) show pending-export state in the Estado column, (2) a way to filter/find those books. Let's look at that method and the context menu setup, plus the filter combo _ESTADOS_FILTRO.
+Leerpestana_biblioteca.py
+Now let's check _ESTADOS_FILTRO and combo_estado setup near line 271, and buscar_libros in gestor for filter args.
+Ejecutado 2 comandos, leer un archivo, editado un archivo
+Now update pestana_biblioteca.py: add filter option and mark state.
+Editadopestana_biblioteca.py+1-1
+Now update _cargar_libros and _describir_estado:
+Editado un archivo, ejecutado un comando
+Line 1111 also calls it — let's check that context.
+Leerpestana_biblioteca.py
+That's fine — default param False is safe there. Let's fix it to check pending too for accuracy, and also compile-check.
+Editadopestana_biblioteca.py+2-1
+Also init self._ids_audiolibro_pendiente = set() in __init__ for safety before first load.
+Ejecutado un comando, editado un archivo
+Now compile-check and commit.
+Ejecutado 2 comandos
+He pusheado dos commits con todo lo que pediste. Resumen claro de las cuatro cosas:
+1. No, no había hecho el diálogo de libros pendientes — pero ahora Biblioteca marca "Audiolibro a medias" en la columna Estado de cualquier libro con exportación cortada, y el filtro de Estado tiene una opción nueva "Audiolibros a medias" para verlos todos de un vistazo, sin tener que recordar cuál era el último. Para retomar, la seleccionas y usas "Enviar a Creador de Audiolibros" como siempre — ese envío ya carga el botón de retomar automáticamente.
+2. Archivo sin audio — el problema real: la comprobación solo miraba si el archivo pesaba más de 0 bytes, y un WAV con cabecera pero sin sonido dentro pasa esa prueba igualmente. Ahora se valida con fotogramas y duración reales del audio; si sale silencio, lanza error en vez de dar el archivo por bueno.
+3. Siempre grababa con Elena, sin dejarte elegir — el diálogo de "usar voz local" nunca ofrecía ninguna voz, y por debajo se mandaba un dict falso sin id real que nunca encajaba con ninguna voz instalada, así que SAPI se quedaba con la voz por defecto del sistema. Ahora ese diálogo tiene un combo con todas tus voces SAPI5 (64 y 32 bits) para elegir.
+4. Un cambio adicional por precaución: sospecho que el archivo sin audio también venía de exportar SAPI5 en paralelo — cada síntesis crea su propio objeto COM, y no puedo descartar un problema de concurrencia sin poder probarlo en Windows real. Así que forcé las exportaciones con voz local a ir siempre en serie (una detrás de otra), no en paralelo. Los proveedores de nube siguen en paralelo como antes.
+Importante, sé honesta contigo: aunque ahora el combo te deja elegir voces de 32 bits (Eloquence, RealSpeak) para "usar voz local", el motor de exportación todavía las enruta mal — las trata como si fueran de 64 bits y no van a funcionar de verdad para exportar. Esto no lo he arreglado todavía; lo dejo anotado para la siguiente tanda. Por ahora, para exportar, elige Elena, Pablo o Laura (las de 64 bits) en ese combo.
+Como no puedo probar nada de esto en Windows real con NVDA, necesito que lo verifiques tú: el audio ya no sale en silencio, el combo de voz local funciona y elige de verdad, y el nuevo filtro de "Audiolibros a medias" aparece en Biblioteca.
+Mostrar acciones del mensaje
+Has dicho: es que necesito que lo arregles ahora.
+es que necesito que lo arregles ahora. No quiero que lo dejes pendiente, ya que yo quiero utilizar la voz de eloquence. No la de  Elena o Pablo, porque son orribles! A, y otra cosa. En la ventana de exportación, pues cuando se está grabando un libro, en el cuadro de lectura, donde va diciendo el progreso y tal.... Pues, cuando empieza, pues tarda un poco en actualizarse, y además, tengo que estar constantemente mirando la ese cuadro, para saber como va. Y cuando termiona de exportar, pues dice 100% pero, tengo que esperar a que suene la campanita, y ahí si dice, completado
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Now let's view grabarsapi5 fully to see how it invokes the client and add a 32-bit branch.
+Ejecutado un comando, leer un archivo
+Now let's view _grabar_sapi5 fully to see how it invokes the client and add a 32-bit branch.
+Leer 2 archivos, ejecutado 4 comandos, editado un archivo
+Now the client bridge: add synchronous exportar_archivo method and event handling.
+Editadocliente_sapi32_bridge.py+33-0
+Now wire this into grabador_audio.py: add a cached bridge instance and a _grabar_sapi5_32 method, and route in _llamar_motor.
+Editadograbador_audio.py+7-0
+Now add _grabar_sapi5_32 after _grabar_sapi5, reusing the WAV validity check.
+Editado un archivo, ejecutado 2 comandos, leer un archivo
+Now the progress-window issues. Let's find the progress UI in pestana_creador_audiolibros.py.
+Ejecutado 4 comandos, leer un archivo
+Good, confirms the pattern. Let's apply the two fixes.
+Editadopestana_creador_audiolibros.py+4-0
+Now fix the false-100%/completion-gap in both progress branches:
+Editadopestana_creador_audiolibros.py+18-3
+Now compile-check and commit everything (the routing fix + progress UX fix).
+Ejecutado 3 comandos
+Ya está pusheado. Resumen:
+Eloquence ya se puede usar para exportar de verdad. El fallo era que _llamar_motor mandaba cualquier voz que no fuera de nube directamente al cliente de 64 bits, que nunca encuentra las voces de 32 bits. Ahora:
+• Añadí un comando nuevo al proceso puente (auxiliar_sapi32.py) que sintetiza directo a WAV, igual que hace la voz de 64 bits (antes el puente solo servía para lectura interactiva por altavoces, no para exportar a archivo).
+• grabador_audio.py enruta las voces local_32 a ese nuevo camino, con la misma comprobación real de audio (fotogramas/duración) que ya tenía Elena/Pablo/Laura.
+Así que en el combo de "usar voz local" del diálogo de cuota agotada, ya puedes elegir Eloquence y que exporte con esa voz de verdad, no en silencio ni con la de por defecto.
+Sobre el cuadro de progreso, dos arreglos:
+1. "Iniciando exportación..." ahora se anuncia por voz al arrancar (antes solo se escribía en el cuadro, y NVDA no lo dice si el cuadro no tiene el foco — por eso parecía que tardaba).
+2. El "100%"/"último capítulo" ya no suena a que terminó — ahora dice "Finalizando exportación..." y el aviso real de completado (con su campanita) solo llega cuando de verdad ha terminado de cerrar el archivo. Así no te quedas con la duda de si hay que seguir esperando o ya se puede tocar algo.
+No puedo probar nada de esto en Windows real, así que en cuanto puedas: exporta algo con Eloquence desde ese combo y confírmame si suena bien, y fíjate si ahora el aviso de arranque y el de "finalizando" se oyen como esperas.
+Mostrar acciones del mensaje
+Has dicho: ---------------------------------------------------
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+[Polly] Conexión establecida | 1.21s | Motor: generative | Voz: Lucia | 72 chars
+WARNING   app.motor.grabador_audio  [GrabadorAudio] Error pydub al concatenar: 'L' format requires 0 <= number <= 4294967295. Usando bytes crudos.
+Exception ignored in: <function Wave_write.__del__ at 0x000002585BA00900>
+Traceback (most recent call last):
+  File "C:\Program Files\Python312\Lib\wave.py", line 465, in __del__
+    self.close()
+  File "C:\Program Files\Python312\Lib\wave.py", line 583, in close
+    self._ensure_header_written(0)
+  File "C:\Program Files\Python312\Lib\wave.py", line 606, in _ensure_header_written
+    self._write_header(datasize)
+  File "C:\Program Files\Python312\Lib\wave.py", line 618, in _write_header
+    self._file.write(struct.pack('<L4s4sLHHLLHH4s',
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+struct.error: 'L' format requires 0 <= number <= 4294967295
+
+---------------------------------------------------
+   PROGRAMA CERRADO O FINALIZADO
+   (Si ves un error arriba, leelo ahora)
+---------------------------------------------------
+Presione una tecla para continuar . . .

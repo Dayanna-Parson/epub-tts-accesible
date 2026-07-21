@@ -1,0 +1,20 @@
+respuesta 1
+
+He leído `CLAUDE.md` completo y la Sección 4 (Fase C) de `planificacion_v3.md`. Confirmo que estoy trabajando sobre `claude/fase-c-actualizador-frzqhu` (verificado con `git branch`/`git status`: working tree limpio, misma historia que `claude/fase7-actualizador-automatico`, así que no hay divergencia entre ramas).
+
+Antes de tocar código, esto es lo que encontré ya existente y que hay que tener en cuenta porque el diseño de la Fase C lo sustituye:
+
+**Estado actual (dos rutas distintas, ninguna es la del diseño nuevo):**
+1. `app/motor/comprobador_actualizaciones.py` → `descargar_actualizacion()`/`descargar_en_hilo()`: descarga el ZIP y copia archivos **en el propio proceso de la app**, sin exe auxiliar. Parece código muerto: nada en la UI lo llama.
+2. `app/interfaz/pestana_ajustes.py`, bloque `ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` (`_hilo_descargar_e_instalar`, `_escribir_y_lanzar_bat`): es la ruta que sí se usa desde `ventana_principal.py` y desde el botón "Buscar actualizaciones ahora". Genera un `.bat` al vuelo con `del %0` al final — exactamente el enfoque que la Sección 4.1/4.2 dice que hay que abandonar por los falsos positivos de antivirus y por no poder recuperarse si el script es bloqueado a mitad de proceso.
+
+**Plan para este primer paso (solo la parte de descarga/verificación en la app, sin tocar aún el exe ni el flujo de cierre):**
+
+1. Nuevo módulo motor (`app/motor/actualizador_descarga.py` o ampliar `comprobador_actualizaciones.py` con un bloque `ANCLAJE` nuevo) con un hilo de fondo que:
+   - Descarga el ZIP del release a `temp/actualizacion/` (no a la raíz, para no mezclar con `bin/actualizacion` legado).
+   - Lo descomprime ahí mismo.
+   - Verifica que la estructura esperada esté completa (carpetas `app/`, `recursos/`, archivo principal, `recursos/version.json` con versión ≥ la remota anunciada) antes de tocar nada de la instalación actual.
+2. Si la verificación falla: se limpia `temp/actualizacion/`, se avisa por NVDA (patrón `_anunciador` o `wx.MessageBox` + sonido `ERROR`, a decidir) y se aborta — la app sigue funcionando con normalidad, cero cambios en disco fuera de `temp/`.
+3. Dejo para un paso posterior (una vez validado esto): la confirmación del usuario y el lanzamiento de `actualizador.exe --origen temp/actualizacion --destino <raíz>` + cierre de la app, y luego el propio ejecutable auxiliar con backup/rollback.
+
+¿Confirmas que quieres que use `temp/actualizacion/` (nueva, bajo `RAIZ`) en vez de reutilizar `bin/actualizacion` o la carpeta `actualizacion` ya usada por el código legado, y que elimine el bloque `ACTUALIZADOR_SCRIPT_CLON` del `.bat` cuando lleguemos al paso 3, o prefieres que conviva temporalmente hasta que el exe esté probado?

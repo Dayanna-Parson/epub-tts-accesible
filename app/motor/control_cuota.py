@@ -116,6 +116,26 @@ class ControlCuota:
         self.guardar_datos()
         return True
 
+    def estimar_coste_dolares(self, proveedor, caracteres):
+        """
+        Estima el coste aproximado en dólares de sintetizar `caracteres` con
+        `proveedor`, a partir de las mismas tarifas de referencia usadas en
+        el panel de Control de Presupuesto de Ajustes (_texto_ayuda_limite).
+        Es una tarifa de referencia fija, no consultada en vivo a cada API
+        — los precios reales pueden variar; el resultado es solo orientativo.
+        Devuelve (coste, es_aproximado) donde es_aproximado es False para
+        ElevenLabs (tarifa por planes, no por carácter) y voz local (gratis).
+        """
+        prov_key = proveedor.lower()
+        if prov_key in ("azure", "polly"):
+            return round(caracteres * 16 / 1_000_000, 2), True
+        elif prov_key == "deepgram":
+            return round(caracteres * 15 / 1_000_000, 2), True
+        elif prov_key == "elevenlabs" or "eleven" in prov_key:
+            return None, False
+        else:
+            return 0.0, True  # Voz local: gratuita
+
     def get_info_uso(self, proveedor):
         clave = proveedor.lower()
         gastado = self.datos["gastado"].get(clave, 0)

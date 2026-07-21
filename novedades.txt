@@ -1,3 +1,123 @@
+=== v3.0.0 (17/07/2026) ===
+
+Versión 3.0.0 — 2026-07-17
+
+Nuevas funciones
+────────────────
+
+- Pestaña Biblioteca:
+  Nueva pestaña para organizar tu colección de EPUB y PDF: importa una
+  carpeta entera de golpe o un único libro suelto, clasifica por
+  géneros y por sagas/colecciones, y busca por título o autor. Es el
+  punto de entrada común para abrir un libro en Lectura o enviarlo al
+  Creador de Audiolibros.
+
+- Creador de Audiolibros:
+  Exporta un libro completo de tu Biblioteca a MP3 en un único archivo
+  o dividido por capítulos, sin pasar por el flujo manual de
+  etiquetas. Incluye:
+    · Calculador de presupuesto: caracteres totales, coste estimado
+      con la tarifa de referencia de cada proveedor y duración prevista
+      del audio final.
+    · Selector de voz embebido en la propia pestaña, con tus voces
+      favoritas de todos los proveedores (incluidas las locales SAPI5)
+      y preescucha con Alt+P.
+    · Exclusión de capítulos antes de exportar (útil para dejar fuera
+      índice, dedicatoria, agradecimientos...).
+    · Carpetas de salida organizadas automáticamente por saga si el
+      libro tiene alguna etiqueta en Biblioteca.
+    · Exportación en paralelo: varios fragmentos o capítulos se
+      generan a la vez en vez de uno detrás de otro, acortando el
+      tiempo total de forma notable.
+    · Reanudación de exportaciones que se cortaron por falta de cuota
+      o un corte de conexión: retoma justo donde se quedó, sin
+      regrabar lo ya hecho.
+
+- Soporte de PDF además de EPUB:
+  Tanto en Lectura como en el Creador de Audiolibros. En Lectura, la
+  navegación por capítulos usa el índice de contenidos embebido del
+  PDF si lo tiene; si no lo tiene, navega página a página, igual que
+  hacen otros lectores accesibles de referencia.
+
+- Filtro de características en las voces de Azure:
+  Nuevo desplegable en Ajustes → Azure para filtrar por Multilingüe,
+  Dragon, MaiVoice, Flash o Neural genérica.
+
+- La app arranca siempre en Biblioteca:
+  En lugar de recordar la última pestaña usada (que a veces dejaba
+  caer a NVDA en Ajustes), el arranque aterriza siempre en tus libros.
+
+Correcciones
+────────────
+
+- Voces SAPI5 de 32 bits (Eloquence, RealSpeak) mudas de forma
+  intermitente:
+  El objeto COM de la voz se creaba en un hilo y se usaba desde otro,
+  lo que a veces rompía la comunicación con el motor de 32 bits sin
+  ningún aviso. Ahora cada hilo que habla crea y usa su propia
+  instancia del motor, sin compartir nada entre hilos.
+
+- Amazon Polly (voces estándar) se comía la última sílaba a
+  velocidades altas:
+  Se añade un pequeño margen de silencio digital real al final de
+  cada síntesis antes de reproducirla, así el hardware de audio nunca
+  llega a cortar sonido real.
+
+- La velocidad "por puntos" (multiplicador) en Lectura no tenía
+  ningún efecto real sobre el motor de voz: ya vuelve a funcionar en
+  todo su rango.
+
+- Cambiar de voz o de proveedor durante la lectura dejaba de respetar
+  la velocidad y el volumen que ya tenías puestos: se reaplican
+  automáticamente al motor recién activado.
+
+- Un fallo de red o de API repetido durante una lectura larga podía
+  encadenar una ventana de aviso tras otra: ahora se avisa una sola
+  vez por proveedor y sesión, y la lectura sigue con la voz local sin
+  más interrupciones.
+
+- Exportación de audiolibro «generada» sin ningún sonido dentro (SAPI5):
+  Un WAV con cabecera pero sin fotogramas de audio pasaba la
+  comprobación de tamaño de archivo sin más, así que un fallo de
+  síntesis silencioso se daba por exportación válida. Ahora se
+  comprueba la duración real del audio generado; si sale en silencio,
+  se avisa como error en vez de dar el archivo por bueno. Además, las
+  exportaciones con voz local (SAPI5 64 y 32 bits) se fuerzan a
+  generarse siempre en serie, nunca en paralelo, para no arriesgar
+  varios objetos COM de voz creándose a la vez.
+
+- El botón «Usar voz local» al agotarse la cuota siempre grababa con la
+  voz predeterminada del sistema, sin dejar elegir otra: ahora ofrece
+  un desplegable con todas las voces SAPI5 instaladas (64 y 32 bits).
+
+- Las voces SAPI5 de 32 bits (Eloquence, RealSpeak) elegidas para
+  exportar un audiolibro se enrutaban por error al motor de 64 bits,
+  que nunca las encuentra, y acababan hablando con la voz por defecto
+  sin ningún aviso. El Creador de Audiolibros ya sabe exportar de
+  verdad con voces de 32 bits a través del proceso auxiliar.
+
+- Desbordamiento ocasional al unir varios trozos de audio de distinta
+  frecuencia de muestreo o profundidad de bits (por ejemplo, el motor
+  «generative» de Amazon Polly frente a otro trozo): cada trozo se
+  normaliza ahora antes de unirlo, no solo el resultado final.
+
+- Biblioteca: los libros con una exportación de audiolibro cortada por
+  falta de cuota o corte de conexión ahora se marcan como «Audiolibro
+  a medias» en la columna Estado, con un filtro dedicado para
+  encontrarlos sin tener que recordar cuál era el último libro que se
+  estaba exportando.
+
+- Biblioteca: el orden de tabulación del buscador, el filtro de Estado
+  y «Solo favoritos» se había quedado descolgado al final de la
+  pestaña (después incluso de los botones de importar); ahora van en
+  su sitio, justo antes de la lista de libros.
+
+- El estado de lectura «Pendiente» se renombra a «Pendiente de leer»
+  en Biblioteca, para no confundirlo con una exportación de audiolibro
+  pendiente.
+
+───────────────────────────────────────────────────────────────────────────
+
 === v2.0.0 (24/06/2026) ===
 
 Versión 2.0.0 — 2026-06-24

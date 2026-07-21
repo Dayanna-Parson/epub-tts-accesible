@@ -1,0 +1,5 @@
+prompt 28
+Los atajos para agregarloe los estados de lectura, funcionan, pero, solo funcionanen la segunda lista, la de contenido de la etiqueta, y además tengo que hacer varias veces flecha arriba y flecha abajo, y luego volver, quiero decir, que tengo que enfocar varias veces el íten, porque no toma bien los atajos el foco. Pero si que funcionan. A, y en la primera lista, en todas las etiquetas.... Pues ahí tampoco funciona.
+
+Aquí tienes el fragmento del log con los chivatos que pusiste al abrir los dos menús contextuales hoy mismo. Dime qué está bloqueando que aparezcan las opciones de asignación de categorías masiva y los estados de lectura."  
+A ver si por fin encontramos la causa de que no salgan los dichosos menúes. Se me ocurre, que tal vez podrías hacer dos menúes distintos uno para cada lista no? o eso no es práctico, o me generaría mas problemas?

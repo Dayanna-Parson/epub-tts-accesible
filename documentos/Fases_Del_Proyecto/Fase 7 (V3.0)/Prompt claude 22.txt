@@ -1,0 +1,14 @@
+Claude, aquí tienes las respuestas exactas y el comportamiento de la app en mi sistema:
+1. Confirmación de la ruta (Ejecución correcta)
+Sí, estoy ejecutando la copia correcta del repositorio. El comando de verificación apunta sin ninguna duda a mi carpeta de trabajo:
+C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible
+2. El misterio de los libros que "desaparecen" en las Categorías
+No se duplican las ramas en el árbol izquierdo; la estructura se mantiene limpia con un solo nodo (por ejemplo, "Distopía").
+El bug exacto de refresco: La primera vez que añado un lote y asigno varios libros a una categoría, la lista de la derecha solo me muestra los dos primeros. Al reiniciar la app, aparecen todos.
+El comportamiento curioso: Si añado un segundo lote de libros y meto más títulos en una categoría que ya tenía contenido previo, la lista de la derecha se rompe: solo muestra el último libro recién añadido y oculta todos los que ya estaban guardados de antes. Tengo que volver a reiniciar la app para que SQLite cargue la lista completa.
+(Nota: Esto parece un problema de cómo el método de actualización local limpia e indexa el contenido en memoria antes de refrescar el control de la lista frente a la base de datos).
+3. Los submenús contextuales siguen vacíos
+Las opciones nuevas de los filtros de estado ("Marcar como pendiente", "Leyendo", etc.) siguen sin aparecer en ningún menú contextual de la lista, a pesar de haber borrado las carpetas __pycache__. Revisa si el método al_menu_contextual en pestana_biblioteca.py realmente está instanciando los ID correctos de estos nuevos toggles dinámicos o si hay alguna condición que impida que se dibujen.
+4. El silencio al aplicar etiquetas
+Al pulsar "Sí" en el diálogo de agrupamiento de sagas, la voz se queda totalmente muda. No verbaliza absolutamente nada. Sé que el proceso termina únicamente porque escucho el sonido de éxito del sistema, pero el archivo app.log no registra ninguna línea de [AnunciadorVoz] Verbalizando. El hilo secundario que procesa el etiquetado masivo no está llegando a enviar la cadena de texto al hilo del motor de voz.
+Por favor, revisa la lógica de recarga de la lista tras la inserción de lotes (para evitar tener que reiniciar la app para ver los libros) y arregla el disparo del anuncio por voz en el hilo asíncrono. ¡Espero tus correcciones!

@@ -1,0 +1,21 @@
+respuesta 33
+
+Ahora el import y el mensaje de error genérico:
+
+Ahí está el bloqueo explícito. Lo quito ya que Lectura ya admite PDF:
+
+Ahora reviso `ventana_principal.py` línea 491 (recientes) por si tiene una restricción similar:
+
+Sin restricción de formato ahí, funciona directo. Compilo todo:
+
+Ahora aplico la solución de la amortiguación fonética ("...") en `cliente_polly.py` (lectura en vivo) y refuerzo la misma técnica en `grabador_audio.py` (exportación):
+
+Todo compila. Commit y push:
+
+Ya está subido. Resumen de los dos frentes:
+
+**Polly estándar, de raíz**: tu diagnóstico era correcto — el `<break>` (aunque ya estuviera fuera de `<prosody>`) no bastaba porque, según describes, el servidor de Polly parece cortar el búfer de renderizado antes de que la pausa termine, sin importar su duración. Cambié de estrategia: en vez de fiarme de una directiva de tiempo, añado puntos suspensivos reales al final del texto que se envía a Polly, solo para el motor `standard`. Al ser texto de verdad (no una instrucción de pausa que el servidor pueda recortar), obliga al motor fonético a seguir articulando la última palabra real antes de llegar a esos puntos. Lo apliqué en los dos sitios: `cliente_polly.py` (lectura en vivo, donde confirmaste que también pasaba) y `grabador_audio.py` (exportación), manteniendo el `<break>` como margen extra sin quitarlo.
+
+**Por qué Lectura no soportaba PDF, y Bookworm**: tenías razón en que era una laguna real, no algo pendiente a propósito — el Creador de Audiolibros ya tenía su extractor de PDF (el que hice hace poco), pero Lectura seguía atada solo a EPUB. Ya lo añadí: creé `gestor_pdf.py`, que sigue el mismo patrón que Bookworm usa para este caso — capítulos a partir del índice de contenidos embebido del PDF si lo tiene, y si no lo tiene, una entrada por página para que la navegación por capítulo (H/Shift+H, árbol de índice) siga funcionando aunque sea a nivel de página en vez de por capítulo real. También quité el aviso de "PDF no disponible todavía" que había en el menú contextual de Biblioteca.
+
+Cuando puedas, prueba: Polly a velocidad alta (tanto leyendo en vivo como exportando), y abrir un PDF en Lectura (con índice de contenidos y, si tienes alguno, sin índice) para confirmar que la navegación por capítulos/páginas funciona bien con NVDA.

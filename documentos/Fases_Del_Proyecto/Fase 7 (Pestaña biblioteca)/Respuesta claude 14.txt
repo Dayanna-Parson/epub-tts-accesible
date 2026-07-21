@@ -1,0 +1,30 @@
+Respuesta claude 14
+
+Voy por partes. Primero el bug técnico del log (CoInitialize) y confirmo lo de `estructura_proyecto.txt`.
+
+Voy a implementar los cambios claros ahora. Primero reviso el archivo completo para planificar las ediciones sobre la estructura actual.
+
+Voy a implementar los cambios claros ahora: separar árbol y etiquetas en dos controles distintos, diálogo unificado de categoría con casilla de subcategoría, orden natural de la lista, silencios corregidos, y reordenar la ventana según mi recomendación (filtros y lista primero, importar al final, que es lo que usas con más frecuencia frente a lo que usas una vez por carpeta).
+
+Ahora reconstruyo la interfaz: árbol de categorías separado de una lista de etiquetas, y reordeno el panel derecho (lista antes que el botón de importar).
+
+Ahora reescribo por completo la sección del árbol/etiquetas y sus manejadores:
+
+Ahora reemplazo todo el bloque desde `_cargar_arbol_categorias` hasta el final de `al_menu_contextual_arbol` con la versión separada (categorías puras en el árbol, etiquetas en su propia lista):
+
+Ahora el orden natural para cuando no hay etiqueta activa (evita que "10" se ordene antes que "2"):
+
+Orden natural funciona correctamente. Comiteo todo este bloque.
+
+Comiteado y subido. Resumen de todo lo corregido en este bloque:
+
+1. **Crash de pyttsx3** (`CoInitialize`): corregido — era el bug real detrás de que la voz no funcionara en absoluto.
+2. **Categorías y etiquetas separadas** en dos controles distintos (árbol para categorías, lista plana para etiquetas), cada una con su propio botón visible "Nueva...", F2/Supr, y menú contextual — ya no están "todo junto".
+3. **Diálogo unificado de categoría/subcategoría**: implementé tu propia idea de la casilla, pero en un único diálogo reutilizado tanto desde el botón como desde el menú, que se marca sola si tienes una categoría seleccionada. Así se evita el bug de que "crear categoría" siempre creaba raíz sin importar la selección.
+4. **Etiquetas ahora sí se crean y asignan** desde la lista nueva.
+5. **Orden desordenado al importar**: corregido con orden natural (2 antes que 10), verificado con prueba real.
+6. **Silencio entre "sí" y que termine de etiquetar**: añadido "Aplicando etiquetas..." / "Etiquetas aplicadas", y al terminar el escaneo se selecciona automáticamente la etiqueta recién creada.
+7. **Carpetas "proyectos" y "backups"**: no encontré código que cree "proyectos" a secas; las que ves son residuos de antes del arreglo del commit anterior — bórralas a mano, no se regenerarán. `estructura_proyecto.txt` es solo una foto de texto, no ejecuta nada.
+8. **Orden de la ventana**: reordené el panel derecho para que filtros y lista queden primero, e importar al final — coincide con tu intuición.
+
+¿Pruebas esto y seguimos con lo que quede (numeración del divisor, selección de qué no grabar en el futuro Creador de Audiolibros)?

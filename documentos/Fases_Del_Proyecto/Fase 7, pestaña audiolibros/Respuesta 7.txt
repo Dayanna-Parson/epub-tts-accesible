@@ -1,0 +1,44 @@
+Respuesta 7
+
+Añado el bloque de exportaciones pendientes al final de `GestorBiblioteca`.
+
+Corregido. Ahora extiendo `troceador_epub.py` con extracción en memoria (sin escribir a disco).
+
+Ahora cableo el menú contextual de Biblioteca.
+
+Ahora el handler, junto a `al_abrir_libro_seleccionado`:
+
+Perfecto, sigo exactamente el mismo patrón que `_al_abrir_reglas_pronunciacion`.
+
+Ahora la parte grande: reescribo `pestana_creador_audiolibros.py` para cablear presupuesto, exportación, diálogo de proveedor alternativo y persistencia de pendientes.
+
+Ahora añado el botón Abortar y el bloque de progreso (Gauge + etiqueta) a la interfaz:
+
+Ahora actualizo `cargar_libro` y `al_cambiar_modo` para resetear el estado de presupuesto, y sustituyo los stubs de presupuesto/exportación por el cableado real.
+
+Ahora sustituyo el bloque final (presupuesto/exportación stub) por el cableado completo:
+
+Solo falta stubear `wx.adv` en el arnés de pruebas — no es un fallo del código real. Lo añado y reintento.
+
+Verifico ahora el flujo "por capítulos" (anuncios por hito y registro de pendiente con índice de capítulo).
+
+Todo verificado. Limpio los archivos temporales de prueba y hago commit de todo el cableado.
+
+## Resumen del Paso 5
+
+**`pestana_biblioteca.py`** — "Enviar a Creador de Audiolibros" en el menú contextual: toma el libro seleccionado, cambia a `IDX_CREADOR`, llama a `pestana_creador.cargar_libro(...)` con autores ya resueltos.
+
+**`troceador_epub.py`** — dos métodos nuevos en memoria (sin TXT a disco): `extraer_capitulos_texto()` y `extraer_texto_completo_con_fronteras()`, reutilizando `_extraer_texto()`/`limpiar_para_lectura()` ya existentes.
+
+**`gestor_biblioteca.py`** — bloque `EXPORTACIONES_PENDIENTES`: CRUD sobre la tabla ya definida en el esquema. `grabador_audio.py` sigue sin tocar SQLite; esta es la capa que persiste lo que el motor devuelve.
+
+**`pestana_creador_audiolibros.py`** — el cableado completo:
+- **Presupuesto**: hilo de fondo que extrae texto vía `TroceadorEpub` y cuenta/consulta cuota silenciosamente vía `GrabadorAudio.calcular_presupuesto()`; `_anunciador` dice "Calculando presupuesto..." mientras los botones quedan deshabilitados.
+- **Velocidad/voz del diálogo**: al cerrar `DialogoProveedorAlternativo` con éxito, `deslizador_velocidad.SetValue(dlg.velocidad_elegida)` sincroniza el slider de la pestaña, y esa velocidad + la voz elegida viajan explícitas a `GrabadorAudio.exportar_audiolibro_*()` — verificado con test que sin esa propagación el assert falla.
+- **Exportación**: hilo separado, un solo hilo activo a la vez, botón Abortar que llama a `grabador.abortar()` (efectivo en el siguiente punto de control del motor).
+- **Progreso**: `wx.Gauge` y `ListCtrl` actualizados vía `wx.CallAfter`/`SetItem` (sin recrear filas); anuncios por voz limitados a hitos por capítulo o al finalizar — nunca porcentajes (verificado explícitamente: en modo completo, con `total==1`, no se dispara ningún anuncio intermedio).
+- **Persistencia**: al detenerse por cuota, registra `punto_corte` (modo completo) o `capitulo_pendiente` (modo por capítulos, el primero sin cuota tras el corte secuencial estricto) en `biblioteca.db`; al terminar con éxito, limpia cualquier pendiente previo.
+
+Todo verificado con arneses de `wx` y motores simulados (sin entorno gráfico real disponible aquí) — cubrí presupuesto en hilo, invocación del diálogo con contexto correcto, sincronización de velocidad, gating de anuncios, y ambos flujos de persistencia de pendientes. Commit `6ff1aef` pusheado.
+
+Pendiente para una futura sesión: soporte PDF (bloqueado explícitamente con aviso por ahora) y la UI para *retomar* una exportación pendiente desde `exportaciones_pendientes`.

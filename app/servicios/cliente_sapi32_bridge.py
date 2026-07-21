@@ -39,6 +39,8 @@ class ClienteSapi32Bridge:
         self._evt_voces       = threading.Event()
         self._voces_resultado = []
         self._evt_voz_cambiada = threading.Event()
+        self._evt_exportado = threading.Event()
+        self._exportado_resultado = {}
         self._inicializar()
 
     # ── Inicialización ────────────────────────────────────────────────────────
@@ -116,6 +118,10 @@ class ClienteSapi32Bridge:
             elif evento == "voz_cambiada":
                 self._evt_voz_cambiada.set()
 
+            elif evento == "exportado":
+                self._exportado_resultado = datos
+                self._evt_exportado.set()
+
             elif evento == "error":
                 logger.warning("[SAPI32] Error del auxiliar: %s", datos.get("msg"))
 
@@ -176,6 +182,33 @@ class ClienteSapi32Bridge:
     def fijar_volumen(self, v):
         if self.conectado:
             self._enviar({"cmd": "fijar_volumen", "valor": v})
+
+    def exportar_archivo(self, texto, ruta_wav, voz_nombre="", rate=0, volume=100, timeout=None):
+        """
+        Sintetiza `texto` directamente a `ruta_wav` (WAV) de forma síncrona,
+        para el Creador de Audiolibros. Devuelve (exito, mensaje_error).
+        Nunca debe llamarse en paralelo sobre la misma instancia: el
+        auxiliar procesa los comandos uno a uno por stdin.
+        """
+        if not self.conectado:
+            return False, "El proceso auxiliar de 32 bits no está conectado."
+        self._evt_exportado.clear()
+        self._exportado_resultado = {}
+        self._enviar({
+            "cmd": "exportar_archivo",
+            "texto": texto,
+            "ruta_wav": ruta_wav,
+            "voz_nombre": voz_nombre,
+            "rate": rate,
+            "volume": volume,
+        })
+        # Margen generoso: textos largos pueden tardar bastante en
+        # sintetizarse por completo antes de que el auxiliar responda.
+        espera = timeout if timeout is not None else max(30.0, len(texto) * 0.05)
+        if not self._evt_exportado.wait(timeout=espera):
+            return False, "El proceso auxiliar de 32 bits no respondió a tiempo."
+        resultado = self._exportado_resultado
+        return bool(resultado.get("exito")), resultado.get("msg", "")
 
     def cambiar_voz_por_nombre(self, nombre):
         if not self.conectado:

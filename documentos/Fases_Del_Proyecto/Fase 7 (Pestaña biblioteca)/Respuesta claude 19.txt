@@ -1,0 +1,13 @@
+Respuesta claude 19
+
+He identificado la causa del salto de foco al primer elemento — es un efecto secundario directo de mi propio arreglo de hoy (el `SetFocus()` al cambiar de subpestaña reinicia visualmente la selección en algunos controles wx). Lo corrijo restaurando la selección justo después de enfocar.
+
+Ya subí un arreglo. Ahora sobre el resto de tu reporte:
+
+**1. Salto de foco al primer ítem — corregido.** Era efecto secundario directo de mi arreglo de hoy: `SetFocus()` reinicia la selección visual en algunos controles nativos de Windows. Ahora guardo la selección antes de enfocar y la restauro justo después. Ya subido.
+
+**2. No aparecen las opciones de marcar estado en el menú del libro.** Revisé el archivo y el código sí está presente (lo confirmé línea por línea). Esto me hace sospechar que probaste con una versión anterior. ¿Puedes confirmar que hiciste `git pull` **después** de mi penúltimo mensaje (necesitas el commit `d6b3578` o posterior) y que reiniciaste la app tras el pull? Si ya lo hiciste y sigue sin aparecer, dime exactamente qué ves en el menú contextual de un libro (lista completa de opciones) para comparar con lo que debería mostrar.
+
+**3. NVDA sigue sin anunciar nada durante "Aplicando etiquetas".** Esto usa una voz de sistema (pyttsx3) aparte de NVDA, no el propio NVDA — por diseño, para no competir con el proceso de agrupamiento en segundo plano. Si no oyes nada en absoluto (ni siquiera una voz distinta a la de NVDA), puede que el motor pyttsx3 esté fallando en tu equipo. ¿Podrías revisar el archivo de log de la app (debería estar en una carpeta tipo `logs/` dentro del proyecto) justo después de hacer una agrupación, y decirme si aparece una línea `[AnunciadorVoz] Verbalizando: Aplicando etiquetas...`? Eso me dirá si el mensaje llegó a intentar hablarse o si se quedó atascado antes.
+
+**4. Etiqueta/categoría se ve vacía al cambiar, aunque tiene libros (se arregla reiniciando la app).** Esta es la más seria y la que menos puedo diagnosticar solo con lectura de código — parece un problema real, no cosmético, y no until ahora reportado. Necesito que la reproduzcas con más detalle: ¿pasa **siempre** que cambias de etiqueta/categoría, o solo a veces? ¿Pasa la primera vez que cambias, o solo después de varios cambios seguidos? ¿El contador "N libro(s) en la biblioteca" (abajo de la lista) también muestra 0, o solo la lista visual aparece vacía mientras el contador es correcto? Esa última pregunta es clave para saber si es un problema de datos o solo de refresco visual de la lista.

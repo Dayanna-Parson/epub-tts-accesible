@@ -1,0 +1,16 @@
+Respuesta claude 24
+
+Buena pregunta, y merece una respuesta honesta: no lo sé todavía con certeza, pero tengo una hipótesis nueva que no había considerado — y sí, "lo de las etiquetas" sigue pendiente porque tus dos correcciones anteriores (la condición de carrera y el `Refresh()`) ya estaban subidas cuando dijiste "sigue como siempre", así que aparentemente tampoco lo arreglaron. Vamos por partes.
+
+Añadí un diagnóstico similar en la carga de la lista, para poder confirmar de forma objetiva si el problema es de datos o de repintado la próxima vez que pase.
+
+**Sobre por qué el menú se resiste:** honestamente no lo sé con certeza — y prefiero decírtelo así en vez de inventar una explicación. Lo que sí es cierto es que las opciones nuevas (pendiente/leyendo/leído) son las únicas de todo el menú añadidas en estas últimas sesiones; todo lo demás (favorito, categoría, etiqueta...) ya llevaba tiempo funcionando. Eso apunta a que el problema está específicamente en esas líneas nuevas o en algo que solo se dispara con ellas, no en el mecanismo del menú en general — coherente con que el resto de la app "funcionara a la primera". Como ya agoté las explicaciones razonables leyendo el código, dejé de adivinar: acabo de subir un cambio que registra en el log, cada vez que abras el menú de un libro, la lista exacta de ítems que se construyeron de verdad, antes de mostrarlos. La próxima vez que lo pruebes y sigan sin sonar, mándame ese `app.log` — si el log dice que sí están construidos pero NVDA no los lee, el problema es de renderizado/accesibilidad; si el log dice que no están, el problema está en el código antes de llegar ahí (y ahí sí sabré exactamente dónde mirar).
+
+**Sobre las etiquetas (lista vacía):** tienes razón en preguntar — mis dos arreglos anteriores (la condición de carrera y el `Refresh()`) ya estaban subidos cuando dijiste "sigue como siempre", así que aparentemente no lo resolvieron, o no llegaste a probar ese escenario específico en esa ronda (importar dos lotes grandes es bastante tedioso de repetir). Añadí el mismo tipo de diagnóstico ahí: cada vez que se carga la lista de libros, el log ahora registra cuántos libros devolvió la base de datos frente a cuántos terminó mostrando la pantalla. Así, la próxima vez que veas la lista vacía, ese número me dirá si el dato ya estaba mal desde la consulta (bug de datos, tendría que seguir investigando la carrera) o si la base de datos tenía todo correcto y solo falló el dibujado (entonces el `Refresh()` no fue suficiente y hay que buscar otra vía).
+
+**¿Queda algo más pendiente?** Sí, tres cosas que dejamos aparcadas sin tocar código todavía:
+1. El **foco al primer ítem** al cambiar de subpestaña (segundo intento subido, sin confirmar si funcionó).
+2. **"Solo se muestra el primer libro añadido a una categoría"** — pendiente de que confirmes si en el árbol aparece un nodo duplicado o no (ya me dijiste que no, así que sigue siendo un misterio parecido al de la lista vacía; puede que comparta la misma causa de fondo).
+3. Las tres peticiones nuevas que quedaron para después: recordar la última carpeta usada, reordenar el tabulado, y poder arrastrar categorías en el árbol.
+
+No hace falta que pruebes todo de golpe otra vez. Si quieres, dime solo con cuál te gustaría seguir ahora.

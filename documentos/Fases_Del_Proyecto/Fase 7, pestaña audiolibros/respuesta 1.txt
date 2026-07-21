@@ -1,0 +1,32 @@
+respuesta 1
+
+Fase A ya está integrada (Biblioteca existe con 1597 líneas), y no hay nada aún del Creador de Audiolibros. Tengo el contexto completo del plan (sección 3 de la bitácora). Antes de proponer el diseño, déjame revisar rápido cómo `pestana_grabacion.py` reutiliza voces/exportación y cómo está el punto de inserción marcado en `ventana_principal.py`.
+
+Ya tengo el contexto completo: leí `CLAUDE.md`, la bitácora `planificacion_v3.md` (secciones 3.1–3.6 son la especificación de Fase B), y confirmé el estado real del repo:
+
+- **Fase A ya está integrada** en esta rama: `pestana_biblioteca.py` existe (1597 líneas), con su propio menú contextual, escáner, etc.
+- `ventana_principal.py` ya tiene el hueco reservado: comentario explícito en línea 22 y bloque `IDX_*` centralizado, listo para insertar `IDX_CREADOR` entre `IDX_LECTURA` e `IDX_GRABACION`.
+- Revisé los componentes que la Fase B debe **reutilizar, no duplicar**: `control_cuota.py` (`tiene_cuota`, límites por proveedor), `troceador_epub.py` (puntos de corte por capítulo), `grabador_audio.py` (`CARPETA_RAIZ_GRABACIONES`, estándar 44100 Hz/320kbps), y el selector de voces con favoritas (`PanelProveedorIA` en `pestana_ajustes.py` — la bitácora ya marca como tarea pendiente extraer ese bloque a componente compartido).
+
+Antes de tocar código quiero cerrar contigo varias decisiones de diseño que la bitácora deja abiertas o que tienen más de una forma razonable de resolverse:
+
+Perfecto, tres decisiones cerradas. Ahora tengo una pregunta más, esta sí de arquitectura pura (no la deja resuelta la bitácora):
+
+Bien, con las cinco decisiones cerradas tengo el diseño completo de la Fase B. Resumen antes de arrancar:
+
+## Diseño cerrado — Creador de Audiolibros
+
+**Componentes nuevos:**
+1. `app/interfaz/selector_voz_compartido.py` — extracción del bloque de voces favoritas/preescucha de `PanelProveedorIA` (pestana_ajustes.py), con su propio `ANCLAJE`. Lo consumen Ajustes (ya existente, se adapta) y el Creador de Audiolibros (diálogo de proveedor alternativo, 3.3).
+2. `app/motor/creador_audiolibros.py` — orquestador de exportación: presupuesto, corte por cuota, nomenclatura de partes, delega en `troceador_epub.py`/`limpiador_lectura.py`/`limpiador_pdf.py` y en la cola de `reproductor_voz.py`. Mismo patrón que `grabador_audio.py` pero con su propia carpeta `Audiolibros/<Título>/`.
+3. `app/interfaz/pestana_creador_audiolibros.py` — la pestaña en sí: info del libro, selector modo, `ListCtrl` de capítulos con estado (visible siempre en modo "Por capítulos"), botones Calcular presupuesto / Iniciar / Abortar / Abrir carpeta, sliders velocidad/volumen (mismo patrón que Grabación).
+
+**Flujo de entrada:** solo libros de `libros` (biblioteca.db). Se llega vía "Enviar a Creador de Audiolibros" desde Biblioteca (precarga) o `Ctrl+O` dentro de la pestaña, que abre un diálogo ligero de búsqueda sobre `biblioteca.db`. Sin libro cargado, controles deshabilitados.
+
+**Concurrencia:** un solo hilo de exportación a la vez, mismo patrón de bloqueo suave que `al_iniciar_grabacion` en Grabación (resto de pestañas usable, segundo intento rechazado con aviso).
+
+**Persistencia de progreso:** `exportaciones_pendientes` (ya en el esquema) referenciando `id_libro`; nomenclatura de partes/capítulos pendientes tal como está descrito en 3.4.
+
+**Notebook:** se inserta `IDX_CREADOR` entre `IDX_LECTURA` e `IDX_GRABACION`, siguiendo el bloque ya reservado en `ventana_principal.py:22`.
+
+Con esto estoy listo para el primer bloque de código. ¿Empezamos por la extracción del selector de voces compartido (base para todo lo demás), o prefieres arrancar directamente por el esqueleto de la pestaña (`pestana_creador_audiolibros.py` + inserción en el notebook) y dejar el selector compartido para cuando lleguemos al diálogo de proveedor alternativo?

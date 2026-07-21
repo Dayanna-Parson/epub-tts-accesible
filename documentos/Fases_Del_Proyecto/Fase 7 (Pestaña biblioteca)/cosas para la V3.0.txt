@@ -1,0 +1,20 @@
+cosas para la V3.0
+
+1. Nueva pestaña "Biblioteca" (primera en el notebook)
+Sistema de indexación ligera al estilo Bookworm: no copia los archivos, solo guarda rutas en JSON/SQLite. Escáner recursivo (os.walk) para importar carpetas enteras y subcarpetas de golpe sin duplicar. Filtros por autor, género, leídos/no leídos, favoritos. Al seleccionar un libro y pulsar Enter, la app va a la pestaña Lectura con el libro cargado en el punto exacto donde lo dejaste.
+2. Nueva pestaña "Creador de Audiolibros"
+Pestaña independiente (no es una modificación de la actual de fragmentos) dedicada a volcar el libro completo o por capítulos. Opciones: libro completo en un solo archivo o un MP3 por capítulo usando la división de capítulos ya existente. Heredará la caché y el sistema de cuotas del motor de lectura.
+3. Calculador de presupuesto pre-grabado
+Antes de grabar en el Creador de Audiolibros, la app cuenta los caracteres del contenido y calcula el coste aproximado en dinero según las tarifas de cada proveedor. Lo anuncia con NVDA antes de confirmar: "Este capítulo costará aproximadamente X€ en Azure. ¿Deseas continuar?".
+4. Compatibilidad con PDF
+Extracción de texto de archivos .pdf (con pdfplumber o similar) conectada a la misma tubería del motor que ya procesa los EPUBs. Se puede leer en la pestaña Lectura y grabar desde el Creador de Audiolibros.
+5. Asistente Gemini de Biblioteca
+Chat interactivo con contexto de tus libros leídos, accesible con un atajo tipo Control+G desde la pestaña Biblioteca. Permite debatir capítulos y pedir recomendaciones conectadas a internet (rastreo de Goodreads y Kindle España mediante la propia API de Gemini con su herramienta de búsqueda web). El historial del chat se guarda en un JSON ligero local. Se implementa este punto aquí y no en v4 porque depende de la base de datos de la Biblioteca.
+6. Caché de audio, escudo de consumo y calculador de coste en el motor de exportación
+Ya están en parte implementados, pero se consolidan y se conectan de forma completa al Creador de Audiolibros.
+7. Internacionalización (i18n) con gettext
+No se reescribe el código en inglés. Se envuelven los textos de la UI en la función _("texto") y se genera un archivo .po que un colaborador puede traducir. Al arrancar la app, detecta el idioma de Windows y carga la traducción correspondiente.
+8. Cambio de nombre comercial definitivo de la app
+El repositorio de GitHub no cambia de nombre para no romper enlaces. Pero el nombre comercial que se mostrará en Winget y en la interfaz sí cambia. Los nombres barajados fueron TifloReader TTS, TifloVoice, Narrify Studio, Vozify EPUB y AuraEpub; ninguno quedó definitivo.
+9. Empaquetado del manifiesto para Microsoft Winget
+Preparar el manifiesto de despliegue para que la app se pueda instalar con winget install [nombre]. El código interno en "spanglish" no es ningún problema para la revisión de Microsoft.

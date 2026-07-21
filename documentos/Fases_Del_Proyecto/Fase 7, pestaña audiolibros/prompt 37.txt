@@ -1,0 +1,10 @@
+¡Confirmado todo el testeo! La amortiguación con silencio digital para Polly estándar funciona de maravilla y los botones fijos de la Biblioteca están perfectos. Sin embargo, el filtro de 'MaiVoice' en el panel de Azure aparece completamente vacío. Esto ocurre porque el ID técnico de la API de Microsoft usa la grafía exacta 'MaiVoice' (o 'MaiVoice2' / 'Flash'), y tu regla de detección por palabra clave no está machacando bien las mayúsculas o la cadena exacta. Corrige el mapeo para que agrupe bien tanto 'MaiVoice' como sus variantes 'Flash' (que son las versiones rápidas del modelo).
+
+Una vez corregido este detalle de los Ajustes, dale luz verde total al plato fuerte de la Fase B: la exportación en paralelo (paralelización multihilo) en el Creador de Audiolibros.
+
+Necesito que implementes la arquitectura que dejamos pendiente:
+1. Divide el procesamiento de los fragmentos/capítulos del libro utilizando un 'ThreadPoolExecutor' de Python.
+2. Haz que la app procese y descargue múltiples fragmentos de audio de forma simultánea desde la API del proveedor seleccionado (aprovechando los tiempos de espera de red), en lugar de ir estrictamente de uno en uno en secuencial.
+3. Asegura que la numeración de los archivos temporales sea atómica y que la función de ordenación final en '_unificar_archivos_mp3' mantenga la secuencia del libro de forma milimétrica sin importar qué hilo termine de descargar primero.
+4. Mantén la actualización de la barra de progreso en vivo y las verbalizaciones del anunciador cada 10% de forma segura utilizando 'wx.CallAfter' para no congelar la UI.
+

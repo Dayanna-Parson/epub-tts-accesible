@@ -1,0 +1,17 @@
+Prompt claude 19
+
+Cosas que me a pedido que pruebe
+
+• ✅ Agrupamiento por carpeta (código corregido, verificado con datos sintéticos, falta que tú lo pruebes con NVDA en tu biblioteca real)
+(Las carpetas se agrupan perfectamente, pero, NVDA sigue sin decirme que está haciendo. Aunque ya no dice panel ni desconocido. Y se que terminó, porque ahora si que reproduce el sonido de éxito)
+
+• ✅ Foco al cambiar entre Géneros/Sagas (falta prueba con NVDA)
+(Ahora si que en lista de etiquetas aparecen las etiquetas. Pero, ahora cuando cambio de pestaña entre géneros y colecciones, el foco salta al primer item. ¡Y eso antes no lo hacía!)
+• ✅ Anuncio "Abriendo libro..." con retraso de 400ms (falta prueba con NVDA)
+(Ahora si que se verbaliza bien)
+• ✅ Marcar pendiente/leyendo/leído/quitar estado (falta prueba con NVDA)
+No se puede. no sale ni en el menú contextual de las etiquetas, ni en el de cada libro
+• ✅ "Autor: —" (recién corregido, pendiente de que confirmes con tu diagnóstico)
+Si, funciona perfecto, ahora, si que me lee los autores.
+Bien, también me pasa que ya sea que añada mas libros y etiquetas, o también pasa que cuando cambio de categoría / etiqueta, la etiqueta está vacía, aunque si que tiene libros.
+La única forma de solucionarlo es cerrar la app, y volverla a abrir, pero, no es práctico tener que hacerlo cada vez que quiera leer otro libro.

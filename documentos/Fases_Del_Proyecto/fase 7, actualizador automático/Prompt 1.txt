@@ -1,0 +1,16 @@
+¡Hola Claude! Ya vamos a empezar la penúltima fase de esta versión (Fase C: Actualizador automático) y quiero que todo lo hagamos como hasta ahora: paso a paso, comprobando y probando antes de avanzar.
+
+IMPORTANTE: Antes de escribir o modificar una sola línea de código, lee enteros estos dos documentos de referencia obligatoria:
+1. `CLAUDE.md` (reglas absolutas de colaboración, español, anclajes, arquitectura y accesibilidad NVDA).
+2. `planificacion_v3.md` (especificaciones técnicas de la v3.0, en concreto la Sección 4: Fase C — Actualizador automático).
+
+Confírmame que estás trabajando sobre esta rama activa donde ya está todo el código previo actualizado:
+`claude/fase7-actualizador-automatico`
+
+Para este primer paso de la Fase C, necesitamos implementar el ejecutable auxiliar `bin/actualizador.exe` y la lógica de descarga/comprobación en la app:
+1. Diseña la lógica en hilo de fondo para descargar el ZIP de la nueva versión desde GitHub a `temp/actualizacion/` y verificar que la estructura esté completa antes de tocar nada.
+2. Si la verificación falla, se avisa por NVDA y se aborta de forma segura.
+3. Si es correcta, tras confirmación del usuario, la app lanza `actualizador.exe --origen temp/actualizacion --destino <raíz_app>` como proceso independiente y se cierra para no bloquear archivos.
+4. El actualizador auxiliar debe hacer respaldo en `temp/backup_previo/`, mover los archivos nuevos y tener rollback automático si algo falla.
+
+¡Dime cuando hayas leído los documentos para empezar paso a paso!

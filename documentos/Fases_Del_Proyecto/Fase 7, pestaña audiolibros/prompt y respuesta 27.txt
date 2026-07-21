@@ -1,0 +1,83 @@
+prompt y respuesta 27
+
+Has dicho: Volumen: deslizador 100
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Exportando: 0 de 1 — Contrarreloj
+Creador de Audiolibros  pestaña  seleccionado
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Eliminar libro cargado  botón
+Voz para la exportación:  cuadro combinado  Code Factory ETI-Eloquence Castellano (Local SAPI5 (32 bits))  contraído
+Abortar exportación  botón
+Velocidad:  deslizador  70
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Exportando: 0 de 1 — Contrarreloj
+Creador de Audiolibros  pestaña  seleccionado
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Eliminar libro cargado  botón
+Voz para la exportación:  cuadro combinado  Code Factory ETI-Eloquence Castellano (Local SAPI5 (32 bits))  contraído
+Abortar exportación  botón
+Velocidad:  deslizador  70
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Exportando: 0 de 1 — Contrarreloj
+Creador de Audiolibros  pestaña  seleccionado
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Eliminar libro cargado  botón
+Voz para la exportación:  cuadro combinado  Code Factory ETI-Eloquence Castellano (Local SAPI5 (32 bits))  contraído
+Abortar exportación  botón
+pulsado
+Velocidad:  deslizador  70
+Volumen:  deslizador  100
+Velocidad:  deslizador  70
+Voz para la exportación:  cuadro combinado  Code Factory ETI-Eloquence Castellano (Local SAPI5 (32 bits))  contraído
+Libro  agrupación
+Eliminar libro cargado  botón
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Progreso  agrupación
+Estado:  edición  sólo lectura  Cancelando exportación...
+Cancelando exportación...
+Creador de Audiolibros  pestaña  seleccionado
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB)
+Eliminar libro cargado  botón
+Voz para la exportación:  cuadro combinado  Code Factory ETI-Eloquence Castellano (Local SAPI5 (32 bits))  contraído
+Velocidad:  deslizador  70
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Cancelando exportación...
+Creador de Audiolibros  pestaña  seleccionado
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Contrarreloj — Michael Anderle, Renée Jaggér (EPUB) Te tengo buenas noticias. Como sabes esto es el blog de NVDA y me gusta cómo está ahora el presupuesto actual. Pero he visto varias cositas que no funcionan bien del todo o no me terminan de convencer. Bien. Como has visto, he elegido una voz. Pero, ¿por qué no está el botón de preescuchar la voz seleccionada? Con el atajo Alt P. ¿Por qué no está? Porque, como has visto, he cambiado la velocidad. Pero tampoco sé si va a funcionar. He cambiado la velocidad, por eso necesito escuchar cómo se escucha. Valga la redundancia. Otra cosa que no me gusta es cuando pongo el modo por capítulos, debería de mostrar los capítulos, ¿no? Porque no me los muestra. En cambio, antes sí que me los mostraba. Y lo último es en la grabación. Cuando pulso en iniciar grabación, sé que está grabando porque hace el sonido de la grabación. Pero, ni el chat ni el menú de idea dicen capítulo 1 de X o va por esta parte. Y tampoco escucho ni la barra de progreso ni ningún otro sonido. Además, cuando pulso en abortar, como has visto, en el estado pone abortando exportación. O, perdón, cancelando. Pero se queda ahí pillado y realmente no sé si la canceló o no, o no sé qué está haciendo. O no sé si realmente cancela el proceso. Y además, ¿puedes quitar esta? Y tampoco hay ningún tipo de error, porque si no me habría salido en el log. Pero no hay errores.
+Mostrar más
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Now update grabarfragmento to check abort per trozo and report progress:
+Leer 3 archivos, ejecutado un comando, buscado código, editado un archivo
+Now update _grabar_fragmento to check abort per trozo and report progress:
+Editadograbador_audio.py+18-1
+Now wire this into exportar_audiolibro_completo:
+Editado 2 archivos, ejecutado un comando, leer un archivo
+Now add tab order for the new button, add it to dependent controls, and implement al_escuchar_voz:
+Editadopestana_creador_audiolibros.py+3-1
+Now add _reproductor init and al_escuchar_voz handler:
+Editadopestana_creador_audiolibros.py+2-0
+Now add the handler near al_cambiar_voz:
+Editado un archivo, buscado código
+All methods exist as expected. Now let's implement immediate chapter-title loading when switching to "Por capítulos" mode:
+Editado un archivo, ejecutado un comando
+Now let's double check _al_terminar_exportacion/abort messaging reflects the abort properly, and verify _finalizar_exportacion_completa handles the abort-emptied archivos_generados case sanely (already does via salida.get("completo") false branch → registers pending). Let's view final state of the changed sections for sanity.
+Ejecutadoun comando
+Now commit and push.
+Ejecutado 3 comandos
+Ya está subido. Resolví las cuatro cosas que reportaste:
+1. Preescucha (Alt+P): añadí el botón "Escuchar muestra (Alt+P)" justo debajo del selector de voz, igual que en Ajustes — prueba la voz elegida a la velocidad y volumen que tengas puestos en esa misma pestaña, así puedes comprobar el cambio de velocidad antes de exportar.
+2. Capítulos no se mostraban: ahora, en cuanto cambias el modo a "Por capítulos" (con libro cargado), se cargan y muestran los títulos al momento, sin esperar a "Calcular presupuesto".
+3. Sin progreso ni sonido en "Libro completo": encontré la causa real — cuando el texto es largo y se divide internamente en trozos para enviarlo al proveedor, antes no había ninguna señal hasta terminar todo el libro (por eso parecía colgado y silencioso). Ahora cada trozo generado mueve la barra de progreso, actualiza el texto de estado ("Generando audio: fragmento X de Y") y suena el tic de progreso, igual que ya hace Grabación.
+4. Abortar se quedaba pillado: esa misma falta de comprobación por trozo era la causa. Antes, pedir abortar durante "Libro completo" no se comprobaba hasta que terminaba de generar el fragmento entero (que podía tardar mucho en un libro largo). Ahora se comprueba entre cada trozo, así que "Cancelando exportación..." se resuelve en cuanto termina el trozo en curso, no al final de todo el libro.
+No hubo errores reales en el log porque no era un error — era falta de granularidad en la comprobación del aborto y del callback de progreso, ya corregido en grabador_audio.py.
+¿Puedes probar de nuevo con un libro y pasarme el log de NVDA? Sobre todo me interesa: escuchar la preescucha con Alt+P, ver los capítulos aparecer al cambiar de modo, y si notas ahora la barra/sonido de progreso moverse durante una exportación larga en modo libro completo.

@@ -24,8 +24,30 @@
 <header>
     <h1>MANUAL DE USUARIO: EPUB TTS ACCESIBLE</h1>
     <p>Desarrolladora: Dayanna Parson (TifloTutos) | tiflotutos.com</p>
-    <p>Versión 1.2.0</p>
+    <p>Versión 3.0.0</p>
 </header>
+
+<section id="novedades-30">
+    <h2>Novedades de la versión 3.0.0</h2>
+    <div class="novedad-box">
+        <strong>Nuevas funciones:</strong>
+        <ul>
+            <li><strong>Pestaña Biblioteca</strong>: organiza tu colección de libros EPUB y PDF. Importa una carpeta entera de golpe o un único libro suelto, clasifica por géneros y por sagas/colecciones, y busca por título o autor. Desde aquí abres un libro en Lectura o lo envías al Creador de Audiolibros.</li>
+            <li><strong>Creador de Audiolibros</strong>: exporta un libro completo de tu Biblioteca a MP3, en un único archivo o dividido por capítulos. Calcula presupuesto (caracteres, coste estimado, duración prevista del audio), elige tu voz favorita con preescucha, excluye capítulos que no quieras (índice, dedicatoria...), y exporta varios fragmentos a la vez para acortar el tiempo total. Si una exportación se corta por cuota o por un corte de conexión, retómala justo donde se quedó sin regrabar nada.</li>
+            <li><strong>Soporte de PDF</strong>, además de EPUB, tanto en Lectura como en el Creador de Audiolibros.</li>
+            <li><strong>Filtro de características en Azure</strong>: nuevo desplegable en Ajustes → Azure para filtrar voces por Multilingüe, Dragon, MaiVoice, Flash o Neural genérica.</li>
+        </ul>
+        <strong>Correcciones:</strong>
+        <ul>
+            <li><strong>Voces SAPI5 de 32 bits (Eloquence, RealSpeak)</strong> ya no se quedan mudas de forma intermitente, y ya se pueden usar de verdad para exportar audiolibros (antes se enrutaban por error al motor de 64 bits).</li>
+            <li><strong>Amazon Polly (voces estándar)</strong> ya no se come la última sílaba de la palabra a velocidades altas.</li>
+            <li><strong>La velocidad «por puntos» (multiplicador)</strong> en Lectura vuelve a funcionar en todo su rango.</li>
+            <li><strong>Exportación de audiolibro sin audio real:</strong> un WAV con cabecera pero sin sonido dentro ya no se da por válido; ahora se comprueba la duración real del audio generado.</li>
+            <li><strong>«Usar voz local»</strong> (al agotarse la cuota de nube) ya deja elegir cualquier voz SAPI5 instalada, en vez de usar siempre la voz predeterminada del sistema.</li>
+            <li><strong>Biblioteca</strong> marca ahora los libros con un audiolibro a medias, con un filtro dedicado para encontrarlos.</li>
+        </ul>
+    </div>
+</section>
 
 <section id="novedades-12">
     <h2>Novedades de la versión 1.2.0</h2>
@@ -70,39 +92,74 @@
     <p>Epub TTS Accesible es una herramienta única diseñada para unificar la lectura de alta calidad y la producción de audiolibros multivoz en una sola aplicación portable para Windows.</p>
 
     <div class="info-box">
-        <strong>Propósito:</strong> Leer libros con voces neuronales, crear audiolibros con etiquetas de personajes y exportar en MP3 a 320 kbps, normalizados a 44 100 Hz para máxima compatibilidad.
+        <strong>Propósito:</strong> Organizar tu biblioteca de libros EPUB y PDF, leerlos con voces neuronales, y producir audiolibros —a mano con etiquetas de personajes, o de un libro entero con un solo clic— exportados en MP3 a 320 kbps, normalizados a 44 100 Hz para máxima compatibilidad.
     </div>
 </section>
 
 <section id="modos">
     <h2>2. Modos de Uso y Atajos Principales</h2>
     <ul>
-        <li><strong>Control + 1:</strong> Modo Lectura (Tiempo real).</li>
-        <li><strong>Control + 2:</strong> Modo Grabación (Producción multivoz).</li>
-        <li><strong>Control + 3:</strong> Ajustes de la aplicación.</li>
-        <li><strong>Control + O:</strong> Abrir archivo EPUB (en Lectura) o Abrir carpeta (en Grabación).</li>
+        <li><strong>Control + 1:</strong> Biblioteca (tus libros).</li>
+        <li><strong>Control + 2:</strong> Modo Lectura (tiempo real).</li>
+        <li><strong>Control + 3:</strong> Creador de Audiolibros (exportación de un libro entero).</li>
+        <li><strong>Control + 4:</strong> Grabación de Fragmentos (producción multivoz con etiquetas).</li>
+        <li><strong>Control + 5:</strong> Ajustes de la aplicación.</li>
+        <li><strong>Control + O:</strong> Cargar libro (en Lectura), abrir carpeta (en Biblioteca o Grabación) — contextual según la pestaña activa.</li>
         <li><strong>Control + P:</strong> Reproducir / Pausar.</li>
         <li><strong>F1:</strong> Abrir este manual.</li>
     </ul>
 </section>
 
+<section id="biblioteca">
+    <h2>3. Pestaña Biblioteca</h2>
+    <p>El punto de entrada a tus libros. Admite EPUB y PDF.</p>
+    <ul>
+        <li><strong>Importar carpeta...:</strong> escanea una carpeta entera en segundo plano y añade todos los libros que encuentre. Puede sugerir agrupar por sagas si detecta varios libros en una misma subcarpeta.</li>
+        <li><strong>Importar libro...:</strong> añade un único archivo suelto, sin escanear nada más.</li>
+        <li><strong>Árbol de géneros</strong> y <strong>lista de sagas/etiquetas</strong> a la izquierda, para filtrar la lista de libros de la derecha.</li>
+        <li><strong>Control + F:</strong> buscar por título o autor.</li>
+        <li><strong>Filtro de Estado:</strong> Todos, Pendientes de leer, Leyendo ahora, Leídos o Audiolibros a medias — esta última opción muestra solo los libros con una exportación de audiolibro cortada por falta de cuota o un corte de conexión, sin tener que recordar cuál era el último libro que estabas exportando. La columna Estado de la lista también marca «Audiolibro a medias» junto al estado de lectura del libro.</li>
+        <li>Desde el menú contextual de un libro (tecla Menú o Mayús+F10) puedes abrirlo en Lectura o enviarlo al Creador de Audiolibros.</li>
+    </ul>
+</section>
+
 <section id="lectura">
-    <h2>3. Pestaña Modo Lectura</h2>
+    <h2>4. Pestaña Modo Lectura</h2>
     <p>Navega por tus libros favoritos con control total:</p>
     <ul>
         <li><strong>Control + F:</strong> Buscar texto en el libro.</li>
         <li><strong>Control + M:</strong> Gestor de marcadores.</li>
         <li><strong>Control + G:</strong> Ir a un porcentaje específico del libro.</li>
+        <li><strong>Control + I:</strong> Anuncia la página actual (del capítulo y del libro) sin mover el foco.</li>
+        <li><strong>H / Mayús+H:</strong> Salta entre encabezados del libro.</li>
         <li><strong>Navegación:</strong> Usa los botones <strong>Retroceder</strong> y <strong>Avanzar</strong> (configurables en Ajustes).</li>
     </ul>
     <h3>Controles de Voz</h3>
-    <p>Puedes ajustar la <strong>Velocidad</strong> y el <strong>Volumen</strong>. Los deslizadores se mueven de 1 en 1 con las flechas del teclado y de 5 en 5 con RePág/AvPág, para mayor comodidad con lectores de pantalla.</p>
+    <p>Puedes ajustar la <strong>Velocidad</strong> y el <strong>Volumen</strong>. Los deslizadores se mueven de 1 en 1 con las flechas del teclado y de 5 en 5 con RePág/AvPág, para mayor comodidad con lectores de pantalla. En Ajustes puedes elegir que la velocidad se muestre en porcentaje (0-100) o como multiplicador (0.2×-1.8×); el valor real que recibe la voz es siempre el mismo, solo cambia cómo se lee la etiqueta.</p>
     <h3>Lectura continua en la nube</h3>
-    <p>Con voces de Azure, Amazon Polly, Deepgram o ElevenLabs, la lectura continua descarga en segundo plano el siguiente fragmento mientras el actual se está reproduciendo. La transición entre bloques es prácticamente imperceptible (menos de 5 ms), sin silencios ni esperas visibles.</p>
+    <p>Con voces de Azure, Amazon Polly, Deepgram o ElevenLabs, la lectura continua descarga en segundo plano el siguiente fragmento mientras el actual se está reproduciendo. La transición entre bloques es prácticamente imperceptible, sin silencios ni esperas visibles.</p>
+    <h3>EPUB y PDF</h3>
+    <p>Con PDF, la navegación por capítulos usa el índice de contenidos del propio archivo si lo tiene. Si el PDF no trae ese índice (habitual en documentos escaneados o mal generados), la navegación pasa a ser por página, con una entrada por cada una en el árbol de índice.</p>
+</section>
+
+<section id="creador">
+    <h2>5. Creador de Audiolibros</h2>
+    <p>Exporta un libro entero de tu Biblioteca a MP3, sin pasar por el flujo manual de etiquetas.</p>
+    <ul>
+        <li><strong>Modo de exportación:</strong> Libro completo (un único MP3) o Por capítulos (un MP3 por capítulo, numerado).</li>
+        <li><strong>Voz para la exportación:</strong> elige entre tus voces favoritas de cualquier proveedor, incluidas las locales SAPI5. <strong>Alt+P</strong> escucha una muestra antes de exportar.</li>
+        <li><strong>Calcular presupuesto:</strong> cuenta los caracteres, estima el coste y la duración del audio final, antes de generar nada.</li>
+        <li><strong>Excluir capítulos:</strong> en modo «Por capítulos», desmarca los que no quieras en el resultado final (índice, agradecimientos...).</li>
+        <li><strong>Iniciar exportación:</strong> genera el audiolibro. La barra de progreso y los anuncios de voz te avisan del avance sin saturarte con porcentajes exactos.</li>
+        <li><strong>Retomar exportación pendiente:</strong> si una exportación se cortó por falta de cuota o un corte de conexión, este botón aparece automáticamente al volver a cargar el libro, y continúa exactamente donde se quedó.</li>
+        <li><strong>Abrir carpeta:</strong> va directo a la carpeta de salida del audiolibro en el Explorador.</li>
+    </ul>
+    <p>Si se agota la cuota de todos los proveedores de nube a mitad de una exportación, aparece un diálogo con varias salidas: usar otro proveedor, dividir en partes, o <strong>usar voz local</strong> — esta última opción incluye un desplegable con todas tus voces SAPI5 instaladas (64 y 32 bits, incluidas Eloquence y RealSpeak) para elegir con cuál seguir.</p>
+    <p>Los audiolibros se guardan en <code>Grabaciones_Epub-TTS/Audiolibros/&lt;Título&gt;/</code> (o dentro de una subcarpeta con el nombre de la saga, si el libro tiene alguna etiqueta asignada en Biblioteca).</p>
 </section>
 
 <section id="grabacion">
-    <h2>4. Modo Grabación (SAPI 5 y Nube)</h2>
+    <h2>6. Grabación de Fragmentos (SAPI 5 y Nube)</h2>
     <p>Epub TTS Accesible permite asignar voces a etiquetas como <code>{{@narrador}}</code> o <code>{{@personaje1}}</code> dentro de un archivo TXT.</p>
 
     <h3>Etiquetas de personaje</h3>
@@ -127,7 +184,7 @@
 </section>
 
 <section id="ajustes">
-    <h2>5. Ajustes y Presupuesto</h2>
+    <h2>7. Ajustes y Presupuesto</h2>
     <p>Controla tu consumo de APIs de forma inteligente. La app viene configurada con límites por defecto para cuentas gratuitas o de acceso básico:</p>
 
     <table>
@@ -194,7 +251,7 @@
 </section>
 
 <section id="diccionario">
-    <h2>6. Diccionario de Pronunciación</h2>
+    <h2>8. Diccionario de Pronunciación</h2>
     <p>Disponible en <strong>Ajustes → Voces e idiomas</strong>. Permite corregir la pronunciación de palabras que los motores de voz neuronal lean de forma incorrecta: nombres propios de fantasía, siglas, palabras en otros idiomas o términos técnicos.</p>
     <p>Las reglas del diccionario se aplican automáticamente a todos los motores (Azure, Polly, Deepgram, ElevenLabs y SAPI5) antes de enviar el texto a la síntesis.</p>
 
@@ -223,12 +280,12 @@
 </section>
 
 <section id="contacto">
-    <h2>7. Contacto y Soporte</h2>
+    <h2>9. Contacto y Soporte</h2>
     <p>Si tienes problemas, envía el archivo <code>app.log</code> a: <strong>contacto@tiflotutos.com</strong></p>
 </section>
 
 <div class="footer">
-    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 1.2.0</p>
+    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 3.0.0</p>
 </div>
 
 </body>

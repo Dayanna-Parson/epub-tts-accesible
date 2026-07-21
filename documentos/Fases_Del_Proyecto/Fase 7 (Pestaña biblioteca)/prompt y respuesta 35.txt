@@ -1,0 +1,18 @@
+prompt y respuesta 35
+
+vale, lo e encontrado! estaba en la raíz principal. espero que este te sirva
+Respuesta:
+
+Este archivo no es el correcto — es de otra aplicación tuya distinta, "TifloHistorias" (otro proyecto tuyo, con rutas en `C:\Users\PC\iCloudDrive\...`), no de Epub TTS Accesible. Debe haber otro `app.log` en algún sitio de tu PC con ese mismo nombre, y el buscador de Windows te lo trajo a él en vez del nuestro.
+
+Vamos a hacerlo de la forma más directa posible, sin depender de navegar carpetas a ciegas:
+
+1. Pulsa **Windows + R** (abre la ventana "Ejecutar").
+2. Escribe exactamente esto y pulsa Enter:
+```
+notepad "C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\registros\app.log"
+```
+3. Eso debería abrir el archivo correcto directamente en el Bloc de notas, sin pasar por ninguna búsqueda ni por ninguna carpeta a tientas.
+4. Selecciona todo (Ctrl+A), copia (Ctrl+C), y pégalo aquí en el chat directamente como texto (no hace falta subir el archivo).
+
+Si al ejecutar ese comando Windows te dice que el archivo no existe, avísame inmediatamente — eso sería información nueva importante (significaría que la carpeta `registros` no se ha creado todavía en tu copia, lo cual también sería una pista).

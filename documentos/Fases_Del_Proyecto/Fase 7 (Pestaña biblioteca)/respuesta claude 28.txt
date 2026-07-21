@@ -1,0 +1,15 @@
+respuesta claude 28
+
+Encontré algo importante: en el log que pegaste **no hay ni una sola línea nueva de los chivatos** — solo las entradas viejas de junio. Eso significa que ninguno de los dos métodos de menú se llegó a ejecutar hoy, ni el de libros ni el de etiquetas. Combinado con que los atajos "van pero hay que insistir con flechas arriba/abajo para que se enteren", creo que he encontrado la causa común de ambos problemas.
+
+Creo que sí encontré el hilo del que tirar. Te explico:
+
+**Dato clave:** en el `app.log` que pegaste no hay **ninguna línea nueva de los chivatos** — solo las entradas viejas de junio. Eso significa que `al_menu_contextual` y `al_menu_contextual_etiquetas` **no se ejecutaron ni una sola vez** cuando abriste esos menús hoy. No es que construyan mal el menú — es que ni siquiera se disparan. Lo que ves en su lugar es el menú genérico de Windows/NVDA por defecto, porque el foco real no estaba, en ese instante, sobre `lista_libros` ni sobre `lista_etiquetas`.
+
+Y eso conecta directo con lo otro que describiste: los atajos "van, pero hay que insistir con flechas arriba y abajo para que se enteren". Encontré una causa que explica ambas cosas a la vez: cada vez que marcas un estado (con el atajo), la app anuncia el resultado con el patrón `_anunciar()` — que roba el foco un instante a un campo oculto y luego lo devuelve automáticamente 300 milisegundos después. El problema: ese "devolver el foco" se hacía **sin comprobar si mientras tanto ya habías movido tú el foco a otro sitio** (por ejemplo, pulsando el siguiente atajo o moviendo el cursor). Si pulsabas algo antes de que pasaran esos 300ms, la app te quitaba el foco de las manos y te lo devolvía a donde estaba antes, sin que lo pidieras — de ahí que tuvieras que "pelear" con flechas arriba/abajo para que se quedara quieto donde tú querías. Y si el foco nunca se asentaba de verdad sobre la lista, Shift+F10/tecla Menú tampoco encontraban el control correcto para disparar su menú personalizado.
+
+Ya lo corregí: ahora solo se devuelve el foco si sigue exactamente donde se dejó (nadie lo reclamó mientras tanto). Está subido.
+
+Sobre tu idea de dos menús separados: no hace falta, y de hecho habría sido peor — el problema nunca fue "qué menú se construye", sino que el foco no llegaba a tiempo al control correcto para que **cualquier** menú se disparase. Dos menús distintos no habrían arreglado eso, solo habrían duplicado el problema.
+
+Prueba de nuevo cuando puedas: los atajos (deberían asentarse sin pelear), y los dos menús contextuales (Shift+F10 sobre un libro, y sobre una etiqueta). Si algo sigue fallando, el log ya tiene los chivatos listos para decirnos qué pasa de verdad esta vez.

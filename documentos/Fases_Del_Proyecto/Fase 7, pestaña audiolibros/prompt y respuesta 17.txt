@@ -1,0 +1,189 @@
+prompt y respuesta 17
+
+Has dicho: miraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!
+miraaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!!! edición  sólo lectura  seleccionado Libro cargado en el Creador de Audiolibros: Ciudad de hueso — Cassandra Clare (EPUB)
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Sin exportación en curso.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Libro cargado en el Creador de Audiolibros: Ciudad de hueso — Cassandra Clare (EPUB)
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Calcular presupuesto  botón
+pulsado
+no disponible
+edición  sólo lectura  Calculando presupuesto...
+Velocidad:  deslizador  50
+edición  sólo lectura  Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Velocidad:  deslizador  50
+Iniciar exportación  botón
+Calcular presupuesto  botón
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Voz: Seraphina Mehrsprachig (azure)
+Voz: Seraphina Mehrsprachig (azure) deseleccionado
+Voz: Seraphina Mehrsprachig (azure)
+Calcular presupuesto  botón
+Iniciar exportación  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido. deseleccionado
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 819477 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Por capítulos
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Calcular presupuesto  botón
+pulsado
+no disponible
+edición  sólo lectura  Calculando presupuesto...
+Velocidad:  deslizador  50
+edición  sólo lectura  Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Capítulos  agrupación
+Capítulos  lista
+1; Título: Cubierta; Estado: Pendiente
+2; Título: sinopsis; Estado: Pendiente
+3; Título: Ciudad de hueso; Estado: Pendiente
+4; Título: info; Estado: Pendiente
+5; Título: dedicatoria; Estado: Pendiente
+6; Título: cita; Estado: Pendiente
+7; Título: Agradecimientos; Estado: Pendiente
+8; Título: Primera parte: Descenso a la oscuridad; Estado: Pendiente
+9; Título: 1. Pandemónium; Estado: Pendiente
+10; Título: 2. Secretos y mentiras; Estado: Pendiente
+11; Título: 3. Cazador de sombras; Estado: Pendiente
+12; Título: 4. Rapiñador; Estado: Pendiente
+13; Título: 5. Clave y Alianza; Estado: Pendiente
+14; Título: 6. Repudiado; Estado: Pendiente
+15; Título: 7. La puerta de cinco dimensiones; Estado: Pendiente
+16; Título: 8. El arma preferida; Estado: Pendiente
+17; Título: 9. El Círculo y la Hermandad; Estado: Pendiente
+18; Título: Segunda parte: Fácil es el descenso; Estado: Pendiente
+19; Título: 10. Ciudad de hueso; Estado: Pendiente
+20; Título: 11. Magnus Bane; Estado: Pendiente
+24; Título: 15. La estacada; Estado: Pendiente
+28; Título: 19. Abbadon; Estado: Pendiente
+29; Título: 20. En el callejón de las ratas; Estado: Pendiente
+31; Título: 21. El relato del hombre lobo; Estado: Pendiente
+32; Título: 22. Las ruinas de Renwick; Estado: Pendiente
+36; Título: TOC; Estado: Pendiente
+36; Título: TOC; Estado: Pendiente
+36; Título: TOC; Estado: Pendiente
+36; Título: TOC; Estado: Pendiente
+35; Título: Sobre la autora; Estado: Pendiente
+36; Título: TOC; Estado: Pendiente
+35; Título: Sobre la autora; Estado: Pendiente
+34; Título: Epílogo: La ascensión seduce; Estado: Pendiente
+33; Título: 23. Valentine; Estado: Pendiente
+32; Título: 22. Las ruinas de Renwick; Estado: Pendiente
+1; Título: Cubierta; Estado: Pendiente
+1; Título: Cubierta; Estado: Pendiente
+2; Título: sinopsis; Estado: Pendiente
+1; Título: Cubierta; Estado: Pendiente
+2; Título: sinopsis; Estado: Pendiente
+Contexto  menú
+Ayuda  submenú  a
+Salir  s
+Ayuda  submenú  a
+Epub-TTS
+lista de pestañas
+Capítulos  agrupación
+Capítulos  lista
+2; Título: sinopsis; Estado: Pendiente
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Capítulos  agrupación
+Capítulos  lista
+2; Título: sinopsis; Estado: Pendiente
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Modo de exportación:  cuadro combinado  Por capítulos  contraído
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Calcular presupuesto  botón
+Iniciar exportación  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido. deseleccionado
+Capítulos  agrupación
+Capítulos  lista
+2; Título: sinopsis; Estado: Pendiente
+Creador de Audiolibros  pestaña  seleccionado
+edición  sólo lectura  seleccionado Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Modo de exportación:  cuadro combinado  Por capítulos  contraído
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Calcular presupuesto  botón
+no disponible
+edición  sólo lectura  Calculando presupuesto...
+Velocidad:  deslizador  50
+edición  sólo lectura  Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Velocidad:  deslizador  50
+Iniciar exportación  botón
+Calcular presupuesto  botón
+Voz por defecto:  edición  sólo lectura  seleccionado Voz: Seraphina Mehrsprachig (azure)
+Modo de exportación:  cuadro combinado  Por capítulos  contraído
+Libro  agrupación
+Libro cargado:  edición  sólo lectura  seleccionado Ciudad de hueso — Cassandra Clare (EPUB)
+Capítulos  agrupación
+Capítulos  lista
+Progreso  agrupación
+Estado:  edición  sólo lectura  seleccionado Presupuesto calculado: 819409 caracteres. Estado: NO cabe en la cuota actual del proveedor elegido.
+Volumen:  deslizador  100
+Velocidad:  deslizador  50
+Mostrar más
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: ¡Sí!
+¡Sí! 🎉 Ahora sí lee todo en orden con Tab puro: "Libro cargado: ...", "Modo de exportación: ...", "Voz por defecto: ...", "Calcular presupuesto", "Velocidad", "Volumen", "Estado: ...", y hasta la lista de "Capítulos" con los títulos reales extraídos del EPUB (Cubierta, sinopsis, Ciudad de hueso, 1. Pandemónium...). El fix de AcceptsFocusFromKeyboard era la causa real. Por fin.
+Dos cosas que veo en tu log:
+1. El diálogo de proveedor alternativo — aún no lo probaste. Calculaste el presupuesto y correctamente dice "NO cabe en la cuota actual", pero el diálogo de voces alternativas no se abre en ese momento — está diseñado para abrirse cuando pulsas "Iniciar exportación" (que ya veo que se habilitó tras calcular), no en el momento de calcular. ¿Puedes tabular hasta "Iniciar exportación" y pulsarlo? Ahí debería aparecer el diálogo con Azure Neural (o los proveedores que tengas configurados) con saldo disponible, preseleccionando el de más cuota.
+2. La lista de Capítulos — veo números que saltan raro (20 → 24 → 28 → 29 → 31 → 32 → luego "36; TOC" repetido varias veces seguidas, luego vuelve a "1; Cubierta"). ¿Eso fue tú explorando la lista con las flechas de un lado a otro, o notaste algo raro al leerla normalmente de arriba a abajo? Si fue solo exploración manual, no es un bug — pero si al bajar con flecha abajo de forma normal y continua ves saltos o repeticiones así, dímelo porque sí sería un problema real de la lista.
+Prueba lo de "Iniciar exportación" y me cuentas.

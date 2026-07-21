@@ -1,0 +1,129 @@
+# ANCLAJE_INICIO: GESTOR_PDF
+"""
+gestor_pdf.py
+──────────────
+Extracción de texto y estructura de un PDF para la pestaña Lectura, con
+la misma forma de retorno que extraer_datos_epub() de gestor_epub.py,
+para que pestana_lectura.py pueda cargar EPUB y PDF por el mismo camino
+sin duplicar el árbol de índice, la navegación por encabezados ni el
+guardado de posición de lectura.
+
+Capítulos / navegación H·Shift+H: se usa el índice de contenidos
+embebido del PDF (documento.get_toc(), vía PyMuPDF/fitz) cuando existe.
+Si el PDF no tiene índice (habitual en PDF escaneados o mal generados),
+se genera un índice sintético de una entrada por página ("Página N"),
+para que la navegación por capítulo siga disponible aunque sea a nivel
+de página — mismo criterio que Bookworm en este mismo caso.
+
+No hay texto con negrita/cursiva/subrayado embebido de forma fiable en
+PDF como en el HTML de un EPUB, así que spans_estilo se devuelve vacío.
+"""
+
+import os
+
+import fitz
+
+from app.motor.limpiador_lectura import limpiar_para_lectura
+
+
+def extraer_datos_pdf(ruta_pdf):
+    """
+    Extrae el texto completo y la estructura de índice de un PDF.
+
+    Retorna la misma forma que extraer_datos_epub():
+        - texto_completo (str)
+        - datos_indice (list)     [{'title', 'offset', 'children'}, ...]
+        - posiciones_capitulos (dict)   {titulo: posicion_caracter}
+        - posiciones_encabezados (list) [{'nivel', 'texto', 'pos'}, ...]
+        - spans_estilo (list)     siempre vacío para PDF
+    """
+    if not os.path.exists(ruta_pdf):
+        raise FileNotFoundError(f"No se encontró el archivo: {ruta_pdf}")
+
+    try:
+        documento = fitz.open(ruta_pdf)
+    except Exception as e:
+        raise Exception(f"Error al leer el formato PDF: {e}")
+
+    # Cada página se limpia individualmente (en vez de concatenar todo en
+    # crudo y limpiar una sola vez al final) para poder registrar el offset
+    # de inicio de cada página ya sobre el texto definitivo. Antes las
+    # posiciones se calculaban sobre el texto sin limpiar y no se
+    # reubicaban después (a diferencia de gestor_epub.py, donde sí se
+    # reubican buscando el propio texto del encabezado) porque el título de
+    # un marcador de PDF no siempre aparece literal en el cuerpo de la
+    # página — limpiando página a página se evita el problema de raíz: la
+    # posición registrada ya es la definitiva, sin necesidad de reubicar nada.
+    texto_completo = ""
+    posiciones_inicio_pagina = []  # índice = página 0-based, valor = offset en texto_completo (ya limpio)
+
+    for num in range(documento.page_count):
+        texto_pagina = documento[num].get_text("text")
+        texto_limpio_pagina = (
+            limpiar_para_lectura(texto_pagina, ruta_libro=ruta_pdf).strip()
+            if texto_pagina and texto_pagina.strip() else ""
+        )
+        if texto_limpio_pagina:
+            if texto_completo:
+                texto_completo += "\n\n"
+            posiciones_inicio_pagina.append(len(texto_completo))
+            texto_completo += texto_limpio_pagina
+        else:
+            # Página sin texto (portada, imagen escaneada...): su "inicio"
+            # coincide con la posición actual, no aporta contenido propio.
+            posiciones_inicio_pagina.append(len(texto_completo))
+
+    toc = documento.get_toc()  # [[nivel, titulo, pagina_1_based], ...]
+
+    posiciones_capitulos = {}
+    posiciones_encabezados = []
+
+    def _offset_de_pagina(pagina_1_based):
+        idx = max(0, min(documento.page_count - 1, pagina_1_based - 1))
+        return posiciones_inicio_pagina[idx] if posiciones_inicio_pagina else 0
+
+    if toc:
+        # Construir árbol jerárquico a partir de los niveles planos del TOC.
+        datos_indice = []
+        pila = []  # [(nivel, nodo)] — para anidar hijos bajo su padre más reciente
+        for nivel, titulo, pagina in toc:
+            titulo = (titulo or "").strip() or f"Página {pagina}"
+            offset = _offset_de_pagina(pagina)
+
+            # Título único: si se repite (habitual con TOC mal generados),
+            # se distingue con el número de página para no pisar la entrada
+            # anterior en posiciones_capitulos.
+            titulo_unico = titulo
+            sufijo = 2
+            while titulo_unico in posiciones_capitulos:
+                titulo_unico = f"{titulo} ({sufijo})"
+                sufijo += 1
+
+            nodo = {"title": titulo_unico, "offset": offset, "children": []}
+            posiciones_capitulos[titulo_unico] = offset
+            posiciones_encabezados.append({"nivel": nivel, "texto": titulo_unico, "pos": offset})
+
+            while pila and pila[-1][0] >= nivel:
+                pila.pop()
+            if pila:
+                pila[-1][1]["children"].append(nodo)
+            else:
+                datos_indice.append(nodo)
+            pila.append((nivel, nodo))
+    else:
+        # Sin índice de contenidos: una entrada sintética por página, igual
+        # que hace Bookworm cuando el PDF no trae TOC embebido.
+        datos_indice = []
+        for num in range(documento.page_count):
+            titulo = f"Página {num + 1}"
+            offset = posiciones_inicio_pagina[num]
+            datos_indice.append({"title": titulo, "offset": offset, "children": []})
+            posiciones_capitulos[titulo] = offset
+            posiciones_encabezados.append({"nivel": 1, "texto": titulo, "pos": offset})
+
+    # El texto ya salió limpio página a página (ver el bucle de arriba), así
+    # que las posiciones registradas en posiciones_capitulos/posiciones_encabezados
+    # son exactas sobre texto_completo — a diferencia de antes, no hace
+    # falta ningún paso de limpieza global ni de reubicación posterior.
+    return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados, []
+# ANCLAJE_FIN: GESTOR_PDF

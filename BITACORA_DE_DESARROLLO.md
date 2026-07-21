@@ -270,3 +270,72 @@ Durante ese trabajo, apareció un aviso en consola: `DeprecationWarning: CheckLi
 El sistema de actualizaciones automáticas estaba implementado desde la versión 1.1 en forma básica. En la versión 2.0 el flujo quedó completo: al detectar una versión nueva en GitHub, la app avisa de forma accesible. Si la usuaria acepta, descarga el ZIP en segundo plano, escribe `actualizador.bat` y se cierra. El script bat reemplaza los archivos y vuelve a abrir la app. Las grabaciones, configuraciones y la carpeta `/bin/` se conservan siempre.
 
 — Dayanna Parson, junio de 2026
+
+---
+
+## Fase 7: V3.0 — Biblioteca y el Creador de Audiolibros (julio 2026)
+
+La Fase 6 había resuelto la accesibilidad profunda de lo que ya existía. La Fase 7 fue distinta: añadió una pieza que no existía en absoluto. Hasta entonces, producir un audiolibro completo de un libro entero significaba abrirlo en Lectura y grabarlo yo misma, en tiempo real, escuchando cada palabra. Funcionaba, pero no era lo mismo que exportar un libro de 800.000 caracteres mientras hago otra cosa.
+
+### La Biblioteca, primero
+
+Antes del Creador de Audiolibros hacía falta un sitio de donde sacar los libros: la pestaña Biblioteca. Importar una carpeta entera de golpe (con detección de sagas por subcarpeta) o un único archivo suelto, organizar por géneros y por sagas, buscar por título o autor. No es una pestaña vistosa, pero es la que hace que todo lo demás tenga sentido: sin un sitio central de libros, "enviar a Creador de Audiolibros" no significaría nada.
+
+### El Creador de Audiolibros: construir y volver a construir
+
+La primera versión del selector de voz en el Creador de Audiolibros no fue la que quedó. Puse un campo de solo lectura llamado "Voz por defecto" con un botón "Elegir voz..." que abría un diálogo aparte. Funcionaba, pero no era lo que había en mi propio documento de planificación, y me lo dijo sin rodeos: *"¿por qué hay dos por defecto si yo en ningún momento recuerdo haber dicho que quería una voz por defecto?"*. Volví al documento, encontré la frase exacta que me había saltado — "selector de voz/proveedor" como control directo, al mismo nivel que el selector de modo — y lo rehice: un combo embebido en la propia pestaña con todas las voces favoritas de todos los proveedores, incluidas las locales SAPI5, en formato plano para que NVDA no tuviera que adivinar de qué proveedor era cada voz.
+
+Ese patrón se repitió más veces de las que me gustaría admitir en esta fase: proponer algo, que las pruebas reales con NVDA lo tumben, y reconstruir con lo aprendido. No lo cuento como fracaso. Es exactamente el método que ya funcionó en la Fase 4 y la Fase 6: nada se da por bueno hasta que se prueba con el lector de pantalla encendido.
+
+### El bug de "todo marcado"
+
+Al construir el catálogo de voces reutilizable (`selector_voz_compartido.py`), apareció un bug sutil: al poblar la lista de voces con casillas de verificación, `CheckItem()` de wxPython dispara el mismo evento que si el usuario marcara la casilla a mano. El resultado era que cada voz ya favorita "contagiaba" el marcado a las demás, y cambiar de proveedor en un diálogo dejaba todas las casillas marcadas sin que nadie las hubiera tocado. El fix fue un candado (`_poblando_lista`) que ignora esos eventos sintéticos mientras la lista se está construyendo. El mismo patrón tuvo que repetirse después para la lista de capítulos del Creador de Audiolibros, que tiene el mismo problema de raíz.
+
+### Polly, la investigación más larga de la fase
+
+Ningún bug de esta fase me costó tantas vueltas como el de Amazon Polly comiéndose la última sílaba de la palabra, y solo con las cuatro voces estándar, y solo a partir de cierta velocidad. Fueron, en orden, cuatro intentos:
+
+1. Ajustar el umbral de recorte de silencio en la costura entre fragmentos. No era eso: el problema aparecía también en la lectura en vivo, sin ninguna costura de por medio.
+2. Un `<break>` SSML al final del texto, dentro de la etiqueta de velocidad. No bastaba a velocidades altas: el propio `<break>` se aceleraba junto con el resto del texto.
+3. Sacar el `<break>` fuera de la etiqueta de velocidad y escalarlo con la propia velocidad. Ayudó, pero seguía fallando en algunos casos.
+4. La solución real: rellenar el array de audio con silencio digital puro (ceros) al final, antes de mandarlo a los altavoces. Nada de temporización, nada de SSML — silencio real que el hardware nunca puede recortar porque no hay nada real que cortar detrás.
+
+El motivo de que costara tanto fue estructural, no solo técnico: yo no puedo escuchar el audio que genera la app. Cada uno de esos cuatro intentos lo hice a ciegas (en el sentido literal de "no puedo verificarlo yo misma"), razonando desde el código y desde patrones conocidos de la comunidad de AWS, y esperando a que la usuaria lo probara con sus propios oídos antes de saber si había funcionado. Fue el recordatorio más claro de la fase de que "funciona en la teoría" y "funciona de verdad" son cosas distintas, y de que hacía falta ese diálogo constante y honesto sobre qué se podía verificar y qué no.
+
+### El puente SAPI32, otra vez
+
+El puente a las voces de 32 bits (Eloquence, RealSpeak) que se había resuelto en la Fase 6 volvió a fallar, esta vez de forma intermitente: "No se ha llamado a CoInitialize." El primer parche —añadir `CoInitialize()` en el hilo que habla— no fue suficiente. La causa real era más de fondo: un objeto COM creado en un hilo no se puede usar de forma fiable desde otro hilo aunque ese segundo hilo llame a `CoInitialize()`, porque falta el traspaso correcto entre apartamentos de Windows (marshaling). La solución robusta fue que cada hilo que habla cree y use su propia instancia del motor de voz, de principio a fin, sin compartir ningún puntero COM entre hilos.
+
+### La exportación en paralelo
+
+El cierre de la fase fue la pieza más grande de ingeniería: paralelizar la exportación con `ThreadPoolExecutor`, de forma que varios fragmentos o capítulos se generen a la vez en vez de uno detrás de otro. La parte delicada no fue lanzar hilos — eso es sencillo. Fue mantener dos garantías al mismo tiempo: que la comprobación de cuota siguiera siendo estrictamente secuencial y en el orden real del libro (para no dejar huecos), y que la numeración de los archivos generados en paralelo fuera atómica por índice, no por orden de llegada, para que el audiolibro final sonara exactamente en el mismo orden que el libro, sin importar qué hilo terminara antes.
+
+Justo después llegó la reanudación de exportaciones pendientes: si una exportación se corta por cuota agotada o un corte de internet, la app recuerda dónde se quedó y permite continuar sin regrabar nada, numerando la continuación como una parte nueva del audiolibro.
+
+### Lo que se descartó
+
+Piper TTS, que llevaba desde la Fase 4 en la lista de "próximos motores", se descarta explícitamente en esta fase. SAPI5 sigue siendo, y se queda siendo, el único motor local de la app.
+
+### El audiolibro sin sonido
+
+Con la fase ya cerrada y publicada, las pruebas reales de uso encontraron un puñado de bugs que ninguna revisión de código hubiera detectado sin escucharlos.
+
+El primero, el más serio: exportar un audiolibro con voz local podía dejar un archivo "generado" con éxito, pero completamente mudo. La comprobación de que el audio estuviera bien solo miraba si el archivo pesaba más de cero bytes, y un WAV con cabecera pero sin fotogramas de audio pasa esa prueba sin más. Se cambió por una comprobación real: abrir el WAV y medir su duración de verdad. Si sale en silencio, ahora es un error, no un archivo válido.
+
+Relacionado con esto, un botón que llevaba tiempo roto sin que nadie lo notara: "Usar voz local", el que aparece cuando se agota la cuota de todos los proveedores de nube, siempre grababa con la voz predeterminada del sistema. Por debajo se le pasaba un dict genérico sin ningún id real, así que nunca podía encontrar ninguna voz instalada por su nombre. Se le añadió un desplegable de verdad con todas las voces SAPI5 (64 y 32 bits) para elegir.
+
+Y las voces de 32 bits (Eloquence, RealSpeak) elegidas para exportar tenían un problema más de fondo: `_llamar_motor()` las enrutaba, por defecto, al mismo motor de 64 bits que usan Elena, Pablo y Laura — un motor que nunca puede encontrarlas, porque son un proceso auxiliar aparte. Exportar con Eloquence, hasta ahora, siempre acababa hablando con la voz por defecto sin ningún aviso. Se le dio al proceso auxiliar de 32 bits un comando nuevo, `exportar_archivo`, que sintetiza directo a WAV igual que hace el motor de 64 bits, y se enrutó `local_32` ahí en vez de al motor equivocado.
+
+### El desbordamiento al unir trozos de distinta calidad
+
+Un error de consola nuevo, tras arreglar lo anterior: `'L' format requires 0 <= number <= 4294967295` al concatenar los trozos de un fragmento largo con Amazon Polly. La causa era que solo se normalizaba a 44100 Hz/mono el resultado final de la unión, no cada trozo individual antes de unirlo. El motor "generative" de Polly puede devolver un trozo con una frecuencia o profundidad de bits distinta a la de otro trozo del mismo fragmento, y el reajuste interno de pydub al pegarlos podía calcular mal el tamaño combinado. Ya se recuperaba solo con un respaldo (unir los MP3 en bytes crudos), así que no llegaba a romper la exportación, pero dejaba ese ruido feo en el log. Ahora cada trozo se normaliza antes de recortarle el silencio y antes de unirlo.
+
+### "¿Dónde estaba grabando?"
+
+La última pieza de esta ronda no fue un bug de audio, sino de orientación: no había ninguna forma de saber, desde Biblioteca, qué libro tenía una exportación de audiolibro a medias sin abrir el Creador de Audiolibros y comprobarlo a mano. La columna Estado solo hablaba de lectura (leído, leyendo, pendiente de leer). Se añadió un estado nuevo, "Audiolibro a medias", y un filtro dedicado para encontrarlos todos de un vistazo — con una consulta nueva a `exportaciones_pendientes` que no existía hasta ahora (`obtener_ids_libros_con_exportacion_pendiente`).
+
+De paso, con el nuevo filtro al lado, el viejo "Pendientes" (un estado de lectura, "quiero leerlo pronto") se prestaba a confundirse con una exportación pendiente. Se renombró a "Pendiente de leer" en todos los sitios donde aparecía.
+
+Y un bug de accesibilidad puro, encontrado al describir la pantalla con el visor de voz de NVDA: el buscador, el filtro de Estado y "Solo favoritos" habían quedado descolgados al final del orden de tabulación de toda la pestaña, después incluso de los botones de importar, por un `MoveAfterInTabOrder()` que solo reposicionaba la lista de libros y los botones, dando por hecho que los filtros —creados antes— se quedarían en su sitio sin más. No era así: al mover la lista, los filtros que nadie tocó explícitamente quedaron sueltos al final de todo. Se encadenó el orden completo a mano.
+
+— Dayanna Parson, julio de 2026

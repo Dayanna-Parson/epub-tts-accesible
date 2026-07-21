@@ -1,0 +1,48 @@
+prompt y respuesta 3
+
+Has dicho: sigue con el siguiente paso, y usa los wx.
+sigue con el siguiente paso, y usa los wx.MessageBox + sonido ERROR para ese aviso de fallo.
+Mostrar acciones del mensaje
+Claude ha respondido: Añado el botón de prueba de la Fase C junto al existente, sin tocar el flujo de producción.
+Ejecutado un comando, leer un archivo
+Añado el botón de prueba de la Fase C junto al existente, sin tocar el flujo de producción.
+Editadopestana_ajustes.py+17-0
+Ahora añado el handler tras el bloque ACTUALIZADOR_SCRIPT_CLON:
+Editadopestana_ajustes.py+40-0
+Verifico que el archivo compile correctamente:
+Ejecutado 3 comandos
+He añadido un botón "Probar descarga y verificación (Fase C)" en Ajustes → General, junto al botón real de "Buscar actualizaciones ahora" pero completamente independiente de él (no toca el flujo de producción con el .bat):
+• Llama a GestorDescargaActualizacion.descargar_y_verificar_en_hilo(), muestra progreso en lbl_progreso.
+• Si falla la verificación: reproducir(ERROR) + wx.MessageBox con el motivo, sin haber tocado la instalación (el propio gestor ya limpia temp/actualizacion/).
+• Si tiene éxito: reproducir(SUCCESS) + wx.MessageBox confirmando la ruta extraída, y limpia temp/actualizacion/ (todavía no instala nada — eso es el siguiente paso, cuando conectemos actualizador.exe).
+Compilé ambos archivos (py_compile) sin errores. Como no tengo Windows/wx aquí para probar la interfaz de verdad, esto no ha sido probado en pantalla — cuando puedas, dale al botón nuevo en tu máquina y cuéntame qué anuncia NVDA y si el flujo se siente bien antes de seguir.
+Ya lo subí y pusheé (commit 445cad9) al PR #8, que sigo vigilando.
+Siguiente paso propuesto: diseñar el ejecutable auxiliar actualizador.exe (nuevo auxiliar_actualizador.py, mismo patrón que auxiliar_sapi32.py) con: backup de app/ actual a temp/backup_previo/, mover los archivos nuevos desde temp/actualizacion/, y rollback automático si algo falla — y el punto de la app que lo lanza como proceso independiente y se cierra. ¿Seguimos con eso?
+Mostrar acciones del mensaje
+Has dicho: si!
+si!
+respuesta:
+
+Ahora el caso de fallo con rollback (simulo que falla el segundo movimiento):
+
+Confirma correctamente: rollback completo, tanto del archivo ya reemplazado (`iniciar_epub_tts.py`) como del que falló a medias (`app`), sin dejar la instalación en un estado inconsistente. Ahora conecto la app: confirmación del usuario y lanzamiento de `actualizador.exe` como proceso independiente antes de cerrarse.
+
+Falta el import de `subprocess` en mi método nuevo (el legado lo importa localmente dentro del suyo). Lo añado igual, de forma local, para no tocar los imports globales del archivo:
+
+Commit y push:
+
+Subido y pusheado (commit `31975d9`).
+
+**Qué se añadió:**
+
+1. **`auxiliar_actualizador.py`** (raíz, para compilar aparte con PyInstaller igual que `auxiliar_sapi32.py` → `bin/actualizador.exe`):
+   - Espera opcionalmente a que el PID de la app termine (`tasklist`, sin dependencias nuevas).
+   - Mueve (nunca copia) cada carpeta/archivo de nivel superior de `--origen` a `--destino`, respaldando primero lo que ya existía en `temp/backup_previo/`. Nunca toca `configuraciones/`, `Grabaciones_Epub-TTS/`, `bin/` ni `temp/`.
+   - Si cualquier paso falla, revierte automáticamente todo lo ya movido — incluida la entrada que estaba a medias — antes de relanzar la app vía `INICIAR_APP.bat` y salir con código de error.
+   - Probado con simulaciones (instalación correcta, y fallo forzado a mitad de la carpeta `app/`): el rollback deja exactamente el estado original, verificado archivo por archivo.
+
+2. **`pestana_ajustes.py`**: el botón de prueba de Fase C ahora, tras verificar la descarga con éxito, pide confirmación (`Instalar ahora?`) y si el usuario acepta lanza `bin/actualizador.exe --origen ... --destino ... --pid ...` como proceso independiente y cierra la app. Si `actualizador.exe` no existe en `bin/` (normal en este entorno, aún no compilado), avisa con `MessageBox` + sonido `ERROR` en vez de fallar en silencio.
+
+**Pendiente de validar en Windows real** (no puedo hacerlo desde aquí): compilar `actualizador.exe` con PyInstaller, colocarlo en `bin/`, y probar el ciclo completo con NVDA activo — sobre todo que `INICIAR_APP.bat` relance correctamente y que el respaldo/rollback se comporte igual con archivos bloqueados de verdad por Windows/antivirus.
+
+¿Quieres que sigamos ahora con retirar el bloque `ACTUALIZADOR_SCRIPT_CLON` legado (una vez lo pruebes tú en Windows), o prefieres primero probarlo tú y avisarme?

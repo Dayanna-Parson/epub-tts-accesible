@@ -1,0 +1,17 @@
+prompt y respuesta 32
+
+A ver. sigue saliendo los mismos menús que ya te he dicho otras veces. No ha cambiado nada al respecto. Pero bueno, te paso el log, ya con todo actualizado y he hecho las pruebas que me pediste.
+
+respuesta:
+
+Creo que ya sé por qué llevamos varias rondas sin avanzar con el log: el archivo que me has subido estas últimas 5 veces es **exactamente idéntico**, letra por letra, a los anteriores — con fechas de junio, nada de hoy. Ni siquiera aparece la línea "INICIANDO EPUB-TTS" de cuando arrancaste la app hace un momento. Eso no encaja con que hayas hecho pruebas nuevas: significa que probablemente me estás subiendo un archivo viejo/en caché, no el que se está escribiendo ahora mismo.
+
+La ruta exacta donde la app escribe el log es:
+
+```
+C:\Users\Jacqueline\Documents\git_repos\epub-tts-accesible\registros\app.log
+```
+
+¿Puedes ir a esa carpeta en el Explorador de archivos y comprobar la **fecha de modificación** del archivo `app.log` antes de subírmelo? Debería decir "hace un momento" o la hora de tu última prueba. Si ves varios archivos ahí (`app.log`, `app.log.1`, `app.log.2`, `app.log.3`), el que quiero siempre es el que **no** tiene número al final — los numerados son copias de seguridad antiguas que se generan cuando el principal se llena.
+
+Si al comprobar la fecha ves que sí es reciente y aun así el contenido es el mismo de siempre, entonces el problema es otro (por ejemplo, que la carpeta `registros` que usa tu copia en ejecución no es esa) y lo investigamos desde ahí. Pero antes de seguir adivinando causas de por qué el menú no sale, necesito confirmar que estamos mirando el archivo correcto.

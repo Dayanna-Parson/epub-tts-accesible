@@ -1,0 +1,8 @@
+prompt 32
+
+¡Buenas noticias! Tras la compilación limpia del ejecutable de 32 bits, la preescucha de Eloquence ya funciona perfectamente. Sin embargo, tenemos el diagnóstico exacto del problema de Amazon Polly estándar (Conchita, Enrique, Miguel, Penélope):
+
+* Ajuste dinámico para Polly Estándar: El parche del silencio SSML funciona, pero solo si la velocidad está por debajo de 1.16× (posición 60 del deslizador). De la posición 60 hacia la derecha (velocidades rápidas), el motor de AWS vuelve a comerse la última sílaba. Esto ocurre porque al acelerarse la tasa de habla, el tiempo fijo de '<break time="400ms"/>' se procesa demasiado rápido en el servidor. Modifica la lógica para que el tiempo del 'break' SSML sea dinámico: si la velocidad es igual o superior a 60, aumenta el break a '800ms' o '1000ms' (o multiplica el tiempo base por el factor de velocidad) para garantizar que el audio no se trunque en velocidades rápidas.
+* Siguiente Frente - Soporte PDF: Una vez corregido lo de Polly, vamos a abordar el siguiente punto de la Fase B: el soporte para archivos PDF en el Creador de Audiolibros. Modifica el extractor para que admita archivos '.pdf' además de 'EPUB', utilizando la librería 'fitz' (PyMuPDF) que ya aparece en los logs del proyecto, extrayendo el texto limpio por páginas/bloques de forma accesible.
+
+Respóndeme siempre en castellano, que últimamente lo haces en inglés

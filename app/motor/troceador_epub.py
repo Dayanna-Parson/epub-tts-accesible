@@ -351,6 +351,55 @@ class TroceadorEpub:
 
         return _html_a_texto(html_data)
 
+    # ── Extracción en memoria (Creador de Audiolibros) ─────────────────────────
+    # A diferencia de dividir(), estos métodos no escriben TXT a disco: solo
+    # devuelven el texto ya limpio en memoria, para que grabador_audio.py lo
+    # envíe directamente a los motores de voz sin pasar por archivos
+    # intermedios. Reutilizan _extraer_texto() y limpiar_para_lectura(), la
+    # misma lógica ya usada por dividir(), para no duplicarla.
+
+    def extraer_capitulos_texto(self, indices_seleccionados: list = None) -> list:
+        """
+        Devuelve una lista de (titulo_capitulo, texto_limpio) para los
+        índices indicados (o todos los puntos de corte si no se especifica),
+        en el mismo orden en que aparecen en el libro.
+        """
+        indices = (
+            sorted(indices_seleccionados) if indices_seleccionados is not None
+            else list(range(len(self._split_lines)))
+        )
+        resultado = []
+        for idx in indices:
+            sl = self._split_lines[idx]
+            next_sl = self._split_lines[idx + 1] if idx + 1 < len(self._split_lines) else None
+            texto = self._extraer_texto(sl, next_sl)
+            texto = limpiar_para_lectura(texto).strip()
+            resultado.append((sl["titulo"], texto))
+        return resultado
+
+    def extraer_texto_completo_con_fronteras(self, indices_seleccionados: list = None):
+        """
+        Concatena los capítulos indicados en un único texto para el modo
+        "libro completo", devolviendo también los índices de carácter donde
+        empieza cada capítulo dentro de ese texto — las fronteras que usa
+        GrabadorAudio para ajustar el punto de corte por cuota sin caer a
+        mitad de capítulo.
+
+        Returns:
+            (texto_completo: str, fronteras_capitulo: list[int])
+        """
+        capitulos = self.extraer_capitulos_texto(indices_seleccionados)
+        texto_completo = ""
+        fronteras = []
+        for _titulo, texto in capitulos:
+            if not texto:
+                continue
+            if texto_completo:
+                texto_completo += "\n\n"
+            fronteras.append(len(texto_completo))
+            texto_completo += texto
+        return texto_completo, fronteras
+
     # ── Utilidades ────────────────────────────────────────────────────────────
 
     @staticmethod

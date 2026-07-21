@@ -1,0 +1,21 @@
+Prompt claude 15
+
+
+A ver, son varias cosas que no me terminan de cuadrar.
+
+La primera: cuando se agregan categorías en el árbol. Por ejemplo, está la categoría «Fantasía». Cuando en el diálogo de las categorías marco la opción que dice «Añadir a la categoría tal», se crea la categoría, pero el árbol se ordena de forma alfabética. Por ejemplo, tengo la categoría «Fantasía» y quiero agregar la categoría «Distopía». Cuando añado esa categoría, se muestra primero «Distopía» y después «Fantasía». Pero lo lógico aquí es que se muestre «Fantasía» como categoría principal y después «Distopía» como otra categoría diferente.
+
+Por otro lado, la primera vez que se agrega una categoría en Sapi, me dice: «Se ha añadido la categoría tal». Pero la segunda vez que se añade otra categoría o subcategoría, ya no me dice «Se ha agregado la categoría tal»; es decir, no me dice el nombre de la categoría que se ha agregado.
+
+A ver qué más... Ah, el siguiente diálogo hay que modificarlo. (El mensaje del diálogo es el siguiente:
+«Categorías automáticas: ¿Quieres usar la estructura de subcarpetas de esta carpeta como árbol de categorías (género/subgénero)? Por ejemplo, si tienes libros dentro de "Fantasía/Fantasía épica/", se crearán esas categorías automáticamente. Podrás renombrarlas o moverlas después. Si no organizas tus libros por género en carpetas, elige No. [Sí] [No]».
+
+Y otra pregunta: ¿Por qué las listas de categorías y etiquetas están tan separadas? No sé cómo está estructurada la biblioteca; no lo termino de ver. O sea, me gusta, pero no sé... Y ahora que lo pienso, ¿es bueno tener las etiquetas y las categorías separadas? ¿O de qué otra forma lo podemos estructurar?
+
+Otra cosa: en el listado de etiquetas no sale el menú de «Añadir esa etiqueta a la categoría». Solo sale cuando te vas al listado de los libros que tienen esa etiqueta; ahí sí que sale «Añadir a la categoría».
+
+También quiero modificar el submenú de la categoría para que salgan directamente las subcategorías que tiene esa categoría. Así sería más rápido, porque si no, tengo que darle al botón «Asignar a subcategoría» y escribir las categorías o buscarlas, y no me gusta.
+
+Y perdona, ¿qué preguntas me habías hecho? Creo que si quieres escribir código o no, eso ya depende de ti y de tu conveniencia. Pero creo que eso es todo.
+
+Ah, y sigue sin vervalizar  el mensaje «Abriendo libro, por favor, espere», pero ya no me sale ningún error en la consola; la consola aparece limpia.

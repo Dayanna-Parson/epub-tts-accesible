@@ -1,0 +1,27 @@
+Respuesta claude 15
+Voy con esto en orden. Primero el más importante: sospecho que el "solo la primera vez habla" y "abriendo libro no se oye" son el mismo bug de pyttsx3 (es un problema conocido: reutilizar la misma instancia del motor para varios anuncios seguidos falla en silencio a partir del segundo). Lo arreglo primero.
+
+Ahora el orden del árbol de categorías (por orden de creación, no alfabético):
+
+Ahora simplifico el texto del diálogo de categorías automáticas:
+
+Ahora generalizo el constructor de submenú de categorías para reutilizarlo tanto en un libro individual como en la asignación masiva por etiqueta:
+
+Ahora actualizo `al_asignar_categoria_existente` y `al_crear_categoria_y_asignar` para operar sobre una lista de libros:
+
+Ahora añado el menú de asignación masiva en el listado de etiquetas:
+
+Comiteo este bloque.
+
+Comiteado y subido. Ahora respondo tu pregunta de diseño (categorías vs. etiquetas separadas), que es la más importante de aclarar antes de seguir tocando código:
+
+## ¿Categorías y etiquetas separadas o juntas?
+
+Mantenlas separadas — son cosas de naturaleza distinta y mezclarlas en una sola lista genera confusión, no la resuelve:
+
+- **Categoría** = una propiedad objetiva del libro (es fantasía, punto). Un libro casi nunca cambia de género.
+- **Etiqueta** = una agrupación tuya, personal, cambiante (esta saga, esta colección "pendiente de terminar"). Puedes inventar y borrar etiquetas libremente sin que eso diga nada sobre el libro en sí.
+
+Si las juntas en una sola lista, cada vez que la mires tendrás que preguntarte "¿esto que veo es un género o una saga mía?" — eso es justo lo que te generaba ruido cuando estaban mezcladas en un solo árbol antes.
+
+**Lo que sí puedo mejorar es la percepción visual de que están "muy separadas"**: voy a agruparlas bajo un único título "Organización de la biblioteca" con las dos debajo, para que quede claro que son dos maneras complementarias de clasificar lo mismo, sin fundirlas en un solo control. ¿Lo hago así, o prefieres verlo primero tal como está ahora (ya con las correcciones de este bloque) antes de tocar más la disposición visual?
