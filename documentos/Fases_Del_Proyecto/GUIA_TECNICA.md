@@ -346,7 +346,9 @@ silencio digital real al final de cada síntesis de Amazon Polly (motor estánda
 
 Piper TTS, que figuraba como motor local previsto desde la Fase 4, queda descartado explícitamente.
 
-Nada pendiente en las funciones esenciales.
+En desarrollo dentro de v3.0.0 (Fase C — actualizador automático): sustitución del script `.bat` generado al vuelo (v2.0) por un ejecutable auxiliar fijo, `bin/actualizador.exe`, con el mismo patrón de compilación que `auxiliar_sapi32.exe`. Respaldo por copia verificada (no por movimiento) antes de reemplazar cualquier archivo, y rollback automático si algo falla. Implementado y probado con simulaciones y con el tramo de descarga/verificación en Windows real; pendiente de validar en Windows real el ciclo completo de instalación antes de retirar el sistema anterior, que sigue activo en producción mientras tanto.
+
+Nada más pendiente en las funciones esenciales.
 
 ---
 

@@ -12,6 +12,9 @@ epub-tts-accesible/
 ├── auxiliar_sapi32.py           Proceso auxiliar de 32 bits para SAPI5
 │                                 (Eloquence, RealSpeak). Se compila aparte
 │                                 con Python de 32 bits -> bin/auxiliar_sapi32.exe
+├── auxiliar_actualizador.py     Instalador auxiliar de actualizaciones (Fase C):
+│                                 respaldo por copia verificada + rollback.
+│                                 Se compila automáticamente -> bin/actualizador.exe
 ├── crear_portable.py            Empaqueta la app en un .zip portable.
 ├── subir_version.py             Sube el número de versión y actualiza
 │                                 novedades.txt.
@@ -72,6 +75,8 @@ epub-tts-accesible/
 │   │   ├── cliente_nube_voces.py        Descarga y caché de catálogos de voces.
 │   │   ├── verificador_voces_nuevas.py  Detección de voces nuevas.
 │   │   ├── comprobador_actualizaciones.py  Versionado semver contra GitHub.
+│   │   ├── actualizador_descarga.py     Fase C: descarga y verifica la versión
+│   │   │                                 nueva en temp/actualizacion/.
 │   │   ├── control_cuota.py             Cuota mensual por proveedor + coste.
 │   │   ├── gestor_proyectos.py          Proyectos de Grabación de Fragmentos.
 │   │   ├── gestor_atajos.py             Atajos de teclado configurables.
@@ -85,12 +90,17 @@ epub-tts-accesible/
 │       ├── cliente_sapi5.py             SAPI5 de 64 bits.
 │       └── cliente_sapi32_bridge.py     SAPI5 de 32 bits, vía auxiliar_sapi32.exe.
 │
-├── bin/                          Ejecutables portables: ffmpeg, auxiliar_sapi32.
+├── bin/                          Ejecutables portables: ffmpeg, auxiliar_sapi32,
+│                                  actualizador (Fase C, compilado automáticamente).
 ├── recursos/                     Sonidos, iconos, version.json.
 ├── configuraciones/               JSON/SQLite del usuario (claves, ajustes,
 │                                  biblioteca.db, proyectos...). Casi todo en
 │                                  .gitignore por ser datos personales.
 ├── Grabaciones_Epub-TTS/         Salida de audio generada por la app.
+├── temp/                         Generada en tiempo de ejecución (Fase C):
+│                                  actualizacion/ (descarga verificada) y
+│                                  backup_previo/ (respaldo durante la
+│                                  instalación). No se versiona (.gitignore).
 ├── tests/                        Pruebas (aún sin suite automatizada completa).
 │
 └── documentos/

@@ -91,6 +91,7 @@ app/
 │   ├── cliente_nube_voces.py     # Descarga listas de voces desde cada API
 │   ├── verificador_voces_nuevas.py  # Detecta voces nuevas con cooldown de 24h
 │   ├── comprobador_actualizaciones.py  # Versioning semver contra GitHub
+│   ├── actualizador_descarga.py  # Fase C: descarga y verifica la versión nueva en temp/actualizacion/
 │   ├── control_cuota.py          # Contadores mensuales por proveedor con autoreset + coste estimado
 │   ├── troceador_epub.py         # Divide EPUB por anclas HTML
 │   ├── troceador_pdf.py          # Divide PDF por su índice de contenidos (o por página si no tiene)
@@ -106,6 +107,8 @@ app/
 └── config_rutas.py               # Rutas absolutas. cargar_claves() / guardar_claves().
 
 auxiliar_sapi32.py                # Proceso auxiliar de 32 bits. Se compila a bin/auxiliar_sapi32.exe.
+auxiliar_actualizador.py           # Fase C: instalador auxiliar de actualizaciones. Se compila a bin/actualizador.exe
+                                   # (automáticamente, desde crear_portable.py — a diferencia de auxiliar_sapi32.exe).
 ```
 
 Archivos de configuración (en `/configuraciones/`):
@@ -259,6 +262,17 @@ Los audiolibros generados desde el Creador de Audiolibros van en `Grabaciones_Ep
 ## Motor local previsto
 
 Se descartó **Piper TTS** como candidato a motor local de alta calidad. SAPI5 (64 y 32 bits vía puente) sigue siendo el único motor local de la app y así se queda.
+
+---
+
+## Actualizador automático (Fase C, v3.0)
+
+Sustituye el enfoque de la v2.0 de generar un `.bat` al vuelo (bloque `ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py`) por un ejecutable auxiliar fijo y compilado, `bin/actualizador.exe`, igual que ya se hace con `auxiliar_sapi32.exe`:
+
+- `actualizador_descarga.py` descarga y verifica la versión nueva en `temp/actualizacion/` sin tocar la instalación actual.
+- `auxiliar_actualizador.py` (compilado a `bin/actualizador.exe`, automáticamente desde `crear_portable.py`) hace el respaldo por copia verificada en `temp/backup_previo/`, reemplaza los archivos y revierte solo si algo falla.
+
+**Estado:** implementado y probado con simulaciones (instalación correcta, fallo a mitad de proceso, fallo de verificación del respaldo), pero pendiente de una validación completa de extremo a extremo en Windows real con NVDA antes de sustituir el bloque `ACTUALIZADOR_SCRIPT_CLON`, que sigue siendo el sistema activo en producción. No retirar ese bloque hasta confirmar esa validación.
 
 ---
 
