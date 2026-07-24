@@ -71,6 +71,7 @@ _AJUSTES_FABRICA = {
         "actualizar_automaticamente": True,
         "escala_velocidad": "porcentaje",
         "idioma_libro_codigo": "es-ES",
+        "sonidos_habilitados": True,
     },
 }
 

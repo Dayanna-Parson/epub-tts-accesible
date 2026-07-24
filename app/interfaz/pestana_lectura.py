@@ -11,7 +11,7 @@ from app.motor.gestor_pdf import extraer_datos_pdf
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
-from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR, PAGE_SCROLLED
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
@@ -85,6 +85,11 @@ class PestanaLectura(wx.Panel):
         self.cargar_config_salto()
         
         self.pos_inicio_fragmento = 0
+        # Última página virtual (bloque de _CHARS_POR_PAGINA caracteres) en la
+        # que sonó page_scrolled.wav — evita repetir el sonido si el cursor
+        # se mueve sin cruzar un límite de página. -1 para que la primera
+        # posición real (0) ya cuente como cambio.
+        self._pagina_virtual_sonido = -1
         # Variables para la estimación temporal del progreso de voces neuronales
         self._tiempo_inicio_frag = 0.0
         self._longitud_frag_actual = 0
@@ -563,6 +568,7 @@ class PestanaLectura(wx.Panel):
         self.pos_inicio_fragmento = pos
         self.txt_contenido.SetInsertionPoint(pos)
         self.txt_contenido.ShowPosition(pos)
+        self._comprobar_cambio_pagina_virtual(pos)
         if self.longitud_texto > 0:
             pct = max(0, min(100, int(pos / self.longitud_texto * 100)))
             if self.deslizador_progreso.GetValue() != pct:
@@ -639,6 +645,7 @@ class PestanaLectura(wx.Panel):
             # Sincronización de cursor: mover el punto de inserción para que NVDA
             # pueda seguir la posición de lectura en tiempo real
             self.txt_contenido.SetInsertionPoint(pos_estimada)
+            self._comprobar_cambio_pagina_virtual(pos_estimada)
 
             porcentaje = max(0, min(100, int((pos_estimada / self.longitud_texto) * 100)))
 
@@ -989,12 +996,34 @@ class PestanaLectura(wx.Panel):
         estado = 'detenido'
         if hasattr(self.reproductor, 'obtener_estado'):
             estado = self.reproductor.obtener_estado()
-            
+
         if estado != 'reproduciendo' and self.longitud_texto > 0:
             p = int((self.txt_contenido.GetInsertionPoint()/self.longitud_texto)*100)
             if self.deslizador_progreso.GetValue() != p: self.deslizador_progreso.SetValue(p)
+        # txt_contenido es de solo lectura: cualquier KEY_UP que llegue aquí
+        # viene de navegación con flechas (o RePág/AvPág/Inicio/Fin), nunca de
+        # escritura — el punto de entrada correcto para el sonido sutil de
+        # cambio de página al estilo Bookworm.
+        self._comprobar_cambio_pagina_virtual(self.txt_contenido.GetInsertionPoint())
         e.Skip()
     # ANCLAJE_FIN: NAVEGACION_TEXTO_Y_SALTOS
+
+    # ANCLAJE_INICIO: SONIDO_CAMBIO_PAGINA_VIRTUAL
+    def _comprobar_cambio_pagina_virtual(self, pos):
+        """
+        Reproduce page_scrolled.wav cada vez que el cursor cruza el límite de
+        una página virtual (bloque de _CHARS_POR_PAGINA caracteres) — tanto al
+        navegar con las flechas como durante la lectura continua con
+        cualquier motor de voz, igual que hace Bookworm con sus propias
+        páginas. Si el archivo no está disponible, reproducir() ya falla en
+        silencio (ver reproductor_sonidos.py), así que no hace falta
+        protección adicional aquí.
+        """
+        pagina = pos // self._CHARS_POR_PAGINA
+        if pagina != self._pagina_virtual_sonido:
+            self._pagina_virtual_sonido = pagina
+            reproducir(PAGE_SCROLLED)
+    # ANCLAJE_FIN: SONIDO_CAMBIO_PAGINA_VIRTUAL
 
     def al_cargar_libro(self, evento):
         """Abre el explorador de archivos para seleccionar un libro EPUB o PDF."""
@@ -1025,6 +1054,7 @@ class PestanaLectura(wx.Panel):
 
             self.marcadores = {}
             self.pos_inicio_fragmento = 0
+            self._pagina_virtual_sonido = -1
             self.txt_contenido.SetValue(texto)
             self.longitud_texto = len(texto)
             # Aplicar negrita/cursiva/subrayado en diferido (no bloquea la carga)

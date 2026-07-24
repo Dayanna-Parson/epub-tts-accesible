@@ -1,6 +1,7 @@
 import wx
 import os
 import re
+import sys
 import json
 import logging
 import webbrowser
@@ -8,8 +9,13 @@ import wx.lib.mixins.listctrl as listmix
 
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 from app.motor import anunciador_lector as voz
-from app.motor.reproductor_sonidos import reproducir, LIST_NAV, SUCCESS, ERROR
+from app.motor import gestor_prompts_asistente as prompts
+from app.motor.reproductor_sonidos import (
+    reproducir, LIST_NAV, SUCCESS, ERROR, OPEN_FOLDER,
+    SONIDOS_DISPONIBLES, sonidos_habilitados, fijar_sonidos_habilitados,
+)
 from app.interfaz.selector_voz_compartido import ListaVocesCheck, PanelProveedorIA
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 
@@ -1861,6 +1867,201 @@ class PanelAtajos(wx.Panel):
 # ANCLAJE_FIN: PANEL_ATAJOS
 
 
+# ANCLAJE_INICIO: PANEL_SONIDOS
+class PanelSonidos(wx.Panel):
+    """Casilla global de sonidos de la app + selector de prueba individual."""
+
+    def __init__(self, padre):
+        super().__init__(padre)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(wx.StaticText(self, label="Efectos de sonido:"), 0, wx.LEFT | wx.TOP, 8)
+
+        self.chk_habilitados = wx.CheckBox(
+            self, label="Habilitar todos los efectos de sonido de la aplicación"
+        )
+        self.chk_habilitados.SetValue(sonidos_habilitados())
+        self.chk_habilitados.SetHelpText(
+            "Desmarca esta casilla para silenciar todos los sonidos de la app: "
+            "navegación, éxito, error, y el resto de efectos."
+        )
+        self.chk_habilitados.Bind(wx.EVT_CHECKBOX, self.al_cambiar_habilitados)
+        sizer.Add(self.chk_habilitados, 0, wx.ALL, 8)
+
+        sizer.Add(wx.StaticText(self, label="Probar un efecto:"), 0, wx.LEFT, 8)
+        self._ids_sonidos = list(SONIDOS_DISPONIBLES.keys())
+        self.combo_sonidos = wx.ComboBox(self, style=wx.CB_READONLY)
+        self.combo_sonidos.Set([SONIDOS_DISPONIBLES[i] for i in self._ids_sonidos])
+        self.combo_sonidos.SetSelection(0)
+        sizer.Add(self.combo_sonidos, 0, wx.EXPAND | wx.ALL, 8)
+
+        self.btn_probar = wx.Button(self, label="Probar sonido")
+        self.btn_probar.SetHelpText(
+            "Reproduce el efecto seleccionado, incluso si los efectos de sonido "
+            "están desactivados."
+        )
+        self.btn_probar.Bind(wx.EVT_BUTTON, self.al_probar_sonido)
+        sizer.Add(self.btn_probar, 0, wx.ALL, 8)
+
+        self.SetSizer(sizer)
+        self.primer_control = self.chk_habilitados
+        self.ultimo_control = self.btn_probar
+
+    def al_cambiar_habilitados(self, evento):
+        # Sin voz.hablar() aquí: wx.CheckBox ya anuncia "marcado"/"desmarcado"
+        # de forma nativa con NVDA al pulsar Espacio o Intro; añadir una
+        # confirmación propia duplicaría esa lectura, el mismo problema que
+        # se corrigió en el combo de "Estilo del asistente".
+        fijar_sonidos_habilitados(self.chk_habilitados.GetValue())
+
+    def al_probar_sonido(self, evento):
+        idx = self.combo_sonidos.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return
+        reproducir(self._ids_sonidos[idx], forzar=True)
+# ANCLAJE_FIN: PANEL_SONIDOS
+
+
+# ANCLAJE_INICIO: PANEL_ASISTENTE_BIBLIOTECA
+class PanelAsistenteBiblioteca(wx.Panel):
+    """
+    Gestión completa de las plantillas de prompt de sistema del Asistente de
+    Biblioteca: crear, editar, borrar, y acceso directo a la carpeta donde
+    se guardan como archivos .txt individuales
+    (configuraciones/asistente_biblioteca/plantillas/). El combo del chat
+    del asistente (dialogo_asistente_biblioteca.py) solo permite elegir
+    entre las ya creadas aquí.
+    """
+
+    _NUEVA = "(Nueva plantilla...)"
+
+    def __init__(self, padre):
+        super().__init__(padre)
+        self._plantillas = []
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(
+            wx.StaticText(self, label="Plantillas de prompt del Asistente de Biblioteca:"),
+            0, wx.LEFT | wx.TOP, 8,
+        )
+
+        sizer.Add(wx.StaticText(self, label="Plantilla:"), 0, wx.LEFT, 8)
+        self.combo_plantillas = wx.ComboBox(self, style=wx.CB_READONLY)
+        self.combo_plantillas.Bind(wx.EVT_COMBOBOX, self.al_seleccionar_plantilla)
+        sizer.Add(self.combo_plantillas, 0, wx.EXPAND | wx.ALL, 8)
+
+        sizer.Add(wx.StaticText(self, label="Nombre:"), 0, wx.LEFT, 8)
+        self.txt_nombre = wx.TextCtrl(self)
+        sizer.Add(self.txt_nombre, 0, wx.EXPAND | wx.ALL, 8)
+
+        sizer.Add(wx.StaticText(self, label="Texto del prompt:"), 0, wx.LEFT, 8)
+        self.txt_prompt = wx.TextCtrl(self, style=wx.TE_MULTILINE)
+        self.txt_prompt.SetName("Texto del prompt")
+        sizer.Add(self.txt_prompt, 1, wx.EXPAND | wx.ALL, 8)
+
+        sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_guardar = wx.Button(self, label="Guardar plantilla")
+        self.btn_guardar.Bind(wx.EVT_BUTTON, self.al_guardar)
+        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar plantilla")
+        self.btn_borrar = wx.Button(self, label="Borrar plantilla")
+        self.btn_borrar.Bind(wx.EVT_BUTTON, self.al_borrar)
+        aplicar_icono_boton(self.btn_borrar, "eliminar", "Borrar plantilla")
+        self.btn_abrir_carpeta = wx.Button(self, label="Abrir carpeta de plantillas")
+        self.btn_abrir_carpeta.SetHelpText(
+            "Abre en el Explorador de Windows la carpeta donde se guarda cada "
+            "plantilla como un archivo .txt independiente, editable desde fuera de la app."
+        )
+        self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON, self.al_abrir_carpeta)
+        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta de plantillas")
+        for boton in (self.btn_guardar, self.btn_borrar, self.btn_abrir_carpeta):
+            sizer_botones.Add(boton, 0, wx.RIGHT, 5)
+        sizer.Add(sizer_botones, 0, wx.ALL, 8)
+
+        self.SetSizer(sizer)
+        self.primer_control = self.combo_plantillas
+        self.ultimo_control = self.btn_abrir_carpeta
+
+        self._recargar_combo()
+
+    def al_activar(self):
+        """
+        Llamado por PestanaAjustes cada vez que se entra en este nodo del
+        árbol: vuelve a escanear configuraciones/asistente_biblioteca/plantillas/
+        por si se añadió o borró algún archivo .txt desde fuera de la app.
+        """
+        self._recargar_combo()
+
+    def _recargar_combo(self, seleccionar=None):
+        self._plantillas = prompts.listar_prompts()
+        nombres = [p["nombre"] for p in self._plantillas] + [self._NUEVA]
+        objetivo = seleccionar or self.combo_plantillas.GetStringSelection()
+        self.combo_plantillas.Set(nombres)
+        if objetivo not in nombres:
+            objetivo = nombres[0]
+        self.combo_plantillas.SetStringSelection(objetivo)
+        self._mostrar_plantilla(objetivo)
+
+    def al_seleccionar_plantilla(self, evento):
+        # No mueve el foco en ningún caso: navegar con flechas por un combo
+        # de solo selección dispara este mismo evento en cada elemento que
+        # se cruza, y robar el foco aquí obligaría a salir con Escape para
+        # seguir recorriendo la lista.
+        self._mostrar_plantilla(self.combo_plantillas.GetStringSelection())
+
+    def _mostrar_plantilla(self, seleccion):
+        if seleccion == self._NUEVA:
+            self.txt_nombre.Clear()
+            self.txt_prompt.Clear()
+            return
+        plantilla = next((p for p in self._plantillas if p["nombre"] == seleccion), None)
+        if plantilla:
+            self.txt_nombre.SetValue(plantilla["nombre"])
+            self.txt_prompt.SetValue(plantilla["texto"])
+
+    def al_guardar(self, evento):
+        nombre = self.txt_nombre.GetValue().strip()
+        texto = self.txt_prompt.GetValue().strip()
+        if not nombre or not texto:
+            reproducir(ERROR)
+            wx.MessageBox("El nombre y el texto del prompt no pueden estar vacíos.", "Error")
+            return
+        prompts.guardar_prompt(nombre, texto)
+        reproducir(SUCCESS)
+        voz.hablar(f"Plantilla «{nombre}» guardada.")
+        self._recargar_combo(seleccionar=nombre)
+
+    def al_borrar(self, evento):
+        nombre = self.txt_nombre.GetValue().strip()
+        if not nombre:
+            return
+        if wx.MessageBox(
+            f"¿Borrar la plantilla «{nombre}»?", "Borrar plantilla",
+            wx.YES_NO | wx.ICON_WARNING,
+        ) != wx.YES:
+            return
+        if prompts.borrar_prompt(nombre):
+            reproducir(SUCCESS)
+            voz.hablar(f"Plantilla «{nombre}» borrada.")
+            self._recargar_combo()
+        else:
+            reproducir(ERROR)
+            wx.MessageBox("No se puede borrar: tiene que quedar al menos una plantilla.", "Error")
+
+    def al_abrir_carpeta(self, evento):
+        carpeta = prompts.ruta_carpeta_plantillas()
+        try:
+            os.makedirs(carpeta, exist_ok=True)
+            reproducir(OPEN_FOLDER)
+            if sys.platform == 'win32':
+                os.startfile(carpeta)
+        except Exception:
+            logger.exception("Error al abrir la carpeta de plantillas del Asistente de Biblioteca")
+            reproducir(ERROR)
+            wx.MessageBox("No se pudo abrir la carpeta de plantillas.", "Error")
+# ANCLAJE_FIN: PANEL_ASISTENTE_BIBLIOTECA
+
+
 # ANCLAJE_INICIO: PESTANA_AJUSTES_PRINCIPAL
 class PestanaAjustes(wx.Panel):
     """
@@ -1887,6 +2088,8 @@ class PestanaAjustes(wx.Panel):
     _PAG_SAPI5      = 6
     _PAG_DICCIONARIO = 7
     _PAG_ATAJOS     = 8
+    _PAG_SONIDOS    = 9
+    _PAG_ASISTENTE  = 10
 
     def __init__(self, padre):
         super().__init__(padre)
@@ -1924,6 +2127,8 @@ class PestanaAjustes(wx.Panel):
         self.pag_sapi5       = PanelSapi5(self.panel_derecho, self.config)
         self.pag_diccionario = PanelDiccionario(self.panel_derecho)
         self.pag_atajos      = PanelAtajos(self.panel_derecho)
+        self.pag_sonidos     = PanelSonidos(self.panel_derecho)
+        self.pag_asistente   = PanelAsistenteBiblioteca(self.panel_derecho)
 
         self.panel_derecho.AddPage(self.pag_general,     "Configuración General")
         self.panel_derecho.AddPage(self.pag_claves,      "Credenciales y API Keys")
@@ -1934,6 +2139,8 @@ class PestanaAjustes(wx.Panel):
         self.panel_derecho.AddPage(self.pag_sapi5,       "Voces Locales SAPI5")
         self.panel_derecho.AddPage(self.pag_diccionario, "Reglas del Diccionario")
         self.panel_derecho.AddPage(self.pag_atajos,      "Atajos de Teclado")
+        self.panel_derecho.AddPage(self.pag_sonidos,     "Efectos de Sonido")
+        self.panel_derecho.AddPage(self.pag_asistente,   "Asistente de Biblioteca")
 
         self.splitter.SetMinimumPaneSize(180)
         self.splitter.SplitVertically(self.arbol_cat, self.panel_derecho, 220)
@@ -2021,6 +2228,12 @@ class PestanaAjustes(wx.Panel):
         nodo_atajos = self.arbol_cat.AppendItem(raiz, "Atajos de Teclado")
         self._nodos[nodo_atajos] = self._PAG_ATAJOS
 
+        nodo_sonidos = self.arbol_cat.AppendItem(raiz, "Efectos de Sonido")
+        self._nodos[nodo_sonidos] = self._PAG_SONIDOS
+
+        nodo_asistente = self.arbol_cat.AppendItem(raiz, "Asistente de Biblioteca")
+        self._nodos[nodo_asistente] = self._PAG_ASISTENTE
+
         # Expandir todas las ramas para que el usuario ciego conozca la estructura
         # completa desde el primer momento que el árbol recibe el foco.
         self.arbol_cat.ExpandAll()
@@ -2089,6 +2302,9 @@ class PestanaAjustes(wx.Panel):
         if nodo.IsOk() and nodo in self._nodos:
             indice = self._nodos[nodo]
             self.panel_derecho.ChangeSelection(indice)
+            pagina = self.panel_derecho.GetCurrentPage()
+            if hasattr(pagina, 'al_activar'):
+                pagina.al_activar()
             # Devolver el foco al árbol después de cambiar la página.
             # La bandera _bloqueo_anuncio evita que el re-enfoque dispare
             # un segundo anuncio de NVDA para el mismo nodo.
@@ -2114,6 +2330,7 @@ class PestanaAjustes(wx.Panel):
             self.pag_azure, self.pag_deepgram, self.pag_polly,
             self.pag_elevenlabs, self.pag_sapi5,
             self.pag_diccionario, self.pag_atajos,
+            self.pag_sonidos, self.pag_asistente,
         ]
         if 0 <= idx < len(paneles):
             return paneles[idx]

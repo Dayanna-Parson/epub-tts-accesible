@@ -38,7 +38,9 @@ from app.motor import anunciador_lector as voz
 from app.motor import gestor_chat_biblioteca as chat
 from app.motor import gestor_prompts_asistente as prompts
 from app.motor.limpiador_markdown_chat import limpiar_markdown
-from app.motor.reproductor_sonidos import reproducir, SUCCESS, ERROR, CLEAR
+from app.motor.reproductor_sonidos import (
+    reproducir, iniciar_bucle, detener_bucle, SUCCESS, ERROR, CLEAR, THINKING,
+)
 from app.servicios.cliente_gemini import enviar_mensaje
 
 logger = logging.getLogger(__name__)
@@ -67,20 +69,18 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # ANCLAJE_INICIO: ASISTENTE_SELECTOR_PROMPT
+        # Solo el combo de selección rápida: crear, editar y borrar plantillas
+        # se gestiona ahora desde Ajustes → Asistente de Biblioteca, para no
+        # duplicar esa gestión completa aquí en el chat.
         sizer_prompt = wx.BoxSizer(wx.HORIZONTAL)
         sizer_prompt.Add(wx.StaticText(self, label="Estilo del asistente:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.combo_prompt = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_prompt.SetHelpText(
-            "Plantilla de instrucciones que sigue el asistente en esta conversación."
+            "Plantilla de instrucciones que sigue el asistente en esta conversación. "
+            "Para crear, editar o borrar plantillas, ve a Ajustes → Asistente de Biblioteca."
         )
         self.combo_prompt.Bind(wx.EVT_COMBOBOX, self.al_cambiar_prompt)
         sizer_prompt.Add(self.combo_prompt, 1, wx.RIGHT, 5)
-        self.btn_editar_prompts = wx.Button(self, label="Editar prompts...")
-        self.btn_editar_prompts.SetHelpText(
-            "Crea, edita o borra las plantillas de prompt de sistema del asistente."
-        )
-        self.btn_editar_prompts.Bind(wx.EVT_BUTTON, self.al_editar_prompts)
-        sizer_prompt.Add(self.btn_editar_prompts, 0)
         sizer.Add(sizer_prompt, 0, wx.EXPAND | wx.ALL, 8)
         # ANCLAJE_FIN: ASISTENTE_SELECTOR_PROMPT
 
@@ -133,7 +133,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self.btn_borrar.Bind(wx.EVT_BUTTON, self.al_borrar_historial)
         self.btn_cerrar = wx.Button(self, label="Cerrar")
         self.btn_cerrar.SetHelpText("Cierra el Asistente de Biblioteca. Equivale a pulsar Escape.")
-        self.btn_cerrar.Bind(wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
+        self.btn_cerrar.Bind(wx.EVT_BUTTON, self._al_cerrar)
         for boton in (
             self.btn_copiar_mensaje, self.btn_copiar_respuesta,
             self.btn_guardar, self.btn_borrar, self.btn_cerrar,
@@ -162,27 +162,15 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             self.combo_prompt.SetSelection(0)
 
     def al_cambiar_prompt(self, evento):
+        # Sin confirmación hablada aquí: EVT_COMBOBOX se dispara en cada
+        # elemento que se cruza al navegar con flechas, y NVDA ya anuncia
+        # de forma nativa el nombre de la plantilla seleccionada en el
+        # combo — añadir voz.hablar() aquí duplicaba esa lectura (se oía
+        # "Estilo del asistente: X." seguido de "X" en cada flecha).
+        # al_enviar() relee obtener_prompt_activo() justo antes de llamar
+        # a Gemini, así que lo que se fija aquí es lo que se usará.
         nombre = self.combo_prompt.GetStringSelection()
         prompts.fijar_prompt_activo(nombre)
-        # Confirma que el cambio realmente se aplicará al siguiente
-        # mensaje: al_enviar() relee obtener_prompt_activo() justo antes
-        # de llamar a Gemini, así que lo que se acaba de fijar aquí es
-        # literalmente lo que se usará.
-        voz.hablar(f"Estilo del asistente: {nombre}.")
-
-    def al_editar_prompts(self, evento):
-        from app.interfaz.dialogo_editar_prompt import DialogoEditarPrompt
-
-        dlg = DialogoEditarPrompt(self, self.combo_prompt.GetStringSelection())
-        dlg.ShowModal()
-        cambios = dlg.cambios_realizados
-        dlg.Destroy()
-        # Siempre se recarga, no solo si dlg.cambios_realizados: es una
-        # lectura barata (unos pocos archivos .txt) y así el combo del
-        # chat nunca puede quedarse desactualizado por un fallo al llevar
-        # la cuenta de qué cambió dentro del diálogo de edición.
-        self._recargar_combo_prompt()
-        self.txt_entrada.SetFocus()
 
     # ── Carga de historial (hilo principal, archivo pequeño) ────────────────
 
@@ -223,6 +211,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self.btn_enviar.Disable()
         self.lbl_estado.SetLabel("Pensando...")
         voz.hablar("Mensaje enviado. Pensando...")
+        iniciar_bucle(THINKING)
 
         historial_previo = chat.cargar_historial(self.id_libro)[:-1]
         instruccion_sistema = prompts.obtener_prompt_activo()["texto"]
@@ -246,6 +235,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             wx.CallAfter(self._al_fallar_respuesta, str(e))
 
     def _al_recibir_respuesta(self, respuesta):
+        detener_bucle()
         self._respuesta_pendiente = False
         self.btn_enviar.Enable()
         self.lbl_estado.SetLabel("")
@@ -255,6 +245,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         voz.hablar(f"Asistente: {respuesta}")
 
     def _al_fallar_respuesta(self, mensaje_error):
+        detener_bucle()
         self._respuesta_pendiente = False
         self.btn_enviar.Enable()
         self.lbl_estado.SetLabel("")
@@ -329,8 +320,17 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         voz.hablar("Historial borrado.")
     # ANCLAJE_FIN: ASISTENTE_ACCIONES_HISTORIAL
 
+    def _al_cerrar(self, evento):
+        # Si el diálogo se cierra con una respuesta todavía pendiente, el
+        # bucle de thinking.wav debe detenerse aquí — la respuesta que
+        # llegue después vía wx.CallAfter ya no tiene diálogo al que
+        # actualizar, así que _al_recibir_respuesta/_al_fallar_respuesta
+        # nunca se ejecutarían para pararlo.
+        detener_bucle()
+        self.EndModal(wx.ID_CLOSE)
+
     def _al_tecla_global(self, evento):
         if evento.GetKeyCode() == wx.WXK_ESCAPE:
-            self.EndModal(wx.ID_CLOSE)
+            self._al_cerrar(evento)
             return
         evento.Skip()

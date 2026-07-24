@@ -20,7 +20,7 @@ import json
 import logging
 import os
 
-from app.config_rutas import ruta_config_asistente
+from app.config_rutas import ruta_config, ruta_config_asistente
 from app.servicios.cliente_gemini import INSTRUCCION_SISTEMA_DEFECTO
 
 logger = logging.getLogger(__name__)
@@ -29,11 +29,24 @@ NOMBRE_DEFECTO = "Por defecto"
 
 _CARACTERES_PROHIBIDOS = '<>:"/\\|?*'
 _RUTA_ACTIVO = ruta_config_asistente("activo.json")
-_RUTA_PROMPTS_JSON_LEGACY = ruta_config_asistente("prompts_asistente.json")
+# Dos ubicaciones antiguas posibles según la versión: la original en la raíz
+# de configuraciones/, y la intermedia ya dentro de asistente_biblioteca/
+# pero todavía como un único JSON (antes de trocearlo por archivo). Se
+# comprueban las dos para no dejar plantillas huérfanas si alguna
+# instalación se quedó a medias entre versiones.
+_RUTAS_PROMPTS_JSON_LEGACY = [
+    ruta_config_asistente("prompts_asistente.json"),
+    ruta_config("prompts_asistente.json"),
+]
 
 
 def _carpeta_plantillas() -> str:
     return ruta_config_asistente("plantillas")
+
+
+def ruta_carpeta_plantillas() -> str:
+    """Carpeta de plantillas, para el botón "Abrir carpeta de plantillas" de Ajustes."""
+    return _carpeta_plantillas()
 
 
 def _nombre_archivo_seguro(nombre: str) -> str:
@@ -55,30 +68,42 @@ def _escribir_atomico(ruta: str, contenido: str):
 
 def _migrar_json_legacy_si_hace_falta():
     """
-    Migración de la versión anterior (todas las plantillas en un único
-    prompts_asistente.json) a un archivo .txt por plantilla. Se ejecuta una
-    sola vez: si ya hay algún .txt en plantillas/, no vuelve a mirar el
-    JSON viejo.
+    Migración de versiones anteriores (todas las plantillas en un único
+    prompts_asistente.json, en cualquiera de sus dos ubicaciones posibles) a
+    un archivo .txt por plantilla.
+
+    Se comprueba en cada llamada a listar_prompts() —no solo la primera vez
+    que se crea plantillas/— porque esa carpeta puede existir ya (por
+    ejemplo, recién creada vacía por crear_portable.py, o con plantillas
+    nuevas creadas después de actualizar la app) sin que el JSON antiguo se
+    haya migrado todavía: si la condición fuera "solo si la carpeta no
+    existe", esas plantillas antiguas se quedarían huérfanas para siempre.
+    No sobrescribe ninguna plantilla que ya exista con ese nombre (por si se
+    editó o se creó una más reciente con el mismo nombre), ni pisa
+    activo.json si ya hay uno guardado.
     """
-    if not os.path.exists(_RUTA_PROMPTS_JSON_LEGACY):
-        return
-    try:
-        with open(_RUTA_PROMPTS_JSON_LEGACY, "r", encoding="utf-8") as f:
-            datos = json.loads(f.read() or "{}")
-        for prompt in datos.get("prompts", []):
-            _escribir_atomico(_ruta_plantilla(prompt["nombre"]), prompt.get("texto", ""))
-        if datos.get("activo"):
-            _escribir_atomico(_RUTA_ACTIVO, json.dumps({"activo": datos["activo"]}, ensure_ascii=False))
-        os.remove(_RUTA_PROMPTS_JSON_LEGACY)
-        logger.info("Plantillas del Asistente de Biblioteca migradas a archivos .txt individuales")
-    except Exception:
-        logger.exception("Error al migrar prompts_asistente.json al nuevo formato por archivos")
+    for ruta_legacy in _RUTAS_PROMPTS_JSON_LEGACY:
+        if not os.path.exists(ruta_legacy):
+            continue
+        try:
+            with open(ruta_legacy, "r", encoding="utf-8") as f:
+                datos = json.loads(f.read() or "{}")
+            for prompt in datos.get("prompts", []):
+                ruta_destino = _ruta_plantilla(prompt["nombre"])
+                if not os.path.exists(ruta_destino):
+                    _escribir_atomico(ruta_destino, prompt.get("texto", ""))
+            if datos.get("activo") and not os.path.exists(_RUTA_ACTIVO):
+                _escribir_atomico(_RUTA_ACTIVO, json.dumps({"activo": datos["activo"]}, ensure_ascii=False))
+            os.remove(ruta_legacy)
+            logger.info("Plantillas del Asistente de Biblioteca migradas desde %s", ruta_legacy)
+        except Exception:
+            logger.exception("Error al migrar %s al nuevo formato por archivos", ruta_legacy)
 
 
 def listar_prompts() -> list:
     """Lista de {"nombre", "texto"} con todas las plantillas guardadas."""
     carpeta = _carpeta_plantillas()
-    if not os.path.isdir(carpeta):
+    if any(os.path.exists(r) for r in _RUTAS_PROMPTS_JSON_LEGACY):
         _migrar_json_legacy_si_hace_falta()
     plantillas = []
     for ruta in sorted(glob.glob(os.path.join(carpeta, "*.txt"))):
@@ -111,12 +136,19 @@ def _nombre_activo_guardado():
 
 
 def obtener_prompt_activo() -> dict:
-    """Plantilla marcada como activa (o la primera, si la marcada ya no existe)."""
+    """
+    Plantilla marcada como activa. Si la marcada ya no existe (por ejemplo,
+    se borró su archivo .txt desde fuera de la app), cae a la primera de la
+    lista — NOMBRE_DEFECTO si sigue existiendo, por el orden de
+    listar_prompts() — y deja esa corrección guardada en activo.json, para
+    no repetir el mismo fallback en cada lectura.
+    """
     plantillas = listar_prompts()
     nombre_activo = _nombre_activo_guardado()
     for prompt in plantillas:
         if prompt["nombre"] == nombre_activo:
             return prompt
+    fijar_prompt_activo(plantillas[0]["nombre"])
     return plantillas[0]
 
 
