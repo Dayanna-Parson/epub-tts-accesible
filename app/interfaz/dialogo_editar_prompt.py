@@ -10,6 +10,7 @@ import logging
 
 import wx
 
+from app.motor import anunciador_lector as voz
 from app.motor import gestor_prompts_asistente as prompts
 from app.motor.reproductor_sonidos import reproducir, SUCCESS, ERROR
 
@@ -57,6 +58,10 @@ class DialogoEditarPrompt(wx.Dialog):
         self.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_global)
 
         self._recargar_combo(seleccionar=nombre_seleccionado)
+        # Foco de partida determinista: sea cual sea el efecto colateral de
+        # rellenar los campos al recargar el combo, el diálogo siempre debe
+        # empezar con el foco en la propia lista de plantillas.
+        self.combo_plantillas.SetFocus()
 
     def _recargar_combo(self, seleccionar=None):
         self._plantillas = prompts.listar_prompts()
@@ -71,7 +76,12 @@ class DialogoEditarPrompt(wx.Dialog):
         if seleccion == _NUEVA:
             self.txt_nombre.Clear()
             self.txt_prompt.Clear()
-            self.txt_nombre.SetFocus()
+            if evento is not None:
+                # Solo mueve el foco cuando el usuario elige "Nueva
+                # plantilla..." a propósito desde el combo (evento real);
+                # al repoblar el combo por código (evento=None) no debe
+                # robarle el foco a nadie.
+                self.txt_nombre.SetFocus()
             return
         plantilla = next((p for p in self._plantillas if p["nombre"] == seleccion), None)
         if plantilla:
@@ -88,6 +98,7 @@ class DialogoEditarPrompt(wx.Dialog):
         prompts.guardar_prompt(nombre, texto)
         self.cambios_realizados = True
         reproducir(SUCCESS)
+        voz.hablar(f"Plantilla «{nombre}» guardada.")
         self._recargar_combo(seleccionar=nombre)
 
     def al_borrar(self, evento):
@@ -102,6 +113,7 @@ class DialogoEditarPrompt(wx.Dialog):
         if prompts.borrar_prompt(nombre):
             self.cambios_realizados = True
             reproducir(SUCCESS)
+            voz.hablar(f"Plantilla «{nombre}» borrada.")
             self._recargar_combo()
         else:
             reproducir(ERROR)

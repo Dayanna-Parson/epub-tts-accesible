@@ -25,13 +25,19 @@ import json
 import logging
 import os
 
-from app.config_rutas import ruta_config
+from app.config_rutas import ruta_carpeta_asistente, ruta_config_asistente
 
 logger = logging.getLogger(__name__)
 
-_RUTA = ruta_config("chat_biblioteca.json")
+_RUTA = ruta_config_asistente("chat_biblioteca.json")
 
 CLAVE_GENERAL = "general"
+
+
+def ruta_carpeta():
+    """Carpeta donde vive chat_biblioteca.json — para sugerir como destino
+    por defecto al exportar una conversación a mano (Guardar conversación...)."""
+    return ruta_carpeta_asistente()
 
 
 def _cargar_todo() -> dict:

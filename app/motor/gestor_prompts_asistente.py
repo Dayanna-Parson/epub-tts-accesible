@@ -10,12 +10,12 @@ import json
 import logging
 import os
 
-from app.config_rutas import ruta_config
+from app.config_rutas import ruta_config_asistente
 from app.servicios.cliente_gemini import INSTRUCCION_SISTEMA_DEFECTO
 
 logger = logging.getLogger(__name__)
 
-_RUTA = ruta_config("prompts_asistente.json")
+_RUTA = ruta_config_asistente("prompts_asistente.json")
 
 NOMBRE_DEFECTO = "Por defecto"
 

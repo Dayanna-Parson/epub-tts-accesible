@@ -48,6 +48,23 @@ def ruta_config(nombre_archivo):
     return os.path.join(CONFIG_DIR, nombre_archivo)
 
 
+# ANCLAJE_INICIO: RUTA_ASISTENTE_BIBLIOTECA
+# Subcarpeta propia para no mezclar los archivos del Asistente de Biblioteca
+# (historial de chat, plantillas de prompt) sueltos junto al resto de
+# configuraciones/. La crean automáticamente gestor_chat_biblioteca.py y
+# gestor_prompts_asistente.py al escribir en ella (os.makedirs).
+_SUBCARPETA_ASISTENTE = "asistente_biblioteca"
+
+
+def ruta_config_asistente(nombre_archivo):
+    return os.path.join(CONFIG_DIR, _SUBCARPETA_ASISTENTE, nombre_archivo)
+
+
+def ruta_carpeta_asistente():
+    return os.path.join(CONFIG_DIR, _SUBCARPETA_ASISTENTE)
+# ANCLAJE_FIN: RUTA_ASISTENTE_BIBLIOTECA
+
+
 def cargar_claves() -> dict:
     """
     Lee configuraciones/claves_api.json y devuelve el dict con las claves.

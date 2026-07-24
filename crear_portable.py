@@ -243,6 +243,15 @@ def crear_configuraciones_fabrica():
     _ocultar_archivo(_gitkeep_bak)
     print("      Creado: configuraciones/proyectos_backup/ (carpeta de respaldos)")
 
+    # asistente_biblioteca/: historial de chat y plantillas de prompt del
+    # Asistente de Biblioteca, separados del resto de configuraciones/.
+    dir_asistente = os.path.join(dir_conf, "asistente_biblioteca")
+    os.makedirs(dir_asistente, exist_ok=True)
+    ruta_prompts = os.path.join(dir_asistente, "prompts_asistente.json")
+    with open(ruta_prompts, "w", encoding="utf-8") as f:
+        json.dump({"prompts": [], "activo": ""}, f, ensure_ascii=False, indent=2)
+    print("      Creado: configuraciones/asistente_biblioteca/ (con prompts_asistente.json vacío)")
+
 
 def comprimir_portable():
     print(f"[6/7] Comprimiendo en {os.path.basename(ZIP_SALIDA)}...")

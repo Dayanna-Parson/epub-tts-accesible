@@ -13,14 +13,25 @@ _TIMEOUT = 30
 
 # Instrucción de sistema: pide a Gemini que se apoye en la búsqueda web para no
 # alucinar datos sobre libros (tramas, autores, ediciones, disponibilidad).
+# Es explícita al prohibir inventar títulos/autores/sagas cuando no encuentra
+# datos reales, porque sin esta advertencia el modelo tiende a "completar"
+# con una sinopsis o un autor plausibles en vez de admitir que no los conoce.
 INSTRUCCION_SISTEMA_DEFECTO = (
     "Eres el Asistente de Biblioteca de una aplicación de audiolibros para "
     "personas ciegas. Ayudas con recomendaciones, dudas sobre autores, tramas "
-    "y ediciones de libros. Cuando cites datos concretos (argumento, autor, año, "
-    "edición, disponibilidad), apóyate en la búsqueda web para verificarlos en "
-    "fuentes fiables como Goodreads o tiendas de libros como Kindle España, en "
-    "vez de inventarlos de memoria. Responde en español, de forma clara y breve, "
-    "pensando en que la respuesta puede leerse con un lector de pantalla."
+    "y ediciones de libros. Antes de citar cualquier dato concreto (argumento, "
+    "autor, año, edición, disponibilidad, número de libro en una saga), "
+    "verifícalo con la búsqueda web en fuentes fiables como Goodreads, "
+    "Amazon o la web del propio autor o editorial — nunca lo inventes ni lo "
+    "completes de memoria. Presta especial cuidado a los NOMBRES PROPIOS: "
+    "escribe el título del libro/saga y el nombre del autor exactamente como "
+    "aparecen en la fuente que consultes, sin adaptarlos ni 'corregirlos'. "
+    "Si tras buscar no encuentras un libro, autor o saga con ese nombre "
+    "exacto, dilo explícitamente ('No he encontrado ese título/autor exacto, "
+    "¿podrías confirmarme el nombre?') en vez de responder con una sinopsis "
+    "o una biografía inventadas para algo parecido. Responde en español, de "
+    "forma clara y breve, pensando en que la respuesta puede leerse con un "
+    "lector de pantalla."
 )
 # ANCLAJE_FIN: CLIENTE_GEMINI
 
@@ -203,6 +214,10 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
     cuerpo = {
         "system_instruction": {"parts": [{"text": instruccion_sistema or INSTRUCCION_SISTEMA_DEFECTO}]},
         "contents": contenidos,
+        # Temperatura baja: menos "creatividad" al citar títulos, autores o
+        # tramas reales — sigue dejando margen para recomendar y charlar,
+        # pero reduce que el modelo rellene huecos con datos inventados.
+        "generationConfig": {"temperature": 0.4},
     }
     if busqueda_web:
         cuerpo["tools"] = [{"google_search": {}}]

@@ -14,17 +14,18 @@ general.
 Accesibilidad (Sección 6 de planificacion_v3.md):
   · El historial previo se lee del JSON en el hilo principal antes de
     mostrar el diálogo (archivo pequeño, sin diferir a hilo secundario).
-  · El contexto se anuncia con el patrón _anunciador, entregando el foco
-    al campo de entrada al terminar — el usuario debe poder escribir de
-    inmediato.
-  · Las llamadas a Gemini se hacen siempre en hilo secundario, con
-    indicador "Pensando..." anunciado una vez al enviar, y la respuesta
-    entregada vía wx.CallAfter.
-  · Los mensajes nuevos (propios o del asistente) se anuncian con un
-    toque de foco brevísimo al control oculto (necesario para que NVDA
-    detecte el cambio) que vuelve enseguida al campo de entrada — el
-    texto ya escrito en el campo no se pierde, porque SetFocus() no
-    modifica el contenido del control.
+  · Los anuncios (contexto inicial, "Mensaje enviado.", "Pensando...",
+    respuestas, errores, acciones sobre el historial) se hablan con
+    app.motor.anunciador_lector (accessible_output3): habla directo al
+    lector de pantalla activo sin mover el foco ni simular controles
+    ocultos. Se descartó el patrón _anunciador (toque de foco a un
+    TextCtrl oculto) para este diálogo porque NVDA anunciaba el rol del
+    control en cada mensaje ("edición, solo lectura...") y se sentía como
+    si saltara una ventana flotante en mitad de la conversación — ver
+    historial de commits si se quiere retomar esa alternativa.
+  · Las llamadas a Gemini se hacen siempre en hilo secundario; la
+    respuesta se entrega vía wx.CallAfter. El foco nunca se mueve del
+    campo de entrada mientras llega la respuesta.
 """
 
 import logging
@@ -33,6 +34,7 @@ import threading
 
 import wx
 
+from app.motor import anunciador_lector as voz
 from app.motor import gestor_chat_biblioteca as chat
 from app.motor import gestor_prompts_asistente as prompts
 from app.motor.limpiador_markdown_chat import limpiar_markdown
@@ -59,7 +61,6 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self.contexto_libro = contexto_libro
         self.id_libro = contexto_libro["id_libro"] if contexto_libro else None
         self._respuesta_pendiente = False
-        self._temporizador_anuncio = None
         self._ultimo_mensaje_usuario = ""
         self._ultimo_mensaje_asistente = ""
 
@@ -83,21 +84,27 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         sizer.Add(sizer_prompt, 0, wx.EXPAND | wx.ALL, 8)
         # ANCLAJE_FIN: ASISTENTE_SELECTOR_PROMPT
 
+        # Etiqueta visible + asociada por orden de tabulación: es lo que
+        # realmente usa NVDA como nombre accesible del campo en esta app
+        # (SetName() por sí solo no lo garantiza, se comprobó con el
+        # historial y el campo de mensaje quedando sin nombre).
+        sizer.Add(wx.StaticText(self, label="Historial de conversación:"), 0, wx.LEFT | wx.TOP, 8)
         self.historial_ctrl = wx.TextCtrl(
             self, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
         )
-        self.historial_ctrl.SetName("Historial de mensajes")
+        self.historial_ctrl.SetName("Historial de conversación")
         self.historial_ctrl.SetHelpText(
             "Historial de la conversación con el Asistente de Biblioteca. "
             "Solo lectura; usa Ctrl+Fin para ir al último mensaje. "
             "Puedes seleccionar cualquier texto y copiarlo con Ctrl+C."
         )
-        sizer.Add(self.historial_ctrl, 1, wx.EXPAND | wx.ALL, 8)
+        sizer.Add(self.historial_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
         self.lbl_estado = wx.StaticText(self, label="")
         sizer.Add(self.lbl_estado, 0, wx.LEFT | wx.RIGHT, 8)
 
         sizer_entrada = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_entrada.Add(wx.StaticText(self, label="Mensaje:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_entrada = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
         self.txt_entrada.SetName("Mensaje")
         self.txt_entrada.SetHelpText(
@@ -136,21 +143,11 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         # ANCLAJE_FIN: ASISTENTE_BOTONES_ACCION
 
         self.SetSizer(sizer)
-
-        # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador),
-        # con la variante de esta sección: siempre devuelve el foco al campo
-        # de entrada (nunca al control que lo tuviera antes de abrir el
-        # diálogo, ni se queda sin devolverlo tras un mensaje entrante).
-        self._anunciador = wx.TextCtrl(
-            self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1)
-        )
-        self._anunciador.SetName("Anuncios del asistente")
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-
         self.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_global)
 
         self._recargar_combo_prompt()
         self._cargar_historial_previo()
+        self.txt_entrada.SetFocus()
         wx.CallAfter(self._anunciar_contexto_inicial)
 
     # ── Plantillas de prompt de sistema ──────────────────────────────────────
@@ -176,7 +173,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         dlg.Destroy()
         if cambios:
             self._recargar_combo_prompt()
-            self.txt_entrada.SetFocus()
+        self.txt_entrada.SetFocus()
 
     # ── Carga de historial (hilo principal, archivo pequeño) ────────────────
 
@@ -192,35 +189,12 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         else:
             self._ultimo_mensaje_asistente = texto
 
-    # ── Anuncios sin robar el campo de entrada de forma permanente ──────────
-
-    def _anunciar(self, texto):
-        # Patrón _anunciador establecido en el resto de la app: toque de
-        # foco brevísimo al control oculto (necesario para que NVDA
-        # detecte el cambio) y vuelta al campo de entrada — el texto ya
-        # escrito no se pierde porque SetFocus() no lo toca. Se probó una
-        # notificación UIA "en vivo" que anunciaba sin tocar el foco en
-        # ningún momento, pero en pruebas reales con NVDA no llegaba a
-        # leerse (quedó descartada; ver historial de commits si se quiere
-        # retomar con más margen para depurarla en Windows real).
-        if self._temporizador_anuncio is not None and self._temporizador_anuncio.IsRunning():
-            self._temporizador_anuncio.Stop()
-
-        self._anunciador.SetValue(texto)
-        self._anunciador.SetFocus()
-
-        def _restaurar_foco():
-            if wx.Window.FindFocus() is self._anunciador:
-                self.txt_entrada.SetFocus()
-
-        self._temporizador_anuncio = wx.CallLater(350, _restaurar_foco)
-
     def _anunciar_contexto_inicial(self):
         if self.contexto_libro:
             texto = f"Hablando sobre: {self.contexto_libro['titulo']}."
         else:
             texto = "Asistente de Biblioteca en modo general. Sin libro seleccionado."
-        self._anunciar(texto)
+        voz.hablar(texto)
 # ANCLAJE_FIN: DIALOGO_ASISTENTE_BIBLIOTECA_INIT
 
 
@@ -239,7 +213,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self._respuesta_pendiente = True
         self.btn_enviar.Disable()
         self.lbl_estado.SetLabel("Pensando...")
-        self._anunciar("Pensando...")
+        voz.hablar("Mensaje enviado. Pensando...")
 
         historial_previo = chat.cargar_historial(self.id_libro)[:-1]
         instruccion_sistema = prompts.obtener_prompt_activo()["texto"]
@@ -269,30 +243,30 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         chat.agregar_turno(self.id_libro, "asistente", respuesta)
         self._agregar_a_historial_visual("asistente", respuesta)
         reproducir(SUCCESS)
-        self._anunciar(f"Asistente: {respuesta}")
+        voz.hablar(f"Asistente: {respuesta}")
 
     def _al_fallar_respuesta(self, mensaje_error):
         self._respuesta_pendiente = False
         self.btn_enviar.Enable()
         self.lbl_estado.SetLabel("")
         reproducir(ERROR)
-        self._anunciar(f"Error al consultar al asistente: {mensaje_error}")
+        voz.hablar(f"Error al consultar al asistente: {mensaje_error}")
 # ANCLAJE_FIN: ASISTENTE_ENVIO_HILO_SECUNDARIO
 
     # ANCLAJE_INICIO: ASISTENTE_ACCIONES_HISTORIAL
     def _copiar_al_portapapeles(self, texto, etiqueta):
         if not texto:
             reproducir(ERROR)
-            self._anunciar(f"Todavía no hay {etiqueta} que copiar.")
+            voz.hablar(f"Todavía no hay {etiqueta} que copiar.")
             return
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(texto))
             wx.TheClipboard.Close()
             reproducir(SUCCESS)
-            self._anunciar(f"{etiqueta.capitalize()} copiado al portapapeles.")
+            voz.hablar(f"{etiqueta.capitalize()} copiado al portapapeles.")
         else:
             reproducir(ERROR)
-            self._anunciar("No se pudo abrir el portapapeles.")
+            voz.hablar("No se pudo abrir el portapapeles.")
 
     def al_copiar_mi_mensaje(self, evento):
         self._copiar_al_portapapeles(self._ultimo_mensaje_usuario, "tu último mensaje")
@@ -304,13 +278,14 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         contenido = self.historial_ctrl.GetValue()
         if not contenido.strip():
             reproducir(ERROR)
-            self._anunciar("No hay ninguna conversación que guardar todavía.")
+            voz.hablar("No hay ninguna conversación que guardar todavía.")
             return
         nombre_sugerido = "Conversación Asistente de Biblioteca.txt"
         if self.contexto_libro:
             nombre_sugerido = f"Conversación sobre {self.contexto_libro['titulo']}.txt"
         with wx.FileDialog(
             self, "Guardar conversación como",
+            defaultDir=chat.ruta_carpeta(),
             defaultFile=nombre_sugerido,
             wildcard="Archivos de texto (*.txt)|*.txt",
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
@@ -322,11 +297,11 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             with open(ruta, "w", encoding="utf-8") as f:
                 f.write(contenido)
             reproducir(SUCCESS)
-            self._anunciar(f"Conversación guardada en {os.path.basename(ruta)}.")
+            voz.hablar(f"Conversación guardada en {os.path.basename(ruta)}.")
         except Exception:
             logger.exception("Error al guardar la conversación del Asistente de Biblioteca")
             reproducir(ERROR)
-            self._anunciar("No se pudo guardar la conversación.")
+            voz.hablar("No se pudo guardar la conversación.")
 
     def al_borrar_historial(self, evento):
         if self.historial_ctrl.IsEmpty():
@@ -342,7 +317,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self._ultimo_mensaje_usuario = ""
         self._ultimo_mensaje_asistente = ""
         reproducir(CLEAR)
-        self._anunciar("Historial borrado.")
+        voz.hablar("Historial borrado.")
     # ANCLAJE_FIN: ASISTENTE_ACCIONES_HISTORIAL
 
     def _al_tecla_global(self, evento):
