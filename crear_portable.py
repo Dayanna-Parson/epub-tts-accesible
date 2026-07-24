@@ -238,11 +238,13 @@ def crear_configuraciones_fabrica():
     _ocultar_archivo(_gitkeep_grab)
     print("      Creado: Grabaciones_Epub-TTS/ (carpeta de salida de audio)")
 
-    os.makedirs(os.path.join(dir_conf, "proyectos_backup"), exist_ok=True)
-    _gitkeep_bak = os.path.join(dir_conf, "proyectos_backup", ".gitkeep")
-    open(_gitkeep_bak, "w").close()
-    _ocultar_archivo(_gitkeep_bak)
-    print("      Creado: configuraciones/proyectos_backup/ (carpeta de respaldos)")
+    for _carpeta_bak in ("backups_proyectos", "backups_biblioteca"):
+        _dir_bak = os.path.join(dir_conf, _carpeta_bak)
+        os.makedirs(_dir_bak, exist_ok=True)
+        _gitkeep_bak = os.path.join(_dir_bak, ".gitkeep")
+        open(_gitkeep_bak, "w").close()
+        _ocultar_archivo(_gitkeep_bak)
+        print(f"      Creado: configuraciones/{_carpeta_bak}/ (carpeta de respaldos)")
 
     # asistente_biblioteca/: historial de chat y plantillas de prompt del
     # Asistente de Biblioteca, separados del resto de configuraciones/.

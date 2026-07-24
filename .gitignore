@@ -80,8 +80,10 @@ temp/
 # ── Caché de audio (generada en tiempo de ejecución) ─────────────────────────
 app/motor/cache/
 
-# ── Respaldos de proyectos (datos personales) ─────────────────────────────────
+# ── Respaldos de proyectos y biblioteca (datos personales) ────────────────────
 configuraciones/proyectos_backup/
+configuraciones/backups_proyectos/
+configuraciones/backups_biblioteca/
 
 # Copias de seguridad y proyectos locales de usuario
 backups/
