@@ -95,27 +95,53 @@ _CACHE_RUTA:    dict[str, str]   = {}   # nombre → ruta absoluta  (llenado al 
 _CACHE_SONIDOS: dict[str, object] = {}  # nombre → wx.adv.Sound   (llenado en primer uso)
 _wx_cache_listo = False
 
-# ── Preferencia global "sonidos_habilitados" ──────────────────────────────────
-# Se guarda en ajustes.json junto al resto de preferencias generales. Se lee
+# ── Preferencias "sonidos_habilitados" (global) y "sonidos_deshabilitados"
+# (lista de sonidos individuales silenciados) ─────────────────────────────────
+# Se guardan en ajustes.json junto al resto de preferencias generales. Se leen
 # de forma perezosa (no hace falta al importar el módulo, antes de que exista
-# configuraciones/ en una instalación nueva) y se cachea en memoria.
+# configuraciones/ en una instalación nueva) y se cachean en memoria.
 _HABILITADOS = True
+_DESHABILITADOS_INDIVIDUALES: set = set()
 _preferencia_cargada = False
 _bucle_activo = None  # nombre del sonido en bucle actualmente, o None
 
 
+def _leer_ajustes_json() -> dict:
+    try:
+        with open(ruta_config("ajustes.json"), "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}  # instalación nueva: ajustes.json todavía no existe
+    except Exception:
+        logger.exception("[Sonidos] Error al leer ajustes.json")
+        return {}
+
+
+def _escribir_ajustes_json(cambios: dict) -> None:
+    try:
+        ruta = ruta_config("ajustes.json")
+        datos = {}
+        if os.path.exists(ruta):
+            with open(ruta, "r", encoding="utf-8") as f:
+                datos = json.load(f)
+        datos.update(cambios)
+        os.makedirs(CONFIG_DIR, exist_ok=True)
+        ruta_tmp = ruta + ".tmp"
+        with open(ruta_tmp, "w", encoding="utf-8") as f:
+            json.dump(datos, f, ensure_ascii=False, indent=4)
+        os.replace(ruta_tmp, ruta)
+    except Exception:
+        logger.exception("[Sonidos] Error al guardar preferencias de sonido en ajustes.json")
+
+
 def _cargar_preferencia_habilitados() -> None:
-    global _HABILITADOS, _preferencia_cargada
+    global _HABILITADOS, _DESHABILITADOS_INDIVIDUALES, _preferencia_cargada
     if _preferencia_cargada:
         return
     _preferencia_cargada = True
-    try:
-        with open(ruta_config("ajustes.json"), "r", encoding="utf-8") as f:
-            _HABILITADOS = json.load(f).get("sonidos_habilitados", True)
-    except FileNotFoundError:
-        pass  # instalación nueva: ajustes.json todavía no existe, se queda en True
-    except Exception:
-        logger.exception("[Sonidos] Error al leer la preferencia 'sonidos_habilitados'")
+    datos = _leer_ajustes_json()
+    _HABILITADOS = datos.get("sonidos_habilitados", True)
+    _DESHABILITADOS_INDIVIDUALES = set(datos.get("sonidos_deshabilitados", []))
 
 
 def sonidos_habilitados() -> bool:
@@ -124,26 +150,31 @@ def sonidos_habilitados() -> bool:
 
 
 def fijar_sonidos_habilitados(valor: bool) -> None:
-    """Actualiza la preferencia en memoria y la persiste en ajustes.json."""
+    """Actualiza la casilla global en memoria y la persiste en ajustes.json."""
     global _HABILITADOS, _preferencia_cargada
+    _cargar_preferencia_habilitados()
     _HABILITADOS = bool(valor)
-    _preferencia_cargada = True
     if not _HABILITADOS:
         detener_bucle()
-    try:
-        ruta = ruta_config("ajustes.json")
-        datos = {}
-        if os.path.exists(ruta):
-            with open(ruta, "r", encoding="utf-8") as f:
-                datos = json.load(f)
-        datos["sonidos_habilitados"] = _HABILITADOS
-        os.makedirs(CONFIG_DIR, exist_ok=True)
-        ruta_tmp = ruta + ".tmp"
-        with open(ruta_tmp, "w", encoding="utf-8") as f:
-            json.dump(datos, f, ensure_ascii=False, indent=4)
-        os.replace(ruta_tmp, ruta)
-    except Exception:
-        logger.exception("[Sonidos] Error al guardar la preferencia 'sonidos_habilitados'")
+    _escribir_ajustes_json({"sonidos_habilitados": _HABILITADOS})
+
+
+def sonido_habilitado(nombre_sonido: str) -> bool:
+    """Preferencia individual de un efecto concreto (independiente de la casilla global)."""
+    _cargar_preferencia_habilitados()
+    return nombre_sonido not in _DESHABILITADOS_INDIVIDUALES
+
+
+def fijar_sonido_habilitado(nombre_sonido: str, valor: bool) -> None:
+    """Activa o desactiva un efecto de sonido concreto, sin tocar la casilla global."""
+    _cargar_preferencia_habilitados()
+    if valor:
+        _DESHABILITADOS_INDIVIDUALES.discard(nombre_sonido)
+    else:
+        _DESHABILITADOS_INDIVIDUALES.add(nombre_sonido)
+        if _bucle_activo == nombre_sonido:
+            detener_bucle()
+    _escribir_ajustes_json({"sonidos_deshabilitados": sorted(_DESHABILITADOS_INDIVIDUALES)})
 
 
 # ── Fase 1: cargar rutas al importar (sin wx todavía) ────────────────────────
@@ -200,11 +231,12 @@ def reproducir(nombre_sonido: str, forzar: bool = False) -> None:
     Debe llamarse desde el hilo principal de wx.
     Desde hilos de fondo: wx.CallAfter(reproducir, NOMBRE_SONIDO).
 
-    forzar=True ignora la casilla global "Habilitar efectos de sonido" —
-    solo lo usa el botón "Probar sonido" de Ajustes, para poder previsualizar
-    un efecto incluso con los sonidos desactivados.
+    forzar=True ignora tanto la casilla global "Habilitar efectos de sonido"
+    como la desactivación individual de este sonido concreto — solo lo usa
+    el botón "Probar sonido" de Ajustes, para poder previsualizar un efecto
+    incluso con los sonidos desactivados.
     """
-    if not forzar and not sonidos_habilitados():
+    if not forzar and not (sonidos_habilitados() and sonido_habilitado(nombre_sonido)):
         return
 
     # Inicialización lazy (primera llamada, wx.App ya activo)
@@ -247,7 +279,7 @@ def iniciar_bucle(nombre_sonido: str) -> None:
     Debe llamarse desde el hilo principal de wx.
     """
     global _bucle_activo
-    if not sonidos_habilitados():
+    if not (sonidos_habilitados() and sonido_habilitado(nombre_sonido)):
         return
     if _bucle_activo == nombre_sonido:
         return  # ya está sonando, no reiniciar

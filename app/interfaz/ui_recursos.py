@@ -54,6 +54,10 @@ _ART_FALLBACK = {
     "informacion":   wx.ART_INFORMATION,
     "advertencia":   wx.ART_WARNING,
     "error":         wx.ART_ERROR,
+    "avanzar":       wx.ART_GO_FORWARD,
+    "retroceder":    wx.ART_GO_BACK,
+    "copiar":        wx.ART_COPY,
+    "restablecer":   wx.ART_UNDO,
 }
 
 
@@ -62,6 +66,7 @@ def aplicar_icono_boton(
     nombre_icono: str,
     accessible_name: str = "",
     size: tuple = (16, 16),
+    fijar_nombre: bool = True,
 ):
     """
     Aplica un icono al botón manteniendo el texto label intacto.
@@ -70,8 +75,8 @@ def aplicar_icono_boton(
       1. PNG propio en /recursos/iconos/<nombre_icono>.png
       2. wx.ArtProvider (icono del sistema, si hay mapeo)
 
-    Siempre asigna accessible_name (btn.SetName) para NVDA.
-    No lanza excepciones si el archivo no existe.
+    Por defecto asigna accessible_name (btn.SetName) para NVDA. No lanza
+    excepciones si el archivo no existe.
 
     Parámetros
     ----------
@@ -79,11 +84,16 @@ def aplicar_icono_boton(
     nombre_icono    : str    nombre sin extensión, ej. "carpeta", "trocear"
     accessible_name : str    texto que NVDA leerá; si vacío, usa el label del botón
     size            : tuple  tamaño del icono en píxeles (ancho, alto)
+    fijar_nombre    : bool   pon False para botones cuya etiqueta cambia en
+                             tiempo real (ej. "Retroceder 10s"): SetName() deja
+                             fijo el nombre accesible para siempre, así que un
+                             valor fijo aquí congelaría ese texto y NVDA dejaría
+                             de anunciar los cambios reales de la etiqueta.
     """
-    # AccessibleName siempre, aunque no haya icono
-    nombre = accessible_name or btn.GetLabel()
-    if nombre:
-        btn.SetName(nombre)
+    if fijar_nombre:
+        nombre = accessible_name or btn.GetLabel()
+        if nombre:
+            btn.SetName(nombre)
 
     bmp = _cargar_bmp_png(nombre_icono, size) or _cargar_bmp_art(nombre_icono, size)
     if bmp and bmp.IsOk():

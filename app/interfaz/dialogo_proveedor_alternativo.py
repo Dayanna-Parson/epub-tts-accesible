@@ -6,6 +6,7 @@ from app.config_rutas import cargar_claves
 from app.motor import anunciador_lector as voz
 from app.motor.control_cuota import ControlCuota
 from app.interfaz.pestana_ajustes import PanelAzure, PanelDeepgram, PanelPolly, PanelElevenLabs
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 
@@ -209,10 +210,12 @@ class DialogoProveedorAlternativo(wx.Dialog):
         )
         self.btn_dividir.Enable(self.modo_libro_completo)
         self.btn_dividir.Bind(wx.EVT_BUTTON, self._al_dividir)
+        aplicar_icono_boton(self.btn_dividir, "trocear", "Dividir en partes")
         sz_botones.Add(self.btn_dividir, 0, wx.RIGHT, 8)
 
         self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")
         self.btn_cancelar.Bind(wx.EVT_BUTTON, self._al_cancelar)
+        aplicar_icono_boton(self.btn_cancelar, "cerrar", "Cancelar")
         sz_botones.Add(self.btn_cancelar, 0)
 
         sizer.Add(sz_botones, 0, wx.ALIGN_RIGHT | wx.ALL, 10)

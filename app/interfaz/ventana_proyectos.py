@@ -11,6 +11,7 @@ from app.motor.gestor_proyectos import GestorProyectos, TIPOS_PROYECTO
 from app.motor.reproductor_sonidos import (
     reproducir, LIST_NAV, MOVE_UP, MOVE_DOWN, OPEN_FOLDER, CLEAR, CLICK, ERROR, SUCCESS,
 )
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
@@ -179,6 +180,8 @@ class VentanaProyectos(wx.Frame):
             "Desvincula el archivo de texto seleccionado de este proyecto. "
             "El archivo en disco no se borra."
         )
+        aplicar_icono_boton(self.btn_añadir_txt, "añadir", "Añadir TXT")
+        aplicar_icono_boton(self.btn_quitar_txt, "eliminar", "Quitar TXT")
         sz_btn_archivos.Add(self.btn_añadir_txt, 0, wx.RIGHT, 8)
         sz_btn_archivos.Add(self.btn_quitar_txt, 0)
 
@@ -223,6 +226,8 @@ class VentanaProyectos(wx.Frame):
             "Cierra el gestor y devuelve el foco a la ventana principal. "
             "También puedes pulsar Escape."
         )
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar proyecto")
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", "Cerrar")
 
         # Etiqueta de estado — retroalimentación sin diálogos modales
         self.lbl_estado = wx.StaticText(panel_raiz, label="")
@@ -894,6 +899,8 @@ class VentanaProyectos(wx.Frame):
         )
         btn_ok     = wx.Button(panel, wx.ID_OK,     label="Crear proyecto")
         btn_cancel = wx.Button(panel, wx.ID_CANCEL, label="Cancelar")
+        aplicar_icono_boton(btn_ok, "nuevo", "Crear proyecto")
+        aplicar_icono_boton(btn_cancel, "cerrar", "Cancelar")
         sz_btn = wx.BoxSizer(wx.HORIZONTAL)
         sz_btn.Add(btn_ok, 0, wx.RIGHT, 8)
         sz_btn.Add(btn_cancel, 0)

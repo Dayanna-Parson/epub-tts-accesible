@@ -12,6 +12,7 @@ from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
 from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR, PAGE_SCROLLED
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
@@ -168,6 +169,12 @@ class PestanaLectura(wx.Panel):
         self.btn_detener.Bind(wx.EVT_BUTTON, self.al_detener)
         self.btn_atras.Bind(wx.EVT_BUTTON, self.al_saltar_atras)
         self.btn_adelante.Bind(wx.EVT_BUTTON, self.al_saltar_adelante)
+        aplicar_icono_boton(self.btn_detener, "detener", "Detener")
+        # fijar_nombre=False: la etiqueta de estos dos botones cambia con los
+        # segundos de salto configurados ("Retroceder 10s"...); un nombre
+        # accesible fijo aquí congelaría ese texto para NVDA.
+        aplicar_icono_boton(self.btn_atras, "retroceder", fijar_nombre=False)
+        aplicar_icono_boton(self.btn_adelante, "avanzar", fijar_nombre=False)
 
         self.lbl_velocidad = wx.StaticText(self, label="Velocidad de lectura:")
         self.deslizador_velocidad = wx.Slider(self, value=50, minValue=0, maxValue=100)

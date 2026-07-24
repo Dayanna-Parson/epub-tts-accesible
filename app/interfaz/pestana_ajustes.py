@@ -13,6 +13,7 @@ from app.motor import gestor_prompts_asistente as prompts
 from app.motor.reproductor_sonidos import (
     reproducir, LIST_NAV, SUCCESS, ERROR, OPEN_FOLDER,
     SONIDOS_DISPONIBLES, sonidos_habilitados, fijar_sonidos_habilitados,
+    sonido_habilitado, fijar_sonido_habilitado,
 )
 from app.interfaz.selector_voz_compartido import ListaVocesCheck, PanelProveedorIA
 from app.interfaz.ui_recursos import aplicar_icono_boton
@@ -183,6 +184,7 @@ class PanelGeneral(wx.ScrolledWindow):
             "con el del repositorio de GitHub."
         )
         self.btn_buscar_updates.Bind(wx.EVT_BUTTON, self._al_buscar_actualizaciones)
+        aplicar_icono_boton(self.btn_buscar_updates, "buscar", "Buscar actualizaciones ahora")
         sizer_updates.Add(self.btn_buscar_updates, 0, wx.ALL, 5)
 
         self.lbl_progreso = wx.StaticText(self, label="")
@@ -240,6 +242,7 @@ class PanelGeneral(wx.ScrolledWindow):
             "Guarda los segundos de salto, la escala de velocidad y los límites de presupuesto de cada proveedor."
         )
         self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
+        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar Configuración General y Límites de presupuesto")
         sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
 
         self.btn_borrar_recientes = wx.Button(self, label="Borrar historial de libros recientes")
@@ -248,6 +251,7 @@ class PanelGeneral(wx.ScrolledWindow):
             "No borra ningún archivo, solo el atajo a los últimos libros abiertos."
         )
         self.btn_borrar_recientes.Bind(wx.EVT_BUTTON, self._al_borrar_recientes)
+        aplicar_icono_boton(self.btn_borrar_recientes, "eliminar", "Borrar historial de libros recientes")
         sizer.Add(self.btn_borrar_recientes, 0, wx.ALL, 10)
 
         self.btn_limpiar = wx.Button(self, label="Limpiar caché")
@@ -255,6 +259,7 @@ class PanelGeneral(wx.ScrolledWindow):
             "Elimina carpetas __pycache__, archivos .tmp y audio temporal."
         )
         self.btn_limpiar.Bind(wx.EVT_BUTTON, self._limpiar_cache)
+        aplicar_icono_boton(self.btn_limpiar, "limpiar", "Limpiar caché")
         sizer.Add(self.btn_limpiar, 0, wx.ALL, 10)
 
         self.SetSizer(sizer)
@@ -775,9 +780,11 @@ class PanelClaves(wx.ScrolledWindow):
         btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")
         btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")
         btn_az_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "azure"))
+        aplicar_icono_boton(btn_az_check, "buscar", "Comprobar clave y descargar voces Azure")
         btn_az_del = wx.Button(self, label="Borrar clave Azure")
         btn_az_del.SetHelpText("Borra los datos de acceso de Azure guardados en la aplicación.")
         btn_az_del.Bind(wx.EVT_BUTTON, self.al_borrar_azure)
+        aplicar_icono_boton(btn_az_del, "eliminar", "Borrar clave Azure")
         hb_az.Add(btn_az_web, 0, wx.RIGHT, 5)
         hb_az.Add(btn_az_check, 0, wx.RIGHT, 5)
         hb_az.Add(btn_az_del, 0)
@@ -811,9 +818,11 @@ class PanelClaves(wx.ScrolledWindow):
         btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
         btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
         btn_po_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "polly"))
+        aplicar_icono_boton(btn_po_check, "buscar", "Comprobar clave y descargar voces Polly")
         btn_po_del = wx.Button(self, label="Borrar clave Polly")
         btn_po_del.SetHelpText("Borra los datos de acceso de Amazon Polly guardados en la aplicación.")
         btn_po_del.Bind(wx.EVT_BUTTON, self.al_borrar_polly)
+        aplicar_icono_boton(btn_po_del, "eliminar", "Borrar clave Polly")
         hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
         hb_po.Add(btn_po_check, 0, wx.RIGHT, 5)
         hb_po.Add(btn_po_del, 0)
@@ -836,9 +845,11 @@ class PanelClaves(wx.ScrolledWindow):
         btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
         btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces.")
         btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))
+        aplicar_icono_boton(btn_el_check, "buscar", "Comprobar clave y descargar voces ElevenLabs")
         btn_el_del = wx.Button(self, label="Borrar clave ElevenLabs")
         btn_el_del.SetHelpText("Borra la API Key de ElevenLabs guardada en la aplicación.")
         btn_el_del.Bind(wx.EVT_BUTTON, self.al_borrar_elevenlabs)
+        aplicar_icono_boton(btn_el_del, "eliminar", "Borrar clave ElevenLabs")
         hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
         hb_el.Add(btn_el_check, 0, wx.RIGHT, 5)
         hb_el.Add(btn_el_del, 0)
@@ -861,9 +872,11 @@ class PanelClaves(wx.ScrolledWindow):
         btn_dg_check = wx.Button(self, label="Comprobar clave y descargar voces Deepgram")
         btn_dg_check.SetHelpText("Guarda la API Key, la verifica contra Deepgram y descarga la lista de modelos Aura-2.")
         btn_dg_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "deepgram"))
+        aplicar_icono_boton(btn_dg_check, "buscar", "Comprobar clave y descargar voces Deepgram")
         btn_dg_del = wx.Button(self, label="Borrar clave Deepgram")
         btn_dg_del.SetHelpText("Borra la API Key de Deepgram guardada en la aplicación.")
         btn_dg_del.Bind(wx.EVT_BUTTON, self.al_borrar_deepgram)
+        aplicar_icono_boton(btn_dg_del, "eliminar", "Borrar clave Deepgram")
         hb_dg.Add(btn_dg_web, 0, wx.RIGHT, 5)
         hb_dg.Add(btn_dg_check, 0, wx.RIGHT, 5)
         hb_dg.Add(btn_dg_del, 0)
@@ -898,9 +911,11 @@ class PanelClaves(wx.ScrolledWindow):
         btn_ge_check = wx.Button(self, label="Comprobar clave y listar modelos Gemini")
         btn_ge_check.SetHelpText("Guarda la clave, la verifica contra Gemini y actualiza la lista de modelos disponibles.")
         btn_ge_check.Bind(wx.EVT_BUTTON, self.al_comprobar_gemini)
+        aplicar_icono_boton(btn_ge_check, "buscar", "Comprobar clave y listar modelos Gemini")
         btn_ge_del = wx.Button(self, label="Borrar clave Gemini")
         btn_ge_del.SetHelpText("Borra la API Key de Gemini guardada en la aplicación.")
         btn_ge_del.Bind(wx.EVT_BUTTON, self.al_borrar_gemini)
+        aplicar_icono_boton(btn_ge_del, "eliminar", "Borrar clave Gemini")
         hb_ge.Add(btn_ge_web, 0, wx.RIGHT, 5)
         hb_ge.Add(btn_ge_check, 0, wx.RIGHT, 5)
         hb_ge.Add(btn_ge_del, 0)
@@ -910,6 +925,7 @@ class PanelClaves(wx.ScrolledWindow):
 
         self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
         self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
+        aplicar_icono_boton(self.btn_save, "guardar", "Guardar todas las claves")
         sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER | wx.ALL, 15)
 
         self.SetSizer(sizer)
@@ -1471,14 +1487,17 @@ class PanelDiccionario(wx.Panel):
             "Si la palabra ya existe, actualiza su pronunciación."
         )
         self.btn_anadir.Bind(wx.EVT_BUTTON, self._al_anadir)
+        aplicar_icono_boton(self.btn_anadir, "añadir", "Añadir o actualizar")
         self.btn_eliminar = wx.Button(self, label="Eliminar seleccionada")
         self.btn_eliminar.SetHelpText("Elimina la entrada seleccionada en la lista.")
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar seleccionada")
         self.btn_guardar = wx.Button(self, label="Guardar cambios\tAlt+G")
         self.btn_guardar.SetHelpText(
             "Guarda todos los cambios del diccionario en disco y recarga la pronunciación activa."
         )
         self.btn_guardar.Bind(wx.EVT_BUTTON, self._al_guardar_cambios)
+        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar cambios")
         sz_btn.Add(self.btn_anadir, 0, wx.RIGHT, 8)
         sz_btn.Add(self.btn_eliminar, 0, wx.RIGHT, 8)
         sz_btn.Add(self.btn_guardar, 0)
@@ -1756,6 +1775,8 @@ class PanelAtajos(wx.Panel):
         self.btn_asignar.Bind(wx.EVT_BUTTON, self._al_asignar)
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
         self.btn_restablecer.Bind(wx.EVT_BUTTON, self._al_restablecer)
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar asignación personalizada")
+        aplicar_icono_boton(self.btn_restablecer, "restablecer", "Restablecer todos los atajos a valores predeterminados")
         hbox.Add(self.btn_asignar, 0, wx.RIGHT, 10)
         hbox.Add(self.btn_eliminar, 0, wx.RIGHT, 10)
         hbox.Add(self.btn_restablecer, 0)
@@ -1893,19 +1914,30 @@ class PanelSonidos(wx.Panel):
         self.combo_sonidos = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_sonidos.Set([SONIDOS_DISPONIBLES[i] for i in self._ids_sonidos])
         self.combo_sonidos.SetSelection(0)
+        self.combo_sonidos.Bind(wx.EVT_COMBOBOX, self.al_cambiar_sonido_seleccionado)
         sizer.Add(self.combo_sonidos, 0, wx.EXPAND | wx.ALL, 8)
 
         self.btn_probar = wx.Button(self, label="Probar sonido")
         self.btn_probar.SetHelpText(
-            "Reproduce el efecto seleccionado, incluso si los efectos de sonido "
-            "están desactivados."
+            "Reproduce el efecto seleccionado, incluso si está desactivado "
+            "(individualmente o con la casilla global)."
         )
         self.btn_probar.Bind(wx.EVT_BUTTON, self.al_probar_sonido)
         sizer.Add(self.btn_probar, 0, wx.ALL, 8)
 
+        # Activar/desactivar únicamente el efecto elegido en el combo de
+        # arriba, independiente de la casilla global. La propia etiqueta del
+        # botón lleva el nombre del efecto para que NVDA la lea entera al
+        # llegar con Tab, sin tener que adivinar a qué sonido se refiere.
+        self.btn_alternar_individual = wx.Button(self)
+        self.btn_alternar_individual.Bind(wx.EVT_BUTTON, self.al_alternar_individual)
+        sizer.Add(self.btn_alternar_individual, 0, wx.ALL, 8)
+
         self.SetSizer(sizer)
         self.primer_control = self.chk_habilitados
-        self.ultimo_control = self.btn_probar
+        self.ultimo_control = self.btn_alternar_individual
+
+        self._actualizar_boton_alternar()
 
     def al_cambiar_habilitados(self, evento):
         # Sin voz.hablar() aquí: wx.CheckBox ya anuncia "marcado"/"desmarcado"
@@ -1913,6 +1945,36 @@ class PanelSonidos(wx.Panel):
         # confirmación propia duplicaría esa lectura, el mismo problema que
         # se corrigió en el combo de "Estilo del asistente".
         fijar_sonidos_habilitados(self.chk_habilitados.GetValue())
+
+    def al_cambiar_sonido_seleccionado(self, evento):
+        self._actualizar_boton_alternar()
+
+    def _sonido_seleccionado(self):
+        idx = self.combo_sonidos.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return None
+        return self._ids_sonidos[idx]
+
+    def _actualizar_boton_alternar(self):
+        nombre_id = self._sonido_seleccionado()
+        if nombre_id is None:
+            return
+        nombre_legible = SONIDOS_DISPONIBLES[nombre_id]
+        # Cambiar la etiqueta de un botón que tiene el foco sí lo vuelve a
+        # anunciar con NVDA (a diferencia de wx.StaticText.SetLabel()): es
+        # el mismo patrón ya usado en los botones de Retroceder/Avanzar de
+        # Lectura, que también cambian de texto según el ajuste actual.
+        if sonido_habilitado(nombre_id):
+            self.btn_alternar_individual.SetLabel(f"Desactivar sonido «{nombre_legible}»")
+        else:
+            self.btn_alternar_individual.SetLabel(f"Activar sonido «{nombre_legible}»")
+
+    def al_alternar_individual(self, evento):
+        nombre_id = self._sonido_seleccionado()
+        if nombre_id is None:
+            return
+        fijar_sonido_habilitado(nombre_id, not sonido_habilitado(nombre_id))
+        self._actualizar_boton_alternar()
 
     def al_probar_sonido(self, evento):
         idx = self.combo_sonidos.GetSelection()
@@ -2003,16 +2065,23 @@ class PanelAsistenteBiblioteca(wx.Panel):
         self._mostrar_plantilla(objetivo)
 
     def al_seleccionar_plantilla(self, evento):
-        # No mueve el foco en ningún caso: navegar con flechas por un combo
-        # de solo selección dispara este mismo evento en cada elemento que
-        # se cruza, y robar el foco aquí obligaría a salir con Escape para
-        # seguir recorriendo la lista.
+        # No mueve el foco a "Nombre" para las plantillas ya existentes:
+        # navegar con flechas por un combo de solo selección dispara este
+        # mismo evento en cada elemento que se cruza, y robar el foco ahí
+        # obligaría a salir con Escape para seguir recorriendo la lista.
+        # "(Nueva plantilla...)" es la excepción: siempre es el último
+        # elemento (no se "pasa por encima" al recorrer la lista, es donde
+        # se termina), y sin mover el foco ahí el texto que se escribiera a
+        # continuación no llegaba a ningún campo — se quedaba en el propio
+        # combo, de solo lectura, y "Guardar plantilla" veía Nombre y Texto
+        # del prompt vacíos.
         self._mostrar_plantilla(self.combo_plantillas.GetStringSelection())
 
     def _mostrar_plantilla(self, seleccion):
         if seleccion == self._NUEVA:
             self.txt_nombre.Clear()
             self.txt_prompt.Clear()
+            self.txt_nombre.SetFocus()
             return
         plantilla = next((p for p in self._plantillas if p["nombre"] == seleccion), None)
         if plantilla:

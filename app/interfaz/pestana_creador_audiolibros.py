@@ -10,6 +10,7 @@ import wx
 from app.config_rutas import ruta_config
 from app.motor import anunciador_lector as voz
 from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR, PROGRESS, OPEN_FOLDER
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +117,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             "equivocado, sin afectar a la Biblioteca ni al archivo original."
         )
         self.btn_eliminar_libro.Bind(wx.EVT_BUTTON, self.al_eliminar_libro)
+        aplicar_icono_boton(self.btn_eliminar_libro, "eliminar", "Eliminar libro cargado")
         self.btn_eliminar_libro.Enable(False)
         sz_libro.Add(self.btn_eliminar_libro, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
@@ -194,6 +196,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             "presupuesto con la configuración actual."
         )
         self.btn_iniciar.Bind(wx.EVT_BUTTON, self.al_iniciar_exportacion)
+        aplicar_icono_boton(self.btn_iniciar, "grabar", "Iniciar exportación")
         self.btn_iniciar.Enable(False)
         hbox_botones.Add(self.btn_iniciar, 0, wx.RIGHT, 8)
 
@@ -203,6 +206,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             "conserva y queda registrado como pendiente para retomarlo más tarde."
         )
         self.btn_abortar.Bind(wx.EVT_BUTTON, self.al_abortar_exportacion)
+        aplicar_icono_boton(self.btn_abortar, "detener", "Abortar exportación")
         self.btn_abortar.Enable(False)
         hbox_botones.Add(self.btn_abortar, 0, wx.RIGHT, 8)
 
@@ -212,6 +216,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             "exportados de este libro."
         )
         self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON, self.al_abrir_carpeta)
+        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta")
         self.btn_abrir_carpeta.Enable(False)
         hbox_botones.Add(self.btn_abrir_carpeta, 0)
 

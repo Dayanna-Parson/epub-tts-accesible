@@ -42,6 +42,7 @@ from app.motor.reproductor_sonidos import (
     reproducir, iniciar_bucle, detener_bucle, SUCCESS, ERROR, CLEAR, THINKING,
 )
 from app.servicios.cliente_gemini import enviar_mensaje
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         sizer_entrada.Add(self.txt_entrada, 1, wx.EXPAND | wx.RIGHT, 5)
         self.btn_enviar = wx.Button(self, label="Enviar")
         self.btn_enviar.Bind(wx.EVT_BUTTON, self.al_enviar)
+        aplicar_icono_boton(self.btn_enviar, "avanzar", "Enviar")
         sizer_entrada.Add(self.btn_enviar, 0)
         sizer.Add(sizer_entrada, 0, wx.EXPAND | wx.ALL, 8)
 
@@ -122,18 +124,23 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self.btn_copiar_mensaje = wx.Button(self, label="Copiar mi último mensaje")
         self.btn_copiar_mensaje.SetHelpText("Copia al portapapeles el último mensaje que escribiste.")
         self.btn_copiar_mensaje.Bind(wx.EVT_BUTTON, self.al_copiar_mi_mensaje)
+        aplicar_icono_boton(self.btn_copiar_mensaje, "copiar", "Copiar mi último mensaje")
         self.btn_copiar_respuesta = wx.Button(self, label="Copiar última respuesta")
         self.btn_copiar_respuesta.SetHelpText("Copia al portapapeles la última respuesta del asistente.")
         self.btn_copiar_respuesta.Bind(wx.EVT_BUTTON, self.al_copiar_ultima_respuesta)
+        aplicar_icono_boton(self.btn_copiar_respuesta, "copiar", "Copiar última respuesta")
         self.btn_guardar = wx.Button(self, label="Guardar conversación...")
         self.btn_guardar.SetHelpText("Guarda toda la conversación en un archivo de texto.")
         self.btn_guardar.Bind(wx.EVT_BUTTON, self.al_guardar_conversacion)
+        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar conversación")
         self.btn_borrar = wx.Button(self, label="Borrar historial")
         self.btn_borrar.SetHelpText("Borra el historial de esta conversación, sin posibilidad de deshacer.")
         self.btn_borrar.Bind(wx.EVT_BUTTON, self.al_borrar_historial)
+        aplicar_icono_boton(self.btn_borrar, "eliminar", "Borrar historial")
         self.btn_cerrar = wx.Button(self, label="Cerrar")
         self.btn_cerrar.SetHelpText("Cierra el Asistente de Biblioteca. Equivale a pulsar Escape.")
         self.btn_cerrar.Bind(wx.EVT_BUTTON, self._al_cerrar)
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", "Cerrar")
         for boton in (
             self.btn_copiar_mensaje, self.btn_copiar_respuesta,
             self.btn_guardar, self.btn_borrar, self.btn_cerrar,

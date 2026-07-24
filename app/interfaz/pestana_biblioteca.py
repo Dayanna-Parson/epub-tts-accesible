@@ -21,6 +21,7 @@ from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.reproductor_sonidos import (
     reproducir, SUCCESS, ERROR, LIST_NAV, MOVE_UP, MOVE_DOWN, CLEAR,
 )
+from app.interfaz.ui_recursos import aplicar_icono_boton
 # ANCLAJE_FIN: DEPENDENCIAS_BIBLIOTECA
 
 logger = logging.getLogger(__name__)
@@ -151,6 +152,7 @@ class PestanaBiblioteca(wx.Panel):
         sizer_importar = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
         self.btn_importar.Bind(wx.EVT_BUTTON, self.al_importar_carpeta)
+        aplicar_icono_boton(self.btn_importar, "examinar", "Importar carpeta")
         sizer_importar.Add(self.btn_importar, 0, wx.ALL, 5)
         self.btn_importar_archivo = wx.Button(self, label="Importar libro...")
         self.btn_importar_archivo.SetHelpText(
@@ -158,6 +160,7 @@ class PestanaBiblioteca(wx.Panel):
             "toda una carpeta."
         )
         self.btn_importar_archivo.Bind(wx.EVT_BUTTON, self.al_importar_archivo)
+        aplicar_icono_boton(self.btn_importar_archivo, "examinar", "Importar libro")
         sizer_importar.Add(self.btn_importar_archivo, 0, wx.ALL, 5)
         self.barra_progreso = wx.Gauge(self, range=100)
         self.barra_progreso.Hide()
