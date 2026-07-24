@@ -5,6 +5,7 @@ import json
 import time
 import logging
 import threading
+from app.motor import anunciador_lector as voz
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.gestor_pdf import extraer_datos_pdf
 from app.motor.reproductor_voz import ReproductorVoz
@@ -201,16 +202,6 @@ class PestanaLectura(wx.Panel):
         self.SetSizer(sizer_principal)
         self.configurar_aceleradores()
 
-        # Control oculto para anuncios de accesibilidad NVDA.
-        # Al darle foco con un valor nuevo, NVDA lo verbaliza al instante
-        # sin necesidad de diálogos ni de que el usuario navegue hasta él.
-        self._anunciador = wx.TextCtrl(
-            self,
-            style=wx.TE_READONLY | wx.BORDER_NONE,
-            size=(1, 1),
-        )
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        
         self.temporizador_ui = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.al_actualizar_ui, self.temporizador_ui)
         self.temporizador_ui.Start(200)
@@ -1211,9 +1202,10 @@ class PestanaLectura(wx.Panel):
 
     def anunciar_pagina_actual(self):
         """
-        Ctrl+I: verbaliza la posición de lectura a través del control _anunciador.
-        NVDA lo lee al instante al recibir el foco; en 300 ms el foco vuelve
-        al control anterior sin que el usuario perciba el salto.
+        Ctrl+I: verbaliza la posición de lectura con accessible_output3, sin
+        mover el foco en ningún momento (antes usaba el patrón _anunciador,
+        que le hacía anunciar a NVDA el rol del control oculto — "edición,
+        solo lectura" — en cada pulsación, como si saltara un diálogo).
         """
         if not self.longitud_texto:
             return
@@ -1223,11 +1215,7 @@ class PestanaLectura(wx.Panel):
             f"Página {pag_libro} de {total_libro} del libro."
         )
         self.lbl_progreso.SetLabel(texto)
-        foco_anterior = wx.Window.FindFocus()
-        self._anunciador.SetValue(texto)
-        self._anunciador.SetFocus()
-        if foco_anterior:
-            wx.CallLater(300, lambda: foco_anterior.SetFocus() if foco_anterior.IsShownOnScreen() else None)
+        voz.hablar(texto)
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
 
     # ANCLAJE_INICIO: SLIDER_VELOCIDAD_SEMANTICO

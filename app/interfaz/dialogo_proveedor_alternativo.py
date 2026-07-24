@@ -3,6 +3,7 @@ import logging
 import wx
 
 from app.config_rutas import cargar_claves
+from app.motor import anunciador_lector as voz
 from app.motor.control_cuota import ControlCuota
 from app.interfaz.pestana_ajustes import PanelAzure, PanelDeepgram, PanelPolly, PanelElevenLabs
 
@@ -216,11 +217,6 @@ class DialogoProveedorAlternativo(wx.Dialog):
 
         sizer.Add(sz_botones, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
 
-        # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
-        self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        sizer.Add(self._anunciador, 0, wx.LEFT, 0)
-
         self.SetSizer(sizer)
         self.Bind(wx.EVT_CLOSE, lambda e: self._cerrar(wx.ID_CANCEL))
 
@@ -273,10 +269,9 @@ class DialogoProveedorAlternativo(wx.Dialog):
             return
         panel_voces.chk_solo_favs.SetValue(False)
         panel_voces.filtrar_y_mostrar()
-        self._anunciador.SetValue(
+        voz.hablar(
             "Este proveedor no tiene voces favoritas guardadas. Se muestran todas sus voces."
         )
-        self._anunciador.SetFocus()
 
     def _sincronizar_velocidad_panel(self):
         # PanelProveedorIA no aplica velocidad por defecto en su preescucha
@@ -310,7 +305,7 @@ class DialogoProveedorAlternativo(wx.Dialog):
             evento.Skip()
 
     # ------------------------------------------------------------------ #
-    # Anuncio de accesibilidad al abrir (patrón _anunciador)
+    # Anuncio de accesibilidad al abrir — accessible_output3
     # ------------------------------------------------------------------ #
 
     def _anunciar_estado_inicial(self, nombre_proveedor_actual):
@@ -325,12 +320,11 @@ class DialogoProveedorAlternativo(wx.Dialog):
             plural = "proveedor alternativo" if n == 1 else "proveedores alternativos"
             mensaje = f"{nombre_proveedor_actual} sin cuota suficiente. {n} {plural} disponible con saldo."
 
-        self._anunciador.SetValue(mensaje)
-        self._anunciador.SetFocus()
-        # El foco final va al selector de proveedor (primer control útil del
-        # diálogo), no de vuelta al control previo — igual que el criterio ya
-        # establecido para el campo de entrada del chat de Biblioteca (Ctrl+G).
-        wx.CallLater(350, self._enfocar_combo_inicial)
+        voz.hablar(mensaje)
+        # El foco va directo al selector de proveedor (primer control útil
+        # del diálogo), no de vuelta al control previo — ya no hace falta
+        # esperar: accessible_output3 no necesita el foco para hablar.
+        self._enfocar_combo_inicial()
 
     def _enfocar_combo_inicial(self):
         if self.combo_proveedores:

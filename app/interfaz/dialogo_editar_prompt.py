@@ -72,16 +72,16 @@ class DialogoEditarPrompt(wx.Dialog):
         self.al_seleccionar_plantilla(None)
 
     def al_seleccionar_plantilla(self, evento):
+        # No mueve el foco en ningún caso: navegar con flechas por un
+        # combo de solo selección dispara este mismo evento en cada
+        # cambio, así que robar el foco aquí (incluso solo al llegar a
+        # "Nueva plantilla...") obligaba a salir con Escape para seguir
+        # recorriendo la lista. El usuario decide con Tab cuándo pasar a
+        # rellenar el nombre.
         seleccion = self.combo_plantillas.GetStringSelection()
         if seleccion == _NUEVA:
             self.txt_nombre.Clear()
             self.txt_prompt.Clear()
-            if evento is not None:
-                # Solo mueve el foco cuando el usuario elige "Nueva
-                # plantilla..." a propósito desde el combo (evento real);
-                # al repoblar el combo por código (evento=None) no debe
-                # robarle el foco a nadie.
-                self.txt_nombre.SetFocus()
             return
         plantilla = next((p for p in self._plantillas if p["nombre"] == seleccion), None)
         if plantilla:

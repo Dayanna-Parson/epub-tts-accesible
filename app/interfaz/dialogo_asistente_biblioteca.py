@@ -162,7 +162,13 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             self.combo_prompt.SetSelection(0)
 
     def al_cambiar_prompt(self, evento):
-        prompts.fijar_prompt_activo(self.combo_prompt.GetStringSelection())
+        nombre = self.combo_prompt.GetStringSelection()
+        prompts.fijar_prompt_activo(nombre)
+        # Confirma que el cambio realmente se aplicará al siguiente
+        # mensaje: al_enviar() relee obtener_prompt_activo() justo antes
+        # de llamar a Gemini, así que lo que se acaba de fijar aquí es
+        # literalmente lo que se usará.
+        voz.hablar(f"Estilo del asistente: {nombre}.")
 
     def al_editar_prompts(self, evento):
         from app.interfaz.dialogo_editar_prompt import DialogoEditarPrompt
@@ -171,8 +177,11 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         dlg.ShowModal()
         cambios = dlg.cambios_realizados
         dlg.Destroy()
-        if cambios:
-            self._recargar_combo_prompt()
+        # Siempre se recarga, no solo si dlg.cambios_realizados: es una
+        # lectura barata (unos pocos archivos .txt) y así el combo del
+        # chat nunca puede quedarse desactualizado por un fallo al llevar
+        # la cuenta de qué cambió dentro del diálogo de edición.
+        self._recargar_combo_prompt()
         self.txt_entrada.SetFocus()
 
     # ── Carga de historial (hilo principal, archivo pequeño) ────────────────

@@ -7,6 +7,7 @@ import webbrowser
 import wx.lib.mixins.listctrl as listmix
 
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
+from app.motor import anunciador_lector as voz
 from app.motor.reproductor_sonidos import reproducir, LIST_NAV, SUCCESS, ERROR
 from app.interfaz.selector_voz_compartido import ListaVocesCheck, PanelProveedorIA
 
@@ -1948,13 +1949,6 @@ class PestanaAjustes(wx.Panel):
             (wx.ACCEL_CTRL, ord('S'), id_guardar),
         ]))
 
-        # Anunciador oculto: recibe el foco un instante para que NVDA verbalice el texto
-        self._anunciador = wx.TextCtrl(
-            self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1)
-        )
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        sizer.Add(self._anunciador, 0, wx.LEFT, 0)
-
         # Punto de entrada para el bucle de tabulación de ventana_principal.py
         self.primer_control = self.arbol_cat
 
@@ -1983,26 +1977,11 @@ class PestanaAjustes(wx.Panel):
             padre = wx.GetTopLevelParent(self)
             if hasattr(padre, "pestana_lectura"):
                 wx.CallAfter(padre.pestana_lectura.cargar_config_salto)
-            # NVDA verbaliza "Guardado" mediante el anunciador oculto
-            def _anunciar():
-                foco_anterior = wx.Window.FindFocus()
-                self._anunciador.SetValue("Guardado.")
-                self._anunciador.SetFocus()
-                if foco_anterior:
-                    wx.CallLater(300, lambda: foco_anterior.SetFocus()
-                                 if foco_anterior.IsShownOnScreen() else None)
-            wx.CallAfter(_anunciar)
+            voz.hablar("Guardado.")
         except Exception:
             logger.exception("Error al guardar configuración global con Ctrl+S")
             reproducir(ERROR)
-            def _anunciar_error():
-                foco_anterior = wx.Window.FindFocus()
-                self._anunciador.SetValue("Error al guardar.")
-                self._anunciador.SetFocus()
-                if foco_anterior:
-                    wx.CallLater(300, lambda: foco_anterior.SetFocus()
-                                 if foco_anterior.IsShownOnScreen() else None)
-            wx.CallAfter(_anunciar_error)
+            voz.hablar("Error al guardar.")
     # ANCLAJE_FIN: GUARDAR_GLOBAL_CTRL_S
 
     # ANCLAJE_INICIO: CONSTRUIR_ARBOL_CATEGORIAS

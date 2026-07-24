@@ -43,7 +43,8 @@ configuraciones/favoritos.json
 configuraciones/cache_voces*.json
 
 # Asistente de Biblioteca: historial de conversaciones (datos personales).
-# prompts_asistente.json sí se versiona, como pronunciacion.json.
+# Las plantillas de prompt (asistente_biblioteca/plantillas/*.txt y
+# activo.json) sí se versionan, como pronunciacion.json.
 configuraciones/asistente_biblioteca/chat_biblioteca.json
 
 # ── Logs ─────────────────────────────────────────────────────────────────────

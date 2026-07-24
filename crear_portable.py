@@ -245,12 +245,15 @@ def crear_configuraciones_fabrica():
 
     # asistente_biblioteca/: historial de chat y plantillas de prompt del
     # Asistente de Biblioteca, separados del resto de configuraciones/.
-    dir_asistente = os.path.join(dir_conf, "asistente_biblioteca")
-    os.makedirs(dir_asistente, exist_ok=True)
-    ruta_prompts = os.path.join(dir_asistente, "prompts_asistente.json")
-    with open(ruta_prompts, "w", encoding="utf-8") as f:
-        json.dump({"prompts": [], "activo": ""}, f, ensure_ascii=False, indent=2)
-    print("      Creado: configuraciones/asistente_biblioteca/ (con prompts_asistente.json vacío)")
+    # Las plantillas se guardan una por archivo .txt en plantillas/; la
+    # plantilla "Por defecto" la crea la propia app en el primer arranque
+    # (gestor_prompts_asistente.listar_prompts), no hace falta sembrarla aquí.
+    dir_plantillas = os.path.join(dir_conf, "asistente_biblioteca", "plantillas")
+    os.makedirs(dir_plantillas, exist_ok=True)
+    _gitkeep_plantillas = os.path.join(dir_plantillas, ".gitkeep")
+    open(_gitkeep_plantillas, "w").close()
+    _ocultar_archivo(_gitkeep_plantillas)
+    print("      Creado: configuraciones/asistente_biblioteca/plantillas/")
 
 
 def comprimir_portable():

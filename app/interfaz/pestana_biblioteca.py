@@ -16,6 +16,7 @@ from app.motor.renombrador_biblioteca import (
     reconciliar_carpeta_movida,
 )
 from app.interfaz.dialogos import DialogoArchivoNoEncontrado, DialogoAgruparCarpetas
+from app.motor import anunciador_lector as voz
 from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.reproductor_sonidos import (
     reproducir, SUCCESS, ERROR, LIST_NAV, MOVE_UP, MOVE_DOWN, CLEAR,
@@ -318,13 +319,6 @@ class PestanaBiblioteca(wx.Panel):
         self.btn_importar.MoveAfterInTabOrder(self.lista_libros)
         self.btn_importar_archivo.MoveAfterInTabOrder(self.btn_importar)
 
-        # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
-        self._anunciador = wx.TextCtrl(
-            self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1)
-        )
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        self._temporizador_anuncio = None
-
     def _configurar_atajos(self):
         # Ctrl+O (apertura universal, contextual por pestaña) se gestiona a
         # nivel de VentanaPrincipal y llama a al_importar_carpeta() desde
@@ -373,38 +367,10 @@ class PestanaBiblioteca(wx.Panel):
     def ultimo_control(self):
         return self.btn_importar_archivo
 
-    # ── Anuncios de accesibilidad ────────────────────────────────────────────
+    # ── Anuncios de accesibilidad — accessible_output3, sin mover el foco ────
 
     def _anunciar(self, texto):
-        control_previo = wx.Window.FindFocus()
-
-        def _restaurar_foco():
-            # Solo devuelve el foco si sigue en el anunciador oculto — si
-            # el usuario ya navegó a otro control mientras tanto (por
-            # ejemplo, pulsando otro atajo o moviéndose con flechas antes
-            # de que pasaran los 300ms), forzar aquí el foco de vuelta a
-            # control_previo se lo quitaría de las manos sin que lo pidiera,
-            # obligando a insistir con flechas arriba/abajo para que el
-            # foco "se quedara quieto" — exactamente el síntoma reportado.
-            if wx.Window.FindFocus() is self._anunciador and control_previo:
-                control_previo.SetFocus()
-
-        # Si ya había un anuncio pendiente de restaurar el foco (por
-        # ejemplo, dos atajos de estado pulsados en sucesión rápida), se
-        # cancela — si no, el primero podía disparar su restauración
-        # DESPUÉS de que el segundo ya hubiera puesto el nuevo texto,
-        # cortando el anuncio del segundo mensaje a mitad de lectura.
-        if self._temporizador_anuncio is not None and self._temporizador_anuncio.IsRunning():
-            self._temporizador_anuncio.Stop()
-
-        self._anunciador.SetValue(texto)
-        self._anunciador.SetFocus()
-        # 450ms en vez de 300: con el foco ya asentado de verdad (antes se
-        # perdía y recuperaba con las peleas de foco), NVDA necesita algo
-        # más de margen para terminar de leer mensajes de estado más
-        # largos ("Quitado de leyendo ahora.") antes de que se le devuelva
-        # el foco a la lista.
-        self._temporizador_anuncio = wx.CallLater(450, _restaurar_foco)
+        voz.hablar(texto)
 
     # ── Árbol de categorías (jerárquico) ─────────────────────────────────────
     #

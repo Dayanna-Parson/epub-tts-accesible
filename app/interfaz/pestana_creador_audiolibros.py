@@ -8,6 +8,7 @@ import threading
 import wx
 
 from app.config_rutas import ruta_config
+from app.motor import anunciador_lector as voz
 from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR, PROGRESS, OPEN_FOLDER
 
 logger = logging.getLogger(__name__)
@@ -92,16 +93,6 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
     def _construir_interfaz(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
-        # Creado aquí, al principio, para que no le quede ningún StaticBox con
-        # texto justo delante en el orden de creación/tabulación — MSAA puede
-        # "heredar" el título del grupo más cercano como nombre accesible de
-        # un control sin nombre propio si se crea justo después de uno.
-        self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
-        self._anunciador.SetName("Anuncios")
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        sizer.Add(self._anunciador, 0, wx.LEFT, 0)
 
         # ── Información del libro cargado ───────────────────────────────
         # TextCtrl de solo lectura (no wx.StaticText): un StaticText suelto,
@@ -297,12 +288,11 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # Orden de tabulación forzado explícitamente. Confirmado con el
         # Visor de voz de NVDA que, pese a construirse en este mismo orden,
         # el Tab nativo saltaba directo de deslizador_volumen de vuelta a la
-        # pestaña sin pasar por txt_libro/combo_voz/txt_progreso/_anunciador
-        # (los TextCtrl de solo lectura) ni por lista_capitulos — ninguno
+        # pestaña sin pasar por txt_libro/combo_voz/txt_progreso (los
+        # TextCtrl de solo lectura) ni por lista_capitulos — ninguno
         # deshabilitado ni oculto en ese punto, así que no dependía de
         # nuestra propia lógica de habilitar/deshabilitar. Mismo remedio ya
         # usado en pestana_biblioteca.py (lista_libros.MoveAfterInTabOrder).
-        self.txt_libro.MoveAfterInTabOrder(self._anunciador)
         self.btn_eliminar_libro.MoveAfterInTabOrder(self.txt_libro)
         self.btn_retomar_pendiente.MoveAfterInTabOrder(self.btn_eliminar_libro)
         self.combo_modo.MoveAfterInTabOrder(self.btn_retomar_pendiente)
@@ -1467,12 +1457,9 @@ class PestanaCreadorAudiolibros(wx.Panel):
             )
 
     # ------------------------------------------------------------------ #
-    # Anuncios de accesibilidad (patrón _anunciador)
+    # Anuncios de accesibilidad — accessible_output3, sin mover el foco
     # ------------------------------------------------------------------ #
 
     def _anunciar(self, texto):
-        control_previo = wx.Window.FindFocus()
-        self._anunciador.SetValue(texto)
-        self._anunciador.SetFocus()
-        wx.CallLater(300, lambda: control_previo.SetFocus() if control_previo else None)
+        voz.hablar(texto)
 # ANCLAJE_FIN: PESTANA_CREADOR_AUDIOLIBROS
