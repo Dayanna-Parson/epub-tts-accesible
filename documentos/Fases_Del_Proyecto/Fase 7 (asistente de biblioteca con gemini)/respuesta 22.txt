@@ -1,0 +1,31 @@
+respuesta 22
+
+Parte 1:
+Ahora reviso el resto de textos accesibles (SetHelpText, SetName, mensajes de UI) en toda la app en busca de referencias desactualizadas, en paralelo con un agente para no perder contexto.
+
+Ya corregí el texto de bienvenida de la pestaña Lectura (le faltaba Deepgram y decía "Ctrl+1, 2 y 3" cuando ya hay cinco pestañas). Mientras tanto, lancé un agente para rastrear el resto de la app en busca de otros textos accesibles (SetHelpText, SetName, diálogos de ayuda) desactualizados — te confirmo en cuanto termine.
+
+Ya comité y pusheé el fix del texto de bienvenida. El agente de auditoría sigue corriendo en segundo plano revisando el resto de textos accesibles de la app — te aviso en cuanto termine con los hallazgos.
+
+Parte 2:
+
+Ahora reviso el resto de textos accesibles (SetHelpText, SetName, mensajes de UI) en toda la app en busca de referencias desactualizadas, en paralelo con un agente para no perder contexto.
+
+Ya corregí el texto de bienvenida de la pestaña Lectura (le faltaba Deepgram y decía "Ctrl+1, 2 y 3" cuando ya hay cinco pestañas). Mientras tanto, lancé un agente para rastrear el resto de la app en busca de otros textos accesibles (SetHelpText, SetName, diálogos de ayuda) desactualizados — te confirmo en cuanto termine.
+
+Ya comité y pusheé el fix del texto de bienvenida. El agente de auditoría sigue corriendo en segundo plano revisando el resto de textos accesibles de la app — te aviso en cuanto termine con los hallazgos.
+
+Aplico las cuatro correcciones que encontró el agente.
+
+Todo confirmado. Aplicando los cinco fixes.
+
+Todo pasa. Comiteo y pusheo.
+
+El agente terminó la auditoría y encontró 4 puntos más, ya corregidos, comiteados y pusheados (91/91 tests siguen pasando):
+
+- **`dialogo_voces_nuevas.py`**: faltaba `"deepgram"` en el diccionario de nombres de proveedor — si Deepgram sacaba una voz nueva, el aviso decía "Deepgram" a secas en vez de "Deepgram Aura-2".
+- **`ventana_principal.py`**: un docstring interno de la verificación de voces nuevas solo mencionaba Azure/Polly/ElevenLabs, sin Deepgram (no es texto visible, pero también estaba desactualizado).
+- **`pestana_ajustes.py`**: dos textos de ayuda (la lista de voces SAPI5 y la lista de "Atajos fijos") no mencionaban el Creador de Audiolibros ni el atajo Ctrl+Shift+B del Asistente de Biblioteca, ambos añadidos en la Fase 7.
+- **`selector_voz_compartido.py`**: el texto de ayuda del panel de voces en la nube (Azure/Polly/ElevenLabs/Deepgram) decía que las favoritas solo se usan en Grabación, cuando también se usan en Lectura y el Creador de Audiolibros.
+
+El resto de diálogos (`dialogo_asistente_biblioteca.py`, `dialogo_proveedor_alternativo.py`, `dialogo_novedades.py`, `dialogo_troceador.py`, `ventana_proyectos.py`, `pestana_biblioteca.py`, `pestana_grabacion.py`, etc.) ya estaban al día — mencionan correctamente los 5 motores, las 5 pestañas y el soporte EPUB+PDF. No queda pendiente nada más de esta auditoría.

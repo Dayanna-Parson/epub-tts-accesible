@@ -1,0 +1,15 @@
+¡Buenas noticias! Probando con una clave API activa, el envío de mensajes a Gemini ya funciona perfectamente y llegan las respuestas.
+
+Sin embargo, tras las pruebas de usabilidad y accesibilidad con NVDA, tenemos varios puntos clave para corregir y mejorar:
+
+1. **La Región Viva UIA no está verbalizando:** Al llegar la respuesta suena el efecto de éxito, pero NVDA no lee la respuesta automática. Volvamos al patrón estándar `_anunciador` del proyecto para asegurar que NVDA anuncie inmediatamente la respuesta entrante o los primeros caracteres de la misma.
+
+2. **Feedback al borrar claves en Ajustes:** Al pulsar el botón "Borrar" en la clave de Gemini (y revisa que ocurra en los demás proveedores), no hay confirmación accesible. Añade un anuncio inmediato ("Clave borrada.") usando el patrón `_anunciador`.
+
+3. **Bug en el contexto del libro/saga seleccionado:** Al pulsar Ctrl+Shift+B estando situados sobre un libro o sobre el nombre de una saga en la Biblioteca, el diálogo se abre en modo general sin precargar el contexto. Revisa la extracción del item seleccionado en `pestana_biblioteca.py` para que le pase los datos correctos al diálogo.
+
+4. **Conexión global con `biblioteca.db`:** En el modo general (sin libro específico), haz que el asistente consulte SQLite (`gestor_biblioteca.py`) para obtener un resumen ligero de los libros, categorías y autores que el usuario tiene registrados o marcados como favoritos/leídos. De este modo, Gemini sabrá en todo momento las preferencias del usuario para dar mejores recomendaciones. Como consulta directamente `biblioteca.db`, si se añaden o eliminan libros, el contexto se actualiza automáticamente.
+
+5. **Gestor de Prompts de Sistema personalizables:** Permite en Ajustes o en el propio diálogo guardar y editar varios prompts de sistema (ej. "Recomendador de lectura", "Analista de personajes", "Sin spoilers"), pudiendo seleccionar cuál usar por defecto.
+
+Por favor, confirma que integras estos ajustes y dime por qué bloque empezamos.

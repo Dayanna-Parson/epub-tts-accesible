@@ -1,0 +1,15 @@
+respuesta 4
+
+Sí, hay conflicto: `Ctrl+G` ya está en uso en el modo Lectura para "Ir a porcentaje del libro" (`ir_porcentaje` en `gestor_atajos.py`, líneas 42-46, y enlazado en `pestana_lectura.py:1155`). Técnicamente no chocarían en tiempo de ejecución porque cada pestaña tiene su propia `AcceleratorTable` (Biblioteca y Lectura son paneles distintos), pero sí chocaría conceptualmente en el registro compartido de atajos (`gestor_atajos.py`, que se muestra en el panel de Ajustes) — la misma combinación significaría dos cosas distintas según la pestaña, lo cual es confuso y contradice cómo está pensado ese registro.
+
+Sin conflictos con `Ctrl+Shift+B`. Empiezo con `gestor_chat_biblioteca.py`.
+
+Ahora tengo el patrón exacto. Creo `gestor_chat_biblioteca.py`.
+
+Ahora registro `Ctrl+Shift+B` en `gestor_atajos.py`.
+
+**Bloque de persistencia hecho y pusheado** — usé `Ctrl+Shift+B` en vez de `Ctrl+G` (que ya era "Ir a porcentaje del libro" en Lectura), registrado en `gestor_atajos.py` bajo `ATAJO_ASISTENTE_BIBLIOTECA`.
+
+- `app/motor/gestor_chat_biblioteca.py`: `cargar_historial(id_libro=None)`, `agregar_turno(id_libro, rol, texto)`, `borrar_historial(id_libro=None)` — todo con escritura atómica temp+`os.replace`, clave `"general"` para el modo sin libro seleccionado.
+
+Ahora sigo con `dialogo_asistente_biblioteca.py`: diálogo wx con historial, campo de entrada, foco directo al abrir, hilo secundario con "Pensando..." y `Ctrl+Shift+B` conectado desde `pestana_biblioteca.py`. Voy a revisar cómo `pestana_biblioteca.py` obtiene el libro seleccionado (título/autor/categoría/estado) antes de escribir el diálogo.

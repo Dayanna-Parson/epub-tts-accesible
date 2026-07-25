@@ -1,0 +1,35 @@
+respuesta 3
+
+Ahora reviso `control_cuota.py` completo (métodos `tiene_cuota`, `registrar_gasto`) y la estructura de capítulos que produce `troceador_epub.py`.
+
+Bien, `tiene_cuota`/`registrar_gasto` son exactamente lo pedido (silenciosos). Ahora reviso cómo se estructuran los capítulos en `troceador_epub.py` para diseñar el corte por frontera de capítulo.
+
+Ahora extiendo `grabador_audio.py`. Voy a reutilizar `_grabar_fragmento`/`_dividir_en_trozos`/`_concatenar_audios` ya existentes (que ya hacen chunking y reintentos) en vez de duplicar esa lógica, y añado únicamente lo nuevo: presupuesto silencioso, cálculo de punto de corte por cuota, y los dos flujos de exportación (completo/por capítulos).
+
+Ahora añado el bloque nuevo al final de la clase, antes del método `probar_voz` (para mantener juntos los métodos de exportación silenciosa) o al final del archivo. Lo pongo justo después de `_grabar_sapi5` y antes de `probar_voz`, como un ANCLAJE propio.
+
+Verifico que compile y hago una prueba rápida en aislado de la lógica de corte (sin wx/pydub reales, solo la bisección y el ajuste de frontera).
+
+Confirmado: en el segundo caso sí encontró un punto de frase válido en el índice 40 (el corte real coincide con un punto de frase, no con el fallback de espacio) — el motor funciona correctamente en ambos escenarios. Compruebo también el caso límite de la bisección de cuota con un `ControlCuota` real (fixture con límite bajo).
+
+La bisección respeta exactamente el límite de cuota configurado. Registro los cambios.
+
+## Resumen del bloque `EXPORTACION_AUDIOLIBROS_CREADOR` en `grabador_audio.py`
+
+**Métodos nuevos, todos dentro de `GrabadorAudio`:**
+
+1. **`calcular_presupuesto(texto, proveedor)`** — cuenta caracteres y consulta `ControlCuota().tiene_cuota()` una sola vez, sin generar audio ni gastar cuota. Devuelve `{"caracteres": N, "cabe_en_cuota": bool}`.
+
+2. **`_buscar_punto_corte_por_cuota(texto, proveedor, control)`** — bisección puramente silenciosa sobre `tiene_cuota()` (probado: con un límite de 100 caracteres, encuentra exactamente 100).
+
+3. **`_ajustar_punto_corte(texto, punto_bruto, fronteras_capitulo)`** — ajusta el corte bruto: 1º a la frontera de capítulo más cercana sin superar presupuesto, 2º a un punto de frase, 3º a un espacio como último respaldo. No conoce la estructura del EPUB — recibe los índices de capítulo ya calculados por la capa superior (mantiene el motor ajeno a `troceador_epub.py`/SQLite, tal como pediste).
+
+4. **`obtener_carpeta_audiolibro(titulo_libro)`** — nueva carpeta `Grabaciones_Epub-TTS/Audiolibros/<Título>/`, separada de la de Grabación de Fragmentos.
+
+5. **`exportar_audiolibro_completo(...)`** — modo "libro completo". Calcula el corte, genera con `_grabar_fragmento` (que ya hace chunking/reintentos), nombra `Título.mp3` o `Título (parte N - pendiente).mp3`, y devuelve un dict con `completo`, `punto_corte`, `archivos_generados`, `errores`.
+
+6. **`exportar_audiolibro_por_capitulos(...)`** — modo "por capítulos". Comprueba `tiene_cuota()` capítulo a capítulo (no se detiene ante el primero que no cabe, por si uno posterior más corto sí cabe), nombra `N. Título.mp3`, y devuelve el estado de cada capítulo (`completado` / `pendiente_sin_cuota`).
+
+Ni `verificar_y_registrar()` ni `reproductor_voz.py` aparecen en ningún punto del flujo — solo `tiene_cuota()`/`registrar_gasto()` silenciosos. `py_compile` pasa y probé en aislado (con `wx`/`requests` mockeados) tanto el snap a frontera de capítulo como el respeto de límites de cuota exactos. Commit `6956fb9` pusheado.
+
+¿Seguimos con el Paso 3: el diseño/lógica del diálogo de proveedor alternativo (3.3), o prefieres primero armar el esqueleto de `pestana_creador_audiolibros.py` que orqueste estos métodos?

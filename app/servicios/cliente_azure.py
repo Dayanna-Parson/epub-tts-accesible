@@ -1,9 +1,12 @@
+import logging
+import time
 import requests
 import sounddevice as sd
 import soundfile as sf
 import io
-import time
 from app.config_rutas import cargar_claves
+
+logger = logging.getLogger(__name__)
 
 _MAX_CACHE = 5  # Máximo de fragmentos de audio en caché por cliente
 
@@ -95,6 +98,7 @@ class ClienteAzure:
         texto_limpio = self._limpiar_texto_xml(texto)
         tasa = self._velocidad_a_tasa()
         nivel_vol = self._volumen_a_nivel()
+        logger.debug("[Azure] _llamar_api: self._velocidad=%s -> tasa SSML='%s'", self._velocidad, tasa)
 
         ssml = f"""
         <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{idioma_destino}'>
@@ -119,15 +123,31 @@ class ClienteAzure:
                 break
             except requests.exceptions.Timeout:
                 raise Exception("Azure tardó demasiado (Timeout > 30s).")
-            except requests.exceptions.ConnectionError as e:
+            except requests.exceptions.ConnectionError:
                 if intento == 0 and not self._parado:
                     time.sleep(1)
                     self._sesion = requests.Session()
                     continue
                 raise
+            except requests.exceptions.RequestException as e:
+                # Cualquier otro fallo de la librería requests (SSL, lectura
+                # cortada, redirecciones...) que no fuera Timeout ni
+                # ConnectionError se dejaba escapar sin capturar aquí, y
+                # `response` se quedaba en None sin más contexto que "sin
+                # respuesta" — ahora queda su propio mensaje.
+                raise Exception(f"Error de conexión con Azure: {e}")
 
         if response is None or response.status_code != 200:
-            codigo = response.status_code if response else "sin respuesta"
+            if response is not None:
+                # El cuerpo de la respuesta de Azure suele decir la causa
+                # exacta (p. ej. voz no disponible en esa región) — útil
+                # sobre todo con voces nuevas que puede que aún no estén
+                # habilitadas en todas las regiones/suscripciones.
+                detalle = response.text[:200] if response.text else ""
+                codigo = f"{response.status_code} — {detalle}" if detalle else str(response.status_code)
+            else:
+                codigo = "sin respuesta"
+            logger.warning("[Azure] Fallo de síntesis: %s", codigo)
             raise Exception(f"Error Azure: {codigo}")
 
         data, fs = sf.read(io.BytesIO(response.content))
@@ -151,6 +171,13 @@ class ClienteAzure:
         if not self._parado:
             sd.play(data, fs)
             sd.wait()
+            # sd.wait() puede volver antes de que el hardware de audio termine
+            # de vaciar físicamente su búfer (más notorio a velocidades altas,
+            # donde el siguiente fragmento arranca casi de inmediato) — sin
+            # este margen, sd.play() del fragmento siguiente puede interrumpir
+            # la cola de audio del anterior y comerse su última sílaba.
+            if not self._parado:
+                time.sleep(0.12)
 
     def preparar(self, texto, datos_voz):
         """

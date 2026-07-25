@@ -1,0 +1,10 @@
+prompt 5
+
+Bien corregido, ahora la lógica de auxiliar_actualizador.py tiene mucho más sentido y es segura para Windows.
+Vamos con el siguiente paso:
+1. 
+Actualiza la llamada en pestana_ajustes.py para que pase los argumentos correspondientes (--lanzador, --python si está en modo desarrollo, --origen, --destino, --pid).
+2. 
+En ese mismo bloque de la interfaz, asegúrate de que si bin/actualizador.exe no existe todavía en el disco, se muestre un mensaje claro o un aviso por NVDA (o MessageBox) indicando que el actualizador no está instalado/compilado en bin/, pero permita verificar que la descarga y descompresión en temp/actualizacion/ se completó con éxito.
+De esta forma puedo probar ya mismo en mi rama si la descarga y la verificación del ZIP funcionan bien desde el botón de Ajustes sin que la app me lance un fallo feo por no tener el .exe compilado aún.
+Actualiza pestana_ajustes.py con esto y me avisas.

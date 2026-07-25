@@ -1,0 +1,32 @@
+Respuesta 41
+
+Qué alegría, ¡en serio! Vamos con tus preguntas, una por una.
+
+**1. Por qué el listado de "Todas las etiquetas" no tiene pendiente/leyendo/leído:** es a propósito — esas opciones marcan el estado de lectura de **un libro concreto**, y ese menú es sobre la etiqueta en sí (la saga), no sobre un libro. No tendría sentido "marcar como pendiente" una etiqueta completa. Lo que sí existe ahí, análogo a lo que pides, es "Asignar categoría a los N libros de esta etiqueta" — aplica una categoría a todos los libros de la saga de golpe. Si quieres, puedo añadir algo parecido para estados de lectura ("Marcar todos los libros de esta etiqueta como leídos", etc.) — dime si te interesa y lo hago.
+
+**2. Añadir varios libros a una etiqueta que ya tenían algunos con esa etiqueta:** revisé el código y es seguro — usa `INSERT OR IGNORE`, así que si un libro ya tenía esa etiqueta, simplemente no pasa nada (no se duplica, no da error). Puedes añadir de más sin miedo a romper nada.
+
+**3. ¿Afecta a otros menús o a futuras pestañas/menús?** No — el cambio fue solo dentro de `_menu_contextual_biblioteca()`, el método específico de la pestaña Biblioteca. Los de Lectura, Grabación y Ajustes son métodos completamente separados (`_menu_contextual_lectura`, etc.) y no los toqué. Dicho esto, tu pregunta me hace sospechar que **podrían tener el mismo problema de fondo** (duplicar el menú en vez de delegar) — no lo he comprobado. Si quieres, lo reviso en otra ronda para confirmar que no hay el mismo fallo escondido ahí, ya que ahora sé exactamente qué patrón buscar.
+
+**4. Lo del log que nunca se guarda — tienes razón, hay que buscar otra vía.** Se me ocurre algo mucho más simple para ti: un botón en el menú de Ayuda que copie el contenido del log **directamente al portapapeles**, sin que tengas que navegar carpetas ni acordarte de rutas. Lo implemento ahora.
+
+Espera — encontré otra pista relacionada, esta vez en código real, no solo en un comentario.
+
+¡Ahí está el origen de toda esta confusión! Hay una función "Abrir carpeta de registros" en el menú de Ayuda que **crea y abre la carpeta equivocada** (`app/registros` en vez de `registros`) — literalmente por eso existía esa carpeta huérfana que encontraste al principio. La corrijo, y de paso añado la opción de copiar el log al portapapeles.
+
+Ahora añado el ítem de menú en `_submenu_ayuda` para poder llamar a esta función.
+
+Perfecto, ya existe "Abrir carpeta de registros" (ya corregido). Añado la nueva opción justo al lado.
+
+¡Encontrado el origen de raíz de toda la confusión del log! Había una función real (no solo un comentario) — **"Abrir carpeta de registros"** en el menú de Ayuda — que apuntaba a `app/registros` en vez de `registros`, y encima **creaba esa carpeta vacía** si no existía. Cada vez que la usaste, te llevaba a una carpeta huérfana que la app nunca actualiza. Ya está corregida.
+
+Y de paso añadí lo que pedías: en el menú **Ayuda → "Copiar registros al portapapeles"**, disponible desde cualquier pestaña. Lee el log de verdad y lo pone directamente en el portapapeles — pegas con Ctrl+V donde quieras, sin buscar ni adjuntar archivos nunca más.
+
+Resumen de tus 4 preguntas:
+
+1. **Etiquetas sin pendiente/leyendo/leído** — es a propósito, ese menú es sobre la etiqueta (saga), no sobre un libro concreto. Si quieres una versión "en bloque" (marcar todos los libros de la saga a la vez, como ya existe para categoría), dímelo y lo hago.
+2. **Añadir etiqueta duplicada a un libro que ya la tenía** — seguro, no pasa nada, el código ya lo ignora sin duplicar ni dar error.
+3. **¿Afecta a otros menús o pestañas futuras?** — no, el cambio fue solo en el dispatcher de Biblioteca. Pero tu pregunta es buena: podría haber el mismo patrón duplicado en Lectura/Grabación/Ajustes sin que lo hayamos notado porque ahí sí "parecían" funcionar. Si quieres que lo revise para confirmar, lo hago en otra ronda.
+4. **El log que nunca se guardaba** — resuelto por partida doble: arreglada la carpeta equivocada, y añadido el botón de copiar al portapapeles como plan B permanente.
+
+Todo subido. `git pull` cuando quieras y prueba el botón nuevo — así ya no dependemos de rutas ni carpetas para el próximo bicho que aparezca.

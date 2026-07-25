@@ -1,0 +1,130 @@
+Epub TTS Accesible — estructura del proyecto
+==============================================
+Versión 3.0.0 · julio 2026
+
+Vista rápida de dónde vive cada cosa. Para el porqué de cada decisión,
+ver DEVELOPMENT.md (arquitectura técnica) y CLAUDE.md (reglas del
+proyecto). Para la historia completa, BITACORA_DE_DESARROLLO.md.
+
+epub-tts-accesible/
+│
+├── iniciar_epub_tts.py          Punto de entrada de la aplicación.
+├── auxiliar_sapi32.py           Proceso auxiliar de 32 bits para SAPI5
+│                                 (Eloquence, RealSpeak). Se compila aparte
+│                                 con Python de 32 bits -> bin/auxiliar_sapi32.exe
+├── auxiliar_actualizador.py     Instalador auxiliar de actualizaciones (Fase C):
+│                                 respaldo por copia verificada + rollback.
+│                                 Se compila automáticamente -> bin/actualizador.exe
+├── crear_portable.py            Empaqueta la app en un .zip portable.
+├── subir_version.py             Sube el número de versión y actualiza
+│                                 novedades.txt.
+├── CREAR_PORTABLE.bat           Atajos de Windows para los dos scripts
+├── SUBIR_VERSION.bat            anteriores.
+├── INICIAR_APP.bat              Lanza la app sin abrir una consola visible.
+│
+├── requisitos.txt               Dependencias Python (pip install -r).
+├── ayuda.html                   Manual de usuario, se abre con F1 dentro
+│                                 de la app.
+├── novedades.txt                Historial de versiones cara al usuario.
+├── LICENSE
+│
+├── CLAUDE.md                    Reglas del proyecto para quien colabore
+│                                 en el código (humano o asistente IA).
+├── DEVELOPMENT.md                Arquitectura técnica: por qué está hecho
+│                                 así, con ejemplos de código.
+├── BITACORA_DE_DESARROLLO.md    Historia narrada del proyecto, fase a fase.
+├── estructura_proyecto.txt      Este archivo.
+│
+├── app/
+│   ├── config_rutas.py          RAIZ del proyecto, rutas absolutas,
+│   │                             cargar_claves()/guardar_claves().
+│   │
+│   ├── interfaz/                Todo lo que es UI (wxPython).
+│   │   ├── ventana_principal.py         Ventana raíz, notebook de pestañas.
+│   │   ├── pestana_biblioteca.py        Biblioteca: importar, organizar, buscar.
+│   │   ├── pestana_lectura.py           Modo Lectura: EPUB/PDF + TTS.
+│   │   ├── pestana_creador_audiolibros.py  Exportación de audiolibros completos.
+│   │   ├── pestana_grabacion.py         Grabación de Fragmentos (etiquetas).
+│   │   ├── pestana_ajustes.py           Claves API, voces, atajos, cuota.
+│   │   ├── ventana_proyectos.py         Gestor de proyectos de Grabación.
+│   │   ├── selector_voz_compartido.py   Catálogo de voces reutilizable.
+│   │   ├── dialogo_proveedor_alternativo.py  Cuota insuficiente al exportar.
+│   │   ├── dialogo_troceador.py         División de EPUB por capítulos.
+│   │   ├── dialogo_voces_nuevas.py      Aviso de voces nuevas.
+│   │   ├── dialogo_novedades.py         Novedades al actualizar.
+│   │   ├── dialogo_asistente_biblioteca.py  Chat con el Asistente de Biblioteca (Gemini).
+│   │   ├── dialogos.py                  Diálogos compartidos varios.
+│   │   └── ui_recursos.py               Iconos con fallback a wx.ArtProvider.
+│   │
+│   ├── motor/                   Lógica de negocio, sin wx (salvo wx.CallAfter).
+│   │   ├── gestor_biblioteca.py         CRUD sobre biblioteca.db (SQLite).
+│   │   ├── escaner_biblioteca.py        Escaneo de carpetas en paralelo.
+│   │   ├── renombrador_biblioteca.py    Renombrado según metadatos reales.
+│   │   ├── gestor_epub.py               Extracción de texto/índice de EPUB.
+│   │   ├── gestor_pdf.py                Extracción de texto/índice de PDF.
+│   │   ├── troceador_epub.py            División de EPUB por capítulos.
+│   │   ├── troceador_pdf.py             División de PDF por capítulos/página.
+│   │   ├── limpiador_lectura.py         Limpieza de texto para TTS.
+│   │   ├── diccionario_pronunciacion.py Sustituciones fonéticas locales.
+│   │   ├── reproductor_voz.py           Cola TTS interactiva (Lectura).
+│   │   ├── anunciador_lector.py         accessible_output3: anuncios de UI al
+│   │   │                                 lector de pantalla activo.
+│   │   ├── anunciador_voz.py            pyttsx3: cola de voz para ráfagas
+│   │   │                                 rápidas (progreso de escaneo).
+│   │   ├── gestor_chat_biblioteca.py    Historial de chat del Asistente de Biblioteca.
+│   │   ├── gestor_prompts_asistente.py  Plantillas de prompt (un .txt por plantilla).
+│   │   ├── limpiador_markdown_chat.py   Limpia markdown de las respuestas de Gemini.
+│   │   ├── grabador_audio.py            Grabación silenciosa a archivo
+│   │   │                                 (fragmentos y audiolibros completos,
+│   │   │                                  con exportación en paralelo).
+│   │   ├── procesador_etiquetas.py      Parseo de {{@voz}}.
+│   │   ├── reproductor_sonidos.py       14 efectos contextuales (incluye bucle).
+│   │   ├── cliente_nube_voces.py        Descarga y caché de catálogos de voces.
+│   │   ├── verificador_voces_nuevas.py  Detección de voces nuevas.
+│   │   ├── comprobador_actualizaciones.py  Versionado semver contra GitHub.
+│   │   ├── actualizador_descarga.py     Fase C: descarga y verifica la versión
+│   │   │                                 nueva en temp/actualizacion/.
+│   │   ├── control_cuota.py             Cuota mensual por proveedor + coste.
+│   │   ├── gestor_proyectos.py          Proyectos de Grabación de Fragmentos.
+│   │   ├── gestor_atajos.py             Atajos de teclado configurables.
+│   │   └── gestor_backups.py            Copias rotativas de biblioteca.db y
+│   │                                     proyectos.json (carpetas separadas,
+│   │                                     solo si hubo cambios reales).
+│   │
+│   └── servicios/                Un cliente por proveedor de voz (y por Gemini).
+│       ├── cliente_azure.py
+│       ├── cliente_polly.py
+│       ├── cliente_eleven.py
+│       ├── cliente_deepgram.py
+│       ├── cliente_sapi5.py             SAPI5 de 64 bits.
+│       ├── cliente_sapi32_bridge.py     SAPI5 de 32 bits, vía auxiliar_sapi32.exe.
+│       └── cliente_gemini.py            Asistente de Biblioteca: REST puro, sin SDK.
+│
+├── bin/                          Ejecutables portables: ffmpeg, auxiliar_sapi32,
+│                                  actualizador (Fase C, compilado automáticamente).
+├── recursos/                     Sonidos, iconos, version.json.
+├── configuraciones/               JSON/SQLite del usuario (claves, ajustes,
+│                                  biblioteca.db, proyectos...). Casi todo en
+│                                  .gitignore por ser datos personales.
+│   ├── backups_proyectos/         Copias rotativas (últimas 5) de proyectos.json.
+│   ├── backups_biblioteca/        Copias rotativas (últimas 5) de biblioteca.db.
+│   └── asistente_biblioteca/      Plantillas de prompt (plantillas/*.txt),
+│                                  plantilla activa (activo.json) e historial
+│                                  de chat (chat_biblioteca.json).
+├── Grabaciones_Epub-TTS/         Salida de audio generada por la app.
+├── temp/                         Generada en tiempo de ejecución (Fase C):
+│                                  actualizacion/ (descarga verificada) y
+│                                  backup_previo/ (respaldo durante la
+│                                  instalación). No se versiona (.gitignore).
+├── tests/                        Pruebas (aún sin suite automatizada completa).
+│
+└── documentos/
+    └── Fases_Del_Proyecto/
+        ├── GUIA_TECNICA.md               Visión técnica completa para
+        │                                  desarrolladores externos.
+        ├── VISION_PERSONAL.md            Por qué existe el proyecto,
+        │                                  documento privado de referencia.
+        ├── idea_app_audiolibros.md       Origen de la idea, conversación
+        │                                  fundacional con Gemini.
+        └── README.md                     Notas sobre la organización de
+                                            este directorio de documentos.

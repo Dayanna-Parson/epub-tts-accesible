@@ -1,0 +1,33 @@
+Claude, acabo de subir a la carpeta de sonidos del repositorio el archivo `thinking.wav` (el sonido de carga/espera para el asistente) y ya tenemos `page_scrolled.wav` para la lectura.
+
+Aquí tienes el siguiente bloque de mejoras de interfaz, sonido y configuración:
+
+1. **Efecto de carga/espera (`thinking.wav`):**
+   Haz que `thinking.wav` suene en bucle suave cuando el usuario envía un mensaje a Gemini, y que se detenga automáticamente al recibir la respuesta o al saltar un error.
+
+2. **Sonido de paso de página en Lectura (`page_scrolled.wav`):**
+   Añade el efecto auditivo `page_scrolled.wav` en la pestaña de Lectura para que suene de forma sutil al cambiar de página o bloque, tanto durante la lectura continua como al navegar con las flechas por el texto (similar a la experiencia de Bookworm). Si por algún motivo el evento no encuentra el archivo en el entorno, deja la llamada protegida para que no rompa la ejecución.
+una cosa que hace bookworm, es que cada vez que se está leyendo ya sea con cualquier tts, o con las flechas, suena el cambio de página. Así que podría mirar como lo tienen implementado no? además el sonido de cambio de página es muy sutil y agradable. 
+
+3. **Control de sonidos en Ajustes:**
+   En la pestaña Ajustes, añade una sección "Efectos de sonido" con:
+   - Una casilla global para habilitar/deshabilitar todos los efectos de sonido de la app.
+   - Un selector de efectos con un botón para probar cada sonido individualmente.
+
+4. **Gestión avanzada de plantillas de prompts:**
+   - Traslada la gestión completa (crear, editar, borrar con confirmación hablada) a la pestaña Ajustes -> Asistente de Lectura.
+   - En la sección de Ajustes, añade también un botón "Abrir carpeta de plantillas" para abrir directamente el Explorador de Windows en la subcarpeta del sistema.
+   - En el chat del asistente deja únicamente el combo selector de estilo rápido.
+   - Haz que el gestor escanee la carpeta `configuraciones/asistente_biblioteca/plantillas/` de forma dinámica: si añado o borro un archivo de prompt desde fuera de la app, la lista se actualiza sola al abrir la ventana. Si la plantilla activa deja de existir, pasa automáticamente a la plantilla "Por defecto".
+Cuando navego con las flechas por el cuadro combinado de prompts en el asistente de la biblioteca, pues me lee todo el rato el título de la ventana, y repite dos veces el prompt con el foco. Aquí te dejo el log de NVDA.
+
+Estilo del asistente: Por defecto.
+Por defecto
+Estilo del asistente: fantasía épica.
+fantasía épica
+
+Y el otro problema es que... No aparecen ni en amos cuadros cominados, ni el las carpetas y subcarpetas del proyecto, los prompts que tenía antes. Y eso que supuestamente estaban guardados, porque antes si me salían.
+Me refiero a los prompts como suspense fantasía etc.
+Los e buscado por todos lados y no los encuentro.
+A, y otra cosa que quiero que mires es si todo tiene sus correspondientes iconos.
+Porque no lo puedo comprobar porque no veo.

@@ -1,0 +1,22 @@
+respuesta 5
+
+Con esto tengo todo lo necesario. Ahora escribo el diálogo.
+
+Ahora escribo el diálogo completo.
+
+Ahora añado el método que arma el contexto y abre el diálogo, junto al resto de "Acciones sobre el libro seleccionado":
+
+**Diálogo del Asistente de Biblioteca hecho, integrado y pusheado.**
+
+Resumen de lo implementado:
+- `app/interfaz/dialogo_asistente_biblioteca.py`: diálogo modal con historial de solo lectura, campo de entrada, y los dos bloques ANCLAJE que pediste — `DIALOGO_ASISTENTE_BIBLIOTECA_INIT` (carga del historial previo en hilo principal, anuncio de contexto con foco entregado directamente al campo de entrada, no devuelto) y `ASISTENTE_ENVIO_HILO_SECUNDARIO` (hilo + "Pensando..." + `wx.CallAfter`, sin robar el foco al llegar la respuesta).
+- `pestana_biblioteca.py`: bloque `ABRIR_ASISTENTE_BIBLIOTECA` que arma el contexto (autor, categorías + etiquetas, estado con `_describir_estado`) del libro seleccionado o abre en modo general si no hay selección, enlazado a `Ctrl+Shift+B`.
+
+No hizo falta consultar `VisionAssistantPro` para el formato de texto/Markdown — de momento muestro la respuesta de Gemini tal cual (texto plano) en el historial; si quieres limpieza de Markdown (negritas, listas, etc.) antes de mostrarlo, dime y reviso ese repo específicamente para ese punto antes de escribir el helper de formateo.
+
+**Pendiente para cerrar la Fase C completa:**
+1. Combo de modelo en Ajustes ya lee de `listar_modelos()`, pero el diálogo de chat en sí no deja elegir "análisis profundo" vs rápido por turno — ahora mismo `analisis_profundo` siempre es `False`. ¿Quieres un control para eso, o dejarlo automático siempre en modo rápido salvo que cambies el modelo en Ajustes?
+2. Limpieza/Markdown de las respuestas, si lo pides.
+3. Prueba manual en Windows con clave real y NVDA (pendiente, sin entorno Windows aquí).
+
+¿Sigo con el punto 1, con el 2, o prefieres que probemos primero lo que hay?

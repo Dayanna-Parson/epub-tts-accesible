@@ -32,16 +32,16 @@ import logging
 from app.config_rutas import ruta_config, cargar_claves, CONFIG_DIR
 from app.motor.gestor_proyectos import TIPOS_PROYECTO
 from app.motor.procesador_etiquetas import (
-    escanear_etiquetas,
     fragmentar_texto,
     normalizar_etiqueta,
     limpiar_nombre_archivo,
 )
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
 from app.motor.reproductor_sonidos import (
-    reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
+    reproducir, REC_START, PROGRESS, SUCCESS,
     ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV, CLICK,
 )
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +133,8 @@ class DialogoBautizo(wx.Dialog):
         btn_cancel       = wx.Button(self._panel, wx.ID_CANCEL, label="Ahora no")
         self._btn_ok.SetHelpText("Confirma la asociación del archivo al proyecto seleccionado.")
         btn_cancel.SetHelpText("Cierra este diálogo sin asociar el archivo a ningún proyecto.")
+        aplicar_icono_boton(self._btn_ok, "guardar", "Guardar en proyecto")
+        aplicar_icono_boton(btn_cancel, "cerrar", "Ahora no")
         sz_btn.Add(self._btn_ok, 0, wx.RIGHT, 8)
         sz_btn.Add(btn_cancel,  0)
         sz.Add(sz_btn, 0, wx.ALIGN_RIGHT | wx.ALL, 10)

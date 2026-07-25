@@ -1,0 +1,76 @@
+prompt y respuesta 43
+
+Has dicho: sí, cámbialo a "Pendientes de leer"
+sí, cámbialo a "Pendientes de leer"
+Mostrar acciones del mensaje
+Claude ha respondido: Ahora aplico el cambio en todos los sitios donde aparece "Pendiente(s)" referido a lectura, para que sea consistente en toda la pestaña.
+Leerpestana_biblioteca.py(1118–1157, 1535–1564)
+Ahora aplico el cambio en todos los sitios donde aparece "Pendiente(s)" referido a lectura, para que sea consistente en toda la pestaña.
+Editadopestana_biblioteca.py+3-3
+Ahora el menú contextual (individual y masivo), para que "Marcar como pendiente" también diga "de leer":
+Editado un archivo, ejecutado un comando
+Bien, esos otros usos son cosas distintas (revisión de títulos, exportaciones pendientes) y no deben tocarse. Compilo y confirmo.
+Ejecutado 2 comandos
+Hecho y pusheado. Cambié "Pendiente" → "Pendiente de leer" en el combo de filtro, la columna Estado y el menú contextual (individual y el masivo por saga), para que no se confunda con "Audiolibro a medias". No toqué nada de lógica ni de la base de datos, solo texto.
+Mostrar acciones del mensaje
+Has dicho: y lo de los filtros y eso que acabas de arreglar, ya está subido también?
+y lo de los filtros y eso que acabas de arreglar, ya está subido también? hay algún otro bug que no hallamos encontrado, pero tu si, en el código que se te halla pasado? o está todo bien?...
+Mostrar acciones del mensaje
+Claude ha respondido: Sí, todo está subido — árbol de trabajo limpio, y el remoto está exactamente en el mismo commit que local (c05298e), así que no queda nada pendiente de push.
+Ejecutadoun comando
+Sí, todo está subido — árbol de trabajo limpio, y el remoto está exactamente en el mismo commit que local (c05298e), así que no queda nada pendiente de push.
+Ahora reviso con cuidado lo que toqué en esta sesión buscando algo más que se me haya escapado, antes de decirte "está todo bien".
+Ejecutadoun comando
+Repasé todo lo tocado en esta sesión con calma. No encontré ningún bug adicional de comportamiento — la lógica de las voces de 32 bits, la concatenación normalizada, el orden de tabulación y el filtro renombrado están consistentes.
+Sí hay un detalle menor que quiero dejarte anotado, no es un bug que rompa nada, pero es honesto mencionarlo: cuando exportas con una voz de 32 bits (Eloquence/RealSpeak), se arranca un proceso auxiliar (auxiliar_sapi32.exe) para esa exportación. Ese proceso se cierra solo cuando Python recoge la basura del objeto GrabadorAudio (no hay un cierre explícito e inmediato al terminar la exportación). En la práctica no debería notarse — se libera poco después de terminar — pero si alguna vez ves un auxiliar_sapi32.exe colgado en el Administrador de tareas tras exportar varias veces seguidas con Eloquence, es por esto, no por una fuga real de cada exportación. Si te preocupa, puedo cerrarlo explícitamente al terminar cada exportación — es un cambio pequeño y seguro. Dime si lo hago.
+Fuera de eso, no veo nada más pendiente en el código que te he tocado.
+Mostrar acciones del mensaje
+Has dicho: sí, ciérralo explícitamente al terminar cada exportación.
+sí, ciérralo explícitamente al terminar cada exportación. Y también actualiza de nuevo los documentos de antes por si fuese necesario! ayuda.html
+BITACORA_DE_DESARROLLO.md
+CLAUDE.md
+DEVELOPMENT.md
+estructura_proyecto.txt
+novedades.txt
+README.md
+requisitos.txt (Si fuese necesario)
+subir_version.py (si fuese necesario)
+GUIA_TECNICA.md
+idea_app_audiolibros.md
+VISION_PERSONAL.md
+crear_portable.py (Si fuese necesario)
+
+.gitignore (Si es necesario) Y has añadido las nuevas librerías y dependencias al documento requisitos.txt? había dos o mas. Solo recuerdo las dos para los pdf...
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Ahora el final de exportaraudiolibropor_capitulos:
+Ejecutado un comando, leer un archivo, editado un archivo
+Ahora el final de exportar_audiolibro_por_capitulos:
+Ejecutado 3 comandos, editado un archivo
+Ahora reviso requisitos.txt y busco las dependencias PDF y demás que se hayan añadido durante la sesión, antes de tocar la documentación.
+Leer un archivo, ejecutado 2 comandos
+Confirmado: requisitos.txt ya tiene todo lo necesario — PyMuPDF y ftfy (las dos de PDF que recordabas) ya estaban, y no hay ninguna librería nueva usada en el código que falte ahí. No necesita cambios.
+Ahora repaso y actualizo la documentación relevante con lo que hicimos hoy: voces de 32 bits en exportación, corrección de audio silencioso, filtro de audiolibros a medias, orden de tabulación, renombrado de "Pendiente de leer".
+Leer 2 archivos, ejecutado un comando, editado un archivo
+Ahora la bitácora de desarrollo:
+Ejecutado un comando, editado un archivo
+Ahora reviso los documentos técnicos (CLAUDE.md, DEVELOPMENT.md, GUIA_TECNICA.md, estructura_proyecto.txt, ayuda.html) para ver qué merece actualización real.
+Ejecutado 2 comandos, leer un archivo, editado un archivo
+Bien, no hay descripciones de esquema de biblioteca ni de Estado que deba tocar ahí — no hace falta más cambio en DEVELOPMENT.md. Ahora reviso GUIA_TECNICA.md, estructura_proyecto.txt y ayuda.html.
+Ejecutado 3 comandos, leer un archivo, editado un archivo
+Ahora la sección del Creador de Audiolibros, para mencionar el diálogo de cuota agotada y el combo de voz local:
+Leer un archivo, editado un archivo, ejecutado un comando
+Ese ya cubre bin/*.exe (incluye auxiliar_sapi32.exe) y biblioteca.db. No necesita cambios. Ahora reviso crear_portable.py y subir_version.py rápidamente por si referencian algo desactualizado.
+Ejecutadoun comando
+No hay referencias que actualizar en crear_portable.py. Compilo los HTML/MD tocados (revisión visual rápida) y hago commit final de documentación.
+Ejecutado 3 comandos
+Todo pusheado. Resumen de esta ronda:
+Código:
+• GrabadorAudio.cerrar() cierra explícitamente el proceso auxiliar_sapi32.exe al terminar cada una de las tres exportaciones (fragmentos, libro completo, por capítulos), en vez de esperar a que Python lo recoja por su cuenta.
+Documentación revisada y actualizada donde tenía sentido:
+• novedades.txt — añadidas todas las correcciones de esta ronda a la sección v3.0.0.
+• BITACORA_DE_DESARROLLO.md — dos secciones nuevas narrando estos bugs, al cierre de la Fase 7.
+• DEVELOPMENT.md — documentado el comando exportar_archivo del puente de 32 bits y el nuevo enrutado de grabador_audio.py.
+• ayuda.html — el filtro "Audiolibros a medias" en Biblioteca, el desplegable de voz local en el diálogo de cuota agotada, y las correcciones en la caja de novedades.
+Revisados sin necesidad de cambios: requisitos.txt (las dependencias de PDF, PyMuPDF y ftfy, ya estaban; no falta ninguna librería nueva), estructura_proyecto.txt, GUIA_TECNICA.md, CLAUDE.md, VISION_PERSONAL.md, idea_app_audiolibros.md, crear_portable.py, subir_version.py y .gitignore — ninguno necesitaba tocarse, no hay archivos, dependencias ni rutas nuevas que documentar ahí.
+No toqué la versión (recursos/version.json sigue en 3.0.0) ni ejecuté subir_version.py — ese es tu script, hace commits él solo, y decidir cuándo subir de versión es tuya, no mía.

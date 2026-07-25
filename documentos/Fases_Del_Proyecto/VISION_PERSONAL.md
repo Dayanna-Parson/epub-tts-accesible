@@ -164,7 +164,7 @@ Gestiona estados explícitos (detenido, reproduciendo, pausado) y trata de forma
 
 ### 9. Motores de voz soportados
 
-La aplicación utiliza actualmente cuatro motores de voz, cada uno con un rol claro:
+La aplicación utiliza actualmente cinco motores de voz, cada uno con un rol claro:
 
 SAPI5 (local): respaldo offline, siempre disponible.
 
@@ -348,9 +348,21 @@ Gestor de Proyectos independiente, con árbol jerárquico, papelera y acceso dir
 
 Divisor de EPUB integrado, 12 sonidos contextuales y voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante un proceso puente.
 
-Árbol de navegación en Ajustes, navegación semántica por encabezados y verbalización inmediata sin mover el foco.
+Árbol de navegación en Ajustes y verbalización inmediata sin mover el foco. (Se intentó también una navegación por encabezados con `H`/`Shift+H`, pero nunca llegó a funcionar y se retiró varias versiones después.)
 
 Sistema de actualizaciones automáticas completo, con reinicio de la app sin perder configuración ni grabaciones.
+
+Versión 3.0.0:
+
+Pestaña Biblioteca, con importación de carpetas y de libros sueltos, organización por géneros y sagas.
+
+Soporte de PDF además de EPUB, en Lectura y en el nuevo Creador de Audiolibros.
+
+Creador de Audiolibros: exportación de un libro completo o por capítulos, con presupuesto de coste y duración, exportación en paralelo y reanudación de exportaciones cortadas por cuota o corte de conexión.
+
+Asistente de Biblioteca con Google Gemini: chat accesible sobre mis propios libros, con plantillas de prompt personalizables y conocimiento del catálogo real de mi biblioteca, no de un resumen que podía llevarle a negar que tuviera una saga que sí tengo.
+
+Piper TTS, previsto desde hacía tiempo como motor local futuro, queda descartado. SAPI5 sigue siendo, y se queda siendo, el único motor local.
 
 El criterio ha sido el mismo a lo largo de todo el proceso: que funcione, que sea accesible, que el coste sea transparente.
 

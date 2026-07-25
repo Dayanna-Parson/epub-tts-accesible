@@ -1,0 +1,95 @@
+prompt y respuesta 40
+
+Has dicho: por donde quieres seguir tu?
+por donde quieres seguir tu? y que tal si agrupas todas las cosas menores que quedan?
+Mostrar acciones del mensaje
+Claude ha respondido: Aquí tienes agrupado todo lo menor que quedó suelto durante la sesión, sin resolver del todo:
+Aquí tienes agrupado todo lo menor que quedó suelto durante la sesión, sin resolver del todo:
+Rendimiento / UX menor
+• El combo de proveedor en DialogoProveedorAlternativo tarda un poco en cargar el catálogo al cambiar de proveedor con las flechas — lo reconociste tú misma como aceptable, pero sigue ahí.
+• El número de hilos en paralelo (4) está fijo; si algún día alguien con conexión limitada usa la app, convendría poder bajarlo. No es urgente mientras la uses tú.
+Cuota / coste
+• El coste estimado en el presupuesto usa una tarifa de referencia fija (no editable con fecha), simplificado respecto a lo que hablamos al principio. Sigue en pie si algún día quieres precisión real por si cambian las tarifas de los proveedores.
+Lectura con PDF
+• La posición de capítulos/encabezados en PDF se calcula sobre el texto sin limpiar (a diferencia de EPUB, que sí reubica tras limpiar) — funciona, pero con un margen de imprecisión menor que en EPUB. No lo has reportado como problema, pero es una diferencia real entre ambos formatos que documenté como limitación conocida.
+Motor Piper (mencionado en tu documento de arquitectura)
+• Sigue como "próximo motor previsto", no he tocado nada de eso — es un frente grande, no menor, lo agrupo aparte para que no se pierda de vista.
+Mi recomendación honesta: de todo esto, nada es urgente ni bloquea nada — son afinados, no bugs. Si quieres que elija yo por dónde seguir, iría por el combo de precios editable con fecha (lo dejamos a medias y es lo más tangible de "terminar bien" algo que empezamos), antes que abrir un motor nuevo como Piper, que es mucho más grande y merece su propia conversación de diseño aparte, no colarlo como "cosa menor".
+¿Quieres que haga eso, o prefieres marcar tú cuál de estos te importa más ahora mismo?
+Mostrar acciones del mensaje
+Has dicho: creo que piper lo voy a descartar por completo.
+creo que piper lo voy a descartar por completo.... Y lo de los precios editables también que quieres hacer? yo tiraría mas por lo del pdf. Ya que todo lo que me has dicho, pues me parece bien, y si que funciona...
+Mostrar acciones del mensaje
+Claude ha respondido: Ahora quito el paso final de limpieza global (ya innecesario, cada página se limpia individualmente):
+Leer un archivo, editado un archivo
+Ahora quito el paso final de limpieza global (ya innecesario, cada página se limpia individualmente):
+Editado un archivo, leer un archivo
+Ese docstring ya no menciona la limitación anterior directamente, no requiere cambios. Compilo y pruebo la lógica con un test rápido:
+Ejecutado 2 comandos
+Funciona bien — offsets exactos, sin depender de búsqueda aproximada. Compilo el resto y confirmo que nada más se rompió:
+Ejecutado 4 comandos
+Ya está subido y verificado con un PDF real de 32 páginas (probé que los offsets caen exactamente al inicio del texto de cada página).
+Lo que cambié: antes limpiaba todo el texto del PDF de golpe al final, sobre posiciones calculadas en crudo, sin reubicarlas después (a diferencia de EPUB). Ahora cada página se limpia individualmente y la posición se registra ya sobre el texto definitivo según se va concatenando — sin ningún paso de reubicación aproximada. La navegación por capítulo/página en PDF (H/Shift+H, árbol de índice) queda tan exacta como en EPUB.
+Con esto, Piper descartado, precios editables descartados, y el PDF ya afinado — ¿qué te parece si consideramos la Fase B oficialmente cerrada por ahora? Si te surge algo más al usarla en el día a día, aquí sigo.
+Mostrar acciones del mensaje
+Has dicho: perfecto!
+perfecto! entonces, si te parece bien ya dar la fase por cerrada y continuar en otra... pues lo siguiente... puedes actualizar con el tono adecuado estos documentos?ayuda.html
+BITACORA_DE_DESARROLLO.md
+CLAUDE.md
+DEVELOPMENT.md
+estructura_proyecto.txt
+novedades.txt
+README.md
+requisitos.txt (Si fuese necesario)
+subir_version.py (si fuese necesario)
+GUIA_TECNICA.md
+idea_app_audiolibros.md
+VISION_PERSONAL.md
+crear_portable.py (Si fuese necesario)
+
+.gitignore (Si es necesario)
+Mostrar acciones del mensaje
+Claude ha respondido: Ahora reviso los archivos restantes rápidamente:
+Ejecutado 5 comandos, leer 6 archivos
+Ahora reviso los archivos restantes rápidamente:
+Leer 3 archivos, ejecutado 3 comandos, editado un archivo
+Ahora CLAUDE.md:
+Editado un archivo, ejecutado un comando
+Ahora reviso y actualizo la sección "Próximos motores previstos" (quitar Piper) y añado una sección breve sobre el Creador de Audiolibros:
+Ejecutado un comando, leer un archivo, editado un archivo
+Ahora novedades.txt — añado la entrada de la v3.0.0 al principio:
+Editadonovedades.txt+80-0
+Ahora BITACORA_DE_DESARROLLO.md — añado la narrativa de la Fase 7:
+EditadoBITACORA_DE_DESARROLLO.md+48-1
+Ahora DEVELOPMENT.md — corrijo la escala de velocidad desactualizada y quito Piper:
+Editado un archivo, leer un archivo, ejecutado un comando
+Este es el final del archivo. Añado la sección de la Fase 7 al final:
+Editado un archivo, ejecutado un comando
+No menciona Piper. Actualizo la sección de "Estado actual del proyecto" en GUIA_TECNICA.md:
+EditadoGUIA_TECNICA.md+23-3
+Ahora VISION_PERSONAL.md:
+EditadoVISION_PERSONAL.md+10-0
+Ahora idea_app_audiolibros.md:
+Editadoidea_app_audiolibros.md+3-0
+Ahora reviso ayuda.html completo para actualizarlo:
+Leer un archivo, ejecutado un comando, editado un archivo
+Ahora actualizo la sección de atajos principales y añado las nuevas secciones:
+Editado un archivo, ejecutado un comando
+Ahora el pie de página:
+Editado un archivo, ejecutado un comando
+Ahora requisitos.txt — añado comtypes, que faltaba pese a usarse en todo el código SAPI5:
+Editado 2 archivos, ejecutado 5 comandos, creado 2 archivos, leer un archivo
+Ya casi termino. Reviso todos los archivos tocados y hago commit:
+Ejecutado 5 comandos
+Ya está subido. Resumen de lo que actualicé, archivo por archivo:
+• recursos/version.json: 2.0.0 → 3.0.0.
+• CLAUDE.md: estructura de archivos con Biblioteca/Creador de Audiolibros/PDF, estándar de nombrado de audiolibros y partes, Piper retirado.
+• DEVELOPMENT.md: estructura actualizada, corregí una descripción desactualizada del selector de velocidad que ya no correspondía al código real, y añadí una sección técnica completa de la Fase 7 (SQLite en Biblioteca, offsets exactos en PDF, el candado contra eventos sintéticos de wx, exportación en paralelo, reanudación, el bug de COM del puente SAPI32, el silencio digital de Polly).
+• BITACORA_DE_DESARROLLO.md: narrativa en primera persona de toda la Fase 7, contando también los intentos fallidos antes de cada causa raíz — mantiene el tono honesto del resto del documento, no solo lo que salió bien.
+• novedades.txt: entrada v3.0.0 completa.
+• GUIA_TECNICA.md, VISION_PERSONAL.md, idea_app_audiolibros.md, documentos/Fases_Del_Proyecto/README.md: extendidos con la nueva versión.
+• ayuda.html: versión, atajos (ahora 5 pestañas: Ctrl+1 a Ctrl+5) y secciones nuevas de Biblioteca y Creador de Audiolibros.
+• requisitos.txt: añadí comtypes, que llevaba usándose en todo el código SAPI5 sin estar listada — un descuido de antes de esta fase, no algo que rompiera nada, pero sí incorrecto.
+• README.md (raíz) y estructura_proyecto.txt: no existían, los creé desde cero.
+No toqué subir_version.py, crear_portable.py ni .gitignore — los revisé y ninguno necesitaba cambios (no hardcodean nombres de archivos concretos, y biblioteca.db ya estaba en .gitignore).
+Con esto la Fase 7 queda cerrada también en la documentación, no solo en el código. ¿Seguimos con algo más, o lo dejamos aquí por hoy?

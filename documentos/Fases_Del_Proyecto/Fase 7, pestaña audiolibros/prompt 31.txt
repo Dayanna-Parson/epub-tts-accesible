@@ -1,0 +1,10 @@
+He realizado la limpieza absoluta de las carpetas 'build' y 'dist', he recompilado el ejecutable 'auxiliar_sapi32.exe' con la versión limpia de PyInstaller y he verificado en local que el binario está al día. Sin embargo, el error persiste de forma idéntica en la consola: 'WARNING [SAPI32] Error del auxiliar: (-2147221008, "No se ha llamado a CoInitialize.")'.
+
+Investiga en la documentación de comtypes/pywin32 y en la comunidad de desarrollo de wxPython/SAPI5 cómo solucionar esto de raíz. El parche actual de meter CoInitialize en '_hilo_parrafos' no funciona porque la inicialización del objeto 'SAPI.SpVoice' en 'auxiliar_sapi32.py' probablemente ocurre en el hilo principal del subproceso (o en otro bloque ajeno), y cuando el ciclo de ejecución intenta interactuar con el objeto COM desde un hilo cruzado, se rompe el contexto de apartamentos (STA/MTA) de Windows.
+
+Necesito que hagas lo siguiente:
+1. Revisa a fondo 'auxiliar_sapi32.py'. Blinda la inicialización COM llamando a 'comtypes.CoInitialize()' (o 'pythoncom.CoInitialize()') al inicio absoluto del 'if __name__ == "__main__":' o justo antes de que se instancie el motor SAPI por primera vez, garantizando que todo el ciclo de vida del subproceso esté en el mismo apartamento COM. Añade los 'try/finally' necesarios con 'CoUninitialize()'.
+2. El ajuste de las 4 voces estándar de Amazon Polly sigue truncando la última sílaba de las palabras en las costuras de fragmentos. Revisa '_recortar_silencio_extremos' en 'grabador_audio.py'. El padding o el umbral sigue siendo muy agresivo para el bitrate y sample rate de Polly estándar. Deja un margen de silencio final (tail padding) más holgado específicamente para Polly.
+
+
+Busca también en la comunidad o en foros, los problemas con las 4 voces standar de polly, y que soluciones dieron...

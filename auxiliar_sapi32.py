@@ -18,6 +18,7 @@ Protocolo de comandos (stdin, una línea JSON por comando):
     {"cmd": "reanudar"}
     {"cmd": "fijar_velocidad", "valor": 50}
     {"cmd": "fijar_volumen",   "valor": 100}
+    {"cmd": "exportar_archivo", "texto": "...", "ruta_wav": "...", "voz_nombre": "...", "rate": 0, "volume": 100}
     {"cmd": "salir"}
 
 Protocolo de eventos (stdout, una línea JSON por evento):
@@ -26,6 +27,7 @@ Protocolo de eventos (stdout, una línea JSON por evento):
     {"evento": "voz_cambiada", "exito": true}
     {"evento": "progreso",     "pos": 123}
     {"evento": "completado"}
+    {"evento": "exportado",    "exito": true/false, "msg": "..."}
     {"evento": "error",        "msg": "..."}
 """
 
@@ -49,6 +51,46 @@ def _enviar(datos):
             sys.stdout.flush()
     except Exception:
         pass
+
+
+def _seleccionar_voz(motor_obj, nombre_buscado, comtypes_client):
+    """
+    Busca `nombre_buscado` entre las voces disponibles y la activa sobre
+    `motor_obj`. Función compartida por el comando "cambiar_voz" (hilo
+    principal) y por cada hilo de habla, que necesita repetir la misma
+    selección sobre su propia instancia local del motor (ver _hilo_parrafos).
+    Devuelve True si encontró y activó la voz.
+    """
+    nombre_buscado = (nombre_buscado or "").lower()
+    if not nombre_buscado:
+        return False
+    try:
+        sp_cat = comtypes_client.CreateObject("SAPI.SpObjectTokenCategory")
+        sp_cat.SetId(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices", False)
+        tokens = sp_cat.EnumTokens()
+        for i in range(tokens.Count):
+            try:
+                tok = tokens.Item(i)
+                if nombre_buscado in tok.GetDescription().lower():
+                    motor_obj.Voice = tok
+                    return True
+            except Exception:
+                pass
+    except Exception:
+        pass
+    try:
+        tokens = motor_obj.GetVoices()
+        for i in range(tokens.Count):
+            try:
+                tok = tokens.Item(i)
+                if nombre_buscado in tok.GetDescription().lower():
+                    motor_obj.Voice = tok
+                    return True
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return False
 
 
 def _leer_categorias_sapi(motor, comtypes_client):
@@ -91,26 +133,57 @@ def _leer_categorias_sapi(motor, comtypes_client):
     return lista
 
 
-def _hilo_parrafos(motor, texto, pos_offset, gen, estado):
-    """Hilo de fondo: habla párrafo a párrafo y emite eventos de progreso."""
-    pos = pos_offset
-    for linea in texto.split("\n"):
-        if estado["detener"] or estado["generacion"] != gen:
-            return
-        if linea.strip():
-            _enviar({"evento": "progreso", "pos": pos})
-            try:
-                motor.Volume = 100
-                motor.Speak(linea, _SPF_ASYNC | _SPF_IS_NOT_XML)
-                while not estado["detener"] and estado["generacion"] == gen:
-                    if motor.WaitUntilDone(100):
-                        break
-            except Exception as e:
-                _enviar({"evento": "error", "msg": str(e)})
-        pos += len(linea) + 1  # +1 por el \n que split elimina
+def _hilo_parrafos(texto, pos_offset, gen, estado):
+    """
+    Hilo de fondo: habla párrafo a párrafo y emite eventos de progreso.
 
-    if not estado["detener"] and estado["generacion"] == gen:
-        _enviar({"evento": "completado"})
+    No recibe el `motor` de main() como parámetro. Un objeto COM (SAPI.SpVoice)
+    creado en un hilo queda ligado al apartamento COM de ESE hilo — SAPI es un
+    objeto de apartamento simple (STA), así que un puntero creado en el hilo
+    principal no se puede usar de forma fiable desde otro hilo aunque ese
+    segundo hilo llame a CoInitialize(): compartir el puntero directamente
+    salta el marshaling entre apartamentos y explota con
+    "No se ha llamado a CoInitialize." (CO_E_NOTINITIALIZED), de forma
+    intermitente según el orden de llamadas. La solución robusta es que cada
+    hilo tenga su PROPIO objeto COM, creado y usado enteramente dentro de sí
+    mismo — nunca compartir un puntero COM entre hilos. Este hilo crea su
+    propia instancia de SAPI.SpVoice y repite aquí la voz/velocidad/volumen
+    ya aplicados en el hilo principal (guardados en `estado`), en vez de
+    reutilizar el `motor` de main().
+    """
+    import comtypes
+    import comtypes.client
+    comtypes.CoInitialize()
+    try:
+        try:
+            motor_local = comtypes.client.CreateObject("SAPI.SpVoice")
+            motor_local.Rate = estado.get("rate", 0)
+            motor_local.Volume = estado.get("volume", 100)
+            if estado.get("voz_nombre"):
+                _seleccionar_voz(motor_local, estado["voz_nombre"], comtypes.client)
+        except Exception as e:
+            _enviar({"evento": "error", "msg": f"No se pudo crear el motor de habla: {e}"})
+            return
+
+        pos = pos_offset
+        for linea in texto.split("\n"):
+            if estado["detener"] or estado["generacion"] != gen:
+                return
+            if linea.strip():
+                _enviar({"evento": "progreso", "pos": pos})
+                try:
+                    motor_local.Speak(linea, _SPF_ASYNC | _SPF_IS_NOT_XML)
+                    while not estado["detener"] and estado["generacion"] == gen:
+                        if motor_local.WaitUntilDone(100):
+                            break
+                except Exception as e:
+                    _enviar({"evento": "error", "msg": str(e)})
+            pos += len(linea) + 1  # +1 por el \n que split elimina
+
+        if not estado["detener"] and estado["generacion"] == gen:
+            _enviar({"evento": "completado"})
+    finally:
+        comtypes.CoUninitialize()
 
 
 def main():
@@ -125,8 +198,10 @@ def main():
 
     _enviar({"evento": "listo"})
 
-    # Estado compartido entre el hilo principal y el de habla
-    estado = {"detener": False, "generacion": 0}
+    # Estado compartido entre el hilo principal y el de habla — solo datos
+    # planos (nunca punteros COM, ver _hilo_parrafos), así que compartirlo
+    # entre hilos es seguro.
+    estado = {"detener": False, "generacion": 0, "rate": 0, "volume": 100, "voz_nombre": None}
 
     for linea_cruda in sys.stdin:
         linea_cruda = linea_cruda.strip()
@@ -147,43 +222,11 @@ def main():
             _enviar({"evento": "voces", "lista": _leer_categorias_sapi(motor, comtypes.client)})
 
         elif accion == "cambiar_voz":
-            nombre_buscado = cmd.get("nombre", "").lower()
-            encontrada = False
-            for voz_dict in _leer_categorias_sapi(motor, comtypes.client):
-                if nombre_buscado in voz_dict["nombre"].lower():
-                    try:
-                        sp_cat = comtypes.client.CreateObject("SAPI.SpObjectTokenCategory")
-                        sp_cat.SetId(
-                            r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices", False
-                        )
-                        tokens = sp_cat.EnumTokens()
-                        for i in range(tokens.Count):
-                            try:
-                                tok  = tokens.Item(i)
-                                desc = tok.GetDescription()
-                                if nombre_buscado in desc.lower():
-                                    motor.Voice = tok
-                                    encontrada = True
-                                    break
-                            except Exception:
-                                pass
-                        if encontrada:
-                            break
-                        # Buscar también en GetVoices estándar
-                        tokens = motor.GetVoices()
-                        for i in range(tokens.Count):
-                            try:
-                                tok  = tokens.Item(i)
-                                if nombre_buscado in tok.GetDescription().lower():
-                                    motor.Voice = tok
-                                    encontrada = True
-                                    break
-                            except Exception:
-                                pass
-                    except Exception:
-                        pass
-                    if encontrada:
-                        break
+            nombre_buscado = cmd.get("nombre", "")
+            encontrada = _seleccionar_voz(motor, nombre_buscado, comtypes.client)
+            # Se recuerda el nombre para que cada hilo de habla nuevo pueda
+            # reaplicarlo sobre su propia instancia local del motor.
+            estado["voz_nombre"] = nombre_buscado if encontrada else estado["voz_nombre"]
             _enviar({"evento": "voz_cambiada", "exito": encontrada})
 
         elif accion == "hablar":
@@ -192,7 +235,7 @@ def main():
             gen = estado["generacion"]
             threading.Thread(
                 target=_hilo_parrafos,
-                args=(motor, cmd.get("texto", ""), cmd.get("pos_offset", 0), gen, estado),
+                args=(cmd.get("texto", ""), cmd.get("pos_offset", 0), gen, estado),
                 daemon=True,
             ).start()
 
@@ -220,16 +263,45 @@ def main():
         elif accion == "fijar_velocidad":
             v = cmd.get("valor", 50)
             try:
-                tasa = int((v / 5) - 10)
-                motor.Rate = max(-10, min(10, tasa))
+                tasa = max(-10, min(10, int((v / 5) - 10)))
+                motor.Rate = tasa
+                estado["rate"] = tasa
             except Exception:
                 pass
 
         elif accion == "fijar_volumen":
             try:
-                motor.Volume = int(cmd.get("valor", 100))
+                vol = int(cmd.get("valor", 100))
+                motor.Volume = vol
+                estado["volume"] = vol
             except Exception:
                 pass
+
+        elif accion == "exportar_archivo":
+            # Exportación silenciosa a WAV para el Creador de Audiolibros.
+            # Se ejecuta en el hilo principal, con su propio objeto COM
+            # recién creado (mismo motivo que _hilo_parrafos: nunca
+            # compartir un puntero COM entre hilos ni con el `motor`
+            # interactivo). El Creador de Audiolibros llama a esto siempre
+            # en serie (nunca en paralelo) para las voces de 32 bits, así
+            # que bloquear aquí no retrasa nada más.
+            ruta_wav = cmd.get("ruta_wav", "")
+            texto_exportar = cmd.get("texto", "")
+            try:
+                motor_export = comtypes.client.CreateObject("SAPI.SpVoice")
+                motor_export.Rate = cmd.get("rate", 0)
+                motor_export.Volume = cmd.get("volume", 100)
+                voz_nombre = cmd.get("voz_nombre", "")
+                if voz_nombre:
+                    _seleccionar_voz(motor_export, voz_nombre, comtypes.client)
+                stream = comtypes.client.CreateObject("SAPI.SpFileStream")
+                stream.Open(ruta_wav, 3)  # SSFMCreateForWrite = 3
+                motor_export.AudioOutputStream = stream
+                motor_export.Speak(texto_exportar, 0)  # SPF_SYNC = 0
+                stream.Close()
+                _enviar({"evento": "exportado", "exito": True})
+            except Exception as e:
+                _enviar({"evento": "exportado", "exito": False, "msg": str(e)})
 
 
 if __name__ == "__main__":

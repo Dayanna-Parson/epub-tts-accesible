@@ -1,0 +1,9 @@
+prompt 36
+
+Ya me e descargado los últimos cambios, Y polly sigue leyendo igual con las voces standar en la pestaña lectura. en ese aspecto, no ha cambiado nada.
+no está el botón para importar archivo. ni si quiera el de la carpeta... ya sabes que salen ocultos, hasta que no envíe un archivo desde la biblioteca. Y aún así, no sanen ni el de importar carpeta ni el de archivo.
+El suprimir tampoco funciona en libros recientes.
+y los dos últimos puntos, el cálculo y la preescucha si que funcionan.
+Y también quiero que en ajustes, en el apartado de azure, también pongas un cuadro combinado con todos los filtros que tiene la api, y que se actualice solo, cada vez que añadan nuevos.
+Me refiero a neural, multilingual, dragon y el nuevo que han añadido ahora al parecer, el maivoice 2 y 2 flash. Que no se si aparece en este log, pero hay algunas voces que dan error. Pero el resto, la gran mayoría de estas nuevas voces y han añadido 53 pues se escuchan super bien.
+¿Qué mas le podemos pedir que haga? necesito seguir avanzando!

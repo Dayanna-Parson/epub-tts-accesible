@@ -1,0 +1,24 @@
+respuesta 3
+
+Ahora añado el bloque Gemini dentro de `PANEL_CLAVES`, con el selector de modelo (Automático/manual) y una comprobación propia (no reutiliza `GestorVoces`, porque Gemini no es un proveedor de voces TTS sino de chat).
+
+Ahora actualizo `cargar_datos_visuales`, `al_guardar` y añado `al_borrar_gemini` / `al_comprobar_gemini`.
+
+Ahora los manejadores `al_borrar_gemini` y `al_comprobar_gemini`:
+
+Como el botón "Comprobar clave" ya depende de `cliente_gemini.py`, sigo directamente con ese módulo para no dejar el bloque anterior con una referencia rota.
+
+Ahora creo `app/servicios/cliente_gemini.py` con REST puro, lista dinámica de modelos y grounding con Google Search.
+
+Verifico sintaxis y hago commit de ambos bloques.
+
+**Bloques 2 y 3 hechos y pusheados:**
+
+- `ANCLAJE_INICIO/FIN: PANEL_CLAVES_GEMINI` en `pestana_ajustes.py`: campo de clave (sin validar formato/longitud, porque Google cambia el prefijo — hoy `AQ.`, antes `AIza`), combo de modelo con "Automático" + los modelos reales que devuelva la cuenta, y los tres botones (conseguir/comprobar/borrar) siguiendo el mismo esqueleto que Azure/Deepgram.
+- `app/servicios/cliente_gemini.py` nuevo, con dos bloques:
+  - `CLIENTE_GEMINI_LISTA_MODELOS`: `GET /v1beta/models`, filtra por `generateContent`, pagina si hace falta.
+  - `CLIENTE_GEMINI_ENVIO_MENSAJE`: arma historial + contexto del libro (solo metadatos) + `system_instruction` orientada a verificar datos, y activa `tools: [{"google_search": {}}]` para grounding.
+
+No llegué a clonar `VisionAssistantPro` — el formato de `contents`/`system_instruction`/`tools` de la API pública de Gemini ya lo conocía y es estándar, así que no hizo falta. Si al probarlo contra la cuenta real algo no encaja (nombre de campo, versión de endpoint), lo contrasto con ese repo de referencia entonces.
+
+**Siguiente paso natural:** `app/motor/gestor_chat_biblioteca.py` (persistencia atómica de `chat_biblioteca.json`) y luego el diálogo `dialogo_asistente_biblioteca.py` con `Ctrl+G`. ¿Sigo con la persistencia?

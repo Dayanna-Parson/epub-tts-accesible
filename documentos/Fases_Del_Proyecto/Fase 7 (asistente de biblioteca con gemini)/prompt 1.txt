@@ -1,0 +1,18 @@
+prompt 1
+
+"¡Hola Claude! Ya tenemos la Fase C (Actualizador) integrada y sincronizada.
+Estamos trabajando directamente sobre la rama activa:
+claude/fase7-asistente-biblioteca-gemini
+Aquí ya tienes disponibles el código de la Biblioteca (biblioteca.db, gestor_biblioteca.py, etc.) y todo el trabajo del actualizador.
+Vamos a empezar con la Sección 6 — Asistente de Biblioteca (Gemini) según la especificación de planificacion_v3.md:
+1. 
+Recuerda las reglas de CLAUDE.md (respetar anclajes, todo en español, sin rastros de IA en comentarios/código, accesibilidad NVDA estricta).
+Confírmame que has leído la Sección 6 para empezar paso a paso."
+
+Te voy a enviar el enlace de un repo que integra gemini en un complemento para NVDA
+Y creo que te puede ayudar a que veas como está implementado, como funciona y toda la lógica que tiene por detrás.
+Creo que podemos sacar algo útil de aquí, aunque este proyecto no se parezca mucho al mío.
+link:
+https://github.com/mahmoodhozhabri/VisionAssistantPro.git
+
+

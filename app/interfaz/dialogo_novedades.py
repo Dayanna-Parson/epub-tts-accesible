@@ -18,6 +18,8 @@ Características de accesibilidad:
 
 import wx
 
+from app.interfaz.ui_recursos import aplicar_icono_boton
+
 
 # ═════════════════════════════════════════════════════════════════════════════
 class DialogoNovedades(wx.Dialog):
@@ -101,6 +103,7 @@ class DialogoNovedades(wx.Dialog):
             "Cierra este diálogo sin actualizar. "
             "Podrás actualizar más tarde desde Ajustes."
         )
+        aplicar_icono_boton(btn_no, "cerrar", "No, cerrar")
         btn_no.SetDefault()
         btn_no.Bind(wx.EVT_BUTTON, self._al_rechazar)
 

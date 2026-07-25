@@ -1,0 +1,24 @@
+prompt y respuesta 21
+
+Has dicho: vale.
+app.log
+vale. creo que ya funciona bien. aquí te mando el log para que lo revises. Y luego, quiero que me digas todos los frentes que quedan abiertos, y que mas queda para terminar esta fase... Porque, hay cosas del creador de audiolibros actual que no me gustan
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Confirmado en el log: slider v=70 → tasa SSML='+32%', v=60 → '+16%', v=50 → '+0%' — la cadena completa aplica el valor correctamente en cada paso, sin pérdidas.
+Ejecutadoun comando
+Confirmado en el log: slider v=70 → tasa SSML='+32%', v=60 → '+16%', v=50 → '+0%' — la cadena completa aplica el valor correctamente en cada paso, sin pérdidas. El fix funciona. Genial que ya lo confirmes en la práctica.
+Ahora, el balance completo de la Fase B (Creador de Audiolibros) — qué está resuelto y qué queda abierto:
+Resuelto y verificado esta sesión
+• Crash de SetHelpText en menú contextual
+• Tab cíclico global blindado con try/except
+• Accesibilidad del Creador de Audiolibros (campos ahora alcanzables con Tab, AcceptsFocusFromKeyboard)
+• Ctrl+número movía foco correctamente
+• Volumen de Lectura reseteado cada párrafo (SAPI5)
+• Velocidad/volumen reseteados al cambiar de voz o proveedor (todos los motores)
+• Modo "velocidad por puntos" no aplicaba nada real — corregido y verificado con tu log
+• Botones "Eliminar libro cargado" y "Elegir voz..." añadidos
+Antes de que te diga qué falta, cuéntame lo que no te gusta
+Dijiste que hay cosas del Creador de Audiolibros actual que no te gustan. ¿Me las cuentas ahora con detalle para que arme el plan de lo que queda, o prefieres que primero te enseñe mi lista de frentes abiertos (basada en la planificación original) y luego añadimos tus cambios encima?
+Cuéntame primero tus cosas (Recomendado)
+Adelante — cuéntame con detalle qué es lo que no te gusta del Creador de Audiolibros tal como está ahora, y con eso armo el plan completo de lo que queda para cerrar esta fase.

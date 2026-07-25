@@ -28,12 +28,15 @@ else:
 CONFIG_DIR = os.path.join(RAIZ, "configuraciones")
 
 # Valores por defecto neutros para claves_api.json (sin secretos reales)
+# ANCLAJE_INICIO: CLAVES_DEFAULT_GEMINI
 _CLAVES_DEFAULT = {
     "azure":       {"key": "", "region": ""},
     "polly":       {"access_key": "", "secret_key": "", "region": ""},
     "elevenlabs":  {"api_key": ""},
     "deepgram":    {"api_key": ""},
+    "gemini":      {"api_key": "", "modelo": "auto", "temperatura": 0.4},
 }
+# ANCLAJE_FIN: CLAVES_DEFAULT_GEMINI
 
 
 def ruta_config(nombre_archivo):
@@ -43,6 +46,23 @@ def ruta_config(nombre_archivo):
     desde el que se lanza la aplicación.
     """
     return os.path.join(CONFIG_DIR, nombre_archivo)
+
+
+# ANCLAJE_INICIO: RUTA_ASISTENTE_BIBLIOTECA
+# Subcarpeta propia para no mezclar los archivos del Asistente de Biblioteca
+# (historial de chat, plantillas de prompt) sueltos junto al resto de
+# configuraciones/. La crean automáticamente gestor_chat_biblioteca.py y
+# gestor_prompts_asistente.py al escribir en ella (os.makedirs).
+_SUBCARPETA_ASISTENTE = "asistente_biblioteca"
+
+
+def ruta_config_asistente(nombre_archivo):
+    return os.path.join(CONFIG_DIR, _SUBCARPETA_ASISTENTE, nombre_archivo)
+
+
+def ruta_carpeta_asistente():
+    return os.path.join(CONFIG_DIR, _SUBCARPETA_ASISTENTE)
+# ANCLAJE_FIN: RUTA_ASISTENTE_BIBLIOTECA
 
 
 def cargar_claves() -> dict:

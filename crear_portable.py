@@ -8,10 +8,15 @@ distribuir a usuarios finales invidentes.
 Pasos que ejecuta:
   1. Limpia el directorio de salida anterior (/dist/epubtts/).
   2. Ejecuta PyInstaller con --noconsole para generar epubtts.exe.
-  3. Copia bin/, recursos/ y documentos/ al portable.
-  4. Crea configuraciones/ vacía (con solo ajustes.json de fábrica).
-  5. Copia INICIAR_APP.bat y novedades.txt a la raíz del portable.
-  6. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
+  3. Compila auxiliar_actualizador.py a bin/actualizador.exe (misma
+     arquitectura que la app, por eso se automatiza aquí — a diferencia de
+     auxiliar_sapi32.exe, que necesita un intérprete de 32 bits aparte y
+     sigue siendo un paso manual, ver bin/INSTRUCCIONES.txt).
+  4. Copia bin/, recursos/ y documentos/ al portable.
+  5. Crea configuraciones/ vacía (ajustes.json de fábrica, carpetas de
+     backups separadas y carpeta de plantillas del Asistente de Biblioteca).
+  6. Copia INICIAR_APP.bat y novedades.txt a la raíz del portable.
+  7. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
 
 Uso:
     python crear_portable.py
@@ -67,6 +72,7 @@ _AJUSTES_FABRICA = {
         "actualizar_automaticamente": True,
         "escala_velocidad": "porcentaje",
         "idioma_libro_codigo": "es-ES",
+        "sonidos_habilitados": True,
     },
 }
 
@@ -82,7 +88,7 @@ def _ocultar_archivo(ruta: str):
 
 
 def limpiar_destino():
-    print("[1/6] Limpiando directorios de salida anteriores...")
+    print("[1/7] Limpiando directorios de salida anteriores...")
     for ruta in (DIR_DIST_RAW, DIR_PORTABLE):
         if os.path.exists(ruta):
             shutil.rmtree(ruta)
@@ -94,7 +100,7 @@ def limpiar_destino():
 
 
 def ejecutar_pyinstaller():
-    print("[2/6] Ejecutando PyInstaller...")
+    print("[2/7] Ejecutando PyInstaller...")
     punto_entrada = os.path.join(RAIZ, "iniciar_epub_tts.py")
     icono         = os.path.join(RAIZ, "recursos", "iconos", "epubtts.ico")
     args = [
@@ -102,7 +108,7 @@ def ejecutar_pyinstaller():
         "--noconfirm",
         "--noconsole",
         "--onedir",
-        f"--name=epubtts",
+        "--name=epubtts",
         f"--distpath={os.path.join(RAIZ, 'dist')}",
         f"--workpath={os.path.join(RAIZ, 'build')}",
         f"--specpath={os.path.join(RAIZ, 'build')}",
@@ -117,8 +123,45 @@ def ejecutar_pyinstaller():
         sys.exit(1)
 
 
+# ANCLAJE_INICIO: COMPILACION_ACTUALIZADOR_AUXILIAR
+def compilar_actualizador():
+    """
+    Compila auxiliar_actualizador.py a bin/actualizador.exe con PyInstaller,
+    con el mismo intérprete (misma arquitectura) que compila la app
+    principal. A diferencia de auxiliar_sapi32.exe —que necesita Python de
+    32 bits y por eso sigue siendo un paso manual documentado en
+    bin/INSTRUCCIONES.txt—, actualizador.exe no tiene ese requisito, así
+    que se automatiza aquí para que cada portable lo lleve siempre
+    actualizado sin depender de un paso manual adicional.
+    """
+    print("[3/7] Compilando actualizador.exe (auxiliar de actualizaciones)...")
+    origen_script = os.path.join(RAIZ, "auxiliar_actualizador.py")
+    if not os.path.isfile(origen_script):
+        print("      AVISO: auxiliar_actualizador.py no encontrado; se omite bin/actualizador.exe.")
+        return
+
+    dir_build_aux = os.path.join(RAIZ, "build", "actualizador")
+    args = [
+        sys.executable, "-m", "PyInstaller",
+        "--noconfirm",
+        "--noconsole",
+        "--onefile",
+        "--name=actualizador",
+        f"--distpath={os.path.join(RAIZ, 'bin')}",
+        f"--workpath={dir_build_aux}",
+        f"--specpath={dir_build_aux}",
+        origen_script,
+    ]
+    resultado = subprocess.run(args, cwd=RAIZ)
+    if resultado.returncode != 0:
+        print("ERROR: PyInstaller terminó con errores al compilar actualizador.exe. Abortando.")
+        sys.exit(1)
+    print("      Generado: bin/actualizador.exe")
+# ANCLAJE_FIN: COMPILACION_ACTUALIZADOR_AUXILIAR
+
+
 def copiar_recursos():
-    print("[3/6] Copiando recursos al portable...")
+    print("[4/7] Copiando recursos al portable...")
     os.makedirs(DIR_PORTABLE, exist_ok=True)
 
     # Mover el directorio generado por PyInstaller a DIR_PORTABLE
@@ -164,7 +207,7 @@ def copiar_recursos():
 
 
 def crear_configuraciones_fabrica():
-    print("[4/6] Creando configuraciones/ de fábrica...")
+    print("[5/7] Creando configuraciones/ de fábrica...")
     dir_conf = os.path.join(DIR_PORTABLE, "configuraciones")
     os.makedirs(dir_conf, exist_ok=True)
 
@@ -196,15 +239,29 @@ def crear_configuraciones_fabrica():
     _ocultar_archivo(_gitkeep_grab)
     print("      Creado: Grabaciones_Epub-TTS/ (carpeta de salida de audio)")
 
-    os.makedirs(os.path.join(dir_conf, "proyectos_backup"), exist_ok=True)
-    _gitkeep_bak = os.path.join(dir_conf, "proyectos_backup", ".gitkeep")
-    open(_gitkeep_bak, "w").close()
-    _ocultar_archivo(_gitkeep_bak)
-    print("      Creado: configuraciones/proyectos_backup/ (carpeta de respaldos)")
+    for _carpeta_bak in ("backups_proyectos", "backups_biblioteca"):
+        _dir_bak = os.path.join(dir_conf, _carpeta_bak)
+        os.makedirs(_dir_bak, exist_ok=True)
+        _gitkeep_bak = os.path.join(_dir_bak, ".gitkeep")
+        open(_gitkeep_bak, "w").close()
+        _ocultar_archivo(_gitkeep_bak)
+        print(f"      Creado: configuraciones/{_carpeta_bak}/ (carpeta de respaldos)")
+
+    # asistente_biblioteca/: historial de chat y plantillas de prompt del
+    # Asistente de Biblioteca, separados del resto de configuraciones/.
+    # Las plantillas se guardan una por archivo .txt en plantillas/; la
+    # plantilla "Por defecto" la crea la propia app en el primer arranque
+    # (gestor_prompts_asistente.listar_prompts), no hace falta sembrarla aquí.
+    dir_plantillas = os.path.join(dir_conf, "asistente_biblioteca", "plantillas")
+    os.makedirs(dir_plantillas, exist_ok=True)
+    _gitkeep_plantillas = os.path.join(dir_plantillas, ".gitkeep")
+    open(_gitkeep_plantillas, "w").close()
+    _ocultar_archivo(_gitkeep_plantillas)
+    print("      Creado: configuraciones/asistente_biblioteca/plantillas/")
 
 
 def comprimir_portable():
-    print(f"[5/6] Comprimiendo en {os.path.basename(ZIP_SALIDA)}...")
+    print(f"[6/7] Comprimiendo en {os.path.basename(ZIP_SALIDA)}...")
     raiz_zip = f"epub-tts-accesible-v{VERSION}"
     with zipfile.ZipFile(ZIP_SALIDA, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
         for carpeta_actual, _, archivos in os.walk(DIR_PORTABLE):
@@ -217,7 +274,7 @@ def comprimir_portable():
 
 
 def limpiar_temporal():
-    print("[6/6] Eliminando archivos temporales de compilación...")
+    print("[7/7] Eliminando archivos temporales de compilación...")
     dir_build = os.path.join(RAIZ, "build")
     if os.path.isdir(dir_build):
         shutil.rmtree(dir_build, ignore_errors=True)
@@ -230,6 +287,7 @@ if __name__ == "__main__":
     print(f"\n=== Construcción del portable Epub TTS Accesible v{VERSION} ===\n")
     limpiar_destino()
     ejecutar_pyinstaller()
+    compilar_actualizador()
     copiar_recursos()
     crear_configuraciones_fabrica()
     comprimir_portable()

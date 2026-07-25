@@ -1,0 +1,48 @@
+respuesta 35.1
+
+Vamos a aplicar el mismo margen de seguridad tras `sd.wait()` en los 4 clientes de nube. Empiezo por Azure:
+
+Ahora Polly (ya tiene `import time`):
+
+Ahora los 5 frentes de usabilidad. Empiezo por el punto 1: importar un solo archivo en Biblioteca.
+
+Añado un segundo botón "Importar libro..." junto al de carpeta:
+
+Ahora añado el handler, justo después de `al_importar_carpeta`:
+
+Correcto, el método es `_cargar_libros()`. Corrijo:
+
+Bien, todo ya disponible. Compilo:
+
+Ahora actualizo la construcción del submenú para rastrear el resaltado:
+
+Ahora añado `_al_resaltar_reciente` y el gancho de Supr en `al_navegacion_tab_global`:
+
+Uso el patrón de sonido ya existente en vez de inventar un objeto de voz que no existe:
+
+Ahora el punto 3: progreso hablado cada 10% en modo "Libro completo" del Creador de Audiolibros.
+
+Ahora reinicio el contador al arrancar cada exportación:
+
+Añado caché del cliente boto3 para no reconstruirlo en cada llamada:
+
+Ahora inicializo esos atributos en `__init__` de `GrabadorAudio` para evitar depender de `getattr`:
+
+Ahora simplifico el `getattr` ya que está inicializado en `__init__`:
+
+Ahora añado el método `_estimar_duracion_texto`, reutilizando la fórmula de multiplicador ya usada en Lectura:
+
+Compilo todo el conjunto de cambios y hago commit/push.
+
+Ya está subido. Resumen de todo lo que hice en esta ronda:
+
+**El bug de Polly, resuelto de raíz de verdad**: tu diagnóstico cruzado (MP3 perfecto, solo falla en vivo) era la pista definitiva. Encontré que `sd.wait()` puede devolver el control antes de que el hardware de audio termine de vaciar físicamente su búfer — a velocidad alta el siguiente fragmento arranca casi de inmediato, y su `sd.play()` interrumpe la cola de audio del anterior, comiéndose la última sílaba. Añadí un margen de 120ms tras `sd.wait()` en los 4 clientes de nube (no solo Polly, ya que todos comparten el mismo patrón). Quité el relleno de puntos suspensivos que había probado antes en `cliente_polly.py`, porque ya no hacía falta y sonaba raro en la lectura en vivo.
+
+**Los 5 puntos**:
+1. Botón "Importar libro..." en Biblioteca, para un solo EPUB/PDF sin escanear carpeta.
+2. Supr sobre un libro resaltado en "Libros Recientes" lo quita del historial. Aviso honesto: esto depende de que la tecla llegue al mecanismo de captura global mientras el menú está abierto — es una zona técnica incierta en Windows que no puedo verificar sin probarlo ahí, así que dime si funciona o si Supr no hace nada en ese menú.
+3. Progreso hablado cada 10% en modo "Libro completo" (antes solo se movía la barra en silencio).
+4. Preescucha de Conchita: no pude aislar la causa exacta sin log, pero encontré y corregí un problema real relacionado — se creaba un cliente de Amazon Polly nuevo en cada síntesis, lo cual es más lento la primera vez que se usa en el proceso (justo el patrón de "falla la primera vez, luego va bien"). Ahora se reutiliza. Si el problema persiste, mándame el `app.log` de ese momento y lo cazamos con datos en vez de teoría.
+5. "Calcular presupuesto" ahora también anuncia la duración estimada del audio final, según caracteres y velocidad.
+
+Cuando puedas, prueba sobre todo: Polly a velocidad alta en Lectura, la preescucha de Conchita varias veces seguidas, y el Supr en recientes.

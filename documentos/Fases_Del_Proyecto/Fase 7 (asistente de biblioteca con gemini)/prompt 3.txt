@@ -1,0 +1,3 @@
+prompt 3
+
+si, sigue con ese bloque. Y asegúrate de que la clave api sea compatible con las nuevas que da google ai studio. algo como esto: AQ.Ab8_TU_CLAVE_AQUI... creo que cada cierto tiempo las cambian o algo así... De hecho en el complemento de referencia, sale como obtiene la clave, y todo eso!

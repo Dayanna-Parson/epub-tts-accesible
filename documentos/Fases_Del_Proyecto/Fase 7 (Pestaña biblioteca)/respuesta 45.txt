@@ -1,0 +1,54 @@
+respuesta 45
+
+Encontré el bug — mío, de la última ronda. `EVT_TREE_KEY_DOWN` entrega un `TreeEvent`, no un `KeyEvent`, y `TreeEvent` no tiene `ControlDown()` directamente — hay que sacar el `KeyEvent` real con `.GetKeyEvent()`. Lo arreglo ya.
+
+Solo un sitio, ya corregido. Commit y push.
+
+Perdón por este, era mío de la última ronda — al añadir el reordenar categorías con Ctrl+Arriba/Abajo, usé `evento.ControlDown()` directamente, pero `al_tecla_arbol` recibe un `TreeEvent` (no un `KeyEvent`), y ese método solo existe en el `KeyEvent` real, que hay que sacar aparte con `.GetKeyEvent()`. Por eso se rompía con **cualquier** flecha dentro del árbol, no solo con Ctrl+flecha.
+
+Ya está corregido y subido. `git pull` y prueba de nuevo: ahora las flechas normales deberían moverse sin problema, y Ctrl+Arriba/Ctrl+Abajo debería reordenar sin crashear.
+y que pasa con el resto del documento, de las cosas que te acabo de decir en este último prompt?
+respuesta:
+Vale, con esto sí tengo el resto completo. Vamos uno por uno.
+
+Perfecto, uso eso. Ahora actualizo con sonido dirigido y anuncio detallado, igual que en Proyectos.
+
+Ahora reviso el sistema de copias de seguridad ya existente para aplicárselo también a `biblioteca.db`.
+
+Añado la función de backup para `biblioteca.db`, ejecutada una vez por sesión al arrancar (no en cada escritura, sería demasiado costoso con una base de datos de este tamaño).
+
+Ahora la llamo una vez al arrancar la pestaña, en un hilo de fondo para no bloquear el arranque.
+
+Ahora el método del hilo, cerca de otros métodos de arranque.
+
+Rotación y contenido confirmados correctos. Ahora reviso el ajuste "Buscar actualizaciones automáticamente al iniciar".
+
+Now I'll fix the constructor to pass the real `PestanaAjustes` reference and use it directly, plus make Ctrl+S sync live checkbox values first.
+
+Now update the constructor call and `_al_guardar_global` to sync before writing:
+
+Now let me quickly verify there's no other broken `wx.GetTopLevelParent(self)` pattern with the same `hasattr(padre, "guardar_config_en_archivo")` guard in other panels that might have the same bug:
+
+Good, both instances were in `PanelGeneral`. Now let's check for a py_compile sanity check:
+
+Now let's investigate the console duplicate-crash-logging question quickly, then commit.
+
+`logger.critical` already prints to console via `_handler_consola`. The `sys.__excepthook__` call afterward is redundant — it reprints the bare traceback a second time. I'll remove it.
+
+Now let's commit both fixes and push.
+
+Everything else was committed already (`d764b89`); the pending diff is exactly the biblioteca-backup wiring, the move-announcement pattern, plus my two new fixes. Let me commit.
+
+Todos los fixes de tu último mensaje están hechos y subidos. Resumen:
+
+1. **Duplicado de "CRASH NO CONTROLADO" en consola**: confirmado que era cosmético, solo de consola. El manejador global registraba el crash con `logger.critical()` (que ya imprime en consola) y luego reenviaba lo mismo a `sys.__excepthook__`, que lo volvía a imprimir en crudo. `app.log` nunca tuvo el duplicado. Quité el reenvío redundante.
+
+2. **Ctrl+Arriba/Abajo para mover categorías**: ya estaba arreglado en el commit anterior (`d764b89`) — el crash venía de mi propio código nuevo usando `evento.ControlDown()` directo sobre un `TreeEvent` en vez de `evento.GetKeyEvent().ControlDown()`.
+
+3. **Anuncio de voz al mover categoría**: añadido, siguiendo el patrón de `ventana_proyectos.py` — sonido direccional (`MOVE_UP`/`MOVE_DOWN`) + `"{nombre} movido arriba/abajo."` por el anunciador oculto y por voz.
+
+4. **Backups de biblioteca.db**: implementado. Copia zip rotativa (últimas 5) una vez por sesión al abrir la pestaña Biblioteca, en hilo de fondo — no en cada escritura individual como `proyectos.json`, porque con cientos de libros comprimir la base entera en cada cambio sería demasiado costoso.
+
+5. **Persistencia de ajustes, específicamente la casilla de auto-actualización**: encontré un bug real. `PanelGeneral.guardar_todo()` usaba `wx.GetTopLevelParent(self)`, que resuelve a `ventana_principal` (el Frame) y no a `PestanaAjustes`, así que el `hasattr(padre, "guardar_config_en_archivo")` fallaba en silencio y el botón "Guardar" del panel general nunca escribía en disco. Además, la casilla no tenía ningún evento propio, así que si guardabas solo con Ctrl+S (sin pulsar antes el botón "Guardar" del panel), el valor de la casilla nunca llegaba a `self.config` antes de escribirse. Arreglado: `PanelGeneral` ahora recibe una referencia directa a `PestanaAjustes`, y Ctrl+S sincroniza primero los controles del panel general antes de guardar.
+
+Con esto queda cerrada la Fase 7 por mi parte. Dime si quieres que empecemos ya con la siguiente.

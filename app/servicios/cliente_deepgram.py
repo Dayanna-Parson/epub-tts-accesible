@@ -192,6 +192,12 @@ class ClienteDeepgram:
         if not self._parado:
             sd.play(data, fs)
             sd.wait()
+            # Margen de seguridad: sd.wait() puede volver antes de que el
+            # hardware termine de vaciar físicamente su búfer, sobre todo a
+            # velocidades altas — sin esto, el sd.play() del fragmento
+            # siguiente puede cortar la última sílaba del anterior.
+            if not self._parado:
+                time.sleep(0.12)
 
     def preparar(self, texto: str, datos_voz):
         """Pre-descarga el audio del siguiente fragmento en segundo plano."""

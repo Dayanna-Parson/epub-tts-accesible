@@ -61,11 +61,6 @@ def _limpiar_nombre_para_titulo(nombre: str) -> str:
     return re.sub(r"\s+", " ", nombre).strip()
 
 
-def _titulo_desde_nombre_archivo(ruta_archivo: str) -> str:
-    nombre = os.path.splitext(os.path.basename(ruta_archivo))[0]
-    return _limpiar_nombre_para_titulo(nombre)
-
-
 def _separar_titulo_y_autor(texto: str) -> tuple[str, Optional[str]]:
     """
     Respaldo para cuando el EPUB no trae autor en sus metadatos internos.

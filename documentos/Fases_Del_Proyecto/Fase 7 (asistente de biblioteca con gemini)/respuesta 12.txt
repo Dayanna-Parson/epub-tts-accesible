@@ -1,0 +1,46 @@
+respuesta 12
+
+Bien, limpio. Ahora `pestana_biblioteca.py`:
+
+Ahora reemplazo el bloque completo:
+
+Añado el import y verifico que no queden referencias sueltas:
+
+Sin colisiones. Ahora `dialogo_proveedor_alternativo.py`:
+
+Verifico que no queden restos:
+
+Ahora `pestana_ajustes.py`:
+
+Ahora `pestana_lectura.py` (el más delicado, incluye Ctrl+I):
+
+No hay otras referencias (ni anclas de orden de tabulación). Elimino el control oculto:
+
+Ninguno más. Ahora reviso `dialogo_asistente_biblioteca.py` (comentario desactualizado que mencionaba el alcance limitado) y confirmo compilación completa:
+
+Ahora corrijo las tres cosas. Primero, la reestructuración de plantillas a archivos individuales `.txt`:
+
+Verifico con una prueba rápida:
+
+Migración funciona perfectamente. Ahora corrijo el salto de foco en `dialogo_editar_prompt.py` y hago el refresco del combo del chat incondicional:
+
+Ahora hago el refresco del combo del chat siempre incondicional y añado confirmación al cambiar de estilo:
+
+Y confirmación por voz al cambiar el estilo (confirma que aplica realmente):
+
+All compiles clean, no leftover functional `_anunciador` references. Now updating `.gitignore` and `crear_portable.py` to match the new per-file template storage.
+
+Good, `json` is still used elsewhere. Now update `.gitignore`.
+
+Now let's check git status and commit.
+
+Pushed. Todo listo y ya en PR #9.
+
+Resumen de esta ronda:
+
+1. **`_anunciador` reemplazado en toda la app por `accessible_output3`**: `pestana_lectura.py` (Ctrl+I), `pestana_biblioteca.py`, `pestana_creador_audiolibros.py`, `dialogo_proveedor_alternativo.py` y `pestana_ajustes.py` (Ctrl+S) ya no usan el truco del `TextCtrl` oculto con `SetFocus()`; todos llaman directamente a `voz.hablar(...)`. `pyttsx3` (`anunciador_voz.py`) se dejó intacto, tal como pediste, para la cola de voz que ya usaba.
+2. **Combo "Estilo del asistente" del chat**: ahora se recarga siempre al cerrar "Editar prompts" (ya no depende de una bandera interna que podía quedar desactualizada), y al cambiar de plantilla en ese combo se aplica de inmediato (`fijar_prompt_activo`) con confirmación hablada: "Estilo del asistente: X."
+3. **Salto de foco en "Editar prompts"**: `al_seleccionar_plantilla` ya no mueve el foco a "Nombre" en ningún caso; puedes recorrer el combo con flechas sin que se dispare el salto, y decides con Tab cuándo pasar a editar.
+4. **Plantillas como archivos individuales**: cada plantilla vive ahora en `configuraciones/asistente_biblioteca/plantillas/<nombre>.txt`, editable directamente desde fuera de la app; cuál está activa se guarda aparte en `activo.json`. Hay migración automática y silenciosa desde el `prompts_asistente.json` anterior (tus plantillas "fan de la fantasía" y "suspense" pasarán solas al nuevo formato). También actualicé `crear_portable.py` y `.gitignore` para que coincidan con esta nueva estructura.
+
+Como siempre, no puedo probar `accessible_output3` ni NVDA real en este entorno Linux — solo verifiqué compilación y la lógica pura de `gestor_prompts_asistente.py` con pruebas de sandbox (alta, edición, borrado, migración de legado). Avísame qué tal se comporta todo en tu equipo real.

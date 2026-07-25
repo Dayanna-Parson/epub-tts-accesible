@@ -1,0 +1,20 @@
+Now let's rewrite `gestor_backups.py`:
+
+Now update `.gitignore`:
+
+Migration, gating, and rotation all work correctly. Now let's address item 1 (validate the save button already requires both fields non-empty):
+
+¡Gracias a ti por la paciencia con esta ronda! Las tres cosas, resueltas:
+
+1. **Validación al guardar plantilla**: ya estaba implementada exactamente como pides — `al_guardar()` comprueba que "Nombre" y "Texto del prompt" tengan contenido y, si falta alguno, suena el error y aparece un `wx.MessageBox` (que NVDA lee automáticamente) sin llegar a guardar nada. No hizo falta tocar código, solo confirmarlo.
+
+2. **Backups separados y solo con cambios reales**: hecho.
+   - Ahora hay `configuraciones/backups_proyectos/` y `configuraciones/backups_biblioteca/`, cada uno con sus propios 5 más recientes.
+   - Los `.zip` que ya tenías en `proyectos_backup/` se reparten solos a la carpeta que les toca la primera vez que la app los necesita (por prefijo de nombre), y la carpeta vieja se borra si queda vacía.
+   - El backup de `biblioteca.db` ya no se dispara solo por abrir la pestaña: ahora compara la fecha de modificación del archivo contra la del backup más reciente, y si no ha cambiado, no crea nada. El de proyectos ya solo se disparaba tras guardar de verdad, pero le apliqué la misma comprobación por consistencia.
+   - Añadidas las dos rutas nuevas a `.gitignore` (y `crear_portable.py` actualizado para crearlas de fábrica).
+   - Verificado con una prueba de sandbox: migración, no-duplicado sin cambios, y sí-genera-uno con cambio real, todo correcto.
+
+3. **Iconos**: sin cambios, como pediste — se quedan como están.
+
+Con esto, sí: para mí esta fase queda cerrada. Todo está pusheado en `claude/fase7-asistente-biblioteca-gemini`. Como el PR #9 está cerrado, dime si quieres que abra uno nuevo para dejar constancia de este trabajo, o si prefieres dejarlo así.

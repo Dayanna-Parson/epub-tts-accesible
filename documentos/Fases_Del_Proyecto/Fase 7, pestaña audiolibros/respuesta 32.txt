@@ -1,0 +1,23 @@
+respuesta 32
+
+Ahora vamos con el soporte de PDF. Primero reviso cómo está estructurado el troceador de EPUB y qué falta por el lado de PDF.
+
+Ahora creo `troceador_pdf.py`, con la misma interfaz pública que `TroceadorEpub`:
+
+Ahora actualizo `pestana_creador_audiolibros.py` para admitir PDF, con dispatch según formato:
+
+Ahora la parte del cálculo de presupuesto (línea ~692 y ~739):
+
+Ahora comprobemos que no queden más referencias a `formato != "epub"` ni imports sueltos de `TroceadorEpub` a corregir, y revisemos `cargar_libro`/dependencias del botón "Eliminar libro" respecto a PDF:
+
+Bien, ya cubierto. Compilo todo:
+
+Todo limpio. Commit y push:
+
+Ya está subido (te sigo respondiendo en castellano, sin problema). Resumen de los dos frentes:
+
+**Polly a velocidades rápidas**: encontré la causa exacta de por qué solo fallaba a partir de la posición 60 — el `<break>` estaba metido *dentro* de `<prosody rate="+16%">`, así que Amazon también aceleraba la propia pausa junto con el texto, dejándola sin efecto real a medida que subías la velocidad. Lo saqué fuera de `<prosody>` para que sea siempre un tiempo real, sin importar la velocidad, y además lo hice escalar de 400ms hasta 1000ms como margen extra según lo rápido que vayas. Con esto debería quedar resuelto en todo el rango del deslizador, no solo por debajo de 1.16×.
+
+**Soporte PDF**: ya está añadido al Creador de Audiolibros. Creé `troceador_pdf.py` con PyMuPDF (la misma librería que ya usa el escáner de Biblioteca, sin dependencias nuevas), con la misma interfaz que el troceador de EPUB para no duplicar lógica en el resto de la pestaña. Los "capítulos" se calculan a partir del índice de contenidos embebido del PDF si lo tiene; si no lo tiene, se trata como un único bloque con todo el documento (el modo "por capítulos" sigue funcionando, solo que con una entrada). Ya no bloquea con el aviso de "solo EPUB".
+
+Cuando puedas, prueba con un PDF real (con y sin índice de contenidos si tienes alguno de cada) y con Polly a velocidad alta, y me cuentas qué tal. Cuando confirmes que esto va bien, seguimos con la paralelización de la exportación que dejamos pendiente.

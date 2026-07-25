@@ -1,0 +1,35 @@
+Ahora reescribo `enviar_mensaje` para intentar varios candidatos en modo automático y dar mensajes de error más claros:
+
+Ahora reviso el resto del diálogo para renombrar controles, añadir botones y decidir la mejor forma del anuncio automático sin robar el foco de forma permanente.
+
+Ahora añado el manejador global y lo conecto al despachador de atajos dinámicos:
+
+Ahora el método global y el helper de menú contextual compartido, junto a `al_abrir_gestor_proyectos` (patrón similar):
+
+Ahora añado la entrada en los 5 menús de `ventana_principal.py`:
+
+Ahora `_menu_contextual_lectura` y `_menu_contextual_grabacion` (no llaman a `_submenu_ayuda`, así que añado la entrada directamente antes de "Salir"):
+
+Perfecto, un único punto de inyección para las tres. Añado la entrada del asistente ahí:
+
+Bien, `"B"` cae en el fallback genérico (letra simple → `ord()`), confirmado por cómo ya funcionan `reproducir_pausar` (P), `detener` (D), etc. Ahora compilo el conjunto completo y hago commit.
+
+Ahora respondo a cada punto del reporte.
+
+Ahora integro el nuevo helper en el diálogo, con el toque de foco como respaldo si la notificación UIA falla:
+
+Todo pusheado. Resumen de las correcciones a tu reporte:
+
+**1. Atajo `Ctrl+Shift+B` no funcionaba fuera del libro seleccionado** — corregido: pasó de acelerador de panel (`pestana_biblioteca`) a acelerador de **Frame** en `ventana_principal._configurar_aceleradores_globales`, que tiene prioridad sobre cualquier control hijo. Ahora funciona desde cualquier pestaña y con cualquier control enfocado.
+
+**2. Acceso por menú contextual en toda la app** — añadido `_agregar_item_asistente_biblioteca()` en `ventana_principal.py`, llamado desde los 5 menús contextuales de las pestañas y desde los 3 menús propios de Biblioteca (árbol, etiquetas, libro).
+
+**3. Nombre del cuadro "en blanco multilínea"** — le puse `SetName("Historial de mensajes")` y al campo de entrada `SetName("Mensaje")`; antes no tenían nombre accesible y NVDA solo leía el rol.
+
+**4. Error 404 con `gemini-2.5-flash`** — el modelo salía en la lista pero ya no respondía a `generateContent` (Google lo retira aunque tarde en desaparecer del listado). Ahora en modo automático se prueban varios candidatos en orden (alias `-latest` → coincidencias flash/pro → cualquier otro) y se salta al siguiente si uno da 404, en vez de romper la conversación.
+
+**5. ¿NVDA anuncia los mensajes nuevos automáticamente?** — antes NO (bug real: llamaba `SetValue()` sin `SetFocus()`, así que no anunciaba nada). Ahora, siguiendo tu elección, uso `UiaRaiseNotificationEvent` (notificación UIA "en vivo" de Windows) para que se anuncie **sin tocar el foco en ningún momento** — ni siquiera el toque breve que usa el resto de la app. Si por lo que sea esa API fallara en tu Windows, cae automáticamente al método de respaldo (toque de foco de 350ms).
+
+**6. Controles nuevos** en la fila inferior: **Copiar mi último mensaje**, **Copiar última respuesta**, **Guardar conversación...** (exporta a `.txt`), **Borrar historial** (con confirmación) y **Cerrar** (equivalente a Escape).
+
+Como no tengo un Windows real con NVDA para probar la parte de UIA, te pido que la verifiques con tu clave real cuando puedas — si `anunciar_en_vivo()` fallara silenciosamente por alguna razón que no anticipé, el respaldo debería cubrirlo, pero es la pieza más nueva y menos probada de todo lo que hemos hecho hasta ahora.

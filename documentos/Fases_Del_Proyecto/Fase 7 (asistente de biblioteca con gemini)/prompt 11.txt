@@ -1,0 +1,169 @@
+Verás. Vamos a tener que volver al otro método que no me acuerdo cómo se llama. Porque el anunciador que has puesto pues no me gusta y te voy a decir por qué. Tanto en el modo de lectura, la pestaña de lectura, cuando pulsamos control i para quel lector nos verbalice el número de página, el capítulo y esas cosas, pues no me gusta porque es como que salta como ese diálogo, o sea como una especie de diálogo de ventana flotante o algo así. Y que dice algo así. Te voy a poner un ej con NVDA.
+(edición  sólo lectura  Página 2 de 2 del capítulo. Página 2 de 201 del libro.
+edición  sólo lectura  Todo había ido bien hasta que llegó la cuenta.
+multilínea
+edición  sólo lectura  Página 2 de 2 del capítulo. Página 2 de 201 del libro.
+edición  sólo lectura  Todo había ido bien hasta que llegó la cuenta.
+multilínea) lo he hecho dos veces para que veas lo que sucede.
+
+después anuncia también el rol, por ejemplo. Eh, dice el número de páginas, tal, capítulo tal, te quedan X páginas para acabar el capítulo. Edición solo lectura. No sé, no me gusta. Y también en... En la ventana del asistente de gemini, pues pasa exactamente lo mismo. abajo también te dejo el log. para que veas todo lo que pasa en esta ventana.
+E de decir, que si que funciona tanto que toma la biblioteca como cualquier etiqueta o libro donde el foco esté situado.
+Cuando envío el mensaje, no dice, mensaje enviado. solo dice pensando... se queda un rato en silencio, y cuando suena la campana, se que llegó el mensaje, porque me tengo que ir al historial a leerlo.
+Al final te voy a dejar un repo donde precisamente funciona y lee en voz alta lo que la IA respondió. a ver si te sirve como lo hicieron, y me lo cuentas, y me vas explicando. Ese repo también lo puedes usar como referencia, y también puedes buscar en foros y en las distintas documentaciones oficiales el problema, a ver que solución hay.
+A. Y con respecto a los prompts, pues, como ves, cuando bajo por el diálogo, el foco salta al nombre... y tengo que hacer shift tab. A, y tampoco al pulsar en el botón guardar, me dice nada. se que se guarda, porque sale en el cuadro combinado. Y al guardarlo tampoco se cierra el diálogo. lo tengo que cerrar de forma manual con escape o el botón cerrar.
+A, tanto el historial de mensajes, que creo que es mejor que se llame historial de conversación o algo así, pues sigue diciendo, solo lectura nada mas. También te lo muestro en el log.
+Y tampoco se verbaliza el otro cuadro de edición, escribe un mensaje. Solo dice, cuadro de edición.
+A, y podrías hacer que tanto el historial de conversaciones que se valla guardando, como el que se guarde de forma manual, y las plantillas, pues que se guarden en una subcarpeta, donde quieras, pero que la carpeta de la app, quede bien organizada. Y ya que estás, también añádela al gitignore, y al portable.py, para que también se cree de forma automática. Y, busca alguna forma de que la IA no se equivoque tanto con los nombres de los autores, y con los títulos de los libros o sagas, de los que le preguntamos o hablamos. Es que alucina mucho...
+A, y te confirmo que el borrado de claves ahora si que se anuncia bien.
+Y que tal cambiar, asistente de gemini, por asistente de lectura?
+
+edición  sólo lectura  Pensando...
+Pensando...  edición  en blanco
+edición  sólo lectura  Asistente: ¡Por supuesto que sí! Es una de esas divertidísimas joyas de la fantasía urbana ligera, llena de acción, sarcasmo y humor, que se han vuelto superpopulares en Amazon gracias al modelo de autopublicación de LMBPN Publishing (la editorial de Michael Anderle).
+
+Para quien no la conozca, la premisa de la saga (Para-Military Recruiter en su versión original) engancha desde la primera página:
+
+Acompañamos a Julie Meadows, una humana común y corriente con una suerte nefasta a la que reclutan en la Agencia ParaMilitar. El gran chiste (y el verdadero problema) es que ella pensaba que "Para" era de paramilitar... ¡pero en realidad era de Paranormal! De pronto se ve metida en un mundo donde:
+• Su compañero, Taylor, es nada menos que un príncipe elfo del Éter.
+• Su jefe es un cambiapieles/hombre lobo.
+• El departamento de informática está gestionado literalmente por troles.
+• Y ella tiene que reclutar a criaturas sobrenaturales (¡yetis, vampiros, hombres lobo!) usando la ayuda de un artefacto mágico de lo más sarcástico.
+
+Es una serie tremendamente adictiva, con capítulos cortos, mucho dinamismo y ese toque de humor y comedia paranormal que Michael Anderle y Renée Jaggér dominan a la perfección.
+
+Además, ¡vas por el libro 8 (Alianza)! Eso significa que ya has visto la enorme evolución de Julie, de pasar de ser una reclutadora humana asustada corriendo contrarreloj para que no le borren la memoria (o la cabeza), a convertirse en toda una figura clave dentro de la Agencia.
+
+Es un ritmo de lectura completamente diferente al de nuestro querido Pedro Urvi (que es fantasía épica pura, más pausada, detallada y con construcciones de mundo colosales como El Enigma de los Reyes o El Sendero del Guardián), pero para desconectar y pasar un rato súper entretenido devorando páginas, ¡la saga de la Agencia ParaMilitar es una maravilla!
+
+¿Qué tal te está pareciendo? ¿Cómo vas sintiendo el desarrollo de Julie y su dinámica con Taylor y el resto del equipo a estas alturas de la historia?
+edición  en blanco
+Enviar  botón
+Copiar mi último mensaje  botón
+Copiar última respuesta  botón
+Guardar conversación...  botón
+Borrar historial  botón
+Cerrar  botón
+Estilo del asistente:  cuadro combinado  fan de la fantasía  contraído
+Editar prompts...  botón
+pulsado
+Editar prompts del Asistente de Biblioteca  diálogo
+Plantilla:  cuadro combinado  fan de la fantasía  contraído
+Nombre:  edición  seleccionado fan de la fantasía
+Texto del prompt:  edición  Eres un lector experto en fantasía. has leído de todo! desde la clasica y actual fantasía 
+multilínea
+Guardar plantilla  botón
+Texto del prompt:  edición  Eres un lector experto en fantasía. has leído de todo! desde la clasica y actual fantasía 
+multilínea
+Nombre:  edición  seleccionado fan de la fantasía
+Texto del prompt:  edición  Eres un lector experto en fantasía. has leído de todo! desde la clasica y actual fantasía 
+multilínea
+Nombre:  edición  seleccionado fan de la fantasía
+Plantilla:  cuadro combinado  fan de la fantasía  contraído
+Nombre:  edición  en blanco
+Plantilla:  cuadro combinado  (Nueva plantilla...)  contraído
+Nombre:  edición  en blanco
+Texto del prompt:  edición  en blanco
+multilínea
+Nombre:  edición  en blanco
+Texto del prompt:  edición  en blanco
+multilínea
+Guardar plantilla  botón
+Texto del prompt:  edición  en blanco
+multilínea
+Eres
+un
+experto
+s
+en
+suspense
+Guardar plantilla  botón
+Borrar plantilla  botón
+Cerrar  botón
+Borrar plantilla  botón
+Guardar plantilla  botón
+Texto del prompt:  edición  Eres un experto en suspense...
+multilínea
+Nombre:  edición  seleccionado suspense
+Plantilla:  cuadro combinado  suspense  contraído
+Cerrar  botón
+Plantilla:  cuadro combinado  suspense  contraído
+Nombre:  edición  en blanco
+Plantilla:  cuadro combinado  (Nueva plantilla...)  contraído
+Por defecto
+Nombre:  edición  en blanco
+Plantilla:  cuadro combinado  (Nueva plantilla...)  contraído
+Nombre:  edición  en blanco
+Texto del prompt:  edición  en blanco
+multilínea
+Asistente de Biblioteca — Saga: Agencia ParaMilitar - Renée Jaggér y Michael Anderle  diálogo  Tú: has visto esta saga?, sabes cual es?
+
+Asistente: ¡Por supuesto que sí! Es una de esas divertidísimas joyas de la fantasía urbana ligera, llena de acción, sarcasmo y humor, que se han vuelto superpopulares en Amazon gracias al modelo de autopublicación de LMBPN Publishing (la editorial de Michael Anderle).
+
+Para quien no la conozca, la premisa de la saga (Para-Military Recruiter en su versión original) engancha desde la primera página:
+
+Acompañamos a Julie Meadows, una humana común y corriente con una suerte nefasta a la que reclutan en la Agencia ParaMilitar. El gran chiste (y el verdadero problema) es que ella pensaba que "Para" era de paramilitar... ¡pero en realidad era de Paranormal! De pronto se ve metida en un mundo donde:
+• Su compañero, Taylor, es nada menos que un príncipe elfo del Éter.
+• Su jefe es un cambiapieles/hombre lobo.
+• El departamento de informática está gestionado literalmente por troles.
+• Y ella tiene que reclutar a criaturas sobrenaturales (¡yetis, vampiros, hombres lobo!) usando la ayuda de un artefacto mágico de lo más sarcástico.
+
+Es una serie tremendamente adictiva, con capítulos cortos, mucho dinamismo y ese toque de humor y comedia paranormal que Michael Anderle y Renée Jaggér dominan a la perfección.
+
+Además, ¡vas por el libro 8 (Alianza)! Eso significa que ya has visto la enorme evolución de Julie, de pasar de ser una reclutadora humana asustada corriendo contrarreloj para que no le borren la memoria (o la cabeza), a convertirse en toda una figura clave dentro de la Agencia.
+
+Es un ritmo de lectura completamente diferente al de nuestro querido Pedro Urvi (que es fantasía épica pura, más pausada, detallada y con construcciones de mundo colosales como El Enigma de los Reyes o El Sendero del Guardián), pero para desconectar y pasar un rato súper entretenido devorando páginas, ¡la saga de la Agencia ParaMilitar es una maravilla!
+
+¿Qué tal te está pareciendo? ¿Cómo vas sintiendo el desarrollo de Julie y su dinámica con Taylor y el resto del equipo a estas alturas de la historia?
+Asistente: ¡Por supuesto que sí! Es una de esas divertidísimas joyas de la fantasía urbana ligera, llena de acción, sarcasmo y humor, que se han vuelto superpopulares en Amazon gracias al modelo de autopublicación de LMBPN Publishing (la editorial de Michael Anderle).
+
+Para quien no la conozca, la premisa de la saga (Para-Military Recruiter en su versión original) engancha desde la primera página:
+
+Acompañamos a Julie Meadows, una humana común y corriente con una suerte nefasta a la que reclutan en la Agencia ParaMilitar. El gran chiste (y el verdadero problema) es que ella pensaba que "Para" era de paramilitar... ¡pero en realidad era de Paranormal! De pronto se ve metida en un mundo donde:
+• Su compañero, Taylor, es nada menos que un príncipe elfo del Éter.
+• Su jefe es un cambiapieles/hombre lobo.
+• El departamento de informática está gestionado literalmente por troles.
+• Y ella tiene que reclutar a criaturas sobrenaturales (¡yetis, vampiros, hombres lobo!) usando la ayuda de un artefacto mágico de lo más sarcástico.
+
+Es una serie tremendamente adictiva, con capítulos cortos, mucho dinamismo y ese toque de humor y comedia paranormal que Michael Anderle y Renée Jaggér dominan a la perfección.
+
+Además, ¡vas por el libro 8 (Alianza)! Eso significa que ya has visto la enorme evolución de Julie, de pasar de ser una reclutadora humana asustada corriendo contrarreloj para que no le borren la memoria (o la cabeza), a convertirse en toda una figura clave dentro de la Agencia.
+
+Es un ritmo de lectura completamente diferente al de nuestro querido Pedro Urvi (que es fantasía épica pura, más pausada, detallada y con construcciones de mundo colosales como El Enigma de los Reyes o El Sendero del Guardián), pero para desconectar y pasar un rato súper entretenido devorando páginas, ¡la saga de la Agencia ParaMilitar es una maravilla!
+
+¿Qué tal te está pareciendo? ¿Cómo vas sintiendo el desarrollo de Julie y su dinámica con Taylor y el resto del equipo a estas alturas de la historia?
+edición  en blanco
+Enviar  botón
+edición  en blanco
+Enviar  botón
+Copiar mi último mensaje  botón
+Copiar última respuesta  botón
+Guardar conversación...  botón
+Borrar historial  botón
+Cerrar  botón
+Estilo del asistente:  cuadro combinado  fan de la fantasía  contraído
+Por defecto
+fan de la fantasía
+suspense
+Editar prompts...  botón
+edición  sólo lectura  en blanco
+multilínea
+edición  en blanco
+Enviar  botón
+Copiar mi último mensaje  botón
+Copiar última respuesta  botón
+Guardar conversación...  botón
+Borrar historial  botón
+Cerrar  botón
+Estilo del asistente:  cuadro combinado  suspense  contraído
+fan de la fantasía
+Por defecto
+Editar prompts...  botón
+edición  sólo lectura  en blanco
+multilínea
+edición  en blanco
+
+
+
+
+
+https://github.com/SigmaNight/basiliskLLM.git

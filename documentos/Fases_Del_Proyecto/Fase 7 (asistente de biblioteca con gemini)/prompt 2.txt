@@ -1,0 +1,19 @@
+¡Gracias por las aclaraciones! La estructura general está aprobada.
+
+Para la implementación del cliente de Gemini (`cliente_gemini.py`), confirmamos que usaremos REST puro con `requests` (sin librerías como `google-genai` o `pydantic`), asegurando máxima estabilidad y cero dependencias pesadas.
+
+Antes de empezar con el primer bloque, añade estos requerimientos clave a la arquitectura del asistente:
+
+1. **Obtención dinámica de modelos (Lista de modelos de Gemini):**
+   - Implementa en `cliente_gemini.py` una función para consultar el endpoint `GET /v1beta/models` usando la API key configurada.
+   - Filtra la lista para mostrar solo los modelos que soporten `generateContent`. Así, cuando Google agregue nuevos modelos en AI Studio (como las versiones Flash o Pro más recientes), la lista se actualizará sola sin tocar código.
+   - En la configuración/diálogo, permite seleccionar el modelo deseado o dejar un modo "Automático" (usando Flash para preguntas rápidas y Pro para análisis profundos).
+
+2. **Google Search Grounding (Búsqueda en internet para evitar alucinaciones):**
+   - Incluye en la llamada a la API la opción de activar `tools: [{"google_search": {}}]`.
+   - Modela el prompt del sistema para que, al sugerir libros, verificar detalles o buscar recomendaciones literarias, Gemini consulte fuentes web fiables (como Goodreads o la tienda Kindle España) para fundamentar sus respuestas en datos reales y evitar alucinaciones sobre tramas, autores o ediciones.
+
+3. **Consulta del repositorio de referencia:**
+   - Si en algún momento necesitas verificar cómo estructurar los mensajes, el historial o las llamadas a la API de Gemini, consulta primero el repositorio de referencia que te pasé (`VisionAssistantPro`), recordando ignorar la lógica de OCR/visión/NVDA.
+
+Por favor, confirma que integras estos puntos en el plan y empezamos paso a paso con el primer bloque de código (la gestión de la API key en `config_rutas.py` y `pestana_ajustes.py` o el módulo `cliente_gemini.py`).

@@ -1,0 +1,35 @@
+Respuesta 2
+Ahora creo el nuevo archivo con ambos bloques movidos tal cual, y dejo el import en `pestana_ajustes.py`.
+
+Ahora reduzco `pestana_ajustes.py`: quito ambos bloques movidos y los sustituyo por un import.
+
+Ambos siguen usándose fuera de los bloques movidos (líneas 393, 1870, etc.), así que se mantienen en el import. Ahora reemplazo los dos bloques por el import del nuevo módulo.
+
+Ahora borro el bloque `LISTA_VOCES_CHECK` original (líneas 15-28 antes del import añadido, revisar offset actual) y el bloque `BASE_PANEL_PROVEEDOR_IA`.
+
+Ahora el bloque grande `BASE_PANEL_PROVEEDOR_IA`.
+
+Verifico que compile y que no queden referencias rotas.
+
+Compila correctamente y `PanelAzure`/`PanelDeepgram`/`PanelPolly`/`PanelElevenLabs` siguen subclasificando `PanelProveedorIA`, ahora importado desde el nuevo módulo.
+
+## Bloque entregado: `selector_voz_compartido.py` (nuevo)
+
+Contiene los dos ANCLAJE movidos íntegros desde `pestana_ajustes.py`:
+- `# ANCLAJE_INICIO/FIN: LISTA_VOCES_CHECK`
+- `# ANCLAJE_INICIO/FIN: BASE_PANEL_PROVEEDOR_IA`
+
+## Bloques reemplazados en `pestana_ajustes.py`
+
+1. Import añadido junto a los demás (`from app.interfaz.selector_voz_compartido import ListaVocesCheck, PanelProveedorIA`).
+2. El antiguo `# ANCLAJE_INICIO/FIN: LISTA_VOCES_CHECK` → comentario de reubicación de 2 líneas.
+3. El antiguo `# ANCLAJE_INICIO/FIN: BASE_PANEL_PROVEEDOR_IA` (374 líneas) → comentario de reubicación de 2 líneas.
+4. `PanelAzure`, `PanelDeepgram`, `PanelPolly`, `PanelElevenLabs` quedan intactos, heredando ahora del componente importado.
+
+`py_compile` pasa en ambos archivos. No verifiqué en runtime con wxPython (entorno sin display), pero la lógica es un traslado literal sin modificaciones de comportamiento.
+
+Listo para el paso 2: extender `grabador_audio.py` con el chunking/exportación silenciosa que necesita el Creador de Audiolibros, o prefieres primero el esqueleto de `pestana_creador_audiolibros.py` y la inserción en el notebook. ¿Cómo seguimos?
+
+Commit hecho y pusheado a `claude/audiobook-creator-tab-design-zmckzo`. No abro PR todavía porque este es un paso intermedio de diseño en curso, no una entrega — dime cuando quieras que lo levante.
+
+¿Seguimos con la vitaminización de `grabador_audio.py` (chunking + control de cuota silencioso) o prefieres el esqueleto de la pestaña primero?

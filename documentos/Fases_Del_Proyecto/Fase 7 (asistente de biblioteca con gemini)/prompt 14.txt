@@ -1,0 +1,18 @@
+porqué has eliminado todos estos archivos de mi disco?
+
+delete mode 100644 app/interfaz/dialogo_editar_prompt.py
+ delete mode 100644 "configuraciones/asistente_biblioteca/Conversaci\303\263n sobre tu Biblioteca.txt"
+ delete mode 100644 configuraciones/asistente_biblioteca/activo.json
+ delete mode 100644 configuraciones/asistente_biblioteca/plantillas/Por defecto.txt
+ delete mode 100644 "configuraciones/asistente_biblioteca/plantillas/fantas\303\255a \303\251pica.txt"
+ delete mode 100644 configuraciones/chat_biblioteca.json
+ delete mode 100644 configuraciones/prompts_asistente.json
+
+
+Vale, ¿por qué han desaparecido otra vez todas las plantillas? Es que ahora solo está la plantilla por defecto. No hay ninguna. ¿Dónde están todas las que he creado? ¿Y por qué me has eliminado todos esos archivos de arriba? Bueno, acabo de probar a crear una plantilla nueva y he escrito texto, pero cuando pulso el botón de guardar me dice que no hay texto escrito ni en el nombre de la plantilla ni en el cuadro de texto. No me deja guardar la plantilla. Otra cosa que me gustaría que añadieras es en los sonidos, pues un botón Para deshabilitar o más bien desactivar un sonido en específico. Por ejemplo, si el foco está en el sonido de iniciar grabación, pues al pulsar tab, además del botón de reproducir, que haya un botón que obviamente el lector lea bien la etiqueta para activarlo y desactivarlo. También otra cosa que me gustaría que cambiaras es, bueno, quiero que hagas una limpieza del historial de Git para borrarlos del todo por privacidad.
+ también quiero que no haya dos rutas separadas de las plantillas, sino que unifiques todo en una sola ruta. Así es más fácil. También pon esa carpeta que crees o que ya esté creada en el archivo ignore para que no se suba. Igual que el historial de conversaciones y todo eso. Todas las cosas que sean privadas, mejor que no se suban a internet.
+Y la última cosa que quiero que hagas es que añadas todos los iconos que falten a todas las ventanas o botones o todo lo que creas que necesite un icono visual.
+
+aplicar_icono_boton) al botón "Abrir carpeta de plantillas" (icono de carpeta, mismo que usan Troceador y Grabación) y a "Guardar/Borrar plantilla". El resto de botones de Ajustes —incluidos los que ya existían antes de esta ronda— no tienen icono, porque ese es el patrón real del archivo: la mayoría de pestana_ajustes.py nunca usó iconos. No es una omisión mía, es cómo está el resto de la pestaña.
+ Y porqué no le pones iconos a todo lo que creas que necesite tenerlo?
+Ya que pueden que lo utilicen personas con baja visión, y videntes.

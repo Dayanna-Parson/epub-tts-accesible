@@ -4,14 +4,14 @@ anunciador_voz.py
 Verbalización de estado con voz del sistema (pyttsx3), independiente de
 NVDA y del foco de la interfaz.
 
-El patrón `_anunciador` (TextCtrl oculto + robo de foco) es la forma
-correcta de verbalizar UNA cosa puntual para NVDA, pero no es fiable
-para secuencias de anuncios rápidos o encadenados con otros cambios de
-foco (por ejemplo, progreso de un escaneo, o un anuncio seguido de un
-cambio de pestaña): las llamadas se pisan entre sí y NVDA puede no
-llegar a anunciar nada. Para esos casos, este módulo ofrece una cola de
-voz con una única instancia de pyttsx3 reutilizable en un hilo de
-fondo, ya usado con éxito en la ventana de gestión de Proyectos.
+accessible_output3 (ver app/motor/anunciador_lector.py) es la forma
+correcta de verbalizar UNA cosa puntual para el lector de pantalla
+activo, pero no resuelve secuencias de anuncios rápidos o encadenados
+con otros cambios de estado (por ejemplo, progreso de un escaneo, o un
+anuncio seguido de un cambio de pestaña): las llamadas pueden pisarse
+entre sí. Para esos casos, este módulo ofrece una cola de voz con una
+única instancia de pyttsx3 reutilizable en un hilo de fondo, ya usado
+con éxito en la ventana de gestión de Proyectos.
 """
 
 import logging

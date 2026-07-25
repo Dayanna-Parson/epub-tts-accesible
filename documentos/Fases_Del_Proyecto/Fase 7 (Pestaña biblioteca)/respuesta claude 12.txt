@@ -1,0 +1,58 @@
+Encontré la causa real: el volcado de errores repetidos es exactamente el patrón conocido de wxPython donde `EVT_TREE_SEL_CHANGED` se dispara durante el cierre de la app, después de que el control ya fue destruido. Tu propia `ventana_proyectos.py` ya tiene la solución para esto — voy a mirarla y replicarla.
+
+Encontré varios problemas reales — algunos relacionados entre sí. Voy a explicarte primero el más grave (el crash) y luego corrijo todo en bloque.
+
+**Sobre el crash y la "ventana atascada"**: son el mismo problema. `EVT_TREE_SEL_CHANGED` se dispara durante el cierre de la app, después de que el árbol ya fue destruido — es un problema clásico y conocido de wxPython. Cuando esto se dispara en bucle (como en tu log, cientos de veces seguidas), satura el hilo principal y Windows muestra la ventana como "no responde": una imagen congelada que parece "atascada" y solo se puede cerrar con Alt+F4. Tu propia `ventana_proyectos.py` ya tenía la solución para esto (desconectar el evento antes de destruir) — solo faltaba aplicarla aquí.
+
+Voy a corregir esto y el resto de lo que reportaste en bloque.
+
+Voy a corregir todo esto en bloque. Empiezo por el motor: consulta por lotes de autores (para el rendimiento) y comparación de título más tolerante.
+
+Ahora la comparación de título más tolerante (contención, no solo igualdad exacta):
+
+Ahora reescribo `pestana_biblioteca.py` con todas las correcciones. Empiezo por el guardado contra el crash y la corrección del menú contextual del árbol.
+
+Ahora el guardado contra el crash del árbol destruido, y el manejador de clic derecho:
+
+Ahora añado el anuncio explícito al crear categoría/subcategoría, y arreglo el mensaje de `al_nueva_subcategoria`:
+
+Ahora sustituyo el diálogo de selección de categoría por un submenú (tu propuesta B, que además es coherente con el diseño ya cerrado para etiquetas en el documento):
+
+Ahora sustituyo `al_anadir_a_categoria` por el constructor del submenú y su lógica de asignación directa:
+
+Ahora actualizo el menú contextual de la lista para usar el nuevo submenú:
+
+Ahora corrijo `_cargar_libros` (consulta por lotes), el mecanismo de progreso (temporizador en vez de eventos acumulados), y el resumen final con diálogo cerrable de verdad.
+
+Ahora actualizo el final del escaneo para detener el temporizador y mostrar un resumen con diálogo modal cerrable de verdad:
+
+Ahora mejoro la apertura con `Enter`: anuncio antes de abrir y sonido de éxito al terminar.
+
+Ahora actualizo `ventana_principal.py`: desconexión defensiva del árbol al cerrar, y el menú contextual global con el nuevo submenú de categorías.
+
+Ahora el menú contextual global de Biblioteca, para usar el submenú de categorías:
+
+Limpio. Pruebo el motor con los cambios nuevos:
+
+Ambos arreglos verificados. Comiteo todo este bloque.
+
+Comiteado y subido. Resumen de todo lo corregido:
+
+**El crash y la "ventana atascada"** — eran el mismo bug: `EVT_TREE_SEL_CHANGED` disparándose tras destruir el árbol al cerrar la app, en bucle, congelando el hilo principal (Windows lo muestra como "no responde"). Ya está corregido con el mismo patrón que ya usabas en `ventana_proyectos.py`.
+
+**El retraso al abrir Biblioteca** — encontré un problema real de rendimiento: la lista hacía una consulta SQLite *por cada libro* para sus autores (500 libros = 500 conexiones abriéndose y cerrándose). Ahora es una sola consulta para toda la lista. Prueba de nuevo y dime si el retraso desaparece.
+
+**"Título sin revisar" en todos los libros** — la comparación era demasiado estricta; ahora acepta que un título contenga al otro (tu caso "Imperio de fuego azul" vs. "Imperio de fuego azul (Saga Fénix & Dragón 1)" ya lo verifiqué y funciona).
+
+**Categorías**: botón visible "Nueva categoría..." añadido, menú contextual del árbol arreglado (usaba un evento que no se disparaba de forma fiable), y sustituí el diálogo confuso por tu propuesta de submenú — te explico por qué la recomendé:
+
+- **Submenú** (implementado): más rápido para árboles pequeños/medianos como un género literario, consistente con cómo ya ibas a hacer las etiquetas en el diseño original. Para varias categorías a la vez, simplemente abres el menú varias veces (como marcar favorito) — no hace falta selección múltiple con casillas.
+- **Diálogo con árbol**: mejor solo si tuvieras cientos de categorías (no es tu caso, un árbol de géneros es pequeño).
+
+Con las categorías pequeñas que vas a tener, el submenú gana claramente en rapidez de uso.
+
+**Progreso de escaneo silencioso** — bug real: los anuncios se disparaban desde el callback que corre muchas veces por segundo desde 8 hilos, pisándose entre sí. Ahora el progreso visual se actualiza siempre, pero el anuncio de voz va por un temporizador aparte cada 2,5 segundos, y al terminar aparece un diálogo modal normal con el resumen (tal como sugeriste) en vez de solo el anunciador silencioso.
+
+**Enter para abrir libro** — ahora anuncia "Abriendo libro, por favor espera..." y suena el éxito al terminar de cargar.
+
+¿Pruebas esto y me cuentas cómo va?

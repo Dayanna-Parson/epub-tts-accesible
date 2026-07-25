@@ -1,0 +1,15 @@
+Encontré la causa real del atajo, y confirmé el enfoque de modelos con el repo de referencia. Aplico las tres correcciones.
+
+Ahora mejoro la selección/reintento de modelos en `cliente_gemini.py`: orden por versión más alta primero, y reintento también en 429 (cuota), no solo en 404.
+
+Ahora amplío el bucle de reintento para que también pase al siguiente candidato en 429, y mejoro el mensaje de error final:
+
+Confirmado: la fusión funciona — un archivo `teclas_predeterminadas.json` viejo (con solo `reproducir_pausar`) queda completado con las claves nuevas, incluida `asistente_biblioteca`. Hago commit.
+
+Ambos problemas corregidos y pusheados:
+
+**`Ctrl+Shift+B` — causa real encontrada:** `gestor_atajos.py._asegurar_defaults()` solo escribía `teclas_predeterminadas.json` si el archivo *no existía*. Como tu instalación ya lo había generado en una ejecución anterior (con la tabla de atajos de antes de que yo añadiera el asistente), la clave `asistente_biblioteca` nunca llegaba a ese JSON — y por tanto tampoco al `AcceleratorTable` global, aunque el código que la registra estuviera bien. Lo verifiqué simulando un archivo viejo: ahora se fusiona automáticamente y añade solo las claves nuevas, sin tocar tus atajos personalizados. Esto también evita que se repita con cualquier atajo que añada en el futuro.
+
+**Error 429 (cuota agotada):** ya no se trata solo el 404 como "modelo retirado, prueba el siguiente" — ahora el 429 hace lo mismo, porque en la capa gratuita cada modelo tiene su propia cuota independiente (agotar `gemini-flash-latest` no agota `gemini-2.5-pro`, por ejemplo). Además, siguiendo tu comentario y lo que confirmé en el repo de referencia (que también usa el alias `"gemini-flash-latest"` y una lista de modelos, con reintento en 429 por cuota), ahora los candidatos se ordenan por **número de versión real, de mayor a menor** — ya no dependo del orden arbitrario que devuelva la API, así que si Google saca mañana la 3.6 o la 4.0, se probará antes que las versiones más viejas automáticamente. Si se agotan todos los candidatos por cuota, el mensaje de error ahora es claro ("se agotó la cuota gratuita... consulta tu plan") en vez de volcar el JSON crudo.
+
+Sobre el repo de referencia: confirmé que usa el mismo enfoque de alias `-latest` + lista de modelos + reintento en 429, más rotación entre varias claves API (no aplica aquí, tenemos una sola clave) y backoff con `retryDelay`. No he añadido esa rotación de claves ni el backoff con espera porque no encajan con el diseño actual (una sola clave, un mensaje = una respuesta); si en el futuro quieres soportar varias claves de Gemini como respaldo, dímelo y lo diseñamos aparte.

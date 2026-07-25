@@ -36,15 +36,19 @@ La app nace para unificar y simplificar todo eso en un entorno de escritorio acc
 
 ### 3. Vista general de la interfaz
 
-La aplicación se organiza visualmente en tres pestañas, porque es la forma más clara y accesible de separar usos:
+La aplicación se organiza visualmente en pestañas, porque es la forma más clara y accesible de separar usos:
+
+Biblioteca
 
 Modo Lectura
 
-Modo Grabación
+Creador de Audiolibros
+
+Grabación de Fragmentos
 
 Ajustes
 
-Además, hay un menú superior desde el que se accede a acciones generales como abrir libros o gestionar recientes.
+Además, hay un menú superior desde el que se accede a acciones generales como cargar libros o gestionar recientes.
 
 La idea es que el usuario siempre sepa dónde está y qué puede hacer en cada momento, sin menús ocultos ni flujos confusos.
 
@@ -130,7 +134,7 @@ El reproductor no conoce ni la interfaz ni el EPUB. Recibe texto y lo envía al 
 
 ### 7. Motores de síntesis de voz y su papel
 
-La app trabaja con cuatro motores de voz, cada uno con un rol claro:
+La app trabaja con cinco motores de voz, cada uno con un rol claro:
 
 SAPI5 (local): voces locales. Se usa como respaldo y para trabajar sin conexión.
 
@@ -206,9 +210,13 @@ límites de cuota,
 
 tiempos de salto adelante y atrás,
 
-limpieza de caché.
+limpieza de caché,
 
-Toda la configuración se guarda en archivos JSON locales.
+efectos de sonido (casilla global y activación individual por efecto),
+
+credenciales, modelo y temperatura del Asistente de Biblioteca (Gemini), y gestión de sus plantillas de prompt.
+
+Toda la configuración se guarda en archivos JSON locales (o, en el caso de las plantillas de prompt, en archivos de texto individuales pensados para poder editarse también desde fuera de la app).
 
 ---
 
@@ -233,6 +241,12 @@ numpy: soporte para trabajo con audio.
 EbookLib: lectura y estructura de EPUB.
 
 BeautifulSoup: limpieza del HTML del EPUB.
+
+PyMuPDF (fitz): lectura y estructura de PDF, con la misma forma de datos que EbookLib para no duplicar lógica en Lectura ni en el Creador de Audiolibros.
+
+accessible-output3: anuncios de interfaz directos al lector de pantalla activo (NVDA, JAWS...), sin mover el foco. Es distinta de pyttsx3: esta última sigue usándose, pero solo donde puede llegar una ráfaga rápida de anuncios seguidos (el progreso de escanear una carpeta grande), porque descarta los anuncios intermedios y solo dice el más reciente.
+
+requests, sin SDK adicional, también para el Asistente de Biblioteca (Gemini): mismo criterio que con Azure, Polly, Deepgram y ElevenLabs, para no añadir una dependencia nueva solo por un proveedor más.
 
 Dependencias técnicas internas (como h2) se mantienen en requirements, pero no son relevantes a nivel conceptual.
 
@@ -320,13 +334,39 @@ Divisor de EPUB integrado por capítulos, sin depender de herramientas externas,
 
 soporte de voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante un proceso puente de 32 bits,
 
-navegación semántica por encabezados (`H` / `Shift+H`) y patrón `_anunciador` para verbalizaciones inmediatas sin mover el foco,
+patrón `_anunciador` para verbalizaciones inmediatas sin mover el foco (retirado en la Fase 7 a favor de `accessible_output3`, ver más abajo),
 
 árbol de navegación en Ajustes (`wx.TreeCtrl`), sustituyendo la disposición lineal anterior,
 
 sistema de actualizaciones automáticas completo (Script Clon): descarga, sustitución de archivos y reinicio sin perder configuración ni grabaciones.
 
-Nada pendiente en las funciones esenciales.
+Añadido en v3.0.0 (Fase 7):
+
+Pestaña Biblioteca: importación de carpetas y de libros sueltos (EPUB y PDF), organización por géneros y por sagas/etiquetas, buscador. Persistencia en `biblioteca.db` (SQLite), no en JSON, para poder manejar colecciones grandes con consultas relacionales,
+
+Soporte de PDF además de EPUB, tanto en Lectura como en el nuevo Creador de Audiolibros, vía PyMuPDF (`fitz`),
+
+Creador de Audiolibros: exportación de un libro completo a un único MP3 o dividido por capítulos, con calculador de presupuesto (caracteres, coste estimado, duración prevista), selector de voz favorita embebido con preescucha, exclusión de capítulos antes de exportar, carpetas de salida organizadas por saga, exportación en paralelo con `ThreadPoolExecutor` y reanudación de exportaciones cortadas por cuota o corte de conexión,
+
+filtro de características en las voces de Azure (Multilingüe, Dragon, MaiVoice, Flash),
+
+corrección de fondo del puente SAPI5 de 32 bits (cada hilo que habla crea y usa su propia instancia del motor COM, sin compartir punteros entre hilos),
+
+silencio digital real al final de cada síntesis de Amazon Polly (motor estándar) para evitar el corte de la última sílaba a velocidades altas,
+
+Asistente de Biblioteca con Google Gemini (`cliente_gemini.py`, REST puro sin SDK): chat accesible con `Ctrl+Shift+B`, contexto automático del libro/saga/categoría seleccionados o del catálogo completo en modo general, plantillas de prompt de sistema personalizables (Ajustes → Asistente de Biblioteca, un archivo `.txt` por plantilla), modelo y temperatura configurables, Google Search Grounding para fundamentar recomendaciones,
+
+reemplazo del patrón `_anunciador` por `accessible_output3` (`anunciador_lector.py`) en toda la app, hablando directo al lector de pantalla activo sin mover el foco; se mantiene `pyttsx3` solo para secuencias de anuncios muy rápidas (progreso de escaneo de Biblioteca),
+
+14 sonidos contextuales (se añaden `thinking.wav` en bucle y `page_scrolled.wav`), con casilla global y activación individual por efecto desde Ajustes → Efectos de Sonido,
+
+copias de seguridad de biblioteca y proyectos separadas por tipo, con historial rotativo de 5 copias y creación solo ante cambios reales.
+
+Piper TTS, que figuraba como motor local previsto desde la Fase 4, queda descartado explícitamente.
+
+En desarrollo dentro de v3.0.0 (Fase C — actualizador automático): sustitución del script `.bat` generado al vuelo (v2.0) por un ejecutable auxiliar fijo, `bin/actualizador.exe`, con el mismo patrón de compilación que `auxiliar_sapi32.exe`. Respaldo por copia verificada (no por movimiento) antes de reemplazar cualquier archivo, y rollback automático si algo falla. Implementado y probado con simulaciones y con el tramo de descarga/verificación en Windows real; pendiente de validar en Windows real el ciclo completo de instalación antes de retirar el sistema anterior, que sigue activo en producción mientras tanto.
+
+Nada más pendiente en las funciones esenciales.
 
 ---
 

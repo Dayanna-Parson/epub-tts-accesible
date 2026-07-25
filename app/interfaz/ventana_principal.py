@@ -9,9 +9,10 @@ from app.interfaz.pestana_biblioteca import PestanaBiblioteca
 from app.interfaz.pestana_lectura import PestanaLectura
 from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
+from app.interfaz.pestana_creador_audiolibros import PestanaCreadorAudiolibros
 from app.interfaz.ventana_proyectos import VentanaProyectos
-from app.config_rutas import ruta_config
-from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS
+from app.config_rutas import ruta_config, RAIZ_RECURSOS
+from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS, ERROR
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
@@ -19,13 +20,11 @@ _URL_GITHUB = "https://github.com/Dayanna-Parson/epub-tts-accesible"
 
 # ── Índices de pestaña del notebook ───────────────────────────────────────────
 # Centralizados aquí para no repetir números mágicos por todo el archivo.
-# Cuando se añada la pestaña "Creador de Audiolibros" (Fase 7), se inserta
-# entre IDX_LECTURA e IDX_GRABACION y solo hay que renumerar este bloque.
 IDX_BIBLIOTECA = 0
 IDX_LECTURA    = 1
-IDX_GRABACION  = 2
-IDX_AJUSTES    = 3
-NUM_PESTANAS   = 4
+IDX_CREADOR    = 2
+IDX_GRABACION  = 3
+IDX_AJUSTES    = 4
 
 # ── Helpers para traducir atajos de gestor_atajos al formato de wx ───────────
 def _mod_a_flag(mod_str):
@@ -93,11 +92,15 @@ class VentanaPrincipal(wx.Frame):
         self.pestana_lectura = PestanaLectura(self.notebook)
         self.notebook.AddPage(self.pestana_lectura, "Modo Lectura")
 
-        # Pestaña 3: Grabación multivoz
+        # Pestaña 3: Creador de Audiolibros
+        self.pestana_creador = PestanaCreadorAudiolibros(self.notebook)
+        self.notebook.AddPage(self.pestana_creador, "Creador de Audiolibros")
+
+        # Pestaña 4: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
         self.notebook.AddPage(self.pestana_grabacion, "Creación de fragmentos")
 
-        # Pestaña 4: Ajustes
+        # Pestaña 5: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
         self.notebook.AddPage(self.pestana_ajustes, "Ajustes")
 
@@ -169,20 +172,26 @@ class VentanaPrincipal(wx.Frame):
 
         # Tecla Menú (Applications key) → menú contextual de la pestaña activa
         if keycode == getattr(wx, "WXK_WINDOWS_MENU", 348):
-            self._mostrar_menu_contextual()
+            self._mostrar_menu_contextual_seguro()
             return
         # Shift+F10 → ídem (alternativa universal para teclados sin tecla Menú)
         if keycode == wx.WXK_F10 and evento.ShiftDown():
-            self._mostrar_menu_contextual()
+            self._mostrar_menu_contextual_seguro()
             return
 
-        # Ctrl+1 a Ctrl+4 → cambiar de pestaña directamente
+        # Ctrl+1 a Ctrl+5 → cambiar de pestaña directamente
         # Solo cuando el foco está dentro de la ventana principal (no en diálogos externos)
         if evento.ControlDown() and not evento.ShiftDown() and keycode in (
-            ord('1'), ord('2'), ord('3'), ord('4')
+            ord('1'), ord('2'), ord('3'), ord('4'), ord('5')
         ):
-            idx = keycode - ord('1')   # 0 a 3
+            idx = keycode - ord('1')   # 0 a 4
             self.notebook.SetSelection(idx)
+            # Sin esto, el foco de teclado se quedaba en el control que ya
+            # tuviera antes (a veces de una pestaña que acaba de ocultarse),
+            # así que el lector de pantalla anunciaba un control desconectado
+            # en vez de la pestaña nueva — mismo tratamiento que ya recibe
+            # Ctrl+Tab más abajo.
+            wx.CallAfter(self.notebook.SetFocus)
             return
 
         # Ctrl+Tab / Ctrl+Shift+Tab → cambiar de pestaña sin importar dónde
@@ -197,27 +206,41 @@ class VentanaPrincipal(wx.Frame):
             evento.Skip()
             return
 
-        foco = self.FindFocus()
-        if foco is None:
-            evento.Skip()
-            return
+        # Todo el bloque de Tab cíclico queda blindado: un fallo al resolver
+        # primer_control/ultimo_control de una pestaña (por ejemplo, un
+        # atributo que aún no existe tras un cambio a medio terminar) no debe
+        # dejar el teclado sin Tab en el resto de la aplicación — se registra
+        # y se cede el evento al comportamiento por defecto de wx en vez de
+        # propagar la excepción hacia EVT_CHAR_HOOK.
+        try:
+            foco = self.FindFocus()
+            if foco is None:
+                evento.Skip()
+                return
 
-        shift = evento.ShiftDown()
-        indice = self.notebook.GetSelection()
+            shift = evento.ShiftDown()
+            indice = self.notebook.GetSelection()
 
-        if indice == IDX_BIBLIOTECA:
-            primer = self.pestana_biblioteca.primer_control
-            ultimo = self.pestana_biblioteca.ultimo_control
-        elif indice == IDX_LECTURA:
-            primer = self.pestana_lectura.primer_control
-            ultimo = self.pestana_lectura.ultimo_control
-        elif indice == IDX_GRABACION:
-            primer = self.pestana_grabacion.primer_control
-            ultimo = self.pestana_grabacion.ultimo_control
-        elif indice == IDX_AJUSTES:
-            primer = self.pestana_ajustes.arbol_cat
-            ultimo = self.pestana_ajustes.obtener_ultimo_control()
-        else:
+            if indice == IDX_BIBLIOTECA:
+                primer = self.pestana_biblioteca.primer_control
+                ultimo = self.pestana_biblioteca.ultimo_control
+            elif indice == IDX_LECTURA:
+                primer = self.pestana_lectura.primer_control
+                ultimo = self.pestana_lectura.ultimo_control
+            elif indice == IDX_CREADOR:
+                primer = self.pestana_creador.primer_control
+                ultimo = self.pestana_creador.ultimo_control
+            elif indice == IDX_GRABACION:
+                primer = self.pestana_grabacion.primer_control
+                ultimo = self.pestana_grabacion.ultimo_control
+            elif indice == IDX_AJUSTES:
+                primer = self.pestana_ajustes.arbol_cat
+                ultimo = self.pestana_ajustes.obtener_ultimo_control()
+            else:
+                evento.Skip()
+                return
+        except Exception:
+            logger.exception("[VentanaPrincipal] Fallo al resolver el Tab cíclico de la pestaña activa")
             evento.Skip()
             return
 
@@ -267,6 +290,27 @@ class VentanaPrincipal(wx.Frame):
             gestor_proyectos=self.pestana_grabacion.gestor_proyectos,
         )
         self._ventana_proyectos.Show()
+
+    # ANCLAJE_INICIO: ABRIR_ASISTENTE_BIBLIOTECA_GLOBAL
+    def al_abrir_asistente_biblioteca_global(self, evento=None):
+        """
+        Abre el Asistente de Biblioteca desde cualquier pestaña. Delega en
+        el método propio de PestanaBiblioteca (que arma el contexto del
+        libro seleccionado, si lo hay) en vez de duplicar esa lógica aquí.
+        """
+        self.pestana_biblioteca.al_abrir_asistente_biblioteca(None)
+
+    def _agregar_item_asistente_biblioteca(self, menu):
+        """
+        Añade la entrada del Asistente de Biblioteca a un menú contextual.
+        Compartido por todos los menús contextuales de la aplicación (igual
+        que _submenu_ayuda) para que el asistente sea accesible desde
+        cualquier pestaña, no solo desde Biblioteca.
+        """
+        item = menu.Append(wx.ID_ANY, "Asistente de Biblioteca (Gemini)...\tCtrl+Shift+B")
+        self.Bind(wx.EVT_MENU, self.al_abrir_asistente_biblioteca_global, item)
+        menu.AppendSeparator()
+    # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA_GLOBAL
 
     def al_abrir_txt_grabacion(self, evento):
         """Activa la pestaña Grabación y llama al método Examinar del panel."""
@@ -342,17 +386,19 @@ class VentanaPrincipal(wx.Frame):
             os.makedirs(os.path.dirname(self._ruta_config_general), exist_ok=True)
             with open(self._ruta_config_general, "w", encoding="utf-8") as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            pass  # No es crítico si falla el guardado de sesión
+        except Exception:
+            logger.exception("Error al guardar el estado de sesión en ajustes.json")
 
     def _restaurar_sesion(self):
         """Restaura el estado de sesión desde ajustes.json."""
         config = self._cargar_config_general()
 
-        # Restaurar pestaña activa
-        ultima_pestana = config.get("ultima_pestana", IDX_BIBLIOTECA)
-        if isinstance(ultima_pestana, int) and 0 <= ultima_pestana < NUM_PESTANAS:
-            self.notebook.SetSelection(ultima_pestana)
+        # La pestaña activa ya no se restaura desde la sesión anterior: el
+        # arranque siempre aterriza en Biblioteca (IDX_BIBLIOTECA), para que
+        # NVDA llegue directo a los libros en vez de a la última pestaña
+        # usada (a veces Ajustes), sea cual sea. self.notebook ya empieza en
+        # la página 0 por orden de construcción, así que no hace falta
+        # ningún SetSelection() explícito aquí.
 
         # Restaurar estado del checkbox "Dividir por etiquetas"
         dividir = config.get("dividir_por_etiqueta", True)
@@ -472,6 +518,21 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_FIN: HISTORIAL_RECIENTES
 
     # ANCLAJE_INICIO: MENUS_CONTEXTUALES
+    def _mostrar_menu_contextual_seguro(self):
+        """
+        Envoltorio defensivo alrededor de _mostrar_menu_contextual(): un
+        error al construir un menú contextual (por ejemplo, un atributo de
+        wx mal usado en algún ítem) no debe propagarse hasta
+        al_navegacion_tab_global(), vinculado a EVT_CHAR_HOOK del Frame —
+        un fallo sin capturar ahí deja sin Tab/Shift+F10/tecla Menú al resto
+        de la aplicación, no solo a la pestaña donde ocurrió.
+        """
+        try:
+            self._mostrar_menu_contextual()
+        except Exception:
+            logger.exception("[VentanaPrincipal] Error al mostrar el menú contextual")
+            reproducir(ERROR)
+
     def _mostrar_menu_contextual(self):
         """Muestra el menú contextual correspondiente a la pestaña activa."""
         indice = self.notebook.GetSelection()
@@ -479,6 +540,8 @@ class VentanaPrincipal(wx.Frame):
             self._menu_contextual_biblioteca()
         elif indice == IDX_LECTURA:
             self._menu_contextual_lectura()
+        elif indice == IDX_CREADOR:
+            self._menu_contextual_creador()
         elif indice == IDX_GRABACION:
             self._menu_contextual_grabacion()
         else:
@@ -519,6 +582,7 @@ class VentanaPrincipal(wx.Frame):
         item_importar = menu.Append(wx.ID_ANY, "Importar carpeta...\tCtrl+O")
         self.Bind(wx.EVT_MENU, pb.al_importar_carpeta, item_importar)
         menu.AppendSeparator()
+        self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
@@ -526,9 +590,27 @@ class VentanaPrincipal(wx.Frame):
         self.PopupMenu(menu)
         menu.Destroy()
 
+    def _menu_contextual_creador(self):
+        """
+        Menú contextual de Creador de Audiolibros. Sin selector de archivos
+        propio (flujo de entrada único: solo libros enviados desde
+        Biblioteca), así que por ahora se limita a Ayuda y Salir. Las
+        acciones propias de exportación se añadirán aquí cuando se conecte
+        el cableado real de la pestaña.
+        """
+        menu = wx.Menu()
+        self._agregar_item_asistente_biblioteca(menu)
+        self._submenu_ayuda(menu)
+        menu.AppendSeparator()
+        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
+        self.pestana_creador.PopupMenu(menu)
+        menu.Destroy()
+
     def _menu_contextual_ajustes(self):
         """Menú contextual de la pestaña Ajustes: solo Ayuda y Salir."""
         menu = wx.Menu()
+        self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
@@ -585,7 +667,7 @@ class VentanaPrincipal(wx.Frame):
         menu = wx.Menu()
 
         # Abrir libro
-        item_abrir = menu.Append(wx.ID_ANY, "Abrir libro EPUB")
+        item_abrir = menu.Append(wx.ID_ANY, "Cargar libro")
         self.Bind(wx.EVT_MENU, self.al_abrir_archivo, item_abrir)
 
         # Submenú libros recientes
@@ -619,6 +701,7 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
 
         menu.AppendSeparator()
+        self._agregar_item_asistente_biblioteca(menu)
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
@@ -663,6 +746,7 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, item_proy)
 
         menu.AppendSeparator()
+        self._agregar_item_asistente_biblioteca(menu)
         item_salir = menu.Append(wx.ID_EXIT, "Salir")
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
@@ -744,6 +828,10 @@ class VentanaPrincipal(wx.Frame):
             "marcadores":        lambda: self.pestana_lectura.al_abrir_marcadores(None),
             "buscar":            lambda: self.pestana_lectura.iniciar_busqueda(),
             "ir_porcentaje":     lambda: self.pestana_lectura.iniciar_ir_a_pagina(),
+            # Sin restricción de pestaña (no está en _ATAJOS_SOLO_LECTURA):
+            # el Asistente de Biblioteca debe abrirse desde cualquier parte
+            # de la aplicación, no solo con Biblioteca activa.
+            "asistente_biblioteca": lambda: self.al_abrir_asistente_biblioteca_global(),
         }
         if clave in _ACCIONES:
             if clave in _ATAJOS_SOLO_LECTURA and not en_lectura:
@@ -757,12 +845,16 @@ class VentanaPrincipal(wx.Frame):
     # ANCLAJE_INICIO: AYUDA
     def _al_ctrl_o_contextual(self, evento=None):
         """Ctrl+O: apertura contextual según la pestaña activa —
-        importar carpeta en Biblioteca, libro en Lectura, TXT en Grabación."""
+        importar carpeta en Biblioteca, libro en Lectura, TXT en Grabación.
+        En Creador de Audiolibros no abre nada propio: solo anuncia que hay
+        que enviar el libro desde Biblioteca (flujo de entrada único)."""
         indice = self.notebook.GetSelection()
         if indice == IDX_BIBLIOTECA:
             self.pestana_biblioteca.al_importar_carpeta(None)
         elif indice == IDX_LECTURA:
             self.pestana_lectura.al_cargar_libro(None)
+        elif indice == IDX_CREADOR:
+            self.pestana_creador.al_ctrl_o(None)
         elif indice == IDX_GRABACION:
             self.pestana_grabacion.al_examinar(None)
 
@@ -800,23 +892,6 @@ class VentanaPrincipal(wx.Frame):
             wx.OK | wx.ICON_INFORMATION
         )
 
-    def al_abrir_readme(self, evento):
-        """Abre el README del proyecto con el visor de texto predeterminado del sistema."""
-        import subprocess
-        raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        for nombre in ("README.md", "README.txt", "README"):
-            ruta = os.path.join(raiz, nombre)
-            if os.path.exists(ruta):
-                try:
-                    os.startfile(ruta)
-                except Exception:
-                    try:
-                        subprocess.Popen(["xdg-open", ruta])
-                    except Exception:
-                        wx.MessageBox(f"README encontrado en:\n{ruta}", "README")
-                return
-        wx.MessageBox("No se encontró un archivo README en el directorio del proyecto.", "Info")
-
     def al_abrir_github(self, evento):
         """Abre el repositorio del proyecto en el navegador predeterminado."""
         import webbrowser
@@ -824,18 +899,23 @@ class VentanaPrincipal(wx.Frame):
 
     def al_abrir_acerca_de(self, evento):
         """Muestra el diálogo Acerca de con información y créditos de la aplicación."""
-        import webbrowser
+        try:
+            with open(os.path.join(RAIZ_RECURSOS, "recursos", "version.json"), "r", encoding="utf-8") as f:
+                version = json.load(f).get("version", "3.0.0")
+        except Exception:
+            version = "3.0.0"
         texto = (
             "Epub TTS Accesible\n"
-            "Versión: Fase 3 (2026)\n\n"
-            "Aplicación de texto a voz accesible para libros EPUB y archivos TXT.\n"
+            f"Versión: {version}\n\n"
+            "Aplicación de texto a voz accesible para libros EPUB y PDF, con "
+            "producción de audiolibros multivoz.\n"
             "Diseñada para usuarios de lectores de pantalla como NVDA.\n\n"
             "Créditos\n"
-            "Desarrollo: Dayanna Parson\n"
-            "Asistencia IA: Claude (Anthropic)\n\n"
+            "Desarrollo: Dayanna Parson (TifloTutos)\n\n"
             "Proveedores de voz:\n"
             "  Microsoft Azure Text to Speech\n"
             "  Amazon Polly (AWS)\n"
+            "  Deepgram Aura-2\n"
             "  ElevenLabs\n"
             "  Microsoft SAPI5 (voces del sistema, sin coste)\n\n"
             "Repositorio: github.com/Dayanna-Parson/epub-tts-accesible"
@@ -978,7 +1058,7 @@ class VentanaPrincipal(wx.Frame):
 
     def _iniciar_verificacion_voces(self):
         """
-        Comprueba si hay voces nuevas en las APIs (Azure, Polly, ElevenLabs).
+        Comprueba si hay voces nuevas en las APIs (Azure, Polly, ElevenLabs, Deepgram).
         Solo se ejecuta si han pasado más de 24 horas desde la última comprobación.
         Corre en hilo de fondo para no bloquear la UI al arrancar.
         """

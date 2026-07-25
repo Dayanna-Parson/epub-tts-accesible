@@ -8,7 +8,7 @@ import threading
 
 from app.config_rutas import ruta_config, CONFIG_DIR
 from app.motor.gestor_biblioteca import GestorBiblioteca
-from app.motor.escaner_biblioteca import EscanerBiblioteca, confirmar_agrupamiento_por_carpeta
+from app.motor.escaner_biblioteca import EscanerBiblioteca, confirmar_agrupamiento_por_carpeta, _procesar_archivo
 from app.motor.renombrador_biblioteca import (
     renombrar_libro_segun_metadatos,
     renombrar_pendientes_por_lote,
@@ -16,10 +16,12 @@ from app.motor.renombrador_biblioteca import (
     reconciliar_carpeta_movida,
 )
 from app.interfaz.dialogos import DialogoArchivoNoEncontrado, DialogoAgruparCarpetas
+from app.motor import anunciador_lector as voz
 from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.reproductor_sonidos import (
     reproducir, SUCCESS, ERROR, LIST_NAV, MOVE_UP, MOVE_DOWN, CLEAR,
 )
+from app.interfaz.ui_recursos import aplicar_icono_boton
 # ANCLAJE_FIN: DEPENDENCIAS_BIBLIOTECA
 
 logger = logging.getLogger(__name__)
@@ -101,6 +103,7 @@ class PestanaBiblioteca(wx.Panel):
         self.gestor = GestorBiblioteca()
         self.escaner = None
         self._libros_actuales = []
+        self._ids_audiolibro_pendiente = set()
         self._id_categoria_activa = None
         self._id_etiqueta_activa = None
         self._categoria_en_portapapeles = None
@@ -137,6 +140,33 @@ class PestanaBiblioteca(wx.Panel):
     # ── Construcción de la interfaz ─────────────────────────────────────────
 
     def _configurar_interfaz(self):
+        sizer_general = wx.BoxSizer(wx.VERTICAL)
+
+        # ── Barra de herramientas fija de importación (siempre visible) ──
+        # Antes vivía al final de la columna derecha, dentro de un sizer que
+        # podía quedar recortado fuera del área visible según el tamaño de
+        # la ventana (la lista de libros, con proporción 1, se quedaba con
+        # todo el espacio disponible y empujaba estos botones fuera). Al ir
+        # en su propia fila fija en la parte superior de toda la pestaña,
+        # con proporción 0, nunca se oculta ni se recorta.
+        sizer_importar = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
+        self.btn_importar.Bind(wx.EVT_BUTTON, self.al_importar_carpeta)
+        aplicar_icono_boton(self.btn_importar, "examinar", "Importar carpeta")
+        sizer_importar.Add(self.btn_importar, 0, wx.ALL, 5)
+        self.btn_importar_archivo = wx.Button(self, label="Importar libro...")
+        self.btn_importar_archivo.SetHelpText(
+            "Añade un único archivo EPUB o PDF a la Biblioteca, sin escanear "
+            "toda una carpeta."
+        )
+        self.btn_importar_archivo.Bind(wx.EVT_BUTTON, self.al_importar_archivo)
+        aplicar_icono_boton(self.btn_importar_archivo, "examinar", "Importar libro")
+        sizer_importar.Add(self.btn_importar_archivo, 0, wx.ALL, 5)
+        self.barra_progreso = wx.Gauge(self, range=100)
+        self.barra_progreso.Hide()
+        sizer_importar.Add(self.barra_progreso, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_general.Add(sizer_importar, 0, wx.EXPAND)
+
         sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
 
         # ── Panel izquierdo: sub-pestañas Géneros / Sagas ────────────────
@@ -245,7 +275,7 @@ class PestanaBiblioteca(wx.Panel):
         sizer_filtro_estado.Add(
             wx.StaticText(self, label="Estado:"), 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5
         )
-        self._ESTADOS_FILTRO = ["Todos", "Pendientes", "Leyendo ahora", "Leídos"]
+        self._ESTADOS_FILTRO = ["Todos", "Pendientes de leer", "Leyendo ahora", "Leídos", "Audiolibros a medias"]
         self.combo_estado = wx.Choice(self, choices=self._ESTADOS_FILTRO)
         self.combo_estado.SetSelection(0)
         self.combo_estado.Bind(wx.EVT_CHOICE, self.al_cambiar_filtro)
@@ -272,37 +302,34 @@ class PestanaBiblioteca(wx.Panel):
         self.lbl_estado = wx.StaticText(self, label="")
         sizer_derecho.Add(self.lbl_estado, 0, wx.ALL, 5)
 
-        # Botón de importación + barra de progreso (visual, oculta hasta escanear)
-        sizer_importar = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_importar = wx.Button(self, label="Importar carpeta... (Ctrl+O)")
-        self.btn_importar.Bind(wx.EVT_BUTTON, self.al_importar_carpeta)
-        sizer_importar.Add(self.btn_importar, 0, wx.ALL, 5)
-        self.barra_progreso = wx.Gauge(self, range=100)
-        self.barra_progreso.Hide()
-        sizer_importar.Add(self.barra_progreso, 1, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_derecho.Add(sizer_importar, 0, wx.EXPAND)
-
         sizer_principal.Add(sizer_derecho, 3, wx.EXPAND)
 
-        self.SetSizer(sizer_principal)
+        sizer_general.Add(sizer_principal, 1, wx.EXPAND)
+        self.SetSizer(sizer_general)
 
-        # Tab desde el árbol/lista de etiquetas debe llegar directo a la
-        # lista de libros — es lo que se usa constantemente — en vez de
-        # pasar antes por los controles de filtro, que se usan mucho
-        # menos y quedan más lejos en el orden natural de creación.
-        self.lista_libros.MoveAfterInTabOrder(self.subnotebook_izquierdo)
-
-        # Control oculto para anuncios inmediatos de NVDA (patrón _anunciador).
-        self._anunciador = wx.TextCtrl(
-            self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1)
-        )
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        self._temporizador_anuncio = None
+        # Orden de tabulación explícito, de principio a fin: subpestañas de
+        # géneros/sagas → filtros (buscar, estado, favoritos) → lista de
+        # libros → botones de importación al final (acción puntual, no lo
+        # que más se usa). Antes solo se reposicionaban la lista y los
+        # botones de importar, así que los filtros —creados antes que la
+        # lista, pero nunca movidos— quedaban descolgados al final del
+        # todo, después de los botones de importar, en vez de justo
+        # delante de la lista donde tiene sentido encontrarlos.
+        self.txt_filtro.MoveAfterInTabOrder(self.subnotebook_izquierdo)
+        self.combo_estado.MoveAfterInTabOrder(self.txt_filtro)
+        self.chk_favoritos.MoveAfterInTabOrder(self.combo_estado)
+        self.lista_libros.MoveAfterInTabOrder(self.chk_favoritos)
+        self.btn_importar.MoveAfterInTabOrder(self.lista_libros)
+        self.btn_importar_archivo.MoveAfterInTabOrder(self.btn_importar)
 
     def _configurar_atajos(self):
         # Ctrl+O (apertura universal, contextual por pestaña) se gestiona a
         # nivel de VentanaPrincipal y llama a al_importar_carpeta() desde
-        # allí — no se duplica aquí para no pisar el atajo global.
+        # allí — no se duplica aquí para no pisar el atajo global. Ctrl+Shift+B
+        # (Asistente de Biblioteca) también se gestiona a nivel de
+        # VentanaPrincipal (AcceleratorTable del Frame, con prioridad sobre
+        # los de cualquier panel hijo) para que funcione desde cualquier
+        # pestaña, no solo con el foco dentro de Biblioteca.
         id_buscar = wx.NewIdRef()
         id_info = wx.NewIdRef()
         id_favorito = wx.NewIdRef()
@@ -341,40 +368,12 @@ class PestanaBiblioteca(wx.Panel):
 
     @property
     def ultimo_control(self):
-        return self.btn_importar
+        return self.btn_importar_archivo
 
-    # ── Anuncios de accesibilidad ────────────────────────────────────────────
+    # ── Anuncios de accesibilidad — accessible_output3, sin mover el foco ────
 
     def _anunciar(self, texto):
-        control_previo = wx.Window.FindFocus()
-
-        def _restaurar_foco():
-            # Solo devuelve el foco si sigue en el anunciador oculto — si
-            # el usuario ya navegó a otro control mientras tanto (por
-            # ejemplo, pulsando otro atajo o moviéndose con flechas antes
-            # de que pasaran los 300ms), forzar aquí el foco de vuelta a
-            # control_previo se lo quitaría de las manos sin que lo pidiera,
-            # obligando a insistir con flechas arriba/abajo para que el
-            # foco "se quedara quieto" — exactamente el síntoma reportado.
-            if wx.Window.FindFocus() is self._anunciador and control_previo:
-                control_previo.SetFocus()
-
-        # Si ya había un anuncio pendiente de restaurar el foco (por
-        # ejemplo, dos atajos de estado pulsados en sucesión rápida), se
-        # cancela — si no, el primero podía disparar su restauración
-        # DESPUÉS de que el segundo ya hubiera puesto el nuevo texto,
-        # cortando el anuncio del segundo mensaje a mitad de lectura.
-        if self._temporizador_anuncio is not None and self._temporizador_anuncio.IsRunning():
-            self._temporizador_anuncio.Stop()
-
-        self._anunciador.SetValue(texto)
-        self._anunciador.SetFocus()
-        # 450ms en vez de 300: con el foco ya asentado de verdad (antes se
-        # perdía y recuperaba con las peleas de foco), NVDA necesita algo
-        # más de margen para terminar de leer mensajes de estado más
-        # largos ("Quitado de leyendo ahora.") antes de que se le devuelva
-        # el foco a la lista.
-        self._temporizador_anuncio = wx.CallLater(450, _restaurar_foco)
+        voz.hablar(texto)
 
     # ── Árbol de categorías (jerárquico) ─────────────────────────────────────
     #
@@ -478,7 +477,7 @@ class PestanaBiblioteca(wx.Panel):
             self._cargar_arbol_categorias(id_categoria_seleccionar=id_categoria)
             texto_direccion = "arriba" if direccion < 0 else "abajo"
             self._anunciar(f"{nombre} movido {texto_direccion}.")
-            self._voz.hablar(f"{nombre} movido {texto_direccion}.")
+            voz.hablar(f"{nombre} movido {texto_direccion}.")
         else:
             self._anunciar("Ya está en ese extremo, no se puede mover más.")
 
@@ -512,7 +511,7 @@ class PestanaBiblioteca(wx.Panel):
 
         if self.gestor.renombrar_categoria(valor, nuevo_nombre):
             reproducir(SUCCESS)
-            self._voz.hablar(f"Categoría renombrada a {nuevo_nombre}.")
+            voz.hablar(f"Categoría renombrada a {nuevo_nombre}.")
             self._cargar_libros()
         else:
             evento.Veto()
@@ -535,9 +534,9 @@ class PestanaBiblioteca(wx.Panel):
             id_nueva = self.gestor.crear_categoria(dlg.nombre, id_padre_final)
             reproducir(SUCCESS)
             if id_padre_final is not None:
-                self._voz.hablar(f"Subcategoría {dlg.nombre} creada dentro de {nombre_padre}.")
+                voz.hablar(f"Subcategoría {dlg.nombre} creada dentro de {nombre_padre}.")
             else:
-                self._voz.hablar(f"Categoría {dlg.nombre} creada.")
+                voz.hablar(f"Categoría {dlg.nombre} creada.")
             self._cargar_arbol_categorias(id_categoria_seleccionar=id_nueva)
         dlg.Destroy()
 
@@ -555,7 +554,7 @@ class PestanaBiblioteca(wx.Panel):
         self.gestor.eliminar_categoria(id_categoria)
         self._id_categoria_activa = None
         reproducir(SUCCESS)
-        self._voz.hablar(f"Categoría {nombre} eliminada.")
+        voz.hablar(f"Categoría {nombre} eliminada.")
         self._cargar_arbol_categorias()
         self._cargar_libros()
 
@@ -566,13 +565,13 @@ class PestanaBiblioteca(wx.Panel):
         self._categoria_en_portapapeles = id_categoria
         reproducir(CLEAR)
         nombre = self.arbol_categorias.GetItemText(self.arbol_categorias.GetSelection())
-        self._voz.hablar(
+        voz.hablar(
             f"{nombre} cortada. Selecciona el destino y pulsa Control V, o Escape para cancelar."
         )
 
     def al_pegar_categoria(self, evento):
         if self._categoria_en_portapapeles is None:
-            self._voz.hablar("No hay ninguna categoría cortada.")
+            voz.hablar("No hay ninguna categoría cortada.")
             return
         destino = self._categoria_seleccionada_id()
         if self.gestor.reparentar_categoria(self._categoria_en_portapapeles, destino):
@@ -580,10 +579,10 @@ class PestanaBiblioteca(wx.Panel):
             id_movida = self._categoria_en_portapapeles
             self._categoria_en_portapapeles = None
             self._cargar_arbol_categorias(id_categoria_seleccionar=id_movida)
-            self._voz.hablar("Categoría movida.")
+            voz.hablar("Categoría movida.")
         else:
             reproducir(ERROR)
-            self._voz.hablar("No se puede mover ahí: crearía un ciclo o el destino es la misma categoría.")
+            voz.hablar("No se puede mover ahí: crearía un ciclo o el destino es la misma categoría.")
 
     def al_menu_contextual_arbol(self, evento):
         id_categoria = self._categoria_seleccionada_id()
@@ -676,7 +675,7 @@ class PestanaBiblioteca(wx.Panel):
     def al_renombrar_etiqueta_seleccionada(self):
         etiqueta = self._etiqueta_seleccionada()
         if etiqueta is None:
-            self._voz.hablar("Selecciona primero una etiqueta para renombrarla.")
+            voz.hablar("Selecciona primero una etiqueta para renombrarla.")
             return
         dlg = wx.TextEntryDialog(
             self, "Nuevo nombre de la etiqueta:", "Renombrar etiqueta", value=etiqueta["nombre"]
@@ -685,7 +684,7 @@ class PestanaBiblioteca(wx.Panel):
             nuevo_nombre = dlg.GetValue().strip()
             if nuevo_nombre and self.gestor.renombrar_etiqueta(etiqueta["id"], nuevo_nombre):
                 reproducir(SUCCESS)
-                self._voz.hablar(f"Etiqueta renombrada a {nuevo_nombre}.")
+                voz.hablar(f"Etiqueta renombrada a {nuevo_nombre}.")
                 self._cargar_lista_etiquetas(id_etiqueta_seleccionar=etiqueta["id"])
                 self._cargar_libros()
             elif nuevo_nombre:
@@ -708,7 +707,7 @@ class PestanaBiblioteca(wx.Panel):
             return
         self.gestor.eliminar_etiqueta(etiqueta["id"])
         reproducir(SUCCESS)
-        self._voz.hablar(f"Etiqueta {etiqueta['nombre']} eliminada.")
+        voz.hablar(f"Etiqueta {etiqueta['nombre']} eliminada.")
         self._cargar_lista_etiquetas()
         self._cargar_libros()
 
@@ -719,7 +718,7 @@ class PestanaBiblioteca(wx.Panel):
             if nombre:
                 id_nueva = self.gestor.crear_etiqueta(nombre)
                 reproducir(SUCCESS)
-                self._voz.hablar(f"Etiqueta {nombre} creada.")
+                voz.hablar(f"Etiqueta {nombre} creada.")
                 self._cargar_lista_etiquetas(id_etiqueta_seleccionar=id_nueva)
         dlg.Destroy()
 
@@ -768,10 +767,13 @@ class PestanaBiblioteca(wx.Panel):
             id_categoria=self._id_categoria_activa,
             id_etiqueta=self._id_etiqueta_activa,
             solo_favoritos=self.chk_favoritos.GetValue(),
-            solo_pendientes=(estado == "Pendientes"),
+            solo_pendientes=(estado == "Pendientes de leer"),
             solo_leyendo=(estado == "Leyendo ahora"),
             solo_leidos=(estado == "Leídos"),
         )
+        self._ids_audiolibro_pendiente = self.gestor.obtener_ids_libros_con_exportacion_pendiente()
+        if estado == "Audiolibros a medias":
+            libros = [l for l in libros if l["id"] in self._ids_audiolibro_pendiente]
         if self._id_etiqueta_activa is None and self._id_categoria_activa is None:
             # Sin etiqueta ni categoría activa, buscar_libros() ordena
             # alfabéticamente por título — pero muchos libros heredan un
@@ -789,7 +791,9 @@ class PestanaBiblioteca(wx.Panel):
         self.lista_libros.DeleteAllItems()
         for indice, libro in enumerate(libros):
             nombres_autores = ", ".join(autores_por_libro.get(libro["id"], [])) or "—"
-            estado_txt = self._describir_estado(libro)
+            estado_txt = self._describir_estado(
+                libro, libro["id"] in self._ids_audiolibro_pendiente
+            )
 
             self.lista_libros.InsertItem(indice, libro["titulo"])
             self.lista_libros.SetItem(indice, 1, nombres_autores)
@@ -807,18 +811,20 @@ class PestanaBiblioteca(wx.Panel):
         self.lbl_estado.SetLabel(f"{len(libros)} libro(s) en la biblioteca.")
 
     @staticmethod
-    def _describir_estado(libro) -> str:
+    def _describir_estado(libro, tiene_audiolibro_pendiente=False) -> str:
         partes = []
         if libro["favorito"]:
             partes.append("Favorito")
         if libro["leyendo_ahora"]:
             partes.append("Leyendo")
         elif libro["en_pendientes"]:
-            partes.append("Pendiente")
+            partes.append("Pendiente de leer")
         elif libro["leido"]:
             partes.append("Leído")
         if not libro["titulo_revisado"]:
             partes.append("Título sin revisar")
+        if tiene_audiolibro_pendiente:
+            partes.append("Audiolibro a medias")
         return ", ".join(partes) if partes else "Sin marcar"
 
     def al_cambiar_filtro(self, evento):
@@ -827,6 +833,14 @@ class PestanaBiblioteca(wx.Panel):
 
     def _libro_seleccionado(self):
         indice = self.lista_libros.GetFirstSelected()
+        if indice == -1:
+            # Tras recargar la lista (Freeze/DeleteAllItems/Thaw en
+            # _cargar_libros), puede quedar un ítem con el foco de
+            # teclado pero sin marca de selección — GetFirstSelected()
+            # no lo ve, GetFocusedItem() sí. Sin este respaldo, abrir el
+            # Asistente de Biblioteca con un libro visiblemente
+            # enfocado podía acabar en modo general por error.
+            indice = self.lista_libros.GetFocusedItem()
         if indice == -1 or indice >= len(self._libros_actuales):
             return None
         return self._libros_actuales[indice]
@@ -852,7 +866,7 @@ class PestanaBiblioteca(wx.Panel):
             "¿Crear categorías desde las subcarpetas?", wx.YES_NO | wx.ICON_QUESTION,
         ) == wx.YES
 
-        self._voz.hablar("Escaneando carpeta, por favor espera...")
+        voz.hablar("Escaneando carpeta, por favor espera...")
         self.barra_progreso.SetValue(0)
         self.barra_progreso.Show()
         self.Layout()
@@ -869,6 +883,42 @@ class PestanaBiblioteca(wx.Panel):
             al_fallar=lambda error: wx.CallAfter(self._al_fallar_escaneo, error),
         )
         self.escaner.iniciar(carpeta, usar_subcarpetas_como_categorias=usar_subcarpetas)
+
+    def al_importar_archivo(self, evento=None):
+        """
+        Añade un único archivo EPUB o PDF a la Biblioteca, sin pasar por el
+        escáner de carpetas (pensado para 500 libros a la vez, no para uno
+        suelto). Reutiliza _procesar_archivo() y insertar_libros_lote(), la
+        misma lógica de extracción de metadatos e inserción que usa
+        EscanerBiblioteca, para no duplicarla.
+        """
+        with wx.FileDialog(
+            self, "Seleccionar libro a importar",
+            wildcard="Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf",
+            style=wx.FD_OPEN,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            ruta = dlg.GetPath()
+
+        if ruta in self.gestor.obtener_rutas_indexadas():
+            reproducir(ERROR)
+            self._anunciar("Ese libro ya está en la Biblioteca.")
+            return
+
+        resultado = _procesar_archivo(ruta)
+        if resultado is None:
+            reproducir(ERROR)
+            wx.MessageBox(
+                "No se pudieron leer los metadatos de ese archivo.",
+                "Error al importar", wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        self.gestor.insertar_libros_lote([resultado])
+        reproducir(SUCCESS)
+        self._anunciar(f"Libro añadido a la Biblioteca: {resultado['titulo']}.")
+        self._cargar_libros()
 
     def _al_progresar_escaneo(self, procesados, total):
         # Solo actualiza el estado visual (Gauge + etiqueta) aquí — esto se
@@ -927,7 +977,7 @@ class PestanaBiblioteca(wx.Panel):
         # queda en silencio y parece que la app se ha colgado. El
         # etiquetado en sí se hace en un hilo de fondo (ver
         # _agrupar_carpetas_en_hilo) para no bloquear la interfaz.
-        self._voz.hablar("Aplicando etiquetas, por favor espera...")
+        voz.hablar("Aplicando etiquetas, por favor espera...")
         self._ultima_etiqueta_creada = next(iter(carpetas_a_agrupar.values()), None)
         threading.Thread(
             target=self._agrupar_carpetas_en_hilo,
@@ -983,12 +1033,12 @@ class PestanaBiblioteca(wx.Panel):
 
         if total_fallos:
             reproducir(ERROR)
-            self._voz.hablar(
+            voz.hablar(
                 f"Etiquetas aplicadas, pero {total_fallos} libro(s) no se pudieron etiquetar."
             )
         else:
             reproducir(SUCCESS)
-            self._voz.hablar("Etiquetas aplicadas.")
+            voz.hablar("Etiquetas aplicadas.")
 
     def _al_terminar_escaneo(self, total_insertados):
         self._timer_progreso.Stop()
@@ -1023,7 +1073,7 @@ class PestanaBiblioteca(wx.Panel):
             mensaje = f"Se han añadido {total_insertados} libro(s) a la biblioteca."
         else:
             mensaje = "No se encontraron libros nuevos en esa carpeta."
-        self._voz.hablar(mensaje)
+        voz.hablar(mensaje)
         wx.MessageBox(mensaje, "Escaneo completado", wx.OK | wx.ICON_INFORMATION)
 
     def _al_fallar_escaneo(self, error):
@@ -1042,10 +1092,146 @@ class PestanaBiblioteca(wx.Panel):
             return
         autores = self.gestor.obtener_autores_de_libro(libro["id"])
         nombres_autores = ", ".join(a["nombre"] for a in autores) or "autor desconocido"
-        estado = self._describir_estado(libro)
+        pendiente = bool(self.gestor.obtener_exportaciones_pendientes(libro["id"]))
+        estado = self._describir_estado(libro, pendiente)
         self._anunciar(
             f"{libro['titulo']}, {nombres_autores}, {libro['formato'].upper()}, {estado}."
         )
+
+    # ANCLAJE_INICIO: ABRIR_ASISTENTE_BIBLIOTECA
+    def al_abrir_asistente_biblioteca(self, evento):
+        from app.interfaz.dialogo_asistente_biblioteca import DialogoAsistenteBiblioteca
+
+        libro = self._libro_seleccionado()
+        contexto_libro = None
+        if libro is not None:
+            autores = self.gestor.obtener_autores_de_libro(libro["id"])
+            nombres_autores = ", ".join(a["nombre"] for a in autores) or None
+            categorias = self.gestor.obtener_categorias_de_libro(libro["id"])
+            etiquetas = self.gestor.obtener_etiquetas_de_libro(libro["id"])
+            nombres_categoria = ", ".join(
+                c["nombre"] for c in list(categorias) + list(etiquetas)
+            ) or None
+            pendiente = bool(self.gestor.obtener_exportaciones_pendientes(libro["id"]))
+            contexto_libro = {
+                "id_libro": libro["id"],
+                "tipo": "libro",
+                "titulo": libro["titulo"],
+                "autor": nombres_autores,
+                "categoria": nombres_categoria,
+                "estado": self._describir_estado(libro, pendiente),
+            }
+        elif self._id_etiqueta_activa is not None:
+            # Sin libro concreto seleccionado pero con una saga activa en
+            # el panel izquierdo (lista_etiquetas): se manda esa saga como
+            # contexto en vez de caer directo a modo general.
+            contexto_libro = self._contexto_saga(self._id_etiqueta_activa)
+        elif self._id_categoria_activa is not None:
+            contexto_libro = self._contexto_categoria(self._id_categoria_activa)
+        else:
+            # Modo totalmente general: sin libro, saga ni categoría
+            # concretos, se manda un resumen agregado de toda la
+            # Biblioteca (géneros y autores más frecuentes, sagas,
+            # conteos de favoritos/leídos/pendientes) para que el
+            # asistente conozca los gustos del usuario incluso sin
+            # selección. Se calcula al vuelo desde biblioteca.db en cada
+            # apertura, así que altas y bajas de libros ya se reflejan
+            # solas, sin nada que mantener sincronizado aparte.
+            contexto_libro = self._contexto_resumen_biblioteca()
+
+        dlg = DialogoAsistenteBiblioteca(self, contexto_libro)
+        dlg.ShowModal()
+        dlg.Destroy()
+
+    def _resumen_titulos(self, libros, limite=15):
+        titulos = [l["titulo"] for l in libros]
+        resumen = f"{len(titulos)} libro(s): " + ", ".join(titulos[:limite])
+        if len(titulos) > limite:
+            resumen += ", ..."
+        return resumen
+
+    def _contexto_saga(self, id_etiqueta):
+        nombre = next(
+            (e["nombre"] for e in self._etiquetas_indice if e["id"] == id_etiqueta), None
+        )
+        if nombre is None:
+            return None
+        libros = self.gestor.buscar_libros(id_etiqueta=id_etiqueta)
+        return {
+            "id_libro": f"etiqueta:{id_etiqueta}",
+            "tipo": "saga",
+            "titulo": f"Saga: {nombre}",
+            "autor": None,
+            "categoria": None,
+            "estado": self._resumen_titulos(libros),
+        }
+
+    def _contexto_categoria(self, id_categoria):
+        try:
+            nodo = self.arbol_categorias.GetSelection()
+            nombre = self.arbol_categorias.GetItemText(nodo).rsplit(" (", 1)[0]
+        except RuntimeError:
+            return None
+        libros = self.gestor.buscar_libros(id_categoria=id_categoria)
+        return {
+            "id_libro": f"categoria:{id_categoria}",
+            "tipo": "categoria",
+            "titulo": f"Género: {nombre}",
+            "autor": None,
+            "categoria": None,
+            "estado": self._resumen_titulos(libros),
+        }
+
+    def _contexto_resumen_biblioteca(self):
+        resumen = self.gestor.resumen_para_asistente()
+        if resumen["total"] == 0:
+            return None
+        partes = [
+            f"{resumen['total']} libro(s) en total "
+            f"({resumen['favoritos']} favorito(s), {resumen['leidos']} leído(s), "
+            f"{resumen['pendientes']} pendiente(s), {resumen['leyendo']} en curso)."
+        ]
+        if resumen["generos_frecuentes"]:
+            nombres = ", ".join(f"{g['nombre']} ({g['total']})" for g in resumen["generos_frecuentes"])
+            partes.append(f"Géneros más frecuentes: {nombres}.")
+        if resumen["autores_frecuentes"]:
+            nombres = ", ".join(f"{a['nombre']} ({a['total']})" for a in resumen["autores_frecuentes"])
+            partes.append(f"Autores más frecuentes: {nombres}.")
+        if resumen["sagas"]:
+            nombres = ", ".join(f"{s['nombre']} ({s['total']})" for s in resumen["sagas"])
+            partes.append(f"Sagas en la Biblioteca: {nombres}.")
+        return {
+            "id_libro": None,
+            "tipo": "resumen",
+            "titulo": "tu Biblioteca",
+            "autor": None,
+            "categoria": None,
+            "estado": " ".join(partes),
+            "catalogo": self._catalogo_completo_texto(),
+        }
+
+    def _catalogo_completo_texto(self):
+        """
+        Listado título/autor/saga de toda la Biblioteca, en texto plano
+        separado por punto y coma — para que el Asistente sepa con certeza
+        qué libros y sagas tienes, en vez de solo los más frecuentes del
+        resumen agregado de arriba (por eso a veces decía que no tenías una
+        saga que sí tenías: solo veía las más repetidas, no todas).
+        """
+        catalogo = self.gestor.catalogo_para_asistente()
+        lineas = []
+        for libro in catalogo["libros"]:
+            partes_libro = [libro["titulo"]]
+            if libro.get("autores"):
+                partes_libro.append(libro["autores"])
+            if libro.get("sagas"):
+                partes_libro.append(f"Saga: {libro['sagas']}")
+            lineas.append(" — ".join(partes_libro))
+        texto = "; ".join(lineas)
+        if catalogo["total"] > len(catalogo["libros"]):
+            texto += f"; ... y {catalogo['total'] - len(catalogo['libros'])} libro(s) más."
+        return texto
+    # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA
 
     def al_alternar_favorito(self, evento):
         libro = self._libro_seleccionado()
@@ -1075,7 +1261,7 @@ class PestanaBiblioteca(wx.Panel):
         """
         menu = wx.Menu()
         opciones = [
-            ("en_pendientes", "Pendiente", "pendientes"),
+            ("en_pendientes", "Pendiente de leer", "pendientes de leer"),
             ("leyendo_ahora", "Leyendo ahora", "leyendo ahora"),
             ("leido", "Leído", "leídos"),
         ]
@@ -1102,15 +1288,7 @@ class PestanaBiblioteca(wx.Panel):
         if not os.path.exists(libro["ruta_archivo"]):
             self._al_archivo_no_encontrado(libro)
             return
-        if libro["formato"] != "epub":
-            wx.MessageBox(
-                "La lectura de archivos PDF todavía no está conectada a la pestaña "
-                "Lectura. Por ahora solo se pueden abrir libros EPUB desde aquí.",
-                "Formato no disponible todavía", wx.OK | wx.ICON_INFORMATION,
-            )
-            return
-
-        self._voz.hablar("Abriendo libro, por favor espera...")
+        voz.hablar("Abriendo libro, por favor espera...")
         self._anunciar("Abriendo libro, por favor espera...")
 
         wx.CallLater(400, self._continuar_apertura_libro, libro)
@@ -1128,6 +1306,36 @@ class PestanaBiblioteca(wx.Panel):
 
         self.gestor.establecer_bandera(libro["id"], "leyendo_ahora", True)
         reproducir(SUCCESS)
+
+    def al_enviar_a_creador_audiolibros(self):
+        libro = self._libro_seleccionado()
+        if libro is None:
+            return
+        if not os.path.exists(libro["ruta_archivo"]):
+            self._al_archivo_no_encontrado(libro)
+            return
+
+        autores = self.gestor.obtener_autores_de_libro(libro["id"])
+        nombres_autores = ", ".join(a["nombre"] for a in autores)
+
+        datos_libro = {
+            "id": libro["id"],
+            "titulo": libro["titulo"],
+            "autor": nombres_autores,
+            "formato": libro["formato"],
+            "ruta_archivo": libro["ruta_archivo"],
+        }
+
+        ventana_principal = self.padre_notebook.GetParent()
+        try:
+            from app.interfaz.ventana_principal import IDX_CREADOR
+            self.padre_notebook.SetSelection(IDX_CREADOR)
+            ventana_principal.pestana_creador.cargar_libro(datos_libro)
+        except Exception:
+            logger.exception(
+                "[PestanaBiblioteca] No se pudo enviar el libro al Creador de Audiolibros"
+            )
+            reproducir(ERROR)
 
     def _al_abrir_reglas_pronunciacion(self, libro):
         ventana_principal = self.padre_notebook.GetParent()
@@ -1355,7 +1563,7 @@ class PestanaBiblioteca(wx.Panel):
         )
         self.gestor.asignar_etiqueta(libro["id"], nombre)
         reproducir(SUCCESS)
-        self._voz.hablar(f"Añadido a etiqueta {nombre}.")
+        voz.hablar(f"Añadido a etiqueta {nombre}.")
         self._cargar_lista_etiquetas(id_etiqueta_seleccionar=self._id_etiqueta_activa)
         self._cargar_libros()
 
@@ -1366,7 +1574,7 @@ class PestanaBiblioteca(wx.Panel):
             if nombre:
                 self.gestor.asignar_etiqueta(libro["id"], nombre)
                 reproducir(SUCCESS)
-                self._voz.hablar(f"Etiqueta {nombre} creada y libro añadido.")
+                voz.hablar(f"Etiqueta {nombre} creada y libro añadido.")
                 self._cargar_lista_etiquetas(id_etiqueta_seleccionar=self._id_etiqueta_activa)
                 self._cargar_libros()
         dlg.Destroy()
@@ -1377,7 +1585,7 @@ class PestanaBiblioteca(wx.Panel):
             return
         self.gestor.quitar_etiqueta_de_libro(libro["id"], self._id_etiqueta_activa)
         reproducir(SUCCESS)
-        self._voz.hablar("Libro quitado de esta etiqueta.")
+        voz.hablar("Libro quitado de esta etiqueta.")
         self._cargar_libros()
 
     def al_asignar_categoria_existente(self, libros, id_categoria):
@@ -1386,9 +1594,9 @@ class PestanaBiblioteca(wx.Panel):
             self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
         reproducir(SUCCESS)
         if len(libros) == 1:
-            self._voz.hablar(f"Añadido a categoría {' > '.join(ruta)}.")
+            voz.hablar(f"Añadido a categoría {' > '.join(ruta)}.")
         else:
-            self._voz.hablar(f"{len(libros)} libros añadidos a categoría {' > '.join(ruta)}.")
+            voz.hablar(f"{len(libros)} libros añadidos a categoría {' > '.join(ruta)}.")
         self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
         self._cargar_libros()
 
@@ -1407,9 +1615,9 @@ class PestanaBiblioteca(wx.Panel):
                     self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
                 reproducir(SUCCESS)
                 if len(libros) == 1:
-                    self._voz.hablar(f"Categoría {nombre} creada y libro añadido.")
+                    voz.hablar(f"Categoría {nombre} creada y libro añadido.")
                 else:
-                    self._voz.hablar(f"Categoría {nombre} creada y {len(libros)} libros añadidos.")
+                    voz.hablar(f"Categoría {nombre} creada y {len(libros)} libros añadidos.")
                 self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
                 self._cargar_libros()
         dlg.Destroy()
@@ -1435,6 +1643,12 @@ class PestanaBiblioteca(wx.Panel):
         item_abrir = menu.Append(wx.ID_ANY, "Abrir en Lectura\tIntro")
         self.Bind(wx.EVT_MENU, lambda e: self.al_abrir_libro_seleccionado(), item_abrir)
 
+        item_creador = menu.Append(wx.ID_ANY, "Enviar a Creador de Audiolibros")
+        item_creador.SetHelp(
+            "Cambia a la pestaña Creador de Audiolibros con este libro ya cargado."
+        )
+        self.Bind(wx.EVT_MENU, lambda e: self.al_enviar_a_creador_audiolibros(), item_creador)
+
         menu.AppendSeparator()
 
         item_favorito = menu.Append(
@@ -1444,11 +1658,13 @@ class PestanaBiblioteca(wx.Panel):
 
         item_pendiente = menu.Append(
             wx.ID_ANY,
-            "Quitar de pendientes" if libro["en_pendientes"] else "Marcar como pendiente",
+            "Quitar de pendientes de leer" if libro["en_pendientes"] else "Marcar como pendiente de leer",
         )
         self.Bind(
             wx.EVT_MENU,
-            lambda e: self._alternar_estado_libro("en_pendientes", "pendiente", "pendientes"),
+            lambda e: self._alternar_estado_libro(
+                "en_pendientes", "pendiente de leer", "pendientes de leer"
+            ),
             item_pendiente,
         )
 
@@ -1493,7 +1709,7 @@ class PestanaBiblioteca(wx.Panel):
         item_renombrar_pendientes = menu.Append(
             wx.ID_ANY, "Renombrar todos los pendientes de revisión..."
         )
-        item_renombrar_pendientes.SetHelpText(
+        item_renombrar_pendientes.SetHelp(
             "Renombra en bloque, según sus metadatos, todos los libros de la "
             "biblioteca cuyo nombre de archivo no coincide con el título real."
         )
@@ -1502,7 +1718,7 @@ class PestanaBiblioteca(wx.Panel):
         item_reglas_pronunciacion = menu.Append(
             wx.ID_ANY, "Reglas de pronunciación de este libro..."
         )
-        item_reglas_pronunciacion.SetHelpText(
+        item_reglas_pronunciacion.SetHelp(
             "Abre Ajustes en el diccionario de pronunciación, ya en alcance "
             "'Este libro' y con este libro seleccionado."
         )
@@ -1529,6 +1745,7 @@ class PestanaBiblioteca(wx.Panel):
         """
         ventana_principal = self.padre_notebook.GetParent()
         menu.AppendSeparator()
+        ventana_principal._agregar_item_asistente_biblioteca(menu)
         ventana_principal._submenu_ayuda(menu)
         menu.AppendSeparator()
         item_salir = menu.Append(wx.ID_EXIT, "Salir")

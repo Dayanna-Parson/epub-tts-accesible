@@ -1,0 +1,25 @@
+prompt y respuesta 16
+malas noticias. lo acabo de probar, y está exactamente igual o peor, porque ahora, el tab no es circular. mira esto: Modo de exportación:  cuadro combinado  Libro completo  contraído
+Calcular presupuesto  botón
+Velocidad:  deslizador  50
+Volumen:  deslizador  100
+Velocidad:  deslizador  50
+Calcular presupuesto  botón
+Modo de exportación:  cuadro combinado  Libro completo  contraído
+Creador de Audiolibros  pestaña  seleccionado
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Buena noticia y mala noticia a la vez: el reordenamiento no arregló nada, pero tu nuevo log es la pista definitiva.
+Buena noticia y mala noticia a la vez: el reordenamiento no arregló nada, pero tu nuevo log es la pista definitiva. Mira: moví txt_voz justo entre combo_modo y btn_calcular con MoveAfterInTabOrder, y aun así el Tab sigue saltándoselo — pasa de "Modo de exportación" directo a "Calcular presupuesto". Eso descarta el orden como causa: el problema no es dónde están en la cola, es que wx no los trata como paradas de Tab en absoluto.
+Esto es un comportamiento conocido y documentado de wxWidgets: los TextCtrl de solo lectura (wx.TE_READONLY) a veces quedan excluidos del orden de tabulación por defecto, precisamente porque wx asume "de solo lectura = no interactivo = no hace falta pararse ahí" — un antipatrón de accesibilidad bastante criticado. Voy a forzar explícitamente que acepten foco de teclado subclasificando el control.
+Leer un archivo, editado un archivo
+Hay que corregir el duplicado del comentario ANCLAJE (dos bloques con el mismo nombre). Reviso y ajusto.
+Ejecutadoun comando
+Bien, sin duplicado. Ahora sustituyo wx.TextCtrl por _TextoInformativoAccesible en los cuatro campos afectados.
+Ejecutado 4 comandos
+Registro el fix y explico el porqué en el mensaje de commit.
+Commit realizado0d68265
+Commit 0d68265 pusheado
+Tu segundo log fue la prueba clave: reordené txt_voz justo entre combo_modo y btn_calcular, y el Tab lo siguió saltando exactamente igual. Eso descartó el orden como causa — confirma que wx no estaba tratando esos TextCtrl de solo lectura como paradas de teclado en absoluto, algo documentado de wxWidgets (los campos TE_READONLY a veces quedan excluidos del Tab por defecto, por considerarlos "no interactivos").
+El arreglo: _TextoInformativoAccesible, una subclase de wx.TextCtrl que sobreescribe AcceptsFocusFromKeyboard() para forzar que sí acepten foco de teclado, aplicada a _anunciador, txt_libro, txt_voz y txt_progreso.
+Por favor, haz git pull, relanza la app y repite la misma prueba de siempre: Tab puro desde el principio de la pestaña con un libro cargado. Si esta vez sí anuncia "Libro cargado: ...", "Voz por defecto: ..." y "Estado: ..." en la secuencia, lo tenemos. Pégame el log tal cual salga, sea cual sea el resultado.

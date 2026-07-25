@@ -1,7 +1,6 @@
 import wx
-import os
-import sys
-from app.motor.reproductor_sonidos import reproducir, LIST_NAV, OPEN_FOLDER
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 class DialogoMarcadores(wx.Dialog):
     """
@@ -43,15 +42,18 @@ class DialogoMarcadores(wx.Dialog):
         
         self.btn_anadir = wx.Button(self, label="Nuevo")
         self.btn_anadir.Bind(wx.EVT_BUTTON, self.al_anadir_marcador)
+        aplicar_icono_boton(self.btn_anadir, "nuevo", "Nuevo marcador")
 
         self.btn_renombrar = wx.Button(self, label="Renombrar")
         self.btn_renombrar.Bind(wx.EVT_BUTTON, self.al_renombrar_marcador)
 
         self.btn_eliminar = wx.Button(self, label="Eliminar")
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar_marcador)
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar marcador")
 
         self.btn_cerrar = wx.Button(self, wx.ID_CANCEL, "Cerrar")
-        
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", "Cerrar")
+
         sizer_botones.Add(self.btn_anadir, 0, wx.ALL, 5)
         sizer_botones.Add(self.btn_renombrar, 0, wx.ALL, 5)
         sizer_botones.Add(self.btn_eliminar, 0, wx.ALL, 5)
@@ -165,53 +167,6 @@ class DialogoMarcadores(wx.Dialog):
                 del self.marcadores[nombre]
                 self.llenar_lista()
                 self.lista_marcadores.SetFocus()
-
-class DialogoExportacion(wx.Dialog):
-    """
-    Diálogo que se muestra al finalizar una grabación.
-    """
-    def __init__(self, padre, mensaje, ruta_carpeta):
-        super().__init__(padre, title="Proceso Completado", style=wx.DEFAULT_DIALOG_STYLE)
-        
-        self.ruta_carpeta = ruta_carpeta
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        
-        hbox_msg = wx.BoxSizer(wx.HORIZONTAL)
-        icono = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION, wx.ART_MESSAGE_BOX)
-        bmp = wx.StaticBitmap(self, bitmap=icono)
-        lbl = wx.StaticText(self, label=mensaje)
-        
-        hbox_msg.Add(bmp, 0, wx.ALL, 10)
-        hbox_msg.Add(lbl, 1, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
-        sizer.Add(hbox_msg, 1, wx.EXPAND | wx.ALL, 5)
-        
-        sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
-        
-        self.btn_abrir = wx.Button(self, label="Abrir carpeta de destino")
-        self.btn_abrir.Bind(wx.EVT_BUTTON, self.al_abrir_carpeta)
-        self.btn_abrir.SetDefault()
-        
-        self.btn_cerrar = wx.Button(self, wx.ID_CANCEL, "Cerrar")
-        
-        sizer_botones.Add(self.btn_abrir, 0, wx.ALL, 5)
-        sizer_botones.Add(self.btn_cerrar, 0, wx.ALL, 5)
-        
-        sizer.Add(sizer_botones, 0, wx.ALIGN_CENTER | wx.ALL, 10)
-        
-        self.SetSizer(sizer)
-        self.Fit()
-        self.CenterOnParent()
-
-    def al_abrir_carpeta(self, evento):
-        if os.path.exists(self.ruta_carpeta):
-            reproducir(OPEN_FOLDER)
-            if sys.platform == 'win32':
-                os.startfile(self.ruta_carpeta)
-        else:
-            wx.MessageBox("La carpeta ya no existe.", "Error")
-        self.EndModal(wx.ID_OK)
-
 
 # ANCLAJE_INICIO: DIALOGO_AGRUPAR_CARPETAS
 class DialogoAgruparCarpetas(wx.Dialog):
@@ -370,6 +325,7 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
             "Elige manualmente dónde está ahora el archivo de este libro."
         )
         self.btn_localizar.Bind(wx.EVT_BUTTON, self.al_localizar)
+        aplicar_icono_boton(self.btn_localizar, "examinar", "Localizar archivo")
         sizer.Add(self.btn_localizar, 0, wx.EXPAND | wx.ALL, 5)
 
         self.btn_reescanear = wx.Button(self, label="Volver a escanear una carpeta...")
@@ -379,6 +335,7 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
             "casando por nombre de archivo."
         )
         self.btn_reescanear.Bind(wx.EVT_BUTTON, self.al_reescanear)
+        aplicar_icono_boton(self.btn_reescanear, "buscar", "Volver a escanear una carpeta")
         sizer.Add(self.btn_reescanear, 0, wx.EXPAND | wx.ALL, 5)
 
         self.btn_eliminar = wx.Button(self, label="Eliminar de la biblioteca")
@@ -387,6 +344,7 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
             "si existiera en algún sitio, no se borra."
         )
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar)
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar de la biblioteca")
         sizer.Add(self.btn_eliminar, 0, wx.EXPAND | wx.ALL, 5)
 
         self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")

@@ -710,6 +710,96 @@ class GestorBiblioteca:
                 (id_libro,),
             ).fetchall()
 
+    # ANCLAJE_INICIO: RESUMEN_BIBLIOTECA_ASISTENTE
+    def resumen_para_asistente(self, limite_top=5, limite_sagas=10) -> dict:
+        """
+        Agregados de biblioteca.db para el contexto del Asistente de
+        Biblioteca en modo general (sin libro/saga/categoría concretos
+        seleccionados): total de libros, conteos por estado, autores y
+        géneros más frecuentes, y sagas con su número de libros. Se
+        calcula al vuelo en cada apertura del chat —directamente sobre el
+        estado actual de la base de datos—, así que altas y bajas de
+        libros se reflejan solas sin necesidad de mantener nada
+        sincronizado aparte.
+        """
+        with self._conexion() as conexion:
+            total = conexion.execute("SELECT COUNT(*) AS n FROM libros").fetchone()["n"]
+            estados = conexion.execute(
+                "SELECT SUM(favorito) AS favoritos, SUM(leido) AS leidos, "
+                "SUM(en_pendientes) AS pendientes, SUM(leyendo_ahora) AS leyendo "
+                "FROM libros"
+            ).fetchone()
+            autores = conexion.execute(
+                """
+                SELECT a.nombre, COUNT(*) AS total FROM autores a
+                JOIN libro_autor la ON la.id_autor = a.id
+                GROUP BY a.id ORDER BY total DESC, a.nombre LIMIT ?
+                """,
+                (limite_top,),
+            ).fetchall()
+            generos = conexion.execute(
+                """
+                SELECT c.nombre, COUNT(*) AS total FROM categorias c
+                JOIN libro_categoria lc ON lc.id_categoria = c.id
+                GROUP BY c.id ORDER BY total DESC, c.nombre LIMIT ?
+                """,
+                (limite_top,),
+            ).fetchall()
+            sagas = conexion.execute(
+                """
+                SELECT e.nombre, COUNT(*) AS total FROM etiquetas e
+                JOIN libro_etiqueta le ON le.id_etiqueta = e.id
+                GROUP BY e.id ORDER BY total DESC, e.nombre LIMIT ?
+                """,
+                (limite_sagas,),
+            ).fetchall()
+        return {
+            "total": total,
+            "favoritos": estados["favoritos"] or 0,
+            "leidos": estados["leidos"] or 0,
+            "pendientes": estados["pendientes"] or 0,
+            "leyendo": estados["leyendo"] or 0,
+            "autores_frecuentes": [dict(a) for a in autores],
+            "generos_frecuentes": [dict(g) for g in generos],
+            "sagas": [dict(s) for s in sagas],
+        }
+    # ANCLAJE_FIN: RESUMEN_BIBLIOTECA_ASISTENTE
+
+    # ANCLAJE_INICIO: CATALOGO_COMPLETO_ASISTENTE
+    def catalogo_para_asistente(self, limite=800) -> dict:
+        """
+        Listado completo (título, autor, saga) de toda la Biblioteca para el
+        contexto del Asistente en modo general, además del resumen agregado
+        de resumen_para_asistente(). Se calcula al vuelo sobre el estado
+        actual de biblioteca.db —sin caché ni detección de cambios—, así que
+        siempre está al día con solo volver a abrir el chat: el coste real
+        de recalcularlo (una consulta SQL) y de reenviarlo (texto plano de
+        títulos y autores) es insignificante frente al de cachearlo y tener
+        que invalidar esa caché cada vez que se añade o borra un libro.
+
+        limite acota el número de libros listados (no las consultas del
+        resumen agregado), para no generar un texto desproporcionado en
+        bibliotecas realmente enormes.
+        """
+        with self._conexion() as conexion:
+            filas = conexion.execute(
+                """
+                SELECT
+                    l.titulo,
+                    (SELECT GROUP_CONCAT(a.nombre, ', ')
+                     FROM autores a JOIN libro_autor la ON la.id_autor = a.id
+                     WHERE la.id_libro = l.id) AS autores,
+                    (SELECT GROUP_CONCAT(e.nombre, ', ')
+                     FROM etiquetas e JOIN libro_etiqueta le ON le.id_etiqueta = e.id
+                     WHERE le.id_libro = l.id) AS sagas
+                FROM libros l
+                ORDER BY l.titulo COLLATE NOCASE
+                """
+            ).fetchall()
+        total = len(filas)
+        return {"total": total, "libros": [dict(f) for f in filas[:limite]]}
+    # ANCLAJE_FIN: CATALOGO_COMPLETO_ASISTENTE
+
     # ── Actualización de estado ─────────────────────────────────────────────
 
     def actualizar_punto_lectura(self, id_libro: int, posicion: int):
@@ -858,3 +948,68 @@ class GestorBiblioteca:
                     ).fetchall()
                 )
         return filas
+
+    # ANCLAJE_INICIO: EXPORTACIONES_PENDIENTES
+    # Persistencia de exportaciones del Creador de Audiolibros cortadas por
+    # falta de cuota o canceladas a medias (sección 3.4 de la planificación
+    # v3.0). El motor de exportación (grabador_audio.py) no toca SQLite —
+    # solo calcula y devuelve el punto de corte; esta capa es quien lo
+    # persiste, respetando la separación de responsabilidades ya acordada.
+
+    def registrar_exportacion_pendiente(
+        self,
+        id_libro: int,
+        modo: str,
+        proveedor: str,
+        punto_corte: Optional[int] = None,
+        capitulo_pendiente: Optional[int] = None,
+        ruta_parcial: Optional[str] = None,
+    ) -> int:
+        with self._conexion() as conexion:
+            cursor = conexion.execute(
+                """
+                INSERT INTO exportaciones_pendientes
+                    (id_libro, modo, proveedor, punto_corte, capitulo_pendiente, ruta_parcial)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (id_libro, modo, proveedor, punto_corte, capitulo_pendiente, ruta_parcial),
+            )
+            return cursor.lastrowid
+
+    def obtener_exportaciones_pendientes(self, id_libro: int) -> list[sqlite3.Row]:
+        with self._conexion() as conexion:
+            return conexion.execute(
+                "SELECT * FROM exportaciones_pendientes WHERE id_libro = ? ORDER BY id",
+                (id_libro,),
+            ).fetchall()
+
+    def obtener_ids_libros_con_exportacion_pendiente(self) -> set[int]:
+        """
+        IDs de todos los libros con al menos una exportación de audiolibro
+        a medias, sin importar el proveedor ni el modo — para poder
+        marcarlos en la Biblioteca y no depender de recordar cuál era el
+        último libro que se estaba exportando.
+        """
+        with self._conexion() as conexion:
+            filas = conexion.execute(
+                "SELECT DISTINCT id_libro FROM exportaciones_pendientes"
+            ).fetchall()
+        return {fila["id_libro"] for fila in filas}
+
+    def eliminar_exportacion_pendiente(self, id_exportacion: int):
+        with self._conexion() as conexion:
+            conexion.execute(
+                "DELETE FROM exportaciones_pendientes WHERE id = ?", (id_exportacion,)
+            )
+
+    def eliminar_exportaciones_pendientes_de_libro(self, id_libro: int):
+        """
+        Limpia cualquier pendiente anterior de este libro antes de arrancar
+        una exportación nueva desde cero, para no acumular registros de
+        intentos ya abandonados junto a los de la exportación actual.
+        """
+        with self._conexion() as conexion:
+            conexion.execute(
+                "DELETE FROM exportaciones_pendientes WHERE id_libro = ?", (id_libro,)
+            )
+    # ANCLAJE_FIN: EXPORTACIONES_PENDIENTES

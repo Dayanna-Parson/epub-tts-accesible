@@ -42,6 +42,18 @@ configuraciones/recientes.json
 configuraciones/favoritos.json
 configuraciones/cache_voces*.json
 
+# Asistente de Biblioteca: historial de conversaciones, plantillas de
+# prompt y exportaciones — todo dato personal del usuario, no contenido de
+# fábrica (a diferencia de pronunciacion.json). "Por defecto" se recrea
+# sola en el primer arranque (gestor_prompts_asistente.listar_prompts), así
+# que no hace falta versionar nada de esta carpeta.
+configuraciones/chat_biblioteca.json
+configuraciones/prompts_asistente.json
+configuraciones/asistente_biblioteca/chat_biblioteca.json
+configuraciones/asistente_biblioteca/activo.json
+configuraciones/asistente_biblioteca/plantillas/
+configuraciones/asistente_biblioteca/*.txt
+
 # ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
 logs/
@@ -62,11 +74,16 @@ build/
 *.spec
 actualizador.bat
 
+# ── Actualizador automático (Fase C): descarga y respaldo en tiempo de ejecución ──
+temp/
+
 # ── Caché de audio (generada en tiempo de ejecución) ─────────────────────────
 app/motor/cache/
 
-# ── Respaldos de proyectos (datos personales) ─────────────────────────────────
+# ── Respaldos de proyectos y biblioteca (datos personales) ────────────────────
 configuraciones/proyectos_backup/
+configuraciones/backups_proyectos/
+configuraciones/backups_biblioteca/
 
 # Copias de seguridad y proyectos locales de usuario
 backups/

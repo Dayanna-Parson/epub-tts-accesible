@@ -42,6 +42,8 @@ elegir qué voces usar mediante un sistema de favoritas,
 
 controlar el consumo de servicios TTS de pago,
 
+consultar al Asistente de Biblioteca (Google Gemini) sobre tu catálogo, con recomendaciones y plantillas de prompt personalizables,
+
 trabajar durante sesiones largas sin perder el contexto.
 
 ---
@@ -52,19 +54,31 @@ La aplicación se organiza de forma clara y predecible:
 
 Pestañas
 
+Biblioteca
+
 Modo Lectura
 
-Modo Grabación
+Creador de Audiolibros
+
+Grabación de Fragmentos
 
 Ajustes
 
 Barra de menú
 
-opciones para abrir libros EPUB,
+opciones para cargar libros EPUB o PDF,
 
 acceso a libros recientes,
 
 posibilidad de borrar el historial.
+
+Biblioteca
+
+importar una carpeta entera o un único libro suelto,
+
+organización por géneros y por sagas/colecciones,
+
+buscador por título o autor.
 
 Modo Lectura
 
@@ -74,7 +88,17 @@ selector de voces (basado en favoritas),
 
 gestión de marcadores mediante diálogos accesibles,
 
-lectura continua con memoria de posición.
+lectura continua con memoria de posición,
+
+soporte de EPUB y PDF.
+
+Creador de Audiolibros
+
+exportación de un libro completo a un único MP3 o dividido por capítulos,
+
+cálculo de presupuesto: caracteres, coste estimado y duración prevista,
+
+exportación en paralelo y reanudación ante cortes de cuota o de conexión.
 
 Todo está pensado para poder usarse únicamente con teclado y lector de pantalla.
 
@@ -188,27 +212,37 @@ cómo preparar contenidos para audiolibros.
 
 ### Estado actual del proyecto
 
-Epub TTS Accesible es una aplicación completa y estable. Versión actual: 2.0.0.
+Epub TTS Accesible es una aplicación completa y estable. Versión actual: 3.0.0.
 
-modo lectura con voces de Azure, Amazon Polly, Deepgram, ElevenLabs y SAPI5 (64 y 32 bits),
+Biblioteca: organización de EPUB y PDF por géneros y sagas, importación de carpetas o de libros sueltos,
 
-modo grabación multivoz con etiquetas de personaje {{@voz}},
+modo lectura con voces de Azure, Amazon Polly, Deepgram, ElevenLabs y SAPI5 (64 y 32 bits), con soporte de EPUB y PDF,
+
+Creador de Audiolibros: exportación de un libro completo o por capítulos, con presupuesto de coste y duración, exportación en paralelo y reanudación ante cortes,
+
+grabación de fragmentos multivoz con etiquetas de personaje {{@voz}},
 
 exportación MP3 a 320 kbps, normalizado a 44 100 Hz,
 
 diccionario de pronunciación para todos los motores,
 
-control de cuota y avisos de gasto por proveedor,
+control de cuota, coste estimado y avisos de gasto por proveedor,
 
 Gestor de Proyectos con árbol jerárquico, papelera y acceso directo a las grabaciones,
 
+Asistente de Biblioteca con IA (Google Gemini): recomendaciones y consultas sobre tu catálogo, con plantillas de prompt personalizables,
+
 divisor de EPUB integrado por capítulos,
 
-12 sonidos contextuales y navegación semántica por encabezados,
+14 sonidos contextuales y resalte en negrita de los encabezados (h1-h6) en el contenido leído,
 
-ajustes avanzados en árbol de navegación y actualizaciones automáticas desde la propia app.
+copias de seguridad automáticas y rotativas de la biblioteca y los proyectos, separadas por tipo,
+
+ajustes avanzados en árbol de navegación y actualizaciones automáticas desde la propia app,
 
 silencio total en la consola al arrancar: NVDA no verbaliza textos técnicos de inicio.
+
+Piper TTS, que figuró como motor local previsto, queda descartado: SAPI5 sigue siendo el único motor local.
 
 ---
 

@@ -1,0 +1,19 @@
+respuesta claude 21
+
+Ahora investigo el bug de "solo se muestra el primer libro añadido a una categoría".
+
+Subido el segundo intento del foco. Ahora, sobre los otros dos:
+
+**Foco al primer elemento (intento 2, ya subido):** Invertí el orden — ahora selecciono el nodo/etiqueta **antes** de llamar a `SetFocus()`, no después. La teoría es que el primer evento de foco que le llega a NVDA importa más que los cambios posteriores. Pruébalo de nuevo. Si **también** falla, te aviso ya mismo: no voy a seguir adivinando a ciegas una tercera vez sin poder probarlo yo misma en Windows — en ese caso lo más honesto será revertir el auto-foco por completo y dejarte solo con el Tab manual que ya tenías, hasta que puedas grabarme un vídeo o sesión de NVDA con los eventos en bruto.
+
+**Menú con opciones ausentes, incluso tras borrar caché — esto ya es raro.** Como el código está confirmado en el archivo y borrar `__pycache__` no lo arregló, necesito verificar algo muy concreto: que la app que abres de verdad está corriendo desde esa copia del repo y no desde otra carpeta duplicada o una instalación distinta. ¿Puedes ejecutar esto en la misma consola donde lanzas la app (con el entorno activado si usas uno) y decirme qué ruta imprime?
+
+```
+python -c "import app.interfaz.pestana_biblioteca as m; print(m.__file__)"
+```
+
+Si la ruta que imprime **no** es tu carpeta `git_repos\epub-tts-accesible`, ahí está el problema (hay dos copias y estás editando/actualizando una pero ejecutando otra).
+
+**Libro añadido a categoría que no aparece — necesito un dato exacto.** Revisé el código de asignación y está bien escrito (no debería duplicar nada ni perder libros). Para no seguir adivinando: la próxima vez que añadas un segundo libro a una categoría y no lo veas, entra al árbol de categorías y mira si **aparecen dos nodos con el mismo nombre** (por ejemplo dos "Distopía" en vez de uno) o solo uno. Eso me dice si se está creando una categoría duplicada en vez de reusar la existente, o si es otra cosa.
+
+**Sobre "Aplicando etiquetas" en silencio — el log que adjuntaste es el mismo de la vez anterior** (mismas fechas de junio, nada de hoy). Para diagnosticarlo bien necesito que hagas la prueba de agrupar por carpeta otra vez y me pases el `app.log` de **esa sesión concreta**, para ver si aparece la línea `[AnunciadorVoz] Verbalizando: Aplicando etiquetas...`.

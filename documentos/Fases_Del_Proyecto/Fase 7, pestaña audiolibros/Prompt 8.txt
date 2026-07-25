@@ -1,0 +1,72 @@
+Tenemos un problema crítico en runtime tras el último commit (6ff1aef) que rompe la interfaz y la accesibilidad. Al intentar desplegar el menú contextual o navegar, la app sufre un crash no controlado. 
+
+Corrige de inmediato los siguientes puntos en sus respectivos archivos:
+
+* Corrección en 'pestana_biblioteca.py' (Línea 1469): Elimina por completo el uso de 'item_creador.SetHelpText()', ya que en wxPython los objetos 'MenuItem' no disponen de ese atributo, provocando un AttributeError fulminante. Configura el texto de ayuda directamente en la instanciación del menú o retíralo para evitar el crash.
+* Reparación del flujo visual: Asegúrate de que, tras eliminar este bloqueo, el contenedor Sizer de 'pestana_creador_audiolibros.py' se renderice por completo, haciendo accesibles todos los sliders de velocidad/volumen, la información del libro y los botones de acción que ahora mismo quedan invisibles para NVDA debido a la ruptura de la inicialización.
+* Blindaje del Tab Cíclico Global: Revisa minuciosamente 'al_navegacion_tab_global' en 'ventana_principal.py' (líneas 176-180). Asegura que el manejo de eventos (wx.NavigationKeyEvent) para Tab y Shift+Tab sea completamente circular, robusto y esté protegido con bloques try-except para que ningún fallo colateral en una pestaña rompa la navegación por teclado de la aplicación.
+
+
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 180, in al_navegacion_tab_global
+    self._mostrar_menu_contextual()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 486, in _mostrar_menu_contextual
+    self._menu_contextual_biblioteca()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 522, in _menu_contextual_biblioteca
+    pb.al_menu_contextual(None)
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 1469, in al_menu_contextual
+    item_creador.SetHelpText(
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MenuItem' object has no attribute 'SetHelpText'
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 180, in al_navegacion_tab_global
+    self._mostrar_menu_contextual()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 486, in _mostrar_menu_contextual
+    self._menu_contextual_biblioteca()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 522, in _menu_contextual_biblioteca
+    pb.al_menu_contextual(None)
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 1469, in al_menu_contextual
+    item_creador.SetHelpText(
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MenuItem' object has no attribute 'SetHelpText'
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 176, in al_navegacion_tab_global
+    self._mostrar_menu_contextual()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 486, in _mostrar_menu_contextual
+    self._menu_contextual_biblioteca()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 522, in _menu_contextual_biblioteca
+    pb.al_menu_contextual(None)
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 1469, in al_menu_contextual
+    item_creador.SetHelpText(
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MenuItem' object has no attribute 'SetHelpText'
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 1469, in al_menu_contextual
+    item_creador.SetHelpText(
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MenuItem' object has no attribute 'SetHelpText'
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 180, in al_navegacion_tab_global
+    self._mostrar_menu_contextual()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 486, in _mostrar_menu_contextual
+    self._menu_contextual_biblioteca()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\ventana_principal.py", line 522, in _menu_contextual_biblioteca
+    pb.al_menu_contextual(None)
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_biblioteca.py", line 1469, in al_menu_contextual
+    item_creador.SetHelpText(
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MenuItem' object has no attribute 'SetHelpText'
+

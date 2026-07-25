@@ -11,6 +11,7 @@ from app.motor.gestor_proyectos import GestorProyectos, TIPOS_PROYECTO
 from app.motor.reproductor_sonidos import (
     reproducir, LIST_NAV, MOVE_UP, MOVE_DOWN, OPEN_FOLDER, CLEAR, CLICK, ERROR, SUCCESS,
 )
+from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
@@ -81,7 +82,6 @@ class VentanaProyectos(wx.Frame):
         # que dos instancias independientes se sobreescriban mutuamente al guardar.
         self._gestor = gestor_proyectos if gestor_proyectos is not None else GestorProyectos()
         self._mapa_nodos = {}           # {TreeItemId → proyecto_id (str uuid)}
-        self._ruta_txt_activo = ruta_txt_activo
         self._foco_previo = foco_previo
         self._proyecto_en_portapapeles: str | None = None  # id del proyecto cortado con Ctrl+X
 
@@ -105,7 +105,6 @@ class VentanaProyectos(wx.Frame):
 
     def _construir_interfaz(self):
         panel_raiz = wx.Panel(self)
-        self._panel_raiz = panel_raiz
         sizer_raiz = wx.BoxSizer(wx.VERTICAL)
 
         # ── Área principal: árbol + detalle ──────────────────────────────
@@ -179,6 +178,8 @@ class VentanaProyectos(wx.Frame):
             "Desvincula el archivo de texto seleccionado de este proyecto. "
             "El archivo en disco no se borra."
         )
+        aplicar_icono_boton(self.btn_añadir_txt, "añadir", "Añadir TXT")
+        aplicar_icono_boton(self.btn_quitar_txt, "eliminar", "Quitar TXT")
         sz_btn_archivos.Add(self.btn_añadir_txt, 0, wx.RIGHT, 8)
         sz_btn_archivos.Add(self.btn_quitar_txt, 0)
 
@@ -223,6 +224,8 @@ class VentanaProyectos(wx.Frame):
             "Cierra el gestor y devuelve el foco a la ventana principal. "
             "También puedes pulsar Escape."
         )
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar proyecto")
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", "Cerrar")
 
         # Etiqueta de estado — retroalimentación sin diálogos modales
         self.lbl_estado = wx.StaticText(panel_raiz, label="")
@@ -894,6 +897,8 @@ class VentanaProyectos(wx.Frame):
         )
         btn_ok     = wx.Button(panel, wx.ID_OK,     label="Crear proyecto")
         btn_cancel = wx.Button(panel, wx.ID_CANCEL, label="Cancelar")
+        aplicar_icono_boton(btn_ok, "nuevo", "Crear proyecto")
+        aplicar_icono_boton(btn_cancel, "cerrar", "Cancelar")
         sz_btn = wx.BoxSizer(wx.HORIZONTAL)
         sz_btn.Add(btn_ok, 0, wx.RIGHT, 8)
         sz_btn.Add(btn_cancel, 0)

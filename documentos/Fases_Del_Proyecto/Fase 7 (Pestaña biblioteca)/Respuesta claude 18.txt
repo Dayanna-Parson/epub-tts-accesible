@@ -1,0 +1,60 @@
+Respuesta claude 18
+
+Has dicho: te sirve?
+content.opf
+te sirve? o quieres que pruebe con otro mas? y lo siento, pero, sigo sin entender lo del estado... A ver, que es lo que se suele hacer' o lo que hace bookworm en este caso u otra similar?
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Sí, esto es justo lo que hacía falta ver.
+Sí, esto es justo lo que hacía falta ver. Tu diagnóstico anterior era certero, pero el problema real es distinto (y más de fondo) de lo que ambos pensábamos:
+<dc:creator id="epub-creator-1"></dc:creator>
+Copiar código
+No hay ningún <dc:title> en este archivo, y <dc:creator> existe pero está vacío. No es un problema de cómo mi código busca los datos — es que el EPUB en sí no trae ni título ni autor guardados dentro. Esto es típico de ciertos conversores/generadores de EPUB (dejan solo un esqueleto con fecha, idioma e ID, y el role="aut" sin nombre). Mi corrección de ayer no puede arreglar esto porque no hay dato que extraer.
+Lo que sí tienes es la carpeta: Lorris el elfo - Laura Gallego. Ese patrón "Saga - Autor" en el nombre de carpeta es información real que si está presente en (casi) todas tus carpetas de sagas, podría usarse como respaldo cuando el EPUB no trae autor. Antes de tocar código: ¿tus ~130 carpetas siguen ese mismo patrón "Algo - Autor" de forma consistente, o varía mucho (algunas solo tienen el nombre de la saga, otras el autor primero, etc.)? Si es bastante consistente, meto un fallback que lo use; si no, sería peor el remedio porque asignaría autores incorrectos a libros sueltos.
+ 
+Sobre lo de los estados, vamos con un ejemplo sin tecnicismos, como funcionan las "estanterías" de Goodreads o StoryGraph (que es el modelo en que me basé):
+• Tienes tres estanterías posibles para un libro: Pendiente (quiero leerlo), Leyendo ahora, Leído. Un libro está en máximo una de las tres a la vez — por eso son excluyentes.
+• "Quitar estado" no es una cuarta estantería nueva, es simplemente sacar el libro de las tres, dejarlo "sin estantería", tal como estaba antes de que existiera esta función. Sirve para dos casos reales:
+1. Te equivocaste al marcarlo (lo pusiste como "Leyendo" sin querer) y quieres deshacerlo, no cambiarlo a otra cosa igual de incorrecta.
+2. Simplemente no quieres que ese libro cuente en ningún filtro de estado — por ejemplo, un libro de consulta que ni "lees" ni "terminas", solo consultas de vez en cuando.
+Calibre no tiene este sistema de estados de fábrica (necesita un plugin). Bookworm (el lector de GNOME) tampoco. El que sí lo tiene, y es el modelo que copié, es Goodreads/StoryGraph: ahí cada estantería tiene también la opción de "quitar de esta estantería" sin moverlo a otra.
+Si te sigue pareciendo confuso o innecesario, puedo simplificarlo quitando esa cuarta opción y dejando que "Pendiente" sea el estado por defecto al que vuelve un libro — dime cuál prefieres y lo dejo así.
+Mostrar acciones del mensaje
+Has dicho: no se, me parece algo confuso, y además, mi app, sirve para leer.
+no se, me parece algo confuso, y además, mi app, sirve para leer.... y lo otro... Pues, normal mente todos los archivos tienen en el título (cuando te hablo de título es el de fuera, no el de dentro, y con autor también) tiene en el archivo el título y autor. y o a veces también está en la carpeta
+Mostrar acciones del mensaje
+Claude ha respondido: Ahora veo procesararchivo para añadir el respaldo de autor desde nombre de archivo/carpeta.
+Ejecutado un comando, leer 2 archivos
+Ahora veo _procesar_archivo para añadir el respaldo de autor desde nombre de archivo/carpeta.
+Leer un archivo, ejecutado un comando
+Ahora implemento el respaldo de autor desde el nombre de archivo o carpeta, con patrón "Título - Autor".
+Editadoescaner_biblioteca.py+28-1
+Ahora simplifico el sistema de estados: elimino "Quitar estado de lectura" y convierto cada opción en un toggle (si ya está en ese estado, lo quita; si no, lo pone).
+Ejecutado un comando, leer un archivo, editado un archivo
+Ahora actualizo el menú contextual para usar el nuevo toggle, con etiquetas dinámicas tipo "Marcar/Quitar de..." (igual que ya hace favorito), y quito la opción "Quitar estado de lectura".
+Leer un archivo, editado un archivo, ejecutado un comando
+Confirmed — mutual exclusion only applies when setting True, exactly matching the toggle behavior. Let's fix the "pendientes" grammar wording, then verify and commit.
+Leer un archivo, editado un archivo
+Ahora actualizo también la apertura automática de libro, que ya marcaba leyendo_ahora=True directamente (eso sigue igual, no toggle). Verifico y ejecuto pruebas.
+Ejecutadoun comando
+Bien, ya no quedan referencias al método viejo. Ahora verifico el fallback de autor con un caso sintético que replica tu OPF real.
+Ejecutadoun comando
+Funciona: reproduce tu caso exacto — sin dc:title real y sin dc:creator con texto, ahora recupera "Laura Gallego" de la carpeta. También verifico el caso donde el autor está en el propio nombre del archivo.
+Ejecutadoun comando
+Encontré un bug en mi propio fix: _titulo_desde_nombre_archivo ya reemplaza los guiones por espacios, así que cuando reviso el patrón "Título - Autor" en el nombre del archivo, el guion ya no existe. Corrijo usando el nombre crudo del archivo.
+Leer un archivo, editado un archivo
+Ahora vuelvo a verificar todos los casos.
+Ejecutado 2 comandos
+Only used internally. Let me refactor to separate title from author cleanly when the autor comes from the filename split.
+Leer un archivo, editado un archivo
+Ahora actualizo _procesar_archivo para usar la nueva función y separar correctamente título/autor.
+Leer un archivo, editado un archivo
+Ahora reverifico todos los casos, incluido este bug corregido.
+Ejecutadoun comando
+All four cases correct now. Let's also re-run the earlier Bug A/D verification quickly to make sure nothing else broke, then commit.
+Ejecutado 3 comandos
+Ya está subido. Resumen de lo que cambié con tu feedback:
+Sobre los estados de lectura: tenías razón, era una complicación innecesaria. Quité "Quitar estado de lectura" del menú. Ahora cada opción (Pendiente / Leyendo ahora / Leído) funciona como un interruptor — igual que ya funciona "favorito": si el libro no está en ese estado, la opción dice "Marcar como..." y lo activa; si ya está, dice "Quitar de..." y lo desactiva. Un solo clic, sin cuarta opción confusa.
+Sobre "Autor: —": tu OPF real confirmó el problema: literalmente no tiene <dc:title> y <dc:creator> está vacío — no es algo que se pueda "extraer mejor", el dato no existe dentro del EPUB. Como me dijiste que normalmente el título y el autor sí están en el nombre del archivo o de la carpeta, añadí un respaldo: cuando el EPUB no trae autor, la app ahora busca el patrón "Título - Autor" primero en el nombre del archivo, y si no está ahí, en el nombre de la carpeta contenedora (tu caso: Lorris el elfo - Laura Gallego). Lo probé con tu caso exacto y con varias variantes (autor en archivo, autor en carpeta, metadatos completos que no deben tocarse, y archivos sin ningún guion) — todos correctos.
+Para que veas el efecto real necesitarías volver a escanear esa carpeta (o borrar y reimportar esos libros) en tu máquina, ya que los que están en la base de datos actual ya se guardaron con "—" y no se recalculan solos.
+¿Seguimos con la prueba en NVDA de todo lo de hoy antes de cerrar la fase, o quieres que revise algo más primero?

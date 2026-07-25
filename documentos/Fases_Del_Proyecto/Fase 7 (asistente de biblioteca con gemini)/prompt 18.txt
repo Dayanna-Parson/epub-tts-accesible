@@ -1,0 +1,21 @@
+Oye, Claude, lo he estado probando todo y todo funciona muy bien. Solo que en los ajustes, en el asistente de gemini, en la sección de temperatura, me lo lee de esta manera. No sé por qué va de 10 en 10 y lo lee así: 30, 40, 50... pero no me lee para qué sirve cada opción. Además, cuando cambio de valor, si pongo uno más alto o más bajo, no me lee la descripción que según tú habías puesto. Aquí te pego el log de NVDA (Temperatura (creatividad de las respuestas):  deslizador  30
+40
+50
+60
+70
+80
+90
+100
+90
+80
+70
+60
+50
+40
+30
+20
+10
+0
+10
+20
+30) ¿Porqué antes me leía los números de otra forma?. Y no es que salgan duplicados ni nada, es solo que estoy moviendo las flechas para enseñarte cómo funciona.

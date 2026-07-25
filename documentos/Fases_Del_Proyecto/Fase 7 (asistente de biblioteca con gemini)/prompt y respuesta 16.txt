@@ -1,0 +1,57 @@
+Genial muchísimas gracias sobre los zip que se crean en ambas carpetas ahora por qué los nombres son tan largos tienen muchos números y son un poco engorroso para NVDA podrías acortarlos algo más corto y que de un solo vistazo pueda saber la fecha y todo eso me refiero al nombre del archivo y oye sería buena idea también poner en los ajustes el apartado de temperatura para modificarla o así está bien yo he hecho varias pruebas y la verdad que la precisión ha mejorado bastante ya no inventa tantas obras ficticias digamos así ya nos inventa datos bueno alguno que otros si todavía hay alguno hay algún autor o algún libro que se sigue inventando pero bueno en fin sería bueno poner eso en ajustes para que el usuario también pueda elegir la temperatura que quiera o mejor dejarlo así como está
+Y sobre los iconos que faltan, pues crees que tampoco hace falta ponerlos
+Mostrar acciones del mensaje
+Claude ha respondido: Now let's add the temperature control.
+Leer 3 archivos, editado un archivo, ejecutado 3 comandos+6-1
+Now let's add the temperature control. First config_rutas.py and cliente_gemini.py:
+Leer 2 archivos, editado 2 archivos, ejecutado un comando+13-5
+Now check where datos_gemini is defined earlier in enviar_mensaje to confirm the variable is in scope:
+Ejecutadoun comando
+Good, in scope. Now let's add the UI control in pestana_ajustes.py:
+Editado pestana_ajustes.py, ejecutado 5 comandos+17-0
+Todo pusheado. Resumen:
+Nombres de backup: acortados de proyectos_20260724_225107.zip a proyectos_2026-07-24_22h51m.zip — quité los segundos y separé con "h"/"m" en vez de una tira de 14 dígitos seguidos. NVDA lo lee mucho más claro ("2026 guion 07 guion 24, 22 h 51 m") y de un vistazo se ve la fecha y hora exactas. El orden cronológico al listar sigue siendo correcto.
+Temperatura de Gemini: la añadí en Ajustes → Credenciales y API Keys → Google Gemini, justo debajo del selector de modelo. Es un control de 0.0 a 1.0 en pasos de 0.1, con el valor de fábrica en 0.4 (el que ya tenías funcionando bien). Me pareció mejor idea añadirla que dejarlo fijo: como bien dices, todavía se cuela algún autor o libro inventado de vez en cuando, y darte el control para bajarla más (hacia respuestas más literales) o subirla un poco si la notas demasiado rígida me parece razonable — sin tocarla, se sigue comportando exactamente igual que hasta ahora.
+Iconos: sin novedad, coincido contigo — los que quedan sin icono ("Conseguir clave...", "Escuchar muestra...", "Renombrar"...) no tienen un icono honesto en el ArtProvider de wx, así que mejor dejarlos solo con texto que ponerles uno que confunda. Se quedan como están.
+Mostrar acciones del mensaje
+Has dicho: Vale, y sobre el selector de modelos de Géminis, crees que es mejor dejarlo así en automático como está también sería buena idea poner un bueno que se pueda el…
+Vale, y sobre el selector de modelos de Géminis, crees que es mejor dejarlo así en automático como está también sería buena idea poner un bueno que se pueda elegir el modelo que quiera usar en ese momento porque el repo que te pasé del complemento de NVDA de visión Assistant Pro hace justo eso puedes elegir el modelo que quieras y hay un botón que es para actualizar todos los modelos y creo que también trae los nuevos modelos que hayan añadido. Podrías mirar a ver cómo lo hace en el complemento y también se me está ocurriendo que al igual que hace el resto de proveedores con las voces que cada vez que hay nuevas voces se actualiza y salta un diálogo, pues diciendo que se han actualizado, no podrías hacer lo mismo, pero con los modelos pero en veces que salte un diálogo o sea que salte, pero me refiero en vez de en que en ajustes como pasa con las otras voces que pongan un apartado para los nuevos modelos como en realidad hay pocos modelos, pues no es necesario y yo creo que con dejarlos así en el mismo cuadro combinado pues ya está dime primero qué te parece y si quieres pues ya me vas contando crees que falta algo más por arreglar o algún detalle que se nos haya pasado de la interfaz o del código que digas esto creo que deberíamos mirarlo así y sobre la librería Pix tres como sabes bueno creo que solo la usamos para grabar no es para las notificaciones que dice esa P5, por ejemplo las las notificaciones de la carpeta en las biblioteca o cosas. Así crees que deberíamos reemplazarlas también por el tres o o por qué deberíamos seguir usando también la otra librería dime qué me recomiendas o qué es lo mejor porque yo no tengo ni idea
+Mostrar más
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: 1.
+Ejecutado 5 comandos, leer 2 archivos
+1. Selector de modelo de Gemini
+Buena noticia: esto ya lo tienes hecho, sin que hiciera falta nada nuevo. El botón "Comprobar clave y listar modelos Gemini" (justo al lado del selector) hace exactamente lo que describes de Vision Assistant Pro: descarga la lista real de modelos de tu cuenta desde Google y la mete en el combo, sustituyendo la lista anterior. Y el combo ya no es solo "Automático": en cuanto compruebas la clave, aparecen ahí todos los modelos reales (gemini-2.5-flash, gemini-2.5-pro, etc.) y puedes elegir uno concreto — el código respeta esa elección exacta, sin caer al modo automático. Así que no hace falta tocar nada aquí.
+2. Aviso de modelos nuevos
+De acuerdo contigo: con pocos modelos y el botón de arriba disponible cuando quieras, montar todo un mecanismo de "modelo nuevo detectado" con diálogo aparte (como el de voces) sería sobre-ingeniería para un problema pequeño. Se queda como está.
+3. ¿Algo más pendiente?
+Repasando todo lo tocado esta fase, no veo nada más que me preocupe ahora mismo. Lo único que noté de pasada (ni siquiera te lo iba a mencionar por ser tan menor) es que los nombres de modelo en el combo ya salen limpios, sin el prefijo técnico "models/" — así que ni eso hace falta arreglar. Si en tus pruebas te sale algo raro, dímelo y lo miro.
+4. pyttsx3 vs accessible_output3
+Aquí sí te voy a corregir un dato: pyttsx3 (a través de AnunciadorVoz) no se usa solo para grabación — es el motor de casi todos los anuncios de la pestaña Biblioteca ahora mismo: "Categoría renombrada", "Etiqueta creada", "Escaneando carpeta...", "Procesando 5 de 200 libros...", etc. Es una librería aparte de la de grabación/lectura con SAPI5.
+La diferencia técnica real, y por qué no es un caso claro de "reemplázalo todo":
+• pyttsx3 (AnunciadorVoz): lanza un proceso de Python nuevo por cada frase (por un bug conocido de pyttsx3+SAPI5). Es más lento, pero tiene una ventaja concreta: si llegan varios anuncios seguidos muy rápido (por ejemplo, la barra de progreso al escanear cientos de libros), descarta los anuncios intermedios y solo dice el último — así NVDA no se queda leyendo "5 de 200... 6 de 200... 7 de 200..." con retraso creciente hasta terminar minutos después del escaneo real.
+• accessible_output3: habla directo al lector de pantalla, sin ese descarte de mensajes intermedios. Para un anuncio suelto (una acción puntual, tipo "Categoría eliminada") es perfecto, más rápido y más limpio. Pero si lo metiera tal cual en un bucle de progreso rápido, NVDA se pondría a la cola TODOS los valores intermedios uno detrás de otro, y acabarías escuchando el progreso con retraso, no en tiempo real.
+Mi recomendación: un cambio mixto, no todo o nada.
+• Los anuncios puntuales (renombrar, crear, eliminar, mover categorías/etiquetas — la mayoría de las llamadas a self._voz.hablar(...)) los pasaría a accessible_output3, por consistencia con el resto de la app y porque ahí no hay riesgo de acumulación.
+• Los anuncios de progreso en bucle (escaneando carpeta, procesando X de Y libros, aplicando etiquetas) los dejaría con pyttsx3, precisamente por ese descarte de mensajes intermedios que evita el retraso.
+¿Quieres que haga ese cambio mixto en pestana_biblioteca.py, o prefieres dejarlo todo como está por ahora?
+Mostrar acciones del mensaje
+Has dicho: Perfecto, me parece muy bien oye me encanta todo lo que me has dicho si haz ese cambio mixto creo que va a ser que la app vaya mucho más rápida no crees tambié…
+Perfecto, me parece muy bien oye me encanta todo lo que me has dicho si haz ese cambio mixto creo que va a ser que la app vaya mucho más rápida no crees también me impresiona lo poquito que pesa la app cuando la cumplimos en un SIP la verdad que pesa bastante poco para lo pesado o sea para lo grande que es y todas las cosas que tiene está muy bien optimizada muy bien muy buen trabajo y otra pregunta pero esto no voy a hacer quizá la fase siguiente crees que sería buena idea también hacer la app instalable o mejor la dejo así portable como está
+Mostrar acciones del mensaje
+Claude ha respondido: Good, still in place for the progress-loop use.
+Ejecutado 5 comandos, leer pestana_biblioteca.py
+Good, still in place for the progress-loop use. Let's compile and check for any leftover issues:
+Ejecutado un comando, leer pestana_biblioteca.py
+Good. Now let's finalize with a commit:
+Ejecutado 2 comandos
+Sobre la velocidad: notarás un pequeño extra de rapidez en cada acción puntual (renombrar, crear, eliminar categoría/etiqueta, etc.), porque antes cada una de esas frases lanzaba un proceso de Python nuevo solo para decirla, y ahora habla directo con NVDA sin ese paso. No esperes un cambio dramático en el conjunto de la app —el resto del rendimiento (lectura, exportación, etc.) no dependía de esto—, pero sí deberías notar la interfaz un pelín más ágil al trabajar en Biblioteca.
+Sobre el tamaño del portable: gracias, la verdad es que cuidar bien qué entra en el paquete (solo bin/, recursos/ y la documentación imprescindible, nada de código fuente ni carpetas de desarrollo) es justo lo que mantiene el zip ligero pese a todo lo que hace la app.
+Sobre instalable vs portable, mi opinión (para cuando llegues a esa fase, no hace falta decidirlo ahora):
+Yo me quedaría en portable. Razones concretas:
+• Ya tienes un actualizador propio funcionando dentro de la app (la Fase C que mencionamos antes) — un instalador tradicional (Inno Setup, NSIS...) no te aporta gran cosa ahí, solo duplicaría ese trabajo.
+• Un instalador sin firmar dispara el aviso de SmartScreen de Windows ("Editor desconocido") la primera vez, que con NVDA se lee pero puede generar dudas o sustos a un usuario que no lo esperaba; el portable evita ese paso.
+• El asistente de instalación (el wizard con "Siguiente, Siguiente, Instalar") es una superficie de accesibilidad nueva que habría que probar aparte con NVDA — un punto más de fricción y de posible fallo que ahora mismo no tienes.
+• Lo único que ganarías de verdad es un acceso directo en el Menú Inicio y una entrada en "Agregar o quitar programas" — cómodo, pero no imprescindible si el portable ya se abre con un .bat.
+Si más adelante quisieras distribuirla en algún sitio que exija instalador (Microsoft Store, un repositorio de software, etc.) sería otra historia, pero para uso directo desde tu web yo seguiría con portable.

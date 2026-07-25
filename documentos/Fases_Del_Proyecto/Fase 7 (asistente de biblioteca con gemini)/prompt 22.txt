@@ -1,0 +1,5 @@
+prompt 22
+
+¿Te acuerdas de este texto que pusimos en la pestaña de lectura? Cuando la abrimos, sale esto cuando no hay nada cargado. Pues bueno, hay que actualizarlo porque está desactualizado. Y ya que estamos en esto, fíjate si absolutamente todas las descripciones, los textos de ayuda, las etiquetas accesibles, absolutamente todo eso está actualizado o si falta algo por actualizar. ¿Sabes a qué me refiero, no? Espero que sí.
+
+¡Bienvenido a Epub TTS! Tu lector de EPUB con soporte para voces de alta calidad (Azure, Polly y ElevenLabs) y voces locales SAPI 5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1, 2 y 3 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!

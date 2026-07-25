@@ -1,0 +1,63 @@
+Prompt y respuesta claude 5
+
+espera, pero, como has visto en el código, actualmente se creean dos carpetas en la raíz de la carpeta de mi app. grabaciones epub TTS (Que allí se guardan o bien por fragmentos, si grabamos por fragmentos. y en otra carpeta a parte, pues el audio completo, ya tenga etiquetas varias o solo una) y otra que es la carpeta proyectos, que va guardando todos los proyectos que vamos creando, o en los que vamos trabajando. y en la pestaña grabación, puedes abrir la carpeta inmediatamente, pues pulsando el botón abrir carpeta de gravaciones, y en la ventana de proyectos, pues, si pulsas control enter, o en el menú contextual, pues también puedes ir directamente a la carpeta del proyecto seleccionado. Que opinas de esto? y que mas me habías preguntado?
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Ya lo veo confirmado: existe CARPETARAIZGRABACIONES (Grabaciones_Epub-TTS/) con estructura <Nombre del libro>/capitulos/ para fragmentos, y otra para audio com…
+BuscadoGrabaciones|grabaciones epub|abrir carpeta|Abrir carpeta"
+Ya lo veo confirmado: existe CARPETA_RAIZ_GRABACIONES (Grabaciones_Epub-TTS/) con estructura <Nombre del libro>/capitulos/ para fragmentos, y otra para audio completo. Esto cambia mi recomendación anterior.
+Reculando sobre lo que dije antes: tienes razón en pararme aquí. Ya existe un patrón consolidado y funcionando — carpeta fija en la raíz del portable + botón "Abrir Carpeta" + acceso directo desde Proyectos con Ctrl+Enter/menú contextual. No hay que inventar nada nuevo, solo extender ese mismo patrón al Creador de Audiolibros, no crear un tercer sistema distinto.
+Propuesta concreta: el Creador de Audiolibros reutiliza CARPETA_RAIZ_GRABACIONES como raíz, con una subcarpeta propia dentro para no mezclar fragmentos de Grabación con audiolibros completos:
+Grabaciones_Epub-TTS/
+├── <Nombre del libro>/capitulos/     ← ya existe (Grabación, por fragmentos)
+├── <Nombre del libro>/completo/       ← ya existe (Grabación, audio completo con etiquetas)
+└── Audiolibros/<Título del libro>/    ← NUEVO, exclusivo del Creador de Audiolibros
+    ├── Título del libro.mp3           (si es modo "completo")
+    └── 1. Capítulo uno.mp3, 2. ...    (si es modo "por capítulos")
+Copiar código
+Mismo botón "Abrir Carpeta" en la pestaña Creador de Audiolibros, mismo patrón de acceso rápido. Y si el libro se exportó viniendo de la Biblioteca, se guarda la ruta de esa exportación en libros.metadatos_json (o en exportaciones_pendientes si quedó parcial por cuota) para que desde la Biblioteca también se pueda "Abrir carpeta de audiolibro" vía menú contextual — coherente con el resto de la app.
+Retiro por completo lo de "carpeta elegida por el usuario cada vez" y lo de moverlo a ajustes.json — no aplica, ya tienes resuelto ese problema desde la v2.0 y solo hay que replicarlo.
+Y respondiendo a lo que preguntabas antes de esta duda: te había preguntado si querías que dejásemos ya un documento único de referencia con todo lo cerrado en esta sesión, o si seguíamos directo con la Fase D (orden de pestañas, nombre comercial, i18n/winget). ¿Cuál de las dos prefieres, o ambas?
+Mostrar acciones del mensaje
+Has dicho: y te parece bien lo de este método o sistema de carpetas?
+y te parece bien lo de este método o sistema de carpetas? a, si, sigamos con la fase b, y cuando terminemos todas las fases, pues, ya generamos el documento completo antes de escribir código, y lo mas emocionante, que es probar!
+Mostrar acciones del mensaje
+Claude ha respondido: Sí, me parece muy buen sistema — es predecible, coherente con lo que ya tienes, y el usuario nunca tiene que pensar dónde buscar sus archivos.
+Sí, me parece muy buen sistema — es predecible, coherente con lo que ya tienes, y el usuario nunca tiene que pensar dónde buscar sus archivos. Lo doy por cerrado tal cual lo planteé arriba.
+Fase B ya la dejamos cerrada (Creador de Audiolibros, presupuesto, cuota insuficiente, actualizador). Lo único que queda pendiente de tu lista original es la Fase D: distribución de pestañas, nombre comercial, i18n y Winget — sigo con eso.
+Fase D — Orden y distribución de pestañas
+Con la Biblioteca ya diseñada como puerta de entrada y el puente directo "Enviar a Creador de Audiolibros" que resolvimos antes, el orden lógico de notebook queda:
+1. Biblioteca (entrada principal, filtra y lanza a Lectura o al Creador)
+2. Lectura (consume libros de la Biblioteca)
+3. Creador de Audiolibros (consume libros de la Biblioteca — adyacente a ella conceptualmente, aunque en el notebook quede en posición 3, ya no importa por el atajo directo)
+4. Grabación de Fragmentos (flujo independiente, multivoz por etiquetas, no depende de la Biblioteca)
+5. Ajustes (siempre al final, como ya tienes)
+Esto resuelve el problema que señaló Gemini (saltar entre pestañas lejanas) sin depender del orden físico, gracias al menú contextual — así que no hace falta forzar una reordenación agresiva que rompa la costumbre que ya tienes con Ctrl+Tab.
+Nombre comercial
+De los barajados (TifloReader TTS, TifloVoice, Narrify Studio, Vozify EPUB, AuraEpub), mi valoración rápida: los que incluyen "Tiflo" refuerzan tu marca personal (TifloTutos) y dejan claro el propósito de accesibilidad de un vistazo — coherente con quién eres y a quién le hablas. Los otros tres son más genéricos/comerciales pero pierden esa conexión inmediata. Si el objetivo es Winget/distribución amplia, un nombre reconocible y ligado a tu marca ya establecida pesa más que sonar "startup". Mi favorito sería TifloReader TTS, pero es una decisión de marca tuya, no técnica — dime si quieres que la cerremos ahora o la dejamos abierta en el documento final como pendiente.
+i18n con gettext
+• Todas las cadenas de UI se envuelven en _("texto"), usando el gettext estándar de Python (sin dependencias nuevas, ya viene en la librería estándar).
+• Estructura: locale/es/LC_MESSAGES/app.po (idioma base, ya existe implícito) y locale/en/LC_MESSAGES/app.po como primer idioma adicional preparado para colaboradores.
+• Detección de idioma de Windows al arrancar (locale.getdefaultlocale() o wx.Locale), con fallback a español si no hay traducción disponible — nunca falla a un idioma en blanco.
+• Importante para tu regla "todo en español" en el código: _("texto") envuelve cadenas visibles al usuario, nunca nombres de variables/funciones/logs internos — el código sigue siendo 100% español como siempre, esto solo afecta a lo que ve el usuario final.
+• Esto es trabajo transversal (toca todos los archivos de interfaz/), lo dejaría como última tarea de la v3.0, después de que toda la UI nueva (Biblioteca, Creador de Audiolibros, Asistente Gemini) esté ya construida y estable — envolver cadenas de código que aún va a cambiar es trabajo perdido.
+Winget
+• Manifiesto YAML estándar (installer.yaml, locale.yaml, version.yaml) apuntando al .exe/instalador que ya generas para el portable, alojado en el release de GitHub.
+• No requiere tocar el código de la app en absoluto — es metadata externa en un repo de Microsoft (winget-pkgs), tarea de empaquetado/publicación, no de arquitectura. La dejaría como el último paso, literal, cuando la v3.0 esté publicada y estable.
+Con esto quedan cerradas las 4 fases. ¿Preparo ya el documento único de referencia con todo lo decidido en la sesión?
+Mostrar acciones del mensaje
+Has dicho: vale, lo único, en que hay que darle mas vueltas es en el nombre.
+vale, lo único, en que hay que darle mas vueltas es en el nombre. Porque creo que existe un aparato que me parece que se llama tifloreader, y que sirve para leer libros... Pero, que nunca he visto... Pero, claro, mi app, precisamente sencilla no es! y abarca muchísimo, y si te paras a pensarlo, es única en este sector!!!
+Mostrar acciones del mensaje
+Claude ha respondido: Buen punto de parar ahí — si existe un dispositivo físico llamado TifloReader para lectura de libros, usar ese nombre generaría confusión de marca inmediata (b…
+Buen punto de parar ahí — si existe un dispositivo físico llamado TifloReader para lectura de libros, usar ese nombre generaría confusión de marca inmediata (búsquedas cruzadas, gente pensando que es software para ese hardware, o peor, quejas de la otra marca). Mejor descartarlo del todo.
+Pensando en lo que realmente es tu app —no un lector simple, sino un estudio completo: biblioteca, lectura, multivoz por etiquetas, creación de audiolibros, varios motores de nube + local, asistente con IA— el nombre debería transmitir "estudio/suite", no "lector". Algunas direcciones:
+Con tu marca (Tiflo-), evitando la palabra "reader":
+• TifloVoice — ya estaba en tu lista, corto, memorable, y "Voice" cubre tanto lectura como grabación/multivoz sin limitarse a "leer".
+• TifloStudio — comunica bien que hay creación (Creador de Audiolibros, Grabación), no solo consumo pasivo.
+• TifloForge (herramienta que "forja" audiolibros) — más distintivo, pero quizás menos inmediato para quien no habla inglés.
+Sin depender de "Tiflo-", pensando en el alcance real (biblioteca + estudio de voz):
+• Narrify Studio — ya estaba en tu lista, "Studio" encaja con lo que la app realmente hace ahora (no es solo un lector, es un estudio de producción de audio).
+• Vozteca o Vocalia — más comercial/genérico, quizás demasiado alejado de tu identidad de marca TifloTutos.
+Mi recomendación honesta: dado que tu audiencia te conoce por TifloTutos y quieres que el nombre comunique inmediatamente "esto es para personas ciegas, hecho por alguien de los nuestros", yo iría con TifloVoice o TifloStudio — ambos evitan el choque con el dispositivo, y "Studio"/"Voice" describen mejor el alcance real (biblioteca + lectura + multivoz + creación) que "Reader", que suena a solo-lectura.
+¿Quieres que lo dejemos decidido ya entre esas opciones, o prefieres dejarlo como punto abierto en el documento final y decidirlo con calma después, sin bloquear el resto del diseño?

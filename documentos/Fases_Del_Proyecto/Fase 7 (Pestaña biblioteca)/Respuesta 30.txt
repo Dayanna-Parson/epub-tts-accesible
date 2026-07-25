@@ -1,0 +1,11 @@
+Respuesta 30
+
+Tienes razón, me equivoqué con lo de NVDA+F7 — no aplica aquí, era una mala comparación mía y la retiro. Y tu forma de navegar el menú (Shift+F10, flechas, flecha derecha para submenús) es exactamente la normal, ningún problema con eso.
+
+Encontré algo que puede ser la pista real: los dos controles que fallan (árbol de géneros y listado de etiquetas) están **metidos dentro del subnotebook** (la subpestaña Géneros/Sagas). El único que funciona bien (el listado de libros) **no** está dentro de ningún notebook, es un control normal del panel. Esa diferencia de posición es sospechosa.
+
+Antes de seguir investigando el código, necesito confirmar algo muy concreto y sencillo:
+
+Justo **antes** de pulsar Shift+F10 sobre el árbol o sobre el listado de etiquetas — cuando te mueves con las flechas justo antes de abrir el menú — **¿qué te dice NVDA?** ¿Te lee el nombre de una categoría o etiqueta (por ejemplo "Fantasía" o "Alcatraz - Brandon Sanderson"), o te dice otra cosa, como "Géneros, pestaña" o algo relacionado con la pestaña en sí, no con un elemento de la lista?
+
+Y una pregunta aparte, para no dar nada por hecho: cuando probaste esto último, ¿ya habías hecho `git pull` para traer el arreglo que subí para el árbol (el que enlaza Shift+F10 ahí), o el log/prueba que me pasaste es de antes de bajar ese cambio?

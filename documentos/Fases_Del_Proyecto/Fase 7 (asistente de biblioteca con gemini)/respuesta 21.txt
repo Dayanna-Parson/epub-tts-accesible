@@ -1,0 +1,63 @@
+respuesta 21
+
+Genuine duplicate import. Let's fix it and check the unused exception var:
+
+Now `cliente_polly.py`'s unused boto3 check import:
+
+Now check `grabador_audio.py`'s unused `abortada` variable — this could be a real logic bug:
+
+Now let's use it in `pestana_creador_audiolibros.py`'s `_finalizar_exportacion_completa`:
+
+Now `pestana_grabacion.py`'s unused imports:
+
+Now `pestana_ajustes.py`'s unused imports:
+
+Good, within that anchor. Let's remove the two dead imports:
+
+Now remove the unused `listmix` import:
+
+Now `ventana_principal.py`'s unused `webbrowser` import and unused exception var:
+
+Now update `al_abrir_acerca_de`:
+
+Good — `migrar_archivos_config` is actually used (just outside `app/`, which vulture didn't scan). Not dead code; false positive. Let me re-check the remaining candidates against the whole repo, not just `app/`:
+
+Confirmed dead — let's remove the whole class:
+
+Now let's check `NUM_PESTANAS` and `al_abrir_readme` in `ventana_principal.py`:
+
+Now `al_abrir_readme`:
+
+Now let's run a full compile check across everything touched:
+
+All 91 tests pass. Now let's check `git status` and review the diff before moving to the documentation review pass:
+
+Both already list five engines below the count — just the number word is stale. Fixing both.
+
+Now let me do a final skim of the remaining docs for other stale claims — checking for other numeric counts, "SAPI5" without Deepgram mentions, or references to removed code.
+
+Found a real stale claim: README.md's "Estado actual" section claims "navegación semántica por encabezados" (semantic header navigation) as a current feature — but that's the H/Shift+H mechanism that never worked and was removed. Fixing it.
+
+Now checking the same "navegación semántica" phrase elsewhere and doing a last sweep for other stale claims across the remaining docs.
+
+Now fixing VISION_PERSONAL.md's changelog line claiming the header-navigation feature worked in v2.0.0.
+
+Now checking ayuda.html for the same stale "navegación semántica por encabezados" claim, plus a broader final sweep.
+
+Good — no other stale header-navigation claims. That DEVELOPMENT.md mention is unrelated (PDF page-offset cleaning). Let me do one last broad check across everything for other numeric/factual drift before wrapping up.
+
+Good — these three are all under historical "hasta v2.0.0" changelog sections describing what the sound count was *at that time*, which is accurate. No fix needed there. The document audit looks complete. Now committing.
+
+Terminada la auditoría "minuciosa" de código y documentación. Recuento completo, sin PR a main (según lo acordado):
+
+**Código** (ya en el commit `d9dfb84`, sesión anterior): ~12 archivos limpiados de imports muertos, métodos huérfanos, clases sin uso (`DialogoExportacion`), una excepción silenciosa corregida, y un bug real destapado (el mensaje de "cuota agotada" aparecía también al cancelar manualmente una exportación).
+
+**Documentación** (commit `6616f32`, recién pusheado):
+- **"Cuatro motores de voz" → cinco**, en `GUIA_TECNICA.md` y `VISION_PERSONAL.md`: a ambos se les olvidaba contar Deepgram, aunque luego sí lo listaban.
+- **"Navegación semántica por encabezados" eliminada** de `README.md` (raíz) y de `documentos/Fases_Del_Proyecto/README.md`: era una referencia residual al H/Shift+H que confirmaste que nunca funcionó. La sustituí por lo que sí hace de verdad hoy (negrita en h1-h6).
+- Mismo error corregido en el changelog de v2.0.0 de `VISION_PERSONAL.md`, ahora con nota honesta de que fue un intento fallido y se retiró.
+- `documentos/Fases_Del_Proyecto/README.md` estaba bastante atrasado respecto al README.md raíz: le faltaban el Asistente de Biblioteca, las copias de seguridad automáticas y tenía el conteo de sonidos en 12 en vez de 14 — puesto al día.
+
+Revisé también `_anunciador`, `Shift+H`, los símbolos de código eliminados (`DialogoExportacion`, `al_abrir_readme`, etc.) y las menciones a "12 sonidos" en el resto de documentos: todas las que quedan son referencias históricas correctas dentro de changelogs de fases pasadas (Fase 4, "hasta v2.0.0"), no afirmaciones sobre el estado actual — esas las dejé tal cual, no son errores.
+
+No toqué `requisitos.txt`, `subir_version.py` ni `.gitignore`: ya se habían confirmado al día en la ronda anterior.

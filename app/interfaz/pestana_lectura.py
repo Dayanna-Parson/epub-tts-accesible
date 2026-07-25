@@ -3,12 +3,18 @@ import wx
 import os
 import json
 import time
+import logging
 import threading
+from app.motor import anunciador_lector as voz
 from app.motor.gestor_epub import extraer_datos_epub
+from app.motor.gestor_pdf import extraer_datos_pdf
 from app.motor.reproductor_voz import ReproductorVoz
 from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
-from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR
+from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR, PAGE_SCROLLED
+from app.interfaz.ui_recursos import aplicar_icono_boton
+
+logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
 
 # ── Tablas de traducción para etiquetas del combo de voz ─────────────────────
@@ -70,7 +76,7 @@ class PestanaLectura(wx.Panel):
         self.reproductor = ReproductorVoz()
         
         self.posiciones_capitulos = {}
-        self.posiciones_encabezados = []  # [{nivel, texto, pos}] para H/Shift+H
+        self.posiciones_encabezados = []  # [{nivel, texto, pos}] para negrita de h1-h6 en _aplicar_estilos_ricos
         self.spans_estilo = []            # [{texto, estilos, cerca_de}] para rich-text
         self.marcadores = {}
         self.longitud_texto = 0
@@ -80,6 +86,11 @@ class PestanaLectura(wx.Panel):
         self.cargar_config_salto()
         
         self.pos_inicio_fragmento = 0
+        # Última página virtual (bloque de _CHARS_POR_PAGINA caracteres) en la
+        # que sonó page_scrolled.wav — evita repetir el sonido si el cursor
+        # se mueve sin cruzar un límite de página. -1 para que la primera
+        # posición real (0) ya cuente como cambio.
+        self._pagina_virtual_sonido = -1
         # Variables para la estimación temporal del progreso de voces neuronales
         self._tiempo_inicio_frag = 0.0
         self._longitud_frag_actual = 0
@@ -113,10 +124,9 @@ class PestanaLectura(wx.Panel):
             "Área de texto de solo lectura con el contenido del capítulo activo. "
             "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
         )
-        self.txt_contenido.SetValue("¡Bienvenido a Epub TTS! Tu lector de EPUB con soporte para voces de alta calidad (Azure, Polly y ElevenLabs) y voces locales SAPI 5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1, 2 y 3 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!")
+        self.txt_contenido.SetValue("¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta calidad en la nube (Azure, Amazon Polly, Deepgram y ElevenLabs) y voces locales SAPI5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1 a Ctrl + 5 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
-        self.txt_contenido.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_contenido)
-        
+
         self.divisor.SetMinimumPaneSize(200)
         self.divisor.SplitVertically(self.arbol_indice, self.txt_contenido, 280)
         sizer_principal.Add(self.divisor, 1, wx.EXPAND | wx.ALL, 5)
@@ -158,6 +168,12 @@ class PestanaLectura(wx.Panel):
         self.btn_detener.Bind(wx.EVT_BUTTON, self.al_detener)
         self.btn_atras.Bind(wx.EVT_BUTTON, self.al_saltar_atras)
         self.btn_adelante.Bind(wx.EVT_BUTTON, self.al_saltar_adelante)
+        aplicar_icono_boton(self.btn_detener, "detener", "Detener")
+        # fijar_nombre=False: la etiqueta de estos dos botones cambia con los
+        # segundos de salto configurados ("Retroceder 10s"...); un nombre
+        # accesible fijo aquí congelaría ese texto para NVDA.
+        aplicar_icono_boton(self.btn_atras, "retroceder", fijar_nombre=False)
+        aplicar_icono_boton(self.btn_adelante, "avanzar", fijar_nombre=False)
 
         self.lbl_velocidad = wx.StaticText(self, label="Velocidad de lectura:")
         self.deslizador_velocidad = wx.Slider(self, value=50, minValue=0, maxValue=100)
@@ -197,16 +213,6 @@ class PestanaLectura(wx.Panel):
         self.SetSizer(sizer_principal)
         self.configurar_aceleradores()
 
-        # Control oculto para anuncios de accesibilidad NVDA.
-        # Al darle foco con un valor nuevo, NVDA lo verbaliza al instante
-        # sin necesidad de diálogos ni de que el usuario navegue hasta él.
-        self._anunciador = wx.TextCtrl(
-            self,
-            style=wx.TE_READONLY | wx.BORDER_NONE,
-            size=(1, 1),
-        )
-        self._anunciador.SetBackgroundColour(self.GetBackgroundColour())
-        
         self.temporizador_ui = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.al_actualizar_ui, self.temporizador_ui)
         self.temporizador_ui.Start(200)
@@ -455,8 +461,14 @@ class PestanaLectura(wx.Panel):
         caracteres del bloque, garantizando fragmentos compactos sin silabear.
         Retorna lista de (texto_fragmento, pos_inicio_global).
         """
-        MAX_CHARS = 200
-        VENTANA = 200  # ventana hacia atrás para buscar puntos de corte naturales
+        # Fragmentos más grandes = menos costuras por audiolibro. Con 200
+        # caracteres (una o dos frases) cada unión de fragmento dependía de
+        # que la precarga del siguiente ganara la carrera contra la
+        # reproducción del actual; con una API lenta, perder esa carrera
+        # obligaba a sintetizar en el momento y sonaba como una pausa
+        # aleatoria ajena a la puntuación real del texto.
+        MAX_CHARS = 500
+        VENTANA = 250  # ventana hacia atrás para buscar puntos de corte naturales
         resultado = []
         restante = texto
         pos_actual = pos_base
@@ -562,6 +574,7 @@ class PestanaLectura(wx.Panel):
         self.pos_inicio_fragmento = pos
         self.txt_contenido.SetInsertionPoint(pos)
         self.txt_contenido.ShowPosition(pos)
+        self._comprobar_cambio_pagina_virtual(pos)
         if self.longitud_texto > 0:
             pct = max(0, min(100, int(pos / self.longitud_texto * 100)))
             if self.deslizador_progreso.GetValue() != pct:
@@ -638,6 +651,7 @@ class PestanaLectura(wx.Panel):
             # Sincronización de cursor: mover el punto de inserción para que NVDA
             # pueda seguir la posición de lectura en tiempo real
             self.txt_contenido.SetInsertionPoint(pos_estimada)
+            self._comprobar_cambio_pagina_virtual(pos_estimada)
 
             porcentaje = max(0, min(100, int((pos_estimada / self.longitud_texto) * 100)))
 
@@ -676,6 +690,8 @@ class PestanaLectura(wx.Panel):
 
     def al_cambiar_velocidad(self, evento):
         v = self.deslizador_velocidad.GetValue()
+        logger.debug("[Lectura] al_cambiar_velocidad: slider v=%s (min=%s max=%s)",
+                        v, self.deslizador_velocidad.GetMin(), self.deslizador_velocidad.GetMax())
         if hasattr(self.reproductor, 'fijar_velocidad'):
             self.reproductor.fijar_velocidad(v)
         self._guardar_ajuste_slider("velocidad_lectura", v)
@@ -725,7 +741,6 @@ class PestanaLectura(wx.Panel):
         self.al_abrir_marcadores(None)
 
     def al_abrir_marcadores(self, evento):
-        from app.interfaz.dialogos import DialogoMarcadores
         pos_actual = self.txt_contenido.GetInsertionPoint()
         
         if not isinstance(self.marcadores, dict): self.marcadores = {}
@@ -883,74 +898,70 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_FIN: DIALOGO_IR_A_PAGINA
 
     # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD
-    def alternar_escala_velocidad(self):
-        """
-        Alterna el slider de velocidad entre escala porcentual (0–100)
-        y multiplicadores (0.5×–3.0×).
-        La escala activa se persiste en ajustes.json.
-        """
-        ruta = ruta_config("ajustes.json")
-        try:
-            with open(ruta, "r", encoding="utf-8") as f:
-                conf = json.load(f)
-        except Exception:
-            conf = {}
-
-        escala_actual = conf.get("escala_velocidad", "porcentaje")
-        nueva_escala  = "multiplicador" if escala_actual == "porcentaje" else "porcentaje"
-        conf["escala_velocidad"] = nueva_escala
-
-        ruta_tmp = ruta + ".tmp"
-        with open(ruta_tmp, "w", encoding="utf-8") as f:
-            json.dump(conf, f, ensure_ascii=False, indent=2)
-        os.replace(ruta_tmp, ruta)
-
-        self._aplicar_escala_velocidad(nueva_escala, conf.get("velocidad_lectura", 50))
-
     def _aplicar_escala_velocidad(self, escala: str, valor_guardado: int):
         """
-        Reconfigura el slider de velocidad según la escala activa y actualiza
-        la etiqueta y el texto de ayuda para que NVDA lo lea correctamente.
+        Actualiza la etiqueta y el texto de ayuda del slider de velocidad
+        según la escala activa, para que NVDA lo lea correctamente.
+
+        El slider SIEMPRE vive en el mismo rango 0–100 que se envía al
+        reproductor — antes, el modo "multiplicador" cambiaba el propio
+        rango del slider a 0–25 y dependía de obtener_velocidad_normalizada()
+        para reconvertirlo a 0–100 al aplicar la velocidad real, pero esa
+        función nunca se llamaba desde ningún sitio: el valor crudo del
+        slider (como mucho 25) se enviaba directo al motor, que lo trataba
+        como un porcentaje 0–100. Con eso, el máximo alcanzable en modo
+        "por puntos" (25) seguía siendo más lento que la velocidad normal
+        (50) — nunca se podía llegar ni a la velocidad neutra, muchísimo
+        menos a "más rápido". El modo "por puntos" es ahora solo una
+        relectura del mismo valor 0–100, calculada con la misma fórmula que
+        aplica realmente el motor (_multiplicador_desde_valor), así que lo
+        que se lee y lo que suena son siempre la misma cifra.
         """
+        self.deslizador_velocidad.SetMin(0)
+        self.deslizador_velocidad.SetMax(100)
+        self.deslizador_velocidad.SetValue(valor_guardado)
+
         if escala == "multiplicador":
-            self.deslizador_velocidad.SetMin(0)
-            self.deslizador_velocidad.SetMax(25)
-            self.deslizador_velocidad.SetValue(
-                min(25, max(0, round((valor_guardado / 100) * 12)))
-            )
-            self.lbl_velocidad.SetLabel("Velocidad (×):")
+            self.lbl_velocidad.SetLabel(f"Velocidad ({self._etiqueta_multiplicador(valor_guardado)}):")
             self.deslizador_velocidad.SetHelpText(
-                "Velocidad de lectura en multiplicadores. "
-                "0 = 0.5×, 12 = 1.75×, 25 = 3.0×. "
-                "Flechas: ±1 paso. RePág/AvPág: ±5 pasos."
+                "Velocidad de lectura en multiplicadores. 0.2× es la más lenta, "
+                "1.0× es la normal, 1.8× es la más rápida. "
+                "Flechas: ±1. RePág/AvPág: ±5."
             )
         else:
-            self.deslizador_velocidad.SetMin(0)
-            self.deslizador_velocidad.SetMax(100)
-            self.deslizador_velocidad.SetValue(valor_guardado)
             self.lbl_velocidad.SetLabel("Velocidad de lectura:")
             self.deslizador_velocidad.SetHelpText(
                 "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
                 "Flechas: ±1. RePág/AvPág: ±5."
             )
 
-    def obtener_velocidad_normalizada(self) -> int:
+    @staticmethod
+    def _multiplicador_desde_valor(v: int) -> float:
         """
-        Devuelve siempre un valor 0–100 independientemente de la escala activa,
-        para pasarlo al reproductor sin que este sepa nada de escalas.
+        Multiplicador real aproximado para un valor 0–100 de velocidad, con
+        la misma fórmula que aplican los motores de voz (tasa SSML
+        (v-50)*1.6%, saturada en ±80%): 50 → 1.0× exacto, 0 → 0.2×, 100 → 1.8×.
         """
-        ruta = ruta_config("ajustes.json")
-        escala = "porcentaje"
-        try:
-            with open(ruta, "r", encoding="utf-8") as f:
-                escala = json.load(f).get("escala_velocidad", "porcentaje")
-        except Exception:
-            pass
+        return 1 + (v - 50) * 0.016
 
-        val = self.deslizador_velocidad.GetValue()
-        if escala == "multiplicador":
-            return min(100, max(0, round(val * 100 / 25)))
-        return val
+    @classmethod
+    def _etiqueta_multiplicador(cls, v: int) -> str:
+        m = cls._multiplicador_desde_valor(v)
+        if v <= 5:
+            calificativo = " (Muy lenta)"
+        elif v <= 30:
+            calificativo = " (Lenta)"
+        elif 45 <= v <= 55:
+            calificativo = " (Normal)"
+        elif v >= 95:
+            calificativo = " (Máxima)"
+        elif v >= 70:
+            calificativo = " (Muy rápida)"
+        elif v >= 55:
+            calificativo = " (Rápida)"
+        else:
+            calificativo = ""
+        return f"{m:.2f}×{calificativo}"
     # ANCLAJE_FIN: SELECTOR_ESCALA_VELOCIDAD
 
     def al_buscar_usuario(self, e):
@@ -966,30 +977,65 @@ class PestanaLectura(wx.Panel):
         estado = 'detenido'
         if hasattr(self.reproductor, 'obtener_estado'):
             estado = self.reproductor.obtener_estado()
-            
+
         if estado != 'reproduciendo' and self.longitud_texto > 0:
             p = int((self.txt_contenido.GetInsertionPoint()/self.longitud_texto)*100)
             if self.deslizador_progreso.GetValue() != p: self.deslizador_progreso.SetValue(p)
+        # txt_contenido es de solo lectura: cualquier KEY_UP que llegue aquí
+        # viene de navegación con flechas (o RePág/AvPág/Inicio/Fin), nunca de
+        # escritura — el punto de entrada correcto para el sonido sutil de
+        # cambio de página al estilo Bookworm.
+        self._comprobar_cambio_pagina_virtual(self.txt_contenido.GetInsertionPoint())
         e.Skip()
     # ANCLAJE_FIN: NAVEGACION_TEXTO_Y_SALTOS
 
+    # ANCLAJE_INICIO: SONIDO_CAMBIO_PAGINA_VIRTUAL
+    def _comprobar_cambio_pagina_virtual(self, pos):
+        """
+        Reproduce page_scrolled.wav cada vez que el cursor cruza el límite de
+        una página virtual (bloque de _CHARS_POR_PAGINA caracteres) — tanto al
+        navegar con las flechas como durante la lectura continua con
+        cualquier motor de voz, igual que hace Bookworm con sus propias
+        páginas. Si el archivo no está disponible, reproducir() ya falla en
+        silencio (ver reproductor_sonidos.py), así que no hace falta
+        protección adicional aquí.
+        """
+        pagina = pos // self._CHARS_POR_PAGINA
+        if pagina != self._pagina_virtual_sonido:
+            self._pagina_virtual_sonido = pagina
+            reproducir(PAGE_SCROLLED)
+    # ANCLAJE_FIN: SONIDO_CAMBIO_PAGINA_VIRTUAL
+
     def al_cargar_libro(self, evento):
-        """Abre el explorador de archivos para seleccionar un libro EPUB."""
-        with wx.FileDialog(self, "Seleccionar EPUB", wildcard="Archivos EPUB (*.epub)|*.epub", style=wx.FD_OPEN) as dlg:
-            if dlg.ShowModal() == wx.ID_OK: 
+        """Abre el explorador de archivos para seleccionar un libro EPUB o PDF."""
+        with wx.FileDialog(
+            self, "Seleccionar libro",
+            wildcard="Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf",
+            style=wx.FD_OPEN,
+        ) as dlg:
+            if dlg.ShowModal() == wx.ID_OK:
                 self.cargar_epub_desde_ruta(dlg.GetPath())
 
     # ANCLAJE_INICIO: GESTION_DATOS_LIBRO
     def cargar_epub_desde_ruta(self, ruta):
+        """
+        Pese al nombre (histórico, mantenido para no romper las llamadas ya
+        existentes desde Biblioteca y VentanaPrincipal), admite tanto EPUB
+        como PDF — el formato se decide por la extensión del archivo y se
+        delega en el extractor correspondiente (extraer_datos_epub /
+        extraer_datos_pdf), que devuelven la misma forma de datos.
+        """
         self.guardar_datos_libro()
         try:
-            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados, self.spans_estilo = extraer_datos_epub(ruta)
+            extractor = extraer_datos_pdf if ruta.lower().endswith('.pdf') else extraer_datos_epub
+            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados, self.spans_estilo = extractor(ruta)
 
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
 
             self.marcadores = {}
             self.pos_inicio_fragmento = 0
+            self._pagina_virtual_sonido = -1
             self.txt_contenido.SetValue(texto)
             self.longitud_texto = len(texto)
             # Aplicar negrita/cursiva/subrayado en diferido (no bloquea la carga)
@@ -1011,7 +1057,7 @@ class PestanaLectura(wx.Panel):
 
         except Exception as e:
             reproducir(ERROR)
-            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro EPUB.\n\nDetalle: {e}", "Error al cargar el libro")
+            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro.\n\nDetalle: {e}", "Error al cargar el libro")
 
     def _construir_arbol_indice(self, padre, nodos):
         for n in nodos:
@@ -1167,9 +1213,10 @@ class PestanaLectura(wx.Panel):
 
     def anunciar_pagina_actual(self):
         """
-        Ctrl+I: verbaliza la posición de lectura a través del control _anunciador.
-        NVDA lo lee al instante al recibir el foco; en 300 ms el foco vuelve
-        al control anterior sin que el usuario perciba el salto.
+        Ctrl+I: verbaliza la posición de lectura con accessible_output3, sin
+        mover el foco en ningún momento (antes usaba el patrón _anunciador,
+        que le hacía anunciar a NVDA el rol del control oculto — "edición,
+        solo lectura" — en cada pulsación, como si saltara un diálogo).
         """
         if not self.longitud_texto:
             return
@@ -1179,25 +1226,16 @@ class PestanaLectura(wx.Panel):
             f"Página {pag_libro} de {total_libro} del libro."
         )
         self.lbl_progreso.SetLabel(texto)
-        foco_anterior = wx.Window.FindFocus()
-        self._anunciador.SetValue(texto)
-        self._anunciador.SetFocus()
-        if foco_anterior:
-            wx.CallLater(300, lambda: foco_anterior.SetFocus() if foco_anterior.IsShownOnScreen() else None)
+        voz.hablar(texto)
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
 
     # ANCLAJE_INICIO: SLIDER_VELOCIDAD_SEMANTICO
-    # Tabla de escalones del modo multiplicador:
-    # índice 0–25 → valor real mostrado a NVDA
-    _ETIQUETAS_MULTIPLICADOR = {
-        0: "0.5× (Muy lenta)", 2: "0.6×", 4: "0.75× (Lenta)",
-        6: "0.9×",  8: "1.0× (Normal)", 10: "1.1×",
-        12: "1.25×", 14: "1.5× (Rápida)", 17: "1.75×",
-        20: "2.0× (Muy rápida)", 22: "2.5×", 25: "3.0× (Máxima)",
-    }
-
     def _al_slider_velocidad_cambio(self, evento):
-        """Actualiza SetHelpText con la etiqueta semántica en modo multiplicador."""
+        """
+        Actualiza la etiqueta con el multiplicador real en modo "por puntos".
+        Usa _etiqueta_multiplicador(), la misma fórmula que aplica realmente
+        el motor de voz — nunca una tabla aparte que pueda desincronizarse.
+        """
         ruta = ruta_config("ajustes.json")
         escala = "porcentaje"
         try:
@@ -1209,9 +1247,7 @@ class PestanaLectura(wx.Panel):
             evento.Skip()
             return
         val = self.deslizador_velocidad.GetValue()
-        # Buscar la etiqueta del escalón más cercano
-        escalon = min(self._ETIQUETAS_MULTIPLICADOR, key=lambda k: abs(k - val))
-        etiqueta = self._ETIQUETAS_MULTIPLICADOR[escalon]
+        etiqueta = self._etiqueta_multiplicador(val)
         self.deslizador_velocidad.SetHelpText(f"Velocidad: {etiqueta}")
         self.lbl_velocidad.SetLabel(f"Velocidad ({etiqueta}):")
         evento.Skip()
@@ -1315,39 +1351,3 @@ class PestanaLectura(wx.Panel):
         finally:
             self.txt_contenido.Thaw()
 
-    def _al_tecla_contenido(self, evento):
-        """
-        Intercepta teclas en el área de texto.
-        H → siguiente encabezado, Shift+H → encabezado anterior (estilo Bookworm/NVDA).
-        """
-        key = evento.GetKeyCode()
-        if key == ord('H') and not evento.ControlDown() and not evento.AltDown():
-            if evento.ShiftDown():
-                self._al_encabezado_anterior()
-            else:
-                self._al_encabezado_siguiente()
-            return  # consumir el evento, no escribir 'H' en el control
-        evento.Skip()
-
-    def _al_encabezado_siguiente(self):
-        """Salta al siguiente encabezado (h1–h6) en el texto."""
-        if not self.posiciones_encabezados:
-            return
-        pos_actual = self.txt_contenido.GetInsertionPoint()
-        for enc in self.posiciones_encabezados:
-            if enc['pos'] > pos_actual:
-                self._ir_a_posicion(enc['pos'])
-                reproducir(LIST_NAV)
-                return
-
-    def _al_encabezado_anterior(self):
-        """Salta al encabezado anterior (h1–h6) en el texto."""
-        if not self.posiciones_encabezados:
-            return
-        pos_actual = self.txt_contenido.GetInsertionPoint()
-        for enc in reversed(self.posiciones_encabezados):
-            if enc['pos'] < pos_actual:
-                self._ir_a_posicion(enc['pos'])
-                reproducir(LIST_NAV)
-                return
-    # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO

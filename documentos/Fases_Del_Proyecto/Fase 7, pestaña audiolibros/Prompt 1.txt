@@ -1,0 +1,9 @@
+Escribe en la terminal:
+git checkout claude/fase7-creador-audiolibros
+git rebase claude/fase-7-v3-planning-tsz05n
+
+Mensaje para Claude:
+Hola. He cambiado a la rama del Creador de Audiolibros y he hecho un rebase para traer los últimos cambios estables de la Fase A (incluyendo el diccionario por libro/saga). 
+
+Lee el archivo CLAUDE.md y la bitácora en documentos/Fases_Del_Proyecto/Fase 7 (V3.0)/planificacion_v3.md para entender el contexto de la aplicación Epub TTS Accesible (versión 2.0.0). Nuestro objetivo en esta sesión es diseñar e implementar la pestaña de la Fase B: el Creador de Audiolibros independiente con su propia lógica de exportación, slider de velocidad/volumen y control de cuota. Dime cuando estés listo para empezar con el primer bloque de código.
+De momento no escribas nada de código. Pongámonos a pensar y diseñar bien esta pestaña.
