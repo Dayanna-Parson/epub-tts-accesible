@@ -905,23 +905,35 @@ class PanelClaves(wx.ScrolledWindow):
         )
         self.combo_ge_modelo.SetSelection(0)
         sz_ge.Add(self.combo_ge_modelo, 0, wx.EXPAND | wx.ALL, 5)
-        sz_ge.Add(wx.StaticText(self, label="Temperatura (creatividad de las respuestas):"), 0, wx.ALL, 2)
+        sz_ge.Add(wx.StaticText(self, label="Temperatura, de 0 a 100 (creatividad de las respuestas):"), 0, wx.ALL, 2)
         # wx.Slider en vez de wx.SpinCtrlDouble: el mismo patrón ya probado con
         # NVDA real en Velocidad/Volumen de Lectura. SpinCtrlDouble no es un
         # control nativo de Windows (lo dibuja la propia wx), y no hereda la
         # misma exposición accesible — NVDA lo anunciaba como "edición,
         # seleccionado 0.3" sin el nombre, pese al SetName().
+        #
+        # Escala 0-100, no 0.0-1.0: un wx.Slider en Windows expone a NVDA su
+        # posición como porcentaje del rango (min-max), no el valor real de
+        # GetValue(). Con un rango 0-10 eso hacía que NVDA anunciara "30, 40,
+        # 50..." (el porcentaje) en vez de "0.3, 0.4, 0.5..." (el valor real),
+        # confuso porque no correspondía con la temperatura real de Gemini.
+        # Con el rango puesto ya en 0-100, porcentaje y valor coinciden, y el
+        # número que se oye es exactamente el que se guarda (dividido entre
+        # 100 al persistirlo). Mismo criterio que "Porcentaje (0-100)" en el
+        # selector de escala de velocidad de Lectura.
         self.slider_ge_temperatura = wx.Slider(
-            self, value=round(TEMPERATURA_DEFECTO_GEMINI * 10), minValue=0, maxValue=10,
+            self, value=round(TEMPERATURA_DEFECTO_GEMINI * 100), minValue=0, maxValue=100,
         )
+        self.slider_ge_temperatura.SetLineSize(10)
+        self.slider_ge_temperatura.SetPageSize(20)
         self.slider_ge_temperatura.SetName("Temperatura de Gemini")
         self.slider_ge_temperatura.SetHelpText(
-            "De 0.0 a 1.0, en pasos de 0.1. Valores bajos (0.1 a 0.4) dan "
-            "respuestas más precisas y ajustadas al catálogo real, con menos "
-            "probabilidad de que el asistente invente títulos, autores o "
-            "tramas. Valores altos (0.7 a 1.0) dan respuestas más variadas y "
-            "creativas, a costa de más alucinaciones ocasionales. "
-            f"Valor de fábrica: {TEMPERATURA_DEFECTO_GEMINI} (recomendado)."
+            "De 0 a 100. Cuanto más bajo (10 a 40), más precisas y ajustadas "
+            "al catálogo real son las respuestas, con menos probabilidad de "
+            "que el asistente invente títulos, autores o tramas. Cuanto más "
+            "alto (70 a 100), más variedad y creatividad, a costa de más "
+            f"alucinaciones ocasionales. Valor de fábrica: "
+            f"{round(TEMPERATURA_DEFECTO_GEMINI * 100)} (recomendado)."
         )
         sz_ge.Add(self.slider_ge_temperatura, 0, wx.EXPAND | wx.ALL, 5)
         hb_ge = wx.BoxSizer(wx.HORIZONTAL)
@@ -973,7 +985,7 @@ class PanelClaves(wx.ScrolledWindow):
         self.txt_ge_key.SetValue(d_ge.get("api_key", ""))
         self._fijar_modelo_gemini(d_ge.get("modelo", "auto"))
         temperatura = d_ge.get("temperatura", TEMPERATURA_DEFECTO_GEMINI)
-        self.slider_ge_temperatura.SetValue(round(temperatura * 10))
+        self.slider_ge_temperatura.SetValue(round(temperatura * 100))
 
     def _fijar_modelo_gemini(self, id_modelo):
         # "auto" (o vacío) siempre es la primera entrada del combo.
@@ -1003,7 +1015,7 @@ class PanelClaves(wx.ScrolledWindow):
             "gemini": {
                 "api_key": self.txt_ge_key.GetValue().strip(),
                 "modelo": "auto" if seleccion_ge in ("", "Automático") else seleccion_ge,
-                "temperatura": round(self.slider_ge_temperatura.GetValue() / 10, 1),
+                "temperatura": round(self.slider_ge_temperatura.GetValue() / 100, 2),
             },
         }
         guardar_claves(claves)
