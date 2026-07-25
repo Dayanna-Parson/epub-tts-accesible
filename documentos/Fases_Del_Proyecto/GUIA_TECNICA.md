@@ -134,7 +134,7 @@ El reproductor no conoce ni la interfaz ni el EPUB. Recibe texto y lo envía al 
 
 ### 7. Motores de síntesis de voz y su papel
 
-La app trabaja con cuatro motores de voz, cada uno con un rol claro:
+La app trabaja con cinco motores de voz, cada uno con un rol claro:
 
 SAPI5 (local): voces locales. Se usa como respaldo y para trabajar sin conexión.
 

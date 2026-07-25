@@ -42,6 +42,8 @@ elegir qué voces usar mediante un sistema de favoritas,
 
 controlar el consumo de servicios TTS de pago,
 
+consultar al Asistente de Biblioteca (Google Gemini) sobre tu catálogo, con recomendaciones y plantillas de prompt personalizables,
+
 trabajar durante sesiones largas sin perder el contexto.
 
 ---
@@ -228,9 +230,13 @@ control de cuota, coste estimado y avisos de gasto por proveedor,
 
 Gestor de Proyectos con árbol jerárquico, papelera y acceso directo a las grabaciones,
 
+Asistente de Biblioteca con IA (Google Gemini): recomendaciones y consultas sobre tu catálogo, con plantillas de prompt personalizables,
+
 divisor de EPUB integrado por capítulos,
 
-12 sonidos contextuales y navegación semántica por encabezados,
+14 sonidos contextuales y resalte en negrita de los encabezados (h1-h6) en el contenido leído,
+
+copias de seguridad automáticas y rotativas de la biblioteca y los proyectos, separadas por tipo,
 
 ajustes avanzados en árbol de navegación y actualizaciones automáticas desde la propia app,
 

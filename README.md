@@ -178,7 +178,7 @@ Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 3.0
 - Control de cuota, coste estimado y avisos de gasto por proveedor.
 - Gestor de Proyectos con árbol jerárquico, papelera y acceso directo a las grabaciones.
 - Asistente de Biblioteca con IA (Google Gemini): recomendaciones y consultas sobre tu catálogo, con plantillas de prompt personalizables.
-- 14 sonidos contextuales (activables/desactivables de forma individual o global) y navegación semántica por encabezados.
+- 14 sonidos contextuales (activables/desactivables de forma individual o global) y resalte en negrita de los encabezados (h1-h6) en el contenido leído.
 - Copias de seguridad automáticas y rotativas de la biblioteca y los proyectos, separadas por tipo.
 - Ajustes en árbol de navegación y actualizaciones automáticas desde la propia app.
 

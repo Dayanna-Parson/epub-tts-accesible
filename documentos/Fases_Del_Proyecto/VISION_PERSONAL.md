@@ -164,7 +164,7 @@ Gestiona estados explícitos (detenido, reproduciendo, pausado) y trata de forma
 
 ### 9. Motores de voz soportados
 
-La aplicación utiliza actualmente cuatro motores de voz, cada uno con un rol claro:
+La aplicación utiliza actualmente cinco motores de voz, cada uno con un rol claro:
 
 SAPI5 (local): respaldo offline, siempre disponible.
 
@@ -348,7 +348,7 @@ Gestor de Proyectos independiente, con árbol jerárquico, papelera y acceso dir
 
 Divisor de EPUB integrado, 12 sonidos contextuales y voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante un proceso puente.
 
-Árbol de navegación en Ajustes, navegación semántica por encabezados y verbalización inmediata sin mover el foco.
+Árbol de navegación en Ajustes y verbalización inmediata sin mover el foco. (Se intentó también una navegación por encabezados con `H`/`Shift+H`, pero nunca llegó a funcionar y se retiró varias versiones después.)
 
 Sistema de actualizaciones automáticas completo, con reinicio de la app sin perder configuración ni grabaciones.
 
