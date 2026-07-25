@@ -151,7 +151,7 @@ def sonidos_habilitados() -> bool:
 
 def fijar_sonidos_habilitados(valor: bool) -> None:
     """Actualiza la casilla global en memoria y la persiste en ajustes.json."""
-    global _HABILITADOS, _preferencia_cargada
+    global _HABILITADOS
     _cargar_preferencia_habilitados()
     _HABILITADOS = bool(valor)
     if not _HABILITADOS:

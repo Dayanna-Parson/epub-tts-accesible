@@ -82,7 +82,6 @@ class VentanaProyectos(wx.Frame):
         # que dos instancias independientes se sobreescriban mutuamente al guardar.
         self._gestor = gestor_proyectos if gestor_proyectos is not None else GestorProyectos()
         self._mapa_nodos = {}           # {TreeItemId → proyecto_id (str uuid)}
-        self._ruta_txt_activo = ruta_txt_activo
         self._foco_previo = foco_previo
         self._proyecto_en_portapapeles: str | None = None  # id del proyecto cortado con Ctrl+X
 
@@ -106,7 +105,6 @@ class VentanaProyectos(wx.Frame):
 
     def _construir_interfaz(self):
         panel_raiz = wx.Panel(self)
-        self._panel_raiz = panel_raiz
         sizer_raiz = wx.BoxSizer(wx.VERTICAL)
 
         # ── Área principal: árbol + detalle ──────────────────────────────

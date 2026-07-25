@@ -11,7 +11,7 @@ from app.interfaz.pestana_ajustes import PestanaAjustes
 from app.interfaz.pestana_grabacion import PestanaGrabacion
 from app.interfaz.pestana_creador_audiolibros import PestanaCreadorAudiolibros
 from app.interfaz.ventana_proyectos import VentanaProyectos
-from app.config_rutas import ruta_config
+from app.config_rutas import ruta_config, RAIZ_RECURSOS
 from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS, ERROR
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
@@ -25,7 +25,6 @@ IDX_LECTURA    = 1
 IDX_CREADOR    = 2
 IDX_GRABACION  = 3
 IDX_AJUSTES    = 4
-NUM_PESTANAS   = 5
 
 # ── Helpers para traducir atajos de gestor_atajos al formato de wx ───────────
 def _mod_a_flag(mod_str):
@@ -387,8 +386,8 @@ class VentanaPrincipal(wx.Frame):
             os.makedirs(os.path.dirname(self._ruta_config_general), exist_ok=True)
             with open(self._ruta_config_general, "w", encoding="utf-8") as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            pass  # No es crítico si falla el guardado de sesión
+        except Exception:
+            logger.exception("Error al guardar el estado de sesión en ajustes.json")
 
     def _restaurar_sesion(self):
         """Restaura el estado de sesión desde ajustes.json."""
@@ -893,23 +892,6 @@ class VentanaPrincipal(wx.Frame):
             wx.OK | wx.ICON_INFORMATION
         )
 
-    def al_abrir_readme(self, evento):
-        """Abre el README del proyecto con el visor de texto predeterminado del sistema."""
-        import subprocess
-        raiz = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        for nombre in ("README.md", "README.txt", "README"):
-            ruta = os.path.join(raiz, nombre)
-            if os.path.exists(ruta):
-                try:
-                    os.startfile(ruta)
-                except Exception:
-                    try:
-                        subprocess.Popen(["xdg-open", ruta])
-                    except Exception:
-                        wx.MessageBox(f"README encontrado en:\n{ruta}", "README")
-                return
-        wx.MessageBox("No se encontró un archivo README en el directorio del proyecto.", "Info")
-
     def al_abrir_github(self, evento):
         """Abre el repositorio del proyecto en el navegador predeterminado."""
         import webbrowser
@@ -917,18 +899,23 @@ class VentanaPrincipal(wx.Frame):
 
     def al_abrir_acerca_de(self, evento):
         """Muestra el diálogo Acerca de con información y créditos de la aplicación."""
-        import webbrowser
+        try:
+            with open(os.path.join(RAIZ_RECURSOS, "recursos", "version.json"), "r", encoding="utf-8") as f:
+                version = json.load(f).get("version", "3.0.0")
+        except Exception:
+            version = "3.0.0"
         texto = (
             "Epub TTS Accesible\n"
-            "Versión: Fase 3 (2026)\n\n"
-            "Aplicación de texto a voz accesible para libros EPUB y archivos TXT.\n"
+            f"Versión: {version}\n\n"
+            "Aplicación de texto a voz accesible para libros EPUB y PDF, con "
+            "producción de audiolibros multivoz.\n"
             "Diseñada para usuarios de lectores de pantalla como NVDA.\n\n"
             "Créditos\n"
-            "Desarrollo: Dayanna Parson\n"
-            "Asistencia IA: Claude (Anthropic)\n\n"
+            "Desarrollo: Dayanna Parson (TifloTutos)\n\n"
             "Proveedores de voz:\n"
             "  Microsoft Azure Text to Speech\n"
             "  Amazon Polly (AWS)\n"
+            "  Deepgram Aura-2\n"
             "  ElevenLabs\n"
             "  Microsoft SAPI5 (voces del sistema, sin coste)\n\n"
             "Repositorio: github.com/Dayanna-Parson/epub-tts-accesible"

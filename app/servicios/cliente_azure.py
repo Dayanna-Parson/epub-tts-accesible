@@ -4,7 +4,6 @@ import requests
 import sounddevice as sd
 import soundfile as sf
 import io
-import time
 from app.config_rutas import cargar_claves
 
 logger = logging.getLogger(__name__)
@@ -124,7 +123,7 @@ class ClienteAzure:
                 break
             except requests.exceptions.Timeout:
                 raise Exception("Azure tardó demasiado (Timeout > 30s).")
-            except requests.exceptions.ConnectionError as e:
+            except requests.exceptions.ConnectionError:
                 if intento == 0 and not self._parado:
                     time.sleep(1)
                     self._sesion = requests.Session()

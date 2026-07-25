@@ -9,7 +9,7 @@ import wx
 
 from app.config_rutas import ruta_config
 from app.motor import anunciador_lector as voz
-from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR, PROGRESS, OPEN_FOLDER
+from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR, PROGRESS, OPEN_FOLDER, CLEAR
 from app.interfaz.ui_recursos import aplicar_icono_boton
 
 logger = logging.getLogger(__name__)
@@ -1326,11 +1326,18 @@ class PestanaCreadorAudiolibros(wx.Panel):
             # cuando se exportó por última vez.
             fila_real_pendiente = self._fila_real_capitulo(pendientes[0]["indice"])
             self._registrar_pendiente_capitulos(fila_real_pendiente, salida.get("proveedor", "local"))
-            mensaje = (
-                f"Exportación detenida por falta de cuota. "
-                f"{completados} de {total} capítulos completados. Queda registrado como pendiente."
-            )
-            reproducir(ERROR)
+            if salida.get("abortada"):
+                mensaje = (
+                    f"Exportación cancelada. "
+                    f"{completados} de {total} capítulos completados. Queda registrado como pendiente."
+                )
+                reproducir(CLEAR)
+            else:
+                mensaje = (
+                    f"Exportación detenida por falta de cuota. "
+                    f"{completados} de {total} capítulos completados. Queda registrado como pendiente."
+                )
+                reproducir(ERROR)
         else:
             self._limpiar_pendientes_de_libro()
             mensaje = f"Exportación finalizada. {total} capítulos completados."
@@ -1344,6 +1351,13 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self._limpiar_pendientes_de_libro()
             mensaje = "Exportación del libro completo finalizada."
             reproducir(SUCCESS)
+        elif salida.get("abortada"):
+            self._registrar_pendiente_completo(salida)
+            mensaje = (
+                "Exportación cancelada. Se guardó una parte pendiente para "
+                "retomar más tarde."
+            )
+            reproducir(CLEAR)
         else:
             self._registrar_pendiente_completo(salida)
             mensaje = (

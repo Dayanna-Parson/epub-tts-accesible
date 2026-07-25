@@ -1278,6 +1278,7 @@ class GrabadorAudio:
             "errores": errores,
             "carpeta_destino": carpeta_destino,
             "numero_parte": numero_parte,
+            "abortada": abortada,
         }
 
     def exportar_audiolibro_por_capitulos(
@@ -1422,6 +1423,7 @@ class GrabadorAudio:
             "archivos_generados": archivos_generados,
             "errores": errores,
             "carpeta_destino": carpeta_destino,
+            "abortada": self._abortar,
         }
     # ANCLAJE_FIN: EXPORTACION_AUDIOLIBROS_CREADOR
 

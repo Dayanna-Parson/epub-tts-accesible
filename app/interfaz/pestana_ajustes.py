@@ -5,7 +5,6 @@ import sys
 import json
 import logging
 import webbrowser
-import wx.lib.mixins.listctrl as listmix
 
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 from app.motor import anunciador_lector as voz
@@ -482,9 +481,7 @@ class PanelGeneral(wx.ScrolledWindow):
         hilo.start()
 
     def _hilo_descargar_e_instalar(self, version_remota: str):
-        import shutil
         import urllib.request
-        import zipfile
         from app.config_rutas import RAIZ
 
         _URL_ZIP = (

@@ -32,14 +32,13 @@ import logging
 from app.config_rutas import ruta_config, cargar_claves, CONFIG_DIR
 from app.motor.gestor_proyectos import TIPOS_PROYECTO
 from app.motor.procesador_etiquetas import (
-    escanear_etiquetas,
     fragmentar_texto,
     normalizar_etiqueta,
     limpiar_nombre_archivo,
 )
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
 from app.motor.reproductor_sonidos import (
-    reproducir, REC_START, REC_END, PROGRESS, SUCCESS,
+    reproducir, REC_START, PROGRESS, SUCCESS,
     ERROR as SND_ERROR, OPEN_FOLDER, CLEAR, LIST_NAV, CLICK,
 )
 from app.interfaz.ui_recursos import aplicar_icono_boton

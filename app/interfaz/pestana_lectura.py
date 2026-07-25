@@ -741,7 +741,6 @@ class PestanaLectura(wx.Panel):
         self.al_abrir_marcadores(None)
 
     def al_abrir_marcadores(self, evento):
-        from app.interfaz.dialogos import DialogoMarcadores
         pos_actual = self.txt_contenido.GetInsertionPoint()
         
         if not isinstance(self.marcadores, dict): self.marcadores = {}
@@ -899,30 +898,6 @@ class PestanaLectura(wx.Panel):
     # ANCLAJE_FIN: DIALOGO_IR_A_PAGINA
 
     # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD
-    def alternar_escala_velocidad(self):
-        """
-        Alterna el slider de velocidad entre escala porcentual (0–100)
-        y multiplicadores (0.5×–3.0×).
-        La escala activa se persiste en ajustes.json.
-        """
-        ruta = ruta_config("ajustes.json")
-        try:
-            with open(ruta, "r", encoding="utf-8") as f:
-                conf = json.load(f)
-        except Exception:
-            conf = {}
-
-        escala_actual = conf.get("escala_velocidad", "porcentaje")
-        nueva_escala  = "multiplicador" if escala_actual == "porcentaje" else "porcentaje"
-        conf["escala_velocidad"] = nueva_escala
-
-        ruta_tmp = ruta + ".tmp"
-        with open(ruta_tmp, "w", encoding="utf-8") as f:
-            json.dump(conf, f, ensure_ascii=False, indent=2)
-        os.replace(ruta_tmp, ruta)
-
-        self._aplicar_escala_velocidad(nueva_escala, conf.get("velocidad_lectura", 50))
-
     def _aplicar_escala_velocidad(self, escala: str, valor_guardado: int):
         """
         Actualiza la etiqueta y el texto de ayuda del slider de velocidad

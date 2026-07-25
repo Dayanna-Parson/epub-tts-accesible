@@ -108,7 +108,7 @@ def ejecutar_pyinstaller():
         "--noconfirm",
         "--noconsole",
         "--onedir",
-        f"--name=epubtts",
+        "--name=epubtts",
         f"--distpath={os.path.join(RAIZ, 'dist')}",
         f"--workpath={os.path.join(RAIZ, 'build')}",
         f"--specpath={os.path.join(RAIZ, 'build')}",
