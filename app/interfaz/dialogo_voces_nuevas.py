@@ -21,6 +21,7 @@ _NOMBRES_PROVEEDOR = {
     "azure":      "Microsoft Azure",
     "polly":      "Amazon Polly",
     "elevenlabs": "ElevenLabs",
+    "deepgram":   "Deepgram Aura-2",
 }
 
 

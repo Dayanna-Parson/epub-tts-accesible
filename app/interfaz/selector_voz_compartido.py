@@ -164,7 +164,7 @@ class PanelProveedorIA(wx.Panel):
         self.lista_voces.SetHelpText(
             f"Lista de voces de {self.nombre_proveedor}. Usa las flechas para navegar. "
             "Pulsa Intro para marcar o desmarcar una voz como favorita. "
-            "Las voces marcadas aparecerán en Grabación para asignarlas a personajes."
+            "Las voces marcadas aparecerán en Lectura, Creador de Audiolibros y Grabación."
         )
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)

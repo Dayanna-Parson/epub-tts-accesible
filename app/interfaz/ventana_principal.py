@@ -1058,7 +1058,7 @@ class VentanaPrincipal(wx.Frame):
 
     def _iniciar_verificacion_voces(self):
         """
-        Comprueba si hay voces nuevas en las APIs (Azure, Polly, ElevenLabs).
+        Comprueba si hay voces nuevas en las APIs (Azure, Polly, ElevenLabs, Deepgram).
         Solo se ejecuta si han pasado más de 24 horas desde la última comprobación.
         Corre en hilo de fondo para no bloquear la UI al arrancar.
         """

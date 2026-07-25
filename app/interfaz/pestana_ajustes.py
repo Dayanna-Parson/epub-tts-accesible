@@ -1278,7 +1278,7 @@ class PanelSapi5(wx.Panel):
             "Lista de voces SAPI5 locales instaladas en este equipo. "
             "Usa las flechas para navegar. "
             "Pulsa Intro para marcar o desmarcar una voz como favorita. "
-            "Las voces marcadas aparecerán en las pestañas Lectura y Grabación."
+            "Las voces marcadas aparecerán en las pestañas Lectura, Creador de Audiolibros y Grabación."
         )
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)
@@ -1838,6 +1838,7 @@ class PanelAtajos(wx.Panel):
             ("Alt+P",        "Escuchar muestra de la voz seleccionada (Creador de Audiolibros, Grabación)"),
             ("Ctrl+S",       "Guardar configuración general (pestaña Ajustes)"),
             ("Tecla Menú / Mayús+F10", "Abrir el menú contextual de la pestaña activa"),
+            ("Ctrl+Shift+B", "Abrir el Asistente de Biblioteca (Gemini)"),
             ("Alt+F4",       "Salir de la aplicación"),
         ]
         for atajo, desc in _FIJOS:
