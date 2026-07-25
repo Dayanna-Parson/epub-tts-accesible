@@ -15,18 +15,26 @@ Esta regla solo afecta a las cadenas de interfaz. El código interno
 (variables, funciones, clases, logs) sigue en español, sin excepción.
 """
 import gettext
+import json
 import locale
 import logging
 import os
 import sys
 
-from app.config_rutas import RAIZ_RECURSOS
+from app.config_rutas import RAIZ_RECURSOS, ruta_config
 
 logger = logging.getLogger(__name__)
 
 DOMINIO = "epub_tts"
 IDIOMA_POR_DEFECTO = "es"
 IDIOMAS_DISPONIBLES = ("es", "en")
+
+# Variable de entorno para forzar un idioma en pruebas locales, sin tener
+# que cambiar el idioma completo de Windows (por ejemplo, para probar un
+# .mo en inglés estando el sistema operativo en español):
+#   set EPUB_TTS_IDIOMA=en   (cmd)
+#   $env:EPUB_TTS_IDIOMA="en"  (PowerShell)
+VARIABLE_ENTORNO_IDIOMA = "EPUB_TTS_IDIOMA"
 
 _traduccion = None
 
@@ -60,15 +68,66 @@ def _detectar_idioma_sistema() -> str:
     return IDIOMA_POR_DEFECTO
 
 
+def _idioma_desde_ajustes() -> str:
+    """
+    Lee `configuraciones/ajustes.json` en busca de una clave "idioma"
+    fijada manualmente por la persona usuaria (selector pendiente en
+    Ajustes). Si no existe el archivo, la clave o es inválida, no hay
+    idioma forzado desde ajustes.
+    """
+    try:
+        ruta = ruta_config("ajustes.json")
+        if not os.path.exists(ruta):
+            return None
+        with open(ruta, encoding="utf-8") as archivo:
+            datos = json.load(archivo)
+        idioma = datos.get("idioma")
+        if idioma in IDIOMAS_DISPONIBLES:
+            return idioma
+    except Exception:
+        logger.exception("No se pudo leer el idioma desde ajustes.json")
+    return None
+
+
+def _resolver_idioma(idioma: str = None) -> str:
+    """
+    Orden de prioridad para elegir el idioma activo:
+      1. Parámetro explícito pasado a inicializar().
+      2. Variable de entorno EPUB_TTS_IDIOMA (pruebas locales sin cambiar
+         el idioma del sistema operativo completo).
+      3. Clave "idioma" en configuraciones/ajustes.json.
+      4. Idioma detectado del sistema operativo Windows.
+    """
+    if idioma in IDIOMAS_DISPONIBLES:
+        return idioma
+
+    idioma_entorno = os.environ.get(VARIABLE_ENTORNO_IDIOMA)
+    if idioma_entorno:
+        idioma_entorno = idioma_entorno.strip().lower()
+        if idioma_entorno in IDIOMAS_DISPONIBLES:
+            return idioma_entorno
+        logger.warning(
+            "Idioma '%s' en %s no está soportado; se ignora",
+            idioma_entorno, VARIABLE_ENTORNO_IDIOMA,
+        )
+
+    idioma_ajustes = _idioma_desde_ajustes()
+    if idioma_ajustes:
+        return idioma_ajustes
+
+    return _detectar_idioma_sistema()
+
+
 def inicializar(idioma: str = None) -> None:
     """
-    Instala la traducción activa. Si `idioma` es None, se detecta el idioma
-    del sistema operativo. Si no hay archivo .mo para ese idioma, se cae a
+    Instala la traducción activa. Ver `_resolver_idioma()` para el orden
+    de prioridad con el que se elige el idioma cuando no se fuerza uno
+    explícitamente. Si no hay archivo .mo para el idioma elegido, se cae a
     una traducción nula (el texto original en español se muestra tal cual).
     Segura de llamar más de una vez.
     """
     global _traduccion
-    idioma_elegido = idioma or _detectar_idioma_sistema()
+    idioma_elegido = _resolver_idioma(idioma)
     try:
         _traduccion = gettext.translation(
             DOMINIO,

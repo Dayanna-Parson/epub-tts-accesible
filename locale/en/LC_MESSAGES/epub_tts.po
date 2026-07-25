@@ -21,3 +21,506 @@ msgstr "Fragment Recording"
 
 msgid "Ajustes"
 msgstr "Settings"
+msgid "\n\nNo se pudieron renombrar:\n{detalle}"
+msgstr "\n\nCould not be renamed:\n{detalle}"
+
+msgid "(Todas las categorías)"
+msgstr "(All categories)"
+
+msgid "(Todas las etiquetas)"
+msgstr "(All tags)"
+
+msgid "; ... y {n} libro(s) más."
+msgstr "; ... and {n} more book(s)."
+
+msgid "Abre Ajustes en el diccionario de pronunciación, ya en alcance 'Este libro' y con este libro seleccionado."
+msgstr "Opens Settings in the pronunciation dictionary, already scoped to 'This book' with this book selected."
+
+msgid "Abriendo libro, por favor espera..."
+msgstr "Opening book, please wait..."
+
+msgid "Abrir en Lectura\tIntro"
+msgstr "Open in Reading\tEnter"
+
+msgid "Aplicando etiquetas, por favor espera..."
+msgstr "Applying tags, please wait..."
+
+msgid "Archivo localizado. Abriendo el libro."
+msgstr "File located. Opening the book."
+
+msgid "Archivo renombrado correctamente."
+msgstr "File renamed successfully."
+
+msgid "Asignar a «{nombre}»"
+msgstr "Assign to “{nombre}”"
+
+msgid "Asignar categoría a los {n} libro(s) de esta etiqueta"
+msgstr "Assign category to the {n} book(s) in this tag"
+
+msgid "Audiolibro a medias"
+msgstr "Audiobook in progress"
+
+msgid "Autor"
+msgstr "Author"
+
+msgid "Autores más frecuentes: {nombres}."
+msgstr "Most frequent authors: {nombres}."
+
+msgid "Añade un único archivo EPUB o PDF a la Biblioteca, sin escanear toda una carpeta."
+msgstr "Adds a single EPUB or PDF file to the Library, without scanning an entire folder."
+
+msgid "Añadido a categoría {ruta}."
+msgstr "Added to category {ruta}."
+
+msgid "Añadido a etiqueta {nombre}."
+msgstr "Added to tag {nombre}."
+
+msgid "Añadir a categoría"
+msgstr "Add to category"
+
+msgid "Añadir a etiqueta"
+msgstr "Add to tag"
+
+msgid "Buscar por título o autor (Ctrl+F):"
+msgstr "Search by title or author (Ctrl+F):"
+
+msgid "Cambia a la pestaña Creador de Audiolibros con este libro ya cargado."
+msgstr "Switches to the Audiobook Creator tab with this book already loaded."
+
+msgid "Categoría movida."
+msgstr "Category moved."
+
+msgid "Categoría renombrada a {nombre}."
+msgstr "Category renamed to {nombre}."
+
+msgid "Categoría {nombre} creada y libro añadido."
+msgstr "Category {nombre} created and book added."
+
+msgid "Categoría {nombre} creada y {n} libros añadidos."
+msgstr "Category {nombre} created and {n} books added."
+
+msgid "Categoría {nombre} creada."
+msgstr "Category {nombre} created."
+
+msgid "Categoría {nombre} eliminada."
+msgstr "Category {nombre} deleted."
+
+msgid "Categorías"
+msgstr "Categories"
+
+msgid "Cortar (Ctrl+X)"
+msgstr "Cut (Ctrl+X)"
+
+msgid "Crear categoría nueva y asignar..."
+msgstr "Create new category and assign..."
+
+msgid "Crear categoría y asignar"
+msgstr "Create category and assign"
+
+msgid "Crear como subcategoría (selecciona antes una categoría en el árbol)"
+msgstr "Create as subcategory (select a category in the tree first)"
+
+msgid "Crear como subcategoría de «{nombre}»"
+msgstr "Create as subcategory of “{nombre}”"
+
+msgid "Crear etiqueta nueva y asignar..."
+msgstr "Create new tag and assign..."
+
+msgid "Crear etiqueta y asignar"
+msgstr "Create tag and assign"
+
+msgid "Crear subcategoría nueva y asignar..."
+msgstr "Create new subcategory and assign..."
+
+msgid "Eliminar categoría"
+msgstr "Delete category"
+
+msgid "Eliminar etiqueta"
+msgstr "Delete tag"
+
+msgid "Eliminar...\tSupr"
+msgstr "Delete...\tDel"
+
+msgid "Enviar a Creador de Audiolibros"
+msgstr "Send to Audiobook Creator"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Error al importar"
+msgstr "Import error"
+
+msgid "Error al renombrar"
+msgstr "Rename error"
+
+msgid "Escaneando carpeta, por favor espera..."
+msgstr "Scanning folder, please wait..."
+
+msgid "Escaneando... {procesados} de {total} libro(s) procesados."
+msgstr "Scanning... {procesados} of {total} book(s) processed."
+
+msgid "Escaneo completado"
+msgstr "Scan complete"
+
+msgid "Escribe un nombre para la categoría."
+msgstr "Enter a name for the category."
+
+msgid "Ese libro ya está en la Biblioteca."
+msgstr "That book is already in the Library."
+
+msgid "Estado"
+msgstr "Status"
+
+msgid "Estado:"
+msgstr "Status:"
+
+msgid "Etiqueta renombrada a {nombre}."
+msgstr "Tag renamed to {nombre}."
+
+msgid "Etiqueta {nombre} creada y libro añadido."
+msgstr "Tag {nombre} created and book added."
+
+msgid "Etiqueta {nombre} creada."
+msgstr "Tag {nombre} created."
+
+msgid "Etiqueta {nombre} eliminada."
+msgstr "Tag {nombre} deleted."
+
+msgid "Etiquetas aplicadas, pero {n} libro(s) no se pudieron etiquetar."
+msgstr "Tags applied, but {n} book(s) could not be tagged."
+
+msgid "Etiquetas aplicadas."
+msgstr "Tags applied."
+
+msgid "Favorito"
+msgstr "Favorite"
+
+msgid "Formato"
+msgstr "Format"
+
+msgid "Género: {nombre}"
+msgstr "Genre: {nombre}"
+
+msgid "Géneros"
+msgstr "Genres"
+
+msgid "Géneros más frecuentes: {nombres}."
+msgstr "Most frequent genres: {nombres}."
+
+msgid "Importar carpeta"
+msgstr "Import folder"
+
+msgid "Importar carpeta... (Ctrl+O)"
+msgstr "Import folder... (Ctrl+O)"
+
+msgid "Importar libro"
+msgstr "Import book"
+
+msgid "Importar libro..."
+msgstr "Import book..."
+
+msgid "Leyendo"
+msgstr "Reading"
+
+msgid "Leyendo ahora"
+msgstr "Reading now"
+
+msgid "Leído"
+msgstr "Read"
+
+msgid "Libro añadido a la Biblioteca: {titulo}."
+msgstr "Book added to the Library: {titulo}."
+
+msgid "Libro quitado de esta categoría."
+msgstr "Book removed from this category."
+
+msgid "Libro quitado de esta etiqueta."
+msgstr "Book removed from this tag."
+
+msgid "Libro quitado de la biblioteca."
+msgstr "Book removed from the library."
+
+msgid "Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf"
+msgstr "Compatible books (*.epub;*.pdf)|*.epub;*.pdf|EPUB files (*.epub)|*.epub|PDF files (*.pdf)|*.pdf"
+
+msgid "Lista plana de etiquetas (sagas y colecciones personalizadas). Seleccionar una filtra la lista de libros por esa etiqueta. F2 renombra, Supr elimina."
+msgstr "Flat list of tags (sagas and custom collections). Selecting one filters the book list by that tag. F2 renames, Del deletes."
+
+msgid "Marcado como favorito."
+msgstr "Marked as favorite."
+
+msgid "Marcado como {nombre}."
+msgstr "Marked as {nombre}."
+
+msgid "Marcar como favorito"
+msgstr "Mark as favorite"
+
+msgid "Marcar como leyendo ahora"
+msgstr "Mark as reading now"
+
+msgid "Marcar como leído"
+msgstr "Mark as read"
+
+msgid "Marcar como pendiente de leer"
+msgstr "Mark as to read"
+
+msgid "Marcar los {n} libro(s) de esta etiqueta como"
+msgstr "Mark the {n} book(s) in this tag as"
+
+msgid "Mover abajo (Ctrl+Abajo)"
+msgstr "Move down (Ctrl+Down)"
+
+msgid "Mover arriba (Ctrl+Arriba)"
+msgstr "Move up (Ctrl+Up)"
+
+msgid "No hay libros pendientes de revisión."
+msgstr "There are no books pending review."
+
+msgid "No hay ninguna categoría cortada."
+msgstr "No category has been cut."
+
+msgid "No hay ningún libro seleccionado."
+msgstr "No book is selected."
+
+msgid "No se encontraron libros nuevos en esa carpeta."
+msgstr "No new books were found in that folder."
+
+msgid "No se encontró ningún libro de la biblioteca en esa carpeta."
+msgstr "No library book was found in that folder."
+
+msgid "No se pudieron leer los metadatos de ese archivo."
+msgstr "Could not read the metadata of that file."
+
+msgid "No se pudo completar el escaneo:\n{error}"
+msgstr "Could not complete the scan:\n{error}"
+
+msgid "No se pudo localizar el archivo indicado."
+msgstr "Could not locate the specified file."
+
+msgid "No se pudo renombrar"
+msgstr "Could not rename"
+
+msgid "No se pudo renombrar el archivo:\n{motivo}"
+msgstr "Could not rename the file:\n{motivo}"
+
+msgid "No se puede mover ahí: crearía un ciclo o el destino es la misma categoría."
+msgstr "Cannot move it there: it would create a cycle, or the destination is the same category."
+
+msgid "Nombre de archivo propuesto (editable):"
+msgstr "Proposed file name (editable):"
+
+msgid "Nombre de la nueva categoría:"
+msgstr "Name of the new category:"
+
+msgid "Nombre de la nueva etiqueta:"
+msgstr "Name of the new tag:"
+
+msgid "Nombre vacío"
+msgstr "Empty name"
+
+msgid "Nueva categoría"
+msgstr "New category"
+
+msgid "Nueva categoría o subcategoría..."
+msgstr "New category or subcategory..."
+
+msgid "Nueva categoría... (F2 renombra, Supr elimina)"
+msgstr "New category... (F2 renames, Del deletes)"
+
+msgid "Nueva etiqueta"
+msgstr "New tag"
+
+msgid "Nueva etiqueta..."
+msgstr "New tag..."
+
+msgid "Nueva etiqueta... (F2 renombra, Supr elimina)"
+msgstr "New tag... (F2 renames, Del deletes)"
+
+msgid "Nuevo nombre de la etiqueta:"
+msgstr "New tag name:"
+
+msgid "Pegar aquí (Ctrl+V)"
+msgstr "Paste here (Ctrl+V)"
+
+msgid "Pendiente de leer"
+msgstr "To read"
+
+msgid "Procesando... {procesados} de {total} libros."
+msgstr "Processing... {procesados} of {total} books."
+
+msgid "Quitado de favoritos."
+msgstr "Removed from favorites."
+
+msgid "Quitado de {nombre}."
+msgstr "Removed from {nombre}."
+
+msgid "Quitar de esta categoría"
+msgstr "Remove from this category"
+
+msgid "Quitar de esta etiqueta"
+msgstr "Remove from this tag"
+
+msgid "Quitar de favoritos"
+msgstr "Remove from favorites"
+
+msgid "Quitar de la biblioteca"
+msgstr "Remove from the library"
+
+msgid "Quitar de leyendo ahora"
+msgstr "Remove from reading now"
+
+msgid "Quitar de leídos"
+msgstr "Remove from read"
+
+msgid "Quitar de pendientes de leer"
+msgstr "Remove from to read"
+
+msgid "Reglas de pronunciación de este libro..."
+msgstr "Pronunciation rules for this book..."
+
+msgid "Renombra en bloque, según sus metadatos, todos los libros de la biblioteca cuyo nombre de archivo no coincide con el título real."
+msgstr "Batch-renames, according to their metadata, every library book whose file name doesn't match its real title."
+
+msgid "Renombrado por lotes"
+msgstr "Batch rename"
+
+msgid "Renombrar\tF2"
+msgstr "Rename\tF2"
+
+msgid "Renombrar archivo (F2)"
+msgstr "Rename file (F2)"
+
+msgid "Renombrar archivo...\tF2"
+msgstr "Rename file...\tF2"
+
+msgid "Renombrar etiqueta"
+msgstr "Rename tag"
+
+msgid "Renombrar todos los pendientes de revisión..."
+msgstr "Rename all pending review..."
+
+msgid "Saga: {nombre}"
+msgstr "Saga: {nombre}"
+
+msgid "Sagas en la Biblioteca: {nombres}."
+msgstr "Sagas in the Library: {nombres}."
+
+msgid "Sagas y colecciones"
+msgstr "Sagas and collections"
+
+msgid "Salir"
+msgstr "Exit"
+
+msgid "Se han añadido {n} libro(s) a la biblioteca."
+msgstr "{n} book(s) have been added to the library."
+
+msgid "Selecciona primero un género o subgénero para moverlo."
+msgstr "Select a genre or subgenre first to move it."
+
+msgid "Selecciona primero una etiqueta para renombrarla."
+msgstr "Select a tag first to rename it."
+
+msgid "Seleccionar carpeta con libros para importar"
+msgstr "Select a folder with books to import"
+
+msgid "Seleccionar libro a importar"
+msgstr "Select a book to import"
+
+msgid "Sin marcar"
+msgstr "Unmarked"
+
+msgid "Solo favoritos"
+msgstr "Favorites only"
+
+msgid "Subcategoría {nombre} creada dentro de {padre}."
+msgstr "Subcategory {nombre} created under {padre}."
+
+msgid "Título"
+msgstr "Title"
+
+msgid "Título sin revisar"
+msgstr "Title not reviewed"
+
+msgid "Ya está en ese extremo, no se puede mover más."
+msgstr "Already at that end, it can't be moved further."
+
+msgid "Ya existe una categoría con ese nombre en el mismo nivel."
+msgstr "A category with that name already exists at the same level."
+
+msgid "Ya existe una etiqueta con ese nombre."
+msgstr "A tag with that name already exists."
+
+msgid "abajo"
+msgstr "down"
+
+msgid "arriba"
+msgstr "up"
+
+msgid "autor desconocido"
+msgstr "unknown author"
+
+msgid "leyendo ahora"
+msgstr "reading now"
+
+msgid "leído"
+msgstr "read"
+
+msgid "leídos"
+msgstr "read"
+
+msgid "pendiente de leer"
+msgstr "to read"
+
+msgid "pendientes de leer"
+msgstr "to read"
+
+msgid "tu Biblioteca"
+msgstr "your Library"
+
+msgid "{exitosos} de {total} archivos renombrados correctamente."
+msgstr "{exitosos} of {total} files renamed successfully."
+
+msgid "{nombre} ({total} libro(s))"
+msgstr "{nombre} ({total} book(s))"
+
+msgid "{nombre} cortada. Selecciona el destino y pulsa Control V, o Escape para cancelar."
+msgstr "{nombre} cut. Select the destination and press Control V, or Escape to cancel."
+
+msgid "{nombre} movido {direccion}."
+msgstr "{nombre} moved {direccion}."
+
+msgid "{n} libro(s) en la biblioteca."
+msgstr "{n} book(s) in the library."
+
+msgid "{n} libro(s) marcados como {estado}."
+msgstr "{n} book(s) marked as {estado}."
+
+msgid "{n} libro(s) reconciliados con la nueva carpeta."
+msgstr "{n} book(s) reconciled with the new folder."
+
+msgid "{n} libro(s): "
+msgstr "{n} book(s): "
+
+msgid "{n} libros añadidos a categoría {ruta}."
+msgstr "{n} books added to category {ruta}."
+
+msgid "{total} libro(s) en total ({favoritos} favorito(s), {leidos} leído(s), {pendientes} pendiente(s), {leyendo} en curso)."
+msgstr "{total} book(s) in total ({favoritos} favorite(s), {leidos} read, {pendientes} to read, {leyendo} in progress)."
+
+msgid "¿Crear categorías desde las subcarpetas?"
+msgstr "Create categories from the subfolders?"
+
+msgid "¿Eliminar la categoría «{nombre}» y sus subcategorías?\n\nLos libros no se eliminan, solo dejan de pertenecer a esta categoría."
+msgstr "Delete the category “{nombre}” and its subcategories?\n\nBooks are not deleted, they just stop belonging to this category."
+
+msgid "¿Eliminar la etiqueta «{nombre}»?\n\nLos libros no se eliminan, solo dejan de tener esta etiqueta."
+msgstr "Delete the tag “{nombre}”?\n\nBooks are not deleted, they just stop having this tag."
+
+msgid "¿Las subcarpetas de esta carpeta representan géneros y subgéneros?\n\nEjemplo: «Fantasía/Fantasía épica/tu_libro.epub» crearía la categoría «Fantasía» con la subcategoría «Fantasía épica».\n\nPodrás renombrar o mover las categorías después. Si tus subcarpetas no son géneros (por ejemplo, son autores o sagas), elige No."
+msgstr "Do the subfolders of this folder represent genres and subgenres?\n\nExample: “Fantasy/Epic fantasy/your_book.epub” would create the category “Fantasy” with the subcategory “Epic fantasy”.\n\nYou can rename or move the categories afterward. If your subfolders are not genres (for example, they are authors or sagas), choose No."
+
+msgid "¿Quitar «{titulo}» de la biblioteca?\n\nEl archivo no se borrará del disco, solo su registro aquí."
+msgstr "Remove “{titulo}” from the library?\n\nThe file will not be deleted from disk, only its entry here."
+
+msgid "Árbol de géneros y subgéneros. Flechas para navegar; seleccionar un nodo filtra la lista de libros por esa categoría (incluye subgéneros). F2 renombra, Supr elimina, Ctrl+X/Ctrl+V mueve un género bajo otro, Ctrl+Arriba/Ctrl+Abajo lo reordena entre sus hermanos, Menú o Shift+F10 para más opciones."
+msgstr "Tree of genres and subgenres. Arrows to navigate; selecting a node filters the book list by that category (including subgenres). F2 renames, Del deletes, Ctrl+X/Ctrl+V moves a genre under another, Ctrl+Up/Ctrl+Down reorders it among its siblings, Menu or Shift+F10 for more options."
