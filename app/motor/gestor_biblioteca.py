@@ -765,6 +765,41 @@ class GestorBiblioteca:
         }
     # ANCLAJE_FIN: RESUMEN_BIBLIOTECA_ASISTENTE
 
+    # ANCLAJE_INICIO: CATALOGO_COMPLETO_ASISTENTE
+    def catalogo_para_asistente(self, limite=800) -> dict:
+        """
+        Listado completo (título, autor, saga) de toda la Biblioteca para el
+        contexto del Asistente en modo general, además del resumen agregado
+        de resumen_para_asistente(). Se calcula al vuelo sobre el estado
+        actual de biblioteca.db —sin caché ni detección de cambios—, así que
+        siempre está al día con solo volver a abrir el chat: el coste real
+        de recalcularlo (una consulta SQL) y de reenviarlo (texto plano de
+        títulos y autores) es insignificante frente al de cachearlo y tener
+        que invalidar esa caché cada vez que se añade o borra un libro.
+
+        limite acota el número de libros listados (no las consultas del
+        resumen agregado), para no generar un texto desproporcionado en
+        bibliotecas realmente enormes.
+        """
+        with self._conexion() as conexion:
+            filas = conexion.execute(
+                """
+                SELECT
+                    l.titulo,
+                    (SELECT GROUP_CONCAT(a.nombre, ', ')
+                     FROM autores a JOIN libro_autor la ON la.id_autor = a.id
+                     WHERE la.id_libro = l.id) AS autores,
+                    (SELECT GROUP_CONCAT(e.nombre, ', ')
+                     FROM etiquetas e JOIN libro_etiqueta le ON le.id_etiqueta = e.id
+                     WHERE le.id_libro = l.id) AS sagas
+                FROM libros l
+                ORDER BY l.titulo COLLATE NOCASE
+                """
+            ).fetchall()
+        total = len(filas)
+        return {"total": total, "libros": [dict(f) for f in filas[:limite]]}
+    # ANCLAJE_FIN: CATALOGO_COMPLETO_ASISTENTE
+
     # ── Actualización de estado ─────────────────────────────────────────────
 
     def actualizar_punto_lectura(self, id_libro: int, posicion: int):

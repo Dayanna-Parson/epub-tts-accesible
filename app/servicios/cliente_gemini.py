@@ -171,6 +171,8 @@ def _construir_contexto_libro(contexto_libro):
         partes.append(f"Categoría/etiquetas: {contexto_libro['categoria']}")
     if contexto_libro.get("estado"):
         partes.append(f"Estado de lectura: {contexto_libro['estado']}")
+    if contexto_libro.get("catalogo"):
+        partes.append(f"Catálogo completo de la Biblioteca (título — autor — saga): {contexto_libro['catalogo']}")
     if not partes:
         return None
     encabezado = _ENCABEZADOS_CONTEXTO.get(contexto_libro.get("tipo", "libro"), _ENCABEZADOS_CONTEXTO["libro"])

@@ -1207,7 +1207,30 @@ class PestanaBiblioteca(wx.Panel):
             "autor": None,
             "categoria": None,
             "estado": " ".join(partes),
+            "catalogo": self._catalogo_completo_texto(),
         }
+
+    def _catalogo_completo_texto(self):
+        """
+        Listado título/autor/saga de toda la Biblioteca, en texto plano
+        separado por punto y coma — para que el Asistente sepa con certeza
+        qué libros y sagas tienes, en vez de solo los más frecuentes del
+        resumen agregado de arriba (por eso a veces decía que no tenías una
+        saga que sí tenías: solo veía las más repetidas, no todas).
+        """
+        catalogo = self.gestor.catalogo_para_asistente()
+        lineas = []
+        for libro in catalogo["libros"]:
+            partes_libro = [libro["titulo"]]
+            if libro.get("autores"):
+                partes_libro.append(libro["autores"])
+            if libro.get("sagas"):
+                partes_libro.append(f"Saga: {libro['sagas']}")
+            lineas.append(" — ".join(partes_libro))
+        texto = "; ".join(lineas)
+        if catalogo["total"] > len(catalogo["libros"]):
+            texto += f"; ... y {catalogo['total'] - len(catalogo['libros'])} libro(s) más."
+        return texto
     # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA
 
     def al_alternar_favorito(self, evento):

@@ -906,19 +906,24 @@ class PanelClaves(wx.ScrolledWindow):
         self.combo_ge_modelo.SetSelection(0)
         sz_ge.Add(self.combo_ge_modelo, 0, wx.EXPAND | wx.ALL, 5)
         sz_ge.Add(wx.StaticText(self, label="Temperatura (creatividad de las respuestas):"), 0, wx.ALL, 2)
-        self.spin_ge_temperatura = wx.SpinCtrlDouble(
-            self, min=0.0, max=1.0, inc=0.1, initial=TEMPERATURA_DEFECTO_GEMINI,
+        # wx.Slider en vez de wx.SpinCtrlDouble: el mismo patrón ya probado con
+        # NVDA real en Velocidad/Volumen de Lectura. SpinCtrlDouble no es un
+        # control nativo de Windows (lo dibuja la propia wx), y no hereda la
+        # misma exposición accesible — NVDA lo anunciaba como "edición,
+        # seleccionado 0.3" sin el nombre, pese al SetName().
+        self.slider_ge_temperatura = wx.Slider(
+            self, value=round(TEMPERATURA_DEFECTO_GEMINI * 10), minValue=0, maxValue=10,
         )
-        self.spin_ge_temperatura.SetDigits(1)
-        self.spin_ge_temperatura.SetName("Temperatura de Gemini")
-        self.spin_ge_temperatura.SetHelpText(
-            "De 0.0 a 1.0. Cuanto más baja, más precisas y deterministas son las "
-            "respuestas sobre títulos, autores y tramas reales (menos probabilidad "
-            "de que el asistente invente datos). Cuanto más alta, más variedad en "
-            "la redacción, a costa de más alucinaciones ocasionales. "
-            f"Valor de fábrica: {TEMPERATURA_DEFECTO_GEMINI}."
+        self.slider_ge_temperatura.SetName("Temperatura de Gemini")
+        self.slider_ge_temperatura.SetHelpText(
+            "De 0.0 a 1.0, en pasos de 0.1. Valores bajos (0.1 a 0.4) dan "
+            "respuestas más precisas y ajustadas al catálogo real, con menos "
+            "probabilidad de que el asistente invente títulos, autores o "
+            "tramas. Valores altos (0.7 a 1.0) dan respuestas más variadas y "
+            "creativas, a costa de más alucinaciones ocasionales. "
+            f"Valor de fábrica: {TEMPERATURA_DEFECTO_GEMINI} (recomendado)."
         )
-        sz_ge.Add(self.spin_ge_temperatura, 0, wx.ALL, 5)
+        sz_ge.Add(self.slider_ge_temperatura, 0, wx.EXPAND | wx.ALL, 5)
         hb_ge = wx.BoxSizer(wx.HORIZONTAL)
         btn_ge_web = wx.Button(self, label="Conseguir clave Gemini")
         btn_ge_web.SetHelpText("Abre el navegador en Google AI Studio para crear o copiar tu clave.")
@@ -967,7 +972,8 @@ class PanelClaves(wx.ScrolledWindow):
         d_ge = claves.get("gemini", {})
         self.txt_ge_key.SetValue(d_ge.get("api_key", ""))
         self._fijar_modelo_gemini(d_ge.get("modelo", "auto"))
-        self.spin_ge_temperatura.SetValue(d_ge.get("temperatura", TEMPERATURA_DEFECTO_GEMINI))
+        temperatura = d_ge.get("temperatura", TEMPERATURA_DEFECTO_GEMINI)
+        self.slider_ge_temperatura.SetValue(round(temperatura * 10))
 
     def _fijar_modelo_gemini(self, id_modelo):
         # "auto" (o vacío) siempre es la primera entrada del combo.
@@ -980,7 +986,7 @@ class PanelClaves(wx.ScrolledWindow):
             indice = self.combo_ge_modelo.FindString(id_modelo)
         self.combo_ge_modelo.SetSelection(indice)
 
-    def al_guardar(self, evento, mensaje="Claves guardadas en claves_api.json."):
+    def al_guardar(self, evento, mensaje="Ajustes de proveedores guardados correctamente."):
         seleccion_ge = self.combo_ge_modelo.GetStringSelection()
         claves = {
             "azure": {
@@ -997,7 +1003,7 @@ class PanelClaves(wx.ScrolledWindow):
             "gemini": {
                 "api_key": self.txt_ge_key.GetValue().strip(),
                 "modelo": "auto" if seleccion_ge in ("", "Automático") else seleccion_ge,
-                "temperatura": round(self.spin_ge_temperatura.GetValue(), 1),
+                "temperatura": round(self.slider_ge_temperatura.GetValue() / 10, 1),
             },
         }
         guardar_claves(claves)
