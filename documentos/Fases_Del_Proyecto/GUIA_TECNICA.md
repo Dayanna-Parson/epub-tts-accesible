@@ -210,9 +210,13 @@ límites de cuota,
 
 tiempos de salto adelante y atrás,
 
-limpieza de caché.
+limpieza de caché,
 
-Toda la configuración se guarda en archivos JSON locales.
+efectos de sonido (casilla global y activación individual por efecto),
+
+credenciales, modelo y temperatura del Asistente de Biblioteca (Gemini), y gestión de sus plantillas de prompt.
+
+Toda la configuración se guarda en archivos JSON locales (o, en el caso de las plantillas de prompt, en archivos de texto individuales pensados para poder editarse también desde fuera de la app).
 
 ---
 
@@ -237,6 +241,12 @@ numpy: soporte para trabajo con audio.
 EbookLib: lectura y estructura de EPUB.
 
 BeautifulSoup: limpieza del HTML del EPUB.
+
+PyMuPDF (fitz): lectura y estructura de PDF, con la misma forma de datos que EbookLib para no duplicar lógica en Lectura ni en el Creador de Audiolibros.
+
+accessible-output3: anuncios de interfaz directos al lector de pantalla activo (NVDA, JAWS...), sin mover el foco. Es distinta de pyttsx3: esta última sigue usándose, pero solo donde puede llegar una ráfaga rápida de anuncios seguidos (el progreso de escanear una carpeta grande), porque descarta los anuncios intermedios y solo dice el más reciente.
+
+requests, sin SDK adicional, también para el Asistente de Biblioteca (Gemini): mismo criterio que con Azure, Polly, Deepgram y ElevenLabs, para no añadir una dependencia nueva solo por un proveedor más.
 
 Dependencias técnicas internas (como h2) se mantienen en requirements, pero no son relevantes a nivel conceptual.
 
@@ -342,7 +352,15 @@ filtro de características en las voces de Azure (Multilingüe, Dragon, MaiVoice
 
 corrección de fondo del puente SAPI5 de 32 bits (cada hilo que habla crea y usa su propia instancia del motor COM, sin compartir punteros entre hilos),
 
-silencio digital real al final de cada síntesis de Amazon Polly (motor estándar) para evitar el corte de la última sílaba a velocidades altas.
+silencio digital real al final de cada síntesis de Amazon Polly (motor estándar) para evitar el corte de la última sílaba a velocidades altas,
+
+Asistente de Biblioteca con Google Gemini (`cliente_gemini.py`, REST puro sin SDK): chat accesible con `Ctrl+Shift+B`, contexto automático del libro/saga/categoría seleccionados o del catálogo completo en modo general, plantillas de prompt de sistema personalizables (Ajustes → Asistente de Biblioteca, un archivo `.txt` por plantilla), modelo y temperatura configurables, Google Search Grounding para fundamentar recomendaciones,
+
+reemplazo del patrón `_anunciador` por `accessible_output3` (`anunciador_lector.py`) en toda la app, hablando directo al lector de pantalla activo sin mover el foco; se mantiene `pyttsx3` solo para secuencias de anuncios muy rápidas (progreso de escaneo de Biblioteca),
+
+14 sonidos contextuales (se añaden `thinking.wav` en bucle y `page_scrolled.wav`), con casilla global y activación individual por efecto desde Ajustes → Efectos de Sonido,
+
+copias de seguridad de biblioteca y proyectos separadas por tipo, con historial rotativo de 5 copias y creación solo ante cambios reales.
 
 Piper TTS, que figuraba como motor local previsto desde la Fase 4, queda descartado explícitamente.
 

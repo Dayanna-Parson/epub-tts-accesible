@@ -360,6 +360,8 @@ Soporte de PDF además de EPUB, en Lectura y en el nuevo Creador de Audiolibros.
 
 Creador de Audiolibros: exportación de un libro completo o por capítulos, con presupuesto de coste y duración, exportación en paralelo y reanudación de exportaciones cortadas por cuota o corte de conexión.
 
+Asistente de Biblioteca con Google Gemini: chat accesible sobre mis propios libros, con plantillas de prompt personalizables y conocimiento del catálogo real de mi biblioteca, no de un resumen que podía llevarle a negar que tuviera una saga que sí tengo.
+
 Piper TTS, previsto desde hacía tiempo como motor local futuro, queda descartado. SAPI5 sigue siendo, y se queda siendo, el único motor local.
 
 El criterio ha sido el mismo a lo largo de todo el proceso: que funcione, que sea accesible, que el coste sea transparente.

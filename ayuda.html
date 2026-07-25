@@ -36,6 +36,9 @@
             <li><strong>Creador de Audiolibros</strong>: exporta un libro completo de tu Biblioteca a MP3, en un único archivo o dividido por capítulos. Calcula presupuesto (caracteres, coste estimado, duración prevista del audio), elige tu voz favorita con preescucha, excluye capítulos que no quieras (índice, dedicatoria...), y exporta varios fragmentos a la vez para acortar el tiempo total. Si una exportación se corta por cuota o por un corte de conexión, retómala justo donde se quedó sin regrabar nada.</li>
             <li><strong>Soporte de PDF</strong>, además de EPUB, tanto en Lectura como en el Creador de Audiolibros.</li>
             <li><strong>Filtro de características en Azure</strong>: nuevo desplegable en Ajustes → Azure para filtrar voces por Multilingüe, Dragon, MaiVoice, Flash o Neural genérica.</li>
+            <li><strong>Asistente de Biblioteca (Google Gemini)</strong>: chat accesible con <strong>Control + Mayús + B</strong> desde cualquier pestaña. Con un libro, saga o categoría seleccionados en Biblioteca, el asistente ya conoce ese contexto; en modo general conoce el catálogo completo de tu biblioteca (títulos, autores y sagas), no solo un resumen, para no dar respuestas erróneas sobre lo que sí tienes. Las plantillas de prompt de sistema (distintos "estilos" de asistente) se crean, editan y borran desde <strong>Ajustes → Asistente de Biblioteca</strong>, como archivos de texto independientes editables desde fuera de la app. Modelo y temperatura de Gemini son configurables en Ajustes → Credenciales y API Keys.</li>
+            <li><strong>Efectos de sonido configurables</strong>: en Ajustes → Efectos de Sonido hay una casilla para silenciar todos los sonidos de la app, y un selector para activar o desactivar un efecto concreto (con botón de prueba independiente de esa preferencia). Nuevo sonido de página al navegar en Lectura (con flechas o durante la lectura continua, al estilo Bookworm) y sonido de espera mientras el Asistente de Biblioteca consulta a Gemini.</li>
+            <li><strong>Copias de seguridad automáticas</strong> de la biblioteca y de los proyectos de grabación, separadas por tipo, con un historial rotativo de las últimas 5 copias de cada una; solo se crean cuando hay cambios reales, no por el mero hecho de abrir la app.</li>
         </ul>
         <strong>Correcciones:</strong>
         <ul>
@@ -106,6 +109,7 @@
         <li><strong>Control + 5:</strong> Ajustes de la aplicación.</li>
         <li><strong>Control + O:</strong> Cargar libro (en Lectura), abrir carpeta (en Biblioteca o Grabación) — contextual según la pestaña activa.</li>
         <li><strong>Control + P:</strong> Reproducir / Pausar.</li>
+        <li><strong>Control + Mayús + B:</strong> Abrir el Asistente de Biblioteca (Gemini), desde cualquier pestaña.</li>
         <li><strong>F1:</strong> Abrir este manual.</li>
     </ul>
 </section>
@@ -120,6 +124,14 @@
         <li><strong>Control + F:</strong> buscar por título o autor.</li>
         <li><strong>Filtro de Estado:</strong> Todos, Pendientes de leer, Leyendo ahora, Leídos o Audiolibros a medias — esta última opción muestra solo los libros con una exportación de audiolibro cortada por falta de cuota o un corte de conexión, sin tener que recordar cuál era el último libro que estabas exportando. La columna Estado de la lista también marca «Audiolibro a medias» junto al estado de lectura del libro.</li>
         <li>Desde el menú contextual de un libro (tecla Menú o Mayús+F10) puedes abrirlo en Lectura o enviarlo al Creador de Audiolibros.</li>
+    </ul>
+
+    <h3>Asistente de Biblioteca (Gemini)</h3>
+    <p>Con <strong>Control + Mayús + B</strong> (desde cualquier pestaña) abres un chat accesible con un asistente basado en Google Gemini. Si tienes un libro, una saga o una categoría seleccionados, el asistente ya conoce ese contexto; si no hay nada seleccionado, conoce el catálogo completo de tu biblioteca (títulos, autores y sagas), para responder con precisión sobre lo que sí tienes y no inventar datos.</p>
+    <ul>
+        <li><strong>Estilo del asistente:</strong> combo con las plantillas de prompt disponibles (recomendaciones, análisis crítico, resúmenes rápidos...). Se crean, editan y borran desde <strong>Ajustes → Asistente de Biblioteca</strong>, no aquí.</li>
+        <li>El historial de la conversación se guarda por libro y puede exportarse a un archivo de texto con el botón <strong>«Guardar conversación...»</strong>.</li>
+        <li>Necesitas una clave de API de Google Gemini, configurable en <strong>Ajustes → Credenciales y API Keys</strong>, junto con el modelo a usar (automático o uno concreto) y la temperatura de las respuestas.</li>
     </ul>
 </section>
 
@@ -248,6 +260,15 @@
         <li>Muestra el botón <strong>«Reiniciar ahora»</strong> para relanzar la aplicación con la versión actualizada.</li>
     </ol>
     <p>Si la descarga falla (sin conexión, corte de red…) el botón cambia a <strong>«Reintentar actualización»</strong> para volver a intentarlo.</p>
+
+    <h3>Google Gemini (Asistente de Biblioteca)</h3>
+    <p>En <strong>Ajustes → Credenciales y API Keys</strong>, sección Google Gemini, se configura la clave de API (consíguela en Google AI Studio), el modelo (automático, o uno concreto de la lista real de tu cuenta tras pulsar «Comprobar clave y listar modelos Gemini») y la <strong>temperatura</strong>: un deslizador de 0.0 a 1.0 que controla cuánto se ajusta el asistente a los datos reales. Valores bajos (0.1 a 0.4, el valor de fábrica es 0.4) dan respuestas más precisas y con menos probabilidad de inventar títulos o autores; valores altos (0.7 a 1.0) dan respuestas más variadas, a costa de más alucinaciones ocasionales.</p>
+
+    <h3>Efectos de Sonido</h3>
+    <p>En <strong>Ajustes → Efectos de Sonido</strong> hay una casilla para silenciar todos los sonidos de la aplicación, y un selector con un botón para activar o desactivar un efecto concreto (por ejemplo, el sonido de cambio de página en Lectura) de forma independiente a esa casilla general. El botón «Probar sonido» reproduce el efecto elegido aunque esté desactivado, para poder escucharlo antes de decidir.</p>
+
+    <h3>Asistente de Biblioteca: plantillas de prompt</h3>
+    <p>En <strong>Ajustes → Asistente de Biblioteca</strong> se gestionan las plantillas de prompt de sistema que puedes elegir en el combo «Estilo del asistente» del chat: crear una nueva, editar el nombre o el texto de una existente, o borrarla (siempre debe quedar al menos una). El botón «Abrir carpeta de plantillas» abre en el Explorador de Windows la carpeta donde se guarda cada plantilla como un archivo de texto independiente, editable también desde fuera de la aplicación.</p>
 </section>
 
 <section id="diccionario">

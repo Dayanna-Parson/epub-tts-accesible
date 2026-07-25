@@ -80,6 +80,7 @@ app/
 │   ├── dialogo_troceador.py      # División de EPUB por capítulos
 │   ├── dialogo_voces_nuevas.py   # Notificación de voces nuevas disponibles
 │   ├── dialogo_novedades.py      # Novedades de versión al actualizar
+│   ├── dialogo_asistente_biblioteca.py  # Chat accesible con el Asistente de Biblioteca (Gemini)
 │   ├── dialogos.py               # Diálogos compartidos: marcadores, confirmaciones, etc.
 │   └── ui_recursos.py            # Helper para cargar iconos con fallback a wx.ArtProvider
 ├── motor/
@@ -90,10 +91,15 @@ app/
 │   ├── gestor_pdf.py             # Extrae texto/índice de PDF (fitz) para Lectura, misma forma que gestor_epub
 │   ├── gestor_proyectos.py       # Lógica de proyectos de Grabación. Persistencia en proyectos.json
 │   ├── gestor_atajos.py          # Atajos de teclado configurables por el usuario
+│   ├── gestor_chat_biblioteca.py     # Historial de conversación del Asistente de Biblioteca
+│   ├── gestor_prompts_asistente.py   # Plantillas de prompt de sistema, un .txt por plantilla
+│   ├── gestor_backups.py         # Copias rotativas de proyectos.json y biblioteca.db, solo si cambiaron
+│   ├── anunciador_lector.py      # accessible_output3: anuncios de interfaz al lector de pantalla activo
+│   ├── anunciador_voz.py         # pyttsx3: cola de voz para ráfagas rápidas (progreso de escaneo)
 │   ├── grabador_audio.py         # Grabación silenciosa a archivo: fragmentos y audiolibros completos
 │   ├── procesador_etiquetas.py   # Parsea {{@voz}} en el texto y fragmenta para grabación
 │   ├── reproductor_voz.py        # Cola de audio TTS asíncrona interactiva. Orquesta todos los motores.
-│   ├── reproductor_sonidos.py    # 12 efectos contextuales. Caché en RAM. Motor wx + fallback.
+│   ├── reproductor_sonidos.py    # 14 efectos contextuales (incluye bucle). Caché en RAM. Motor wx + fallback.
 │   ├── cliente_nube_voces.py     # Descarga listas de voces desde cada API
 │   ├── verificador_voces_nuevas.py # Detecta voces nuevas con cooldown de 24h
 │   ├── comprobador_actualizaciones.py # Versioning semver contra GitHub
@@ -101,14 +107,16 @@ app/
 │   ├── control_cuota.py          # Contadores mensuales por proveedor con autoreset + coste estimado
 │   ├── troceador_epub.py         # Divide EPUB por anclas HTML. TOC jerárquico y plano.
 │   ├── troceador_pdf.py          # Divide PDF por su índice de contenidos (o por página si no tiene)
-│   └── limpiador_lectura.py      # Limpieza de texto para TTS (sin HTML, sin ruido)
+│   ├── limpiador_lectura.py      # Limpieza de texto para TTS (sin HTML, sin ruido)
+│   └── limpiador_markdown_chat.py    # Limpia el markdown de las respuestas de Gemini para lectura en voz
 ├── servicios/
 │   ├── cliente_azure.py          # Azure Neural TTS. SSML escapado con xml.sax.saxutils.
 │   ├── cliente_polly.py          # Amazon Polly. Selección automática de motor (standard/neural/generative).
 │   ├── cliente_eleven.py         # ElevenLabs. Multilingüe. Streaming de audio.
 │   ├── cliente_deepgram.py       # Deepgram Aura-2. REST puro. Pay-as-you-go. Caché LRU.
 │   ├── cliente_sapi5.py          # SAPI5 64 bits. Siempre disponible, siempre el fallback.
-│   └── cliente_sapi32_bridge.py  # SAPI5 32 bits (Eloquence, RealSpeak). Proceso puente JSON.
+│   ├── cliente_sapi32_bridge.py  # SAPI5 32 bits (Eloquence, RealSpeak). Proceso puente JSON.
+│   └── cliente_gemini.py         # Asistente de Biblioteca: REST puro contra Gemini, sin SDK
 └── config_rutas.py               # Rutas absolutas. cargar_claves() / guardar_claves(). RAIZ del proyecto.
 
 auxiliar_sapi32.py                # Script 32 bits independiente. Compilar con Python 32 bits + PyInstaller.
@@ -158,13 +166,16 @@ El motor principal es `wx.adv.Sound` (parte de wxPython, sin deps adicionales). 
 wx.CallAfter(reproducir, NOMBRE_SONIDO)
 ```
 
-Las 12 constantes disponibles:
+Las 14 constantes disponibles:
 ```python
 APP_READY, REC_START, REC_END, PROGRESS, LIST_NAV,
-MOVE_UP, MOVE_DOWN, OPEN_FOLDER, SUCCESS, CLICK, ERROR, CLEAR
+MOVE_UP, MOVE_DOWN, OPEN_FOLDER, SUCCESS, CLICK, ERROR, CLEAR,
+THINKING, PAGE_SCROLLED
 ```
 
 Todos los `wav` viven en `/recursos/sonidos/` a 16-bit, 44100 Hz. Si el directorio no existe o un archivo falta, el sistema falla silenciosamente (log WARNING, sin crash).
+
+`THINKING` admite además reproducción en bucle (`iniciar_bucle()`/`detener_bucle()`, con fallback a `winsound` usando `SND_LOOP`) — se usa mientras el Asistente de Biblioteca espera respuesta de Gemini. Cada efecto se puede activar/desactivar de forma individual (`sonido_habilitado()`/`fijar_sonido_habilitado()`) además de la casilla global (`sonidos_habilitados()`/`fijar_sonidos_habilitados()`); ambas preferencias se guardan en `ajustes.json` y `reproducir(nombre, forzar=True)` las ignora, para el botón "Probar sonido" de Ajustes.
 
 ---
 
@@ -264,9 +275,10 @@ FFMPEG = os.path.join(RAIZ, "bin", "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
 
 | Archivo | Qué contiene | En .gitignore |
 |---|---|---|
-| `configuraciones/claves_api.json` | Claves de Azure, Polly, ElevenLabs | **Sí** |
-| `configuraciones/ajustes.json` | Todo lo demás: idioma, velocidad, volumen, tiempos de salto, favoritas, límites de cuota | No |
+| `configuraciones/claves_api.json` | Claves de Azure, Polly, ElevenLabs, Deepgram, Gemini (con modelo y temperatura) | **Sí** |
+| `configuraciones/ajustes.json` | Todo lo demás: idioma, velocidad, volumen, tiempos de salto, favoritas, límites de cuota, sonidos habilitados/deshabilitados | No |
 | `configuraciones/proyectos.json` | Jerarquía completa de proyectos y subproyectos | No |
+| `configuraciones/asistente_biblioteca/` | Plantillas de prompt (`plantillas/*.txt`), plantilla activa (`activo.json`) e historial de chat (`chat_biblioteca.json`) | **Sí** |
 
 `cargar_claves()` y `guardar_claves()` en `config_rutas.py` son las únicas funciones que tocan `claves_api.json`. El resto de la app no tiene acceso directo a ese archivo.
 
@@ -320,23 +332,16 @@ Usa `EnableCheckBoxes(True)` directamente sobre el `ListCtrl`. En wxPython 4.2+ 
 
 **No uses `CheckListCtrlMixin.__init__(self)`** — en wxPython 4.2+ genera `DeprecationWarning` en consola. Si el código hereda de `CheckListCtrlMixin`, elimina la llamada al `__init__` del mixin (la herencia en sí no causa problemas, pero la llamada sí).
 
-**5. Verbalización inmediata sin mover el foco visible (`_anunciador`).**
+**5. Verbalización inmediata sin mover el foco visible (`accessible_output3`).**
 
-`StaticText.SetLabel()` no dispara eventos de accesibilidad. Para que NVDA anuncie texto en respuesta a una acción (Ctrl+I para la página, Ctrl+S para "Guardado."), usa un `wx.TextCtrl` oculto de 1×1 px:
+`StaticText.SetLabel()` no dispara eventos de accesibilidad. Para que NVDA anuncie texto en respuesta a una acción (Ctrl+I para la página, Ctrl+S para "Guardado."), habla directo al lector de pantalla activo con `accessible_output3`, sin mover el foco:
 
 ```python
-# En __init__:
-self._anunciador = wx.TextCtrl(self, style=wx.TE_READONLY | wx.BORDER_NONE, size=(1, 1))
-
-# Para verbalizar:
-def _anunciar(self, texto):
-    control_previo = wx.Window.FindFocus()
-    self._anunciador.SetValue(texto)
-    self._anunciador.SetFocus()
-    wx.CallLater(300, lambda: control_previo.SetFocus() if control_previo else None)
+from app.motor import anunciador_lector as voz
+voz.hablar("Guardado.")
 ```
 
-El control recibe el foco brevemente, NVDA anuncia su valor, y el foco vuelve tras 300 ms. El usuario no nota ningún movimiento visible.
+El patrón anterior (`_anunciador`: un `wx.TextCtrl` oculto de 1×1 px que recibía el foco un instante) se retiró de toda la app — hacía que NVDA anunciara el rol del control oculto ("edición, solo lectura") en cada aviso, molesto en secuencias con varios anuncios seguidos. `app/motor/anunciador_lector.py` es perezoso y a prueba de fallos: si la librería no está instalada o no hay ningún lector de pantalla activo, `hablar()` no hace nada, sin excepción. Excepción: en secuencias de anuncios muy rápidas donde importa más el valor más reciente que leerlos todos (el progreso de escaneo de Biblioteca), se sigue usando `pyttsx3` (`anunciador_voz.py`), que descarta los anuncios intermedios — ver la sección "Anuncios de interfaz" de la Fase 7 más abajo.
 
 **6. El debounce de 300ms en búsquedas.**
 
@@ -681,5 +686,43 @@ La v2.0 generaba un `.bat` al vuelo (`ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` 
 3. **Espera de cierre por WinAPI, relanzamiento sin `.bat`.** `auxiliar_actualizador.py` espera a que el proceso de la app (su `--pid`) termine con `OpenProcess`/`WaitForSingleObject` (`ctypes`, con timeout), no parseando la salida de `tasklist`. Para relanzar la app no depende de `INICIAR_APP.bat`: recibe `--lanzador` (más `--python` si la app corre en modo desarrollo) desde la propia app, que sabe si está congelada con PyInstaller o corriendo desde código fuente; si no recibe `--lanzador`, autodetecta `epubtts.exe` o `iniciar_epub_tts.py` en `--destino`.
 
 **Estado a fecha de este documento:** implementado y probado con simulaciones de instalación correcta, fallo a mitad de una entrada y fallo de verificación del backup (rollback correcto en los tres casos). Probado también en Windows real con NVDA el tramo de descarga/verificación/aviso de instalador no disponible. Pendiente: validar en Windows real el ciclo completo de instalación con `bin/actualizador.exe` ya compilado (backup, reemplazo, rollback ante fallo real, relanzamiento). Hasta que esa validación se confirme, `ACTUALIZADOR_SCRIPT_CLON` sigue siendo el sistema activo en producción y no se retira.
+
+### Asistente de Biblioteca: cliente REST propio para Gemini, sin SDK
+
+`app/servicios/cliente_gemini.py` habla directo con `generativelanguage.googleapis.com/v1beta` usando `requests`, sin el SDK oficial de Google — mismo criterio que el resto de clientes de nube de la app (Azure, Polly, Deepgram, ElevenLabs), para no añadir una dependencia nueva solo por un proveedor más.
+
+- `listar_modelos()`: `GET /models`, filtrado por soporte de `generateContent` y por `_es_modelo_chat_de_texto()` (excluye variantes TTS/imagen/embedding que rechazarían una conversación multiturno). Se llama en cada comprobación de clave desde Ajustes, así la lista se actualiza sola cuando Google publica modelos nuevos, sin tocar código ni esperar a una notificación de la app.
+- `enviar_mensaje()`: arma `historial` + contexto de biblioteca + mensaje nuevo, con `system_instruction` (la plantilla de prompt activa) y Google Search Grounding (`tools: [{"google_search": {}}]`) para fundamentar recomendaciones en fuentes reales. Temperatura configurable (`generationConfig.temperature`, por defecto 0.4 — más determinista, menos alucinaciones sobre títulos/autores reales).
+- Selector de modelo en modo automático: si el usuario deja "Automático", `_candidatos_automaticos()` construye una cadena de reintento (Flash primero para preguntas normales, o Pro primero si `analisis_profundo=True`) que también cruza de familia (flash↔pro) ante 404 o 429, en vez de fallar directamente. Si el usuario elige un modelo concreto de la lista real de su cuenta, se usa exactamente ese, sin cadena de reintento.
+
+### Plantillas de prompt: un archivo `.txt` por plantilla, no un JSON único
+
+`app/motor/gestor_prompts_asistente.py` guarda cada plantilla de prompt de sistema del Asistente como un archivo de texto independiente en `configuraciones/asistente_biblioteca/plantillas/<nombre>.txt` — el texto tal cual, sin JSON ni escapado, para que se puedan editar directamente desde fuera de la app con cualquier editor. Cuál es la activa se guarda aparte, en `activo.json` (un dato pequeño que no encaja en "una plantilla = un archivo").
+
+`listar_prompts()` reescanea la carpeta en cada llamada (no hay caché en memoria): si el usuario añade o borra un `.txt` a mano mientras la app está abierta, el combo de plantillas y el panel de gestión en Ajustes lo reflejan solos la próxima vez que se consulten. `obtener_prompt_activo()` se autocorrige si la plantilla marcada como activa ya no existe (se cae a la primera de la lista y deja esa corrección guardada en `activo.json`, para no repetir el mismo fallback en cada lectura).
+
+Migración desde el formato anterior (todas las plantillas en un único `prompts_asistente.json`): `_migrar_json_legacy_si_hace_falta()` revisa **dos ubicaciones antiguas posibles** (la original en la raíz de `configuraciones/`, y una intermedia ya dentro de `asistente_biblioteca/` pero todavía sin trocear) en cada `listar_prompts()`, no solo si la carpeta de plantillas no existe todavía — esa condición más estricta dejaba plantillas huérfanas para siempre en cuanto la carpeta se creaba por cualquier otro motivo (por ejemplo, `crear_portable.py` generándola vacía en un build nuevo). No sobrescribe ninguna plantilla ni `activo.json` que ya existan.
+
+### Anuncios de interfaz: de `_anunciador` a `accessible_output3`
+
+El patrón `_anunciador` (un `wx.TextCtrl` oculto de 1×1 px que recibía el foco un instante para forzar la verbalización de NVDA) se reemplazó en toda la aplicación por `app/motor/anunciador_lector.py`, que envía el texto directo al lector de pantalla activo con la librería `accessible_output3` (`accessible_output3.outputs.auto.Auto().speak(texto, interrupt=False)`), sin mover el foco ni simular ningún control. El cambio salió del chat del Asistente de Biblioteca: con mensajes seguidos llegando por `wx.CallAfter`, `_anunciador` hacía que NVDA anunciara el rol del control oculto ("edición, solo lectura") en cada uno, como si saltara una ventana flotante en mitad de la conversación.
+
+Import perezoso y a prueba de fallos: si la librería no está instalada o no hay ningún lector de pantalla en ejecución, `hablar()` no hace nada, sin excepción. Se mantiene `pyttsx3` (`anunciador_voz.py`, ya existente) exclusivamente para secuencias de anuncios muy rápidas donde importa más decir el valor más reciente que leerlos todos — el progreso de escaneo de Biblioteca es el caso real: `AnunciadorVoz.hablar()` descarta los anuncios pendientes en cuanto llega uno nuevo, evitando que NVDA se quede leyendo un progreso desfasado con cientos de libros. `accessible_output3` no tiene ese descarte, así que no es intercambiable para ese caso concreto.
+
+### Copias de seguridad separadas por tipo, y solo si hay cambios reales
+
+`app/motor/gestor_backups.py` guardaba antes `proyectos.json` y `biblioteca.db` mezclados en `configuraciones/proyectos_backup/`. Ahora cada uno tiene su propia carpeta (`backups_proyectos/`, `backups_biblioteca/`), con migración automática de los `.zip` ya existentes por prefijo de nombre la primera vez que se necesite cualquiera de las dos.
+
+El backup de `biblioteca.db` se disparaba una vez por sesión solo con abrir la pestaña Biblioteca, hubiera cambios o no. Ahora `_hay_cambios_desde_ultimo_backup()` compara la fecha de modificación del archivo de origen contra la del backup más reciente de ese tipo; si no cambió, no se crea ningún `.zip` nuevo. El de `proyectos.json` ya solo se disparaba en `guardar()` tras una operación real, pero se le aplicó la misma comprobación por consistencia. Se mantiene el historial rotativo de las últimas 5 copias por tipo. Nombres de archivo sin segundos y con separadores legibles (`proyectos_2026-07-24_22h51m.zip` en vez de `proyectos_20260724_225107.zip`): mismo orden cronológico al ordenar por nombre, mucho más fácil de seguir de oído con NVDA.
+
+### Sonidos: bucle continuo y activación individual por efecto
+
+`reproductor_sonidos.py` incorpora `iniciar_bucle()`/`detener_bucle()` (con fallback a `winsound` con `SND_LOOP`) para `thinking.wav`, que suena mientras el Asistente de Biblioteca espera respuesta de Gemini, y `PAGE_SCROLLED` (`page_scrolled.wav`), que suena en Lectura al cruzar el límite de una página virtual (tanto navegando con flechas como durante la lectura continua con cualquier motor).
+
+Además de la casilla global ya existente para silenciar todos los sonidos (`sonidos_habilitados`/`fijar_sonidos_habilitados()`), cada efecto se puede activar o desactivar por separado (`sonido_habilitado()`/`fijar_sonido_habilitado()`, persistido en `ajustes.json` como una lista `sonidos_deshabilitados`). El botón "Probar sonido" de Ajustes usa `reproducir(nombre, forzar=True)` para ignorar ambas preferencias y poder previsualizar un efecto aunque esté desactivado.
+
+### Catálogo completo para el Asistente en modo general
+
+En modo general (sin libro/saga/categoría seleccionados), el Asistente de Biblioteca recibía solo un resumen agregado (`GestorBiblioteca.resumen_para_asistente()`: géneros/autores/sagas *más frecuentes*, con un límite de 5-10). Eso podía hacer que negara tener una saga real si esta no estaba entre las más repetidas. `GestorBiblioteca.catalogo_para_asistente()` añade el listado completo de título/autor/saga de toda la biblioteca (hasta un límite de 800 libros, por sentido común más que por coste real), calculado en vivo sobre `biblioteca.db` en cada apertura del chat — deliberadamente sin caché ni detección de cambios: el coste de recalcular una consulta SQL y reenviar texto plano de títulos es insignificante frente al de mantener sincronizada una caché.
 
 ---

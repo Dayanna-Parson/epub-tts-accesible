@@ -13,7 +13,8 @@ Pasos que ejecuta:
      auxiliar_sapi32.exe, que necesita un intérprete de 32 bits aparte y
      sigue siendo un paso manual, ver bin/INSTRUCCIONES.txt).
   4. Copia bin/, recursos/ y documentos/ al portable.
-  5. Crea configuraciones/ vacía (con solo ajustes.json de fábrica).
+  5. Crea configuraciones/ vacía (ajustes.json de fábrica, carpetas de
+     backups separadas y carpeta de plantillas del Asistente de Biblioteca).
   6. Copia INICIAR_APP.bat y novedades.txt a la raíz del portable.
   7. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
 

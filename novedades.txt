@@ -43,6 +43,32 @@ Nuevas funciones
   Nuevo desplegable en Ajustes → Azure para filtrar por Multilingüe,
   Dragon, MaiVoice, Flash o Neural genérica.
 
+- Asistente de Biblioteca (Google Gemini):
+  Chat accesible con Control + Mayús + B desde cualquier pestaña. Con
+  un libro, saga o categoría seleccionados en Biblioteca, el asistente
+  ya conoce ese contexto; en modo general conoce el catálogo completo
+  de tu biblioteca (títulos, autores y sagas), no solo un resumen, para
+  no dar respuestas erróneas sobre lo que sí tienes. Las plantillas de
+  prompt de sistema (distintos "estilos" de asistente) se crean,
+  editan y borran desde Ajustes → Asistente de Biblioteca, guardadas
+  como archivos de texto independientes editables desde fuera de la
+  app. Modelo y temperatura de Gemini son configurables en Ajustes →
+  Credenciales y API Keys.
+
+- Efectos de sonido configurables:
+  En Ajustes → Efectos de Sonido hay una casilla para silenciar todos
+  los sonidos de la app, y un selector para activar o desactivar un
+  efecto concreto de forma independiente, con botón de prueba. Nuevo
+  sonido sutil de cambio de página en Lectura (con flechas o durante
+  la lectura continua) y sonido de espera mientras el Asistente de
+  Biblioteca consulta a Gemini.
+
+- Copias de seguridad automáticas:
+  La biblioteca y los proyectos de grabación se respaldan por
+  separado, con un historial rotativo de las últimas 5 copias de cada
+  una. Solo se crea una copia nueva cuando hay cambios reales, no por
+  el mero hecho de abrir la app.
+
 - La app arranca siempre en Biblioteca:
   En lugar de recordar la última pestaña usada (que a veces dejaba
   caer a NVDA en Ajustes), el arranque aterriza siempre en tus libros.

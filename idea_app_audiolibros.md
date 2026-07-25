@@ -90,3 +90,6 @@ Deepgram Aura-2 integrado como motor de síntesis recomendado. Diccionario de pr
 
 **Versión 2.0.0:**
 Gestor de Proyectos, divisor de EPUB integrado, 12 sonidos contextuales, voces SAPI5 de 32 bits (Eloquence, RealSpeak), árbol de navegación en Ajustes y actualizaciones automáticas completas.
+
+**Versión 3.0.0 (julio 2026):**
+Pestaña Biblioteca con soporte de PDF, Creador de Audiolibros con exportación en paralelo, y un Asistente de Biblioteca con Google Gemini — el mismo tipo de conversación que dio origen a este documento, ahora integrado dentro de la propia aplicación para hablar sobre mis libros.

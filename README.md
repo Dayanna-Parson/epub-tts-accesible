@@ -46,7 +46,9 @@ producir audiolibros multivoz a mano con etiquetas de personaje,
 
 controlar el consumo de servicios TTS de pago,
 
-trabajar durante sesiones largas sin perder el contexto.
+trabajar durante sesiones largas sin perder el contexto,
+
+consultar a un Asistente de Biblioteca con IA (Google Gemini) sobre tus libros, sagas y recomendaciones.
 
 ---
 
@@ -80,6 +82,13 @@ La aplicación se organiza de forma clara y predecible:
 - Exportación de un libro completo a un único MP3 o dividido por capítulos.
 - Cálculo de presupuesto: caracteres, coste estimado y duración prevista.
 - Exportación en paralelo y reanudación ante cortes de cuota o de conexión.
+
+**Asistente de Biblioteca (Gemini)**
+
+- Chat accesible con `Ctrl+Shift+B` desde cualquier pestaña, o desde el menú contextual.
+- Con un libro, saga o categoría seleccionados, el asistente ya conoce ese contexto; en modo general conoce el catálogo completo de tu biblioteca (títulos, autores y sagas), no solo un resumen.
+- Plantillas de prompt de sistema personalizables (Ajustes → Asistente de Biblioteca): distintos "estilos" de asistente (recomendaciones, análisis crítico, resúmenes...), guardadas como archivos de texto editables.
+- Historial de conversación por libro, exportable a texto.
 
 Todo está pensado para poder usarse únicamente con teclado y lector de pantalla.
 
@@ -168,7 +177,9 @@ Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 3.0
 - Diccionario de pronunciación para todos los motores.
 - Control de cuota, coste estimado y avisos de gasto por proveedor.
 - Gestor de Proyectos con árbol jerárquico, papelera y acceso directo a las grabaciones.
-- 12 sonidos contextuales y navegación semántica por encabezados.
+- Asistente de Biblioteca con IA (Google Gemini): recomendaciones y consultas sobre tu catálogo, con plantillas de prompt personalizables.
+- 14 sonidos contextuales (activables/desactivables de forma individual o global) y navegación semántica por encabezados.
+- Copias de seguridad automáticas y rotativas de la biblioteca y los proyectos, separadas por tipo.
 - Ajustes en árbol de navegación y actualizaciones automáticas desde la propia app.
 
 Piper TTS, que figuró como motor local previsto, queda descartado: SAPI5 sigue siendo el único motor local.
