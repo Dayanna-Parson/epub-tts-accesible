@@ -477,7 +477,7 @@ class PestanaBiblioteca(wx.Panel):
             self._cargar_arbol_categorias(id_categoria_seleccionar=id_categoria)
             texto_direccion = "arriba" if direccion < 0 else "abajo"
             self._anunciar(f"{nombre} movido {texto_direccion}.")
-            self._voz.hablar(f"{nombre} movido {texto_direccion}.")
+            voz.hablar(f"{nombre} movido {texto_direccion}.")
         else:
             self._anunciar("Ya está en ese extremo, no se puede mover más.")
 
@@ -511,7 +511,7 @@ class PestanaBiblioteca(wx.Panel):
 
         if self.gestor.renombrar_categoria(valor, nuevo_nombre):
             reproducir(SUCCESS)
-            self._voz.hablar(f"Categoría renombrada a {nuevo_nombre}.")
+            voz.hablar(f"Categoría renombrada a {nuevo_nombre}.")
             self._cargar_libros()
         else:
             evento.Veto()
@@ -534,9 +534,9 @@ class PestanaBiblioteca(wx.Panel):
             id_nueva = self.gestor.crear_categoria(dlg.nombre, id_padre_final)
             reproducir(SUCCESS)
             if id_padre_final is not None:
-                self._voz.hablar(f"Subcategoría {dlg.nombre} creada dentro de {nombre_padre}.")
+                voz.hablar(f"Subcategoría {dlg.nombre} creada dentro de {nombre_padre}.")
             else:
-                self._voz.hablar(f"Categoría {dlg.nombre} creada.")
+                voz.hablar(f"Categoría {dlg.nombre} creada.")
             self._cargar_arbol_categorias(id_categoria_seleccionar=id_nueva)
         dlg.Destroy()
 
@@ -554,7 +554,7 @@ class PestanaBiblioteca(wx.Panel):
         self.gestor.eliminar_categoria(id_categoria)
         self._id_categoria_activa = None
         reproducir(SUCCESS)
-        self._voz.hablar(f"Categoría {nombre} eliminada.")
+        voz.hablar(f"Categoría {nombre} eliminada.")
         self._cargar_arbol_categorias()
         self._cargar_libros()
 
@@ -565,13 +565,13 @@ class PestanaBiblioteca(wx.Panel):
         self._categoria_en_portapapeles = id_categoria
         reproducir(CLEAR)
         nombre = self.arbol_categorias.GetItemText(self.arbol_categorias.GetSelection())
-        self._voz.hablar(
+        voz.hablar(
             f"{nombre} cortada. Selecciona el destino y pulsa Control V, o Escape para cancelar."
         )
 
     def al_pegar_categoria(self, evento):
         if self._categoria_en_portapapeles is None:
-            self._voz.hablar("No hay ninguna categoría cortada.")
+            voz.hablar("No hay ninguna categoría cortada.")
             return
         destino = self._categoria_seleccionada_id()
         if self.gestor.reparentar_categoria(self._categoria_en_portapapeles, destino):
@@ -579,10 +579,10 @@ class PestanaBiblioteca(wx.Panel):
             id_movida = self._categoria_en_portapapeles
             self._categoria_en_portapapeles = None
             self._cargar_arbol_categorias(id_categoria_seleccionar=id_movida)
-            self._voz.hablar("Categoría movida.")
+            voz.hablar("Categoría movida.")
         else:
             reproducir(ERROR)
-            self._voz.hablar("No se puede mover ahí: crearía un ciclo o el destino es la misma categoría.")
+            voz.hablar("No se puede mover ahí: crearía un ciclo o el destino es la misma categoría.")
 
     def al_menu_contextual_arbol(self, evento):
         id_categoria = self._categoria_seleccionada_id()
@@ -675,7 +675,7 @@ class PestanaBiblioteca(wx.Panel):
     def al_renombrar_etiqueta_seleccionada(self):
         etiqueta = self._etiqueta_seleccionada()
         if etiqueta is None:
-            self._voz.hablar("Selecciona primero una etiqueta para renombrarla.")
+            voz.hablar("Selecciona primero una etiqueta para renombrarla.")
             return
         dlg = wx.TextEntryDialog(
             self, "Nuevo nombre de la etiqueta:", "Renombrar etiqueta", value=etiqueta["nombre"]
@@ -684,7 +684,7 @@ class PestanaBiblioteca(wx.Panel):
             nuevo_nombre = dlg.GetValue().strip()
             if nuevo_nombre and self.gestor.renombrar_etiqueta(etiqueta["id"], nuevo_nombre):
                 reproducir(SUCCESS)
-                self._voz.hablar(f"Etiqueta renombrada a {nuevo_nombre}.")
+                voz.hablar(f"Etiqueta renombrada a {nuevo_nombre}.")
                 self._cargar_lista_etiquetas(id_etiqueta_seleccionar=etiqueta["id"])
                 self._cargar_libros()
             elif nuevo_nombre:
@@ -707,7 +707,7 @@ class PestanaBiblioteca(wx.Panel):
             return
         self.gestor.eliminar_etiqueta(etiqueta["id"])
         reproducir(SUCCESS)
-        self._voz.hablar(f"Etiqueta {etiqueta['nombre']} eliminada.")
+        voz.hablar(f"Etiqueta {etiqueta['nombre']} eliminada.")
         self._cargar_lista_etiquetas()
         self._cargar_libros()
 
@@ -718,7 +718,7 @@ class PestanaBiblioteca(wx.Panel):
             if nombre:
                 id_nueva = self.gestor.crear_etiqueta(nombre)
                 reproducir(SUCCESS)
-                self._voz.hablar(f"Etiqueta {nombre} creada.")
+                voz.hablar(f"Etiqueta {nombre} creada.")
                 self._cargar_lista_etiquetas(id_etiqueta_seleccionar=id_nueva)
         dlg.Destroy()
 
@@ -866,7 +866,7 @@ class PestanaBiblioteca(wx.Panel):
             "¿Crear categorías desde las subcarpetas?", wx.YES_NO | wx.ICON_QUESTION,
         ) == wx.YES
 
-        self._voz.hablar("Escaneando carpeta, por favor espera...")
+        voz.hablar("Escaneando carpeta, por favor espera...")
         self.barra_progreso.SetValue(0)
         self.barra_progreso.Show()
         self.Layout()
@@ -977,7 +977,7 @@ class PestanaBiblioteca(wx.Panel):
         # queda en silencio y parece que la app se ha colgado. El
         # etiquetado en sí se hace en un hilo de fondo (ver
         # _agrupar_carpetas_en_hilo) para no bloquear la interfaz.
-        self._voz.hablar("Aplicando etiquetas, por favor espera...")
+        voz.hablar("Aplicando etiquetas, por favor espera...")
         self._ultima_etiqueta_creada = next(iter(carpetas_a_agrupar.values()), None)
         threading.Thread(
             target=self._agrupar_carpetas_en_hilo,
@@ -1033,12 +1033,12 @@ class PestanaBiblioteca(wx.Panel):
 
         if total_fallos:
             reproducir(ERROR)
-            self._voz.hablar(
+            voz.hablar(
                 f"Etiquetas aplicadas, pero {total_fallos} libro(s) no se pudieron etiquetar."
             )
         else:
             reproducir(SUCCESS)
-            self._voz.hablar("Etiquetas aplicadas.")
+            voz.hablar("Etiquetas aplicadas.")
 
     def _al_terminar_escaneo(self, total_insertados):
         self._timer_progreso.Stop()
@@ -1073,7 +1073,7 @@ class PestanaBiblioteca(wx.Panel):
             mensaje = f"Se han añadido {total_insertados} libro(s) a la biblioteca."
         else:
             mensaje = "No se encontraron libros nuevos en esa carpeta."
-        self._voz.hablar(mensaje)
+        voz.hablar(mensaje)
         wx.MessageBox(mensaje, "Escaneo completado", wx.OK | wx.ICON_INFORMATION)
 
     def _al_fallar_escaneo(self, error):
@@ -1265,7 +1265,7 @@ class PestanaBiblioteca(wx.Panel):
         if not os.path.exists(libro["ruta_archivo"]):
             self._al_archivo_no_encontrado(libro)
             return
-        self._voz.hablar("Abriendo libro, por favor espera...")
+        voz.hablar("Abriendo libro, por favor espera...")
         self._anunciar("Abriendo libro, por favor espera...")
 
         wx.CallLater(400, self._continuar_apertura_libro, libro)
@@ -1540,7 +1540,7 @@ class PestanaBiblioteca(wx.Panel):
         )
         self.gestor.asignar_etiqueta(libro["id"], nombre)
         reproducir(SUCCESS)
-        self._voz.hablar(f"Añadido a etiqueta {nombre}.")
+        voz.hablar(f"Añadido a etiqueta {nombre}.")
         self._cargar_lista_etiquetas(id_etiqueta_seleccionar=self._id_etiqueta_activa)
         self._cargar_libros()
 
@@ -1551,7 +1551,7 @@ class PestanaBiblioteca(wx.Panel):
             if nombre:
                 self.gestor.asignar_etiqueta(libro["id"], nombre)
                 reproducir(SUCCESS)
-                self._voz.hablar(f"Etiqueta {nombre} creada y libro añadido.")
+                voz.hablar(f"Etiqueta {nombre} creada y libro añadido.")
                 self._cargar_lista_etiquetas(id_etiqueta_seleccionar=self._id_etiqueta_activa)
                 self._cargar_libros()
         dlg.Destroy()
@@ -1562,7 +1562,7 @@ class PestanaBiblioteca(wx.Panel):
             return
         self.gestor.quitar_etiqueta_de_libro(libro["id"], self._id_etiqueta_activa)
         reproducir(SUCCESS)
-        self._voz.hablar("Libro quitado de esta etiqueta.")
+        voz.hablar("Libro quitado de esta etiqueta.")
         self._cargar_libros()
 
     def al_asignar_categoria_existente(self, libros, id_categoria):
@@ -1571,9 +1571,9 @@ class PestanaBiblioteca(wx.Panel):
             self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
         reproducir(SUCCESS)
         if len(libros) == 1:
-            self._voz.hablar(f"Añadido a categoría {' > '.join(ruta)}.")
+            voz.hablar(f"Añadido a categoría {' > '.join(ruta)}.")
         else:
-            self._voz.hablar(f"{len(libros)} libros añadidos a categoría {' > '.join(ruta)}.")
+            voz.hablar(f"{len(libros)} libros añadidos a categoría {' > '.join(ruta)}.")
         self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
         self._cargar_libros()
 
@@ -1592,9 +1592,9 @@ class PestanaBiblioteca(wx.Panel):
                     self.gestor.asignar_categoria_por_ruta(libro["id"], ruta)
                 reproducir(SUCCESS)
                 if len(libros) == 1:
-                    self._voz.hablar(f"Categoría {nombre} creada y libro añadido.")
+                    voz.hablar(f"Categoría {nombre} creada y libro añadido.")
                 else:
-                    self._voz.hablar(f"Categoría {nombre} creada y {len(libros)} libros añadidos.")
+                    voz.hablar(f"Categoría {nombre} creada y {len(libros)} libros añadidos.")
                 self._cargar_arbol_categorias(id_categoria_seleccionar=self._id_categoria_activa)
                 self._cargar_libros()
         dlg.Destroy()
