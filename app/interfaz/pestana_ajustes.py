@@ -1819,15 +1819,23 @@ class PanelAtajos(wx.Panel):
 
         sb_fijos = wx.StaticBox(self, label="Atajos fijos del menú (no configurables)")
         sz_fijos = wx.StaticBoxSizer(sb_fijos, wx.VERTICAL)
+        # Lista corregida: tenía "Ctrl+A" y "Ctrl+B" que no existen en ningún
+        # sitio real de la app, y "Ctrl+G"/"Ctrl+M" duplicados con la lista
+        # configurable de arriba (ir_porcentaje/marcadores) — se quitan de
+        # aquí porque esos sí se pueden reasignar. Se añaden los atajos
+        # fijos reales que faltaban (Ctrl+1 a Ctrl+5, Ctrl+I e info de
+        # Biblioteca, H/Shift+H, Alt+P, menú contextual).
         _FIJOS = [
-            ("Ctrl+A",       "Cargar libro (menú Archivo)"),
+            ("Ctrl+1 a Ctrl+5", "Cambiar de pestaña (Biblioteca, Lectura, Creador de Audiolibros, Grabación, Ajustes)"),
+            ("Ctrl+O",       "Cargar libro (Lectura) / Abrir carpeta (Biblioteca o Grabación) — según la pestaña activa"),
             ("Ctrl+T",       "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
             ("Ctrl+Shift+P", "Abrir gestor de proyectos (menú Proyectos)"),
-            ("Ctrl+B",       "Buscar en el texto (pestaña Lectura)"),
-            ("Ctrl+G",       "Ir a página del capítulo, del libro o porcentaje (pestaña Lectura)"),
-            ("Ctrl+I",       "Consultar páginas virtuales actuales del capítulo y del libro (pestaña Lectura)"),
+            ("Ctrl+I",       "Anunciar página actual (Lectura) / Info del libro seleccionado (Biblioteca) — según la pestaña activa"),
+            ("Ctrl+Shift+F", "Marcar/desmarcar como favorito el libro seleccionado (pestaña Biblioteca)"),
+            ("H / Mayús+H",  "Saltar entre encabezados del libro (pestaña Lectura)"),
+            ("Alt+P",        "Escuchar muestra de la voz seleccionada (Creador de Audiolibros, Grabación)"),
             ("Ctrl+S",       "Guardar configuración general (pestaña Ajustes)"),
-            ("Ctrl+M",       "Gestor de marcadores (pestaña Lectura)"),
+            ("Tecla Menú / Mayús+F10", "Abrir el menú contextual de la pestaña activa"),
             ("Alt+F4",       "Salir de la aplicación"),
         ]
         for atajo, desc in _FIJOS:
