@@ -205,7 +205,7 @@ Esta fase marca la transformación de Epub TTS en una herramienta profesional, i
 
 **Hitos alcanzados:**
 1. **Sincronización Exacta SAPI 5:** Implementamos una cola de párrafos con callbacks de progreso. El cursor se mueve en tiempo real con la voz local, permitiendo pausas quirúrgicas y una reanudación perfecta sin pérdida de posición.
-2. **Navegación Semántica:** Incorporamos los atajos `H` y `Shift+H` para saltar entre encabezados (h1-h6) con respuesta sonora, mejorando drásticamente la navegación estructural.
+2. **Navegación Semántica (intento fallido):** Incorporamos los atajos `H` y `Shift+H` para saltar entre encabezados (h1-h6) con respuesta sonora. Nunca llegaron a funcionar de verdad — el `EVT_CHAR_HOOK` del Frame principal se quedaba con la tecla antes de que le llegara al área de texto — y se retiraron varias versiones después, junto con el código muerto que dejaron. Lo que sí quedó de este intento fue útil por otro lado: los datos de posición de cada encabezado, reutilizados para aplicarles negrita.
 3. **Soporte de Rich Text:** El motor ahora preserva visualmente negritas, cursivas y subrayados, permitiendo que el lector de pantalla brinde una lectura mucho más rica en matices.
 4. **Optimización de Interfaz:** Unificamos atajos en `Control + O` (contextual) y refinamos los deslizadores de precisión (saltos de 1 y 10 unidades) para un control total sin fatiga auditiva.
 

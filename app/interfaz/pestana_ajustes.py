@@ -1824,7 +1824,13 @@ class PanelAtajos(wx.Panel):
         # configurable de arriba (ir_porcentaje/marcadores) — se quitan de
         # aquí porque esos sí se pueden reasignar. Se añaden los atajos
         # fijos reales que faltaban (Ctrl+1 a Ctrl+5, Ctrl+I e info de
-        # Biblioteca, H/Shift+H, Alt+P, menú contextual).
+        # Biblioteca, Alt+P, menú contextual). H/Shift+H no se incluye:
+        # se intentó como navegación por encabezados en Lectura, pero el
+        # EVT_CHAR_HOOK del Frame (ventana_principal.py) se queda con la
+        # tecla antes de que le llegue al EVT_CHAR_HOOK del propio
+        # TextCtrl, así que nunca llegó a funcionar de verdad. El código
+        # muerto (_al_tecla_contenido y compañía) se retiró de
+        # pestana_lectura.py.
         _FIJOS = [
             ("Ctrl+1 a Ctrl+5", "Cambiar de pestaña (Biblioteca, Lectura, Creador de Audiolibros, Grabación, Ajustes)"),
             ("Ctrl+O",       "Cargar libro (Lectura) / Abrir carpeta (Biblioteca o Grabación) — según la pestaña activa"),
@@ -1832,7 +1838,6 @@ class PanelAtajos(wx.Panel):
             ("Ctrl+Shift+P", "Abrir gestor de proyectos (menú Proyectos)"),
             ("Ctrl+I",       "Anunciar página actual (Lectura) / Info del libro seleccionado (Biblioteca) — según la pestaña activa"),
             ("Ctrl+Shift+F", "Marcar/desmarcar como favorito el libro seleccionado (pestaña Biblioteca)"),
-            ("H / Mayús+H",  "Saltar entre encabezados del libro (pestaña Lectura)"),
             ("Alt+P",        "Escuchar muestra de la voz seleccionada (Creador de Audiolibros, Grabación)"),
             ("Ctrl+S",       "Guardar configuración general (pestaña Ajustes)"),
             ("Tecla Menú / Mayús+F10", "Abrir el menú contextual de la pestaña activa"),

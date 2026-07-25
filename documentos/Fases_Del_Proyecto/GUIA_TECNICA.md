@@ -334,7 +334,7 @@ Divisor de EPUB integrado por capítulos, sin depender de herramientas externas,
 
 soporte de voces SAPI5 de 32 bits (Eloquence, RealSpeak) mediante un proceso puente de 32 bits,
 
-navegación semántica por encabezados (`H` / `Shift+H`) y patrón `_anunciador` para verbalizaciones inmediatas sin mover el foco,
+patrón `_anunciador` para verbalizaciones inmediatas sin mover el foco (retirado en la Fase 7 a favor de `accessible_output3`, ver más abajo),
 
 árbol de navegación en Ajustes (`wx.TreeCtrl`), sustituyendo la disposición lineal anterior,
 

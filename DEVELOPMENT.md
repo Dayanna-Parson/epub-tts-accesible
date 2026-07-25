@@ -490,7 +490,7 @@ La UI en `pestana_ajustes.py` solo lee `bool(v.get("es_nueva", False))` directam
 
 ### UX y Atajos
 - **Slidrs:** Solo exponen el valor actual a la API de accesibilidad. Pasos de 1 (flechas) y 10 (RePág/AvPág).
-- **Atajos:** `Control + O` es el comando universal de apertura. `H / Shift+H` para navegación por encabezados. Se prohíbe el uso de la tecla `Espacio` para evitar conflictos de foco.
+- **Atajos:** `Control + O` es el comando universal de apertura. Se prohíbe el uso de la tecla `Espacio` para evitar conflictos de foco.
 
 ---
 

@@ -5,10 +5,10 @@ gestor_pdf.py
 Extracción de texto y estructura de un PDF para la pestaña Lectura, con
 la misma forma de retorno que extraer_datos_epub() de gestor_epub.py,
 para que pestana_lectura.py pueda cargar EPUB y PDF por el mismo camino
-sin duplicar el árbol de índice, la navegación por encabezados ni el
+sin duplicar el árbol de índice, la negrita de encabezados ni el
 guardado de posición de lectura.
 
-Capítulos / navegación H·Shift+H: se usa el índice de contenidos
+Capítulos / negrita de encabezados: se usa el índice de contenidos
 embebido del PDF (documento.get_toc(), vía PyMuPDF/fitz) cuando existe.
 Si el PDF no tiene índice (habitual en PDF escaneados o mal generados),
 se genera un índice sintético de una entrada por página ("Página N"),

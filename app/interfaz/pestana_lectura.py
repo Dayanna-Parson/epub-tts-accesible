@@ -76,7 +76,7 @@ class PestanaLectura(wx.Panel):
         self.reproductor = ReproductorVoz()
         
         self.posiciones_capitulos = {}
-        self.posiciones_encabezados = []  # [{nivel, texto, pos}] para H/Shift+H
+        self.posiciones_encabezados = []  # [{nivel, texto, pos}] para negrita de h1-h6 en _aplicar_estilos_ricos
         self.spans_estilo = []            # [{texto, estilos, cerca_de}] para rich-text
         self.marcadores = {}
         self.longitud_texto = 0
@@ -126,8 +126,7 @@ class PestanaLectura(wx.Panel):
         )
         self.txt_contenido.SetValue("¡Bienvenido a Epub TTS! Tu lector de EPUB con soporte para voces de alta calidad (Azure, Polly y ElevenLabs) y voces locales SAPI 5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1, 2 y 3 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!")
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
-        self.txt_contenido.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_contenido)
-        
+
         self.divisor.SetMinimumPaneSize(200)
         self.divisor.SplitVertically(self.arbol_indice, self.txt_contenido, 280)
         sizer_principal.Add(self.divisor, 1, wx.EXPAND | wx.ALL, 5)
@@ -1377,39 +1376,3 @@ class PestanaLectura(wx.Panel):
         finally:
             self.txt_contenido.Thaw()
 
-    def _al_tecla_contenido(self, evento):
-        """
-        Intercepta teclas en el área de texto.
-        H → siguiente encabezado, Shift+H → encabezado anterior (estilo Bookworm/NVDA).
-        """
-        key = evento.GetKeyCode()
-        if key == ord('H') and not evento.ControlDown() and not evento.AltDown():
-            if evento.ShiftDown():
-                self._al_encabezado_anterior()
-            else:
-                self._al_encabezado_siguiente()
-            return  # consumir el evento, no escribir 'H' en el control
-        evento.Skip()
-
-    def _al_encabezado_siguiente(self):
-        """Salta al siguiente encabezado (h1–h6) en el texto."""
-        if not self.posiciones_encabezados:
-            return
-        pos_actual = self.txt_contenido.GetInsertionPoint()
-        for enc in self.posiciones_encabezados:
-            if enc['pos'] > pos_actual:
-                self._ir_a_posicion(enc['pos'])
-                reproducir(LIST_NAV)
-                return
-
-    def _al_encabezado_anterior(self):
-        """Salta al encabezado anterior (h1–h6) en el texto."""
-        if not self.posiciones_encabezados:
-            return
-        pos_actual = self.txt_contenido.GetInsertionPoint()
-        for enc in reversed(self.posiciones_encabezados):
-            if enc['pos'] < pos_actual:
-                self._ir_a_posicion(enc['pos'])
-                reproducir(LIST_NAV)
-                return
-    # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO

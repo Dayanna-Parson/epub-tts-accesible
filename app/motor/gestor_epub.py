@@ -133,7 +133,7 @@ def extraer_datos_epub(ruta_epub):
         - texto_completo (str): El texto del libro limpio.
         - datos_indice (list): Estructura jerárquica para el árbol de navegación.
         - posiciones_capitulos (dict): Diccionario {titulo_capitulo: posicion_caracter}.
-        - posiciones_encabezados (list): [{nivel, texto, pos}] para navegación H/Shift+H.
+        - posiciones_encabezados (list): [{nivel, texto, pos}] para aplicar negrita a h1-h6 en Lectura.
     """
     if not os.path.exists(ruta_epub):
         raise FileNotFoundError(f"No se encontró el archivo: {ruta_epub}")

@@ -144,7 +144,7 @@ Archivos de configuración (en `/configuraciones/`):
 - Con un libro/saga/categoría seleccionados en Biblioteca, el chat precarga ese contexto; en modo general recibe un resumen agregado (géneros/autores/sagas más frecuentes) **más el catálogo completo** de título/autor/saga de toda la biblioteca (`GestorBiblioteca.catalogo_para_asistente()`), calculado en vivo en cada apertura — sin caché ni detección de cambios, porque el coste de recalcularlo es insignificante frente al de mantener una caché sincronizada.
 - Las llamadas a Gemini se hacen siempre en hilo secundario; la respuesta llega por `wx.CallAfter`. `thinking.wav` suena en bucle mientras se espera (`iniciar_bucle`/`detener_bucle` de `reproductor_sonidos.py`).
 - Plantillas de prompt de sistema: se gestionan por completo en Ajustes → Asistente de Biblioteca (crear, editar, borrar, botón "Abrir carpeta de plantillas"), no en el propio chat, que solo tiene el combo de selección rápida. Cada plantilla es un archivo `.txt` independiente en `configuraciones/asistente_biblioteca/plantillas/`, editable con cualquier editor de texto; la carpeta se reescanea cada vez que se entra en ese nodo del árbol de Ajustes.
-- Temperatura (deslizador de 0 a 100 en Ajustes → Credenciales y API Keys → Google Gemini, equivalente a 0.0–1.0 al guardarse) y modelo (automático o uno concreto, con botón para refrescar la lista real de la cuenta) son configurables; Google Search Grounding se activa para fundamentar recomendaciones en fuentes reales. La escala del deslizador es 0-100, no 0.0-1.0: un `wx.Slider` en Windows expone a NVDA su posición como porcentaje del rango, así que con un rango 0-10 se anunciaba el porcentaje ("30, 40...") en vez del valor real — con el rango ya en 0-100 coinciden.
+- Temperatura (deslizador de 0 a 100 en Ajustes → Credenciales y API Keys → Google Gemini, equivalente a 0.0–1.0 al guardarse) y modelo (automático o uno concreto, con botón para refrescar la lista real de la cuenta) son configurables; Google Search Grounding se activa para fundamentar recomendaciones en fuentes reales. La escala del deslizador es 0-100, no 0.0-1.0: un `wx.Slider` en Windows expone a NVDA su posición como porcentaje del rango, así que con un rango 0-10 se anunciaba el porcentaje ("30, 40...") en vez del valor real — con el rango ya en 0-100 coinciden. El número que anuncia NVDA es literalmente la temperatura real de Gemini multiplicada por 100: si el deslizador dice "30", la temperatura que se guarda y se envía a la API es 0.3; si dice "40", es 0.4 (el valor de fábrica). No hay redondeo raro ni otra escala escondida — es una conversión directa (÷100 al guardar, ×100 al mostrar).
 
 ### Voces locales: dos proveedores
 
@@ -249,7 +249,6 @@ Si algo de esto falla tras un cambio, es un bug crítico, no cosmético.
 - Los deslizadores solo exponen el valor actual a la API de accesibilidad (no la escala completa). Pasos de 1 (flechas) y 5 (RePág/AvPág) en lectura; igual en grabación.
 - `Control + P` es el comando universal de reproducción. Prohibido usar la tecla `Espacio` para evitar conflictos de foco con NVDA.
 - `Control + O` es el comando universal de apertura (contextual según pestaña activa).
-- `H / Shift+H` para navegación por encabezados en el lector.
 - Usar siempre "Retroceder/Avanzar" en lugar de "Atrás/Adelante".
 
 ---
