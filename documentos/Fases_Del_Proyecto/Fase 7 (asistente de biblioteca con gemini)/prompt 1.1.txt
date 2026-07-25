@@ -1,0 +1,27 @@
+¡Hola Claude! Ya tenemos la Fase C (Actualizador) integrada y sincronizada.
+
+Antes de responder o proponer nada, lee OBLIGATORIAMENTE de principio a fin los archivos de tu contexto:
+1. CLAUDE.md (reglas absolutas, accesibilidad NVDA, patrón _anunciador, estilo de código y anclajes).
+2. planificacion_v3.md (especialmente la Sección 6 — Asistente de Biblioteca Gemini).
+
+Estamos trabajando directamente sobre la rama activa:
+claude/fase7-asistente-biblioteca-gemini
+
+Te paso además este repositorio solo como REFERENCIA TÉCNICA sobre cómo interactuar con la API de Gemini (obtención de modelos, formato de mensajes e historial conversacional):
+https://github.com/mahmoodhozhabri/VisionAssistantPro.git
+
+ATENCIÓN: Ignora por completo la lógica de visión, OCR, captura de pantalla y hooks específicos de NVDA de ese repo. Nuestro proyecto es una aplicación wxPython de escritorio y solo nos interesa ver la estructura de comunicación con Gemini en Python.
+
+Reglas para nuestra forma de trabajar en esta sesión:
+- No escribas código todavía en tu primera respuesta.
+- Confírmame que has leído la Sección 6 de planificacion_v3.md y CLAUDE.md.
+- Dime primero cuáles son los puntos críticos y la estructura de archivos/anclajes que propones para implementar el Asistente de Biblioteca (diálogo wxPython, llamada asíncrona, gestión de API key, persistencia en chat_biblioteca.json y accesibilidad NVDA) antes de empezar paso a paso.
+Acceso con Ctrl+G desde la pestaña Biblioteca para abrir el diálogo de chat.
+2. 
+Precarga del contexto del libro seleccionado (título, autor, categoría/etiquetas, estado de lectura).
+3. 
+Historial de conversación en configuraciones/chat_biblioteca.json.
+4. 
+Llamadas a la API de Gemini en hilo secundario con indicador 'Pensando...' y entrega vía wx.CallAfter.
+5. 
+Gestión del foco accesible según el diseño (anunciar contexto, mover foco directamente al campo de entrada).

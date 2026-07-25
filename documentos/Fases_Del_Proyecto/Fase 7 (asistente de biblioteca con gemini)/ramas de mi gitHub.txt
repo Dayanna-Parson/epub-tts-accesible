@@ -1,0 +1,175 @@
+ramas de mi gitHub
+De mi app epub tts
+
+
+
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git checkout claude/fase-c-actualizador-frzqhu
+git pull origin claude/fase-c-actualizador-frzqhu
+error: pathspec 'claude/fase-c-actualizador-frzqhu' did not match any file(s) known to git
+Enter passphrase for key '/c/Users/Jacqueline/.ssh/id_ed25519':
+remote: Enumerating objects: 29, done.
+remote: Counting objects: 100% (29/29), done.
+remote: Compressing objects: 100% (13/13), done.
+remote: Total 24 (delta 16), reused 19 (delta 11), pack-reused 0 (from 0)
+Unpacking objects: 100% (24/24), 17.38 KiB | 153.00 KiB/s, done.
+From github.com:Dayanna-Parson/epub-tts-accesible
+ * branch            claude/fase-c-actualizador-frzqhu -> FETCH_HEAD
+ * [new branch]      claude/fase-c-actualizador-frzqhu -> origin/claude/fase-c-actualizador-frzqhu
+Updating d175bac..ea07459
+Fast-forward
+ app/interfaz/pestana_ajustes.py    | 147 ++++++++++++++++
+ app/motor/actualizador_descarga.py | 186 ++++++++++++++++++++
+ auxiliar_actualizador.py           | 339 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 672 insertions(+)
+ create mode 100644 app/motor/actualizador_descarga.py
+ create mode 100644 auxiliar_actualizador.py
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git fetch origin
+git status
+Enter passphrase for key '/c/Users/Jacqueline/.ssh/id_ed25519':
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Total 5 (delta 3), reused 5 (delta 3), pack-reused 0 (from 0)
+Unpacking objects: 100% (5/5), 2.15 KiB | 157.00 KiB/s, done.
+From github.com:Dayanna-Parson/epub-tts-accesible
+   ea07459..64581ee  claude/fase-c-actualizador-frzqhu -> origin/claude/fase-c-actualizador-frzqhu
+On branch claude/fase7-actualizador-automatico
+Your branch is ahead of 'origin/claude/fase7-actualizador-automatico' by 5 commits.
+  (use "git push" to publish your local commits)
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        temp/
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git log HEAD..origin/claude/fase-c-actualizador-frzqhu --oneline
+64581ee (origin/claude/fase-c-actualizador-frzqhu) Automatiza la compilación de actualizador.exe en crear_portable.py
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git pull origin claude/fase-c-actualizador-frzqhu
+Enter passphrase for key '/c/Users/Jacqueline/.ssh/id_ed25519':
+From github.com:Dayanna-Parson/epub-tts-accesible
+ * branch            claude/fase-c-actualizador-frzqhu -> FETCH_HEAD
+Updating ea07459..64581ee
+Fast-forward
+ bin/INSTRUCCIONES.txt |  4 ++++
+ crear_portable.py     | 62 ++++++++++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 56 insertions(+), 10 deletions(-)
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git pull origin claude/fase-c-actualizador-frzqhu
+Enter passphrase for key '/c/Users/Jacqueline/.ssh/id_ed25519':
+remote: Enumerating objects: 17, done.
+remote: Counting objects: 100% (17/17), done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 9 (delta 7), reused 9 (delta 7), pack-reused 0 (from 0)
+Unpacking objects: 100% (9/9), 4.92 KiB | 85.00 KiB/s, done.
+From github.com:Dayanna-Parson/epub-tts-accesible
+ * branch            claude/fase-c-actualizador-frzqhu -> FETCH_HEAD
+   64581ee..59e94f0  claude/fase-c-actualizador-frzqhu -> origin/claude/fase-c-actualizador-frzqhu
+Updating 64581ee..59e94f0
+Fast-forward
+ .gitignore                                    |  3 +++
+ CLAUDE.md                                     | 14 ++++++++++++++
+ DEVELOPMENT.md                                | 20 ++++++++++++++++++++
+ documentos/Fases_Del_Proyecto/GUIA_TECNICA.md |  4 +++-
+ estructura_proyecto.txt                       | 12 +++++++++++-
+ 5 files changed, 51 insertions(+), 2 deletions(-)
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git add .
+git commit -m "Añadir registros de prompt de la Fase C"
+git push origin claude/fase-c-actualizador-frzqhu
+[claude/fase7-actualizador-automatico f077ff6] Añadir registros de prompt de la Fase C
+ 14 files changed, 258 insertions(+)
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/Prompt 1.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/prompt 4.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/prompt 5.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/prompt 6.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/prompt 7.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/prompt 8.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/prompt y respuesta 2.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/prompt y respuesta 3.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/respuesta 1.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/respuesta 4.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/respuesta 5.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/respuesta 6.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/respuesta 7.txt"
+ create mode 100644 "documentos/Fases_Del_Proyecto/fase 7, actualizador autom\303\241tico/respuesta 8.txt"
+error: src refspec claude/fase-c-actualizador-frzqhu does not match any
+error: failed to push some refs to 'github.com:Dayanna-Parson/epub-tts-accesible.git'
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git merge origin/claude/fase-c-actualizador-frzqhu
+Already up to date.
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git push origin claude/fase7-actualizador-automatico
+Enter passphrase for key '/c/Users/Jacqueline/.ssh/id_ed25519':
+Enumerating objects: 22, done.
+Counting objects: 100% (22/22), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (18/18), done.
+Writing objects: 100% (19/19), 14.19 KiB | 807.00 KiB/s, done.
+Total 19 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To github.com:Dayanna-Parson/epub-tts-accesible.git
+   d175bac..f077ff6  claude/fase7-actualizador-automatico -> claude/fase7-actualizador-automatico
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git push origin HEAD:claude/fase-c-actualizador-frzqhu
+Enter passphrase for key '/c/Users/Jacqueline/.ssh/id_ed25519':
+Total 0 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+To github.com:Dayanna-Parson/epub-tts-accesible.git
+   59e94f0..f077ff6  HEAD -> claude/fase-c-actualizador-frzqhu
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git fetch --all
+Enter passphrase for key '/c/Users/Jacqueline/.ssh/id_ed25519':
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$ git branch -a
+  beta
+  claude/fase-7-v3-planning-tsz05n
+  claude/fase3-proyectos-memoria-accesibilidad
+  claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+* claude/fase7-actualizador-automatico
+  claude/fase7-creador-audiolibros
+  claude/intelligent-ptolemy-ig6v3a
+  claude/optimize-focus-latency-q7Sq3
+  claude/python-wxpython-accessibility-ZPVzL
+  claude/recording-tab-implementation-VYDl3
+  claude/review-app-codebase-7HaSE
+  fase-6-V2.0
+  fase4-ajustes-finales
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/beta
+  remotes/origin/claude/audiobook-creator-tab-design-zmckzo
+  remotes/origin/claude/fase-7-v3-planning-tsz05n
+  remotes/origin/claude/fase-c-actualizador-frzqhu
+  remotes/origin/claude/fase3-proyectos-memoria-accesibilidad
+  remotes/origin/claude/fase3-proyectos-memoria-accesibilidad-X9aWP
+  remotes/origin/claude/fase7-actualizador-automatico
+  remotes/origin/claude/fase7-asistente-biblioteca-gemini
+  remotes/origin/claude/fase7-creador-audiolibros
+  remotes/origin/claude/fase7-i18n-winget
+  remotes/origin/claude/fase7-progreso-lectura-ritmo
+  remotes/origin/claude/intelligent-ptolemy-ig6v3a
+  remotes/origin/claude/optimize-focus-latency-q7Sq3
+  remotes/origin/claude/pensive-maxwell-asxyzv
+  remotes/origin/claude/python-wxpython-accessibility-ZPVzL
+  remotes/origin/claude/recording-tab-implementation-VYDl3
+  remotes/origin/claude/review-app-codebase-7HaSE
+  remotes/origin/claude/review-app-feedback-zLQXr
+  remotes/origin/fase-6-V2.0
+  remotes/origin/fase4-ajustes-finales
+  remotes/origin/main
+
+Jacqueline@Jacqui MINGW64 ~/git_repos/epub-tts-accesible (claude/fase7-actualizador-automatico)
+$

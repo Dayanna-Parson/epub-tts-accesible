@@ -1,0 +1,9 @@
+¡Entendido perfectamente! Excelente trabajo con la integración del foco y el comportamiento accesible para NVDA.
+
+Respecto a tus preguntas para cerrar esta parte:
+
+1. **Selección de modelo:** Dejémoslo en modo **Automático** por defecto (o según lo configurado en Ajustes). Así no recargamos el diálogo del chat con controles extra y mantenemos la navegación por Tab limpia y ágil.
+
+2. **Limpieza de Markdown (Muy importante):** SÍ, por favor. Añade una función helper de limpieza de texto/Markdown para las respuestas de Gemini antes de mostrarlas en el historial. Los símbolos como `**` (negritas), `##` (encabezados) o `*` (viñetas) hacen que NVDA lea símbolos innecesarios. Transforma el Markdown a texto plano bien estructurado con saltos de línea limpios. Puedes revisar el repo de referencia si usan algún patrón limpio para esto.
+
+Una vez implementada la limpieza de Markdown, por mi parte damos por completada la lógica de esta fase a falta de probarlo con la API key real. ¡Procede con ese helper de limpieza!

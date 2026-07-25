@@ -1,0 +1,105 @@
+Hay varios puntos importantes en lo que planteas, así que te los separo claramente:
+
+---
+
+## 1. Sobre la rama de i18n (traducciones) y cómo abrirla
+
+**¿Deberías abrir la rama desde Git Bash o pedirselo a Claude?**
+Siempre es mucho mejor **crear la rama tú misma desde Git Bash**. Así tienes el control total del árbol de Git de tu ordenador y evitas que Claude trabaje sobre ramas viejas o desincronizadas.
+
+Una vez que Claude termine la tarea de la documentación y tú subas los archivos de prompt/respuesta:
+
+1. Creas la rama desde Git Bash (`git checkout -b claude/fase7-i18n-winget`).
+2. Entras en la sesión de Claude y le dices que aplique las traducciones en esa rama concreta.
+
+(Por cierto, según la lista de ramas que mostraste antes, la rama remota `origin/claude/fase7-i18n-winget` ya existe, así que solo tendrás que hacer un `git checkout claude/fase7-i18n-winget`).
+
+---
+
+## 2. Puntos a corregir/matizar de tu prompt para Claude
+
+Tu redacción para Claude aborda temas clave, pero conviene **ajustar el enfoque de un par de puntos** para que no haya malentendidos técnicos:
+
+### A. El mensaje de "Claves guardadas" y la ubicación de los ajustes
+
+Al pulsar "Guardar", el mensaje dice "Claves guardadas" porque ese botón gestiona el archivo `claves_api.json`. La temperatura y el modelo de Gemini **sí se están guardando correctamente** dentro de la clave `datos_gemini` de ese archivo JSON. Sin embargo, tienes razón en que la etiqueta "Claves guardadas" resulta confusa.
+
+* **Solución:** Pedirle a Claude que cambie ese aviso por algo más general como **"Ajustes de proveedores guardados correctamente"**.
+
+### B. El etiquetado de la Temperatura en NVDA
+
+El control de la temperatura es un conmutador deslizante (`wx.Slider` o `wx.SpinCtrlDouble`). El problema de que diga `(edición seleccionado 0.3)` es que **no tiene asignada una etiqueta de texto accesible (`wx.StaticText`) asociada para los lectores de pantalla**.
+
+* **Solución:** Pedirle que ponga un texto visible e identificable por el lector ("Temperatura:") y que añada el texto explicativo breve que pides.
+
+### C. El contexto completo de la Biblioteca para Gemini
+
+Le pides que "conozca toda la biblioteca" y propones crear un JSON o usar la base de datos.
+
+* **Atención técnica:** Gemini no necesita un JSON nuevo. La base de datos `biblioteca.db` **ya tiene todo tu catálogo**.
+* El motivo por el que a veces se "inventa" si tienes un libro o no es porque actualmente solo se le envía un resumen con los metadatos del libro activo o un listado muy recortado para ahorrar tokens.
+* **La solución correcta que debes pedirle:** En lugar de enviarle solo un resumen, haz que el gestor del chat (`gestor_chat_biblioteca.py`) lea la tabla `libros` de `biblioteca.db` y le pase a Gemini una **lista estructurada con TODOS los títulos, autores y etiquetas/sagas** indexados. Como es solo texto ligero (títulos y autores), consume poquísimos tokens y le dará conocimiento absoluto de toda tu colección sin saturar la API ni ralentizar la app.
+
+---
+
+## 3. Explicación del error de la consola de Python
+
+El mensaje que te ha salido al iniciar la app:
+
+```text
+Rebuilding cache of generated files for COM support...
+Checking C866CA3A-32F7-11D2-9602-00C04F8EE628x0x5x4
+Could not add module ... - <class 'AttributeError'>: module ... has no attribute 'CLSIDToClassMap'
+Done.
+
+```
+
+### ¿Qué es exactamente este "error"?
+
+**No es un fallo de tu código ni nada grave.**
+
+Es un aviso interno del módulo `pywin32` (la librería de Python que gestiona la comunicación COM con Windows para cosas como SAPI5 o `comtypes`).
+
+Cuando la librería se inicia, escanea la memoria de la caché de módulos COM de Windows (`win32com/gen_py`). Si alguna voz de SAPI5 o componente del sistema de Windows cambió recientemente o dejó un archivo temporal corrupto en `AppData`, `pywin32` intenta regenerar esa caché. Como encuentra un módulo antiguo que no encaja del todo, lo omite (`Could not add module`), muestra ese mensaje en la terminal y continúa la ejecución con normalidad (`Done.`).
+
+### ¿Tienes que preocuparte?
+
+**En absoluto.** Es un comportamiento nativo de mantenimiento de `pywin32` en Windows. La aplicación sigue funcionando exactamente igual.
+
+---
+
+### Versión ajustada de tu prompt para enviarle a Claude
+
+Añadiendo estas precisiones a tu borrador, el prompt final que debes enviarle a Claude queda así:
+
+---
+
+```text
+Claude, NO abras ningún PR a main todavía. La versión 3.0 sigue en desarrollo activo y aún quedan fases y tareas de documentación por rematar.
+
+En este punto, necesito que hagas una actualización completa y rigurosa de los documentos del proyecto para que reflejen fielmente todo el trabajo realizado hasta la fecha en esta rama (asistente Gemini, plantillas en Ajustes, sonidos, backups rotativos, etc.), manteniendo el tono y formato adecuado de cada uno.
+
+Documentos a revisar y actualizar:
+- Documentación de usuario: `README.md`, `ayuda.html`, `novedades.txt`.
+- Documentación técnica: `CLAUDE.md`, `DEVELOPMENT.md`, `BITACORA_DE_DESARROLLO.md`, `GUIA_TECNICA.md`, `estructura_proyecto.txt`, `VISION_PERSONAL.md`, `idea_app_audiolibros.md`.
+- Configuración (si aplica): `crear_portable.py`, `requisitos.txt`, `subir_version.py`, `.gitignore`.
+
+Además, por favor aplica las siguientes tres correcciones en la interfaz y el motor del asistente:
+
+1. **Etiqueta y aclaración del aviso al guardar en Proveedores:**
+   Al guardar en Ajustes -> Proveedores, el mensaje dice "Claves guardadas". Cámbialo por "Ajustes de proveedores guardados correctamente" para que se entienda que también guarda la temperatura y modelo de Gemini.
+
+2. **Accesibilidad y descripción de la Temperatura de Gemini:**
+   El control de la temperatura en la UI no está etiquetado para lectores de pantalla y solo lee "(edición seleccionado 0.3)". Añádele una etiqueta clara ("Temperatura:") y un texto descriptivo breve debajo:
+   "Determina la creatividad de las respuestas. Valores bajos (0.1 - 0.4) ofrecen mayor precisión y se ajustan al catálogo real. Valores altos (0.7 - 1.0) aportan respuestas más creativas."
+
+3. **Contexto completo de la Biblioteca para el Asistente:**
+   Actualmente el asistente falla al identificar si tenemos una saga o libro en la biblioteca porque recibe un resumen demasiado escueto. Haz que `gestor_chat_biblioteca.py` consulte la base de datos `biblioteca.db` e inyecte en el prompt de sistema una lista completa con todos los títulos, autores y etiquetas/sagas indexados en la biblioteca del usuario. Al ser solo nombres y títulos, el peso en tokens es mínimo y le dará visibilidad total sobre el catálogo real.
+
+Confírmame cuando tengas revisada la documentación y aplicados estos ajustes.
+
+```
+
+---
+
+¡Mándaselo y con esto dejará la app alineada, la documentación al día y la base lista para la rama de i18n!

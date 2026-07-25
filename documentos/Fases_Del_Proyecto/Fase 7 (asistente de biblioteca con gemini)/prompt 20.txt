@@ -1,0 +1,3 @@
+prompt 20
+
+Podrías añadir a los documentos necesarios la explicación de eso que me acabas de explicar: que, en realidad, esos valores de 30, 40, etc., equivalen a 3.0 o 4.0. Y sobre lo otro, sobre los atajos, a ver... los atajos H y Shift + H los había eliminado hace varias versiones porque nunca llegaron a funcionar. Así que por eso decidí eliminarlos, pero si quieres puedes revisar tú mismo todo el código para que veas que es así.

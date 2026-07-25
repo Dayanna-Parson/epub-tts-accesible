@@ -1,0 +1,8 @@
+prompt 19
+
+vale. ya me e descargado los cambios. Pero, entonces, tiene que leer así de diez en diez? es que no e notado ningún cambio. Y una cosa más. también en la pestaña ajustes, porqué en el panel de atajos solo salen estos? Reproducir / Pausar (Ctrl+P); Tecla asignada actualmente: Ctrl+P
+Detener lectura (Ctrl+D); Tecla asignada actualmente: Ctrl+D
+Buscar en el texto (Ctrl+F); Tecla asignada actualmente: Ctrl+F
+Gestor de marcadores (Ctrl+M); Tecla asignada actualmente: Ctrl+M
+Ir a porcentaje del libro (Ctrl+G); Tecla asignada actualmente: Ctrl+G
+Asistente de Biblioteca (Gemini) (Ctrl+Shift+B); Tecla asignada actualmente: Ctrl+Shift+B

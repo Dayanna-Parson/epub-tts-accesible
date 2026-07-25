@@ -1,0 +1,107 @@
+respuesta 14
+
+parte 1:
+
+Working tree is clean. Let's run the history scrub now.
+
+This history rewrite went wrong in a dangerous way — I need to stop and explain before doing anything else.
+
+Parte 2:
+
+Let's fix the "Nueva plantilla" focus bug first:
+
+Let me refactor this into a shared helper for both global and per-sound persistence to avoid duplication, then add the per-sound API:
+
+Now update `reproducir()` and `iniciar_bucle()` to also gate on the per-sound flag:
+
+Now add the per-sound toggle button UI in `PanelSonidos`:
+
+Now update the import line:
+
+Good, edit landed cleanly. Now let's verify it compiles and apply icons across the files. Starting with `dialogos.py`:
+
+Now let's view the rest of `dialogos.py` to handle the remaining buttons:
+
+Now the remaining buttons in `dialogos.py` (renombrar etiqueta, localizar, reescanear, eliminar de biblioteca):
+
+Now `dialogo_asistente_biblioteca.py`:
+
+Now `pestana_ajustes.py` — many buttons. Let's check its current icon import status and add across the file:
+
+Good, already imported. Let's go through each remaining button block.
+
+Now the "Guardar Todas las Claves" button and the diccionario/atajos panels:
+
+Now the Atajos panel — "Eliminar asignación" and "Restablecer todos los atajos":
+
+Now `pestana_creador_audiolibros.py`, `dialogo_proveedor_alternativo.py`, `pestana_lectura.py`, `pestana_biblioteca.py`, `pestana_grabacion.py`, `dialogo_novedades.py`:
+
+Now `dialogo_proveedor_alternativo.py`:
+
+Now `pestana_lectura.py` (Retroceder/Avanzar/Detener) and `pestana_biblioteca.py` (Importar):
+
+Now fix the `btn_atras`/`btn_adelante` calls to use `fijar_nombre=False`:
+
+Now `pestana_biblioteca.py` (Importar carpeta / Importar libro):
+
+Now `dialogo_novedades.py`:
+
+Now the "Crear proyecto" / "Cancelar" pair:
+
+Let's commit and push this round.
+
+Antes de nada: lo que pasó con los archivos borrados de tu disco fue un error mío, y tengo que explicártelo bien porque además afecta a cómo recuperar tus datos.
+
+## Qué pasó realmente
+
+Cuando corregí lo de la privacidad, usé `git rm --cached` pensando que eso "desvincula del repositorio pero no borra el archivo". Eso es cierto **solo en el entorno donde yo lo ejecuté** (mi copia en la nube, no tu PC). Pero cuando tú hiciste `git pull` de esa rama en tu ordenador real, Git vio que esos archivos "ya no existen" en el nuevo commit y, como no los tenías modificados en ese momento, los borró de tu disco de verdad. Ese es el motivo de que hayan desaparecido tus plantillas, `chat_biblioteca.json` y la conversación exportada — un efecto secundario que no anticipé bien la primera vez.
+
+**`dialogo_editar_prompt.py` sí lo borré a propósito** (código fuente, no dato tuyo): esa función se trasladó al panel nuevo de Ajustes, así que el archivo viejo ya no hacía falta. Eso no es parte del problema.
+
+## Cómo recuperar tus archivos (hazlo en tu PC, antes de volver a hacer `git pull` de esta rama)
+
+Tu repositorio local todavía debería tener el commit viejo (`cf35b04`) en su historial, aunque yo ya lo limpié del remoto. Abre una terminal en la carpeta del proyecto y ejecuta:
+
+```
+git show cf35b04:configuraciones/prompts_asistente.json > configuraciones/prompts_asistente.json
+git show cf35b04:configuraciones/chat_biblioteca.json > configuraciones/chat_biblioteca.json
+git show cf35b04:"configuraciones/asistente_biblioteca/Conversación sobre tu Biblioteca.txt" > "configuraciones/asistente_biblioteca/Conversación sobre tu Biblioteca.txt"
+git show cf35b04:configuraciones/asistente_biblioteca/activo.json > configuraciones/asistente_biblioteca/activo.json
+git show cf35b04:"configuraciones/asistente_biblioteca/plantillas/Por defecto.txt" > "configuraciones/asistente_biblioteca/plantillas/Por defecto.txt"
+git show cf35b04:"configuraciones/asistente_biblioteca/plantillas/fantasía épica.txt" > "configuraciones/asistente_biblioteca/plantillas/fantasía épica.txt"
+```
+
+Si algún comando falla con "no existe ese objeto", avísame y te paso el texto exacto de las plantillas (lo tengo guardado de la revisión que hice: "fan de la fantasía" y "suspense" siguen ahí, íntegros). Después de recuperar los archivos, sincroniza tu rama con:
+
+```
+git fetch origin claude/fase7-asistente-biblioteca-gemini
+git reset --hard origin/claude/fase7-asistente-biblioteca-gemini
+```
+
+Esto no te va a volver a borrar esos archivos porque ya no están rastreados por git (los añadí al `.gitignore`), y `reset --hard` solo toca archivos rastreados.
+
+En el próximo arranque de la app, `prompts_asistente.json` se fusionará solo con tus plantillas nuevas (sin pisarlas) y se borrará. Ya lo comprobé con pruebas antes de tocar nada.
+
+## Limpieza del historial de Git
+
+Hecha: reescribí el historial de esta rama (y **solo** esta rama — comprobé que `main` y las demás ramas no se tocaron) para que esos 6 archivos ya no existan en ningún commit, y volví a subirla. Un aviso técnico honesto: until now that meant a force-push, así que tu copia local quedará desincronizada — el `git reset --hard` de arriba también soluciona eso.
+
+## El bug de "no me deja guardar"
+
+Encontrado y corregido: al elegir "(Nueva plantilla...)" con las flechas, el foco no se movía a "Nombre" (por el mismo arreglo que pediste para no interrumpir la navegación), así que lo que escribías no llegaba a ningún cuadro de texto — se quedaba en el propio combo, de solo lectura. Ahora el foco sí salta a "Nombre" únicamente en ese caso concreto; navegar entre plantillas existentes sigue sin robar el foco.
+
+## Sonidos individuales
+
+Añadido: en Ajustes → Efectos de sonido, junto al combo y "Probar sonido", hay un tercer botón cuya etiqueta dice "Activar/Desactivar sonido «nombre»" según el sonido elegido en el combo — independiente de la casilla global.
+
+## "Una sola ruta" de plantillas
+
+Aquí solo hay **una** carpeta activa de verdad: `configuraciones/asistente_biblioteca/plantillas/`. Lo que mencioné como "dos rutas" en el commit anterior no son dos sitios donde vive nada hoy — son dos ubicaciones *antiguas* que el código revisa una sola vez para rescatar datos de versiones previas (y es justo lo que necesitas ahora mismo para recuperar tus plantillas). No las voy a quitar todavía porque son las que te van a devolver "fan de la fantasía" y "suspense".
+
+## Iconos
+
+Pasada completa por `dialogo_asistente_biblioteca`, `dialogo_novedades`, `dialogo_proveedor_alternativo`, `dialogos`, `pestana_ajustes` (todos los paneles), `pestana_biblioteca`, `pestana_creador_audiolibros`, `pestana_grabacion`, `pestana_lectura` y `ventana_proyectos`. Añadí icono a botones de guardar, borrar/eliminar, abrir carpeta, buscar/comprobar, avanzar/retroceder, copiar, restablecer, etc. Dejé sin icono los que no tienen un icono honesto disponible (enlaces "Conseguir clave...", "Escuchar muestra", "Renombrar") antes que ponerles uno engañoso — si tú conoces un icono con el que sí quieres esos casos, dímelo y lo aplico.
+
+## El PR
+
+Por cierto: GitHub avisó que cerraste el PR #9 sin fusionar. No lo voy a reabrir ni crear uno nuevo salvo que me lo pidas explícitamente — todo el código sigue en la rama `claude/fase7-asistente-biblioteca-gemini`, ya pusheado.

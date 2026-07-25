@@ -1,0 +1,46 @@
+Investigué el repo que me pasaste: usa **`accessible_output3`** (fork mantenido de `accessible_output2`), una librería que manda texto directo al lector de pantalla activo (NVDA/JAWS/SAPI) sin mover el foco ni simular controles ocultos — es justo el "otro método" que recordabas, y explica por qué mi intento con UIA no sonaba bien. Voy a usarla para el chat del asistente.
+
+Antes de tocar código, dos decisiones de alcance que prefiero confirmar contigo:
+
+Publicado en PyPI como `accessible-output3`, sin necesidad de dependencia git. Ahora implemento todo. Primero el wrapper de anuncios:
+
+Ahora implemento todo. Primero la dependencia y el módulo de anuncios:
+
+No puedo instalarla en este entorno Linux (la librería tiene partes específicas de Windows), así que solo puedo verificar sintaxis, no ejecución — igual que el resto de este trabajo. Escribo el wrapper de forma defensiva, con import diferido.
+
+Ahora reescribo el diálogo del asistente: reemplazo `_anunciador`, añado etiquetas visibles/accesibles correctas, y el "Mensaje enviado."
+
+Ahora actualizo `gestor_chat_biblioteca.py` para usar la subcarpeta y exponer su ruta:
+
+Ahora actualizo los dos gestores para usar la subcarpeta:
+
+Ahora `gestor_prompts_asistente.py`:
+
+Ahora `crear_portable.py` para que cree la subcarpeta de fábrica:
+
+Ahora corrijo `dialogo_editar_prompt.py`: anuncios en guardar/borrar y foco inicial fiable.
+
+Ahora reduzco las alucinaciones del asistente: instrucción de sistema más estricta y `temperature` más baja.
+
+Ahora añado `temperature` baja en la petición para reducir la creatividad en datos factuales:
+
+Reviso todos los cambios y confirmo antes de subir.
+
+Todo compila. Hago commit y push.
+
+Todo pusheado. Resumen de esta ronda (nota: sesión reanudada como `claude-sonnet-5` tras tu cambio de modelo):
+
+**El cambio grande — anuncios del chat:**
+Investigué el repo `basiliskLLM` que me pasaste: usa `accessible_output3`, una librería que habla directo al lector de pantalla activo (NVDA/JAWS/SAPI) sin tocar el foco ni simular controles ocultos. Es justo lo que recordabas. La apliqué **solo en el diálogo del Asistente** (como acordamos) — se acabó lo de "edición, solo lectura" repetido y la sensación de ventana flotante. Añadí también el "Mensaje enviado." que faltaba antes de "Pensando...".
+
+**Etiquetas rotas de verdad:** confirmé en tu log que `SetName()` no le daba nombre a "Historial de mensajes" ni a "escribe un mensaje" — NVDA los leía en blanco. Los cambié a etiquetas visibles de verdad (`Historial de conversación:` / `Mensaje:`), que es el patrón que sí funciona en esta app (como "Nombre:" y "Texto del prompt:" en el diálogo de plantillas, que confirmaste que sí se oían).
+
+**Diálogo de prompts:** foco inicial fijado siempre en el combo de plantillas, y ya no salta a "Nombre" al recargar la lista por código. Guardar y Borrar ahora anuncian por voz.
+
+**Organización de archivos:** `chat_biblioteca.json` y `prompts_asistente.json` ahora viven en `configuraciones/asistente_biblioteca/`; el historial de chat va al `.gitignore` (datos personales), las plantillas se versionan igual que `pronunciacion.json`; `crear_portable.py` crea la subcarpeta de fábrica.
+
+**Alucinaciones:** la instrucción de sistema ahora prohíbe explícitamente inventar títulos/autores cuando la búsqueda no encuentra el nombre exacto ("dilo, no improvises"), y bajé la `temperature` a 0.4 para que sea menos "creativo" con datos reales.
+
+**Sin cambios** (por tu elección): el nombre sigue siendo "Asistente de Biblioteca", y Ctrl+I en Lectura no se tocó — si quieres revisarlo más adelante, dímelo y lo hacemos aparte.
+
+Como siempre, no puedo probar `accessible_output3` en este entorno Linux (la librería es específica de Windows) — avísame qué tal suena en tu NVDA real.

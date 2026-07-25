@@ -1,0 +1,15 @@
+Filtrado correcto: las variantes TTS/imagen/embeddings quedan fuera, y ahora hay respaldo cruzado a Pro si toda la familia Flash está sin cuota. Compilo el resto y hago commit.
+
+Buenas noticias primero: el atajo global ya funciona en toda la app — confirmado.
+
+Sobre el error, encontré el bug real y **no hace falta instalar `google-genai` ni ningún SDK** — te explico por qué y qué arreglé:
+
+**Lo que estaba pasando:** cuando se agotó la cuota gratuita de *todos* los modelos Flash de verdad (los 429 en cascada que ves en el log), la cadena de candidatos siguió bajando por la lista hasta toparse con `gemini-2.5-flash-preview-tts` — un modelo de **texto a voz**, no de chat. Google lo incluye en `/v1beta/models` porque técnicamente "soporta" `generateContent`, pero no acepta conversación de varios turnos, de ahí el `400 Multiturn chat is not enabled`. Mi filtro anterior solo miraba si el nombre contenía "flash", y `flash-preview-tts` también la contiene — colaba variantes de voz, imagen y embeddings que nunca iban a poder responder a un chat.
+
+**Arreglado:**
+1. `listar_modelos()` ahora excluye por nombre cualquier variante especializada (`tts`, `image`, `imagen`, `embedding`, `aqa`, `veo`, `learnlm`) — ni aparecerán en el combo de Ajustes ni se probarán nunca como candidatos del chat.
+2. Añadí un tercer nivel de respaldo: si se agota la cuota de **toda** la familia Flash (que es justo lo que te pasó — 11 variantes seguidas en 429), ahora prueba automáticamente con **Pro** antes de rendirse, en vez de caer en el cajón de "cualquier otro modelo" sin criterio.
+
+Sobre lo del SDK: no lo añadiría para esto en concreto — el problema no era REST-vs-SDK, era que mi filtro de nombres dejaba pasar modelos que no son de chat. Con la lista bien filtrada, REST puro sigue siendo la opción correcta (cero dependencias nuevas, como pide `CLAUDE.md`). Dicho eso: si la cuota gratuita de Gemini se agota con frecuencia en el uso real, eso sí es una limitación de tu plan de Google, no del código — ahí no hay arreglo de software posible, solo esperar a que se renueve o activar facturación.
+
+Cuando puedas, prueba de nuevo con tu clave — si el 429 se repite ahora debería caer en Pro en vez de romperse, o darte un mensaje claro de "cuota agotada" en vez del JSON crudo.

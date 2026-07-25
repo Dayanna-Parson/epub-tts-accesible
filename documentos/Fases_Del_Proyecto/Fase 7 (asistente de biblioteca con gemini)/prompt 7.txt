@@ -1,0 +1,31 @@
+malas noticias, Cuando e puesto la clave, me ha descargado 41 modelos. Pero, no se ejecuta desde cualquier parte de la ap, con el atajo control shift b. Ni si quiera desde la biblioteca. Tengo que ponerme sobre un libro y pulsar el comando, para que se ejecute. Me preguntaba si también se podría añadir un acceso al menú contextual en toda la aplicación, para hablar con él en cualquier momento. A, y también quiero que renombres el cuadro de solo lectura, porque dice literalmente así... a historial de mensajes. y además, al enviar el mensaje, me lanza este error: ---------------------------------------------------
+
+   INICIANDO EPUB-TTS...
+
+---------------------------------------------------
+
+ERROR     app.interfaz.dialogo_asistente_biblioteca  Error al consultar al Asistente de Biblioteca (Gemini)
+
+Traceback (most recent call last):
+
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\dialogo_asistente_biblioteca.py", line 146, in _pedir_respuesta_en_hilo
+
+    respuesta = enviar_mensaje(
+
+                ^^^^^^^^^^^^^^^
+
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\servicios\cliente_gemini.py", line 136, in enviar_mensaje
+
+    resp.raise_for_status()
+
+  File "C:\Program Files\Python312\Lib\site-packages\requests\models.py", line 1026, in raise_for_status
+
+    raise HTTPError(http_error_msg, response=self)
+
+requests.exceptions.HTTPError: 404 Client Error: Not Found for url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AQ.Ab8_TU_CLAVE_AQUI... Y me preguntaba cuando me llegue un nuevo mensaje, NVDA o cualquier lector, me lo va a vebalizar al momento? o me voy a tener que ir al historial cada vez que envíe alguno? A, solo hay estos tres controles en la ventana. edición  sólo lectura  en blanco
+
+multilínea
+
+edición  en blanco
+
+Enviar  botón Y me preguntaba si haría falta alguno más, como por ej, un botón de cerrar la ventana, que también funcione con la tecla escape. Y se me ocurre otro para guardar el historial de conversaciones, por si un libro que nos recomendó nos gustó o lo que sea. Y, otro mas para borrar el historial, y los típicos para copiar la respuesta tanto mía o del usuario, como del modelo. Eso también está en el repo de referencia.

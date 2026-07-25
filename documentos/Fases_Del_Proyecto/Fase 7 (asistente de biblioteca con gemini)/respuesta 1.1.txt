@@ -1,0 +1,45 @@
+"Fase 7 (Pestaña biblioteca)" is the relevant one given the branch name. Let me read that planificacion_v3.md, focusing on Section 6.
+
+He leído `CLAUDE.md` completo y la Sección 6 de `planificacion_v3.md` ("Fase C — Asistente de Biblioteca (Gemini)") en `documentos/Fases_Del_Proyecto/Fase 7 (Pestaña biblioteca)/planificacion_v3.md`. También revisé cómo están hechos `config_rutas.py` (patrón `cargar_claves()`/`guardar_claves()`), el bloque `PANEL_CLAVES` de `pestana_ajustes.py`, y `gestor_atajos.py`, para que la propuesta encaje con lo que ya existe en vez de inventar un patrón nuevo. No he tocado el repositorio de referencia de Gemini todavía — lo miraré solo para la forma de las llamadas a la API cuando lleguemos a ese punto, ignorando toda su lógica de visión/OCR/NVDA como se indicó.
+
+## Puntos críticos que veo antes de escribir código
+
+1. **Hilo secundario obligatorio para la llamada a Gemini.** Igual que `reproductor_voz.py` con las demás nubes: la petición HTTP nunca en el hilo principal, entrega de la respuesta con `wx.CallAfter`. El indicador "Pensando..." se anuncia una vez al enviar (patrón `_anunciador`), no en cada chunk si se usa streaming.
+
+2. **Orden de foco exacto que pide la Sección 6**, que es distinto del uso habitual de `_anunciador` en el resto de la app: aquí NO se devuelve el foco al control previo, se entrega directamente al campo de entrada de texto. Hay que implementarlo como variante explícita del patrón, no reutilizar ciegamente el helper existente que sí restaura foco.
+
+3. **Precarga sin hilo secundario.** El historial de `chat_biblioteca.json` se lee en el hilo principal antes de mostrar el diálogo (archivo pequeño) — no aplica el patrón de "diferir con `wx.CallAfter`" que sí usamos para biblioteca.db u operaciones pesadas.
+
+4. **Contexto mínimo enviado a la API.** Nunca se manda el texto del libro, solo metadatos (título, autor, categoría/etiquetas, estado). Esto hay que respetarlo también en el historial persistido — el JSON no debería acabar arrastrando contenido del libro por error si en el futuro se amplía el contexto.
+
+5. **Clave de Gemini en `claves_api.json`.** Añadir `"gemini": {"api_key": ""}` a `_CLAVES_DEFAULT` en `config_rutas.py`, y un bloque nuevo en el `ANCLAJE PANEL_CLAVES` de `pestana_ajustes.py` siguiendo el mismo esqueleto que Azure/Deepgram (campo, botón "obtener clave" con `webbrowser.open`, comprobar, borrar).
+
+6. **`Ctrl+G` como atajo nuevo**, registrado en `gestor_atajos.py` junto a los demás (`ANCLAJE` correspondiente), configurable como el resto — no hardcodeado solo en `pestana_biblioteca.py`.
+
+7. **Escritura atómica del JSON de historial** (`chat_biblioteca.json`), estructurado por `id_libro`, siguiendo la regla de temp + rename de `CLAUDE.md`.
+
+8. **Modo general vs. modo con libro.** Sin selección en la lista de Biblioteca, el diálogo debe abrir en modo general (recomendaciones), sin intentar precargar contexto inexistente — hay que decidir si en ese modo el historial se guarda bajo una clave especial (p. ej. `"general"`) o no se persiste.
+
+9. **Errores de red/cuota de Gemini nunca silenciosos** — `logger.exception`, y algún aviso accesible en el diálogo (no un `wx.MessageBox` modal que rompa el flujo del chat, sino algo coherente con el patrón de anuncios ya usado en Ajustes/exportación).
+
+## Estructura de archivos/anclajes propuesta
+
+**Nuevo:** `app/servicios/cliente_gemini.py`
+- Cliente HTTP puro (como `cliente_deepgram.py`: REST directo con `requests`, sin SDK añadido — evita nueva dependencia).
+- `ANCLAJE_INICIO/FIN: CLIENTE_GEMINI_ENVIO_MENSAJE` — construcción del payload con historial + contexto del libro, parseo de respuesta.
+
+**Nuevo:** `app/motor/gestor_chat_biblioteca.py`
+- `ANCLAJE_INICIO/FIN: PERSISTENCIA_CHAT_BIBLIOTECA` — leer/escribir `configuraciones/chat_biblioteca.json` (atómico), estructurado por `id_libro`.
+
+**Nuevo:** `app/interfaz/dialogo_asistente_biblioteca.py`
+- `ANCLAJE_INICIO/FIN: DIALOGO_ASISTENTE_BIBLIOTECA_INIT` — construcción del diálogo (historial de solo lectura, campo de entrada, `_anunciador` propio).
+- `ANCLAJE_INICIO/FIN: ASISTENTE_PRECARGA_CONTEXTO` — carga de JSON + anuncio con foco al campo de entrada.
+- `ANCLAJE_INICIO/FIN: ASISTENTE_ENVIO_HILO_SECUNDARIO` — hilo + "Pensando..." + `wx.CallAfter`.
+
+**Modificar (bloques existentes):**
+- `app/config_rutas.py` → bloque `_CLAVES_DEFAULT` (añadir `gemini`).
+- `app/interfaz/pestana_ajustes.py` → `ANCLAJE PANEL_CLAVES` (nueva sección Gemini).
+- `app/motor/gestor_atajos.py` → tabla de atajos por defecto (nuevo `Ctrl+G`).
+- `app/interfaz/pestana_biblioteca.py` → binding de `Ctrl+G`, apertura del diálogo con o sin libro seleccionado.
+
+¿Confirmas esta estructura o quieres que ajuste algo (por ejemplo el nombre de algún anclaje, o si prefieres que la persistencia del chat viva dentro de `gestor_biblioteca.py` en vez de un módulo nuevo) antes de que empiece a escribir el primer bloque?

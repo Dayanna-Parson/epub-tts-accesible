@@ -1,0 +1,11 @@
+Now update the get/set conversions:
+
+Encontré la causa exacta y ya está corregido y pusheado.
+
+**Por qué leía "30, 40, 50..." en vez de "0.3, 0.4, 0.5...":** un `wx.Slider` en Windows le expone a NVDA su posición como **porcentaje del rango** que le pusiste (min-max), no el valor real que devuelve `GetValue()`. Yo había puesto el rango en 0-10 para representar 0.0-1.0, así que NVDA te leía ese porcentaje (10%, 20%... hasta 100%) en vez del valor real. Con los deslizadores de Velocidad/Volumen esto nunca se notó porque su rango ya era 0-100 de por sí — porcentaje y valor coincidían por pura casualidad, y por eso nadie lo detectó antes.
+
+**Arreglo:** puse el rango del propio deslizador directamente en 0-100, con las flechas moviéndolo de 10 en 10. Ahora lo que anuncia NVDA es exactamente el número que se guarda (dividido entre 100 al persistirlo como la temperatura real que recibe Gemini). Mismo criterio que ya usas en "Porcentaje (0-100)" del selector de velocidad de Lectura.
+
+**Sobre la descripción que no se repite:** eso no es un fallo, es el comportamiento normal de NVDA — la descripción (`SetHelpText`) se lee una vez al entrar en el control con foco, no en cada pulsación de flecha. Si se repitiera en cada cambio de valor sería muy pesado de escuchar (imagínate ese párrafo entero sonando cada vez que subes o bajas un punto). Es el mismo comportamiento que ya tienen Velocidad y Volumen en Lectura, solo que ahí no lo habías notado porque no sueles tocarlos tanto.
+
+Actualicé también `CLAUDE.md` y `ayuda.html` para reflejar la escala 0-100. ¿Lo pruebas de nuevo cuando puedas?

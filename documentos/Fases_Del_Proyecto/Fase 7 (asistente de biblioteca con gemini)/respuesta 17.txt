@@ -1,0 +1,74 @@
+respuesta 17
+
+parte 1:
+
+Ya leí los dos documentos. Aquí va mi opinión punto por punto, y luego mi plan concreto — sin tocar código todavía, tal como pediste.
+
+## Sobre el análisis de Gemini en general
+
+Está bien encaminado en el diagnóstico, pero en un par de puntos yo iría más lejos o por un camino distinto. Te lo desgloso:
+
+**A. "Claves guardadas" → mensaje confuso.** De acuerdo al 100%. Ese botón guarda las claves de los 5 proveedores, incluidos modelo y temperatura de Gemini, y el texto no lo deja claro. Lo cambio por algo como "Ajustes de proveedores guardados correctamente." Bajo riesgo, lo hago.
+
+**B. Temperatura sin etiqueta ("edición, seleccionado 0.3").** Gemini acierta en el síntoma pero no en la causa raíz, y por eso su solución ("ponle una etiqueta") probablemente no arreglaría nada. Lo comprobé en el propio código: yo ya le puse un `wx.StaticText("Temperatura...")` justo delante Y un `SetName()` explícito — exactamente el mismo patrón que uso en los deslizadores de Velocidad y Volumen de Lectura, que sí funcionan y los tienes probados con NVDA real. La diferencia es el tipo de control: usé `wx.SpinCtrlDouble`, que en wx no es un control nativo de Windows sino uno "genérico" dibujado por la propia librería — y por lo visto no hereda el mismo comportamiento accesible que sí tienen los controles nativos como `wx.Slider`. Mi plan: cambiar el control de temperatura de `SpinCtrlDouble` a un `wx.Slider` (0 a 10, cada paso = 0.1), clonando el patrón que ya sabemos que funciona en tu equipo. Además le añado el texto explicativo breve que propones tú (valores bajos = precisión, altos = creatividad).
+
+**C. Que el Asistente conozca toda la biblioteca.** Aquí sí discrepo de la parte de "hazlo solo la primera vez, cachéalo, detecta cambios". Gemini tiene razón en que enviar solo títulos y autores es barato en tokens — pero ese ahorro es tan pequeño (hablamos de un texto plano, ni de lejos comparable al peso de un audio o de una imagen) que montar un sistema de caché con detección de cambios en la biblioteca añade complejidad y un punto de fallo nuevo (caché que se queda desactualizada, o que no detecta bien un libro añadido) a cambio de un ahorro que no vas a notar ni en la cuota ni en la velocidad. Mi propuesta: igual que el resumen agregado de ahora, calcular la lista completa (título, autor, saga) **al vuelo desde `biblioteca.db` en cada apertura del chat**, sin caché ni detección de cambios — así siempre está al día automáticamente, con cero código nuevo de sincronización. Solo le pondría un límite razonable (por ejemplo, las primeras 800-1000 entradas con un "... y N más") por si algún día tienes una biblioteca gigantesca, no por ahorro de tokens sino por sentido común.
+
+**D. El aviso de la consola (`pywin32`/COM).** La explicación de Gemini es correcta: es un aviso interno de mantenimiento de caché de `pywin32` al arrancar (relacionado con SAPI5/COM), no un error tuyo ni de la app. Se puede ignorar tranquilamente.
+
+## Mi plan concreto (a la espera de tu confirmación)
+
+1. Cambiar el mensaje de "Claves guardadas" por uno más claro.
+2. Cambiar el control de Temperatura de `SpinCtrlDouble` a `wx.Slider`, con el texto explicativo.
+3. Verificar (ya lo hice mirando el código: `al_guardar()` en `PanelClaves` sí escribe correctamente los 5 proveedores, incluido modelo y temperatura de Gemini en `claves_api.json`) — no hay nada roto ahí, solo el mensaje era confuso.
+4. Ampliar el contexto del Asistente en modo general para incluir el catálogo completo (título + autor + saga), calculado en vivo, sin caché.
+5. Actualizar toda la documentación que listaste (`README.md`, `ayuda.html`, `novedades.txt`, `CLAUDE.md`, `DEVELOPMENT.md`, `BITACORA_DE_DESARROLLO.md`, `GUIA_TECNICA.md`, `estructura_proyecto.txt`, `VISION_PERSONAL.md`, `idea_app_audiolibros.md`, y comprobar si `crear_portable.py`/`requisitos.txt`/`subir_version.py`/`.gitignore` necesitan algo) reflejando todo lo hecho en esta rama.
+6. Nada de PR a main todavía, como pediste.
+
+¿Te parece bien así? Si me das luz verde, me pongo con ello.
+parte 2
+
+Si estoy de acuerdo con todo el plan:
+
+Confirmado: voy a revisar y actualizar los 13 documentos que listas (los de "si fuese necesario" los reviso igualmente para comprobarlo, y solo los toco si de verdad hace falta). Me pongo con el plan completo ahora mismo, empezando por el código.
+
+Good, only the default message needs changing (the specific "borrada" overrides stay as-is, they're accurate):
+
+Now the temperature control — switch from `SpinCtrlDouble` to `wx.Slider`:
+
+Now wire this into `_contexto_resumen_biblioteca()` in `pestana_biblioteca.py`:
+
+Now update `_contexto_resumen_biblioteca()` in `pestana_biblioteca.py` to build and attach that catalog text:
+
+Query works correctly. Now let's check `_catalogo_completo_texto` output formatting with a quick simulation:
+
+Clean, readable output. Now let's commit the code changes before moving to documentation:
+
+Found it. Given the scope (13 files), let's delegate the bulk documentation-writing pass to a background agent while I keep working — but first let me read the key files myself to understand tone/format, since this needs to stay consistent with the author's established voice.
+
+Now let's update the Stack, file structure, config table, and the `_anunciador` section:
+
+Let's fix that last leftover reference in the "Lo que no hacer" checklist:
+
+Now update the shortcuts section and add a dedicated manual section:
+
+Let's append new subsections to the Fase 7 section documenting this session's work:
+
+Let's replace point 5 with the current pattern:
+
+Let me add the new config files to this table too:
+
+Now let's also update section 10 (Ajustes) and section 11 (Librerías):
+
+All 11 relevant docs touched (requisitos.txt, subir_version.py, .gitignore confirmed already correct, no change needed). Let's commit:
+
+Todo pusheado a `claude/fase7-asistente-biblioteca-gemini` (sin PR a main, como pediste). Resumen de esta ronda:
+
+**Código:**
+1. Mensaje al guardar en Proveedores: "Ajustes de proveedores guardados correctamente."
+2. Temperatura de Gemini: cambiada de `wx.SpinCtrlDouble` a `wx.Slider` (0.0–1.0, el mismo patrón ya probado en Velocidad/Volumen de Lectura), con el texto explicativo que pediste.
+3. `GestorBiblioteca.catalogo_para_asistente()`: nuevo método que da al Asistente, en modo general, el catálogo completo (título/autor/saga) además del resumen agregado que ya tenía — calculado en vivo, sin caché, verificado con datos de prueba antes de integrarlo.
+
+**Documentación:** actualizados los 11 documentos que confirmaste (README.md, ayuda.html, novedades.txt, CLAUDE.md, DEVELOPMENT.md, BITACORA_DE_DESARROLLO.md, GUIA_TECNICA.md, estructura_proyecto.txt, VISION_PERSONAL.md, idea_app_audiolibros.md, y el docstring de crear_portable.py). `requisitos.txt`, `subir_version.py` y `.gitignore` los revisé y ya estaban al día de rondas anteriores — no necesitaban cambios.
+
+¿Quieres que verifique algo más antes de considerar esto cerrado del todo, o probamos ya estos tres cambios de código?

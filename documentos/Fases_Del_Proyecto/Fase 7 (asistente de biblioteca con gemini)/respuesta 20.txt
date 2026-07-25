@@ -1,0 +1,27 @@
+respuesta 20
+
+Let's fix all the code and docs now. First, remove the dead code in `pestana_lectura.py`:
+
+Now update the `posiciones_encabezados` comment (no longer for H/Shift+H nav):
+
+Still used elsewhere, good. Now update comments in `gestor_epub.py` and `gestor_pdf.py`:
+
+Now compile the changed Python files:
+
+Now fix the `_FIJOS` list in `pestana_ajustes.py` I just added last round — remove the H/Mayús+H entry:
+
+Now let's fix the living documentation: `CLAUDE.md`, `ayuda.html`, `DEVELOPMENT.md`, `GUIA_TECNICA.md`, `BITACORA_DE_DESARROLLO.md`:
+
+Now `ayuda.html` — remove H/Shift+H mention and add the temperature clarification:
+
+Now `DEVELOPMENT.md` and `GUIA_TECNICA.md`:
+
+Good, all remaining mentions are intentional and accurate now. Let's also add the temperature clarification to `BITACORA` and `DEVELOPMENT.md` since I already documented the fix there but without the concrete equivalence — let's check:
+
+Pusheado. Resumen:
+
+**Temperatura:** añadida la equivalencia exacta en `CLAUDE.md` y `ayuda.html`: el número que anuncia NVDA es la temperatura real × 100 — "30" es 0.3, "40" (el de fábrica) es 0.4. Sin redondeos raros, es una conversión directa.
+
+**H/Shift+H:** revisé el código como sugeriste, y confirmas que tenías razón — de hecho encontré por qué nunca funcionó: `ventana_principal.py` tiene su propio `EVT_CHAR_HOOK` a nivel de Frame (para Tab, Ctrl+1-5, el menú contextual...) que se queda con la tecla `H` antes de que le llegue al `EVT_CHAR_HOOK` que el área de texto tenía enlazado por su cuenta — así que `_al_tecla_contenido()` nunca llegaba a ejecutarse de verdad, por diseño de cómo wx propaga ese evento concreto.
+
+Quedaba código muerto suelto por varios sitios (los tres métodos en `pestana_lectura.py`, el `Bind` que los conectaba, y menciones en `CLAUDE.md`, `DEVELOPMENT.md`, `ayuda.html`, `GUIA_TECNICA.md` y hasta en `BITACORA_DE_DESARROLLO.md`, que narraba el intento como si hubiera funcionado). Até lo había reintroducido yo mismo sin darme cuenta al reconstruir la lista de "atajos fijos" la ronda pasada — gracias por pillarlo. Ya está todo retirado y corregido. Los datos de posición de los encabezados (`posiciones_encabezados`) no se tocan: siguen usándose de verdad para ponerles negrita a los h1-h6, que es una función distinta que sí funciona.

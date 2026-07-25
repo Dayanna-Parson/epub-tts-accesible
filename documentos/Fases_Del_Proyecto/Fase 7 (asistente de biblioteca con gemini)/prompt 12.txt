@@ -1,0 +1,14 @@
+¡Tengo muy buenas noticias! Ahora sí que funciona correctamente el envío de mensajes y la respuesta del asistente con `accessible_output3`. ¡Esa era la solución perfecta!
+
+Sobre la librería `accessible_output3`: me ha gustado tanto cómo funciona para las notificaciones que quiero que reemplaces el antiguo patrón `_anunciador` en toda la aplicación por esta nueva librería (para que las notificaciones de la app suenen así de limpias en NVDA). Eso sí, mantén `pyttsx3` donde ya se usaba como motor de voz local (SAPI5) para la lectura/grabación de libros, pero usa `accessible_output3` para todos los anuncios de interfaz.
+
+Por otro lado, los cuadros de historial y de mensajes ahora sí leen sus etiquetas correctamente, y la temperatura a 0.4 ha mejorado muchísimo la precisión.
+
+Sin embargo, hay un par de problemas con las plantillas de prompt:
+
+1. **Refresco del combo en el chat:** En el cuadro combinado "Estilo del asistente" que está en el chat principal no aparecen las plantillas nuevas que voy creando. Para verlas tengo que pulsar en "Editar prompts". Asegúrate de que cualquier plantilla creada, actualizada o borrada refresque inmediatamente el combo del chat, y confirma que cambiar de plantilla en ese combo aplique realmente la instrucción de sistema seleccionada a las consultas de Gemini.
+
+2. **Salto de foco molesto al navegar:** Dentro del diálogo "Editar prompts", al moverme con las flechas por el cuadro combinado de plantillas para elegir una, el foco salta automáticamente a la casilla de edición del "Nombre". Tengo que seleccionar con flechas y salir con Escape. Corrige ese evento para que el foco no se mueva del combo mientras navego por las plantillas.
+
+3. **Subcarpeta para plantillas:** Haz que las plantillas (tanto la que viene por defecto como las nuevas que cree o edite) se guarden en una subcarpeta dedicada dentro de configuraciones, por ejemplo en `configuraciones/asistente_biblioteca/plantillas/` (o en archivos JSON o txt individuales/organizados), de forma que estén todas accesibles por si quiero editarlas desde fuera de la app.
+

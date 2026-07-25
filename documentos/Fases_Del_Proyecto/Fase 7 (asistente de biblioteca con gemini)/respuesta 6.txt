@@ -1,0 +1,11 @@
+Ahora pruebo la función con un ejemplo real antes de integrarla, y luego la conecto en el diálogo.
+
+Funciona bien. Integro el helper en el diálogo, aplicándolo justo antes de mostrar/anunciar la respuesta (el historial persistido guarda el texto ya limpio, para que futuras cargas no tengan que reprocesarlo).
+
+**Helper de limpieza de Markdown listo, integrado y pusheado.**
+
+- `app/motor/limpiador_markdown_chat.py` (nuevo, bloque `LIMPIADOR_MARKDOWN_CHAT`): `limpiar_markdown()` quita encabezados, negrita/cursiva, tachado, código en línea/bloques, enlaces (`[texto](url)` → `texto (url)`), convierte viñetas a `•` y elimina citas/líneas horizontales — probé con un ejemplo real de recomendación de libro y el resultado queda limpio y bien puntuado para NVDA.
+- `dialogo_asistente_biblioteca.py`: aplica la limpieza a la respuesta de Gemini antes de mostrarla, anunciarla y guardarla en `chat_biblioteca.json` — el historial persistido siempre queda en texto plano, no hace falta reprocesar al recargar.
+- Selección de modelo: queda en "Automático" (o lo que hayas fijado en Ajustes), sin control extra en el diálogo de chat — Tab order se mantiene limpio como pediste.
+
+Con esto la lógica de la Fase C — Asistente de Biblioteca queda completa según lo planificado en la Sección 6, a falta de la prueba real en Windows con clave de Gemini y NVDA activo. El PR #9 sigue en draft con todos los commits; avísame cuando tengas ocasión de probarlo o si quieres que lo pase a "listo para revisión" mientras tanto.

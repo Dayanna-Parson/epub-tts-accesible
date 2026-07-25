@@ -1,0 +1,55 @@
+Now let's make the edits. First `reproductor_sonidos.py` — add loop support, global enable toggle, and new constants.
+
+Now add the enable/disable preference logic and loop support:
+
+Now update `reproducir()` to respect the gate (with a `forzar` bypass for the test button) and add loop functions:
+
+Now wire item 1 (thinking loop) into `dialogo_asistente_biblioteca.py`, and item 4's NVDA-fix + remove editar-prompts button from the chat:
+
+Now let's wire the thinking-loop into send/receive/error handlers:
+
+Now insert the two new panel classes right before `PESTANA_AJUSTES_PRINCIPAL`:
+
+Now register the two new panels in `PestanaAjustes`:
+
+Now update `_construir_arbol`, `_al_cambiar_nodo` (for dynamic refresh) and `_panel_activo`:
+
+Now compile-check pestana_ajustes.py:
+
+Now hook into continuous-reading position updates (`al_actualizar_ui`) and SAPI progress callback:
+
+Good, all clean. Now let's run a full syntax check across the whole app to be safe:
+
+Let's add `sonidos_habilitados` to the factory defaults for consistency:
+
+Let me do one final review pass of the diff for correctness before committing.
+
+This all looks correct. Now let's commit.
+
+All staged correctly (the deletion was already staged via `git rm` earlier).
+
+Now rewrite the migration function and its call site to be idempotent-safe and merge without clobbering:
+
+Migration fix works correctly: it recovers the stranded "fan de la fantasía" and "suspense" templates without clobbering the newer ones. Now let's stage all changes and rebase onto the remote commit.
+
+Now rebase onto the remote commit that added `thinking.wav`:
+
+Rebase succeeded cleanly. Now let's remove the accidentally-committed personal data (chat history, exported conversation, legacy JSON with real templates that's now safely migrated) and tighten `.gitignore` so this can't recur:
+
+Now let's verify everything compiles, then push.
+
+Todo pusheado. Resumen completo de esta ronda:
+
+**1. Sonido de espera (`thinking.wav`):** ya suena en bucle mientras el Asistente consulta a Gemini, y se detiene al recibir respuesta, al fallar, o al cerrar el diálogo con la petición aún pendiente. El archivo llegó al repo mientras yo trabajaba (lo subiste tú directamente), así que ya está todo conectado y debería sonar.
+
+**2. `page_scrolled.wav` en Lectura:** suena, sutil, cada vez que el cursor cruza el límite de una página virtual — tanto al navegar con flechas como durante la lectura continua con cualquier motor (neuronal o SAPI5), igual que en Bookworm.
+
+**3. Ajustes → Efectos de Sonido:** casilla global para silenciar todos los sonidos de la app, más un selector con botón "Probar sonido" que suena aunque estén desactivados.
+
+**4. Gestión de plantillas movida a Ajustes → Asistente de Biblioteca** (mantuve ese nombre para no contradecir tu decisión anterior de no rebautizar el Asistente — dime si en realidad querías la etiqueta "Asistente de Lectura" solo para este nodo de Ajustes). El chat se queda solo con el combo rápido; quité la confirmación hablada al cambiar de plantilla porque duplicaba lo que NVDA ya lee del propio combo — eso era el bug del log que me pasaste. Añadí botón "Abrir carpeta de plantillas" y reescaneo automático al entrar en esa sección.
+
+**Sobre tus prompts perdidos — los encontré:** al subir `thinking.wav` se coló sin querer tu carpeta `configuraciones/` real, y ahí estaban: `configuraciones/prompts_asistente.json` (ruta antigua, de antes de la reorganización) seguía teniendo "fan de la fantasía" y "suspense" intactos, nunca se migraron porque mi código de migración solo miraba la ruta nueva. Ya lo arreglé: la migración ahora revisa las dos rutas posibles y no pisa nada más reciente. Debería recuperarlos solo al abrir la app.
+
+**Aviso de privacidad:** ese mismo commit subió por error tu historial real de conversaciones (`chat_biblioteca.json`, una conversación exportada a .txt) al repositorio. Los dejé de rastrear (`git rm --cached`, siguen en tu disco) y reforcé `.gitignore` para que no vuelva a pasar, pero **siguen visibles en el historial de git** (commit `cf35b04`). Si quieres que los borre también del historial, dímelo explícitamente — es una operación que reescribe commits y necesito tu confirmación antes de tocarla.
+
+**Iconos:** solo añadí icono (`aplicar_icono_boton`) al botón "Abrir carpeta de plantillas" (icono de carpeta, mismo que usan Troceador y Grabación) y a "Guardar/Borrar plantilla". El resto de botones de Ajustes —incluidos los que ya existían antes de esta ronda— no tienen icono, porque ese es el patrón real del archivo: la mayoría de pestana_ajustes.py nunca usó iconos. No es una omisión mía, es cómo está el resto de la pestaña.

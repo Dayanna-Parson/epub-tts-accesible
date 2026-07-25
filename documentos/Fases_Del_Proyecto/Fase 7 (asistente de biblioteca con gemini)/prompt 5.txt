@@ -1,0 +1,10 @@
+¡Excelente ojo detectando el conflicto de Ctrl+G con el modo Lectura! Ctrl+Shift+B es un atajo perfecto y no genera colisiones.
+
+Adelante con el desarrollo de `dialogo_asistente_biblioteca.py` y su integración en `pestana_biblioteca.py`.
+
+Para este diálogo, ten en cuenta esto al consultar el repositorio de referencia (`VisionAssistantPro`):
+- Puedes consultar el repo de referencia únicamente para revisar cómo formatean o limpian las preguntas y respuestas antes de mostrarlas (gestión de texto/Markdown).
+- NO repliques la interfaz ni los métodos de voz de ese repo (ya que ese es un addon nativo de NVDA y nuestra app es una aplicación wxPython independiente).
+- Mantén de forma estricta las reglas de accesibilidad, el patrón `_anunciador` y la gestión del foco de nuestro propio `CLAUDE.md` (anuncio de contexto con foco directo al campo de texto de entrada, e historial en hilo secundario sin mover el foco del usuario).
+
+¡Adelante con el diálogo del asistente!

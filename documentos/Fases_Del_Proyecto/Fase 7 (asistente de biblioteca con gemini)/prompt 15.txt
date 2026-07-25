@@ -1,0 +1,19 @@
+¡Tengo muy buenas noticias! Todo funciona de maravilla con los cambios de hoy y los sonidos. ¡Muchísimas gracias por el trabajazo!
+
+Solo quiero afinar tres cosas antes de dar por cerrada esta fase:
+
+1. **Comportamiento en "Nueva plantilla":**
+   Entendido lo del foco: efectivamente, al seleccionar "(Nueva plantilla...)" en el combo, tiene todo el sentido que el foco salte automáticamente al cuadro de edición "Nombre" para empezar a escribir directamente. 
+   Asegúrate únicamente de que el botón "Guardar" requiera obligatoriamente que HAYA texto tanto en "Nombre" como en "Texto del prompt" (mostrando un aviso accesible si alguno está vacío) para evitar guardar plantillas en blanco.
+
+2. **Organización, lógica y rotación de backups:**
+   He revisado la carpeta `configuraciones/` y he visto que en `proyectos_backup/` hay demasiados archivos `.zip` seguidos mezclando biblioteca y proyectos. Por favor, ajusta la lógica de backups:
+   - **Separación de rutas:** Separa en dos subcarpetas independientes: `configuraciones/backups_biblioteca/` y `configuraciones/backups_proyectos/`.
+   - **Crear solo si hay cambios reales:** Haz que el backup automático solo se dispare cuando el usuario modifique o guarde datos reales (al importar/editar libros, proyectos o la base de datos). Si no ha habido cambios, no crees ningún archivo nuevo solo por abrir o cerrar la app.
+   - **Rotación de archivos:** Mantén únicamente las 5 copias más recientes de cada tipo, borrando las antiguas automáticamente para no saturar el disco.
+   - **Protección Git:** Comprueba que estas nuevas rutas de backups estén bien incluidas en el `.gitignore`.
+
+3. **Iconos en botones específicos:**
+   Aclarado el tema de los iconos. Me parece perfecto tu criterio de no poner icono a los enlaces de texto o botones específicos ("Conseguir clave...", "Escuchar muestra", etc.) para no confundir con gráficos engañosos. Se quedan como están.
+
+Con esta reorganización de carpetas y el ajuste de validación al guardar, ¿podemos dar por concluida y cerrada oficialmente esta fase?

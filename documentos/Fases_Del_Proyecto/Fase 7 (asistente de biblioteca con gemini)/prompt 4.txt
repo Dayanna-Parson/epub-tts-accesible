@@ -1,0 +1,8 @@
+¡Excelente trabajo! Todo lo implementado hasta ahora en cliente_gemini.py, config_rutas.py y pestana_ajustes.py está perfecto. 
+
+Aclarado el tema de las API keys (efectivamente, no validar prefijos por regex es la mejor opción para soportar cualquier formato que emita Google AI Studio).
+
+Puedes seguir adelante con el siguiente paso:
+1. Crear `app/motor/gestor_chat_biblioteca.py` con la persistencia atómica de `chat_biblioteca.json` (temp + rename), estructurada por `id_libro` (y clave "general" para cuando no hay libro seleccionado).
+2. Proceder después con el diálogo accesible `dialogo_asistente_biblioteca.py` (con `Ctrl+G`, foco directo al campo de entrada y anuncios accesibles sin robar el foco).
+A, y si el atajo de ctrl mas g, entra en conflicto con algún otro de la app, pues mejor me avisas, y lo cambiamos

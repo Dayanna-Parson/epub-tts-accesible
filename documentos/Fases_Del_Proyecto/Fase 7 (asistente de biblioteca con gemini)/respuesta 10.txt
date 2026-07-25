@@ -1,0 +1,45 @@
+prompt 10
+
+Confirmado: el bug es preexistente en los 5 (Azure, Polly, ElevenLabs, Deepgram y Gemini) — todos llaman `al_guardar(None)`, que salta el aviso. Lo arreglo con un mensaje específico por proveedor:
+
+Ahora reviso y corrijo el anuncio en vivo, que confirmas que no funciona — vuelvo al patrón `_anunciador` probado en el resto de la app, en vez de insistir con una técnica que no puedo verificar y que ya sabemos que falla en tu equipo real.
+
+Ahora elimino el módulo no usado y actualizo el docstring superior:
+
+Ahora reviso `_libro_seleccionado` y añado contexto de saga/categoría cuando no hay un libro concreto seleccionado:
+
+Ahora los helpers de contexto de saga/categoría y su uso en `al_abrir_asistente_biblioteca`:
+
+He arreglado las cuatro cosas concretas y las he pusheado. Me quedan tus dos ideas más grandes — leer `biblioteca.db` en modo general y prompts de sistema editables/guardables — que sí quiero comentar contigo antes de tocar código, porque cada una tiene varias formas razonables de hacerse.
+
+Ahora añado un método de resumen agregado en `gestor_biblioteca.py`, cerca de las consultas de solo lectura similares:
+
+Ahora edito para añadir `"tipo"` a cada contexto y el resumen general como último recurso:
+
+Ahora añado el parámetro `instruccion_sistema` a `enviar_mensaje`:
+
+Ahora creo `gestor_prompts_asistente.py`:
+
+Ahora el sub-diálogo para crear/editar/borrar plantillas:
+
+Añado la fila de selección de estilo/prompt justo encima del historial:
+
+Ahora paso el texto del prompt activo a `enviar_mensaje`:
+
+Ahora compilo todo el conjunto de cambios:
+
+Funciona correctamente: crea, activa, borra y protege la última plantilla. Todo listo, hago commit.
+
+Todo pusheado. Resumen de esta ronda:
+
+**Arreglos rápidos** (commit anterior):
+- Anuncio en vivo revertido al patrón `_anunciador` probado — la notificación UIA no sonaba en tus pruebas reales, así que la descarté en vez de insistir con algo que no puedo verificar.
+- Los 5 botones "Borrar clave" (Azure, Polly, ElevenLabs, Deepgram, Gemini) tenían el mismo bug: llamaban a `al_guardar(None)`, que salta el aviso a propósito. Ahora los cinco confirman con sonido y mensaje específico.
+- `_libro_seleccionado()` tiene respaldo con `GetFocusedItem()` por si la selección se pierde tras recargar la lista.
+
+**Las dos features grandes, ya implementadas:**
+- **Resumen de tu biblioteca en modo general**: si abres el asistente sin libro, saga ni género seleccionados, ahora manda un resumen calculado al vuelo (total de libros, favoritos/leídos/pendientes, autores y géneros más frecuentes, sagas) — se recalcula desde `biblioteca.db` en cada apertura, así que altas y bajas ya se reflejan solas, sin nada que mantener sincronizado.
+- **Contexto de saga/género**: si tienes una saga o un género activo en el panel izquierdo pero ningún libro concreto marcado, ahora manda ese contexto (nombre + lista de títulos) en vez de abrir en general — esto también debería resolver lo que reportabas de "no funciona ni sobre una saga ni sobre un libro".
+- **Prompts de sistema editables**: combo "Estilo del asistente" + botón "Editar prompts..." arriba del historial del chat. Puedes crear, editar y borrar plantillas (siempre queda al menos una), y la que tengas activa se usa en cada mensaje.
+
+Como siempre, no he podido probar nada de esto en Windows real con NVDA — cuando puedas, avísame qué funciona y qué no.

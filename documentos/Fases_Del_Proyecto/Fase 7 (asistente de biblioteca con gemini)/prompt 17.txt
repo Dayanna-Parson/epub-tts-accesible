@@ -1,0 +1,58 @@
+Claude, NO abras ningún PR a main todavía. La versión 3.0 sigue en desarrollo activo y aún quedan fases y tareas de documentación por rematar.
+
+En este punto, necesito que hagas una actualización completa y rigurosa de los documentos del proyecto para que reflejen fielmente todo el trabajo realizado hasta la fecha en esta rama (asistente Gemini, plantillas en Ajustes, sonidos, backups rotativos, etc.), manteniendo el tono y formato adecuado de cada uno:
+
+Por favor, revisa y actualiza los siguientes archivos según corresponda:
+
+1. **Documentación principal y de usuario:**
+   - `README.md` y `ayuda.html` (reflejando el Asistente de Biblioteca, los nuevos atajos de teclado, las plantillas y el control de sonidos).
+   - `novedades.txt` (resumen accesible de las últimas mejoras para el diálogo de novedades de la v3.0).
+
+2. **Documentación técnica y de arquitectura:**
+   - `CLAUDE.md` y `DEVELOPMENT.md` (patrones actuales de código, accessible_output3, gestión de hilos y flujo de plantillas).
+   - `BITACORA_DE_DESARROLLO.md` (registro cronológico con las decisiones tomadas en este bloque).
+   - `documentos/Fases_Del_Proyecto/GUIA_TECNICA.md` y `estructura_proyecto.txt` (actualizando la estructura de carpetas, incluyendo los backups separados y la carpeta de plantillas).
+   - `VISION_PERSONAL.md` e `idea_app_audiolibros.md` (si requieren ajustar algún matiz sobre el alcance alcanzado).
+
+3. **Archivos de empaquetado y configuración (solo si es necesario):**
+   - Comprueba si `crear_portable.py`, `requisitos.txt`, `subir_version.py` o `.gitignore` necesitan alguna actualización adicional para alinearse con los documentos anteriores.
+
+ayuda.html
+BITACORA_DE_DESARROLLO.md
+CLAUDE.md
+DEVELOPMENT.md
+estructura_proyecto.txt
+novedades.txt
+README.md
+requisitos.txt (Si fuese necesario)
+subir_version.py (si fuese necesario)
+GUIA_TECNICA.md
+idea_app_audiolibros.md
+VISION_PERSONAL.md
+crear_portable.py (Si fuese necesario)
+
+.gitignore (Si es necesario)
+
+
+Confírmame cuando tengas revisada y actualizada toda la documentación del proyecto para que no quede ningún cabo suelto.
+
+
+Vale, no sé por qué no te lo había preguntado antes, pero me he dado cuenta de que en el apartado de claves, ajustes / proveedores, me parece muy bien que salgan todas las claves y todo lo que aparece allí. Sin embargo, por ejemplo, en Gemini, al elegir un modelo o al configurar su temperatura, al pulsar en guardar dice «claves guardadas». No sé si es buena idea dejarlo todo así o tener, digamos, una sección para cada proveedor, porque al decir «claves guardadas» no sé dónde se guarda el resto de la configuración ni si realmente se está registrando. ¿Puedes comprobar que todos los ajustes se estén guardando en sus respectivos campos o sitios? Pero dime primero lo que vas a hacer antes de ejecutar el código para ver si estamos de acuerdo, porque no quiero que la líes ni que rompas nada de lo que ya está hecho.
+
+Ah, y otra cosita más. Me he dado cuenta de que en el apartado de claves y proveedores, en la sección para elegir la temperatura, no dice «temperatura», lo dice tal que así: (edición  seleccionado 0.3). Me gustaría que pusieras una descripción muy breve que explique qué hace la temperatura y qué valores son recomendables para quienes no lo sepan. Por ejemplo: «un valor alto hace esto, un valor bajo hace esto otro; se recomienda dejarlo así». Algo breve y conciso, solo para que el usuario tenga una idea de lo que hace ese control.
+
+Ah, otra cosita más, que casi se me olvida. ¿Se podría hacer que el asistente de la biblioteca obtenga o conozca de alguna manera toda la biblioteca, en vez de solo un pequeño resumen como ahora? Te cuento lo que me ha pasado: le he preguntado sobre una saga de libros en concreto y me ha dicho que no la tengo en la biblioteca, cuando sí la tengo. Siento que en esas cosas todavía no es tan preciso; aunque le ajuste la temperatura y todo eso, con el resumen no basta. Pero claro, esto solo tendría que ser la primera vez que se abra la biblioteca, no siempre. Solo cuando no haya leído antes la base de datos, para no saturar la API y el modelo por la cuota. Y cuando se añadan nuevos libros o nuevas sagas, que el asistente se vaya actualizando y detectando cuándo hay un nuevo libro o saga en la biblioteca, para tenerlo todo al día. Se me ocurre que podríamos darle un JSON (o usar la propia base de datos de la biblioteca, que ya tiene ese formato) para que lo lea. Dime qué opinas de esto.
+
+mira este error tan raro que me ha dado la consola:
+me gustaría saber que es?
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+Rebuilding cache of generated files for COM support...
+Checking C866CA3A-32F7-11D2-9602-00C04F8EE628x0x5x4
+Could not add module (IID('{C866CA3A-32F7-11D2-9602-00C04F8EE628}'), 0, 5, 4) - <class 'AttributeError'>: module 'win32com.gen_py.C866CA3A-32F7-11D2-9602-00C04F8EE628x0x5x4' has no attribute 'CLSIDToClassMap'
+Checking F152C4EF-B92F-4139-A901-E8F1E28CC8E0x0x1x0
+Could not add module (IID('{F152C4EF-B92F-4139-A901-E8F1E28CC8E0}'), 0, 1, 0) - <class 'AttributeError'>: module 'win32com.gen_py.F152C4EF-B92F-4139-A901-E8F1E28CC8E0x0x1x0' has no attribute 'CLSIDToClassMap'
+Done.
+
