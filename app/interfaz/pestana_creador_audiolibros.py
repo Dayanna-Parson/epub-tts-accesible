@@ -11,9 +11,15 @@ from app.config_rutas import ruta_config
 from app.motor import anunciador_lector as voz
 from app.motor.reproductor_sonidos import reproducir, REC_START, SUCCESS, ERROR, PROGRESS, OPEN_FOLDER, CLEAR
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _
 
 logger = logging.getLogger(__name__)
 
+# Tabla de solo lectura, evaluada al importar el módulo — no se envuelve en
+# _() aquí porque fijaría el idioma al arrancar, antes de que gestor_idioma
+# tenga el idioma real (parámetro/env/ajustes). Son en su mayoría marcas de
+# proveedor (Azure, Amazon Polly...); "Local SAPI5" se traduce en el punto
+# de uso si hace falta.
 _NOMBRES_PROVEEDOR = {
     "azure":      "Azure Neural",
     "polly":      "Amazon Polly",
@@ -100,31 +106,31 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # sin un control focalizable justo después, nunca entra en el orden
         # de tabulación y el lector de pantalla no lo alcanza salvo con el
         # navegador de objetos. Mismo patrón que txt_ruta en pestana_grabacion.py.
-        box_libro = wx.StaticBox(self, label="Libro")
+        box_libro = wx.StaticBox(self, label=_("Libro"))
         sz_libro = wx.StaticBoxSizer(box_libro, wx.VERTICAL)
-        lbl_libro_caption = wx.StaticText(self, label="Libro cargado:")
+        lbl_libro_caption = wx.StaticText(self, label=_("Libro cargado:"))
         self.txt_libro = _TextoInformativoAccesible(self, style=wx.TE_READONLY)
         self.txt_libro.SetValue(
-            "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
-            "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
+            _("Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
+              "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar.")
         )
         sz_libro.Add(lbl_libro_caption, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
         sz_libro.Add(self.txt_libro, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.btn_eliminar_libro = wx.Button(self, label="Eliminar libro cargado")
+        self.btn_eliminar_libro = wx.Button(self, label=_("Eliminar libro cargado"))
         self.btn_eliminar_libro.SetHelpText(
-            "Quita el libro actual de esta pestaña, por si se cargó el libro "
-            "equivocado, sin afectar a la Biblioteca ni al archivo original."
+            _("Quita el libro actual de esta pestaña, por si se cargó el libro "
+              "equivocado, sin afectar a la Biblioteca ni al archivo original.")
         )
         self.btn_eliminar_libro.Bind(wx.EVT_BUTTON, self.al_eliminar_libro)
-        aplicar_icono_boton(self.btn_eliminar_libro, "eliminar", "Eliminar libro cargado")
+        aplicar_icono_boton(self.btn_eliminar_libro, "eliminar", _("Eliminar libro cargado"))
         self.btn_eliminar_libro.Enable(False)
         sz_libro.Add(self.btn_eliminar_libro, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
 
-        self.btn_retomar_pendiente = wx.Button(self, label="Retomar exportación pendiente")
+        self.btn_retomar_pendiente = wx.Button(self, label=_("Retomar exportación pendiente"))
         self.btn_retomar_pendiente.SetHelpText(
-            "Continúa una exportación que se quedó a medias por falta de cuota "
-            "o un corte de conexión, sin regrabar lo que ya se generó."
+            _("Continúa una exportación que se quedó a medias por falta de cuota "
+              "o un corte de conexión, sin regrabar lo que ya se generó.")
         )
         self.btn_retomar_pendiente.Bind(wx.EVT_BUTTON, self.al_retomar_exportacion)
         self.btn_retomar_pendiente.Enable(False)
@@ -135,12 +141,12 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         # ── Modo de exportación ──────────────────────────────────────────
         hbox_modo = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_modo = wx.StaticText(self, label="Modo de exportación:")
-        self.combo_modo = wx.Choice(self, choices=["Libro completo", "Por capítulos"])
+        lbl_modo = wx.StaticText(self, label=_("Modo de exportación:"))
+        self.combo_modo = wx.Choice(self, choices=[_("Libro completo"), _("Por capítulos")])
         self.combo_modo.SetSelection(0)
         self.combo_modo.SetHelpText(
-            "Libro completo genera un único archivo MP3 con todo el libro. "
-            "Por capítulos genera un MP3 independiente por cada capítulo, numerado."
+            _("Libro completo genera un único archivo MP3 con todo el libro. "
+              "Por capítulos genera un MP3 independiente por cada capítulo, numerado.")
         )
         self.combo_modo.Bind(wx.EVT_CHOICE, self.al_cambiar_modo)
         hbox_modo.Add(lbl_modo, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
@@ -154,23 +160,23 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # nombre — mismo criterio de navegación que PanelProveedorIA en
         # Ajustes, sin filas de encabezado que NVDA pueda leer como si
         # fueran una voz seleccionable.
-        lbl_voz_caption = wx.StaticText(self, label="Voz para la exportación:")
-        self.combo_voz = wx.Choice(self, choices=["Cargando voces favoritas..."])
+        lbl_voz_caption = wx.StaticText(self, label=_("Voz para la exportación:"))
+        self.combo_voz = wx.Choice(self, choices=[_("Cargando voces favoritas...")])
         self.combo_voz.SetSelection(0)
         self.combo_voz.SetHelpText(
-            "Voz favorita que se usará para la exportación, de cualquier proveedor "
-            "configurado, incluidas las voces locales SAPI5. Marca tus favoritas "
-            "desde Ajustes; esta lista se actualiza sola."
+            _("Voz favorita que se usará para la exportación, de cualquier proveedor "
+              "configurado, incluidas las voces locales SAPI5. Marca tus favoritas "
+              "desde Ajustes; esta lista se actualiza sola.")
         )
         self.combo_voz.Bind(wx.EVT_CHOICE, self.al_cambiar_voz)
         sizer.Add(lbl_voz_caption, 0, wx.LEFT | wx.RIGHT, 8)
         sizer.Add(self.combo_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
-        self.btn_escuchar_voz = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar_voz = wx.Button(self, label=_("Escuchar muestra (Alt+P)"))
         self.btn_escuchar_voz.SetHelpText(
-            "Reproduce una muestra corta con la voz seleccionada arriba, a la "
-            "velocidad y volumen configurados en esta pestaña. Púlsalo de nuevo "
-            "para detener la reproducción."
+            _("Reproduce una muestra corta con la voz seleccionada arriba, a la "
+              "velocidad y volumen configurados en esta pestaña. Púlsalo de nuevo "
+              "para detener la reproducción.")
         )
         self.btn_escuchar_voz.Bind(wx.EVT_BUTTON, self.al_escuchar_voz)
         sizer.Add(self.btn_escuchar_voz, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
@@ -182,41 +188,41 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # ── Presupuesto / exportación ────────────────────────────────────
         hbox_botones = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_calcular = wx.Button(self, label="Calcular presupuesto")
+        self.btn_calcular = wx.Button(self, label=_("Calcular presupuesto"))
         self.btn_calcular.SetHelpText(
-            "Cuenta los caracteres del libro (o de los capítulos) y comprueba si caben "
-            "en la cuota configurada, sin generar audio."
+            _("Cuenta los caracteres del libro (o de los capítulos) y comprueba si caben "
+              "en la cuota configurada, sin generar audio.")
         )
         self.btn_calcular.Bind(wx.EVT_BUTTON, self.al_calcular_presupuesto)
         hbox_botones.Add(self.btn_calcular, 0, wx.RIGHT, 8)
 
-        self.btn_iniciar = wx.Button(self, label="Iniciar exportación")
+        self.btn_iniciar = wx.Button(self, label=_("Iniciar exportación"))
         self.btn_iniciar.SetHelpText(
-            "Empieza a generar el audiolibro. Se habilita después de calcular el "
-            "presupuesto con la configuración actual."
+            _("Empieza a generar el audiolibro. Se habilita después de calcular el "
+              "presupuesto con la configuración actual.")
         )
         self.btn_iniciar.Bind(wx.EVT_BUTTON, self.al_iniciar_exportacion)
-        aplicar_icono_boton(self.btn_iniciar, "grabar", "Iniciar exportación")
+        aplicar_icono_boton(self.btn_iniciar, "grabar", _("Iniciar exportación"))
         self.btn_iniciar.Enable(False)
         hbox_botones.Add(self.btn_iniciar, 0, wx.RIGHT, 8)
 
-        self.btn_abortar = wx.Button(self, label="Abortar exportación")
+        self.btn_abortar = wx.Button(self, label=_("Abortar exportación"))
         self.btn_abortar.SetHelpText(
-            "Detiene la exportación en curso. Lo ya generado hasta ese punto se "
-            "conserva y queda registrado como pendiente para retomarlo más tarde."
+            _("Detiene la exportación en curso. Lo ya generado hasta ese punto se "
+              "conserva y queda registrado como pendiente para retomarlo más tarde.")
         )
         self.btn_abortar.Bind(wx.EVT_BUTTON, self.al_abortar_exportacion)
-        aplicar_icono_boton(self.btn_abortar, "detener", "Abortar exportación")
+        aplicar_icono_boton(self.btn_abortar, "detener", _("Abortar exportación"))
         self.btn_abortar.Enable(False)
         hbox_botones.Add(self.btn_abortar, 0, wx.RIGHT, 8)
 
-        self.btn_abrir_carpeta = wx.Button(self, label="Abrir carpeta")
+        self.btn_abrir_carpeta = wx.Button(self, label=_("Abrir carpeta"))
         self.btn_abrir_carpeta.SetHelpText(
-            "Abre en el Explorador la carpeta donde se guardan los audiolibros "
-            "exportados de este libro."
+            _("Abre en el Explorador la carpeta donde se guardan los audiolibros "
+              "exportados de este libro.")
         )
         self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON, self.al_abrir_carpeta)
-        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta")
+        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", _("Abrir carpeta"))
         self.btn_abrir_carpeta.Enable(False)
         hbox_botones.Add(self.btn_abrir_carpeta, 0)
 
@@ -224,12 +230,12 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         # ── Velocidad ─────────────────────────────────────────────────────
         sz_vel = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_vel = wx.StaticText(self, label="Velocidad:")
+        lbl_vel = wx.StaticText(self, label=_("Velocidad:"))
         self.deslizador_velocidad = wx.Slider(self, value=50, minValue=0, maxValue=100)
-        self.deslizador_velocidad.SetName("Velocidad de exportación")
+        self.deslizador_velocidad.SetName(_("Velocidad de exportación"))
         self.deslizador_velocidad.SetHelpText(
-            "Velocidad de locución de la voz. 0 es la más lenta, 100 la más rápida. "
-            "Flechas: ±1. RePág/AvPág: ±5."
+            _("Velocidad de locución de la voz. 0 es la más lenta, 100 la más rápida. "
+              "Flechas: ±1. RePág/AvPág: ±5.")
         )
         self.deslizador_velocidad.Bind(wx.EVT_SLIDER, self._al_cambiar_velocidad)
         self.deslizador_velocidad.Bind(wx.EVT_KEY_DOWN, self._al_tecla_velocidad)
@@ -239,12 +245,12 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         # ── Volumen ───────────────────────────────────────────────────────
         sz_vol = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_vol = wx.StaticText(self, label="Volumen:")
+        lbl_vol = wx.StaticText(self, label=_("Volumen:"))
         self.deslizador_volumen = wx.Slider(self, value=100, minValue=0, maxValue=100)
-        self.deslizador_volumen.SetName("Volumen de exportación")
+        self.deslizador_volumen.SetName(_("Volumen de exportación"))
         self.deslizador_volumen.SetHelpText(
-            "Volumen del audio generado. 0 es silencio, 100 es volumen máximo. "
-            "Flechas: ±1. RePág/AvPág: ±5."
+            _("Volumen del audio generado. 0 es silencio, 100 es volumen máximo. "
+              "Flechas: ±1. RePág/AvPág: ±5.")
         )
         self.deslizador_volumen.Bind(wx.EVT_SLIDER, self._al_cambiar_volumen)
         self.deslizador_volumen.Bind(wx.EVT_KEY_DOWN, self._al_tecla_volumen)
@@ -253,35 +259,35 @@ class PestanaCreadorAudiolibros(wx.Panel):
         sizer.Add(sz_vol, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
         # ── Progreso de la exportación ────────────────────────────────────
-        box_prog = wx.StaticBox(self, label="Progreso")
+        box_prog = wx.StaticBox(self, label=_("Progreso"))
         sz_prog = wx.StaticBoxSizer(box_prog, wx.VERTICAL)
-        lbl_progreso_caption = wx.StaticText(self, label="Estado:")
+        lbl_progreso_caption = wx.StaticText(self, label=_("Estado:"))
         self.txt_progreso = _TextoInformativoAccesible(self, style=wx.TE_READONLY)
-        self.txt_progreso.SetValue("Sin exportación en curso.")
+        self.txt_progreso.SetValue(_("Sin exportación en curso."))
         self.gauge = wx.Gauge(self, range=100)
-        self.gauge.SetHelpText("Progreso de la exportación actual.")
+        self.gauge.SetHelpText(_("Progreso de la exportación actual."))
         sz_prog.Add(lbl_progreso_caption, 0, wx.LEFT | wx.RIGHT | wx.TOP, 5)
         sz_prog.Add(self.txt_progreso, 0, wx.EXPAND | wx.ALL, 5)
         sz_prog.Add(self.gauge, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 5)
         sizer.Add(sz_prog, 0, wx.EXPAND | wx.ALL, 8)
 
         # ── Lista de capítulos (solo visible en modo "Por capítulos") ────
-        box_caps = wx.StaticBox(self, label="Capítulos")
+        box_caps = wx.StaticBox(self, label=_("Capítulos"))
         self.sz_caps = wx.StaticBoxSizer(box_caps, wx.VERTICAL)
         self.lista_capitulos = wx.ListCtrl(
             self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES | wx.LC_VRULES
         )
-        self.lista_capitulos.InsertColumn(0, "Nº", width=50)
-        self.lista_capitulos.InsertColumn(1, "Título", width=380)
-        self.lista_capitulos.InsertColumn(2, "Estado", width=180)
+        self.lista_capitulos.InsertColumn(0, _("Nº"), width=50)
+        self.lista_capitulos.InsertColumn(1, _("Título"), width=380)
+        self.lista_capitulos.InsertColumn(2, _("Estado"), width=180)
         # No usar CheckListCtrlMixin.__init__ (deprecado en wxPython 4.2+):
         # basta con EnableCheckBoxes(True) sobre el ListCtrl.
         self.lista_capitulos.EnableCheckBoxes(True)
         self.lista_capitulos.SetHelpText(
-            "Capítulos del libro. Todos empiezan marcados para incluirse en la "
-            "exportación; desmarca con Intro o Espacio los que no quieras "
-            "(índice, dedicatoria, agradecimientos...). El estado de cada uno "
-            "se actualiza durante la exportación por capítulos."
+            _("Capítulos del libro. Todos empiezan marcados para incluirse en la "
+              "exportación; desmarca con Intro o Espacio los que no quieras "
+              "(índice, dedicatoria, agradecimientos...). El estado de cada uno "
+              "se actualiza durante la exportación por capítulos.")
         )
         self.lista_capitulos.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_capitulo)
         self.lista_capitulos.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_marcar_capitulo)
@@ -372,7 +378,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         """
         self.libro_actual = datos_libro
         self._ultima_carpeta = None
-        titulo = datos_libro.get("titulo", "(sin título)")
+        titulo = datos_libro.get("titulo", _("(sin título)"))
         autor = datos_libro.get("autor", "")
         formato = datos_libro.get("formato", "").upper()
 
@@ -385,7 +391,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._calculando = False
         self._exportando = False
         self.gauge.SetValue(0)
-        self.txt_progreso.SetValue("Sin exportación en curso.")
+        self.txt_progreso.SetValue(_("Sin exportación en curso."))
 
         self._poblar_lista_capitulos([])
         self.Layout()
@@ -396,9 +402,9 @@ class PestanaCreadorAudiolibros(wx.Panel):
         # silencioso para el lector de pantalla — el título quedaba escrito
         # en el campo, pero nadie lo verbalizaba hasta que el usuario lo
         # encontrara a mano.
-        mensaje = f"Libro cargado en el Creador de Audiolibros: {descripcion}"
+        mensaje = _("Libro cargado en el Creador de Audiolibros: {descripcion}").format(descripcion=descripcion)
         if self._pendiente_actual:
-            mensaje += " Hay una exportación pendiente de completar para este libro."
+            mensaje += " " + _("Hay una exportación pendiente de completar para este libro.")
         self._anunciar(mensaje)
 
     def _comprobar_exportacion_pendiente(self):
@@ -429,11 +435,11 @@ class PestanaCreadorAudiolibros(wx.Panel):
         if not self._pendiente_actual or not self.libro_actual:
             return
         if self._exportando or self._calculando:
-            self._anunciar("Ya hay una operación en curso.")
+            self._anunciar(_("Ya hay una operación en curso."))
             return
         if not self.voz_actual:
             reproducir(ERROR)
-            self._anunciar("Elige una voz favorita antes de retomar la exportación.")
+            self._anunciar(_("Elige una voz favorita antes de retomar la exportación."))
             return
 
         pendiente = self._pendiente_actual
@@ -444,7 +450,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self.sz_caps.ShowItems(True)
             self.Layout()
             capitulo_pendiente = pendiente["capitulo_pendiente"] or 0
-            self._anunciar("Cargando capítulos para retomar la exportación...")
+            self._anunciar(_("Cargando capítulos para retomar la exportación..."))
             self._cargar_titulos_capitulos(
                 al_terminar=lambda: self._preparar_checkboxes_retomar(capitulo_pendiente)
             )
@@ -468,22 +474,24 @@ class PestanaCreadorAudiolibros(wx.Panel):
             for i in range(self.lista_capitulos.GetItemCount()):
                 if i < capitulo_pendiente:
                     self.lista_capitulos.CheckItem(i, False)
-                    self.lista_capitulos.SetItem(i, 2, "Completado (ya existe)")
+                    self.lista_capitulos.SetItem(i, 2, _("Completado (ya existe)"))
                 else:
                     self.lista_capitulos.CheckItem(i, True)
-                    self.lista_capitulos.SetItem(i, 2, self.ESTADO_PENDIENTE)
+                    self.lista_capitulos.SetItem(i, 2, _(self.ESTADO_PENDIENTE))
         finally:
             self._poblando_capitulos = False
         self._anunciar(
-            f"Capítulos cargados. Los primeros {capitulo_pendiente} ya estaban completados y "
-            "quedan excluidos. Pulsa Calcular presupuesto para continuar con el resto."
+            _("Capítulos cargados. Los primeros {n} ya estaban completados y "
+              "quedan excluidos. Pulsa Calcular presupuesto para continuar con el resto.").format(
+                n=capitulo_pendiente
+            )
         )
 
     def _retomar_exportacion_completa(self, pendiente):
         formato = self.libro_actual.get("formato", "")
         if formato not in ("epub", "pdf"):
             reproducir(ERROR)
-            self._anunciar(f"El Creador de Audiolibros no admite el formato «{formato}».")
+            self._anunciar(_("El Creador de Audiolibros no admite el formato «{formato}».").format(formato=formato))
             return
 
         self.combo_modo.SetSelection(0)
@@ -492,8 +500,8 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         self._calculando = True
         self.btn_retomar_pendiente.Enable(False)
-        self.txt_progreso.SetValue("Preparando la continuación de la exportación...")
-        self._anunciar("Preparando la continuación de la exportación...")
+        self.txt_progreso.SetValue(_("Preparando la continuación de la exportación..."))
+        self._anunciar(_("Preparando la continuación de la exportación..."))
 
         threading.Thread(
             target=self._hilo_retomar_completo,
@@ -571,7 +579,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         velocidad = self.deslizador_velocidad.GetValue()
         volumen = self.deslizador_volumen.GetValue()
-        mensaje = f"Continuando la exportación como parte {numero_parte}."
+        mensaje = _("Continuando la exportación como parte {n}.").format(n=numero_parte)
         self.txt_progreso.SetValue(mensaje)
         self._anunciar(mensaje)
         self._arrancar_exportacion(self.voz_actual, velocidad, volumen, resultado)
@@ -583,7 +591,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         archivo original. No tiene efecto si hay una exportación en curso.
         """
         if self._exportando:
-            self._anunciar("No se puede eliminar el libro mientras hay una exportación en curso.")
+            self._anunciar(_("No se puede eliminar el libro mientras hay una exportación en curso."))
             return
 
         self.libro_actual = None
@@ -592,10 +600,10 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._calculando = False
 
         self.txt_libro.SetValue(
-            "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
-            "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
+            _("Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa "
+              "«Enviar a Creador de Audiolibros» sobre el libro que quieras exportar.")
         )
-        self.txt_progreso.SetValue("Sin exportación en curso.")
+        self.txt_progreso.SetValue(_("Sin exportación en curso."))
         self.gauge.SetValue(0)
         self._poblar_lista_capitulos([])
         self._pendiente_actual = None
@@ -604,7 +612,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self._deshabilitar_controles()
         self.Layout()
 
-        self._anunciar("Libro eliminado del Creador de Audiolibros.")
+        self._anunciar(_("Libro eliminado del Creador de Audiolibros."))
 
     def al_cambiar_voz(self, evento):
         idx = self.combo_voz.GetSelection()
@@ -624,7 +632,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         """
         if not self.voz_actual:
             reproducir(ERROR)
-            self._anunciar("No hay ninguna voz favorita seleccionada para escuchar.")
+            self._anunciar(_("No hay ninguna voz favorita seleccionada para escuchar."))
             return
 
         if self._reproductor_preescucha is None:
@@ -633,7 +641,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         if self._reproductor_preescucha.obtener_estado() == "reproduciendo":
             self._reproductor_preescucha.detener()
-            self.btn_escuchar_voz.SetLabel("Escuchar muestra (Alt+P)")
+            self.btn_escuchar_voz.SetLabel(_("Escuchar muestra (Alt+P)"))
             return
 
         nombre = self.voz_actual.get("nombre", "")
@@ -641,17 +649,19 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self._reproductor_preescucha.fijar_voz(self.voz_actual)
             self._reproductor_preescucha.fijar_velocidad(self.deslizador_velocidad.GetValue())
             self._reproductor_preescucha.fijar_volumen(self.deslizador_volumen.GetValue())
-            texto = f"Hola, mi nombre es {nombre}. Esta es una muestra de voz para el audiolibro."
-            self.btn_escuchar_voz.SetLabel("Detener preescucha (Alt+P)")
+            texto = _("Hola, mi nombre es {nombre}. Esta es una muestra de voz para el audiolibro.").format(
+                nombre=nombre
+            )
+            self.btn_escuchar_voz.SetLabel(_("Detener preescucha (Alt+P)"))
             self._reproductor_preescucha.cargar_texto(texto, callback_completado=self._al_terminar_preescucha)
         except Exception as e:
-            self.btn_escuchar_voz.SetLabel("Escuchar muestra (Alt+P)")
+            self.btn_escuchar_voz.SetLabel(_("Escuchar muestra (Alt+P)"))
             reproducir(ERROR)
             logger.exception("[PestanaCreadorAudiolibros] Error en la preescucha de voz")
-            self._anunciar(f"Error al reproducir la muestra: {e}")
+            self._anunciar(_("Error al reproducir la muestra: {error}").format(error=e))
 
     def _al_terminar_preescucha(self):
-        wx.CallAfter(self.btn_escuchar_voz.SetLabel, "Escuchar muestra (Alt+P)")
+        wx.CallAfter(self.btn_escuchar_voz.SetLabel, _("Escuchar muestra (Alt+P)"))
 
     def al_ctrl_o(self, evento=None):
         """
@@ -661,9 +671,9 @@ class PestanaCreadorAudiolibros(wx.Panel):
         voz el camino correcto, sin duplicar el buscador ya existente allí.
         """
         self._anunciar(
-            "Esta pestaña solo trabaja con libros de la Biblioteca. "
-            "Ve a Biblioteca con Ctrl+1 y usa «Enviar a Creador de Audiolibros» "
-            "sobre el libro que quieras exportar."
+            _("Esta pestaña solo trabaja con libros de la Biblioteca. "
+              "Ve a Biblioteca con Ctrl+1 y usa «Enviar a Creador de Audiolibros» "
+              "sobre el libro que quieras exportar.")
         )
 
     # ------------------------------------------------------------------ #
@@ -745,7 +755,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
                 titulo_cap = capitulo[0] if isinstance(capitulo, tuple) else capitulo.get("titulo", "")
                 pos = self.lista_capitulos.InsertItem(i, str(i + 1))
                 self.lista_capitulos.SetItem(pos, 1, titulo_cap)
-                self.lista_capitulos.SetItem(pos, 2, self.ESTADO_PENDIENTE)
+                self.lista_capitulos.SetItem(pos, 2, _(self.ESTADO_PENDIENTE))
                 self.lista_capitulos.CheckItem(pos, True)
         finally:
             self.lista_capitulos.Thaw()
@@ -820,14 +830,17 @@ class PestanaCreadorAudiolibros(wx.Panel):
         seleccion_previa = self.voz_actual
 
         if not self._voces_disponibles:
-            self.combo_voz.Set(["Sin voces favoritas — marca alguna en Ajustes"])
+            self.combo_voz.Set([_("Sin voces favoritas — marca alguna en Ajustes")])
             self.combo_voz.SetSelection(0)
             self.combo_voz.Enable(False)
             self.voz_actual = None
             return
 
         etiquetas = [
-            f"{voz.get('nombre', '')} ({_NOMBRES_PROVEEDOR.get(voz.get('proveedor_id', ''), voz.get('proveedor_id', ''))})"
+            "{nombre} ({proveedor})".format(
+                nombre=voz.get("nombre", ""),
+                proveedor=_NOMBRES_PROVEEDOR.get(voz.get("proveedor_id", ""), voz.get("proveedor_id", "")),
+            )
             for voz in self._voces_disponibles
         ]
         self.combo_voz.Set(etiquetas)
@@ -900,7 +913,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
         if formato not in ("epub", "pdf"):
             reproducir(ERROR)
             self._anunciar(
-                f"El Creador de Audiolibros no admite el formato «{formato}»."
+                _("El Creador de Audiolibros no admite el formato «{formato}».").format(formato=formato)
             )
             return
 
@@ -909,12 +922,12 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.btn_iniciar.Enable(False)
         self.btn_calcular.Enable(False)
         self.combo_modo.Enable(False)
-        self.txt_progreso.SetValue("Calculando presupuesto...")
-        self._anunciar("Calculando presupuesto...")
+        self.txt_progreso.SetValue(_("Calculando presupuesto..."))
+        self._anunciar(_("Calculando presupuesto..."))
 
         ruta_archivo = self.libro_actual["ruta_archivo"]
         modo_capitulos = self.combo_modo.GetSelection() == 1
-        voz = self.voz_actual or {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
+        voz = self.voz_actual or {"proveedor_id": "local", "nombre": _("Voz local (SAPI5)")}
         proveedor_id = voz.get("proveedor_id", "local")
 
         indices_incluidos = None
@@ -932,7 +945,9 @@ class PestanaCreadorAudiolibros(wx.Panel):
                 self.btn_calcular.Enable(True)
                 self.combo_modo.Enable(True)
                 reproducir(ERROR)
-                self._anunciar("No has incluido ningún capítulo. Marca al menos uno para calcular el presupuesto.")
+                self._anunciar(
+                    _("No has incluido ningún capítulo. Marca al menos uno para calcular el presupuesto.")
+                )
                 return
 
         threading.Thread(
@@ -995,21 +1010,28 @@ class PestanaCreadorAudiolibros(wx.Panel):
             incluidos = set(resultado["indices_originales"])
             for i in range(self.lista_capitulos.GetItemCount()):
                 if i not in incluidos:
-                    self.lista_capitulos.SetItem(i, 2, "Excluido (no se exportará)")
+                    self.lista_capitulos.SetItem(i, 2, _("Excluido (no se exportará)"))
                 else:
-                    self.lista_capitulos.SetItem(i, 2, self.ESTADO_PENDIENTE)
+                    self.lista_capitulos.SetItem(i, 2, _(self.ESTADO_PENDIENTE))
 
         presupuesto = resultado["presupuesto"]
         caracteres = presupuesto["caracteres"]
         cabe = presupuesto["cabe_en_cuota"]
-        estado_cuota = "cabe en la cuota actual" if cabe else "NO cabe en la cuota actual del proveedor elegido"
-        mensaje = f"Presupuesto calculado: {caracteres} caracteres. Estado: {estado_cuota}."
+        estado_cuota = (
+            _("cabe en la cuota actual") if cabe
+            else _("NO cabe en la cuota actual del proveedor elegido")
+        )
+        mensaje = _("Presupuesto calculado: {caracteres} caracteres. Estado: {estado}.").format(
+            caracteres=caracteres, estado=estado_cuota
+        )
 
         try:
             from app.motor.control_cuota import ControlCuota
             coste, es_aproximado = ControlCuota().estimar_coste_dolares(resultado["proveedor_id"], caracteres)
             if coste is not None and es_aproximado and coste > 0:
-                mensaje += f" Coste estimado con tarifa de referencia: unos {coste} dólares (puede no ser exacto)."
+                mensaje += " " + _(
+                    "Coste estimado con tarifa de referencia: unos {coste} dólares (puede no ser exacto)."
+                ).format(coste=coste)
         except Exception:
             logger.exception("[PestanaCreadorAudiolibros] Error al estimar el coste del presupuesto")
 
@@ -1045,19 +1067,20 @@ class PestanaCreadorAudiolibros(wx.Panel):
             minutos = 0
 
         if horas > 0:
-            duracion = f"{horas} h {minutos} min"
+            duracion = _("{h} h {min} min").format(h=horas, min=minutos)
         else:
-            duracion = f"{minutos} min"
+            duracion = _("{min} min").format(min=minutos)
 
-        return f"Duración estimada del audio: {duracion}."
+        return _("Duración estimada del audio: {duracion}.").format(duracion=duracion)
 
     def _al_error_presupuesto(self, error: str):
         self._calculando = False
         self.btn_calcular.Enable(True)
         self.combo_modo.Enable(True)
         reproducir(ERROR)
-        self.txt_progreso.SetValue(f"Error al calcular presupuesto: {error}")
-        self._anunciar(f"Error al calcular presupuesto: {error}")
+        mensaje = _("Error al calcular presupuesto: {error}").format(error=error)
+        self.txt_progreso.SetValue(mensaje)
+        self._anunciar(mensaje)
 
     # ------------------------------------------------------------------ #
     # Exportación (hilo de fondo — un único hilo de exportación a la vez)
@@ -1067,11 +1090,11 @@ class PestanaCreadorAudiolibros(wx.Panel):
         if not self.libro_actual or self._exportando:
             return
         if not self._resultado_presupuesto:
-            self._anunciar("Calcula el presupuesto antes de iniciar la exportación.")
+            self._anunciar(_("Calcula el presupuesto antes de iniciar la exportación."))
             return
 
         resultado = self._resultado_presupuesto
-        voz = self.voz_actual or {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
+        voz = self.voz_actual or {"proveedor_id": "local", "nombre": _("Voz local (SAPI5)")}
         velocidad = self.deslizador_velocidad.GetValue()
         volumen = self.deslizador_volumen.GetValue()
 
@@ -1090,7 +1113,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             texto_a_exportar = resultado["texto_completo"]
 
         nombre_proveedor_actual = DialogoProveedorAlternativo._NOMBRES_PROVEEDOR.get(
-            voz_actual.get("proveedor_id", ""), voz_actual.get("proveedor_id", "el proveedor actual")
+            voz_actual.get("proveedor_id", ""), voz_actual.get("proveedor_id", _("el proveedor actual"))
         )
         modo_libro_completo = not resultado["modo_capitulos"]
 
@@ -1102,7 +1125,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
 
         if respuesta != wx.ID_OK or not dlg.accion:
             dlg.Destroy()
-            self._anunciar("Exportación cancelada.")
+            self._anunciar(_("Exportación cancelada."))
             return
 
         # La velocidad ajustada dentro del diálogo se sincroniza de vuelta al
@@ -1125,7 +1148,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             # coincidiera con ese nombre, así que siempre acababa usando la
             # voz predeterminada del sistema sin que hubiera forma de elegir.
             voz_local = dict(dlg.voz_elegida) if dlg.voz_elegida else {
-                "proveedor_id": "local", "nombre": "Voz local (SAPI5)",
+                "proveedor_id": "local", "nombre": _("Voz local (SAPI5)"),
             }
             voz_local.setdefault("proveedor_id", "local")
             dlg.Destroy()
@@ -1139,7 +1162,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             self._arrancar_exportacion(voz_actual, velocidad_final, volumen, resultado)
         else:
             dlg.Destroy()
-            self._anunciar("Exportación cancelada.")
+            self._anunciar(_("Exportación cancelada."))
 
     def _arrancar_exportacion(self, voz, velocidad, volumen, resultado):
         from app.motor.grabador_audio import GrabadorAudio
@@ -1150,11 +1173,11 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.combo_modo.Enable(False)
         self.btn_abortar.Enable(True)
         self.gauge.SetValue(0)
-        self.txt_progreso.SetValue("Iniciando exportación...")
+        self.txt_progreso.SetValue(_("Iniciando exportación..."))
         # SetValue por sí solo no lo verbaliza NVDA si el foco no está en
         # este control — antes tocaba ir a mirar el cuadro para saber que
         # había arrancado. Con _anunciar se escucha de inmediato.
-        self._anunciar("Iniciando exportación...")
+        self._anunciar(_("Iniciando exportación..."))
         self._ultimo_decimo_anunciado = -1
         reproducir(REC_START)
 
@@ -1223,19 +1246,31 @@ class PestanaCreadorAudiolibros(wx.Panel):
             # paralelo, así que "actual" es solo un contador de cuántos
             # llevan (no necesariamente en el mismo orden del libro) — la
             # fila a actualizar se busca por título, no por posición.
-            self.txt_progreso.SetValue(f"Exportando: {actual} de {total} — {etiqueta}")
+            self.txt_progreso.SetValue(
+                _("Exportando: {actual} de {total} — {etiqueta}").format(
+                    actual=actual, total=total, etiqueta=etiqueta
+                )
+            )
             fila = self._fila_por_titulo_capitulo(etiqueta)
             if fila is not None:
-                self._actualizar_estado_capitulo(fila, self.ESTADO_COMPLETADO)
+                self._actualizar_estado_capitulo(fila, _(self.ESTADO_COMPLETADO))
             # Solo se anuncia por voz y con tic sonoro un hito real: un
             # capítulo del libro terminado. El último capítulo generado NO
             # significa que la exportación ya terminó — todavía queda
             # cerrar archivos, registrar pendientes, etc. — así que se
             # avisa de que sigue en curso en vez de sonar a "ya está".
             if actual >= total:
-                self._anunciar(f"Último capítulo generado ({etiqueta}). Finalizando exportación...")
+                self._anunciar(
+                    _("Último capítulo generado ({etiqueta}). Finalizando exportación...").format(
+                        etiqueta=etiqueta
+                    )
+                )
             else:
-                self._anunciar(f"Capítulo completado ({actual} de {total}): {etiqueta}.")
+                self._anunciar(
+                    _("Capítulo completado ({actual} de {total}): {etiqueta}.").format(
+                        actual=actual, total=total, etiqueta=etiqueta
+                    )
+                )
             reproducir(PROGRESS)
         elif not por_capitulos and total > 1:
             # Modo "libro completo": total aquí son los trozos internos en los
@@ -1252,13 +1287,14 @@ class PestanaCreadorAudiolibros(wx.Panel):
                     # terminar: todavía falta cerrar el archivo final. Antes
                     # esto decía "al 100%" y sonaba a que ya estaba, cuando
                     # en realidad tocaba esperar en silencio a la campanita.
-                    mensaje = "Último bloque generado. Finalizando exportación..."
+                    mensaje = _("Último bloque generado. Finalizando exportación...")
                     self.txt_progreso.SetValue(mensaje)
                     self._anunciar(mensaje)
                     reproducir(PROGRESS)
                 elif decimo_actual > 0:
-                    self.txt_progreso.SetValue(f"Exportación al {decimo_actual * 10}%.")
-                    self._anunciar(f"Exportación al {decimo_actual * 10}%.")
+                    mensaje = _("Exportación al {pct}%.").format(pct=decimo_actual * 10)
+                    self.txt_progreso.SetValue(mensaje)
+                    self._anunciar(mensaje)
                     reproducir(PROGRESS)
 
     def _al_terminar_exportacion(self, salida: dict):
@@ -1312,7 +1348,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
     def _finalizar_exportacion_capitulos(self, salida: dict):
         estados = salida.get("capitulos", [])
         for c in estados:
-            estado_visual = self.ESTADO_COMPLETADO if c["estado"] == "completado" else self.ESTADO_SIN_CUOTA
+            estado_visual = _(self.ESTADO_COMPLETADO) if c["estado"] == "completado" else _(self.ESTADO_SIN_CUOTA)
             self._actualizar_estado_capitulo(self._fila_real_capitulo(c["indice"]), estado_visual)
 
         pendientes = [c for c in estados if c["estado"] != "completado"]
@@ -1327,20 +1363,20 @@ class PestanaCreadorAudiolibros(wx.Panel):
             fila_real_pendiente = self._fila_real_capitulo(pendientes[0]["indice"])
             self._registrar_pendiente_capitulos(fila_real_pendiente, salida.get("proveedor", "local"))
             if salida.get("abortada"):
-                mensaje = (
-                    f"Exportación cancelada. "
-                    f"{completados} de {total} capítulos completados. Queda registrado como pendiente."
-                )
+                mensaje = _(
+                    "Exportación cancelada. "
+                    "{completados} de {total} capítulos completados. Queda registrado como pendiente."
+                ).format(completados=completados, total=total)
                 reproducir(CLEAR)
             else:
-                mensaje = (
-                    f"Exportación detenida por falta de cuota. "
-                    f"{completados} de {total} capítulos completados. Queda registrado como pendiente."
-                )
+                mensaje = _(
+                    "Exportación detenida por falta de cuota. "
+                    "{completados} de {total} capítulos completados. Queda registrado como pendiente."
+                ).format(completados=completados, total=total)
                 reproducir(ERROR)
         else:
             self._limpiar_pendientes_de_libro()
-            mensaje = f"Exportación finalizada. {total} capítulos completados."
+            mensaje = _("Exportación finalizada. {total} capítulos completados.").format(total=total)
             reproducir(SUCCESS)
 
         self.txt_progreso.SetValue(mensaje)
@@ -1349,18 +1385,18 @@ class PestanaCreadorAudiolibros(wx.Panel):
     def _finalizar_exportacion_completa(self, salida: dict):
         if salida.get("completo"):
             self._limpiar_pendientes_de_libro()
-            mensaje = "Exportación del libro completo finalizada."
+            mensaje = _("Exportación del libro completo finalizada.")
             reproducir(SUCCESS)
         elif salida.get("abortada"):
             self._registrar_pendiente_completo(salida)
-            mensaje = (
+            mensaje = _(
                 "Exportación cancelada. Se guardó una parte pendiente para "
                 "retomar más tarde."
             )
             reproducir(CLEAR)
         else:
             self._registrar_pendiente_completo(salida)
-            mensaje = (
+            mensaje = _(
                 "Exportación detenida por falta de cuota. Se guardó una parte "
                 "pendiente para retomar más tarde."
             )
@@ -1376,14 +1412,15 @@ class PestanaCreadorAudiolibros(wx.Panel):
         self.combo_modo.Enable(True)
         self.btn_abortar.Enable(False)
         reproducir(ERROR)
-        self.txt_progreso.SetValue(f"Error durante la exportación: {error}")
-        self._anunciar(f"Error durante la exportación: {error}")
+        mensaje = _("Error durante la exportación: {error}").format(error=error)
+        self.txt_progreso.SetValue(mensaje)
+        self._anunciar(mensaje)
 
     def al_abortar_exportacion(self, evento):
         if self._grabador:
             self._grabador.abortar()
         self.btn_abortar.Enable(False)
-        self.txt_progreso.SetValue("Cancelando exportación...")
+        self.txt_progreso.SetValue(_("Cancelando exportación..."))
         # El hilo en curso detecta el aborto en el siguiente punto de control
         # (frontera de capítulo o de trozo interno) y termina llamando a
         # _al_terminar_exportacion, que registra el pendiente si quedó algo
@@ -1411,7 +1448,7 @@ class PestanaCreadorAudiolibros(wx.Panel):
             except Exception as e:
                 reproducir(ERROR)
                 logger.exception("[PestanaCreadorAudiolibros] No se pudo abrir la carpeta")
-                self._anunciar(f"No se pudo abrir la carpeta: {e}")
+                self._anunciar(_("No se pudo abrir la carpeta: {error}").format(error=e))
 
     # ------------------------------------------------------------------ #
     # Persistencia de exportaciones pendientes en biblioteca.db
