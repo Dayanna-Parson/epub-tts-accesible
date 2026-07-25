@@ -1,0 +1,23 @@
+# English translation of Epub TTS Accesible.
+msgid ""
+msgstr ""
+"Project-Id-Version: Epub TTS Accesible 3.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+
+msgid "Biblioteca"
+msgstr "Library"
+
+msgid "Modo Lectura"
+msgstr "Reading Mode"
+
+msgid "Creador de Audiolibros"
+msgstr "Audiobook Creator"
+
+msgid "Creación de fragmentos"
+msgstr "Fragment Recording"
+
+msgid "Ajustes"
+msgstr "Settings"

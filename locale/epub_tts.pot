@@ -1,0 +1,26 @@
+# Plantilla de traducción de Epub TTS Accesible.
+# Este archivo se genera/actualiza a mano por ahora: cada cadena nueva
+# envuelta en _("...") en la interfaz se añade aquí como una entrada
+# msgid/msgstr, y luego se copia a los .po de cada idioma.
+msgid ""
+msgstr ""
+"Project-Id-Version: Epub TTS Accesible 3.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+
+msgid "Biblioteca"
+msgstr ""
+
+msgid "Modo Lectura"
+msgstr ""
+
+msgid "Creador de Audiolibros"
+msgstr ""
+
+msgid "Creación de fragmentos"
+msgstr ""
+
+msgid "Ajustes"
+msgstr ""

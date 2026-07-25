@@ -1,0 +1,26 @@
+# Traducción al español (idioma original de la aplicación).
+# Las entradas se dejan con msgstr vacío a propósito: gettext devuelve el
+# propio msgid cuando msgstr está vacío, y el msgid ya es el texto en
+# español que escribe la desarrolladora. No hace falta duplicarlo aquí.
+msgid ""
+msgstr ""
+"Project-Id-Version: Epub TTS Accesible 3.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: es\n"
+
+msgid "Biblioteca"
+msgstr ""
+
+msgid "Modo Lectura"
+msgstr ""
+
+msgid "Creador de Audiolibros"
+msgstr ""
+
+msgid "Creación de fragmentos"
+msgstr ""
+
+msgid "Ajustes"
+msgstr ""
