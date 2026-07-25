@@ -17,6 +17,7 @@ from app.motor.reproductor_sonidos import (
 from app.interfaz.selector_voz_compartido import ListaVocesCheck, PanelProveedorIA
 from app.interfaz.ui_recursos import aplicar_icono_boton
 from app.servicios.cliente_gemini import TEMPERATURA_DEFECTO as TEMPERATURA_DEFECTO_GEMINI
+from app.motor.gestor_idioma import traducir as _
 
 logger = logging.getLogger(__name__)
 
@@ -42,33 +43,33 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
     if proveedor in ("azure", "polly"):
         coste_gas = round(gas * 16 / 1_000_000, 2)
         coste_lim = round(lim * 16 / 1_000_000, 2)
-        return (
-            f"Gasto: {gas} caracteres, unos {coste_gas} dolares. "
-            f"Restante: {restante} caracteres, aprox {libros} libros. "
-            f"Coste total al limite: {coste_lim} dolares al mes."
-        )
+        return _(
+            "Gasto: {gas} caracteres, unos {coste_gas} dolares. "
+            "Restante: {restante} caracteres, aprox {libros} libros. "
+            "Coste total al limite: {coste_lim} dolares al mes."
+        ).format(gas=gas, coste_gas=coste_gas, restante=restante, libros=libros, coste_lim=coste_lim)
     elif proveedor == "elevenlabs":
         if lim <= 30_000:
-            plan = "Plan Starter, 5 dolares al mes"
+            plan = _("Plan Starter, 5 dolares al mes")
         elif lim <= 100_000:
-            plan = "Plan Creator, 22 dolares al mes"
+            plan = _("Plan Creator, 22 dolares al mes")
         elif lim <= 500_000:
-            plan = "Plan Pro, 99 dolares al mes"
+            plan = _("Plan Pro, 99 dolares al mes")
         else:
-            plan = "Plan Scale, 330 dolares al mes"
-        return (
-            f"Gasto: {gas} caracteres. "
-            f"Restante: {restante} caracteres, aprox {libros} libros. "
-            f"Suscripcion sugerida: {plan}."
-        )
+            plan = _("Plan Scale, 330 dolares al mes")
+        return _(
+            "Gasto: {gas} caracteres. "
+            "Restante: {restante} caracteres, aprox {libros} libros. "
+            "Suscripcion sugerida: {plan}."
+        ).format(gas=gas, restante=restante, libros=libros, plan=plan)
     elif proveedor == "deepgram":
         coste_gas = round(gas * 15 / 1_000_000, 2)
         coste_lim = round(lim * 15 / 1_000_000, 2)
-        return (
-            f"Gasto: {gas} caracteres, unos {coste_gas} dolares. "
-            f"Restante: {restante} caracteres, aprox {libros} libros. "
-            f"Coste total al limite: {coste_lim} dolares al mes."
-        )
+        return _(
+            "Gasto: {gas} caracteres, unos {coste_gas} dolares. "
+            "Restante: {restante} caracteres, aprox {libros} libros. "
+            "Coste total al limite: {coste_lim} dolares al mes."
+        ).format(gas=gas, coste_gas=coste_gas, restante=restante, libros=libros, coste_lim=coste_lim)
     return ""
 # ANCLAJE_FIN: HELPER_TEXTO_LIMITE
 
@@ -89,22 +90,25 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # ANCLAJE_INICIO: IDIOMA_LIBRO_GENERAL
-        sb_idioma = wx.StaticBox(self, label="Idioma del libro")
+        sb_idioma = wx.StaticBox(self, label=_("Idioma del libro"))
         sz_idioma = wx.StaticBoxSizer(sb_idioma, wx.VERTICAL)
         sz_idioma.Add(
-            wx.StaticText(self, label="Idioma principal del libro (preselecciona el acento de voz en Lectura):"),
+            wx.StaticText(
+                self,
+                label=_("Idioma principal del libro (preselecciona el acento de voz en Lectura):"),
+            ),
             0, wx.ALL, 2,
         )
         self.combo_idioma_libro = wx.ComboBox(
             self,
-            choices=["Español (ES)", "Español (LAT)", "Inglés", "Detectar auto"],
+            choices=[_("Español (ES)"), _("Español (LAT)"), _("Inglés"), _("Detectar auto")],
             style=wx.CB_READONLY,
         )
         self.combo_idioma_libro.SetHelpText(
-            "Define el idioma principal del libro para preseleccionar el acento correcto "
-            "en el combo de voz de la pestaña Lectura. "
-            "Elige Español (ES) para España, Español (LAT) para Latinoamérica, "
-            "Inglés para textos en inglés, o Detectar auto para dejar que la aplicación lo decida."
+            _("Define el idioma principal del libro para preseleccionar el acento correcto "
+              "en el combo de voz de la pestaña Lectura. "
+              "Elige Español (ES) para España, Español (LAT) para Latinoamérica, "
+              "Inglés para textos en inglés, o Detectar auto para dejar que la aplicación lo decida.")
         )
         _codigo_guardado = self.config.get("idioma_libro_codigo", "es-ES")
         _mapa_codigo_idx = {"es-ES": 0, "es-MX": 1, "en-US": 2, "auto": 3}
@@ -114,7 +118,7 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer.Add(sz_idioma, 0, wx.EXPAND | wx.ALL, 10)
         # ANCLAJE_FIN: IDIOMA_LIBRO_GENERAL
 
-        sb_cuota = wx.StaticBox(self, label="Control de Presupuesto y Límites")
+        sb_cuota = wx.StaticBox(self, label=_("Control de Presupuesto y Límites"))
         sizer_cuota = wx.StaticBoxSizer(sb_cuota, wx.VERTICAL)
 
         g_az, l_az = self.cuota.get_info_uso("azure")
@@ -131,24 +135,27 @@ class PanelGeneral(wx.ScrolledWindow):
 
         sizer.Add(sizer_cuota, 0, wx.EXPAND | wx.ALL, 10)
 
-        sb_nav = wx.StaticBox(self, label="Navegación")
+        sb_nav = wx.StaticBox(self, label=_("Navegación"))
         sizer_nav = wx.StaticBoxSizer(sb_nav, wx.VERTICAL)
         hbox_salto = wx.BoxSizer(wx.HORIZONTAL)
         hbox_salto.Add(
-            wx.StaticText(self, label="Segundos de salto (botones Retroceder y Avanzar en Lectura):"),
+            wx.StaticText(
+                self,
+                label=_("Segundos de salto (botones Retroceder y Avanzar en Lectura):"),
+            ),
             0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10,
         )
         self.txt_salto = wx.TextCtrl(self, value=str(self.config.get("segundos_salto", "10")), size=(50, -1))
         self.txt_salto.SetHelpText(
-            "Número de segundos que avanza o retrocede el audio al pulsar los botones "
-            "Retroceder y Avanzar en la pestaña Lectura. Introduce un número entero. Valor recomendado: 10."
+            _("Número de segundos que avanza o retrocede el audio al pulsar los botones "
+              "Retroceder y Avanzar en la pestaña Lectura. Introduce un número entero. Valor recomendado: 10.")
         )
         hbox_salto.Add(self.txt_salto, 0)
         sizer_nav.Add(hbox_salto, 0, wx.ALL, 5)
 
         hbox_pausa = wx.BoxSizer(wx.HORIZONTAL)
         hbox_pausa.Add(
-            wx.StaticText(self, label="Pausa entre párrafos en voces de IA (milisegundos):"),
+            wx.StaticText(self, label=_("Pausa entre párrafos en voces de IA (milisegundos):")),
             0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 10,
         )
         self.spin_pausa = wx.SpinCtrl(
@@ -157,39 +164,39 @@ class PanelGeneral(wx.ScrolledWindow):
             min=0, max=3000, size=(70, -1),
         )
         self.spin_pausa.SetHelpText(
-            "Tiempo de espera entre fragmentos consecutivos cuando se usan voces de IA. "
-            "0 = sin pausa adicional. Ejemplo: 300 añade 0,3 segundos de silencio entre párrafos."
+            _("Tiempo de espera entre fragmentos consecutivos cuando se usan voces de IA. "
+              "0 = sin pausa adicional. Ejemplo: 300 añade 0,3 segundos de silencio entre párrafos.")
         )
         hbox_pausa.Add(self.spin_pausa, 0)
         sizer_nav.Add(hbox_pausa, 0, wx.ALL, 5)
 
         sizer.Add(sizer_nav, 0, wx.EXPAND | wx.ALL, 10)
 
-        sb_updates = wx.StaticBox(self, label="Actualizaciones")
+        sb_updates = wx.StaticBox(self, label=_("Actualizaciones"))
         sizer_updates = wx.StaticBoxSizer(sb_updates, wx.VERTICAL)
 
         self.chk_actualizar = wx.CheckBox(
-            self, label="Buscar actualizaciones automáticamente al iniciar la app"
+            self, label=_("Buscar actualizaciones automáticamente al iniciar la app")
         )
         self.chk_actualizar.SetValue(self.config.get("actualizar_automaticamente", True))
         self.chk_actualizar.SetHelpText(
-            "Si está marcado, la aplicación comprueba si hay una nueva versión disponible "
-            "cada vez que se inicia. La comprobación se hace en segundo plano."
+            _("Si está marcado, la aplicación comprueba si hay una nueva versión disponible "
+              "cada vez que se inicia. La comprobación se hace en segundo plano.")
         )
         sizer_updates.Add(self.chk_actualizar, 0, wx.ALL, 5)
 
-        self.btn_buscar_updates = wx.Button(self, label="Buscar actualizaciones ahora")
+        self.btn_buscar_updates = wx.Button(self, label=_("Buscar actualizaciones ahora"))
         self.btn_buscar_updates.SetHelpText(
-            "Comprueba si hay una versión nueva comparando tu version.json local "
-            "con el del repositorio de GitHub."
+            _("Comprueba si hay una versión nueva comparando tu version.json local "
+              "con el del repositorio de GitHub.")
         )
         self.btn_buscar_updates.Bind(wx.EVT_BUTTON, self._al_buscar_actualizaciones)
-        aplicar_icono_boton(self.btn_buscar_updates, "buscar", "Buscar actualizaciones ahora")
+        aplicar_icono_boton(self.btn_buscar_updates, "buscar", _("Buscar actualizaciones ahora"))
         sizer_updates.Add(self.btn_buscar_updates, 0, wx.ALL, 5)
 
         self.lbl_progreso = wx.StaticText(self, label="")
         self.lbl_progreso.SetHelpText(
-            "Estado del proceso de actualización. NVDA lo leerá automáticamente al cambiar."
+            _("Estado del proceso de actualización. NVDA lo leerá automáticamente al cambiar.")
         )
         sizer_updates.Add(self.lbl_progreso, 0, wx.ALL, 5)
 
@@ -200,11 +207,11 @@ class PanelGeneral(wx.ScrolledWindow):
         # Se retira cuando el flujo completo con actualizador.exe sustituya
         # al bloque ACTUALIZADOR_SCRIPT_CLON.
         self.btn_probar_descarga_nueva = wx.Button(
-            self, label="Probar descarga y verificación (Fase C)"
+            self, label=_("Probar descarga y verificación (Fase C)")
         )
         self.btn_probar_descarga_nueva.SetHelpText(
-            "Descarga la última versión a temp/actualizacion/ y verifica su estructura, "
-            "sin instalar nada. Herramienta de desarrollo de la Fase C."
+            _("Descarga la última versión a temp/actualizacion/ y verifica su estructura, "
+              "sin instalar nada. Herramienta de desarrollo de la Fase C.")
         )
         self.btn_probar_descarga_nueva.Bind(wx.EVT_BUTTON, self._al_probar_descarga_nueva)
         sizer_updates.Add(self.btn_probar_descarga_nueva, 0, wx.ALL, 5)
@@ -213,23 +220,23 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
 
         # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD_AJUSTES
-        sb_vel = wx.StaticBox(self, label="Deslizadores de velocidad")
+        sb_vel = wx.StaticBox(self, label=_("Deslizadores de velocidad"))
         sz_vel = wx.StaticBoxSizer(sb_vel, wx.VERTICAL)
         sz_vel.Add(
-            wx.StaticText(self, label="Sistema de visualización de velocidad:"),
+            wx.StaticText(self, label=_("Sistema de visualización de velocidad:")),
             0, wx.ALL, 2,
         )
         self.combo_escala_vel = wx.ComboBox(
             self,
-            choices=["Porcentaje (0 – 100)", "Multiplicador por puntos (0.2× – 1.8×)"],
+            choices=[_("Porcentaje (0 – 100)"), _("Multiplicador por puntos (0.2× – 1.8×)")],
             style=wx.CB_READONLY,
         )
         self.combo_escala_vel.SetHelpText(
-            "Elige cómo se muestra la velocidad en el deslizador de la pestaña Lectura. "
-            "Porcentaje: valores del 0 al 100. "
-            "Multiplicador: etiquetas tipo 1.0× (Normal), 1.4× (Rápida), 1.8× (Muy rápida). "
-            "El motor de audio recibe siempre el mismo valor 0-100 del deslizador; "
-            "el multiplicador es solo su lectura equivalente."
+            _("Elige cómo se muestra la velocidad en el deslizador de la pestaña Lectura. "
+              "Porcentaje: valores del 0 al 100. "
+              "Multiplicador: etiquetas tipo 1.0× (Normal), 1.4× (Rápida), 1.8× (Muy rápida). "
+              "El motor de audio recibe siempre el mismo valor 0-100 del deslizador; "
+              "el multiplicador es solo su lectura equivalente.")
         )
         _escala_guardada = self.config.get("escala_velocidad", "porcentaje")
         self.combo_escala_vel.SetSelection(0 if _escala_guardada == "porcentaje" else 1)
@@ -237,29 +244,32 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer.Add(sz_vel, 0, wx.EXPAND | wx.ALL, 10)
         # ANCLAJE_FIN: SELECTOR_ESCALA_VELOCIDAD_AJUSTES
 
-        self.btn_guardar = wx.Button(self, label="Guardar Configuración General y Límites de presupuesto")
+        self.btn_guardar = wx.Button(self, label=_("Guardar Configuración General y Límites de presupuesto"))
         self.btn_guardar.SetHelpText(
-            "Guarda los segundos de salto, la escala de velocidad y los límites de presupuesto de cada proveedor."
+            _("Guarda los segundos de salto, la escala de velocidad y los límites de presupuesto de cada proveedor.")
         )
         self.btn_guardar.Bind(wx.EVT_BUTTON, lambda e: self.guardar_todo())
-        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar Configuración General y Límites de presupuesto")
+        aplicar_icono_boton(
+            self.btn_guardar, "guardar",
+            _("Guardar Configuración General y Límites de presupuesto"),
+        )
         sizer.Add(self.btn_guardar, 0, wx.ALL, 10)
 
-        self.btn_borrar_recientes = wx.Button(self, label="Borrar historial de libros recientes")
+        self.btn_borrar_recientes = wx.Button(self, label=_("Borrar historial de libros recientes"))
         self.btn_borrar_recientes.SetHelpText(
-            "Vacía la lista de «Libros Recientes» del menú de la pestaña Lectura. "
-            "No borra ningún archivo, solo el atajo a los últimos libros abiertos."
+            _("Vacía la lista de «Libros Recientes» del menú de la pestaña Lectura. "
+              "No borra ningún archivo, solo el atajo a los últimos libros abiertos.")
         )
         self.btn_borrar_recientes.Bind(wx.EVT_BUTTON, self._al_borrar_recientes)
-        aplicar_icono_boton(self.btn_borrar_recientes, "eliminar", "Borrar historial de libros recientes")
+        aplicar_icono_boton(self.btn_borrar_recientes, "eliminar", _("Borrar historial de libros recientes"))
         sizer.Add(self.btn_borrar_recientes, 0, wx.ALL, 10)
 
-        self.btn_limpiar = wx.Button(self, label="Limpiar caché")
+        self.btn_limpiar = wx.Button(self, label=_("Limpiar caché"))
         self.btn_limpiar.SetHelpText(
-            "Elimina carpetas __pycache__, archivos .tmp y audio temporal."
+            _("Elimina carpetas __pycache__, archivos .tmp y audio temporal.")
         )
         self.btn_limpiar.Bind(wx.EVT_BUTTON, self._limpiar_cache)
-        aplicar_icono_boton(self.btn_limpiar, "limpiar", "Limpiar caché")
+        aplicar_icono_boton(self.btn_limpiar, "limpiar", _("Limpiar caché"))
         sizer.Add(self.btn_limpiar, 0, wx.ALL, 10)
 
         self.SetSizer(sizer)
@@ -273,7 +283,10 @@ class PanelGeneral(wx.ScrolledWindow):
         if not hasattr(self, "txt_limites"):
             self.txt_limites = {}
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        lbl = wx.StaticText(self, label=f"{nombre} (Gastado: {gastado}):", size=(180, -1))
+        lbl = wx.StaticText(
+            self, label=_("{nombre} (Gastado: {gastado}):").format(nombre=nombre, gastado=gastado),
+            size=(180, -1),
+        )
         txt = wx.TextCtrl(self, value=str(limite))
         txt.SetName(f"limite_{clave}")
         txt.SetHelpText(_texto_ayuda_limite(clave, gastado, limite))
@@ -326,7 +339,7 @@ class PanelGeneral(wx.ScrolledWindow):
             return
         if not ventana.archivos_recientes:
             reproducir(ERROR)
-            wx.MessageBox("El historial de libros recientes ya está vacío.", "Info")
+            wx.MessageBox(_("El historial de libros recientes ya está vacío."), _("Info"))
             return
         ventana.al_borrar_recientes(evento)
         if hasattr(self, "txt_limites"):
@@ -335,7 +348,7 @@ class PanelGeneral(wx.ScrolledWindow):
                 if val.isdigit():
                     self.cuota.set_limite(clave, int(val))
         reproducir(SUCCESS)
-        wx.MessageBox("Configuración y límites guardados.")
+        wx.MessageBox(_("Configuración y límites guardados."))
 
     def _limpiar_cache(self, evento=None):
         from app.config_rutas import RAIZ
@@ -399,23 +412,25 @@ class PanelGeneral(wx.ScrolledWindow):
             tam_str = f"{total_bytes} bytes"
 
         if total_archivos == 0:
-            msg = "No se encontró ningún archivo temporal que limpiar."
+            msg = _("No se encontró ningún archivo temporal que limpiar.")
         else:
-            msg = f"Limpieza completada.\n{total_archivos} archivo(s) eliminado(s) — {tam_str} liberado(s)."
+            msg = _("Limpieza completada.\n{n} archivo(s) eliminado(s) — {tam} liberado(s).").format(
+                n=total_archivos, tam=tam_str
+            )
         if errores:
-            msg += f"\n({errores} archivo(s) no pudieron borrarse por estar en uso.)"
+            msg += "\n" + _("({n} archivo(s) no pudieron borrarse por estar en uso.)").format(n=errores)
 
         reproducir(SUCCESS)
-        wx.MessageBox(msg, "Limpiar caché", wx.OK | wx.ICON_INFORMATION)
+        wx.MessageBox(msg, _("Limpiar caché"), wx.OK | wx.ICON_INFORMATION)
 
     # ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON
     def _al_buscar_actualizaciones(self, evento=None):
         from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
         self.btn_buscar_updates.Disable()
-        self.btn_buscar_updates.SetLabel("Comprobando…")
+        self.btn_buscar_updates.SetLabel(_("Comprobando…"))
         wx.CallAfter(
             self.lbl_progreso.SetLabel,
-            "Comprobando versiones en el repositorio de GitHub...",
+            _("Comprobando versiones en el repositorio de GitHub..."),
         )
         comp = ComprobadorActualizaciones()
         comp.comprobar_en_hilo(
@@ -424,14 +439,14 @@ class PanelGeneral(wx.ScrolledWindow):
 
     def _al_resultado_actualizacion(self, resultado: dict):
         self.btn_buscar_updates.Enable()
-        self.btn_buscar_updates.SetLabel("Buscar actualizaciones ahora")
+        self.btn_buscar_updates.SetLabel(_("Buscar actualizaciones ahora"))
 
         if resultado.get("error"):
             wx.CallAfter(self.lbl_progreso.SetLabel, "")
             reproducir(ERROR)
             wx.MessageBox(
-                f"No se pudo comprobar la actualización:\n{resultado['error']}",
-                "Error de conexión", wx.OK | wx.ICON_WARNING,
+                _("No se pudo comprobar la actualización:\n{error}").format(error=resultado["error"]),
+                _("Error de conexión"), wx.OK | wx.ICON_WARNING,
             )
             return
 
@@ -442,8 +457,8 @@ class PanelGeneral(wx.ScrolledWindow):
             reproducir(SUCCESS)
             wx.CallAfter(self.lbl_progreso.SetLabel, "")
             wx.MessageBox(
-                f"Ya tienes la versión más reciente ({v_local}).",
-                "Sin actualizaciones", wx.OK | wx.ICON_INFORMATION,
+                _("Ya tienes la versión más reciente ({version}).").format(version=v_local),
+                _("Sin actualizaciones"), wx.OK | wx.ICON_INFORMATION,
             )
             return
 
@@ -459,7 +474,7 @@ class PanelGeneral(wx.ScrolledWindow):
 
         wx.CallAfter(
             self.lbl_progreso.SetLabel,
-            "Descargando el archivo de actualización en segundo plano, por favor espera...",
+            _("Descargando el archivo de actualización en segundo plano, por favor espera..."),
         )
         self.btn_buscar_updates.Disable()
         import threading
@@ -512,15 +527,15 @@ class PanelGeneral(wx.ScrolledWindow):
             wx.CallAfter(self.btn_buscar_updates.Enable)
             wx.CallAfter(
                 wx.MessageBox,
-                f"No se pudo descargar la actualización:\n{exc}",
-                "Error de descarga",
+                _("No se pudo descargar la actualización:\n{error}").format(error=exc),
+                _("Error de descarga"),
                 wx.OK | wx.ICON_ERROR,
             )
             return
 
         wx.CallAfter(
             self.lbl_progreso.SetLabel,
-            "Descarga completada con éxito. Preparando la instalación...",
+            _("Descarga completada con éxito. Preparando la instalación..."),
         )
 
         try:
@@ -531,8 +546,8 @@ class PanelGeneral(wx.ScrolledWindow):
             wx.CallAfter(self.btn_buscar_updates.Enable)
             wx.CallAfter(
                 wx.MessageBox,
-                f"No se pudo preparar la instalación:\n{exc}",
-                "Error interno",
+                _("No se pudo preparar la instalación:\n{error}").format(error=exc),
+                _("Error interno"),
                 wx.OK | wx.ICON_ERROR,
             )
             return
@@ -616,7 +631,7 @@ class PanelGeneral(wx.ScrolledWindow):
         from app.motor.actualizador_descarga import GestorDescargaActualizacion
 
         self.btn_probar_descarga_nueva.Disable()
-        wx.CallAfter(self.lbl_progreso.SetLabel, "Iniciando descarga de prueba...")
+        wx.CallAfter(self.lbl_progreso.SetLabel, _("Iniciando descarga de prueba..."))
 
         gestor = GestorDescargaActualizacion()
         gestor.descargar_y_verificar_en_hilo(
@@ -635,8 +650,10 @@ class PanelGeneral(wx.ScrolledWindow):
             )
             reproducir(ERROR)
             wx.MessageBox(
-                f"No se pudo verificar la actualización descargada:\n{resultado.get('error')}",
-                "Verificación fallida", wx.OK | wx.ICON_ERROR,
+                _("No se pudo verificar la actualización descargada:\n{error}").format(
+                    error=resultado.get("error")
+                ),
+                _("Verificación fallida"), wx.OK | wx.ICON_ERROR,
             )
             return
 
@@ -653,21 +670,23 @@ class PanelGeneral(wx.ScrolledWindow):
             # app, dejando temp/actualizacion/ intacto para poder revisarlo.
             reproducir(ERROR)
             wx.MessageBox(
-                "Descarga y verificación completadas correctamente en:\n"
-                f"«{ruta_extraida}».\n\n"
-                f"El instalador auxiliar todavía no está disponible en:\n{ruta_exe}\n\n"
-                "No se instalará nada. Los archivos ya verificados se conservan "
-                "en temp/actualizacion/ para que puedas revisarlos.",
-                "Instalador no disponible", wx.OK | wx.ICON_WARNING,
+                _(
+                    "Descarga y verificación completadas correctamente en:\n"
+                    "«{ruta_extraida}».\n\n"
+                    "El instalador auxiliar todavía no está disponible en:\n{ruta_exe}\n\n"
+                    "No se instalará nada. Los archivos ya verificados se conservan "
+                    "en temp/actualizacion/ para que puedas revisarlos."
+                ).format(ruta_extraida=ruta_extraida, ruta_exe=ruta_exe),
+                _("Instalador no disponible"), wx.OK | wx.ICON_WARNING,
             )
             return
 
         respuesta = wx.MessageBox(
-            "Descarga y verificación completadas correctamente.\n\n"
-            "Para instalarla, la aplicación se cerrará y un proceso auxiliar "
-            "independiente (actualizador.exe) hará el cambio con respaldo "
-            "automático. ¿Instalar ahora?",
-            "Verificación correcta", wx.YES_NO | wx.ICON_QUESTION,
+            _("Descarga y verificación completadas correctamente.\n\n"
+              "Para instalarla, la aplicación se cerrará y un proceso auxiliar "
+              "independiente (actualizador.exe) hará el cambio con respaldo "
+              "automático. ¿Instalar ahora?"),
+            _("Verificación correcta"), wx.YES_NO | wx.ICON_QUESTION,
         )
         if respuesta != wx.YES:
             from app.motor.actualizador_descarga import GestorDescargaActualizacion
@@ -694,9 +713,11 @@ class PanelGeneral(wx.ScrolledWindow):
         if not os.path.isfile(ruta_exe):
             reproducir(ERROR)
             wx.MessageBox(
-                f"No se encontró el instalador auxiliar en:\n{ruta_exe}\n\n"
-                "La actualización no se puede instalar automáticamente en este portable.",
-                "Instalador no disponible", wx.OK | wx.ICON_ERROR,
+                _("No se encontró el instalador auxiliar en:\n{ruta_exe}\n\n"
+                  "La actualización no se puede instalar automáticamente en este portable.").format(
+                    ruta_exe=ruta_exe
+                ),
+                _("Instalador no disponible"), wx.OK | wx.ICON_ERROR,
             )
             from app.motor.actualizador_descarga import GestorDescargaActualizacion
             GestorDescargaActualizacion().limpiar()
@@ -733,8 +754,8 @@ class PanelGeneral(wx.ScrolledWindow):
             logger.exception("No se pudo lanzar actualizador.exe")
             reproducir(ERROR)
             wx.MessageBox(
-                f"No se pudo iniciar el instalador auxiliar:\n{exc}",
-                "Error al instalar", wx.OK | wx.ICON_ERROR,
+                _("No se pudo iniciar el instalador auxiliar:\n{error}").format(error=exc),
+                _("Error al instalar"), wx.OK | wx.ICON_ERROR,
             )
             return
 
