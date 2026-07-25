@@ -772,38 +772,41 @@ class PanelClaves(wx.ScrolledWindow):
         self.config = config
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(wx.StaticText(self, label="Configura tus claves API."), 0, wx.ALL, 10)
+        sizer.Add(wx.StaticText(self, label=_("Configura tus claves API.")), 0, wx.ALL, 10)
 
         # Azure
         sb_az = wx.StaticBox(self, label="Microsoft Azure TTS")
         sz_az = wx.StaticBoxSizer(sb_az, wx.VERTICAL)
-        sz_az.Add(wx.StaticText(self, label="Clave de suscripción (Key). Formato: 32 caracteres hexadecimales:"), 0, wx.ALL, 2)
+        sz_az.Add(
+            wx.StaticText(self, label=_("Clave de suscripción (Key). Formato: 32 caracteres hexadecimales:")),
+            0, wx.ALL, 2,
+        )
         self.txt_az_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_az_key.SetHelpText(
-            "Clave de suscripción de Azure Text to Speech. "
-            "Puedes encontrarla en el Portal de Azure, en tu recurso de Servicios Cognitivos, "
-            "sección Claves y Punto de conexión."
+            _("Clave de suscripción de Azure Text to Speech. "
+              "Puedes encontrarla en el Portal de Azure, en tu recurso de Servicios Cognitivos, "
+              "sección Claves y Punto de conexión.")
         )
         sz_az.Add(self.txt_az_key, 0, wx.EXPAND | wx.ALL, 5)
-        sz_az.Add(wx.StaticText(self, label="Región del recurso (ej: eastus, westeurope):"), 0, wx.ALL, 2)
+        sz_az.Add(wx.StaticText(self, label=_("Región del recurso (ej: eastus, westeurope):")), 0, wx.ALL, 2)
         self.txt_az_region = wx.TextCtrl(self)
         self.txt_az_region.SetHelpText(
-            "Región de Azure donde está creado tu recurso. "
-            "Ejemplos: eastus, westus2, westeurope."
+            _("Región de Azure donde está creado tu recurso. "
+              "Ejemplos: eastus, westus2, westeurope.")
         )
         sz_az.Add(self.txt_az_region, 0, wx.EXPAND | wx.ALL, 5)
         hb_az = wx.BoxSizer(wx.HORIZONTAL)
-        btn_az_web = wx.Button(self, label="Conseguir clave Azure")
-        btn_az_web.SetHelpText("Abre el navegador en la página de Azure Text to Speech.")
+        btn_az_web = wx.Button(self, label=_("Conseguir clave Azure"))
+        btn_az_web.SetHelpText(_("Abre el navegador en la página de Azure Text to Speech."))
         btn_az_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://azure.microsoft.com/es-es/services/cognitive-services/text-to-speech/"))
-        btn_az_check = wx.Button(self, label="Comprobar clave y descargar voces Azure")
-        btn_az_check.SetHelpText("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles.")
+        btn_az_check = wx.Button(self, label=_("Comprobar clave y descargar voces Azure"))
+        btn_az_check.SetHelpText(_("Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles."))
         btn_az_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "azure"))
-        aplicar_icono_boton(btn_az_check, "buscar", "Comprobar clave y descargar voces Azure")
-        btn_az_del = wx.Button(self, label="Borrar clave Azure")
-        btn_az_del.SetHelpText("Borra los datos de acceso de Azure guardados en la aplicación.")
+        aplicar_icono_boton(btn_az_check, "buscar", _("Comprobar clave y descargar voces Azure"))
+        btn_az_del = wx.Button(self, label=_("Borrar clave Azure"))
+        btn_az_del.SetHelpText(_("Borra los datos de acceso de Azure guardados en la aplicación."))
         btn_az_del.Bind(wx.EVT_BUTTON, self.al_borrar_azure)
-        aplicar_icono_boton(btn_az_del, "eliminar", "Borrar clave Azure")
+        aplicar_icono_boton(btn_az_del, "eliminar", _("Borrar clave Azure"))
         hb_az.Add(btn_az_web, 0, wx.RIGHT, 5)
         hb_az.Add(btn_az_check, 0, wx.RIGHT, 5)
         hb_az.Add(btn_az_del, 0)
@@ -813,35 +816,38 @@ class PanelClaves(wx.ScrolledWindow):
         # Amazon Polly
         sb_po = wx.StaticBox(self, label="Amazon Polly")
         sz_po = wx.StaticBoxSizer(sb_po, wx.VERTICAL)
-        sz_po.Add(wx.StaticText(self, label="Access Key ID (identificador de la clave AWS):"), 0, wx.ALL, 2)
+        sz_po.Add(wx.StaticText(self, label=_("Access Key ID (identificador de la clave AWS):")), 0, wx.ALL, 2)
         self.txt_po_key = wx.TextCtrl(self)
         self.txt_po_key.SetHelpText(
-            "Identificador de clave de acceso de AWS. "
-            "Lo encontrarás en la consola de AWS, sección IAM, Mis credenciales de seguridad."
+            _("Identificador de clave de acceso de AWS. "
+              "Lo encontrarás en la consola de AWS, sección IAM, Mis credenciales de seguridad.")
         )
         sz_po.Add(self.txt_po_key, 0, wx.EXPAND | wx.ALL, 5)
-        sz_po.Add(wx.StaticText(self, label="Secret Access Key (clave secreta, se muestra solo al crearla):"), 0, wx.ALL, 2)
+        sz_po.Add(
+            wx.StaticText(self, label=_("Secret Access Key (clave secreta, se muestra solo al crearla):")),
+            0, wx.ALL, 2,
+        )
         self.txt_po_secret = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_po_secret.SetHelpText(
-            "Clave de acceso secreta de AWS. Solo se muestra una vez al crearla."
+            _("Clave de acceso secreta de AWS. Solo se muestra una vez al crearla.")
         )
         sz_po.Add(self.txt_po_secret, 0, wx.EXPAND | wx.ALL, 5)
-        sz_po.Add(wx.StaticText(self, label="Región AWS (ej: us-east-1, eu-west-1):"), 0, wx.ALL, 2)
+        sz_po.Add(wx.StaticText(self, label=_("Región AWS (ej: us-east-1, eu-west-1):")), 0, wx.ALL, 2)
         self.txt_po_region = wx.TextCtrl(self)
-        self.txt_po_region.SetHelpText("Región de AWS donde usarás Amazon Polly.")
+        self.txt_po_region.SetHelpText(_("Región de AWS donde usarás Amazon Polly."))
         sz_po.Add(self.txt_po_region, 0, wx.EXPAND | wx.ALL, 5)
         hb_po = wx.BoxSizer(wx.HORIZONTAL)
-        btn_po_web = wx.Button(self, label="Conseguir clave Amazon Polly")
-        btn_po_web.SetHelpText("Abre el navegador en la página de Amazon Polly.")
+        btn_po_web = wx.Button(self, label=_("Conseguir clave Amazon Polly"))
+        btn_po_web.SetHelpText(_("Abre el navegador en la página de Amazon Polly."))
         btn_po_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aws.amazon.com/polly/"))
-        btn_po_check = wx.Button(self, label="Comprobar clave y descargar voces Polly")
-        btn_po_check.SetHelpText("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly.")
+        btn_po_check = wx.Button(self, label=_("Comprobar clave y descargar voces Polly"))
+        btn_po_check.SetHelpText(_("Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly."))
         btn_po_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "polly"))
-        aplicar_icono_boton(btn_po_check, "buscar", "Comprobar clave y descargar voces Polly")
-        btn_po_del = wx.Button(self, label="Borrar clave Polly")
-        btn_po_del.SetHelpText("Borra los datos de acceso de Amazon Polly guardados en la aplicación.")
+        aplicar_icono_boton(btn_po_check, "buscar", _("Comprobar clave y descargar voces Polly"))
+        btn_po_del = wx.Button(self, label=_("Borrar clave Polly"))
+        btn_po_del.SetHelpText(_("Borra los datos de acceso de Amazon Polly guardados en la aplicación."))
         btn_po_del.Bind(wx.EVT_BUTTON, self.al_borrar_polly)
-        aplicar_icono_boton(btn_po_del, "eliminar", "Borrar clave Polly")
+        aplicar_icono_boton(btn_po_del, "eliminar", _("Borrar clave Polly"))
         hb_po.Add(btn_po_web, 0, wx.RIGHT, 5)
         hb_po.Add(btn_po_check, 0, wx.RIGHT, 5)
         hb_po.Add(btn_po_del, 0)
@@ -851,24 +857,24 @@ class PanelClaves(wx.ScrolledWindow):
         # ElevenLabs
         sb_el = wx.StaticBox(self, label="ElevenLabs")
         sz_el = wx.StaticBoxSizer(sb_el, wx.VERTICAL)
-        sz_el.Add(wx.StaticText(self, label="API Key (clave de acceso de ElevenLabs):"), 0, wx.ALL, 2)
+        sz_el.Add(wx.StaticText(self, label=_("API Key (clave de acceso de ElevenLabs):")), 0, wx.ALL, 2)
         self.txt_el_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_el_key.SetHelpText(
-            "Clave API de ElevenLabs. La encontrarás en tu perfil, sección API Key."
+            _("Clave API de ElevenLabs. La encontrarás en tu perfil, sección API Key.")
         )
         sz_el.Add(self.txt_el_key, 0, wx.EXPAND | wx.ALL, 5)
         hb_el = wx.BoxSizer(wx.HORIZONTAL)
-        btn_el_web = wx.Button(self, label="Conseguir clave ElevenLabs")
-        btn_el_web.SetHelpText("Abre el navegador en la página de ElevenLabs.")
+        btn_el_web = wx.Button(self, label=_("Conseguir clave ElevenLabs"))
+        btn_el_web.SetHelpText(_("Abre el navegador en la página de ElevenLabs."))
         btn_el_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://elevenlabs.io/"))
-        btn_el_check = wx.Button(self, label="Comprobar clave y descargar voces ElevenLabs")
-        btn_el_check.SetHelpText("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces.")
+        btn_el_check = wx.Button(self, label=_("Comprobar clave y descargar voces ElevenLabs"))
+        btn_el_check.SetHelpText(_("Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces."))
         btn_el_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "elevenlabs"))
-        aplicar_icono_boton(btn_el_check, "buscar", "Comprobar clave y descargar voces ElevenLabs")
-        btn_el_del = wx.Button(self, label="Borrar clave ElevenLabs")
-        btn_el_del.SetHelpText("Borra la API Key de ElevenLabs guardada en la aplicación.")
+        aplicar_icono_boton(btn_el_check, "buscar", _("Comprobar clave y descargar voces ElevenLabs"))
+        btn_el_del = wx.Button(self, label=_("Borrar clave ElevenLabs"))
+        btn_el_del.SetHelpText(_("Borra la API Key de ElevenLabs guardada en la aplicación."))
         btn_el_del.Bind(wx.EVT_BUTTON, self.al_borrar_elevenlabs)
-        aplicar_icono_boton(btn_el_del, "eliminar", "Borrar clave ElevenLabs")
+        aplicar_icono_boton(btn_el_del, "eliminar", _("Borrar clave ElevenLabs"))
         hb_el.Add(btn_el_web, 0, wx.RIGHT, 5)
         hb_el.Add(btn_el_check, 0, wx.RIGHT, 5)
         hb_el.Add(btn_el_del, 0)
@@ -878,24 +884,24 @@ class PanelClaves(wx.ScrolledWindow):
         # Deepgram
         sb_dg = wx.StaticBox(self, label="Deepgram Aura-2 TTS")
         sz_dg = wx.StaticBoxSizer(sb_dg, wx.VERTICAL)
-        sz_dg.Add(wx.StaticText(self, label="API Key de Deepgram:"), 0, wx.ALL, 2)
+        sz_dg.Add(wx.StaticText(self, label=_("API Key de Deepgram:")), 0, wx.ALL, 2)
         self.txt_dg_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_dg_key.SetHelpText(
-            "Clave API de Deepgram. La encontrarás en el panel de Deepgram, sección API Keys."
+            _("Clave API de Deepgram. La encontrarás en el panel de Deepgram, sección API Keys.")
         )
         sz_dg.Add(self.txt_dg_key, 0, wx.EXPAND | wx.ALL, 5)
         hb_dg = wx.BoxSizer(wx.HORIZONTAL)
-        btn_dg_web = wx.Button(self, label="Conseguir clave Deepgram")
-        btn_dg_web.SetHelpText("Abre el navegador en la página de Deepgram.")
+        btn_dg_web = wx.Button(self, label=_("Conseguir clave Deepgram"))
+        btn_dg_web.SetHelpText(_("Abre el navegador en la página de Deepgram."))
         btn_dg_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://console.deepgram.com/"))
-        btn_dg_check = wx.Button(self, label="Comprobar clave y descargar voces Deepgram")
-        btn_dg_check.SetHelpText("Guarda la API Key, la verifica contra Deepgram y descarga la lista de modelos Aura-2.")
+        btn_dg_check = wx.Button(self, label=_("Comprobar clave y descargar voces Deepgram"))
+        btn_dg_check.SetHelpText(_("Guarda la API Key, la verifica contra Deepgram y descarga la lista de modelos Aura-2."))
         btn_dg_check.Bind(wx.EVT_BUTTON, lambda e: self.al_comprobar(e, "deepgram"))
-        aplicar_icono_boton(btn_dg_check, "buscar", "Comprobar clave y descargar voces Deepgram")
-        btn_dg_del = wx.Button(self, label="Borrar clave Deepgram")
-        btn_dg_del.SetHelpText("Borra la API Key de Deepgram guardada en la aplicación.")
+        aplicar_icono_boton(btn_dg_check, "buscar", _("Comprobar clave y descargar voces Deepgram"))
+        btn_dg_del = wx.Button(self, label=_("Borrar clave Deepgram"))
+        btn_dg_del.SetHelpText(_("Borra la API Key de Deepgram guardada en la aplicación."))
         btn_dg_del.Bind(wx.EVT_BUTTON, self.al_borrar_deepgram)
-        aplicar_icono_boton(btn_dg_del, "eliminar", "Borrar clave Deepgram")
+        aplicar_icono_boton(btn_dg_del, "eliminar", _("Borrar clave Deepgram"))
         hb_dg.Add(btn_dg_web, 0, wx.RIGHT, 5)
         hb_dg.Add(btn_dg_check, 0, wx.RIGHT, 5)
         hb_dg.Add(btn_dg_del, 0)
@@ -905,25 +911,28 @@ class PanelClaves(wx.ScrolledWindow):
         # ANCLAJE_INICIO: PANEL_CLAVES_GEMINI
         sb_ge = wx.StaticBox(self, label="Google Gemini (Asistente de Biblioteca)")
         sz_ge = wx.StaticBoxSizer(sb_ge, wx.VERTICAL)
-        sz_ge.Add(wx.StaticText(self, label="API Key de Gemini (AI Studio):"), 0, wx.ALL, 2)
+        sz_ge.Add(wx.StaticText(self, label=_("API Key de Gemini (AI Studio):")), 0, wx.ALL, 2)
         self.txt_ge_key = wx.TextCtrl(self, style=wx.TE_PASSWORD)
         self.txt_ge_key.SetHelpText(
-            "Clave API de Google AI Studio para el Asistente de Biblioteca. "
-            "Google cambia periódicamente el formato de estas claves (por ejemplo, "
-            "de prefijo AIza a prefijo AQ.), así que se guarda tal cual la pegues, "
-            "sin comprobar formato ni longitud."
+            _("Clave API de Google AI Studio para el Asistente de Biblioteca. "
+              "Google cambia periódicamente el formato de estas claves (por ejemplo, "
+              "de prefijo AIza a prefijo AQ.), así que se guarda tal cual la pegues, "
+              "sin comprobar formato ni longitud.")
         )
         sz_ge.Add(self.txt_ge_key, 0, wx.EXPAND | wx.ALL, 5)
-        sz_ge.Add(wx.StaticText(self, label="Modelo a usar:"), 0, wx.ALL, 2)
-        self.combo_ge_modelo = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Automático"])
+        sz_ge.Add(wx.StaticText(self, label=_("Modelo a usar:")), 0, wx.ALL, 2)
+        self.combo_ge_modelo = wx.ComboBox(self, style=wx.CB_READONLY, choices=[_("Automático")])
         self.combo_ge_modelo.SetHelpText(
-            "Automático elige el modelo según la consulta: Flash para preguntas rápidas "
-            "y Pro para análisis profundos. La lista se completa con los modelos reales "
-            "de tu cuenta al comprobar la clave."
+            _("Automático elige el modelo según la consulta: Flash para preguntas rápidas "
+              "y Pro para análisis profundos. La lista se completa con los modelos reales "
+              "de tu cuenta al comprobar la clave.")
         )
         self.combo_ge_modelo.SetSelection(0)
         sz_ge.Add(self.combo_ge_modelo, 0, wx.EXPAND | wx.ALL, 5)
-        sz_ge.Add(wx.StaticText(self, label="Temperatura, de 0 a 100 (creatividad de las respuestas):"), 0, wx.ALL, 2)
+        sz_ge.Add(
+            wx.StaticText(self, label=_("Temperatura, de 0 a 100 (creatividad de las respuestas):")),
+            0, wx.ALL, 2,
+        )
         # wx.Slider en vez de wx.SpinCtrlDouble: el mismo patrón ya probado con
         # NVDA real en Velocidad/Volumen de Lectura. SpinCtrlDouble no es un
         # control nativo de Windows (lo dibuja la propia wx), y no hereda la
@@ -944,28 +953,28 @@ class PanelClaves(wx.ScrolledWindow):
         )
         self.slider_ge_temperatura.SetLineSize(10)
         self.slider_ge_temperatura.SetPageSize(20)
-        self.slider_ge_temperatura.SetName("Temperatura de Gemini")
+        self.slider_ge_temperatura.SetName(_("Temperatura de Gemini"))
         self.slider_ge_temperatura.SetHelpText(
-            "De 0 a 100. Cuanto más bajo (10 a 40), más precisas y ajustadas "
-            "al catálogo real son las respuestas, con menos probabilidad de "
-            "que el asistente invente títulos, autores o tramas. Cuanto más "
-            "alto (70 a 100), más variedad y creatividad, a costa de más "
-            f"alucinaciones ocasionales. Valor de fábrica: "
-            f"{round(TEMPERATURA_DEFECTO_GEMINI * 100)} (recomendado)."
+            _("De 0 a 100. Cuanto más bajo (10 a 40), más precisas y ajustadas "
+              "al catálogo real son las respuestas, con menos probabilidad de "
+              "que el asistente invente títulos, autores o tramas. Cuanto más "
+              "alto (70 a 100), más variedad y creatividad, a costa de más "
+              "alucinaciones ocasionales. Valor de fábrica: "
+              "{valor} (recomendado).").format(valor=round(TEMPERATURA_DEFECTO_GEMINI * 100))
         )
         sz_ge.Add(self.slider_ge_temperatura, 0, wx.EXPAND | wx.ALL, 5)
         hb_ge = wx.BoxSizer(wx.HORIZONTAL)
-        btn_ge_web = wx.Button(self, label="Conseguir clave Gemini")
-        btn_ge_web.SetHelpText("Abre el navegador en Google AI Studio para crear o copiar tu clave.")
+        btn_ge_web = wx.Button(self, label=_("Conseguir clave Gemini"))
+        btn_ge_web.SetHelpText(_("Abre el navegador en Google AI Studio para crear o copiar tu clave."))
         btn_ge_web.Bind(wx.EVT_BUTTON, lambda e: webbrowser.open("https://aistudio.google.com/apikey"))
-        btn_ge_check = wx.Button(self, label="Comprobar clave y listar modelos Gemini")
-        btn_ge_check.SetHelpText("Guarda la clave, la verifica contra Gemini y actualiza la lista de modelos disponibles.")
+        btn_ge_check = wx.Button(self, label=_("Comprobar clave y listar modelos Gemini"))
+        btn_ge_check.SetHelpText(_("Guarda la clave, la verifica contra Gemini y actualiza la lista de modelos disponibles."))
         btn_ge_check.Bind(wx.EVT_BUTTON, self.al_comprobar_gemini)
-        aplicar_icono_boton(btn_ge_check, "buscar", "Comprobar clave y listar modelos Gemini")
-        btn_ge_del = wx.Button(self, label="Borrar clave Gemini")
-        btn_ge_del.SetHelpText("Borra la API Key de Gemini guardada en la aplicación.")
+        aplicar_icono_boton(btn_ge_check, "buscar", _("Comprobar clave y listar modelos Gemini"))
+        btn_ge_del = wx.Button(self, label=_("Borrar clave Gemini"))
+        btn_ge_del.SetHelpText(_("Borra la API Key de Gemini guardada en la aplicación."))
         btn_ge_del.Bind(wx.EVT_BUTTON, self.al_borrar_gemini)
-        aplicar_icono_boton(btn_ge_del, "eliminar", "Borrar clave Gemini")
+        aplicar_icono_boton(btn_ge_del, "eliminar", _("Borrar clave Gemini"))
         hb_ge.Add(btn_ge_web, 0, wx.RIGHT, 5)
         hb_ge.Add(btn_ge_check, 0, wx.RIGHT, 5)
         hb_ge.Add(btn_ge_del, 0)
@@ -973,9 +982,9 @@ class PanelClaves(wx.ScrolledWindow):
         sizer.Add(sz_ge, 0, wx.EXPAND | wx.ALL, 10)
         # ANCLAJE_FIN: PANEL_CLAVES_GEMINI
 
-        self.btn_save = wx.Button(self, label="Guardar Todas las Claves")
+        self.btn_save = wx.Button(self, label=_("Guardar Todas las Claves"))
         self.btn_save.Bind(wx.EVT_BUTTON, self.al_guardar)
-        aplicar_icono_boton(self.btn_save, "guardar", "Guardar todas las claves")
+        aplicar_icono_boton(self.btn_save, "guardar", _("Guardar todas las claves"))
         sizer.Add(self.btn_save, 0, wx.ALIGN_CENTER | wx.ALL, 15)
 
         self.SetSizer(sizer)
@@ -1016,7 +1025,9 @@ class PanelClaves(wx.ScrolledWindow):
             indice = self.combo_ge_modelo.FindString(id_modelo)
         self.combo_ge_modelo.SetSelection(indice)
 
-    def al_guardar(self, evento, mensaje="Ajustes de proveedores guardados correctamente."):
+    def al_guardar(self, evento, mensaje=None):
+        if mensaje is None:
+            mensaje = _("Ajustes de proveedores guardados correctamente.")
         seleccion_ge = self.combo_ge_modelo.GetStringSelection()
         claves = {
             "azure": {
@@ -1032,40 +1043,40 @@ class PanelClaves(wx.ScrolledWindow):
             "deepgram": {"api_key": self.txt_dg_key.GetValue().strip()},
             "gemini": {
                 "api_key": self.txt_ge_key.GetValue().strip(),
-                "modelo": "auto" if seleccion_ge in ("", "Automático") else seleccion_ge,
+                "modelo": "auto" if seleccion_ge in ("", _("Automático")) else seleccion_ge,
                 "temperatura": round(self.slider_ge_temperatura.GetValue() / 100, 2),
             },
         }
         guardar_claves(claves)
         if evento:
             reproducir(SUCCESS)
-            wx.MessageBox(mensaje, "Éxito")
+            wx.MessageBox(mensaje, _("Éxito"))
 
     def al_borrar_azure(self, evento):
         self.txt_az_key.Clear()
         self.txt_az_region.Clear()
-        self.al_guardar(evento, "Clave de Azure borrada.")
+        self.al_guardar(evento, _("Clave de Azure borrada."))
 
     def al_borrar_polly(self, evento):
         self.txt_po_key.Clear()
         self.txt_po_secret.Clear()
         self.txt_po_region.Clear()
-        self.al_guardar(evento, "Clave de Amazon Polly borrada.")
+        self.al_guardar(evento, _("Clave de Amazon Polly borrada."))
 
     def al_borrar_elevenlabs(self, evento):
         self.txt_el_key.Clear()
-        self.al_guardar(evento, "Clave de ElevenLabs borrada.")
+        self.al_guardar(evento, _("Clave de ElevenLabs borrada."))
 
     def al_borrar_deepgram(self, evento):
         self.txt_dg_key.Clear()
-        self.al_guardar(evento, "Clave de Deepgram borrada.")
+        self.al_guardar(evento, _("Clave de Deepgram borrada."))
 
     def al_borrar_gemini(self, evento):
         self.txt_ge_key.Clear()
         while self.combo_ge_modelo.GetCount() > 1:
             self.combo_ge_modelo.Delete(1)
         self.combo_ge_modelo.SetSelection(0)
-        self.al_guardar(evento, "Clave de Gemini borrada.")
+        self.al_guardar(evento, _("Clave de Gemini borrada."))
 
     def al_comprobar_gemini(self, evento):
         from app.servicios.cliente_gemini import listar_modelos
@@ -1081,12 +1092,14 @@ class PanelClaves(wx.ScrolledWindow):
                 self.combo_ge_modelo.Append(id_modelo)
             self._fijar_modelo_gemini(seleccion_previa)
             reproducir(SUCCESS)
-            wx.MessageBox(f"Clave de Gemini válida. Modelos disponibles: {len(modelos)}.", "Info")
+            wx.MessageBox(
+                _("Clave de Gemini válida. Modelos disponibles: {n}.").format(n=len(modelos)), _("Info")
+            )
         except Exception as e:
             wx.EndBusyCursor()
             logger.exception("Error al comprobar la clave de Gemini")
             reproducir(ERROR)
-            wx.MessageBox(f"Error: {e}", "Error")
+            wx.MessageBox(_("Error: {error}").format(error=e), _("Error"))
 
     def al_comprobar(self, evento, proveedor=None):
         from app.motor.cliente_nube_voces import GestorVoces
@@ -1097,7 +1110,7 @@ class PanelClaves(wx.ScrolledWindow):
             res = gestor.actualizar_proveedor(proveedor) if proveedor else gestor.actualizar_voces_desde_internet()
             wx.EndBusyCursor()
             reproducir(SUCCESS)
-            wx.MessageBox(f"Resultado:\n{res}", "Info")
+            wx.MessageBox(_("Resultado:\n{res}").format(res=res), _("Info"))
             try:
                 ventana = wx.GetTopLevelParent(self)
                 if hasattr(ventana, 'pestana_ajustes'):
@@ -1107,7 +1120,7 @@ class PanelClaves(wx.ScrolledWindow):
         except Exception as e:
             wx.EndBusyCursor()
             reproducir(ERROR)
-            wx.MessageBox(f"Error: {e}", "Error")
+            wx.MessageBox(_("Error: {error}").format(error=e), _("Error"))
 # ANCLAJE_FIN: PANEL_CLAVES
 
 
