@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 _URL_BASE = "https://generativelanguage.googleapis.com/v1beta"
 _TIMEOUT = 30
 
+# Valor de fábrica, editable en Ajustes → Credenciales y API Keys → Gemini.
+# Más baja = respuestas más deterministas y con menos datos inventados;
+# más alta = más variedad, a costa de más alucinaciones ocasionales.
+TEMPERATURA_DEFECTO = 0.4
+
 # Instrucción de sistema: pide a Gemini que se apoye en la búsqueda web para no
 # alucinar datos sobre libros (tramas, autores, ediciones, disponibilidad).
 # Es explícita al prohibir inventar títulos/autores/sagas cuando no encuentra
@@ -214,10 +219,13 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
     cuerpo = {
         "system_instruction": {"parts": [{"text": instruccion_sistema or INSTRUCCION_SISTEMA_DEFECTO}]},
         "contents": contenidos,
-        # Temperatura baja: menos "creatividad" al citar títulos, autores o
-        # tramas reales — sigue dejando margen para recomendar y charlar,
-        # pero reduce que el modelo rellene huecos con datos inventados.
-        "generationConfig": {"temperature": 0.4},
+        # Temperatura baja por defecto: menos "creatividad" al citar títulos,
+        # autores o tramas reales — sigue dejando margen para recomendar y
+        # charlar, pero reduce que el modelo rellene huecos con datos
+        # inventados. Ajustable en Ajustes → Credenciales y API Keys.
+        "generationConfig": {
+            "temperature": datos_gemini.get("temperatura", TEMPERATURA_DEFECTO)
+        },
     }
     if busqueda_web:
         cuerpo["tools"] = [{"google_search": {}}]

@@ -77,7 +77,12 @@ def _hay_cambios_desde_ultimo_backup(ruta_origen: str, carpeta_backups: str, pre
 
 def _crear_backup(ruta_origen: str, carpeta_backups: str, prefijo: str, arcname: str):
     os.makedirs(carpeta_backups, exist_ok=True)
-    marca = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Sin segundos y con separadores "h"/"m" en vez de una tira de 14
+    # dígitos seguidos: mismo orden cronológico al ordenar por nombre
+    # (todos los campos tienen ancho fijo), pero mucho más fácil de seguir
+    # de oído con NVDA. Si hubiera dos guardados reales en el mismo minuto,
+    # el segundo simplemente sobrescribe el .zip de ese minuto.
+    marca = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm")
     nombre_zip = f"{prefijo}{marca}.zip"
     ruta_zip = os.path.join(carpeta_backups, nombre_zip)
     ruta_tmp = ruta_zip + ".tmp"

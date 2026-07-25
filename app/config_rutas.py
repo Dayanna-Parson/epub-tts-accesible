@@ -34,7 +34,7 @@ _CLAVES_DEFAULT = {
     "polly":       {"access_key": "", "secret_key": "", "region": ""},
     "elevenlabs":  {"api_key": ""},
     "deepgram":    {"api_key": ""},
-    "gemini":      {"api_key": "", "modelo": "auto"},
+    "gemini":      {"api_key": "", "modelo": "auto", "temperatura": 0.4},
 }
 # ANCLAJE_FIN: CLAVES_DEFAULT_GEMINI
 
