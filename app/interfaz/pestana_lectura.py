@@ -13,6 +13,7 @@ from app.interfaz.dialogos import DialogoMarcadores
 from app.config_rutas import ruta_config, CONFIG_DIR
 from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR, PAGE_SCROLLED
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_LECTURA
@@ -111,20 +112,26 @@ class PestanaLectura(wx.Panel):
         self.arbol_indice = wx.TreeCtrl(self.divisor, style=wx.TR_DEFAULT_STYLE | wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_HIDE_ROOT)
         self.arbol_indice.SetName("Índice")
         self.arbol_indice.SetHelpText(
-            "Índice del libro cargado. Usa las flechas Arriba y Abajo para navegar por los capítulos. "
-            "Pulsa Intro o Enter sobre un capítulo para saltar a él en el área de texto."
+            _("Índice del libro cargado. Usa las flechas Arriba y Abajo para navegar por los capítulos. "
+              "Pulsa Intro o Enter sobre un capítulo para saltar a él en el área de texto.")
         )
-        self.raiz_id = self.arbol_indice.AddRoot("Libro")
+        self.raiz_id = self.arbol_indice.AddRoot(_("Libro"))
         self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
         self.arbol_indice.Bind(wx.EVT_TREE_KEY_DOWN, self._al_tecla_arbol_indice)
 
         self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
         self.txt_contenido.SetName("Contenido del libro")
         self.txt_contenido.SetHelpText(
-            "Área de texto de solo lectura con el contenido del capítulo activo. "
-            "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
+            _("Área de texto de solo lectura con el contenido del capítulo activo. "
+              "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor.")
         )
-        self.txt_contenido.SetValue("¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta calidad en la nube (Azure, Amazon Polly, Deepgram y ElevenLabs) y voces locales SAPI5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1 a Ctrl + 5 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!")
+        self.txt_contenido.SetValue(_(
+            "¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta "
+            "calidad en la nube (Azure, Amazon Polly, Deepgram y ElevenLabs) y voces locales "
+            "SAPI5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1 a Ctrl + 5 para moverte "
+            "entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a "
+            "leer. ¡Disfruta de la lectura!"
+        ))
         self.txt_contenido.Bind(wx.EVT_KEY_UP, self.al_navegar_texto)
 
         self.divisor.SetMinimumPaneSize(200)
@@ -133,13 +140,13 @@ class PestanaLectura(wx.Panel):
 
         # 2. PROGRESO
         sizer_progreso = wx.BoxSizer(wx.HORIZONTAL)
-        self.lbl_progreso = wx.StaticText(self, label="Progreso: 0%")
+        self.lbl_progreso = wx.StaticText(self, label=_("Progreso: {pct}%").format(pct=0))
         self.deslizador_progreso = wx.Slider(self, value=0, minValue=0, maxValue=100)
-        self.deslizador_progreso.SetName("Barra de progreso de lectura")
+        self.deslizador_progreso.SetName(_("Barra de progreso de lectura"))
         self.deslizador_progreso.SetHelpText(
-            "Posición de lectura expresada en porcentaje del libro. "
-            "Usa las flechas Izquierda y Derecha para navegar. "
-            "Al soltar la tecla, la voz saltará a esa posición."
+            _("Posición de lectura expresada en porcentaje del libro. "
+              "Usa las flechas Izquierda y Derecha para navegar. "
+              "Al soltar la tecla, la voz saltará a esa posición.")
         )
         self.deslizador_progreso.Bind(wx.EVT_SLIDER, self.al_buscar_usuario)
         
@@ -150,49 +157,49 @@ class PestanaLectura(wx.Panel):
         # 3. CONTROLES
         sizer_inferior = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.lbl_voz = wx.StaticText(self, label="Voz para lectura:")
+        self.lbl_voz = wx.StaticText(self, label=_("Voz para lectura:"))
         self.combo_voz = wx.ComboBox(self, style=wx.CB_READONLY)
-        self.combo_voz.SetName("Selector de voz")
+        self.combo_voz.SetName(_("Selector de voz"))
         self.combo_voz.SetHelpText(
-            "Voz con la que se leerá el libro. Contiene las voces favoritas marcadas en Ajustes "
-            "y las voces SAPI5 locales instaladas en el sistema."
+            _("Voz con la que se leerá el libro. Contiene las voces favoritas marcadas en Ajustes "
+              "y las voces SAPI5 locales instaladas en el sistema.")
         )
         self.combo_voz.Bind(wx.EVT_COMBOBOX, self.al_cambiar_voz)
 
-        self.btn_atras = wx.Button(self, label=f"Retroceder {self.segundos_salto}s")
-        self.btn_reproducir = wx.Button(self, label="Reproducir (Ctrl+P)")
-        self.btn_adelante = wx.Button(self, label=f"Avanzar {self.segundos_salto}s")
-        self.btn_detener = wx.Button(self, label="Detener (Ctrl+D)")
-        
+        self.btn_atras = wx.Button(self, label=_("Retroceder {s}s").format(s=self.segundos_salto))
+        self.btn_reproducir = wx.Button(self, label=_("Reproducir (Ctrl+P)"))
+        self.btn_adelante = wx.Button(self, label=_("Avanzar {s}s").format(s=self.segundos_salto))
+        self.btn_detener = wx.Button(self, label=_("Detener (Ctrl+D)"))
+
         self.btn_reproducir.Bind(wx.EVT_BUTTON, self.al_alternar_reproduccion)
         self.btn_detener.Bind(wx.EVT_BUTTON, self.al_detener)
         self.btn_atras.Bind(wx.EVT_BUTTON, self.al_saltar_atras)
         self.btn_adelante.Bind(wx.EVT_BUTTON, self.al_saltar_adelante)
-        aplicar_icono_boton(self.btn_detener, "detener", "Detener")
+        aplicar_icono_boton(self.btn_detener, "detener", _("Detener"))
         # fijar_nombre=False: la etiqueta de estos dos botones cambia con los
         # segundos de salto configurados ("Retroceder 10s"...); un nombre
         # accesible fijo aquí congelaría ese texto para NVDA.
         aplicar_icono_boton(self.btn_atras, "retroceder", fijar_nombre=False)
         aplicar_icono_boton(self.btn_adelante, "avanzar", fijar_nombre=False)
 
-        self.lbl_velocidad = wx.StaticText(self, label="Velocidad de lectura:")
+        self.lbl_velocidad = wx.StaticText(self, label=_("Velocidad de lectura:"))
         self.deslizador_velocidad = wx.Slider(self, value=50, minValue=0, maxValue=100)
-        self.deslizador_velocidad.SetName("Velocidad de lectura")
+        self.deslizador_velocidad.SetName(_("Velocidad de lectura"))
         self.deslizador_velocidad.SetHelpText(
-            "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
-            "Flechas: ±1. RePág/AvPág: ±5."
+            _("Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
+              "Flechas: ±1. RePág/AvPág: ±5.")
         )
         self.deslizador_velocidad.Bind(wx.EVT_SLIDER, self.al_cambiar_velocidad)
         self.deslizador_velocidad.Bind(wx.EVT_KEY_DOWN, self._al_tecla_slider_velocidad)
         self.deslizador_velocidad.Bind(wx.EVT_SCROLL_CHANGED, self._al_slider_velocidad_cambio)
         self.deslizador_velocidad.Bind(wx.EVT_SCROLL_THUMBTRACK, self._al_slider_velocidad_cambio)
 
-        self.lbl_volumen = wx.StaticText(self, label="Volumen:")
+        self.lbl_volumen = wx.StaticText(self, label=_("Volumen:"))
         self.deslizador_volumen = wx.Slider(self, value=100, minValue=0, maxValue=100)
-        self.deslizador_volumen.SetName("Volumen de lectura")
+        self.deslizador_volumen.SetName(_("Volumen de lectura"))
         self.deslizador_volumen.SetHelpText(
-            "Volumen del audio de lectura. 0 es silencio, 100 es volumen máximo. "
-            "Flechas: ±1. RePág/AvPág: ±5."
+            _("Volumen del audio de lectura. 0 es silencio, 100 es volumen máximo. "
+              "Flechas: ±1. RePág/AvPág: ±5.")
         )
         self.deslizador_volumen.Bind(wx.EVT_SLIDER, self.al_cambiar_volumen)
         self.deslizador_volumen.Bind(wx.EVT_KEY_DOWN, self._al_tecla_slider_volumen)
@@ -255,8 +262,8 @@ class PestanaLectura(wx.Panel):
     def al_cambiar_pestana_padre(self, event):
         if event.GetSelection() == 0:
             self.cargar_config_salto()
-            self.btn_atras.SetLabel(f"Retroceder {self.segundos_salto}s")
-            self.btn_adelante.SetLabel(f"Avanzar {self.segundos_salto}s")
+            self.btn_atras.SetLabel(_("Retroceder {s}s").format(s=self.segundos_salto))
+            self.btn_adelante.SetLabel(_("Avanzar {s}s").format(s=self.segundos_salto))
             # Diferir la carga de voces para que el foco llegue al panel antes
             # de que comience la lectura de JSONs. El combo se llena tras el cambio de pestaña.
             wx.CallAfter(self.cargar_voces_usuario)
@@ -333,7 +340,7 @@ class PestanaLectura(wx.Panel):
                 print(f"[Aviso] No se pudo leer voces_disponibles.json: {e}")
 
         if not voces_para_combo:
-            self.combo_voz.Append("No hay voces disponibles")
+            self.combo_voz.Append(_("No hay voces disponibles"))
         else:
             for nombre, datos in voces_para_combo:
                 idx = self.combo_voz.Append(nombre)
@@ -579,7 +586,7 @@ class PestanaLectura(wx.Panel):
             pct = max(0, min(100, int(pos / self.longitud_texto * 100)))
             if self.deslizador_progreso.GetValue() != pct:
                 self.deslizador_progreso.SetValue(pct)
-                self.lbl_progreso.SetLabel(f"Progreso: {pct}%")
+                self.lbl_progreso.SetLabel(_("Progreso: {pct}%").format(pct=pct))
 
     def _al_sapi_completado(self):
         """Llamado por ClienteSapi5 cuando termina de leer todos los párrafos."""
@@ -609,11 +616,11 @@ class PestanaLectura(wx.Panel):
             estado = self.reproductor.obtener_estado()
 
         if estado == 'reproduciendo':
-            if self.btn_reproducir.GetLabel() != "Pausar (Ctrl+P)":
-                self.btn_reproducir.SetLabel("Pausar (Ctrl+P)")
+            if self.btn_reproducir.GetLabel() != _("Pausar (Ctrl+P)"):
+                self.btn_reproducir.SetLabel(_("Pausar (Ctrl+P)"))
         else:
-            if self.btn_reproducir.GetLabel() != "Reproducir (Ctrl+P)":
-                self.btn_reproducir.SetLabel("Reproducir (Ctrl+P)")
+            if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                self.btn_reproducir.SetLabel(_("Reproducir (Ctrl+P)"))
 
         # 2. Barra de progreso y sincronización de cursor.
         # Solo se actualiza durante la reproducción activa para no sobreescribir
@@ -658,7 +665,7 @@ class PestanaLectura(wx.Panel):
             # Solo actualiza si hay cambio real para no saturar a NVDA
             if self.deslizador_progreso.GetValue() != porcentaje:
                 self.deslizador_progreso.SetValue(porcentaje)
-                self.lbl_progreso.SetLabel(f"Progreso: {porcentaje}%")
+                self.lbl_progreso.SetLabel(_("Progreso: {pct}%").format(pct=porcentaje))
     # ANCLAJE_FIN: ACTUALIZACION_INTERFAZ_USUARIO
 
     # ANCLAJE_INICIO: NAVEGACION_TEXTO_Y_SALTOS
@@ -767,7 +774,7 @@ class PestanaLectura(wx.Panel):
         self.pos_inicio_fragmento = pos
 
     def iniciar_busqueda(self):
-        dlg = wx.TextEntryDialog(self, "Texto o frase a buscar:", "Buscar en el libro")
+        dlg = wx.TextEntryDialog(self, _("Texto o frase a buscar:"), _("Buscar en el libro"))
         if dlg.ShowModal() == wx.ID_OK:
             consulta = dlg.GetValue().lower()
             if not consulta: return
@@ -785,12 +792,20 @@ class PestanaLectura(wx.Panel):
             
             if not coincidencias:
                 reproducir(ERROR)
-                wx.MessageBox("No se ha encontrado el texto especificado en este libro.", "Búsqueda finalizada")
+                wx.MessageBox(
+                    _("No se ha encontrado el texto especificado en este libro."),
+                    _("Búsqueda finalizada"),
+                )
             elif len(coincidencias) == 1:
                 self._ir_a_posicion(coincidencias[0][0])
             else:
                 opciones = [c[1] for c in coincidencias]
-                dlg_lista = wx.SingleChoiceDialog(self, f"Se encontraron {len(coincidencias)} resultados:", "Seleccionar resultado", opciones)
+                dlg_lista = wx.SingleChoiceDialog(
+                    self,
+                    _("Se encontraron {n} resultados:").format(n=len(coincidencias)),
+                    _("Seleccionar resultado"),
+                    opciones,
+                )
                 if dlg_lista.ShowModal() == wx.ID_OK:
                     seleccion = dlg_lista.GetSelection()
                     self._ir_a_posicion(coincidencias[seleccion][0])
@@ -806,55 +821,65 @@ class PestanaLectura(wx.Panel):
         Prioridad: porcentaje > página del libro > página del capítulo.
         """
         if not self.longitud_texto:
-            wx.MessageBox("Abre un libro antes de usar esta función.", "Sin libro", wx.OK | wx.ICON_INFORMATION)
+            wx.MessageBox(
+                _("Abre un libro antes de usar esta función."), _("Sin libro"),
+                wx.OK | wx.ICON_INFORMATION,
+            )
             return
 
         pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
         pct_actual = int(self.txt_contenido.GetInsertionPoint() / self.longitud_texto * 100)
 
-        dlg = wx.Dialog(self, title="Ir a página o porcentaje")
+        dlg = wx.Dialog(self, title=_("Ir a página o porcentaje"))
         dlg.SetHelpText(
-            "Rellena uno de los tres campos para saltar a esa posición del libro. "
-            "Deja los otros dos en blanco. "
-            "Prioridad si rellenas varios: porcentaje, luego página del libro, luego página del capítulo."
+            _("Rellena uno de los tres campos para saltar a esa posición del libro. "
+              "Deja los otros dos en blanco. "
+              "Prioridad si rellenas varios: porcentaje, luego página del libro, luego página del capítulo.")
         )
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(
-            wx.StaticText(dlg, label=f"Página del capítulo (1–{total_cap}):"),
+            wx.StaticText(dlg, label=_("Página del capítulo (1–{total}):").format(total=total_cap)),
             0, wx.ALL, 8,
         )
         txt_cap = wx.TextCtrl(dlg, value="")
         txt_cap.SetHelpText(
-            f"Número de página dentro del capítulo activo. "
-            f"Ahora estás en la página {pag_cap} de {total_cap}. Deja vacío para ignorar."
+            _("Número de página dentro del capítulo activo. "
+              "Ahora estás en la página {pag} de {total}. Deja vacío para ignorar.").format(
+                pag=pag_cap, total=total_cap
+            )
         )
         sizer.Add(txt_cap, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
         sizer.Add(
-            wx.StaticText(dlg, label=f"Página del libro (1–{total_libro}):"),
+            wx.StaticText(dlg, label=_("Página del libro (1–{total}):").format(total=total_libro)),
             0, wx.ALL, 8,
         )
         txt_libro = wx.TextCtrl(dlg, value="")
         txt_libro.SetHelpText(
-            f"Número de página dentro del libro completo. "
-            f"Ahora estás en la página {pag_libro} de {total_libro}. Deja vacío para ignorar."
+            _("Número de página dentro del libro completo. "
+              "Ahora estás en la página {pag} de {total}. Deja vacío para ignorar.").format(
+                pag=pag_libro, total=total_libro
+            )
         )
         sizer.Add(txt_libro, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
         sizer.Add(
-            wx.StaticText(dlg, label="Porcentaje del libro (0–100):"),
+            wx.StaticText(dlg, label=_("Porcentaje del libro (0–100):")),
             0, wx.ALL, 8,
         )
         txt_pct = wx.TextCtrl(dlg, value="")
         txt_pct.SetHelpText(
-            f"Posición como porcentaje del libro completo. "
-            f"Ahora estás al {pct_actual}%. Deja vacío para ignorar."
+            _("Posición como porcentaje del libro completo. "
+              "Ahora estás al {pct}%. Deja vacío para ignorar.").format(pct=pct_actual)
         )
         sizer.Add(txt_pct, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
         sizer.Add(
-            wx.StaticText(dlg, label="(Rellena solo el campo que quieras usar y deja los demás vacíos.)"),
+            wx.StaticText(
+                dlg,
+                label=_("(Rellena solo el campo que quieras usar y deja los demás vacíos.)"),
+            ),
             0, wx.ALL, 8,
         )
 
@@ -922,17 +947,19 @@ class PestanaLectura(wx.Panel):
         self.deslizador_velocidad.SetValue(valor_guardado)
 
         if escala == "multiplicador":
-            self.lbl_velocidad.SetLabel(f"Velocidad ({self._etiqueta_multiplicador(valor_guardado)}):")
+            self.lbl_velocidad.SetLabel(
+                _("Velocidad ({etiqueta}):").format(etiqueta=self._etiqueta_multiplicador(valor_guardado))
+            )
             self.deslizador_velocidad.SetHelpText(
-                "Velocidad de lectura en multiplicadores. 0.2× es la más lenta, "
-                "1.0× es la normal, 1.8× es la más rápida. "
-                "Flechas: ±1. RePág/AvPág: ±5."
+                _("Velocidad de lectura en multiplicadores. 0.2× es la más lenta, "
+                  "1.0× es la normal, 1.8× es la más rápida. "
+                  "Flechas: ±1. RePág/AvPág: ±5.")
             )
         else:
-            self.lbl_velocidad.SetLabel("Velocidad de lectura:")
+            self.lbl_velocidad.SetLabel(_("Velocidad de lectura:"))
             self.deslizador_velocidad.SetHelpText(
-                "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
-                "Flechas: ±1. RePág/AvPág: ±5."
+                _("Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. "
+                  "Flechas: ±1. RePág/AvPág: ±5.")
             )
 
     @staticmethod
@@ -948,17 +975,17 @@ class PestanaLectura(wx.Panel):
     def _etiqueta_multiplicador(cls, v: int) -> str:
         m = cls._multiplicador_desde_valor(v)
         if v <= 5:
-            calificativo = " (Muy lenta)"
+            calificativo = " " + _("(Muy lenta)")
         elif v <= 30:
-            calificativo = " (Lenta)"
+            calificativo = " " + _("(Lenta)")
         elif 45 <= v <= 55:
-            calificativo = " (Normal)"
+            calificativo = " " + _("(Normal)")
         elif v >= 95:
-            calificativo = " (Máxima)"
+            calificativo = " " + _("(Máxima)")
         elif v >= 70:
-            calificativo = " (Muy rápida)"
+            calificativo = " " + _("(Muy rápida)")
         elif v >= 55:
-            calificativo = " (Rápida)"
+            calificativo = " " + _("(Rápida)")
         else:
             calificativo = ""
         return f"{m:.2f}×{calificativo}"
@@ -1009,8 +1036,11 @@ class PestanaLectura(wx.Panel):
     def al_cargar_libro(self, evento):
         """Abre el explorador de archivos para seleccionar un libro EPUB o PDF."""
         with wx.FileDialog(
-            self, "Seleccionar libro",
-            wildcard="Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf",
+            self, _("Seleccionar libro"),
+            wildcard=_(
+                "Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|"
+                "Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf"
+            ),
             style=wx.FD_OPEN,
         ) as dlg:
             if dlg.ShowModal() == wx.ID_OK:
@@ -1057,7 +1087,12 @@ class PestanaLectura(wx.Panel):
 
         except Exception as e:
             reproducir(ERROR)
-            wx.MessageBox(f"Se ha producido un error técnico al intentar procesar el libro.\n\nDetalle: {e}", "Error al cargar el libro")
+            wx.MessageBox(
+                _("Se ha producido un error técnico al intentar procesar el libro.\n\nDetalle: {error}").format(
+                    error=e
+                ),
+                _("Error al cargar el libro"),
+            )
 
     def _construir_arbol_indice(self, padre, nodos):
         for n in nodos:
@@ -1221,10 +1256,10 @@ class PestanaLectura(wx.Panel):
         if not self.longitud_texto:
             return
         pag_cap, total_cap, pag_libro, total_libro = self._calcular_paginas()
-        texto = (
-            f"Página {pag_cap} de {total_cap} del capítulo. "
-            f"Página {pag_libro} de {total_libro} del libro."
-        )
+        texto = _(
+            "Página {pag_cap} de {total_cap} del capítulo. "
+            "Página {pag_libro} de {total_libro} del libro."
+        ).format(pag_cap=pag_cap, total_cap=total_cap, pag_libro=pag_libro, total_libro=total_libro)
         self.lbl_progreso.SetLabel(texto)
         voz.hablar(texto)
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
@@ -1248,8 +1283,8 @@ class PestanaLectura(wx.Panel):
             return
         val = self.deslizador_velocidad.GetValue()
         etiqueta = self._etiqueta_multiplicador(val)
-        self.deslizador_velocidad.SetHelpText(f"Velocidad: {etiqueta}")
-        self.lbl_velocidad.SetLabel(f"Velocidad ({etiqueta}):")
+        self.deslizador_velocidad.SetHelpText(_("Velocidad: {etiqueta}").format(etiqueta=etiqueta))
+        self.lbl_velocidad.SetLabel(_("Velocidad ({etiqueta}):").format(etiqueta=etiqueta))
         evento.Skip()
     # ANCLAJE_FIN: SLIDER_VELOCIDAD_SEMANTICO
     # ANCLAJE_FIN: CONFIGURACION_ATAJOS_TECLADO
