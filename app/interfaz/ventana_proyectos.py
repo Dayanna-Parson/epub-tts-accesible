@@ -12,6 +12,7 @@ from app.motor.reproductor_sonidos import (
     reproducir, LIST_NAV, MOVE_UP, MOVE_DOWN, OPEN_FOLDER, CLEAR, CLICK, ERROR, SUCCESS,
 )
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _
 
 logger = logging.getLogger(__name__)
 # ANCLAJE_FIN: DEPENDENCIAS_VENTANA_PROYECTOS
@@ -31,7 +32,13 @@ class ListaCategorias(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         # Imprescindible para que las casillas sean visibles
         self.EnableCheckBoxes(True)
-        self.InsertColumn(0, "Categoría", width=wx.LIST_AUTOSIZE_USEHEADER)
+        # Los propios valores de TIPOS_PROYECTO se muestran sin traducir: se
+        # comparan/persisten literalmente como proyecto["tipo"] en varios
+        # puntos de este archivo (_guardar_categorias_actuales,
+        # _al_seleccionar_nodo) — traducir el texto del ítem rompería esa
+        # comparación, mismo motivo que la corrección aplicada en
+        # pestana_ajustes.py con el combo de modelo de Gemini.
+        self.InsertColumn(0, _("Categoría"), width=wx.LIST_AUTOSIZE_USEHEADER)
         for cat in TIPOS_PROYECTO:
             self.InsertItem(self.GetItemCount(), cat)
         self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
@@ -74,7 +81,7 @@ class VentanaProyectos(wx.Frame):
     def __init__(self, parent, ruta_txt_activo=None, foco_previo=None, gestor_proyectos=None):
         super().__init__(
             parent,
-            title="Gestión de Proyectos — Epub TTS",
+            title=_("Gestión de Proyectos — Epub TTS"),
             size=(900, 600),
         )
         self._frame_principal = parent
@@ -112,7 +119,7 @@ class VentanaProyectos(wx.Frame):
 
         # ── Panel izquierdo: árbol de proyectos ──────────────────────────
         sz_arbol = wx.BoxSizer(wx.VERTICAL)
-        lbl_arbol = wx.StaticText(panel_raiz, label="Proyectos:")
+        lbl_arbol = wx.StaticText(panel_raiz, label=_("Proyectos:"))
         self.arbol = wx.TreeCtrl(
             panel_raiz,
             style=(
@@ -124,14 +131,14 @@ class VentanaProyectos(wx.Frame):
             ),
         )
         self.arbol.SetHelpText(
-            "Lista de proyectos en árbol. Flechas para navegar; cada elemento muestra "
-            "el nombre, el estado y el nivel. Tab: ir al panel de detalle. "
-            "F2: renombrar. Supr: eliminar. "
-            "Ctrl+Arriba / Ctrl+Abajo: reordenar dentro del mismo nivel. "
-            "Ctrl+X: cortar para mover. Ctrl+V: pegar como subproyecto del seleccionado "
-            "o como raíz si no hay nada seleccionado. Escape cancela el corte. "
-            "Ctrl+Intro: abrir la carpeta en el Explorador. "
-            "Menú o Shift+F10: más opciones."
+            _("Lista de proyectos en árbol. Flechas para navegar; cada elemento muestra "
+              "el nombre, el estado y el nivel. Tab: ir al panel de detalle. "
+              "F2: renombrar. Supr: eliminar. "
+              "Ctrl+Arriba / Ctrl+Abajo: reordenar dentro del mismo nivel. "
+              "Ctrl+X: cortar para mover. Ctrl+V: pegar como subproyecto del seleccionado "
+              "o como raíz si no hay nada seleccionado. Escape cancela el corte. "
+              "Ctrl+Intro: abrir la carpeta en el Explorador. "
+              "Menú o Shift+F10: más opciones.")
         )
         sz_arbol.Add(lbl_arbol,  0, wx.BOTTOM, 4)
         sz_arbol.Add(self.arbol, 1, wx.EXPAND)
@@ -139,60 +146,60 @@ class VentanaProyectos(wx.Frame):
         # ── Panel derecho: detalle del nodo ──────────────────────────────
         sz_detalle = wx.BoxSizer(wx.VERTICAL)
 
-        lbl_nombre = wx.StaticText(panel_raiz, label="Nombre del proyecto:")
+        lbl_nombre = wx.StaticText(panel_raiz, label=_("Nombre del proyecto:"))
         self.txt_nombre = wx.TextCtrl(panel_raiz, style=wx.TE_PROCESS_ENTER)
         self.txt_nombre.SetHelpText(
-            "Nombre del proyecto seleccionado. Escribe el nuevo nombre y pulsa Intro para guardar."
+            _("Nombre del proyecto seleccionado. Escribe el nuevo nombre y pulsa Intro para guardar.")
         )
 
         lbl_tipo = wx.StaticText(
             panel_raiz,
-            label="Categorías del proyecto:",
+            label=_("Categorías del proyecto:"),
         )
         self.lista_cats = ListaCategorias(panel_raiz)
         self.lista_cats.SetMinSize((-1, 170))
         self.lista_cats.SetHelpText(
-            "Categorías del proyecto. Flechas para navegar, Espacio para marcar o desmarcar. "
-            "Puedes seleccionar varias a la vez."
+            _("Categorías del proyecto. Flechas para navegar, Espacio para marcar o desmarcar. "
+              "Puedes seleccionar varias a la vez.")
         )
 
-        lbl_archivos = wx.StaticText(panel_raiz, label="Archivos TXT asociados:")
+        lbl_archivos = wx.StaticText(panel_raiz, label=_("Archivos TXT asociados:"))
         self.lista_archivos = wx.ListCtrl(
             panel_raiz,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,
         )
-        self.lista_archivos.InsertColumn(0, "Nombre del archivo", width=160)
-        self.lista_archivos.InsertColumn(1, "Ruta completa",      width=280)
+        self.lista_archivos.InsertColumn(0, _("Nombre del archivo"), width=160)
+        self.lista_archivos.InsertColumn(1, _("Ruta completa"),      width=280)
         self.lista_archivos.SetHelpText(
-            "Archivos de texto vinculados a este proyecto. "
-            "Flechas para navegar. Usa el botón Quitar TXT para desvincular el seleccionado."
+            _("Archivos de texto vinculados a este proyecto. "
+              "Flechas para navegar. Usa el botón Quitar TXT para desvincular el seleccionado.")
         )
 
         sz_btn_archivos = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_añadir_txt = wx.Button(panel_raiz, label="Añadir TXT…")
+        self.btn_añadir_txt = wx.Button(panel_raiz, label=_("Añadir TXT…"))
         self.btn_añadir_txt.SetHelpText(
-            "Abre un explorador de archivos para seleccionar un archivo de texto y vincularlo al proyecto."
+            _("Abre un explorador de archivos para seleccionar un archivo de texto y vincularlo al proyecto.")
         )
-        self.btn_quitar_txt = wx.Button(panel_raiz, label="Quitar TXT")
+        self.btn_quitar_txt = wx.Button(panel_raiz, label=_("Quitar TXT"))
         self.btn_quitar_txt.SetHelpText(
-            "Desvincula el archivo de texto seleccionado de este proyecto. "
-            "El archivo en disco no se borra."
+            _("Desvincula el archivo de texto seleccionado de este proyecto. "
+              "El archivo en disco no se borra.")
         )
-        aplicar_icono_boton(self.btn_añadir_txt, "añadir", "Añadir TXT")
-        aplicar_icono_boton(self.btn_quitar_txt, "eliminar", "Quitar TXT")
+        aplicar_icono_boton(self.btn_añadir_txt, "añadir", _("Añadir TXT"))
+        aplicar_icono_boton(self.btn_quitar_txt, "eliminar", _("Quitar TXT"))
         sz_btn_archivos.Add(self.btn_añadir_txt, 0, wx.RIGHT, 8)
         sz_btn_archivos.Add(self.btn_quitar_txt, 0)
 
-        lbl_voces = wx.StaticText(panel_raiz, label="Voces asignadas:")
+        lbl_voces = wx.StaticText(panel_raiz, label=_("Voces asignadas:"))
         self.lista_voces = wx.ListCtrl(
             panel_raiz,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL | wx.LC_HRULES,
         )
-        self.lista_voces.InsertColumn(0, "Etiqueta",     width=120)
-        self.lista_voces.InsertColumn(1, "Voz asignada", width=200)
+        self.lista_voces.InsertColumn(0, _("Etiqueta"),     width=120)
+        self.lista_voces.InsertColumn(1, _("Voz asignada"), width=200)
         self.lista_voces.SetHelpText(
-            "Voces asignadas a las etiquetas del proyecto. "
-            "Si no hay voces propias, se muestran las heredadas del proyecto padre."
+            _("Voces asignadas a las etiquetas del proyecto. "
+              "Si no hay voces propias, se muestran las heredadas del proyecto padre.")
         )
 
         sz_detalle.Add(lbl_nombre,          0, wx.BOTTOM, 2)
@@ -213,24 +220,24 @@ class VentanaProyectos(wx.Frame):
         # están accesibles vía menú contextual (Tecla Menú / Shift+F10 / clic derecho).
         sz_barra = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_eliminar = wx.Button(panel_raiz, label="Eliminar proyecto")
+        self.btn_eliminar = wx.Button(panel_raiz, label=_("Eliminar proyecto"))
         self.btn_eliminar.SetHelpText(
-            "Elimina el proyecto seleccionado y todos sus subproyectos. "
-            "Se pedirá confirmación antes de proceder. "
-            "También puedes pulsar Supr desde el árbol."
+            _("Elimina el proyecto seleccionado y todos sus subproyectos. "
+              "Se pedirá confirmación antes de proceder. "
+              "También puedes pulsar Supr desde el árbol.")
         )
-        self.btn_cerrar = wx.Button(panel_raiz, label="Cerrar")
+        self.btn_cerrar = wx.Button(panel_raiz, label=_("Cerrar"))
         self.btn_cerrar.SetHelpText(
-            "Cierra el gestor y devuelve el foco a la ventana principal. "
-            "También puedes pulsar Escape."
+            _("Cierra el gestor y devuelve el foco a la ventana principal. "
+              "También puedes pulsar Escape.")
         )
-        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar proyecto")
-        aplicar_icono_boton(self.btn_cerrar, "cerrar", "Cerrar")
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", _("Eliminar proyecto"))
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", _("Cerrar"))
 
         # Etiqueta de estado — retroalimentación sin diálogos modales
         self.lbl_estado = wx.StaticText(panel_raiz, label="")
         self.lbl_estado.SetHelpText(
-            "Resultado de la última acción realizada."
+            _("Resultado de la última acción realizada.")
         )
 
         sz_barra.Add(self.btn_eliminar,    0, wx.RIGHT, 8)
@@ -310,7 +317,7 @@ class VentanaProyectos(wx.Frame):
         self.arbol.DeleteAllItems()
         self._mapa_nodos.clear()
 
-        raiz_oculta = self.arbol.AddRoot("Proyectos")
+        raiz_oculta = self.arbol.AddRoot(_("Proyectos"))
         for proyecto in self._gestor.listar_proyectos_raiz():
             self._añadir_nodo_recursivo(raiz_oculta, proyecto)
         self.arbol.ExpandAll()
@@ -359,8 +366,8 @@ class VentanaProyectos(wx.Frame):
         if proyecto is None:
             nombre_archivo = os.path.basename(ruta)
             self._anunciar_estado(
-                f"«{nombre_archivo}» no está asociado a ningún proyecto. "
-                "Abre el menú contextual para asociarlo."
+                _("«{nombre}» no está asociado a ningún proyecto. "
+                  "Abre el menú contextual para asociarlo.").format(nombre=nombre_archivo)
             )
             return
         for nodo, pid in self._mapa_nodos.items():
@@ -368,7 +375,7 @@ class VentanaProyectos(wx.Frame):
                 self.arbol.SelectItem(nodo)
                 self.arbol.EnsureVisible(nodo)
                 self._anunciar_estado(
-                    f"Archivo asociado al proyecto: {proyecto['nombre']}"
+                    _("Archivo asociado al proyecto: {nombre}").format(nombre=proyecto["nombre"])
                 )
                 return
 
@@ -469,8 +476,10 @@ class VentanaProyectos(wx.Frame):
                 proyecto = self._gestor.obtener_proyecto(self._proyecto_en_portapapeles)
                 self._proyecto_en_portapapeles = None
                 reproducir(CLICK)
-                nombre = proyecto["nombre"] if proyecto else "proyecto"
-                self._anunciar_estado(f"Corte cancelado. «{nombre}» permanece en su sitio.")
+                nombre = proyecto["nombre"] if proyecto else _("proyecto")
+                self._anunciar_estado(
+                    _("Corte cancelado. «{nombre}» permanece en su sitio.").format(nombre=nombre)
+                )
                 return
             self.Close()
             return
@@ -550,8 +559,8 @@ class VentanaProyectos(wx.Frame):
             evento.Veto()
             reproducir(ERROR)
             wx.MessageBox(
-                "El nombre no puede estar vacío.",
-                "Nombre no válido", wx.OK | wx.ICON_WARNING
+                _("El nombre no puede estar vacío."),
+                _("Nombre no válido"), wx.OK | wx.ICON_WARNING
             )
             return
         nodo = evento.GetItem()
@@ -590,17 +599,17 @@ class VentanaProyectos(wx.Frame):
         menu = wx.Menu()
 
         # Nuevo proyecto (siempre disponible)
-        item_nuevo_raiz = menu.Append(wx.ID_ANY, "Nuevo proyecto")
+        item_nuevo_raiz = menu.Append(wx.ID_ANY, _("Nuevo proyecto"))
         self.Bind(wx.EVT_MENU, self._al_nuevo_raiz, item_nuevo_raiz)
 
         # Nuevo subproyecto dentro del seleccionado (requiere selección)
-        item_nuevo_hijo = menu.Append(wx.ID_ANY, "Nuevo subproyecto dentro del seleccionado")
+        item_nuevo_hijo = menu.Append(wx.ID_ANY, _("Nuevo subproyecto dentro del seleccionado"))
         item_nuevo_hijo.Enable(bool(proyecto))
         self.Bind(wx.EVT_MENU, self._al_nuevo_hijo, item_nuevo_hijo)
 
         menu.AppendSeparator()
 
-        item_asociar = menu.Append(wx.ID_ANY, "Asociar TXT actual de Grabación")
+        item_asociar = menu.Append(wx.ID_ANY, _("Asociar TXT actual de Grabación"))
         item_asociar.Enable(bool(proyecto and ruta_txt))
         self.Bind(
             wx.EVT_MENU,
@@ -612,11 +621,11 @@ class VentanaProyectos(wx.Frame):
 
         # Cortar / Pegar para mover en la jerarquía
         etiq_pegar = (
-            "Pegar como subproyecto (Ctrl+V)"
+            _("Pegar como subproyecto (Ctrl+V)")
             if proyecto else
-            "Pegar como raíz (Ctrl+V)"
+            _("Pegar como raíz (Ctrl+V)")
         )
-        item_cortar = menu.Append(self._id_cortar, "Cortar (Ctrl+X)")
+        item_cortar = menu.Append(self._id_cortar, _("Cortar (Ctrl+X)"))
         item_cortar.Enable(bool(proyecto))
         item_pegar = menu.Append(self._id_pegar, etiq_pegar)
         item_pegar.Enable(bool(self._proyecto_en_portapapeles))
@@ -625,14 +634,14 @@ class VentanaProyectos(wx.Frame):
 
         # Reordenar — solo disponible para proyectos con padre (no raíz)
         puede_mover = bool(proyecto and proyecto.get("padre"))
-        item_mover_arriba = menu.Append(self._id_mover_arriba, "Mover arriba (Ctrl+Arriba)")
+        item_mover_arriba = menu.Append(self._id_mover_arriba, _("Mover arriba (Ctrl+Arriba)"))
         item_mover_arriba.Enable(puede_mover)
-        item_mover_abajo = menu.Append(self._id_mover_abajo, "Mover abajo (Ctrl+Abajo)")
+        item_mover_abajo = menu.Append(self._id_mover_abajo, _("Mover abajo (Ctrl+Abajo)"))
         item_mover_abajo.Enable(puede_mover)
 
         menu.AppendSeparator()
 
-        item_renombrar = menu.Append(wx.ID_ANY, "Renombrar (F2)")
+        item_renombrar = menu.Append(wx.ID_ANY, _("Renombrar (F2)"))
         item_renombrar.Enable(bool(proyecto))
         self.Bind(
             wx.EVT_MENU,
@@ -642,7 +651,7 @@ class VentanaProyectos(wx.Frame):
 
         menu.AppendSeparator()
 
-        item_eliminar = menu.Append(wx.ID_ANY, "Eliminar…\tSupr")
+        item_eliminar = menu.Append(wx.ID_ANY, _("Eliminar…\tSupr"))
         item_eliminar.Enable(bool(proyecto))
         self.Bind(wx.EVT_MENU, self._al_eliminar, item_eliminar)
 
@@ -663,13 +672,13 @@ class VentanaProyectos(wx.Frame):
                     item_rest,
                 )
             sub_restaurar.AppendSeparator()
-            item_vaciar = sub_restaurar.Append(wx.ID_ANY, "Vaciar papelera…")
+            item_vaciar = sub_restaurar.Append(wx.ID_ANY, _("Vaciar papelera…"))
             self.Bind(wx.EVT_MENU, self._al_vaciar_papelera, item_vaciar)
         else:
-            item_vacio = sub_restaurar.Append(wx.ID_ANY, "No hay proyectos eliminados recientemente")
+            item_vacio = sub_restaurar.Append(wx.ID_ANY, _("No hay proyectos eliminados recientemente"))
             item_vacio.Enable(False)
 
-        menu.AppendSubMenu(sub_restaurar, "Restaurar proyectos eliminados recientemente…")
+        menu.AppendSubMenu(sub_restaurar, _("Restaurar proyectos eliminados recientemente…"))
 
         self.arbol.PopupMenu(menu)
         menu.Destroy()
@@ -683,7 +692,11 @@ class VentanaProyectos(wx.Frame):
         if proyecto_actualizado:
             self._actualizar_lista_archivos(proyecto_actualizado)
         nombre_archivo = os.path.basename(ruta_txt)
-        self._anunciar_estado(f"«{nombre_archivo}» asociado a «{proyecto['nombre']}».")
+        self._anunciar_estado(
+            _("«{archivo}» asociado a «{proyecto}».").format(
+                archivo=nombre_archivo, proyecto=proyecto["nombre"]
+            )
+        )
         # Actualizar proyecto_actual en PestanaGrabacion
         try:
             self._frame_principal.pestana_grabacion.proyecto_actual = (
@@ -705,10 +718,10 @@ class VentanaProyectos(wx.Frame):
         reproducir(CLEAR)
         nombre = proyecto["nombre"]
         self._anunciar_estado(
-            f"«{nombre}» cortado. Navega al destino y pulsa Ctrl+V para pegar, "
-            "o Escape para cancelar."
+            _("«{nombre}» cortado. Navega al destino y pulsa Ctrl+V para pegar, "
+              "o Escape para cancelar.").format(nombre=nombre)
         )
-        self._hablar(f"{nombre} cortado")
+        self._hablar(_("{nombre} cortado").format(nombre=nombre))
 
     def _al_pegar_proyecto(self):
         """
@@ -716,7 +729,7 @@ class VentanaProyectos(wx.Frame):
         o como proyecto raíz si no hay ninguno seleccionado.
         """
         if not self._proyecto_en_portapapeles:
-            self._anunciar_estado("No hay ningún proyecto cortado. Selecciona uno y pulsa Ctrl+X.")
+            self._anunciar_estado(_("No hay ningún proyecto cortado. Selecciona uno y pulsa Ctrl+X."))
             return
 
         proyecto_cortado = self._gestor.obtener_proyecto(self._proyecto_en_portapapeles)
@@ -737,17 +750,21 @@ class VentanaProyectos(wx.Frame):
             wx.CallAfter(self.arbol.SetFocus)
             if destino_id:
                 nombre_destino = destino["nombre"]
-                self._anunciar_estado(f"«{nombre}» pegado como subproyecto de «{nombre_destino}».")
-                self._hablar(f"{nombre} movido a {nombre_destino}")
+                self._anunciar_estado(
+                    _("«{nombre}» pegado como subproyecto de «{destino}».").format(
+                        nombre=nombre, destino=nombre_destino
+                    )
+                )
+                self._hablar(_("{nombre} movido a {destino}").format(nombre=nombre, destino=nombre_destino))
             else:
-                self._anunciar_estado(f"«{nombre}» movido a raíz.")
-                self._hablar(f"{nombre} movido a raíz")
+                self._anunciar_estado(_("«{nombre}» movido a raíz.").format(nombre=nombre))
+                self._hablar(_("{nombre} movido a raíz").format(nombre=nombre))
         else:
             reproducir(ERROR)
             if destino_id == self._proyecto_en_portapapeles:
-                self._anunciar_estado("No puedes pegar un proyecto dentro de sí mismo.")
+                self._anunciar_estado(_("No puedes pegar un proyecto dentro de sí mismo."))
             else:
-                self._anunciar_estado("No se puede pegar aquí: causaría un ciclo en la jerarquía.")
+                self._anunciar_estado(_("No se puede pegar aquí: causaría un ciclo en la jerarquía."))
 
     # ================================================================== #
     # Reordenar nodos: Alt+Arriba / Alt+Abajo (feature h)
@@ -768,15 +785,15 @@ class VentanaProyectos(wx.Frame):
             self._cargar_arbol(seleccionar_id=id_movido)
             # Devolver foco al árbol después de reconstruirlo
             wx.CallAfter(self.arbol.SetFocus)
-            direccion = "arriba" if delta < 0 else "abajo"
+            direccion = _("arriba") if delta < 0 else _("abajo")
             nombre = proyecto["nombre"]
-            self._anunciar_estado(f"Movido {direccion}: {nombre}")
-            self._hablar(f"{nombre} movido {direccion}")
+            self._anunciar_estado(_("Movido {direccion}: {nombre}").format(direccion=direccion, nombre=nombre))
+            self._hablar(_("{nombre} movido {direccion}").format(nombre=nombre, direccion=direccion))
         else:
             self._anunciar_estado(
-                "No se puede mover: está en el límite o es un proyecto raíz."
+                _("No se puede mover: está en el límite o es un proyecto raíz.")
             )
-            self._hablar("No se puede mover")
+            self._hablar(_("No se puede mover"))
 
     # ================================================================== #
     # Guardar nombre y tipo desde el panel de detalle
@@ -790,8 +807,8 @@ class VentanaProyectos(wx.Frame):
         if not nuevo_nombre:
             reproducir(ERROR)
             wx.MessageBox(
-                "El nombre no puede estar vacío.",
-                "Nombre no válido", wx.OK | wx.ICON_WARNING
+                _("El nombre no puede estar vacío."),
+                _("Nombre no válido"), wx.OK | wx.ICON_WARNING
             )
             return
         self._gestor.renombrar_proyecto(proyecto["id"], nuevo_nombre)
@@ -799,7 +816,7 @@ class VentanaProyectos(wx.Frame):
         proyecto["nombre"] = nuevo_nombre
         self.arbol.SetItemText(nodo, self._etiqueta_nodo(proyecto, self._nivel_nodo(nodo)))
         reproducir(SUCCESS)
-        self._anunciar_estado(f"Nombre guardado: {nuevo_nombre}")
+        self._anunciar_estado(_("Nombre guardado: {nombre}").format(nombre=nuevo_nombre))
 
     def _al_marcar_categoria(self, evento):
         """Actualiza las categorías del proyecto al marcar una casilla."""
@@ -835,15 +852,15 @@ class VentanaProyectos(wx.Frame):
         if proyecto is None:
             reproducir(ERROR)
             wx.MessageBox(
-                "Selecciona primero un proyecto.",
-                "Sin selección", wx.OK | wx.ICON_WARNING
+                _("Selecciona primero un proyecto."),
+                _("Sin selección"), wx.OK | wx.ICON_WARNING
             )
             return
         reproducir(OPEN_FOLDER)
         with wx.FileDialog(
             self,
-            "Seleccionar archivo TXT para asociar al proyecto",
-            wildcard="Archivos de texto (*.txt)|*.txt|Todos (*.*)|*.*",
+            _("Seleccionar archivo TXT para asociar al proyecto"),
+            wildcard=_("Archivos de texto (*.txt)|*.txt|Todos (*.*)|*.*"),
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
@@ -862,8 +879,8 @@ class VentanaProyectos(wx.Frame):
         if idx == -1:
             reproducir(ERROR)
             wx.MessageBox(
-                "Selecciona primero un archivo en la lista para quitarlo.",
-                "Sin selección", wx.OK | wx.ICON_WARNING
+                _("Selecciona primero un archivo en la lista para quitarlo."),
+                _("Sin selección"), wx.OK | wx.ICON_WARNING
             )
             return
         ruta = self.lista_archivos.GetItem(idx, 1).GetText()
@@ -882,23 +899,23 @@ class VentanaProyectos(wx.Frame):
         panel = wx.Panel(dlg)
         sz = wx.BoxSizer(wx.VERTICAL)
 
-        lbl_n = wx.StaticText(panel, label="Nombre del proyecto:")
+        lbl_n = wx.StaticText(panel, label=_("Nombre del proyecto:"))
         txt_n = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
-        txt_n.SetHelpText("Escribe el nombre del nuevo proyecto. Campo obligatorio.")
+        txt_n.SetHelpText(_("Escribe el nombre del nuevo proyecto. Campo obligatorio."))
         lbl_t = wx.StaticText(
             panel,
-            label="Categorías (puedes elegir varias):",
+            label=_("Categorías (puedes elegir varias):"),
         )
         lista_t = ListaCategorias(panel)
         lista_t.SetMinSize((-1, 180))
         lista_t.SetHelpText(
-            "Categorías del proyecto. Usa las flechas para moverte y Espacio para marcar "
-            "o desmarcar. Puedes asignar varias categorías al mismo tiempo."
+            _("Categorías del proyecto. Usa las flechas para moverte y Espacio para marcar "
+              "o desmarcar. Puedes asignar varias categorías al mismo tiempo.")
         )
-        btn_ok     = wx.Button(panel, wx.ID_OK,     label="Crear proyecto")
-        btn_cancel = wx.Button(panel, wx.ID_CANCEL, label="Cancelar")
-        aplicar_icono_boton(btn_ok, "nuevo", "Crear proyecto")
-        aplicar_icono_boton(btn_cancel, "cerrar", "Cancelar")
+        btn_ok     = wx.Button(panel, wx.ID_OK,     label=_("Crear proyecto"))
+        btn_cancel = wx.Button(panel, wx.ID_CANCEL, label=_("Cancelar"))
+        aplicar_icono_boton(btn_ok, "nuevo", _("Crear proyecto"))
+        aplicar_icono_boton(btn_cancel, "cerrar", _("Cancelar"))
         sz_btn = wx.BoxSizer(wx.HORIZONTAL)
         sz_btn.Add(btn_ok, 0, wx.RIGHT, 8)
         sz_btn.Add(btn_cancel, 0)
@@ -931,26 +948,26 @@ class VentanaProyectos(wx.Frame):
         return nombre, tipos
 
     def _al_nuevo_raiz(self, evento):
-        resultado = self._pedir_nombre_y_tipo("Nuevo proyecto raíz")
+        resultado = self._pedir_nombre_y_tipo(_("Nuevo proyecto raíz"))
         if resultado is None:
             return
         nombre, tipo = resultado
         nuevo_id = self._gestor.crear_proyecto(nombre, tipo, padre_id=None)
         reproducir(SUCCESS)
         self._cargar_arbol(seleccionar_id=nuevo_id)
-        self._anunciar_estado(f"Proyecto «{nombre}» creado.")
+        self._anunciar_estado(_("Proyecto «{nombre}» creado.").format(nombre=nombre))
 
     def _al_nuevo_hijo(self, evento):
         proyecto_padre = self._proyecto_seleccionado()
         if proyecto_padre is None:
             reproducir(ERROR)
             wx.MessageBox(
-                "Selecciona primero el proyecto padre en la lista.",
-                "Sin selección", wx.OK | wx.ICON_WARNING
+                _("Selecciona primero el proyecto padre en la lista."),
+                _("Sin selección"), wx.OK | wx.ICON_WARNING
             )
             return
         resultado = self._pedir_nombre_y_tipo(
-            f"Nuevo subproyecto de «{proyecto_padre['nombre']}»"
+            _("Nuevo subproyecto de «{padre}»").format(padre=proyecto_padre["nombre"])
         )
         if resultado is None:
             return
@@ -958,7 +975,11 @@ class VentanaProyectos(wx.Frame):
         nuevo_id = self._gestor.crear_proyecto(nombre, tipo, padre_id=proyecto_padre["id"])
         reproducir(SUCCESS)
         self._cargar_arbol(seleccionar_id=nuevo_id)
-        self._anunciar_estado(f"Subproyecto «{nombre}» creado dentro de «{proyecto_padre['nombre']}».")
+        self._anunciar_estado(
+            _("Subproyecto «{nombre}» creado dentro de «{padre}».").format(
+                nombre=nombre, padre=proyecto_padre["nombre"]
+            )
+        )
 
     # ================================================================== #
     # Restaurar proyectos eliminados (papelera)
@@ -970,12 +991,12 @@ class VentanaProyectos(wx.Frame):
         if ok:
             reproducir(SUCCESS)
             self._cargar_arbol(seleccionar_id=raiz_id)
-            self._anunciar_estado("Proyecto restaurado correctamente.")
+            self._anunciar_estado(_("Proyecto restaurado correctamente."))
         else:
             reproducir(ERROR)
             wx.MessageBox(
-                "No se encontró el proyecto en la papelera.",
-                "Error al restaurar", wx.OK | wx.ICON_WARNING
+                _("No se encontró el proyecto en la papelera."),
+                _("Error al restaurar"), wx.OK | wx.ICON_WARNING
             )
 
     def _al_vaciar_papelera(self, evento):
@@ -987,9 +1008,9 @@ class VentanaProyectos(wx.Frame):
         reproducir(CLICK)
         dlg = wx.MessageDialog(
             self,
-            f"¿Eliminar definitivamente {n} proyecto(s) de la papelera?\n\n"
-            "Esta acción no se puede deshacer.",
-            "Vaciar papelera",
+            _("¿Eliminar definitivamente {n} proyecto(s) de la papelera?\n\n"
+              "Esta acción no se puede deshacer.").format(n=n),
+            _("Vaciar papelera"),
             wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING,
         )
         resp = dlg.ShowModal()
@@ -997,7 +1018,7 @@ class VentanaProyectos(wx.Frame):
         if resp == wx.ID_YES:
             self._gestor.vaciar_papelera()
             reproducir(CLEAR)
-            self._anunciar_estado("Papelera vaciada.")
+            self._anunciar_estado(_("Papelera vaciada."))
 
     # ================================================================== #
     # Eliminar proyecto
@@ -1008,21 +1029,21 @@ class VentanaProyectos(wx.Frame):
         if proyecto is None:
             reproducir(ERROR)
             wx.MessageBox(
-                "Selecciona un proyecto en la lista para eliminarlo.",
-                "Sin selección", wx.OK | wx.ICON_WARNING
+                _("Selecciona un proyecto en la lista para eliminarlo."),
+                _("Sin selección"), wx.OK | wx.ICON_WARNING
             )
             return
         tiene_hijos = bool(self._gestor.listar_hijos(proyecto["id"]))
         mensaje = (
-            f"¿Eliminar «{proyecto['nombre']}» y todos sus subproyectos?\n\n"
-            "Puedes recuperarlos después desde el menú contextual."
+            _("¿Eliminar «{nombre}» y todos sus subproyectos?\n\n"
+              "Puedes recuperarlos después desde el menú contextual.").format(nombre=proyecto["nombre"])
             if tiene_hijos else
-            f"¿Eliminar el proyecto «{proyecto['nombre']}»?\n\n"
-            "Puedes recuperarlo después desde el menú contextual."
+            _("¿Eliminar el proyecto «{nombre}»?\n\n"
+              "Puedes recuperarlo después desde el menú contextual.").format(nombre=proyecto["nombre"])
         )
         reproducir(CLICK)
         dlg = wx.MessageDialog(
-            self, mensaje, "Confirmar eliminación",
+            self, mensaje, _("Confirmar eliminación"),
             wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING
         )
         respuesta = dlg.ShowModal()
@@ -1035,8 +1056,8 @@ class VentanaProyectos(wx.Frame):
         except Exception as e:
             reproducir(ERROR)
             wx.MessageBox(
-                f"No se pudo eliminar el proyecto:\n{e}",
-                "Error al eliminar", wx.OK | wx.ICON_ERROR
+                _("No se pudo eliminar el proyecto:\n{error}").format(error=e),
+                _("Error al eliminar"), wx.OK | wx.ICON_ERROR
             )
             return
         self._cargar_arbol()
@@ -1078,14 +1099,14 @@ class VentanaProyectos(wx.Frame):
         if os.path.isdir(carpeta_audio):
             for _, _, archivos in os.walk(carpeta_audio):
                 if any(f.endswith(('.mp3', '.wav')) for f in archivos):
-                    return "Grabado"
+                    return _("Grabado")
 
         for ruta_txt in proyecto.get("archivos", []):
             base = os.path.splitext(ruta_txt)[0]
             if os.path.exists(base + ".mp3") or os.path.exists(base + ".wav"):
-                return "Grabado"
+                return _("Grabado")
 
-        return "Pendiente"
+        return _("Pendiente")
 
     def _etiqueta_nodo(self, proyecto: dict, nivel: int) -> str:
         """Devuelve el texto del nodo tal como NVDA lo leerá al navegar."""
@@ -1093,13 +1114,15 @@ class VentanaProyectos(wx.Frame):
         tipos = proyecto.get("tipo", [])
         if isinstance(tipos, str):
             tipos = [tipos]
-        tipo_str = ", ".join(tipos) if tipos else "Sin categoría"
-        etiqueta = f"{proyecto['nombre']} [{tipo_str}] — {estado} — Nivel {nivel}"
+        tipo_str = ", ".join(tipos) if tipos else _("Sin categoría")
+        etiqueta = _("{nombre} [{tipo}] — {estado} — Nivel {nivel}").format(
+            nombre=proyecto["nombre"], tipo=tipo_str, estado=estado, nivel=nivel
+        )
         padre_id = proyecto.get("padre")
         if padre_id:
             padre = self._gestor.obtener_proyecto(padre_id)
             if padre:
-                etiqueta += f" — Subproyecto de: {padre['nombre']}"
+                etiqueta += _(" — Subproyecto de: {padre}").format(padre=padre["nombre"])
         return etiqueta
 
     def _abrir_carpeta_proyecto(self):
@@ -1109,7 +1132,7 @@ class VentanaProyectos(wx.Frame):
 
         proyecto = self._proyecto_seleccionado()
         if proyecto is None:
-            self._anunciar_estado("Selecciona primero un proyecto.")
+            self._anunciar_estado(_("Selecciona primero un proyecto."))
             return
         reproducir(OPEN_FOLDER)
 
@@ -1131,7 +1154,7 @@ class VentanaProyectos(wx.Frame):
                 os.makedirs(carpeta_libro, exist_ok=True)
                 carpeta = carpeta_libro
             except Exception as e:
-                self._anunciar_estado(f"No se pudo crear la carpeta: {e}")
+                self._anunciar_estado(_("No se pudo crear la carpeta: {error}").format(error=e))
                 return
 
         try:
@@ -1140,9 +1163,9 @@ class VentanaProyectos(wx.Frame):
             else:
                 import subprocess
                 subprocess.Popen(["xdg-open", carpeta])
-            self._anunciar_estado(f"Abriendo carpeta: {nombre}")
+            self._anunciar_estado(_("Abriendo carpeta: {nombre}").format(nombre=nombre))
         except Exception as e:
-            self._anunciar_estado(f"No se pudo abrir la carpeta: {e}")
+            self._anunciar_estado(_("No se pudo abrir la carpeta: {error}").format(error=e))
 
     def actualizar_nombre_proyecto(self, proyecto_id: str, nuevo_nombre: str):
         """
@@ -1161,12 +1184,12 @@ class VentanaProyectos(wx.Frame):
     def _anunciar_estado(self, mensaje: str):
         """Actualiza la barra de estado y el título de la ventana temporalmente."""
         self.lbl_estado.SetLabel(mensaje)
-        self.SetTitle(f"Gestión de Proyectos — {mensaje}")
+        self.SetTitle(_("Gestión de Proyectos — {mensaje}").format(mensaje=mensaje))
         wx.CallLater(4000, self._restaurar_titulo)
 
     def _restaurar_titulo(self):
         if self:
-            self.SetTitle("Gestión de Proyectos — Epub TTS")
+            self.SetTitle(_("Gestión de Proyectos — Epub TTS"))
 
     def _worker_tts(self):
         """
