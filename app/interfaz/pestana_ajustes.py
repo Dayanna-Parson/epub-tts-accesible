@@ -1536,49 +1536,49 @@ class PanelDiccionario(wx.Panel):
         )
 
         self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
-        self.lista.InsertColumn(0, "Palabra original", width=200)
-        self.lista.InsertColumn(1, "Pronunciación fonética", width=320)
+        self.lista.InsertColumn(0, _("Palabra original"), width=200)
+        self.lista.InsertColumn(1, _("Pronunciación fonética"), width=320)
         self.lista.SetHelpText(
-            "Lista de sustituciones activas. Selecciona una entrada y usa los botones "
-            "para editarla o eliminarla."
+            _("Lista de sustituciones activas. Selecciona una entrada y usa los botones "
+              "para editarla o eliminarla.")
         )
         self.lista.Bind(wx.EVT_LIST_ITEM_SELECTED, self._al_seleccionar)
         sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
         sz_form = wx.BoxSizer(wx.HORIZONTAL)
-        sz_form.Add(wx.StaticText(self, label="Palabra:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_form.Add(wx.StaticText(self, label=_("Palabra:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_original = wx.TextCtrl(self)
-        self.txt_original.SetHelpText("Escribe la palabra o sigla tal como aparece en el texto.")
+        self.txt_original.SetHelpText(_("Escribe la palabra o sigla tal como aparece en el texto."))
         self.txt_original.Bind(wx.EVT_TEXT, self._al_modificar_campo)
         sz_form.Add(self.txt_original, 1, wx.RIGHT, 10)
-        sz_form.Add(wx.StaticText(self, label="Pronunciación:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_form.Add(wx.StaticText(self, label=_("Pronunciación:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_pronunciacion = wx.TextCtrl(self)
         self.txt_pronunciacion.SetHelpText(
-            "Escribe la pronunciación fonética que usará la voz. "
-            "Ejemplo: NVDA → en-ví-di-ei"
+            _("Escribe la pronunciación fonética que usará la voz. "
+              "Ejemplo: NVDA → en-ví-di-ei")
         )
         self.txt_pronunciacion.Bind(wx.EVT_TEXT, self._al_modificar_campo)
         sz_form.Add(self.txt_pronunciacion, 1)
         sizer.Add(sz_form, 0, wx.EXPAND | wx.ALL, 8)
 
         sz_btn = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_anadir = wx.Button(self, label="Añadir / Actualizar")
+        self.btn_anadir = wx.Button(self, label=_("Añadir / Actualizar"))
         self.btn_anadir.SetHelpText(
-            "Guarda la entrada del formulario en la lista. "
-            "Si la palabra ya existe, actualiza su pronunciación."
+            _("Guarda la entrada del formulario en la lista. "
+              "Si la palabra ya existe, actualiza su pronunciación.")
         )
         self.btn_anadir.Bind(wx.EVT_BUTTON, self._al_anadir)
-        aplicar_icono_boton(self.btn_anadir, "añadir", "Añadir o actualizar")
-        self.btn_eliminar = wx.Button(self, label="Eliminar seleccionada")
-        self.btn_eliminar.SetHelpText("Elimina la entrada seleccionada en la lista.")
+        aplicar_icono_boton(self.btn_anadir, "añadir", _("Añadir o actualizar"))
+        self.btn_eliminar = wx.Button(self, label=_("Eliminar seleccionada"))
+        self.btn_eliminar.SetHelpText(_("Elimina la entrada seleccionada en la lista."))
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
-        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar seleccionada")
-        self.btn_guardar = wx.Button(self, label="Guardar cambios\tAlt+G")
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", _("Eliminar seleccionada"))
+        self.btn_guardar = wx.Button(self, label=_("Guardar cambios\tAlt+G"))
         self.btn_guardar.SetHelpText(
-            "Guarda todos los cambios del diccionario en disco y recarga la pronunciación activa."
+            _("Guarda todos los cambios del diccionario en disco y recarga la pronunciación activa.")
         )
         self.btn_guardar.Bind(wx.EVT_BUTTON, self._al_guardar_cambios)
-        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar cambios")
+        aplicar_icono_boton(self.btn_guardar, "guardar", _("Guardar cambios"))
         sz_btn.Add(self.btn_anadir, 0, wx.RIGHT, 8)
         sz_btn.Add(self.btn_eliminar, 0, wx.RIGHT, 8)
         sz_btn.Add(self.btn_guardar, 0)
@@ -1692,7 +1692,7 @@ class PanelDiccionario(wx.Panel):
         original = self.txt_original.GetValue().strip()
         pronunciacion = self.txt_pronunciacion.GetValue().strip()
         if not original or not pronunciacion:
-            wx.MessageBox("Rellena los dos campos.", "Aviso")
+            wx.MessageBox(_("Rellena los dos campos."), _("Aviso"))
             return
 
         alcance = self._alcance_actual()
@@ -1702,7 +1702,7 @@ class PanelDiccionario(wx.Panel):
         else:
             id_referencia = self._referencia_seleccionada()
             if id_referencia is None:
-                wx.MessageBox("Elige primero un libro o una saga a la derecha.", "Aviso")
+                wx.MessageBox(_("Elige primero un libro o una saga a la derecha."), _("Aviso"))
                 return
             from app.motor.gestor_biblioteca import GestorBiblioteca
             gestor = GestorBiblioteca()
@@ -1723,7 +1723,7 @@ class PanelDiccionario(wx.Panel):
     def _al_eliminar(self, evento):
         idx = self.lista.GetFirstSelected()
         if idx == -1:
-            wx.MessageBox("Selecciona una entrada de la lista.", "Aviso")
+            wx.MessageBox(_("Selecciona una entrada de la lista."), _("Aviso"))
             return
 
         alcance = self._alcance_actual()
@@ -1744,10 +1744,12 @@ class PanelDiccionario(wx.Panel):
             self._pendiente = False
             from app.motor.limpiador_lectura import recargar_diccionario_pronunciacion
             recargar_diccionario_pronunciacion()
-            wx.MessageBox("Diccionario guardado correctamente.", "Guardado", wx.OK | wx.ICON_INFORMATION)
+            wx.MessageBox(
+                _("Diccionario guardado correctamente."), _("Guardado"), wx.OK | wx.ICON_INFORMATION
+            )
         except Exception:
             logger.exception("Error al guardar el diccionario de pronunciación")
-            wx.MessageBox("No se pudo guardar el diccionario.", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(_("No se pudo guardar el diccionario."), _("Error"), wx.OK | wx.ICON_ERROR)
 # ANCLAJE_FIN: PANEL_DICCIONARIO
 
 
@@ -1774,18 +1776,18 @@ class _DialogoCapturaTecla(wx.Dialog):
     }
 
     def __init__(self, parent, descripcion_atajo):
-        super().__init__(parent, title="Asignar tecla",
+        super().__init__(parent, title=_("Asignar tecla"),
                          style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP)
         self.resultado = None
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        lbl = wx.StaticText(self, label=(
-            f"Atajo: {descripcion_atajo}\n\n"
+        lbl = wx.StaticText(self, label=_(
+            "Atajo: {descripcion}\n\n"
             "Presiona la combinación de teclas que quieres asignar.\n"
             "Escape para cancelar sin cambios."
-        ))
+        ).format(descripcion=descripcion_atajo))
         sizer.Add(lbl, 0, wx.ALL, 20)
-        self.lbl_capturada = wx.StaticText(self, label="Esperando tecla...")
+        self.lbl_capturada = wx.StaticText(self, label=_("Esperando tecla..."))
         sizer.Add(self.lbl_capturada, 0, wx.ALIGN_CENTER | wx.BOTTOM, 20)
         self.SetSizer(sizer)
         self.Fit()
@@ -1813,7 +1815,7 @@ class _DialogoCapturaTecla(wx.Dialog):
             return
         self.resultado = ("+".join(mods), nombre_tecla)
         combo = f"{'+'.join(mods)}+{nombre_tecla}" if mods else nombre_tecla
-        self.lbl_capturada.SetLabel(f"Asignando: {combo}")
+        self.lbl_capturada.SetLabel(_("Asignando: {combo}").format(combo=combo))
         self.EndModal(wx.ID_OK)
 # ANCLAJE_FIN: DIALOGO_CAPTURA_TECLA
 
