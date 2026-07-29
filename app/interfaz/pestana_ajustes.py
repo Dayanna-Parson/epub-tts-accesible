@@ -2113,38 +2113,38 @@ class PanelAsistenteBiblioteca(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(
-            wx.StaticText(self, label="Plantillas de prompt del Asistente de Biblioteca:"),
+            wx.StaticText(self, label=_("Plantillas de prompt del Asistente de Biblioteca:")),
             0, wx.LEFT | wx.TOP, 8,
         )
 
-        sizer.Add(wx.StaticText(self, label="Plantilla:"), 0, wx.LEFT, 8)
+        sizer.Add(wx.StaticText(self, label=_("Plantilla:")), 0, wx.LEFT, 8)
         self.combo_plantillas = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_plantillas.Bind(wx.EVT_COMBOBOX, self.al_seleccionar_plantilla)
         sizer.Add(self.combo_plantillas, 0, wx.EXPAND | wx.ALL, 8)
 
-        sizer.Add(wx.StaticText(self, label="Nombre:"), 0, wx.LEFT, 8)
+        sizer.Add(wx.StaticText(self, label=_("Nombre:")), 0, wx.LEFT, 8)
         self.txt_nombre = wx.TextCtrl(self)
         sizer.Add(self.txt_nombre, 0, wx.EXPAND | wx.ALL, 8)
 
-        sizer.Add(wx.StaticText(self, label="Texto del prompt:"), 0, wx.LEFT, 8)
+        sizer.Add(wx.StaticText(self, label=_("Texto del prompt:")), 0, wx.LEFT, 8)
         self.txt_prompt = wx.TextCtrl(self, style=wx.TE_MULTILINE)
-        self.txt_prompt.SetName("Texto del prompt")
+        self.txt_prompt.SetName(_("Texto del prompt"))
         sizer.Add(self.txt_prompt, 1, wx.EXPAND | wx.ALL, 8)
 
         sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_guardar = wx.Button(self, label="Guardar plantilla")
+        self.btn_guardar = wx.Button(self, label=_("Guardar plantilla"))
         self.btn_guardar.Bind(wx.EVT_BUTTON, self.al_guardar)
-        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar plantilla")
-        self.btn_borrar = wx.Button(self, label="Borrar plantilla")
+        aplicar_icono_boton(self.btn_guardar, "guardar", _("Guardar plantilla"))
+        self.btn_borrar = wx.Button(self, label=_("Borrar plantilla"))
         self.btn_borrar.Bind(wx.EVT_BUTTON, self.al_borrar)
-        aplicar_icono_boton(self.btn_borrar, "eliminar", "Borrar plantilla")
-        self.btn_abrir_carpeta = wx.Button(self, label="Abrir carpeta de plantillas")
+        aplicar_icono_boton(self.btn_borrar, "eliminar", _("Borrar plantilla"))
+        self.btn_abrir_carpeta = wx.Button(self, label=_("Abrir carpeta de plantillas"))
         self.btn_abrir_carpeta.SetHelpText(
-            "Abre en el Explorador de Windows la carpeta donde se guarda cada "
-            "plantilla como un archivo .txt independiente, editable desde fuera de la app."
+            _("Abre en el Explorador de Windows la carpeta donde se guarda cada "
+              "plantilla como un archivo .txt independiente, editable desde fuera de la app.")
         )
         self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON, self.al_abrir_carpeta)
-        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta de plantillas")
+        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", _("Abrir carpeta de plantillas"))
         for boton in (self.btn_guardar, self.btn_borrar, self.btn_abrir_carpeta):
             sizer_botones.Add(boton, 0, wx.RIGHT, 5)
         sizer.Add(sizer_botones, 0, wx.ALL, 8)
@@ -2202,11 +2202,11 @@ class PanelAsistenteBiblioteca(wx.Panel):
         texto = self.txt_prompt.GetValue().strip()
         if not nombre or not texto:
             reproducir(ERROR)
-            wx.MessageBox("El nombre y el texto del prompt no pueden estar vacíos.", "Error")
+            wx.MessageBox(_("El nombre y el texto del prompt no pueden estar vacíos."), _("Error"))
             return
         prompts.guardar_prompt(nombre, texto)
         reproducir(SUCCESS)
-        voz.hablar(f"Plantilla «{nombre}» guardada.")
+        voz.hablar(_("Plantilla «{nombre}» guardada.").format(nombre=nombre))
         self._recargar_combo(seleccionar=nombre)
 
     def al_borrar(self, evento):
@@ -2214,17 +2214,17 @@ class PanelAsistenteBiblioteca(wx.Panel):
         if not nombre:
             return
         if wx.MessageBox(
-            f"¿Borrar la plantilla «{nombre}»?", "Borrar plantilla",
+            _("¿Borrar la plantilla «{nombre}»?").format(nombre=nombre), _("Borrar plantilla"),
             wx.YES_NO | wx.ICON_WARNING,
         ) != wx.YES:
             return
         if prompts.borrar_prompt(nombre):
             reproducir(SUCCESS)
-            voz.hablar(f"Plantilla «{nombre}» borrada.")
+            voz.hablar(_("Plantilla «{nombre}» borrada.").format(nombre=nombre))
             self._recargar_combo()
         else:
             reproducir(ERROR)
-            wx.MessageBox("No se puede borrar: tiene que quedar al menos una plantilla.", "Error")
+            wx.MessageBox(_("No se puede borrar: tiene que quedar al menos una plantilla."), _("Error"))
 
     def al_abrir_carpeta(self, evento):
         carpeta = prompts.ruta_carpeta_plantillas()
@@ -2236,7 +2236,7 @@ class PanelAsistenteBiblioteca(wx.Panel):
         except Exception:
             logger.exception("Error al abrir la carpeta de plantillas del Asistente de Biblioteca")
             reproducir(ERROR)
-            wx.MessageBox("No se pudo abrir la carpeta de plantillas.", "Error")
+            wx.MessageBox(_("No se pudo abrir la carpeta de plantillas."), _("Error"))
 # ANCLAJE_FIN: PANEL_ASISTENTE_BIBLIOTECA
 
 
@@ -2283,9 +2283,9 @@ class PestanaAjustes(wx.Panel):
             style=wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_SINGLE | wx.TR_HIDE_ROOT,
         )
         self.arbol_cat.SetHelpText(
-            "Árbol de categorías de ajustes. Usa las flechas Arriba y Abajo para navegar "
-            "entre categorías. Flecha Derecha expande una rama; Flecha Izquierda la contrae. "
-            "Tab salta al primer control de la habitación seleccionada."
+            _("Árbol de categorías de ajustes. Usa las flechas Arriba y Abajo para navegar "
+              "entre categorías. Flecha Derecha expande una rama; Flecha Izquierda la contrae. "
+              "Tab salta al primer control de la habitación seleccionada.")
         )
         self._nodos = {}
         self._construir_arbol()
@@ -2308,17 +2308,17 @@ class PestanaAjustes(wx.Panel):
         self.pag_sonidos     = PanelSonidos(self.panel_derecho)
         self.pag_asistente   = PanelAsistenteBiblioteca(self.panel_derecho)
 
-        self.panel_derecho.AddPage(self.pag_general,     "Configuración General")
-        self.panel_derecho.AddPage(self.pag_claves,      "Credenciales y API Keys")
+        self.panel_derecho.AddPage(self.pag_general,     _("Configuración General"))
+        self.panel_derecho.AddPage(self.pag_claves,      _("Credenciales y API Keys"))
         self.panel_derecho.AddPage(self.pag_azure,       "Azure Neural")
         self.panel_derecho.AddPage(self.pag_deepgram,    "Deepgram Aura-2")
         self.panel_derecho.AddPage(self.pag_polly,       "Amazon Polly")
         self.panel_derecho.AddPage(self.pag_elevenlabs,  "ElevenLabs")
-        self.panel_derecho.AddPage(self.pag_sapi5,       "Voces Locales SAPI5")
-        self.panel_derecho.AddPage(self.pag_diccionario, "Reglas del Diccionario")
-        self.panel_derecho.AddPage(self.pag_atajos,      "Atajos de Teclado")
-        self.panel_derecho.AddPage(self.pag_sonidos,     "Efectos de Sonido")
-        self.panel_derecho.AddPage(self.pag_asistente,   "Asistente de Biblioteca")
+        self.panel_derecho.AddPage(self.pag_sapi5,       _("Voces Locales SAPI5"))
+        self.panel_derecho.AddPage(self.pag_diccionario, _("Reglas del Diccionario"))
+        self.panel_derecho.AddPage(self.pag_atajos,      _("Atajos de Teclado"))
+        self.panel_derecho.AddPage(self.pag_sonidos,     _("Efectos de Sonido"))
+        self.panel_derecho.AddPage(self.pag_asistente,   _("Asistente de Biblioteca"))
 
         self.splitter.SetMinimumPaneSize(180)
         self.splitter.SplitVertically(self.arbol_cat, self.panel_derecho, 220)
@@ -2362,25 +2362,25 @@ class PestanaAjustes(wx.Panel):
             padre = wx.GetTopLevelParent(self)
             if hasattr(padre, "pestana_lectura"):
                 wx.CallAfter(padre.pestana_lectura.cargar_config_salto)
-            voz.hablar("Guardado.")
+            voz.hablar(_("Guardado."))
         except Exception:
             logger.exception("Error al guardar configuración global con Ctrl+S")
             reproducir(ERROR)
-            voz.hablar("Error al guardar.")
+            voz.hablar(_("Error al guardar."))
     # ANCLAJE_FIN: GUARDAR_GLOBAL_CTRL_S
 
     # ANCLAJE_INICIO: CONSTRUIR_ARBOL_CATEGORIAS
     def _construir_arbol(self):
-        raiz = self.arbol_cat.AddRoot("Ajustes")
+        raiz = self.arbol_cat.AddRoot(_("Ajustes"))
 
-        nodo_general = self.arbol_cat.AppendItem(raiz, "Configuración General")
+        nodo_general = self.arbol_cat.AppendItem(raiz, _("Configuración General"))
         self._nodos[nodo_general] = self._PAG_GENERAL
 
-        nodo_claves = self.arbol_cat.AppendItem(raiz, "Credenciales y API Keys")
+        nodo_claves = self.arbol_cat.AppendItem(raiz, _("Credenciales y API Keys"))
         self._nodos[nodo_claves] = self._PAG_CLAVES
 
         # Rama de Catálogos de Voces con sub-nodos por proveedor
-        nodo_voces = self.arbol_cat.AppendItem(raiz, "Catálogos de Voces")
+        nodo_voces = self.arbol_cat.AppendItem(raiz, _("Catálogos de Voces"))
         # La rama padre no tiene página propia; su selección abre Azure por defecto
         self._nodos[nodo_voces] = self._PAG_AZURE
 
@@ -2396,20 +2396,20 @@ class PestanaAjustes(wx.Panel):
         nodo_eleven = self.arbol_cat.AppendItem(nodo_voces, "ElevenLabs")
         self._nodos[nodo_eleven] = self._PAG_ELEVENLABS
 
-        nodo_sapi5 = self.arbol_cat.AppendItem(nodo_voces, "Voces Locales SAPI5")
+        nodo_sapi5 = self.arbol_cat.AppendItem(nodo_voces, _("Voces Locales SAPI5"))
         self._nodos[nodo_sapi5] = self._PAG_SAPI5
 
-        nodo_diccionario = self.arbol_cat.AppendItem(raiz, "Reglas del Diccionario")
+        nodo_diccionario = self.arbol_cat.AppendItem(raiz, _("Reglas del Diccionario"))
         self._nodos[nodo_diccionario] = self._PAG_DICCIONARIO
         self._nodo_diccionario = nodo_diccionario
 
-        nodo_atajos = self.arbol_cat.AppendItem(raiz, "Atajos de Teclado")
+        nodo_atajos = self.arbol_cat.AppendItem(raiz, _("Atajos de Teclado"))
         self._nodos[nodo_atajos] = self._PAG_ATAJOS
 
-        nodo_sonidos = self.arbol_cat.AppendItem(raiz, "Efectos de Sonido")
+        nodo_sonidos = self.arbol_cat.AppendItem(raiz, _("Efectos de Sonido"))
         self._nodos[nodo_sonidos] = self._PAG_SONIDOS
 
-        nodo_asistente = self.arbol_cat.AppendItem(raiz, "Asistente de Biblioteca")
+        nodo_asistente = self.arbol_cat.AppendItem(raiz, _("Asistente de Biblioteca"))
         self._nodos[nodo_asistente] = self._PAG_ASISTENTE
 
         # Expandir todas las ramas para que el usuario ciego conozca la estructura
@@ -2463,9 +2463,9 @@ class PestanaAjustes(wx.Panel):
             and panel_actual.tiene_cambios_pendientes()
         ):
             respuesta = wx.MessageBox(
-                "Tienes cambios sin guardar en el diccionario de pronunciación.\n"
-                "¿Deseas descartarlos y continuar?",
-                "Cambios sin guardar",
+                _("Tienes cambios sin guardar en el diccionario de pronunciación.\n"
+                  "¿Deseas descartarlos y continuar?"),
+                _("Cambios sin guardar"),
                 wx.YES_NO | wx.NO_DEFAULT | wx.ICON_WARNING,
             )
             if respuesta != wx.YES:
@@ -2562,12 +2562,12 @@ class PestanaAjustes(wx.Panel):
                 if hasattr(ventana, 'pestana_lectura'):
                     pl = ventana.pestana_lectura
                     pl.cargar_config_salto()
-                    pl.btn_atras.SetLabel(f"Retroceder {pl.segundos_salto}s")
-                    pl.btn_adelante.SetLabel(f"Avanzar {pl.segundos_salto}s")
+                    pl.btn_atras.SetLabel(_("Retroceder {s}s").format(s=pl.segundos_salto))
+                    pl.btn_adelante.SetLabel(_("Avanzar {s}s").format(s=pl.segundos_salto))
             except Exception:
                 logger.exception("Error al actualizar etiquetas de botones de salto en Lectura")
         except Exception:
             logger.exception("Error al guardar ajustes.json")
             reproducir(ERROR)
-            wx.MessageBox("No se pudo guardar la configuración.")
+            wx.MessageBox(_("No se pudo guardar la configuración."))
 # ANCLAJE_FIN: PESTANA_AJUSTES_PRINCIPAL
