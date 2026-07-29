@@ -1,13 +1,14 @@
 import wx
 from app.motor.reproductor_sonidos import reproducir, LIST_NAV
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _
 
 class DialogoMarcadores(wx.Dialog):
     """
     Ventana emergente para gestionar los marcadores del libro.
     """
     def __init__(self, padre, marcadores, posicion_actual):
-        super().__init__(padre, title="Gestor de Marcadores", style=wx.DEFAULT_DIALOG_STYLE)
+        super().__init__(padre, title=_("Gestor de Marcadores"), style=wx.DEFAULT_DIALOG_STYLE)
         
         self.marcadores = marcadores
         self.posicion_actual = posicion_actual
@@ -20,7 +21,7 @@ class DialogoMarcadores(wx.Dialog):
     def _configurar_interfaz(self):
         sizer_principal = wx.BoxSizer(wx.VERTICAL)
         
-        lbl_titulo = wx.StaticText(self, label="Mis marcadores:")
+        lbl_titulo = wx.StaticText(self, label=_("Mis marcadores:"))
         sizer_principal.Add(lbl_titulo, 0, wx.ALL, 5)
         
         # Lista
@@ -40,19 +41,19 @@ class DialogoMarcadores(wx.Dialog):
         # Botonera
         sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
         
-        self.btn_anadir = wx.Button(self, label="Nuevo")
+        self.btn_anadir = wx.Button(self, label=_("Nuevo"))
         self.btn_anadir.Bind(wx.EVT_BUTTON, self.al_anadir_marcador)
-        aplicar_icono_boton(self.btn_anadir, "nuevo", "Nuevo marcador")
+        aplicar_icono_boton(self.btn_anadir, "nuevo", _("Nuevo marcador"))
 
-        self.btn_renombrar = wx.Button(self, label="Renombrar")
+        self.btn_renombrar = wx.Button(self, label=_("Renombrar"))
         self.btn_renombrar.Bind(wx.EVT_BUTTON, self.al_renombrar_marcador)
 
-        self.btn_eliminar = wx.Button(self, label="Eliminar")
+        self.btn_eliminar = wx.Button(self, label=_("Eliminar"))
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar_marcador)
-        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar marcador")
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", _("Eliminar marcador"))
 
-        self.btn_cerrar = wx.Button(self, wx.ID_CANCEL, "Cerrar")
-        aplicar_icono_boton(self.btn_cerrar, "cerrar", "Cerrar")
+        self.btn_cerrar = wx.Button(self, wx.ID_CANCEL, _("Cerrar"))
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", _("Cerrar"))
 
         sizer_botones.Add(self.btn_anadir, 0, wx.ALL, 5)
         sizer_botones.Add(self.btn_renombrar, 0, wx.ALL, 5)
@@ -73,7 +74,7 @@ class DialogoMarcadores(wx.Dialog):
         self.lista_marcadores.Clear()
         
         if not self.marcadores:
-            self.lista_marcadores.Append("(Sin marcadores)")
+            self.lista_marcadores.Append(_("(Sin marcadores)"))
             self.lista_marcadores.Enable(False)
             # Ahora esto no fallará porque los botones ya existen
             self.btn_renombrar.Disable()
@@ -124,7 +125,7 @@ class DialogoMarcadores(wx.Dialog):
                 self.EndModal(wx.ID_OK)
 
     def al_anadir_marcador(self, evento):
-        dlg = wx.TextEntryDialog(self, "Nombre del nuevo marcador:", "Añadir Marcador")
+        dlg = wx.TextEntryDialog(self, _("Nombre del nuevo marcador:"), _("Añadir Marcador"))
         if dlg.ShowModal() == wx.ID_OK:
             nombre = dlg.GetValue().strip()
             if nombre:
@@ -141,7 +142,10 @@ class DialogoMarcadores(wx.Dialog):
         if idx == wx.NOT_FOUND: return
         
         nombre_viejo = self.lista_marcadores.GetString(idx)
-        dlg = wx.TextEntryDialog(self, f"Nuevo nombre para '{nombre_viejo}':", "Renombrar Marcador", value=nombre_viejo)
+        dlg = wx.TextEntryDialog(
+            self, _("Nuevo nombre para '{nombre}':").format(nombre=nombre_viejo),
+            _("Renombrar Marcador"), value=nombre_viejo,
+        )
         
         if dlg.ShowModal() == wx.ID_OK:
             nombre_nuevo = dlg.GetValue().strip()
@@ -162,7 +166,9 @@ class DialogoMarcadores(wx.Dialog):
         if idx == wx.NOT_FOUND: return
         
         nombre = self.lista_marcadores.GetString(idx)
-        if wx.MessageBox(f"¿Borrar '{nombre}'?", "Confirmar", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
+        if wx.MessageBox(
+            _("¿Borrar '{nombre}'?").format(nombre=nombre), _("Confirmar"), wx.YES_NO | wx.ICON_QUESTION
+        ) == wx.YES:
             if nombre in self.marcadores:
                 del self.marcadores[nombre]
                 self.llenar_lista()
@@ -190,7 +196,7 @@ class DialogoAgruparCarpetas(wx.Dialog):
 
     def __init__(self, padre, carpetas_candidatas: dict, nombres_sugeridos: dict):
         super().__init__(
-            padre, title="Agrupar por carpeta",
+            padre, title=_("Agrupar por carpeta"),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
         self.carpetas_candidatas = carpetas_candidatas
@@ -203,7 +209,7 @@ class DialogoAgruparCarpetas(wx.Dialog):
 
         lbl = wx.StaticText(
             self,
-            label=(
+            label=_(
                 "Se detectaron carpetas con varios libros. Marca las que quieras "
                 "agrupar con una etiqueta de saga/colección; puedes editar el "
                 "nombre de cada una antes de confirmar."
@@ -214,22 +220,22 @@ class DialogoAgruparCarpetas(wx.Dialog):
         self.lista = wx.ListCtrl(
             self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL, size=(480, 260),
         )
-        self.lista.InsertColumn(0, "Etiqueta propuesta", width=300)
-        self.lista.InsertColumn(1, "Libros", width=80)
+        self.lista.InsertColumn(0, _("Etiqueta propuesta"), width=300)
+        self.lista.InsertColumn(1, _("Libros"), width=80)
         self.lista.EnableCheckBoxes(True)
         self._rellenar_lista()
         self.lista.Bind(wx.EVT_LIST_KEY_DOWN, self.al_tecla_lista)
         sizer.Add(self.lista, 1, wx.EXPAND | wx.ALL, 10)
 
-        self.btn_renombrar = wx.Button(self, label="Renombrar etiqueta seleccionada")
+        self.btn_renombrar = wx.Button(self, label=_("Renombrar etiqueta seleccionada"))
         self.btn_renombrar.Bind(wx.EVT_BUTTON, self.al_renombrar)
         sizer.Add(self.btn_renombrar, 0, wx.ALL, 5)
 
         sizer_botones = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_aceptar = wx.Button(self, wx.ID_OK, "Agrupar las marcadas")
+        self.btn_aceptar = wx.Button(self, wx.ID_OK, _("Agrupar las marcadas"))
         self.btn_aceptar.Bind(wx.EVT_BUTTON, self.al_aceptar)
         self.btn_aceptar.SetDefault()
-        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")
+        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, _("Cancelar"))
         sizer_botones.Add(self.btn_aceptar, 0, wx.ALL, 5)
         sizer_botones.Add(self.btn_cancelar, 0, wx.ALL, 5)
         sizer.Add(sizer_botones, 0, wx.ALIGN_CENTER | wx.ALL, 5)
@@ -261,7 +267,7 @@ class DialogoAgruparCarpetas(wx.Dialog):
             return
         carpeta = self._carpetas_orden[indice]
         dlg = wx.TextEntryDialog(
-            self, "Nombre de la etiqueta:", "Renombrar etiqueta",
+            self, _("Nombre de la etiqueta:"), _("Renombrar etiqueta"),
             value=self._nombres[carpeta],
         )
         if dlg.ShowModal() == wx.ID_OK:
@@ -302,7 +308,7 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
     """
 
     def __init__(self, padre, titulo_libro, extension_original):
-        super().__init__(padre, title="Archivo no encontrado", style=wx.DEFAULT_DIALOG_STYLE)
+        super().__init__(padre, title=_("Archivo no encontrado"), style=wx.DEFAULT_DIALOG_STYLE)
 
         self.extension_original = extension_original
         self.accion = None
@@ -313,41 +319,41 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
 
         lbl = wx.StaticText(
             self,
-            label=(
-                f"No se encontró el archivo de «{titulo_libro}» en su ubicación original.\n\n"
+            label=_(
+                "No se encontró el archivo de «{titulo}» en su ubicación original.\n\n"
                 "¿Qué quieres hacer?"
-            ),
+            ).format(titulo=titulo_libro),
         )
         sizer.Add(lbl, 0, wx.ALL, 10)
 
-        self.btn_localizar = wx.Button(self, label="Localizar archivo...")
+        self.btn_localizar = wx.Button(self, label=_("Localizar archivo..."))
         self.btn_localizar.SetHelpText(
-            "Elige manualmente dónde está ahora el archivo de este libro."
+            _("Elige manualmente dónde está ahora el archivo de este libro.")
         )
         self.btn_localizar.Bind(wx.EVT_BUTTON, self.al_localizar)
-        aplicar_icono_boton(self.btn_localizar, "examinar", "Localizar archivo")
+        aplicar_icono_boton(self.btn_localizar, "examinar", _("Localizar archivo"))
         sizer.Add(self.btn_localizar, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.btn_reescanear = wx.Button(self, label="Volver a escanear una carpeta...")
+        self.btn_reescanear = wx.Button(self, label=_("Volver a escanear una carpeta..."))
         self.btn_reescanear.SetHelpText(
-            "Si moviste toda una carpeta de libros, elige la nueva ubicación y se "
-            "reconciliarán en bloque todos los libros de la biblioteca que falten, "
-            "casando por nombre de archivo."
+            _("Si moviste toda una carpeta de libros, elige la nueva ubicación y se "
+              "reconciliarán en bloque todos los libros de la biblioteca que falten, "
+              "casando por nombre de archivo.")
         )
         self.btn_reescanear.Bind(wx.EVT_BUTTON, self.al_reescanear)
-        aplicar_icono_boton(self.btn_reescanear, "buscar", "Volver a escanear una carpeta")
+        aplicar_icono_boton(self.btn_reescanear, "buscar", _("Volver a escanear una carpeta"))
         sizer.Add(self.btn_reescanear, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.btn_eliminar = wx.Button(self, label="Eliminar de la biblioteca")
+        self.btn_eliminar = wx.Button(self, label=_("Eliminar de la biblioteca"))
         self.btn_eliminar.SetHelpText(
-            "Quita el registro de este libro de la biblioteca. El archivo físico, "
-            "si existiera en algún sitio, no se borra."
+            _("Quita el registro de este libro de la biblioteca. El archivo físico, "
+              "si existiera en algún sitio, no se borra.")
         )
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self.al_eliminar)
-        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar de la biblioteca")
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", _("Eliminar de la biblioteca"))
         sizer.Add(self.btn_eliminar, 0, wx.EXPAND | wx.ALL, 5)
 
-        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")
+        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, _("Cancelar"))
         sizer.Add(self.btn_cancelar, 0, wx.EXPAND | wx.ALL, 5)
 
         self.SetSizer(sizer)
@@ -356,9 +362,9 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
         self.btn_localizar.SetFocus()
 
     def al_localizar(self, evento):
-        comodin = f"Archivos ({self.extension_original})|*{self.extension_original}|Todos los archivos|*.*"
+        comodin = _("Archivos ({ext})|*{ext}|Todos los archivos|*.*").format(ext=self.extension_original)
         dlg = wx.FileDialog(
-            self, "Localizar el archivo del libro", wildcard=comodin,
+            self, _("Localizar el archivo del libro"), wildcard=comodin,
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         )
         if dlg.ShowModal() == wx.ID_OK:
@@ -370,7 +376,7 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
             dlg.Destroy()
 
     def al_reescanear(self, evento):
-        dlg = wx.DirDialog(self, "Selecciona la carpeta donde están ahora los libros")
+        dlg = wx.DirDialog(self, _("Selecciona la carpeta donde están ahora los libros"))
         if dlg.ShowModal() == wx.ID_OK:
             self.accion = "reescanear"
             self.carpeta_reescaneo = dlg.GetPath()
@@ -381,9 +387,9 @@ class DialogoArchivoNoEncontrado(wx.Dialog):
 
     def al_eliminar(self, evento):
         if wx.MessageBox(
-            "¿Quitar este libro de la biblioteca?\n\nEl archivo no se borrará del disco, "
-            "solo su registro aquí.",
-            "Quitar de la biblioteca", wx.YES_NO | wx.ICON_QUESTION,
+            _("¿Quitar este libro de la biblioteca?\n\nEl archivo no se borrará del disco, "
+              "solo su registro aquí."),
+            _("Quitar de la biblioteca"), wx.YES_NO | wx.ICON_QUESTION,
         ) == wx.YES:
             self.accion = "eliminar"
             self.EndModal(wx.ID_OK)
