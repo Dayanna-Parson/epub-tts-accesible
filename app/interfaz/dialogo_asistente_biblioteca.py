@@ -43,8 +43,21 @@ from app.motor.reproductor_sonidos import (
 )
 from app.servicios.cliente_gemini import enviar_mensaje
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _, idioma_activo
 
 logger = logging.getLogger(__name__)
+
+# Nombre del idioma en el propio idioma, para pedirle a Gemini que responda
+# en el idioma activo de la interfaz sin depender de texto ya traducido.
+_NOMBRE_IDIOMA_PARA_PROMPT = {
+    "es": "español",
+    "en": "English",
+}
+
+
+def _instruccion_idioma() -> str:
+    nombre = _NOMBRE_IDIOMA_PARA_PROMPT.get(idioma_activo(), "español")
+    return f"Responde siempre en {nombre}, sin importar en qué idioma esté escrito el mensaje del usuario."
 
 
 # ANCLAJE_INICIO: DIALOGO_ASISTENTE_BIBLIOTECA_INIT
@@ -54,7 +67,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         contexto_libro: None para modo general, o un dict con
         {"id_libro", "titulo", "autor", "categoria", "estado"}.
         """
-        titulo = "Asistente de Biblioteca"
+        titulo = _("Asistente de Biblioteca")
         if contexto_libro:
             titulo += f" — {contexto_libro['titulo']}"
         super().__init__(
@@ -74,11 +87,13 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         # se gestiona ahora desde Ajustes → Asistente de Biblioteca, para no
         # duplicar esa gestión completa aquí en el chat.
         sizer_prompt = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_prompt.Add(wx.StaticText(self, label="Estilo del asistente:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sizer_prompt.Add(
+            wx.StaticText(self, label=_("Estilo del asistente:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5
+        )
         self.combo_prompt = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_prompt.SetHelpText(
-            "Plantilla de instrucciones que sigue el asistente en esta conversación. "
-            "Para crear, editar o borrar plantillas, ve a Ajustes → Asistente de Biblioteca."
+            _("Plantilla de instrucciones que sigue el asistente en esta conversación. "
+              "Para crear, editar o borrar plantillas, ve a Ajustes → Asistente de Biblioteca.")
         )
         self.combo_prompt.Bind(wx.EVT_COMBOBOX, self.al_cambiar_prompt)
         sizer_prompt.Add(self.combo_prompt, 1, wx.RIGHT, 5)
@@ -89,15 +104,15 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         # realmente usa NVDA como nombre accesible del campo en esta app
         # (SetName() por sí solo no lo garantiza, se comprobó con el
         # historial y el campo de mensaje quedando sin nombre).
-        sizer.Add(wx.StaticText(self, label="Historial de conversación:"), 0, wx.LEFT | wx.TOP, 8)
+        sizer.Add(wx.StaticText(self, label=_("Historial de conversación:")), 0, wx.LEFT | wx.TOP, 8)
         self.historial_ctrl = wx.TextCtrl(
             self, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2,
         )
-        self.historial_ctrl.SetName("Historial de conversación")
+        self.historial_ctrl.SetName(_("Historial de conversación"))
         self.historial_ctrl.SetHelpText(
-            "Historial de la conversación con el Asistente de Biblioteca. "
-            "Solo lectura; usa Ctrl+Fin para ir al último mensaje. "
-            "Puedes seleccionar cualquier texto y copiarlo con Ctrl+C."
+            _("Historial de la conversación con el Asistente de Biblioteca. "
+              "Solo lectura; usa Ctrl+Fin para ir al último mensaje. "
+              "Puedes seleccionar cualquier texto y copiarlo con Ctrl+C.")
         )
         sizer.Add(self.historial_ctrl, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 8)
 
@@ -105,42 +120,42 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         sizer.Add(self.lbl_estado, 0, wx.LEFT | wx.RIGHT, 8)
 
         sizer_entrada = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_entrada.Add(wx.StaticText(self, label="Mensaje:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sizer_entrada.Add(wx.StaticText(self, label=_("Mensaje:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
         self.txt_entrada = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
-        self.txt_entrada.SetName("Mensaje")
+        self.txt_entrada.SetName(_("Mensaje"))
         self.txt_entrada.SetHelpText(
-            "Escribe tu pregunta para el Asistente de Biblioteca y pulsa Intro para enviarla."
+            _("Escribe tu pregunta para el Asistente de Biblioteca y pulsa Intro para enviarla.")
         )
         self.txt_entrada.Bind(wx.EVT_TEXT_ENTER, self.al_enviar)
         sizer_entrada.Add(self.txt_entrada, 1, wx.EXPAND | wx.RIGHT, 5)
-        self.btn_enviar = wx.Button(self, label="Enviar")
+        self.btn_enviar = wx.Button(self, label=_("Enviar"))
         self.btn_enviar.Bind(wx.EVT_BUTTON, self.al_enviar)
-        aplicar_icono_boton(self.btn_enviar, "avanzar", "Enviar")
+        aplicar_icono_boton(self.btn_enviar, "avanzar", _("Enviar"))
         sizer_entrada.Add(self.btn_enviar, 0)
         sizer.Add(sizer_entrada, 0, wx.EXPAND | wx.ALL, 8)
 
         # ANCLAJE_INICIO: ASISTENTE_BOTONES_ACCION
         sizer_acciones = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_copiar_mensaje = wx.Button(self, label="Copiar mi último mensaje")
-        self.btn_copiar_mensaje.SetHelpText("Copia al portapapeles el último mensaje que escribiste.")
+        self.btn_copiar_mensaje = wx.Button(self, label=_("Copiar mi último mensaje"))
+        self.btn_copiar_mensaje.SetHelpText(_("Copia al portapapeles el último mensaje que escribiste."))
         self.btn_copiar_mensaje.Bind(wx.EVT_BUTTON, self.al_copiar_mi_mensaje)
-        aplicar_icono_boton(self.btn_copiar_mensaje, "copiar", "Copiar mi último mensaje")
-        self.btn_copiar_respuesta = wx.Button(self, label="Copiar última respuesta")
-        self.btn_copiar_respuesta.SetHelpText("Copia al portapapeles la última respuesta del asistente.")
+        aplicar_icono_boton(self.btn_copiar_mensaje, "copiar", _("Copiar mi último mensaje"))
+        self.btn_copiar_respuesta = wx.Button(self, label=_("Copiar última respuesta"))
+        self.btn_copiar_respuesta.SetHelpText(_("Copia al portapapeles la última respuesta del asistente."))
         self.btn_copiar_respuesta.Bind(wx.EVT_BUTTON, self.al_copiar_ultima_respuesta)
-        aplicar_icono_boton(self.btn_copiar_respuesta, "copiar", "Copiar última respuesta")
-        self.btn_guardar = wx.Button(self, label="Guardar conversación...")
-        self.btn_guardar.SetHelpText("Guarda toda la conversación en un archivo de texto.")
+        aplicar_icono_boton(self.btn_copiar_respuesta, "copiar", _("Copiar última respuesta"))
+        self.btn_guardar = wx.Button(self, label=_("Guardar conversación..."))
+        self.btn_guardar.SetHelpText(_("Guarda toda la conversación en un archivo de texto."))
         self.btn_guardar.Bind(wx.EVT_BUTTON, self.al_guardar_conversacion)
-        aplicar_icono_boton(self.btn_guardar, "guardar", "Guardar conversación")
-        self.btn_borrar = wx.Button(self, label="Borrar historial")
-        self.btn_borrar.SetHelpText("Borra el historial de esta conversación, sin posibilidad de deshacer.")
+        aplicar_icono_boton(self.btn_guardar, "guardar", _("Guardar conversación"))
+        self.btn_borrar = wx.Button(self, label=_("Borrar historial"))
+        self.btn_borrar.SetHelpText(_("Borra el historial de esta conversación, sin posibilidad de deshacer."))
         self.btn_borrar.Bind(wx.EVT_BUTTON, self.al_borrar_historial)
-        aplicar_icono_boton(self.btn_borrar, "eliminar", "Borrar historial")
-        self.btn_cerrar = wx.Button(self, label="Cerrar")
-        self.btn_cerrar.SetHelpText("Cierra el Asistente de Biblioteca. Equivale a pulsar Escape.")
+        aplicar_icono_boton(self.btn_borrar, "eliminar", _("Borrar historial"))
+        self.btn_cerrar = wx.Button(self, label=_("Cerrar"))
+        self.btn_cerrar.SetHelpText(_("Cierra el Asistente de Biblioteca. Equivale a pulsar Escape."))
         self.btn_cerrar.Bind(wx.EVT_BUTTON, self._al_cerrar)
-        aplicar_icono_boton(self.btn_cerrar, "cerrar", "Cerrar")
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", _("Cerrar"))
         for boton in (
             self.btn_copiar_mensaje, self.btn_copiar_respuesta,
             self.btn_guardar, self.btn_borrar, self.btn_cerrar,
@@ -186,7 +201,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             self._agregar_a_historial_visual(turno["rol"], turno["texto"])
 
     def _agregar_a_historial_visual(self, rol, texto):
-        etiqueta = "Tú" if rol == "usuario" else "Asistente"
+        etiqueta = _("Tú") if rol == "usuario" else _("Asistente")
         self.historial_ctrl.AppendText(f"{etiqueta}: {texto}\n\n")
         if rol == "usuario":
             self._ultimo_mensaje_usuario = texto
@@ -195,9 +210,9 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
 
     def _anunciar_contexto_inicial(self):
         if self.contexto_libro:
-            texto = f"Hablando sobre: {self.contexto_libro['titulo']}."
+            texto = _("Hablando sobre: {titulo}.").format(titulo=self.contexto_libro["titulo"])
         else:
-            texto = "Asistente de Biblioteca en modo general. Sin libro seleccionado."
+            texto = _("Asistente de Biblioteca en modo general. Sin libro seleccionado.")
         voz.hablar(texto)
 # ANCLAJE_FIN: DIALOGO_ASISTENTE_BIBLIOTECA_INIT
 
@@ -216,12 +231,12 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
 
         self._respuesta_pendiente = True
         self.btn_enviar.Disable()
-        self.lbl_estado.SetLabel("Pensando...")
-        voz.hablar("Mensaje enviado. Pensando...")
+        self.lbl_estado.SetLabel(_("Pensando..."))
+        voz.hablar(_("Mensaje enviado. Pensando..."))
         iniciar_bucle(THINKING)
 
         historial_previo = chat.cargar_historial(self.id_libro)[:-1]
-        instruccion_sistema = prompts.obtener_prompt_activo()["texto"]
+        instruccion_sistema = prompts.obtener_prompt_activo()["texto"] + "\n\n" + _instruccion_idioma()
 
         threading.Thread(
             target=self._pedir_respuesta_en_hilo,
@@ -249,7 +264,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         chat.agregar_turno(self.id_libro, "asistente", respuesta)
         self._agregar_a_historial_visual("asistente", respuesta)
         reproducir(SUCCESS)
-        voz.hablar(f"Asistente: {respuesta}")
+        voz.hablar(_("Asistente: {respuesta}").format(respuesta=respuesta))
 
     def _al_fallar_respuesta(self, mensaje_error):
         detener_bucle()
@@ -257,44 +272,44 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self.btn_enviar.Enable()
         self.lbl_estado.SetLabel("")
         reproducir(ERROR)
-        voz.hablar(f"Error al consultar al asistente: {mensaje_error}")
+        voz.hablar(_("Error al consultar al asistente: {error}").format(error=mensaje_error))
 # ANCLAJE_FIN: ASISTENTE_ENVIO_HILO_SECUNDARIO
 
     # ANCLAJE_INICIO: ASISTENTE_ACCIONES_HISTORIAL
     def _copiar_al_portapapeles(self, texto, etiqueta):
         if not texto:
             reproducir(ERROR)
-            voz.hablar(f"Todavía no hay {etiqueta} que copiar.")
+            voz.hablar(_("Todavía no hay {etiqueta} que copiar.").format(etiqueta=etiqueta))
             return
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(texto))
             wx.TheClipboard.Close()
             reproducir(SUCCESS)
-            voz.hablar(f"{etiqueta.capitalize()} copiado al portapapeles.")
+            voz.hablar(_("{etiqueta} copiado al portapapeles.").format(etiqueta=etiqueta.capitalize()))
         else:
             reproducir(ERROR)
-            voz.hablar("No se pudo abrir el portapapeles.")
+            voz.hablar(_("No se pudo abrir el portapapeles."))
 
     def al_copiar_mi_mensaje(self, evento):
-        self._copiar_al_portapapeles(self._ultimo_mensaje_usuario, "tu último mensaje")
+        self._copiar_al_portapapeles(self._ultimo_mensaje_usuario, _("tu último mensaje"))
 
     def al_copiar_ultima_respuesta(self, evento):
-        self._copiar_al_portapapeles(self._ultimo_mensaje_asistente, "la última respuesta")
+        self._copiar_al_portapapeles(self._ultimo_mensaje_asistente, _("la última respuesta"))
 
     def al_guardar_conversacion(self, evento):
         contenido = self.historial_ctrl.GetValue()
         if not contenido.strip():
             reproducir(ERROR)
-            voz.hablar("No hay ninguna conversación que guardar todavía.")
+            voz.hablar(_("No hay ninguna conversación que guardar todavía."))
             return
-        nombre_sugerido = "Conversación Asistente de Biblioteca.txt"
+        nombre_sugerido = _("Conversación Asistente de Biblioteca.txt")
         if self.contexto_libro:
-            nombre_sugerido = f"Conversación sobre {self.contexto_libro['titulo']}.txt"
+            nombre_sugerido = _("Conversación sobre {titulo}.txt").format(titulo=self.contexto_libro["titulo"])
         with wx.FileDialog(
-            self, "Guardar conversación como",
+            self, _("Guardar conversación como"),
             defaultDir=chat.ruta_carpeta(),
             defaultFile=nombre_sugerido,
-            wildcard="Archivos de texto (*.txt)|*.txt",
+            wildcard=_("Archivos de texto (*.txt)|*.txt"),
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
@@ -304,18 +319,18 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             with open(ruta, "w", encoding="utf-8") as f:
                 f.write(contenido)
             reproducir(SUCCESS)
-            voz.hablar(f"Conversación guardada en {os.path.basename(ruta)}.")
+            voz.hablar(_("Conversación guardada en {nombre}.").format(nombre=os.path.basename(ruta)))
         except Exception:
             logger.exception("Error al guardar la conversación del Asistente de Biblioteca")
             reproducir(ERROR)
-            voz.hablar("No se pudo guardar la conversación.")
+            voz.hablar(_("No se pudo guardar la conversación."))
 
     def al_borrar_historial(self, evento):
         if self.historial_ctrl.IsEmpty():
             return
         confirmado = wx.MessageBox(
-            "¿Borrar todo el historial de esta conversación? No se puede deshacer.",
-            "Borrar historial", wx.YES_NO | wx.ICON_WARNING,
+            _("¿Borrar todo el historial de esta conversación? No se puede deshacer."),
+            _("Borrar historial"), wx.YES_NO | wx.ICON_WARNING,
         ) == wx.YES
         if not confirmado:
             return
@@ -324,7 +339,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         self._ultimo_mensaje_usuario = ""
         self._ultimo_mensaje_asistente = ""
         reproducir(CLEAR)
-        voz.hablar("Historial borrado.")
+        voz.hablar(_("Historial borrado."))
     # ANCLAJE_FIN: ASISTENTE_ACCIONES_HISTORIAL
 
     def _al_cerrar(self, evento):

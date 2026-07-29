@@ -37,6 +37,7 @@ IDIOMAS_DISPONIBLES = ("es", "en")
 VARIABLE_ENTORNO_IDIOMA = "EPUB_TTS_IDIOMA"
 
 _traduccion = None
+_idioma_activo = None
 
 
 def _ruta_locale():
@@ -126,8 +127,9 @@ def inicializar(idioma: str = None) -> None:
     una traducción nula (el texto original en español se muestra tal cual).
     Segura de llamar más de una vez.
     """
-    global _traduccion
+    global _traduccion, _idioma_activo
     idioma_elegido = _resolver_idioma(idioma)
+    _idioma_activo = idioma_elegido
     try:
         _traduccion = gettext.translation(
             DOMINIO,
@@ -148,6 +150,19 @@ def traducir(texto: str) -> str:
     if _traduccion is None:
         inicializar()
     return _traduccion.gettext(texto)
+
+
+def idioma_activo() -> str:
+    """
+    Código del idioma actualmente activo ("es", "en"...), resuelto con la
+    misma prioridad que `inicializar()`. Pensado para módulos que necesitan
+    saber el idioma de la interfaz sin depender de una cadena traducida
+    (por ejemplo, para pedirle a un servicio externo como Gemini que
+    responda en ese idioma).
+    """
+    if _idioma_activo is None:
+        inicializar()
+    return _idioma_activo
 
 
 # Alias corto pensado para importarse como `from ... import traducir as _`.
