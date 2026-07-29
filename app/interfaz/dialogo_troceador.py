@@ -31,6 +31,7 @@ import wx.lib.mixins.listctrl as listmix
 from app.motor.troceador_epub import TroceadorEpub
 from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS, PROGRESS, CLEAR
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _
 
 
 # ── Lista de capítulos con casillas ──────────────────────────────────────────
@@ -47,12 +48,12 @@ class ListaCapitulos(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         )
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.EnableCheckBoxes(True)
-        self.InsertColumn(0, "Capítulo", width=500)
+        self.InsertColumn(0, _("Capítulo"), width=500)
         self.SetHelpText(
-            "Lista de capítulos del EPUB. Flechas Arriba y Abajo para navegar. "
-            "Espacio para marcar o desmarcar el capítulo enfocado. "
-            "Los capítulos marcados se exportarán como archivos TXT individuales. "
-            "El número de cada capítulo coincide con el número del archivo TXT generado."
+            _("Lista de capítulos del EPUB. Flechas Arriba y Abajo para navegar. "
+              "Espacio para marcar o desmarcar el capítulo enfocado. "
+              "Los capítulos marcados se exportarán como archivos TXT individuales. "
+              "El número de cada capítulo coincide con el número del archivo TXT generado.")
         )
         self.Bind(wx.EVT_LIST_KEY_DOWN, self._al_tecla)
 
@@ -79,7 +80,7 @@ class DialogoTroceador(wx.Dialog):
     def __init__(self, parent):
         super().__init__(
             parent,
-            title="Dividir EPUB en capítulos TXT",
+            title=_("Dividir EPUB en capítulos TXT"),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
             size=(700, 600),
         )
@@ -96,19 +97,19 @@ class DialogoTroceador(wx.Dialog):
         sz    = wx.BoxSizer(wx.VERTICAL)
 
         # ── Selector de archivo ───────────────────────────────────────────────
-        sb_arch = wx.StaticBox(panel, label="Archivo EPUB de origen")
+        sb_arch = wx.StaticBox(panel, label=_("Archivo EPUB de origen"))
         sz_arch = wx.StaticBoxSizer(sb_arch, wx.HORIZONTAL)
 
         self.txt_ruta = wx.TextCtrl(panel, style=wx.TE_READONLY)
         self.txt_ruta.SetHelpText(
-            "Ruta del archivo EPUB seleccionado. Solo lectura. "
-            "Usa el botón 'Examinar EPUB' para seleccionar un archivo."
+            _("Ruta del archivo EPUB seleccionado. Solo lectura. "
+              "Usa el botón 'Examinar EPUB' para seleccionar un archivo.")
         )
-        self.btn_examinar = wx.Button(panel, label="Examinar EPUB…")
+        self.btn_examinar = wx.Button(panel, label=_("Examinar EPUB…"))
         self.btn_examinar.SetHelpText(
-            "Abre un diálogo para seleccionar el archivo EPUB que deseas dividir en capítulos."
+            _("Abre un diálogo para seleccionar el archivo EPUB que deseas dividir en capítulos.")
         )
-        aplicar_icono_boton(self.btn_examinar, "examinar", "Examinar EPUB")
+        aplicar_icono_boton(self.btn_examinar, "examinar", _("Examinar EPUB"))
 
         sz_arch.Add(self.txt_ruta,     1, wx.EXPAND | wx.ALL, 4)
         sz_arch.Add(self.btn_examinar, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 4)
@@ -117,7 +118,7 @@ class DialogoTroceador(wx.Dialog):
         # ── Lista de capítulos ────────────────────────────────────────────────
         sb_caps = wx.StaticBox(
             panel,
-            label="Capítulos detectados (Espacio para marcar o desmarcar)",
+            label=_("Capítulos detectados (Espacio para marcar o desmarcar)"),
         )
         sz_caps = wx.StaticBoxSizer(sb_caps, wx.VERTICAL)
 
@@ -126,18 +127,18 @@ class DialogoTroceador(wx.Dialog):
 
         # Botones de selección masiva + limpiar lista
         sz_sel = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_sel_todo   = wx.Button(panel, label="Seleccionar todo")
-        self.btn_desel_todo = wx.Button(panel, label="Deseleccionar todo")
-        self.btn_limpiar    = wx.Button(panel, label="Limpiar lista")
-        self.btn_sel_todo.SetHelpText("Marca todos los capítulos de la lista.")
-        self.btn_desel_todo.SetHelpText("Desmarca todos los capítulos de la lista.")
+        self.btn_sel_todo   = wx.Button(panel, label=_("Seleccionar todo"))
+        self.btn_desel_todo = wx.Button(panel, label=_("Deseleccionar todo"))
+        self.btn_limpiar    = wx.Button(panel, label=_("Limpiar lista"))
+        self.btn_sel_todo.SetHelpText(_("Marca todos los capítulos de la lista."))
+        self.btn_desel_todo.SetHelpText(_("Desmarca todos los capítulos de la lista."))
         self.btn_limpiar.SetHelpText(
-            "Resetea el diálogo: borra la lista y la ruta del EPUB para "
-            "poder cargar otro archivo sin cerrar la ventana."
+            _("Resetea el diálogo: borra la lista y la ruta del EPUB para "
+              "poder cargar otro archivo sin cerrar la ventana.")
         )
-        aplicar_icono_boton(self.btn_sel_todo,   "seleccionar",   "Seleccionar todo")
-        aplicar_icono_boton(self.btn_desel_todo, "deseleccionar", "Deseleccionar todo")
-        aplicar_icono_boton(self.btn_limpiar,    "limpiar",       "Limpiar lista")
+        aplicar_icono_boton(self.btn_sel_todo,   "seleccionar",   _("Seleccionar todo"))
+        aplicar_icono_boton(self.btn_desel_todo, "deseleccionar", _("Deseleccionar todo"))
+        aplicar_icono_boton(self.btn_limpiar,    "limpiar",       _("Limpiar lista"))
         sz_sel.Add(self.btn_sel_todo,   0, wx.RIGHT, 8)
         sz_sel.Add(self.btn_desel_todo, 0, wx.RIGHT, 8)
         sz_sel.Add(self.btn_limpiar,    0)
@@ -148,26 +149,26 @@ class DialogoTroceador(wx.Dialog):
         # ── Barra de acción ───────────────────────────────────────────────────
         sz_accion = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_dividir = wx.Button(panel, label="Dividir seleccionados")
+        self.btn_dividir = wx.Button(panel, label=_("Dividir seleccionados"))
         self.btn_dividir.SetHelpText(
-            "Genera un archivo TXT por cada capítulo marcado. "
-            "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
+            _("Genera un archivo TXT por cada capítulo marcado. "
+              "Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/.")
         )
         self.btn_dividir.Disable()
-        aplicar_icono_boton(self.btn_dividir, "trocear", "Dividir seleccionados")
+        aplicar_icono_boton(self.btn_dividir, "trocear", _("Dividir seleccionados"))
 
         self.lbl_progreso = wx.StaticText(panel, label="")
         self.lbl_progreso.SetHelpText(
-            "Progreso de la división y resultado final. "
-            "NVDA lo leerá al enfocar esta etiqueta."
+            _("Progreso de la división y resultado final. "
+              "NVDA lo leerá al enfocar esta etiqueta.")
         )
 
-        self.btn_abrir_carpeta = wx.Button(panel, label="Abrir carpeta capitulos")
+        self.btn_abrir_carpeta = wx.Button(panel, label=_("Abrir carpeta capitulos"))
         self.btn_abrir_carpeta.SetHelpText(
-            "Abre en el Explorador la carpeta /capitulos/ donde se generaron los TXT."
+            _("Abre en el Explorador la carpeta /capitulos/ donde se generaron los TXT.")
         )
         self.btn_abrir_carpeta.Hide()
-        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", "Abrir carpeta capitulos")
+        aplicar_icono_boton(self.btn_abrir_carpeta, "carpeta", _("Abrir carpeta capitulos"))
 
         self.barra_progreso = wx.Gauge(panel, range=100)
         self.barra_progreso.Hide()
@@ -180,9 +181,9 @@ class DialogoTroceador(wx.Dialog):
 
         # ── Botón cerrar ──────────────────────────────────────────────────────
         sz.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
-        btn_cerrar = wx.Button(panel, wx.ID_CLOSE, label="Cerrar (Escape)")
-        btn_cerrar.SetHelpText("Cierra este diálogo. También puedes pulsar Escape.")
-        aplicar_icono_boton(btn_cerrar, "cerrar", "Cerrar diálogo")
+        btn_cerrar = wx.Button(panel, wx.ID_CLOSE, label=_("Cerrar (Escape)"))
+        btn_cerrar.SetHelpText(_("Cierra este diálogo. También puedes pulsar Escape."))
+        aplicar_icono_boton(btn_cerrar, "cerrar", _("Cerrar diálogo"))
         sz.Add(btn_cerrar, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
 
         panel.SetSizer(sz)
@@ -204,8 +205,8 @@ class DialogoTroceador(wx.Dialog):
     def _al_examinar(self, evento=None):
         with wx.FileDialog(
             self,
-            "Seleccionar archivo EPUB",
-            wildcard="Archivos EPUB (*.epub)|*.epub|Todos (*.*)|*.*",
+            _("Seleccionar archivo EPUB"),
+            wildcard=_("Archivos EPUB (*.epub)|*.epub|Todos (*.*)|*.*"),
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         ) as dlg:
             if dlg.ShowModal() != wx.ID_OK:
@@ -220,7 +221,7 @@ class DialogoTroceador(wx.Dialog):
         self.lista_caps.DeleteAllItems()
         self.btn_dividir.Disable()
         self.btn_abrir_carpeta.Hide()
-        self._set_progreso("Cargando índice del EPUB…")
+        self._set_progreso(_("Cargando índice del EPUB…"))
         self.Layout()
 
         def _tarea():
@@ -234,10 +235,10 @@ class DialogoTroceador(wx.Dialog):
 
     def _al_epub_cargado(self, caps: list, error: str):
         if error:
-            self._set_progreso(f"Error al cargar: {error}")
+            self._set_progreso(_("Error al cargar: {error}").format(error=error))
             wx.MessageBox(
-                f"No se pudo leer el EPUB:\n{error}",
-                "Error al abrir EPUB", wx.OK | wx.ICON_ERROR,
+                _("No se pudo leer el EPUB:\n{error}").format(error=error),
+                _("Error al abrir EPUB"), wx.OK | wx.ICON_ERROR,
             )
             reproducir(ERROR)
             return
@@ -254,7 +255,7 @@ class DialogoTroceador(wx.Dialog):
 
         n = len(caps)
         self._set_progreso(
-            f"{n} sección(es) en el índice. Marca las que quieres exportar."
+            _("{n} sección(es) en el índice. Marca las que quieres exportar.").format(n=n)
         )
         self.btn_dividir.Enable(n > 0)
         wx.CallAfter(self.lista_caps.SetFocus)
@@ -286,8 +287,8 @@ class DialogoTroceador(wx.Dialog):
         ]
         if not indices:
             wx.MessageBox(
-                "Marca al menos un capítulo antes de iniciar la división.",
-                "Nada seleccionado", wx.OK | wx.ICON_INFORMATION,
+                _("Marca al menos un capítulo antes de iniciar la división."),
+                _("Nada seleccionado"), wx.OK | wx.ICON_INFORMATION,
             )
             return
 
@@ -297,7 +298,7 @@ class DialogoTroceador(wx.Dialog):
         self.btn_dividir.Disable()
         self.btn_examinar.Disable()
         self.btn_abrir_carpeta.Hide()
-        self._set_progreso("Dividiendo…")
+        self._set_progreso(_("Dividiendo…"))
         self.barra_progreso.SetValue(0)
         self.barra_progreso.Show()
         self.Layout()
@@ -308,7 +309,7 @@ class DialogoTroceador(wx.Dialog):
             wx.CallAfter(self._actualizar_barra, actual, total)
             wx.CallAfter(
                 self._set_progreso,
-                f"Procesando {actual}/{total}: {titulo}",
+                _("Procesando {actual}/{total}: {titulo}").format(actual=actual, total=total, titulo=titulo),
             )
 
         def _tarea():
@@ -332,23 +333,25 @@ class DialogoTroceador(wx.Dialog):
         self.Layout()
 
         if error:
-            self._set_progreso(f"Error durante la división: {error}")
+            self._set_progreso(_("Error durante la división: {error}").format(error=error))
             wx.MessageBox(
-                f"Se produjo un error durante la división:\n{error}",
-                "Error al dividir", wx.OK | wx.ICON_ERROR,
+                _("Se produjo un error durante la división:\n{error}").format(error=error),
+                _("Error al dividir"), wx.OK | wx.ICON_ERROR,
             )
             reproducir(ERROR)
             return
 
-        self._set_progreso(f"División completada: {n_archivos} archivo(s) TXT generado(s).")
+        self._set_progreso(
+            _("División completada: {n} archivo(s) TXT generado(s).").format(n=n_archivos)
+        )
         self.btn_abrir_carpeta.Show()
         self.Layout()
         reproducir(SUCCESS)
 
         # Diálogo Sí/No para abrir la carpeta /capitulos/
         respuesta = wx.MessageBox(
-            f"Se han generado {n_archivos} archivo(s).\n¿Abrir carpeta de destino?",
-            "División completada",
+            _("Se han generado {n} archivo(s).\n¿Abrir carpeta de destino?").format(n=n_archivos),
+            _("División completada"),
             wx.YES_NO | wx.ICON_INFORMATION,
         )
         if respuesta == wx.YES:
@@ -358,15 +361,15 @@ class DialogoTroceador(wx.Dialog):
         """Actualiza label de progreso Y título de la ventana (retroalimentación NVDA)."""
         self.lbl_progreso.SetLabel(texto)
         sufijo = f" — {texto}" if texto else ""
-        self.SetTitle(f"Dividir EPUB{sufijo}")
+        self.SetTitle(_("Dividir EPUB{sufijo}").format(sufijo=sufijo))
 
     # ── Abrir carpeta de destino ──────────────────────────────────────────────
 
     def _abrir_carpeta_capitulos(self):
         if not self._carpeta_salida or not os.path.isdir(self._carpeta_salida):
             wx.MessageBox(
-                "La carpeta de destino no existe todavía o no se ha generado correctamente.",
-                "Carpeta no encontrada", wx.OK | wx.ICON_WARNING,
+                _("La carpeta de destino no existe todavía o no se ha generado correctamente."),
+                _("Carpeta no encontrada"), wx.OK | wx.ICON_WARNING,
             )
             return
         reproducir(OPEN_FOLDER)
@@ -378,8 +381,8 @@ class DialogoTroceador(wx.Dialog):
                 subprocess.Popen(["xdg-open", self._carpeta_salida])
         except Exception as exc:
             wx.MessageBox(
-                f"No se pudo abrir la carpeta:\n{exc}",
-                "Error al abrir carpeta", wx.OK | wx.ICON_ERROR,
+                _("No se pudo abrir la carpeta:\n{error}").format(error=exc),
+                _("Error al abrir carpeta"), wx.OK | wx.ICON_ERROR,
             )
 
     def _al_abrir_carpeta(self, evento=None):
