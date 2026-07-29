@@ -17,6 +17,8 @@ no se detectaron cambios.
 
 import wx
 
+from app.motor.gestor_idioma import traducir as _
+
 _NOMBRES_PROVEEDOR = {
     "azure":      "Microsoft Azure",
     "polly":      "Amazon Polly",
@@ -39,7 +41,7 @@ class DialogoVocesNuevas(wx.Dialog):
     def __init__(self, parent, nuevas: dict):
         super().__init__(
             parent,
-            title="Voces nuevas disponibles",
+            title=_("Voces nuevas disponibles"),
             style=wx.DEFAULT_DIALOG_STYLE | wx.STAY_ON_TOP,
         )
         self._construir(nuevas)
@@ -55,11 +57,11 @@ class DialogoVocesNuevas(wx.Dialog):
         # Encabezado
         intro = wx.StaticText(
             panel,
-            label="Se han detectado voces nuevas en los siguientes proveedores:",
+            label=_("Se han detectado voces nuevas en los siguientes proveedores:"),
         )
         intro.SetHelpText(
-            "La aplicación encontró voces que no estaban en la lista local. "
-            "Ve a la pestaña Ajustes para explorarlas y escucharlas."
+            _("La aplicación encontró voces que no estaban en la lista local. "
+              "Ve a la pestaña Ajustes para explorarlas y escucharlas.")
         )
         sz.Add(intro, 0, wx.ALL, 12)
 
@@ -68,32 +70,32 @@ class DialogoVocesNuevas(wx.Dialog):
             nombre_prov = _NOMBRES_PROVEEDOR.get(proveedor, proveedor.title())
             n = len(nombres)
             etiq = (
-                f"  • {nombre_prov}: 1 voz nueva"
+                _("  • {proveedor}: 1 voz nueva").format(proveedor=nombre_prov)
                 if n == 1
-                else f"  • {nombre_prov}: {n} voces nuevas"
+                else _("  • {proveedor}: {n} voces nuevas").format(proveedor=nombre_prov, n=n)
             )
             lbl = wx.StaticText(panel, label=etiq)
             lbl.SetHelpText(
-                f"El proveedor {nombre_prov} tiene {n} "
-                + ("voz" if n == 1 else "voces")
-                + " que no estaban registradas localmente."
+                _("El proveedor {proveedor} tiene {n} {palabra} que no estaban registradas localmente.").format(
+                    proveedor=nombre_prov, n=n, palabra=(_("voz") if n == 1 else _("voces"))
+                )
             )
             sz.Add(lbl, 0, wx.LEFT | wx.BOTTOM, 8)
 
         # Nota de acción
         nota = wx.StaticText(
             panel,
-            label="Abre la pestaña Ajustes → sección Voces para explorarlas.",
+            label=_("Abre la pestaña Ajustes → sección Voces para explorarlas."),
         )
         sz.Add(nota, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 12)
 
         # Separador y botón
         sz.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
 
-        self.btn_ok = wx.Button(panel, wx.ID_OK, label="Entendido")
+        self.btn_ok = wx.Button(panel, wx.ID_OK, label=_("Entendido"))
         self.btn_ok.SetDefault()
         self.btn_ok.SetHelpText(
-            "Cierra este aviso. Puedes explorar las novedades en la pestaña Ajustes."
+            _("Cierra este aviso. Puedes explorar las novedades en la pestaña Ajustes.")
         )
         sz.Add(self.btn_ok, 0, wx.ALIGN_CENTER | wx.ALL, 10)
 

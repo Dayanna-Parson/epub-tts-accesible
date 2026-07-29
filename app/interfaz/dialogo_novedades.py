@@ -19,6 +19,7 @@ Características de accesibilidad:
 import wx
 
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -40,7 +41,7 @@ class DialogoNovedades(wx.Dialog):
     def __init__(self, parent, version_remota: str, texto_novedades: str):
         super().__init__(
             parent,
-            title=f"Nueva versión disponible: {version_remota}",
+            title=_("Nueva versión disponible: {version}").format(version=version_remota),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER | wx.STAY_ON_TOP,
             size=(640, 500),
         )
@@ -58,19 +59,19 @@ class DialogoNovedades(wx.Dialog):
         # Encabezado
         lbl = wx.StaticText(
             self._panel,
-            label=(
-                f"Hay una nueva versión disponible: {version_remota}\n"
+            label=_(
+                "Hay una nueva versión disponible: {version}\n"
                 "¿Deseas instalarla ahora?"
-            ),
+            ).format(version=version_remota),
         )
         lbl.SetHelpText(
-            "Se ha detectado una versión más reciente en el repositorio de GitHub. "
-            "Pulsa Sí para actualizar o No para cerrar sin actualizar."
+            _("Se ha detectado una versión más reciente en el repositorio de GitHub. "
+              "Pulsa Sí para actualizar o No para cerrar sin actualizar.")
         )
         sz.Add(lbl, 0, wx.ALL, 12)
 
         # Área de texto con el contenido de novedades.txt
-        contenido = texto.strip() if texto.strip() else (
+        contenido = texto.strip() if texto.strip() else _(
             "No se pudo cargar el texto de novedades desde el repositorio.\n"
             "Visita GitHub para ver los cambios de esta versión."
         )
@@ -80,8 +81,8 @@ class DialogoNovedades(wx.Dialog):
             style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_AUTO_URL,
         )
         self.txt_novedades.SetHelpText(
-            "Novedades de la versión. Solo lectura. "
-            "Usa las flechas, RePág y AvPág para desplazarte."
+            _("Novedades de la versión. Solo lectura. "
+              "Usa las flechas, RePág y AvPág para desplazarte.")
         )
         sz.Add(self.txt_novedades, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
 
@@ -90,20 +91,20 @@ class DialogoNovedades(wx.Dialog):
         # Fila de botones Sí / No
         fila = wx.BoxSizer(wx.HORIZONTAL)
 
-        btn_si = wx.Button(self._panel, wx.ID_OK, label="&Sí, actualizar ahora")
+        btn_si = wx.Button(self._panel, wx.ID_OK, label=_("&Sí, actualizar ahora"))
         btn_si.SetHelpText(
-            "Descarga e instala la nueva versión. "
-            "Tus configuraciones y grabaciones no se borrarán. "
-            "La aplicación se cerrará y se volverá a abrir automáticamente."
+            _("Descarga e instala la nueva versión. "
+              "Tus configuraciones y grabaciones no se borrarán. "
+              "La aplicación se cerrará y se volverá a abrir automáticamente.")
         )
         btn_si.Bind(wx.EVT_BUTTON, self._al_aceptar)
 
-        btn_no = wx.Button(self._panel, wx.ID_CANCEL, label="&No, cerrar")
+        btn_no = wx.Button(self._panel, wx.ID_CANCEL, label=_("&No, cerrar"))
         btn_no.SetHelpText(
-            "Cierra este diálogo sin actualizar. "
-            "Podrás actualizar más tarde desde Ajustes."
+            _("Cierra este diálogo sin actualizar. "
+              "Podrás actualizar más tarde desde Ajustes.")
         )
-        aplicar_icono_boton(btn_no, "cerrar", "No, cerrar")
+        aplicar_icono_boton(btn_no, "cerrar", _("No, cerrar"))
         btn_no.SetDefault()
         btn_no.Bind(wx.EVT_BUTTON, self._al_rechazar)
 
