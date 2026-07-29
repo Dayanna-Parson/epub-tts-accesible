@@ -89,3 +89,6 @@ configuraciones/backups_biblioteca/
 backups/
 *.zip
 configuraciones/biblioteca.db
+
+# Worktrees temporales de herramientas de desarrollo
+.claude/
