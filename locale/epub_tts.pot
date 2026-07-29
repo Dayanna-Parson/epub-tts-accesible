@@ -10,183 +10,736 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: \n"
 
-msgid "Biblioteca"
+msgid "Índice del libro cargado. Usa las flechas Arriba y Abajo para navegar por los capítulos. Pulsa Intro o Enter sobre un capítulo para saltar a él en el área de texto."
 msgstr ""
 
-msgid "Modo Lectura"
+msgid "Libro"
 msgstr ""
 
-msgid "Creador de Audiolibros"
+msgid "Área de texto de solo lectura con el contenido del capítulo activo. Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
 msgstr ""
 
-msgid "Creación de fragmentos"
+msgid "¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta calidad en la nube (Azure, Amazon Polly, Deepgram y ElevenLabs) y voces locales SAPI5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1 a Ctrl + 5 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!"
 msgstr ""
 
-msgid "Ajustes"
-msgstr ""
-msgid "\n\nNo se pudieron renombrar:\n{detalle}"
+msgid "Progreso: {pct}%"
 msgstr ""
 
-msgid "(Todas las categorías)"
+msgid "Barra de progreso de lectura"
 msgstr ""
 
-msgid "(Todas las etiquetas)"
+msgid "Posición de lectura expresada en porcentaje del libro. Usa las flechas Izquierda y Derecha para navegar. Al soltar la tecla, la voz saltará a esa posición."
 msgstr ""
 
-msgid "; ... y {n} libro(s) más."
+msgid "Voz para lectura:"
 msgstr ""
 
-msgid "Abre Ajustes en el diccionario de pronunciación, ya en alcance 'Este libro' y con este libro seleccionado."
+msgid "Selector de voz"
 msgstr ""
 
-msgid "Abriendo libro, por favor espera..."
+msgid "Voz con la que se leerá el libro. Contiene las voces favoritas marcadas en Ajustes y las voces SAPI5 locales instaladas en el sistema."
 msgstr ""
 
-msgid "Abrir en Lectura\tIntro"
+msgid "Retroceder {s}s"
 msgstr ""
 
-msgid "Aplicando etiquetas, por favor espera..."
+msgid "Reproducir (Ctrl+P)"
 msgstr ""
 
-msgid "Archivo localizado. Abriendo el libro."
+msgid "Avanzar {s}s"
 msgstr ""
 
-msgid "Archivo renombrado correctamente."
+msgid "Detener (Ctrl+D)"
 msgstr ""
 
-msgid "Asignar a «{nombre}»"
+msgid "Detener"
 msgstr ""
 
-msgid "Asignar categoría a los {n} libro(s) de esta etiqueta"
+msgid "Velocidad de lectura:"
 msgstr ""
 
-msgid "Audiolibro a medias"
+msgid "Velocidad de lectura"
 msgstr ""
 
-msgid "Autor"
+msgid "Velocidad de lectura de la voz. 0 es la más lenta, 100 la más rápida. Flechas: ±1. RePág/AvPág: ±5."
 msgstr ""
 
-msgid "Autores más frecuentes: {nombres}."
+msgid "Volumen:"
 msgstr ""
 
-msgid "Añade un único archivo EPUB o PDF a la Biblioteca, sin escanear toda una carpeta."
+msgid "Volumen de lectura"
 msgstr ""
 
-msgid "Añadido a categoría {ruta}."
+msgid "Volumen del audio de lectura. 0 es silencio, 100 es volumen máximo. Flechas: ±1. RePág/AvPág: ±5."
 msgstr ""
 
-msgid "Añadido a etiqueta {nombre}."
+msgid "No hay voces disponibles"
 msgstr ""
 
-msgid "Añadir a categoría"
+msgid "Pausar (Ctrl+P)"
 msgstr ""
 
-msgid "Añadir a etiqueta"
+msgid "Texto o frase a buscar:"
 msgstr ""
 
-msgid "Buscar por título o autor (Ctrl+F):"
+msgid "Buscar en el libro"
 msgstr ""
 
-msgid "Cambia a la pestaña Creador de Audiolibros con este libro ya cargado."
+msgid "No se ha encontrado el texto especificado en este libro."
 msgstr ""
 
-msgid "Categoría movida."
+msgid "Búsqueda finalizada"
 msgstr ""
 
-msgid "Categoría renombrada a {nombre}."
+msgid "Se encontraron {n} resultados:"
 msgstr ""
 
-msgid "Categoría {nombre} creada y libro añadido."
+msgid "Seleccionar resultado"
 msgstr ""
 
-msgid "Categoría {nombre} creada y {n} libros añadidos."
+msgid "Abre un libro antes de usar esta función."
 msgstr ""
 
-msgid "Categoría {nombre} creada."
+msgid "Sin libro"
 msgstr ""
 
-msgid "Categoría {nombre} eliminada."
+msgid "Ir a página o porcentaje"
 msgstr ""
 
-msgid "Categorías"
+msgid "Rellena uno de los tres campos para saltar a esa posición del libro. Deja los otros dos en blanco. Prioridad si rellenas varios: porcentaje, luego página del libro, luego página del capítulo."
+msgstr ""
+
+msgid "Página del capítulo (1–{total}):"
+msgstr ""
+
+msgid "Número de página dentro del capítulo activo. Ahora estás en la página {pag} de {total}. Deja vacío para ignorar."
+msgstr ""
+
+msgid "Página del libro (1–{total}):"
+msgstr ""
+
+msgid "Número de página dentro del libro completo. Ahora estás en la página {pag} de {total}. Deja vacío para ignorar."
+msgstr ""
+
+msgid "Porcentaje del libro (0–100):"
+msgstr ""
+
+msgid "Posición como porcentaje del libro completo. Ahora estás al {pct}%. Deja vacío para ignorar."
+msgstr ""
+
+msgid "(Rellena solo el campo que quieras usar y deja los demás vacíos.)"
+msgstr ""
+
+msgid "Velocidad ({etiqueta}):"
+msgstr ""
+
+msgid "Velocidad de lectura en multiplicadores. 0.2× es la más lenta, 1.0× es la normal, 1.8× es la más rápida. Flechas: ±1. RePág/AvPág: ±5."
+msgstr ""
+
+msgid "(Muy lenta)"
+msgstr ""
+
+msgid "(Lenta)"
+msgstr ""
+
+msgid "(Normal)"
+msgstr ""
+
+msgid "(Máxima)"
+msgstr ""
+
+msgid "(Muy rápida)"
+msgstr ""
+
+msgid "(Rápida)"
+msgstr ""
+
+msgid "Seleccionar libro"
+msgstr ""
+
+msgid "Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf"
+msgstr ""
+
+msgid "Se ha producido un error técnico al intentar procesar el libro.\n\nDetalle: {error}"
+msgstr ""
+
+msgid "Error al cargar el libro"
+msgstr ""
+
+msgid "Página {pag_cap} de {total_cap} del capítulo. Página {pag_libro} de {total_libro} del libro."
+msgstr ""
+
+msgid "Velocidad: {etiqueta}"
+msgstr ""
+
+msgid "Categoría"
+msgstr ""
+
+msgid "Gestión de Proyectos — Epub TTS"
+msgstr ""
+
+msgid "Proyectos:"
+msgstr ""
+
+msgid "Lista de proyectos en árbol. Flechas para navegar; cada elemento muestra el nombre, el estado y el nivel. Tab: ir al panel de detalle. F2: renombrar. Supr: eliminar. Ctrl+Arriba / Ctrl+Abajo: reordenar dentro del mismo nivel. Ctrl+X: cortar para mover. Ctrl+V: pegar como subproyecto del seleccionado o como raíz si no hay nada seleccionado. Escape cancela el corte. Ctrl+Intro: abrir la carpeta en el Explorador. Menú o Shift+F10: más opciones."
+msgstr ""
+
+msgid "Nombre del proyecto:"
+msgstr ""
+
+msgid "Nombre del proyecto seleccionado. Escribe el nuevo nombre y pulsa Intro para guardar."
+msgstr ""
+
+msgid "Categorías del proyecto:"
+msgstr ""
+
+msgid "Categorías del proyecto. Flechas para navegar, Espacio para marcar o desmarcar. Puedes seleccionar varias a la vez."
+msgstr ""
+
+msgid "Archivos TXT asociados:"
+msgstr ""
+
+msgid "Nombre del archivo"
+msgstr ""
+
+msgid "Ruta completa"
+msgstr ""
+
+msgid "Archivos de texto vinculados a este proyecto. Flechas para navegar. Usa el botón Quitar TXT para desvincular el seleccionado."
+msgstr ""
+
+msgid "Añadir TXT…"
+msgstr ""
+
+msgid "Abre un explorador de archivos para seleccionar un archivo de texto y vincularlo al proyecto."
+msgstr ""
+
+msgid "Quitar TXT"
+msgstr ""
+
+msgid "Desvincula el archivo de texto seleccionado de este proyecto. El archivo en disco no se borra."
+msgstr ""
+
+msgid "Añadir TXT"
+msgstr ""
+
+msgid "Voces asignadas:"
+msgstr ""
+
+msgid "Etiqueta"
+msgstr ""
+
+msgid "Voz asignada"
+msgstr ""
+
+msgid "Voces asignadas a las etiquetas del proyecto. Si no hay voces propias, se muestran las heredadas del proyecto padre."
+msgstr ""
+
+msgid "Eliminar proyecto"
+msgstr ""
+
+msgid "Elimina el proyecto seleccionado y todos sus subproyectos. Se pedirá confirmación antes de proceder. También puedes pulsar Supr desde el árbol."
+msgstr ""
+
+msgid "Cerrar"
+msgstr ""
+
+msgid "Cierra el gestor y devuelve el foco a la ventana principal. También puedes pulsar Escape."
+msgstr ""
+
+msgid "Resultado de la última acción realizada."
+msgstr ""
+
+msgid "Proyectos"
+msgstr ""
+
+msgid "«{nombre}» no está asociado a ningún proyecto. Abre el menú contextual para asociarlo."
+msgstr ""
+
+msgid "Archivo asociado al proyecto: {nombre}"
+msgstr ""
+
+msgid "proyecto"
+msgstr ""
+
+msgid "Corte cancelado. «{nombre}» permanece en su sitio."
+msgstr ""
+
+msgid "El nombre no puede estar vacío."
+msgstr ""
+
+msgid "Nombre no válido"
+msgstr ""
+
+msgid "Nuevo proyecto"
+msgstr ""
+
+msgid "Nuevo subproyecto dentro del seleccionado"
+msgstr ""
+
+msgid "Asociar TXT actual de Grabación"
+msgstr ""
+
+msgid "Pegar como subproyecto (Ctrl+V)"
+msgstr ""
+
+msgid "Pegar como raíz (Ctrl+V)"
 msgstr ""
 
 msgid "Cortar (Ctrl+X)"
 msgstr ""
 
-msgid "Crear categoría nueva y asignar..."
+msgid "Mover arriba (Ctrl+Arriba)"
 msgstr ""
 
-msgid "Crear categoría y asignar"
+msgid "Mover abajo (Ctrl+Abajo)"
 msgstr ""
 
-msgid "Crear como subcategoría (selecciona antes una categoría en el árbol)"
+msgid "Renombrar (F2)"
+msgstr ""
+
+msgid "Eliminar…\tSupr"
+msgstr ""
+
+msgid "Vaciar papelera…"
+msgstr ""
+
+msgid "No hay proyectos eliminados recientemente"
+msgstr ""
+
+msgid "Restaurar proyectos eliminados recientemente…"
+msgstr ""
+
+msgid "«{archivo}» asociado a «{proyecto}»."
+msgstr ""
+
+msgid "«{nombre}» cortado. Navega al destino y pulsa Ctrl+V para pegar, o Escape para cancelar."
+msgstr ""
+
+msgid "{nombre} cortado"
+msgstr ""
+
+msgid "No hay ningún proyecto cortado. Selecciona uno y pulsa Ctrl+X."
+msgstr ""
+
+msgid "«{nombre}» pegado como subproyecto de «{destino}»."
+msgstr ""
+
+msgid "{nombre} movido a {destino}"
+msgstr ""
+
+msgid "«{nombre}» movido a raíz."
+msgstr ""
+
+msgid "{nombre} movido a raíz"
+msgstr ""
+
+msgid "No puedes pegar un proyecto dentro de sí mismo."
+msgstr ""
+
+msgid "No se puede pegar aquí: causaría un ciclo en la jerarquía."
+msgstr ""
+
+msgid "arriba"
+msgstr ""
+
+msgid "abajo"
+msgstr ""
+
+msgid "Movido {direccion}: {nombre}"
+msgstr ""
+
+msgid "{nombre} movido {direccion}"
+msgstr ""
+
+msgid "No se puede mover: está en el límite o es un proyecto raíz."
+msgstr ""
+
+msgid "No se puede mover"
+msgstr ""
+
+msgid "Nombre guardado: {nombre}"
+msgstr ""
+
+msgid "Selecciona primero un proyecto."
+msgstr ""
+
+msgid "Sin selección"
+msgstr ""
+
+msgid "Seleccionar archivo TXT para asociar al proyecto"
+msgstr ""
+
+msgid "Archivos de texto (*.txt)|*.txt|Todos (*.*)|*.*"
+msgstr ""
+
+msgid "Selecciona primero un archivo en la lista para quitarlo."
+msgstr ""
+
+msgid "Escribe el nombre del nuevo proyecto. Campo obligatorio."
+msgstr ""
+
+msgid "Categorías (puedes elegir varias):"
+msgstr ""
+
+msgid "Categorías del proyecto. Usa las flechas para moverte y Espacio para marcar o desmarcar. Puedes asignar varias categorías al mismo tiempo."
+msgstr ""
+
+msgid "Crear proyecto"
+msgstr ""
+
+msgid "Cancelar"
+msgstr ""
+
+msgid "Nuevo proyecto raíz"
+msgstr ""
+
+msgid "Proyecto «{nombre}» creado."
+msgstr ""
+
+msgid "Selecciona primero el proyecto padre en la lista."
+msgstr ""
+
+msgid "Nuevo subproyecto de «{padre}»"
+msgstr ""
+
+msgid "Subproyecto «{nombre}» creado dentro de «{padre}»."
+msgstr ""
+
+msgid "Proyecto restaurado correctamente."
+msgstr ""
+
+msgid "No se encontró el proyecto en la papelera."
+msgstr ""
+
+msgid "Error al restaurar"
+msgstr ""
+
+msgid "¿Eliminar definitivamente {n} proyecto(s) de la papelera?\n\nEsta acción no se puede deshacer."
+msgstr ""
+
+msgid "Vaciar papelera"
+msgstr ""
+
+msgid "Papelera vaciada."
+msgstr ""
+
+msgid "Selecciona un proyecto en la lista para eliminarlo."
+msgstr ""
+
+msgid "¿Eliminar «{nombre}» y todos sus subproyectos?\n\nPuedes recuperarlos después desde el menú contextual."
+msgstr ""
+
+msgid "¿Eliminar el proyecto «{nombre}»?\n\nPuedes recuperarlo después desde el menú contextual."
+msgstr ""
+
+msgid "Confirmar eliminación"
+msgstr ""
+
+msgid "No se pudo eliminar el proyecto:\n{error}"
+msgstr ""
+
+msgid "Error al eliminar"
+msgstr ""
+
+msgid "Grabado"
+msgstr ""
+
+msgid "Pendiente"
+msgstr ""
+
+msgid "Sin categoría"
+msgstr ""
+
+msgid "{nombre} [{tipo}] — {estado} — Nivel {nivel}"
+msgstr ""
+
+msgid " — Subproyecto de: {padre}"
+msgstr ""
+
+msgid "No se pudo crear la carpeta: {error}"
+msgstr ""
+
+msgid "Abriendo carpeta: {nombre}"
+msgstr ""
+
+msgid "No se pudo abrir la carpeta: {error}"
+msgstr ""
+
+msgid "Gestión de Proyectos — {mensaje}"
+msgstr ""
+
+msgid "Nueva versión disponible: {version}"
+msgstr ""
+
+msgid "Hay una nueva versión disponible: {version}\n¿Deseas instalarla ahora?"
+msgstr ""
+
+msgid "Se ha detectado una versión más reciente en el repositorio de GitHub. Pulsa Sí para actualizar o No para cerrar sin actualizar."
+msgstr ""
+
+msgid "No se pudo cargar el texto de novedades desde el repositorio.\nVisita GitHub para ver los cambios de esta versión."
+msgstr ""
+
+msgid "Novedades de la versión. Solo lectura. Usa las flechas, RePág y AvPág para desplazarte."
+msgstr ""
+
+msgid "&Sí, actualizar ahora"
+msgstr ""
+
+msgid "Descarga e instala la nueva versión. Tus configuraciones y grabaciones no se borrarán. La aplicación se cerrará y se volverá a abrir automáticamente."
+msgstr ""
+
+msgid "&No, cerrar"
+msgstr ""
+
+msgid "Cierra este diálogo sin actualizar. Podrás actualizar más tarde desde Ajustes."
+msgstr ""
+
+msgid "No, cerrar"
+msgstr ""
+
+msgid "Nueva categoría"
+msgstr ""
+
+msgid "Nombre de la nueva categoría:"
 msgstr ""
 
 msgid "Crear como subcategoría de «{nombre}»"
 msgstr ""
 
-msgid "Crear etiqueta nueva y asignar..."
-msgstr ""
-
-msgid "Crear etiqueta y asignar"
-msgstr ""
-
-msgid "Crear subcategoría nueva y asignar..."
-msgstr ""
-
-msgid "Eliminar categoría"
-msgstr ""
-
-msgid "Eliminar etiqueta"
-msgstr ""
-
-msgid "Eliminar...\tSupr"
-msgstr ""
-
-msgid "Enviar a Creador de Audiolibros"
-msgstr ""
-
-msgid "Error"
-msgstr ""
-
-msgid "Error al importar"
-msgstr ""
-
-msgid "Error al renombrar"
-msgstr ""
-
-msgid "Escaneando carpeta, por favor espera..."
-msgstr ""
-
-msgid "Escaneando... {procesados} de {total} libro(s) procesados."
-msgstr ""
-
-msgid "Escaneo completado"
+msgid "Crear como subcategoría (selecciona antes una categoría en el árbol)"
 msgstr ""
 
 msgid "Escribe un nombre para la categoría."
 msgstr ""
 
-msgid "Ese libro ya está en la Biblioteca."
+msgid "Nombre vacío"
 msgstr ""
 
-msgid "Estado"
+msgid "Importar carpeta... (Ctrl+O)"
+msgstr ""
+
+msgid "Importar carpeta"
+msgstr ""
+
+msgid "Importar libro..."
+msgstr ""
+
+msgid "Añade un único archivo EPUB o PDF a la Biblioteca, sin escanear toda una carpeta."
+msgstr ""
+
+msgid "Importar libro"
+msgstr ""
+
+msgid "Árbol de géneros y subgéneros. Flechas para navegar; seleccionar un nodo filtra la lista de libros por esa categoría (incluye subgéneros). F2 renombra, Supr elimina, Ctrl+X/Ctrl+V mueve un género bajo otro, Ctrl+Arriba/Ctrl+Abajo lo reordena entre sus hermanos, Menú o Shift+F10 para más opciones."
+msgstr ""
+
+msgid "Nueva categoría... (F2 renombra, Supr elimina)"
+msgstr ""
+
+msgid "Géneros"
+msgstr ""
+
+msgid "Lista plana de etiquetas (sagas y colecciones personalizadas). Seleccionar una filtra la lista de libros por esa etiqueta. F2 renombra, Supr elimina."
+msgstr ""
+
+msgid "Nueva etiqueta... (F2 renombra, Supr elimina)"
+msgstr ""
+
+msgid "Sagas y colecciones"
+msgstr ""
+
+msgid "Buscar por título o autor (Ctrl+F):"
 msgstr ""
 
 msgid "Estado:"
 msgstr ""
 
+msgid "Solo favoritos"
+msgstr ""
+
+msgid "Título"
+msgstr ""
+
+msgid "Autor"
+msgstr ""
+
+msgid "Formato"
+msgstr ""
+
+msgid "Estado"
+msgstr ""
+
+msgid "Categorías"
+msgstr ""
+
+msgid "(Todas las categorías)"
+msgstr ""
+
+msgid "{nombre} ({total} libro(s))"
+msgstr ""
+
+msgid "Selecciona primero un género o subgénero para moverlo."
+msgstr ""
+
+msgid "{nombre} movido {direccion}."
+msgstr ""
+
+msgid "Ya está en ese extremo, no se puede mover más."
+msgstr ""
+
+msgid "Categoría renombrada a {nombre}."
+msgstr ""
+
+msgid "Ya existe una categoría con ese nombre en el mismo nivel."
+msgstr ""
+
+msgid "No se pudo renombrar"
+msgstr ""
+
+msgid "Subcategoría {nombre} creada dentro de {padre}."
+msgstr ""
+
+msgid "Categoría {nombre} creada."
+msgstr ""
+
+msgid "¿Eliminar la categoría «{nombre}» y sus subcategorías?\n\nLos libros no se eliminan, solo dejan de pertenecer a esta categoría."
+msgstr ""
+
+msgid "Eliminar categoría"
+msgstr ""
+
+msgid "Categoría {nombre} eliminada."
+msgstr ""
+
+msgid "{nombre} cortada. Selecciona el destino y pulsa Control V, o Escape para cancelar."
+msgstr ""
+
+msgid "No hay ninguna categoría cortada."
+msgstr ""
+
+msgid "Categoría movida."
+msgstr ""
+
+msgid "No se puede mover ahí: crearía un ciclo o el destino es la misma categoría."
+msgstr ""
+
+msgid "Nueva categoría o subcategoría..."
+msgstr ""
+
+msgid "Renombrar\tF2"
+msgstr ""
+
+msgid "Pegar aquí (Ctrl+V)"
+msgstr ""
+
+msgid "Eliminar...\tSupr"
+msgstr ""
+
+msgid "(Todas las etiquetas)"
+msgstr ""
+
+msgid "Selecciona primero una etiqueta para renombrarla."
+msgstr ""
+
+msgid "Nuevo nombre de la etiqueta:"
+msgstr ""
+
+msgid "Renombrar etiqueta"
+msgstr ""
+
 msgid "Etiqueta renombrada a {nombre}."
 msgstr ""
 
-msgid "Etiqueta {nombre} creada y libro añadido."
+msgid "Ya existe una etiqueta con ese nombre."
+msgstr ""
+
+msgid "¿Eliminar la etiqueta «{nombre}»?\n\nLos libros no se eliminan, solo dejan de tener esta etiqueta."
+msgstr ""
+
+msgid "Eliminar etiqueta"
+msgstr ""
+
+msgid "Etiqueta {nombre} eliminada."
+msgstr ""
+
+msgid "Nombre de la nueva etiqueta:"
+msgstr ""
+
+msgid "Nueva etiqueta"
 msgstr ""
 
 msgid "Etiqueta {nombre} creada."
 msgstr ""
 
-msgid "Etiqueta {nombre} eliminada."
+msgid "Nueva etiqueta..."
+msgstr ""
+
+msgid "Asignar categoría a los {n} libro(s) de esta etiqueta"
+msgstr ""
+
+msgid "Marcar los {n} libro(s) de esta etiqueta como"
+msgstr ""
+
+msgid "{n} libro(s) en la biblioteca."
+msgstr ""
+
+msgid "Favorito"
+msgstr ""
+
+msgid "Leyendo"
+msgstr ""
+
+msgid "Pendiente de leer"
+msgstr ""
+
+msgid "Leído"
+msgstr ""
+
+msgid "Título sin revisar"
+msgstr ""
+
+msgid "Audiolibro a medias"
+msgstr ""
+
+msgid "Sin marcar"
+msgstr ""
+
+msgid "Seleccionar carpeta con libros para importar"
+msgstr ""
+
+msgid "¿Las subcarpetas de esta carpeta representan géneros y subgéneros?\n\nEjemplo: «Fantasía/Fantasía épica/tu_libro.epub» crearía la categoría «Fantasía» con la subcategoría «Fantasía épica».\n\nPodrás renombrar o mover las categorías después. Si tus subcarpetas no son géneros (por ejemplo, son autores o sagas), elige No."
+msgstr ""
+
+msgid "¿Crear categorías desde las subcarpetas?"
+msgstr ""
+
+msgid "Escaneando carpeta, por favor espera..."
+msgstr ""
+
+msgid "Seleccionar libro a importar"
+msgstr ""
+
+msgid "Ese libro ya está en la Biblioteca."
+msgstr ""
+
+msgid "No se pudieron leer los metadatos de ese archivo."
+msgstr ""
+
+msgid "Error al importar"
+msgstr ""
+
+msgid "Libro añadido a la Biblioteca: {titulo}."
+msgstr ""
+
+msgid "Escaneando... {procesados} de {total} libro(s) procesados."
+msgstr ""
+
+msgid "Procesando... {procesados} de {total} libros."
+msgstr ""
+
+msgid "Aplicando etiquetas, por favor espera..."
 msgstr ""
 
 msgid "Etiquetas aplicadas, pero {n} libro(s) no se pudieron etiquetar."
@@ -195,335 +748,2031 @@ msgstr ""
 msgid "Etiquetas aplicadas."
 msgstr ""
 
-msgid "Favorito"
-msgstr ""
-
-msgid "Formato"
-msgstr ""
-
-msgid "Género: {nombre}"
-msgstr ""
-
-msgid "Géneros"
-msgstr ""
-
-msgid "Géneros más frecuentes: {nombres}."
-msgstr ""
-
-msgid "Importar carpeta"
-msgstr ""
-
-msgid "Importar carpeta... (Ctrl+O)"
-msgstr ""
-
-msgid "Importar libro"
-msgstr ""
-
-msgid "Importar libro..."
-msgstr ""
-
-msgid "Leyendo"
-msgstr ""
-
-msgid "Leyendo ahora"
-msgstr ""
-
-msgid "Leído"
-msgstr ""
-
-msgid "Libro añadido a la Biblioteca: {titulo}."
-msgstr ""
-
-msgid "Libro quitado de esta categoría."
-msgstr ""
-
-msgid "Libro quitado de esta etiqueta."
-msgstr ""
-
-msgid "Libro quitado de la biblioteca."
-msgstr ""
-
-msgid "Libros compatibles (*.epub;*.pdf)|*.epub;*.pdf|Archivos EPUB (*.epub)|*.epub|Archivos PDF (*.pdf)|*.pdf"
-msgstr ""
-
-msgid "Lista plana de etiquetas (sagas y colecciones personalizadas). Seleccionar una filtra la lista de libros por esa etiqueta. F2 renombra, Supr elimina."
-msgstr ""
-
-msgid "Marcado como favorito."
-msgstr ""
-
-msgid "Marcado como {nombre}."
-msgstr ""
-
-msgid "Marcar como favorito"
-msgstr ""
-
-msgid "Marcar como leyendo ahora"
-msgstr ""
-
-msgid "Marcar como leído"
-msgstr ""
-
-msgid "Marcar como pendiente de leer"
-msgstr ""
-
-msgid "Marcar los {n} libro(s) de esta etiqueta como"
-msgstr ""
-
-msgid "Mover abajo (Ctrl+Abajo)"
-msgstr ""
-
-msgid "Mover arriba (Ctrl+Arriba)"
-msgstr ""
-
-msgid "No hay libros pendientes de revisión."
-msgstr ""
-
-msgid "No hay ninguna categoría cortada."
-msgstr ""
-
-msgid "No hay ningún libro seleccionado."
+msgid "Se han añadido {n} libro(s) a la biblioteca."
 msgstr ""
 
 msgid "No se encontraron libros nuevos en esa carpeta."
 msgstr ""
 
-msgid "No se encontró ningún libro de la biblioteca en esa carpeta."
-msgstr ""
-
-msgid "No se pudieron leer los metadatos de ese archivo."
+msgid "Escaneo completado"
 msgstr ""
 
 msgid "No se pudo completar el escaneo:\n{error}"
 msgstr ""
 
-msgid "No se pudo localizar el archivo indicado."
+msgid "Error"
 msgstr ""
 
-msgid "No se pudo renombrar"
-msgstr ""
-
-msgid "No se pudo renombrar el archivo:\n{motivo}"
-msgstr ""
-
-msgid "No se puede mover ahí: crearía un ciclo o el destino es la misma categoría."
-msgstr ""
-
-msgid "Nombre de archivo propuesto (editable):"
-msgstr ""
-
-msgid "Nombre de la nueva categoría:"
-msgstr ""
-
-msgid "Nombre de la nueva etiqueta:"
-msgstr ""
-
-msgid "Nombre vacío"
-msgstr ""
-
-msgid "Nueva categoría"
-msgstr ""
-
-msgid "Nueva categoría o subcategoría..."
-msgstr ""
-
-msgid "Nueva categoría... (F2 renombra, Supr elimina)"
-msgstr ""
-
-msgid "Nueva etiqueta"
-msgstr ""
-
-msgid "Nueva etiqueta..."
-msgstr ""
-
-msgid "Nueva etiqueta... (F2 renombra, Supr elimina)"
-msgstr ""
-
-msgid "Nuevo nombre de la etiqueta:"
-msgstr ""
-
-msgid "Pegar aquí (Ctrl+V)"
-msgstr ""
-
-msgid "Pendiente de leer"
-msgstr ""
-
-msgid "Procesando... {procesados} de {total} libros."
-msgstr ""
-
-msgid "Quitado de favoritos."
-msgstr ""
-
-msgid "Quitado de {nombre}."
-msgstr ""
-
-msgid "Quitar de esta categoría"
-msgstr ""
-
-msgid "Quitar de esta etiqueta"
-msgstr ""
-
-msgid "Quitar de favoritos"
-msgstr ""
-
-msgid "Quitar de la biblioteca"
-msgstr ""
-
-msgid "Quitar de leyendo ahora"
-msgstr ""
-
-msgid "Quitar de leídos"
-msgstr ""
-
-msgid "Quitar de pendientes de leer"
-msgstr ""
-
-msgid "Reglas de pronunciación de este libro..."
-msgstr ""
-
-msgid "Renombra en bloque, según sus metadatos, todos los libros de la biblioteca cuyo nombre de archivo no coincide con el título real."
-msgstr ""
-
-msgid "Renombrado por lotes"
-msgstr ""
-
-msgid "Renombrar\tF2"
-msgstr ""
-
-msgid "Renombrar archivo (F2)"
-msgstr ""
-
-msgid "Renombrar archivo...\tF2"
-msgstr ""
-
-msgid "Renombrar etiqueta"
-msgstr ""
-
-msgid "Renombrar todos los pendientes de revisión..."
-msgstr ""
-
-msgid "Saga: {nombre}"
-msgstr ""
-
-msgid "Sagas en la Biblioteca: {nombres}."
-msgstr ""
-
-msgid "Sagas y colecciones"
-msgstr ""
-
-msgid "Salir"
-msgstr ""
-
-msgid "Se han añadido {n} libro(s) a la biblioteca."
-msgstr ""
-
-msgid "Selecciona primero un género o subgénero para moverlo."
-msgstr ""
-
-msgid "Selecciona primero una etiqueta para renombrarla."
-msgstr ""
-
-msgid "Seleccionar carpeta con libros para importar"
-msgstr ""
-
-msgid "Seleccionar libro a importar"
-msgstr ""
-
-msgid "Sin marcar"
-msgstr ""
-
-msgid "Solo favoritos"
-msgstr ""
-
-msgid "Subcategoría {nombre} creada dentro de {padre}."
-msgstr ""
-
-msgid "Título"
-msgstr ""
-
-msgid "Título sin revisar"
-msgstr ""
-
-msgid "Ya está en ese extremo, no se puede mover más."
-msgstr ""
-
-msgid "Ya existe una categoría con ese nombre en el mismo nivel."
-msgstr ""
-
-msgid "Ya existe una etiqueta con ese nombre."
-msgstr ""
-
-msgid "abajo"
-msgstr ""
-
-msgid "arriba"
+msgid "No hay ningún libro seleccionado."
 msgstr ""
 
 msgid "autor desconocido"
 msgstr ""
 
-msgid "leyendo ahora"
-msgstr ""
-
-msgid "leído"
-msgstr ""
-
-msgid "leídos"
-msgstr ""
-
-msgid "pendiente de leer"
-msgstr ""
-
-msgid "pendientes de leer"
-msgstr ""
-
-msgid "tu Biblioteca"
-msgstr ""
-
-msgid "{exitosos} de {total} archivos renombrados correctamente."
-msgstr ""
-
-msgid "{nombre} ({total} libro(s))"
-msgstr ""
-
-msgid "{nombre} cortada. Selecciona el destino y pulsa Control V, o Escape para cancelar."
-msgstr ""
-
-msgid "{nombre} movido {direccion}."
-msgstr ""
-
-msgid "{n} libro(s) en la biblioteca."
-msgstr ""
-
-msgid "{n} libro(s) marcados como {estado}."
-msgstr ""
-
-msgid "{n} libro(s) reconciliados con la nueva carpeta."
-msgstr ""
-
 msgid "{n} libro(s): "
 msgstr ""
 
-msgid "{n} libros añadidos a categoría {ruta}."
+msgid "Saga: {nombre}"
+msgstr ""
+
+msgid "Género: {nombre}"
 msgstr ""
 
 msgid "{total} libro(s) en total ({favoritos} favorito(s), {leidos} leído(s), {pendientes} pendiente(s), {leyendo} en curso)."
 msgstr ""
 
-msgid "¿Crear categorías desde las subcarpetas?"
+msgid "Géneros más frecuentes: {nombres}."
 msgstr ""
 
-msgid "¿Eliminar la categoría «{nombre}» y sus subcategorías?\n\nLos libros no se eliminan, solo dejan de pertenecer a esta categoría."
+msgid "Autores más frecuentes: {nombres}."
 msgstr ""
 
-msgid "¿Eliminar la etiqueta «{nombre}»?\n\nLos libros no se eliminan, solo dejan de tener esta etiqueta."
+msgid "Sagas en la Biblioteca: {nombres}."
 msgstr ""
 
-msgid "¿Las subcarpetas de esta carpeta representan géneros y subgéneros?\n\nEjemplo: «Fantasía/Fantasía épica/tu_libro.epub» crearía la categoría «Fantasía» con la subcategoría «Fantasía épica».\n\nPodrás renombrar o mover las categorías después. Si tus subcarpetas no son géneros (por ejemplo, son autores o sagas), elige No."
+msgid "tu Biblioteca"
+msgstr ""
+
+msgid "; ... y {n} libro(s) más."
+msgstr ""
+
+msgid "Marcado como favorito."
+msgstr ""
+
+msgid "Quitado de favoritos."
+msgstr ""
+
+msgid "Marcado como {nombre}."
+msgstr ""
+
+msgid "Quitado de {nombre}."
+msgstr ""
+
+msgid "pendientes de leer"
+msgstr ""
+
+msgid "Leyendo ahora"
+msgstr ""
+
+msgid "leyendo ahora"
+msgstr ""
+
+msgid "leídos"
+msgstr ""
+
+msgid "{n} libro(s) marcados como {estado}."
+msgstr ""
+
+msgid "Abriendo libro, por favor espera..."
+msgstr ""
+
+msgid "Archivo localizado. Abriendo el libro."
+msgstr ""
+
+msgid "No se pudo localizar el archivo indicado."
+msgstr ""
+
+msgid "{n} libro(s) reconciliados con la nueva carpeta."
+msgstr ""
+
+msgid "No se encontró ningún libro de la biblioteca en esa carpeta."
+msgstr ""
+
+msgid "Libro quitado de la biblioteca."
 msgstr ""
 
 msgid "¿Quitar «{titulo}» de la biblioteca?\n\nEl archivo no se borrará del disco, solo su registro aquí."
 msgstr ""
 
-msgid "Árbol de géneros y subgéneros. Flechas para navegar; seleccionar un nodo filtra la lista de libros por esa categoría (incluye subgéneros). F2 renombra, Supr elimina, Ctrl+X/Ctrl+V mueve un género bajo otro, Ctrl+Arriba/Ctrl+Abajo lo reordena entre sus hermanos, Menú o Shift+F10 para más opciones."
+msgid "Quitar de la biblioteca"
 msgstr ""
+
+msgid "Nombre de archivo propuesto (editable):"
+msgstr ""
+
+msgid "Renombrar archivo (F2)"
+msgstr ""
+
+msgid "Archivo renombrado correctamente."
+msgstr ""
+
+msgid "No se pudo renombrar el archivo:\n{motivo}"
+msgstr ""
+
+msgid "Error al renombrar"
+msgstr ""
+
+msgid "No hay libros pendientes de revisión."
+msgstr ""
+
+msgid "{exitosos} de {total} archivos renombrados correctamente."
+msgstr ""
+
+msgid "\n\nNo se pudieron renombrar:\n{detalle}"
+msgstr ""
+
+msgid "Renombrado por lotes"
+msgstr ""
+
+msgid "Crear categoría nueva y asignar..."
+msgstr ""
+
+msgid "Asignar a «{nombre}»"
+msgstr ""
+
+msgid "Crear subcategoría nueva y asignar..."
+msgstr ""
+
+msgid "Crear etiqueta nueva y asignar..."
+msgstr ""
+
+msgid "Añadido a etiqueta {nombre}."
+msgstr ""
+
+msgid "Crear etiqueta y asignar"
+msgstr ""
+
+msgid "Etiqueta {nombre} creada y libro añadido."
+msgstr ""
+
+msgid "Libro quitado de esta etiqueta."
+msgstr ""
+
+msgid "Añadido a categoría {ruta}."
+msgstr ""
+
+msgid "{n} libros añadidos a categoría {ruta}."
+msgstr ""
+
+msgid "Crear categoría y asignar"
+msgstr ""
+
+msgid "Categoría {nombre} creada y libro añadido."
+msgstr ""
+
+msgid "Categoría {nombre} creada y {n} libros añadidos."
+msgstr ""
+
+msgid "Libro quitado de esta categoría."
+msgstr ""
+
+msgid "Abrir en Lectura\tIntro"
+msgstr ""
+
+msgid "Enviar a Creador de Audiolibros"
+msgstr ""
+
+msgid "Cambia a la pestaña Creador de Audiolibros con este libro ya cargado."
+msgstr ""
+
+msgid "Quitar de favoritos"
+msgstr ""
+
+msgid "Marcar como favorito"
+msgstr ""
+
+msgid "Quitar de pendientes de leer"
+msgstr ""
+
+msgid "Marcar como pendiente de leer"
+msgstr ""
+
+msgid "pendiente de leer"
+msgstr ""
+
+msgid "Quitar de leyendo ahora"
+msgstr ""
+
+msgid "Marcar como leyendo ahora"
+msgstr ""
+
+msgid "Quitar de leídos"
+msgstr ""
+
+msgid "Marcar como leído"
+msgstr ""
+
+msgid "leído"
+msgstr ""
+
+msgid "Añadir a categoría"
+msgstr ""
+
+msgid "Quitar de esta categoría"
+msgstr ""
+
+msgid "Añadir a etiqueta"
+msgstr ""
+
+msgid "Quitar de esta etiqueta"
+msgstr ""
+
+msgid "Renombrar archivo...\tF2"
+msgstr ""
+
+msgid "Renombrar todos los pendientes de revisión..."
+msgstr ""
+
+msgid "Renombra en bloque, según sus metadatos, todos los libros de la biblioteca cuyo nombre de archivo no coincide con el título real."
+msgstr ""
+
+msgid "Reglas de pronunciación de este libro..."
+msgstr ""
+
+msgid "Abre Ajustes en el diccionario de pronunciación, ya en alcance 'Este libro' y con este libro seleccionado."
+msgstr ""
+
+msgid "Salir"
+msgstr ""
+
+msgid "Guardar en el Gestor de Proyectos"
+msgstr ""
+
+msgid "¡Todas las etiquetas tienen voz asignada!\n¿Deseas guardar este archivo en el Gestor de Proyectos?"
+msgstr ""
+
+msgid "Crear nuevo proyecto"
+msgstr ""
+
+msgid "Crea un proyecto nuevo y asocia este archivo."
+msgstr ""
+
+msgid "Añadir a un proyecto existente"
+msgstr ""
+
+msgid "Añade este archivo a un proyecto ya creado."
+msgstr ""
+
+msgid "Escribe el nombre del nuevo proyecto."
+msgstr ""
+
+msgid "Tipo:"
+msgstr ""
+
+msgid "Selecciona el proyecto:"
+msgstr ""
+
+msgid "(No hay proyectos aún)"
+msgstr ""
+
+msgid "Elige el proyecto al que quieres añadir este archivo."
+msgstr ""
+
+msgid "Guardar en proyecto"
+msgstr ""
+
+msgid "Ahora no"
+msgstr ""
+
+msgid "Confirma la asociación del archivo al proyecto seleccionado."
+msgstr ""
+
+msgid "Cierra este diálogo sin asociar el archivo a ningún proyecto."
+msgstr ""
+
+msgid "Escribe un nombre para el proyecto."
+msgstr ""
+
+msgid "Nombre requerido"
+msgstr ""
+
+msgid "Selecciona un proyecto de la lista."
+msgstr ""
+
+msgid "Archivo de texto"
+msgstr ""
+
+msgid "Archivo TXT:"
+msgstr ""
+
+msgid "Ruta del archivo de texto actualmente cargado."
+msgstr ""
+
+msgid "Dividir EPUB… — Divide un EPUB en archivos TXT por capítulo"
+msgstr ""
+
+msgid "Abre el diálogo para dividir un archivo EPUB en capítulos TXT independientes. Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
+msgstr ""
+
+msgid "Examinar… — Selecciona un TXT con etiquetas de personaje"
+msgstr ""
+
+msgid "Limpiar — Restablece la pestaña para cargar otro fragmento"
+msgstr ""
+
+msgid "Título (opcional):"
+msgstr ""
+
+msgid "Título del libro o proyecto. Si se deja vacío se usa el nombre del archivo TXT. Define la subcarpeta de grabaciones. Si el archivo está asociado a un proyecto, el título sincroniza el nombre del proyecto al salir del campo."
+msgstr ""
+
+msgid "Capítulo (opcional):"
+msgstr ""
+
+msgid "Nombre del capítulo. Si se deja vacío se usa el nombre del archivo TXT. Define el nombre de la subcarpeta interna."
+msgstr ""
+
+msgid "Asignación de voces"
+msgstr ""
+
+msgid "Etiquetas detectadas:"
+msgstr ""
+
+msgid "Etiquetas detectadas en el archivo. Selecciona la etiqueta a la que quieres asignar una voz. Al marcar una voz en la lista de la derecha la asignación es automática y el combo avanza a la siguiente etiqueta sin asignar."
+msgstr ""
+
+msgid "Asigna voces a la etiqueta seleccionada:"
+msgstr ""
+
+msgid "Nombre de la voz"
+msgstr ""
+
+msgid "Género"
+msgstr ""
+
+msgid "Idioma"
+msgstr ""
+
+msgid "Proveedor"
+msgstr ""
+
+msgid "Lista de voces favoritas. Pulsa Espacio sobre una voz para asignarla a la etiqueta activa. Solo puede haber una voz marcada a la vez."
+msgstr ""
+
+msgid "Probar voz — Escucha una muestra de la voz marcada"
+msgstr ""
+
+msgid "Pre-escucha General — Oye todas las voces asignadas en secuencia"
+msgstr ""
+
+msgid "Asignaciones actuales:"
+msgstr ""
+
+msgid "Resumen de asignaciones etiqueta a voz. Muestra sin asignar para las etiquetas que aún no tienen voz."
+msgstr ""
+
+msgid "Opciones de salida"
+msgstr ""
+
+msgid "Dividir por etiquetas: archivos numerados (1. Nar.mp3, 2. Pj1.mp3…)"
+msgstr ""
+
+msgid "Velocidad de grabación:"
+msgstr ""
+
+msgid "Velocidad de grabación"
+msgstr ""
+
+msgid "Velocidad de locución de la voz. 0 es la más lenta, 100 la más rápida. Flechas: ±1. RePág/AvPág: ±5."
+msgstr ""
+
+msgid "Volumen de grabación:"
+msgstr ""
+
+msgid "Volumen de grabación"
+msgstr ""
+
+msgid "Volumen del audio generado. 0 es silencio, 100 es volumen máximo. Flechas: ±1. RePág/AvPág: ±5."
+msgstr ""
+
+msgid "Progreso"
+msgstr ""
+
+msgid "Estado: En espera. Selecciona un archivo TXT para comenzar."
+msgstr ""
+
+msgid "Barra de progreso de la grabación actual."
+msgstr ""
+
+msgid "Iniciar Grabación — Comienza el proceso de grabación multivoz"
+msgstr ""
+
+msgid "Abortar — Detiene la grabación; los archivos ya generados se conservan"
+msgstr ""
+
+msgid "Abrir Carpeta — Abre la carpeta de grabaciones en el Explorador"
+msgstr ""
+
+msgid "Sin nombre"
+msgstr ""
+
+msgid "Local (SAPI5)"
+msgstr ""
+
+msgid "No hay voces. Añade favoritas en la pestaña Ajustes."
+msgstr ""
+
+msgid "Archivo asociado al proyecto «{nombre}»."
+msgstr ""
+
+msgid "Seleccionar archivo de texto con etiquetas"
+msgstr ""
+
+msgid "No se pudo leer el archivo:\n{error}"
+msgstr ""
+
+msgid "Error de lectura"
+msgstr ""
+
+msgid "El archivo está vacío."
+msgstr ""
+
+msgid "Sin contenido"
+msgstr ""
+
+msgid "El archivo no contiene texto aprovechable."
+msgstr ""
+
+msgid "Sin fragmentos"
+msgstr ""
+
+msgid "Archivo cargado: {total} fragmentos, etiquetas: {etiquetas}. Marca una voz en la lista para asignarla."
+msgstr ""
+
+msgid "Texto cargado.\nFragmentos: {total}\nEtiquetas: {etiquetas}"
+msgstr ""
+
+msgid "Carga un archivo para ver las etiquetas."
+msgstr ""
+
+msgid "Dividir EPUB en capítulos TXT"
+msgstr ""
+
+msgid "Asignado: @{etiqueta}  →  {voz}"
+msgstr ""
+
+msgid "Marca primero una voz en la lista."
+msgstr ""
+
+msgid "Error al reproducir la muestra:\n{error}"
+msgstr ""
+
+msgid "Error de previsualización"
+msgstr ""
+
+msgid "No hay voces asignadas aún. Asigna al menos una voz antes de la pre-escucha."
+msgstr ""
+
+msgid "Sin asignaciones"
+msgstr ""
+
+msgid "Ninguna de las etiquetas detectadas tiene voz asignada."
+msgstr ""
+
+msgid "voz"
+msgstr ""
+
+msgid "Pre-escucha: @{etiqueta} → {voz}"
+msgstr ""
+
+msgid "Pre-escucha completada. {n} voces verificadas."
+msgstr ""
+
+msgid "(sin asignar)"
+msgstr ""
+
+msgid "@{etiqueta}  →  (sin asignar)"
+msgstr ""
+
+msgid "Dividir por etiquetas: un único archivo MP3 unificado"
+msgstr ""
+
+msgid "Recuperadas {n} asignaciones previas para «{titulo}»."
+msgstr ""
+
+msgid "Azure TTS: credenciales no configuradas (clave de suscripción o región vacías).\nConfigúralas en Ajustes → Azure."
+msgstr ""
+
+msgid "ElevenLabs: API Key no configurada.\nConfigúrala en Ajustes → ElevenLabs."
+msgstr ""
+
+msgid "Amazon Polly: credenciales no configuradas (Access Key / Secret Key vacíos).\nConfigúralas en Ajustes → Amazon Polly."
+msgstr ""
+
+msgid "No hay texto cargado. Selecciona primero un archivo TXT."
+msgstr ""
+
+msgid "Las siguientes etiquetas no tienen voz asignada:\n{nombres}\n\nLos fragmentos sin voz se omitirán.\n¿Continuar de todas formas?"
+msgstr ""
+
+msgid "Etiquetas sin voz"
+msgstr ""
+
+msgid "No se puede iniciar la grabación:\n\n{detalle}\n\nRevisa la configuración antes de continuar."
+msgstr ""
+
+msgid "Credenciales no configuradas"
+msgstr ""
+
+msgid "Iniciando grabación…"
+msgstr ""
+
+msgid "Grabando fragmento {actual} de {total}  (Etiqueta: @{etiqueta}  —  Voz: {voz})"
+msgstr ""
+
+msgid "Fragmento {actual} de {total}. Etiqueta {etiqueta}."
+msgstr ""
+
+msgid "Error: no se generó ningún archivo de audio válido."
+msgstr ""
+
+msgid "… y {n} errores más."
+msgstr ""
+
+msgid "\n\nDetalle de errores:\n{resumen}"
+msgstr ""
+
+msgid "La grabación finalizó pero no se generó ningún archivo de audio válido.\nEs posible que las credenciales del servicio sean incorrectas o que no haya conexión a Internet.{detalle}\n\nRevisa la configuración y vuelve a intentarlo."
+msgstr ""
+
+msgid "Error de grabación"
+msgstr ""
+
+msgid "Proceso finalizado. {n} archivo(s) generado(s) en {carpeta}."
+msgstr ""
+
+msgid "Grabación completada. {n} archivos generados."
+msgstr ""
+
+msgid "Proceso finalizado con éxito.\n{n} archivo(s) en:\n{carpeta}"
+msgstr ""
+
+msgid "⚠ {n} fragmento(s) fallido(s):\n{resumen}"
+msgstr ""
+
+msgid "¿Deseas abrir la carpeta de destino?"
+msgstr ""
+
+msgid "Grabación completada"
+msgstr ""
+
+msgid "Error durante la grabación: {error}"
+msgstr ""
+
+msgid "Error durante la grabación:\n\n{error}"
+msgstr ""
+
+msgid "Estado: Grabación abortada por el usuario."
+msgstr ""
+
+msgid "No se pudo abrir la carpeta:\n{error}"
+msgstr ""
+
+msgid "Asistente de Biblioteca"
+msgstr ""
+
+msgid "Estilo del asistente:"
+msgstr ""
+
+msgid "Plantilla de instrucciones que sigue el asistente en esta conversación. Para crear, editar o borrar plantillas, ve a Ajustes → Asistente de Biblioteca."
+msgstr ""
+
+msgid "Historial de conversación:"
+msgstr ""
+
+msgid "Historial de conversación"
+msgstr ""
+
+msgid "Historial de la conversación con el Asistente de Biblioteca. Solo lectura; usa Ctrl+Fin para ir al último mensaje. Puedes seleccionar cualquier texto y copiarlo con Ctrl+C."
+msgstr ""
+
+msgid "Mensaje:"
+msgstr ""
+
+msgid "Mensaje"
+msgstr ""
+
+msgid "Escribe tu pregunta para el Asistente de Biblioteca y pulsa Intro para enviarla."
+msgstr ""
+
+msgid "Enviar"
+msgstr ""
+
+msgid "Copiar mi último mensaje"
+msgstr ""
+
+msgid "Copia al portapapeles el último mensaje que escribiste."
+msgstr ""
+
+msgid "Copiar última respuesta"
+msgstr ""
+
+msgid "Copia al portapapeles la última respuesta del asistente."
+msgstr ""
+
+msgid "Guardar conversación..."
+msgstr ""
+
+msgid "Guarda toda la conversación en un archivo de texto."
+msgstr ""
+
+msgid "Guardar conversación"
+msgstr ""
+
+msgid "Borrar historial"
+msgstr ""
+
+msgid "Borra el historial de esta conversación, sin posibilidad de deshacer."
+msgstr ""
+
+msgid "Cierra el Asistente de Biblioteca. Equivale a pulsar Escape."
+msgstr ""
+
+msgid "Tú"
+msgstr ""
+
+msgid "Asistente"
+msgstr ""
+
+msgid "Hablando sobre: {titulo}."
+msgstr ""
+
+msgid "Asistente de Biblioteca en modo general. Sin libro seleccionado."
+msgstr ""
+
+msgid "Pensando..."
+msgstr ""
+
+msgid "Mensaje enviado. Pensando..."
+msgstr ""
+
+msgid "Asistente: {respuesta}"
+msgstr ""
+
+msgid "Error al consultar al asistente: {error}"
+msgstr ""
+
+msgid "Todavía no hay {etiqueta} que copiar."
+msgstr ""
+
+msgid "{etiqueta} copiado al portapapeles."
+msgstr ""
+
+msgid "No se pudo abrir el portapapeles."
+msgstr ""
+
+msgid "tu último mensaje"
+msgstr ""
+
+msgid "la última respuesta"
+msgstr ""
+
+msgid "No hay ninguna conversación que guardar todavía."
+msgstr ""
+
+msgid "Conversación Asistente de Biblioteca.txt"
+msgstr ""
+
+msgid "Conversación sobre {titulo}.txt"
+msgstr ""
+
+msgid "Guardar conversación como"
+msgstr ""
+
+msgid "Archivos de texto (*.txt)|*.txt"
+msgstr ""
+
+msgid "Conversación guardada en {nombre}."
+msgstr ""
+
+msgid "No se pudo guardar la conversación."
+msgstr ""
+
+msgid "¿Borrar todo el historial de esta conversación? No se puede deshacer."
+msgstr ""
+
+msgid "Historial borrado."
+msgstr ""
+
+msgid "Voces nuevas disponibles"
+msgstr ""
+
+msgid "Se han detectado voces nuevas en los siguientes proveedores:"
+msgstr ""
+
+msgid "La aplicación encontró voces que no estaban en la lista local. Ve a la pestaña Ajustes para explorarlas y escucharlas."
+msgstr ""
+
+msgid "  • {proveedor}: 1 voz nueva"
+msgstr ""
+
+msgid "  • {proveedor}: {n} voces nuevas"
+msgstr ""
+
+msgid "El proveedor {proveedor} tiene {n} {palabra} que no estaban registradas localmente."
+msgstr ""
+
+msgid "voces"
+msgstr ""
+
+msgid "Abre la pestaña Ajustes → sección Voces para explorarlas."
+msgstr ""
+
+msgid "Entendido"
+msgstr ""
+
+msgid "Cierra este aviso. Puedes explorar las novedades en la pestaña Ajustes."
+msgstr ""
+
+msgid "Gestor de Marcadores"
+msgstr ""
+
+msgid "Mis marcadores:"
+msgstr ""
+
+msgid "Nuevo"
+msgstr ""
+
+msgid "Nuevo marcador"
+msgstr ""
+
+msgid "Renombrar"
+msgstr ""
+
+msgid "Eliminar"
+msgstr ""
+
+msgid "Eliminar marcador"
+msgstr ""
+
+msgid "(Sin marcadores)"
+msgstr ""
+
+msgid "Nombre del nuevo marcador:"
+msgstr ""
+
+msgid "Añadir Marcador"
+msgstr ""
+
+msgid "Nuevo nombre para '{nombre}':"
+msgstr ""
+
+msgid "Renombrar Marcador"
+msgstr ""
+
+msgid "¿Borrar '{nombre}'?"
+msgstr ""
+
+msgid "Confirmar"
+msgstr ""
+
+msgid "Agrupar por carpeta"
+msgstr ""
+
+msgid "Se detectaron carpetas con varios libros. Marca las que quieras agrupar con una etiqueta de saga/colección; puedes editar el nombre de cada una antes de confirmar."
+msgstr ""
+
+msgid "Etiqueta propuesta"
+msgstr ""
+
+msgid "Libros"
+msgstr ""
+
+msgid "Renombrar etiqueta seleccionada"
+msgstr ""
+
+msgid "Agrupar las marcadas"
+msgstr ""
+
+msgid "Nombre de la etiqueta:"
+msgstr ""
+
+msgid "Archivo no encontrado"
+msgstr ""
+
+msgid "No se encontró el archivo de «{titulo}» en su ubicación original.\n\n¿Qué quieres hacer?"
+msgstr ""
+
+msgid "Localizar archivo..."
+msgstr ""
+
+msgid "Elige manualmente dónde está ahora el archivo de este libro."
+msgstr ""
+
+msgid "Localizar archivo"
+msgstr ""
+
+msgid "Volver a escanear una carpeta..."
+msgstr ""
+
+msgid "Si moviste toda una carpeta de libros, elige la nueva ubicación y se reconciliarán en bloque todos los libros de la biblioteca que falten, casando por nombre de archivo."
+msgstr ""
+
+msgid "Volver a escanear una carpeta"
+msgstr ""
+
+msgid "Eliminar de la biblioteca"
+msgstr ""
+
+msgid "Quita el registro de este libro de la biblioteca. El archivo físico, si existiera en algún sitio, no se borra."
+msgstr ""
+
+msgid "Archivos ({ext})|*{ext}|Todos los archivos|*.*"
+msgstr ""
+
+msgid "Localizar el archivo del libro"
+msgstr ""
+
+msgid "Selecciona la carpeta donde están ahora los libros"
+msgstr ""
+
+msgid "¿Quitar este libro de la biblioteca?\n\nEl archivo no se borrará del disco, solo su registro aquí."
+msgstr ""
+
+msgid "Gasto: {gas} caracteres, unos {coste_gas} dolares. Restante: {restante} caracteres, aprox {libros} libros. Coste total al limite: {coste_lim} dolares al mes."
+msgstr ""
+
+msgid "Plan Starter, 5 dolares al mes"
+msgstr ""
+
+msgid "Plan Creator, 22 dolares al mes"
+msgstr ""
+
+msgid "Plan Pro, 99 dolares al mes"
+msgstr ""
+
+msgid "Plan Scale, 330 dolares al mes"
+msgstr ""
+
+msgid "Gasto: {gas} caracteres. Restante: {restante} caracteres, aprox {libros} libros. Suscripcion sugerida: {plan}."
+msgstr ""
+
+msgid "Idioma del libro"
+msgstr ""
+
+msgid "Idioma principal del libro (preselecciona el acento de voz en Lectura):"
+msgstr ""
+
+msgid "Español (ES)"
+msgstr ""
+
+msgid "Español (LAT)"
+msgstr ""
+
+msgid "Inglés"
+msgstr ""
+
+msgid "Detectar auto"
+msgstr ""
+
+msgid "Define el idioma principal del libro para preseleccionar el acento correcto en el combo de voz de la pestaña Lectura. Elige Español (ES) para España, Español (LAT) para Latinoamérica, Inglés para textos en inglés, o Detectar auto para dejar que la aplicación lo decida."
+msgstr ""
+
+msgid "Control de Presupuesto y Límites"
+msgstr ""
+
+msgid "Navegación"
+msgstr ""
+
+msgid "Segundos de salto (botones Retroceder y Avanzar en Lectura):"
+msgstr ""
+
+msgid "Número de segundos que avanza o retrocede el audio al pulsar los botones Retroceder y Avanzar en la pestaña Lectura. Introduce un número entero. Valor recomendado: 10."
+msgstr ""
+
+msgid "Pausa entre párrafos en voces de IA (milisegundos):"
+msgstr ""
+
+msgid "Tiempo de espera entre fragmentos consecutivos cuando se usan voces de IA. 0 = sin pausa adicional. Ejemplo: 300 añade 0,3 segundos de silencio entre párrafos."
+msgstr ""
+
+msgid "Actualizaciones"
+msgstr ""
+
+msgid "Buscar actualizaciones automáticamente al iniciar la app"
+msgstr ""
+
+msgid "Si está marcado, la aplicación comprueba si hay una nueva versión disponible cada vez que se inicia. La comprobación se hace en segundo plano."
+msgstr ""
+
+msgid "Buscar actualizaciones ahora"
+msgstr ""
+
+msgid "Comprueba si hay una versión nueva comparando tu version.json local con el del repositorio de GitHub."
+msgstr ""
+
+msgid "Estado del proceso de actualización. NVDA lo leerá automáticamente al cambiar."
+msgstr ""
+
+msgid "Probar descarga y verificación (Fase C)"
+msgstr ""
+
+msgid "Descarga la última versión a temp/actualizacion/ y verifica su estructura, sin instalar nada. Herramienta de desarrollo de la Fase C."
+msgstr ""
+
+msgid "Deslizadores de velocidad"
+msgstr ""
+
+msgid "Sistema de visualización de velocidad:"
+msgstr ""
+
+msgid "Porcentaje (0 – 100)"
+msgstr ""
+
+msgid "Multiplicador por puntos (0.2× – 1.8×)"
+msgstr ""
+
+msgid "Elige cómo se muestra la velocidad en el deslizador de la pestaña Lectura. Porcentaje: valores del 0 al 100. Multiplicador: etiquetas tipo 1.0× (Normal), 1.4× (Rápida), 1.8× (Muy rápida). El motor de audio recibe siempre el mismo valor 0-100 del deslizador; el multiplicador es solo su lectura equivalente."
+msgstr ""
+
+msgid "Guardar Configuración General y Límites de presupuesto"
+msgstr ""
+
+msgid "Guarda los segundos de salto, la escala de velocidad y los límites de presupuesto de cada proveedor."
+msgstr ""
+
+msgid "Borrar historial de libros recientes"
+msgstr ""
+
+msgid "Vacía la lista de «Libros Recientes» del menú de la pestaña Lectura. No borra ningún archivo, solo el atajo a los últimos libros abiertos."
+msgstr ""
+
+msgid "Limpiar caché"
+msgstr ""
+
+msgid "Elimina carpetas __pycache__, archivos .tmp y audio temporal."
+msgstr ""
+
+msgid "{nombre} (Gastado: {gastado}):"
+msgstr ""
+
+msgid "El historial de libros recientes ya está vacío."
+msgstr ""
+
+msgid "Info"
+msgstr ""
+
+msgid "Configuración y límites guardados."
+msgstr ""
+
+msgid "No se encontró ningún archivo temporal que limpiar."
+msgstr ""
+
+msgid "Limpieza completada.\n{n} archivo(s) eliminado(s) — {tam} liberado(s)."
+msgstr ""
+
+msgid "({n} archivo(s) no pudieron borrarse por estar en uso.)"
+msgstr ""
+
+msgid "Comprobando…"
+msgstr ""
+
+msgid "Comprobando versiones en el repositorio de GitHub..."
+msgstr ""
+
+msgid "No se pudo comprobar la actualización:\n{error}"
+msgstr ""
+
+msgid "Error de conexión"
+msgstr ""
+
+msgid "Ya tienes la versión más reciente ({version})."
+msgstr ""
+
+msgid "Sin actualizaciones"
+msgstr ""
+
+msgid "Descargando el archivo de actualización en segundo plano, por favor espera..."
+msgstr ""
+
+msgid "No se pudo descargar la actualización:\n{error}"
+msgstr ""
+
+msgid "Error de descarga"
+msgstr ""
+
+msgid "Descarga completada con éxito. Preparando la instalación..."
+msgstr ""
+
+msgid "No se pudo preparar la instalación:\n{error}"
+msgstr ""
+
+msgid "Error interno"
+msgstr ""
+
+msgid "Iniciando descarga de prueba..."
+msgstr ""
+
+msgid "No se pudo verificar la actualización descargada:\n{error}"
+msgstr ""
+
+msgid "Verificación fallida"
+msgstr ""
+
+msgid "Descarga y verificación completadas correctamente en:\n«{ruta_extraida}».\n\nEl instalador auxiliar todavía no está disponible en:\n{ruta_exe}\n\nNo se instalará nada. Los archivos ya verificados se conservan en temp/actualizacion/ para que puedas revisarlos."
+msgstr ""
+
+msgid "Instalador no disponible"
+msgstr ""
+
+msgid "Descarga y verificación completadas correctamente.\n\nPara instalarla, la aplicación se cerrará y un proceso auxiliar independiente (actualizador.exe) hará el cambio con respaldo automático. ¿Instalar ahora?"
+msgstr ""
+
+msgid "Verificación correcta"
+msgstr ""
+
+msgid "No se encontró el instalador auxiliar en:\n{ruta_exe}\n\nLa actualización no se puede instalar automáticamente en este portable."
+msgstr ""
+
+msgid "No se pudo iniciar el instalador auxiliar:\n{error}"
+msgstr ""
+
+msgid "Error al instalar"
+msgstr ""
+
+msgid "Configura tus claves API."
+msgstr ""
+
+msgid "Clave de suscripción (Key). Formato: 32 caracteres hexadecimales:"
+msgstr ""
+
+msgid "Clave de suscripción de Azure Text to Speech. Puedes encontrarla en el Portal de Azure, en tu recurso de Servicios Cognitivos, sección Claves y Punto de conexión."
+msgstr ""
+
+msgid "Región del recurso (ej: eastus, westeurope):"
+msgstr ""
+
+msgid "Región de Azure donde está creado tu recurso. Ejemplos: eastus, westus2, westeurope."
+msgstr ""
+
+msgid "Conseguir clave Azure"
+msgstr ""
+
+msgid "Abre el navegador en la página de Azure Text to Speech."
+msgstr ""
+
+msgid "Comprobar clave y descargar voces Azure"
+msgstr ""
+
+msgid "Guarda la clave, la verifica contra el servidor de Azure y descarga la lista de voces disponibles."
+msgstr ""
+
+msgid "Borrar clave Azure"
+msgstr ""
+
+msgid "Borra los datos de acceso de Azure guardados en la aplicación."
+msgstr ""
+
+msgid "Access Key ID (identificador de la clave AWS):"
+msgstr ""
+
+msgid "Identificador de clave de acceso de AWS. Lo encontrarás en la consola de AWS, sección IAM, Mis credenciales de seguridad."
+msgstr ""
+
+msgid "Secret Access Key (clave secreta, se muestra solo al crearla):"
+msgstr ""
+
+msgid "Clave de acceso secreta de AWS. Solo se muestra una vez al crearla."
+msgstr ""
+
+msgid "Región AWS (ej: us-east-1, eu-west-1):"
+msgstr ""
+
+msgid "Región de AWS donde usarás Amazon Polly."
+msgstr ""
+
+msgid "Conseguir clave Amazon Polly"
+msgstr ""
+
+msgid "Abre el navegador en la página de Amazon Polly."
+msgstr ""
+
+msgid "Comprobar clave y descargar voces Polly"
+msgstr ""
+
+msgid "Guarda las credenciales, las verifica contra AWS y descarga la lista de voces de Amazon Polly."
+msgstr ""
+
+msgid "Borrar clave Polly"
+msgstr ""
+
+msgid "Borra los datos de acceso de Amazon Polly guardados en la aplicación."
+msgstr ""
+
+msgid "API Key (clave de acceso de ElevenLabs):"
+msgstr ""
+
+msgid "Clave API de ElevenLabs. La encontrarás en tu perfil, sección API Key."
+msgstr ""
+
+msgid "Conseguir clave ElevenLabs"
+msgstr ""
+
+msgid "Abre el navegador en la página de ElevenLabs."
+msgstr ""
+
+msgid "Comprobar clave y descargar voces ElevenLabs"
+msgstr ""
+
+msgid "Guarda la clave API, la verifica contra ElevenLabs y descarga la lista de voces."
+msgstr ""
+
+msgid "Borrar clave ElevenLabs"
+msgstr ""
+
+msgid "Borra la API Key de ElevenLabs guardada en la aplicación."
+msgstr ""
+
+msgid "API Key de Deepgram:"
+msgstr ""
+
+msgid "Clave API de Deepgram. La encontrarás en el panel de Deepgram, sección API Keys."
+msgstr ""
+
+msgid "Conseguir clave Deepgram"
+msgstr ""
+
+msgid "Abre el navegador en la página de Deepgram."
+msgstr ""
+
+msgid "Comprobar clave y descargar voces Deepgram"
+msgstr ""
+
+msgid "Guarda la API Key, la verifica contra Deepgram y descarga la lista de modelos Aura-2."
+msgstr ""
+
+msgid "Borrar clave Deepgram"
+msgstr ""
+
+msgid "Borra la API Key de Deepgram guardada en la aplicación."
+msgstr ""
+
+msgid "API Key de Gemini (AI Studio):"
+msgstr ""
+
+msgid "Clave API de Google AI Studio para el Asistente de Biblioteca. Google cambia periódicamente el formato de estas claves (por ejemplo, de prefijo AIza a prefijo AQ.), así que se guarda tal cual la pegues, sin comprobar formato ni longitud."
+msgstr ""
+
+msgid "Modelo a usar:"
+msgstr ""
+
+msgid "Automático"
+msgstr ""
+
+msgid "Automático elige el modelo según la consulta: Flash para preguntas rápidas y Pro para análisis profundos. La lista se completa con los modelos reales de tu cuenta al comprobar la clave."
+msgstr ""
+
+msgid "Temperatura, de 0 a 100 (creatividad de las respuestas):"
+msgstr ""
+
+msgid "Temperatura de Gemini"
+msgstr ""
+
+msgid "De 0 a 100. Cuanto más bajo (10 a 40), más precisas y ajustadas al catálogo real son las respuestas, con menos probabilidad de que el asistente invente títulos, autores o tramas. Cuanto más alto (70 a 100), más variedad y creatividad, a costa de más alucinaciones ocasionales. Valor de fábrica: {valor} (recomendado)."
+msgstr ""
+
+msgid "Conseguir clave Gemini"
+msgstr ""
+
+msgid "Abre el navegador en Google AI Studio para crear o copiar tu clave."
+msgstr ""
+
+msgid "Comprobar clave y listar modelos Gemini"
+msgstr ""
+
+msgid "Guarda la clave, la verifica contra Gemini y actualiza la lista de modelos disponibles."
+msgstr ""
+
+msgid "Borrar clave Gemini"
+msgstr ""
+
+msgid "Borra la API Key de Gemini guardada en la aplicación."
+msgstr ""
+
+msgid "Guardar Todas las Claves"
+msgstr ""
+
+msgid "Guardar todas las claves"
+msgstr ""
+
+msgid "Ajustes de proveedores guardados correctamente."
+msgstr ""
+
+msgid "Éxito"
+msgstr ""
+
+msgid "Clave de Azure borrada."
+msgstr ""
+
+msgid "Clave de Amazon Polly borrada."
+msgstr ""
+
+msgid "Clave de ElevenLabs borrada."
+msgstr ""
+
+msgid "Clave de Deepgram borrada."
+msgstr ""
+
+msgid "Clave de Gemini borrada."
+msgstr ""
+
+msgid "Clave de Gemini válida. Modelos disponibles: {n}."
+msgstr ""
+
+msgid "Error: {error}"
+msgstr ""
+
+msgid "Resultado:\n{res}"
+msgstr ""
+
+msgid "Característica:"
+msgstr ""
+
+msgid "Filtra las voces de Azure por características detectadas en su nombre técnico: Multilingüe (varios idiomas), Dragon (calidad HD más reciente), MaiVoice, Flash (baja latencia) o Neural genérica."
+msgstr ""
+
+msgid "Tipo de motor:"
+msgstr ""
+
+msgid "Filtra las voces de Amazon Polly por tipo de motor. Neural: mayor calidad y naturalidad. Estándar: compatible con todos los planes. Generativa Long-form: optimizada para textos largos. Generativa: motor generativo estándar."
+msgstr ""
+
+msgid "Voces SAPI5 instaladas en este equipo:"
+msgstr ""
+
+msgid "Solo favoritas"
+msgstr ""
+
+msgid "Marcada: muestra solo las voces SAPI5 marcadas como favoritas. Desmarcada: muestra todas las voces SAPI5 del sistema."
+msgstr ""
+
+msgid "Nombre"
+msgstr ""
+
+msgid "Lista de voces SAPI5 locales instaladas en este equipo. Usa las flechas para navegar. Pulsa Intro para marcar o desmarcar una voz como favorita. Las voces marcadas aparecerán en las pestañas Lectura, Creador de Audiolibros y Grabación."
+msgstr ""
+
+msgid "Escuchar muestra (Alt+P)"
+msgstr ""
+
+msgid "Reproduce una muestra de texto con la voz SAPI5 seleccionada. Púlsalo de nuevo para detener la reproducción."
+msgstr ""
+
+msgid "Selecciona una voz."
+msgstr ""
+
+msgid "Hola, mi nombre es {nombre}. Esta es una muestra de voz local de tu sistema."
+msgstr ""
+
+msgid "Detener preescucha (Alt+P)"
+msgstr ""
+
+msgid "Alcance:"
+msgstr ""
+
+msgid "Global"
+msgstr ""
+
+msgid "Este libro"
+msgstr ""
+
+msgid "Esta saga"
+msgstr ""
+
+msgid "Global aplica a todos los libros. Este libro o Esta saga solo afectan al libro o a la saga/etiqueta que elijas a la derecha, sin tocar el resto de tu biblioteca."
+msgstr ""
+
+msgid "Elige el libro o la saga/etiqueta a la que se aplicarán las reglas de esta lista."
+msgstr ""
+
+msgid "Palabras con pronunciación personalizada:"
+msgstr ""
+
+msgid "Palabra original"
+msgstr ""
+
+msgid "Pronunciación fonética"
+msgstr ""
+
+msgid "Lista de sustituciones activas. Selecciona una entrada y usa los botones para editarla o eliminarla."
+msgstr ""
+
+msgid "Palabra:"
+msgstr ""
+
+msgid "Escribe la palabra o sigla tal como aparece en el texto."
+msgstr ""
+
+msgid "Pronunciación:"
+msgstr ""
+
+msgid "Escribe la pronunciación fonética que usará la voz. Ejemplo: NVDA → en-ví-di-ei"
+msgstr ""
+
+msgid "Añadir / Actualizar"
+msgstr ""
+
+msgid "Guarda la entrada del formulario en la lista. Si la palabra ya existe, actualiza su pronunciación."
+msgstr ""
+
+msgid "Añadir o actualizar"
+msgstr ""
+
+msgid "Eliminar seleccionada"
+msgstr ""
+
+msgid "Elimina la entrada seleccionada en la lista."
+msgstr ""
+
+msgid "Guardar cambios\tAlt+G"
+msgstr ""
+
+msgid "Guarda todos los cambios del diccionario en disco y recarga la pronunciación activa."
+msgstr ""
+
+msgid "Guardar cambios"
+msgstr ""
+
+msgid "Rellena los dos campos."
+msgstr ""
+
+msgid "Aviso"
+msgstr ""
+
+msgid "Elige primero un libro o una saga a la derecha."
+msgstr ""
+
+msgid "Selecciona una entrada de la lista."
+msgstr ""
+
+msgid "Diccionario guardado correctamente."
+msgstr ""
+
+msgid "Guardado"
+msgstr ""
+
+msgid "No se pudo guardar el diccionario."
+msgstr ""
+
+msgid "Asignar tecla"
+msgstr ""
+
+msgid "Atajo: {descripcion}\n\nPresiona la combinación de teclas que quieres asignar.\nEscape para cancelar sin cambios."
+msgstr ""
+
+msgid "Esperando tecla..."
+msgstr ""
+
+msgid "Asignando: {combo}"
+msgstr ""
+
+msgid "Lista de atajos de teclado. Selecciona uno y pulsa Intro o el botón Asignar para cambiarlo. La tecla predeterminada aparece entre paréntesis junto al nombre."
+msgstr ""
+
+msgid "Acción (tecla predeterminada entre paréntesis)"
+msgstr ""
+
+msgid "Tecla asignada actualmente"
+msgstr ""
+
+msgid "Lista de acciones con sus atajos de teclado. Usa las flechas Arriba y Abajo para navegar. Pulsa Intro para abrir el diálogo de asignación de la acción seleccionada."
+msgstr ""
+
+msgid "Asignar nueva tecla al atajo seleccionado"
+msgstr ""
+
+msgid "Abre un diálogo donde puedes pulsar la combinación de teclas que quieres asignar."
+msgstr ""
+
+msgid "Eliminar asignación personalizada"
+msgstr ""
+
+msgid "Elimina la asignación personalizada y vuelve a la tecla predeterminada."
+msgstr ""
+
+msgid "Restablecer todos los atajos a valores predeterminados"
+msgstr ""
+
+msgid "Borra todas las personalizaciones y devuelve todos los atajos a sus valores de fábrica."
+msgstr ""
+
+msgid "Atajos fijos del menú (no configurables)"
+msgstr ""
+
+msgid "Cambiar de pestaña (Biblioteca, Lectura, Creador de Audiolibros, Grabación, Ajustes)"
+msgstr ""
+
+msgid "Cargar libro (Lectura) / Abrir carpeta (Biblioteca o Grabación) — según la pestaña activa"
+msgstr ""
+
+msgid "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"
+msgstr ""
+
+msgid "Abrir gestor de proyectos (menú Proyectos)"
+msgstr ""
+
+msgid "Anunciar página actual (Lectura) / Info del libro seleccionado (Biblioteca) — según la pestaña activa"
+msgstr ""
+
+msgid "Marcar/desmarcar como favorito el libro seleccionado (pestaña Biblioteca)"
+msgstr ""
+
+msgid "Escuchar muestra de la voz seleccionada (Creador de Audiolibros, Grabación)"
+msgstr ""
+
+msgid "Guardar configuración general (pestaña Ajustes)"
+msgstr ""
+
+msgid "Abrir el menú contextual de la pestaña activa"
+msgstr ""
+
+msgid "Abrir el Asistente de Biblioteca (Gemini)"
+msgstr ""
+
+msgid "Salir de la aplicación"
+msgstr ""
+
+msgid "[personalizada]"
+msgstr ""
+
+msgid "Selecciona un atajo de la lista primero."
+msgstr ""
+
+msgid "¿Restablecer todos los atajos a los valores predeterminados?"
+msgstr ""
+
+msgid "Todos los atajos han vuelto a sus valores predeterminados."
+msgstr ""
+
+msgid "Listo"
+msgstr ""
+
+msgid "Efectos de sonido:"
+msgstr ""
+
+msgid "Habilitar todos los efectos de sonido de la aplicación"
+msgstr ""
+
+msgid "Desmarca esta casilla para silenciar todos los sonidos de la app: navegación, éxito, error, y el resto de efectos."
+msgstr ""
+
+msgid "Probar un efecto:"
+msgstr ""
+
+msgid "Probar sonido"
+msgstr ""
+
+msgid "Reproduce el efecto seleccionado, incluso si está desactivado (individualmente o con la casilla global)."
+msgstr ""
+
+msgid "Desactivar sonido «{nombre}»"
+msgstr ""
+
+msgid "Activar sonido «{nombre}»"
+msgstr ""
+
+msgid "Plantillas de prompt del Asistente de Biblioteca:"
+msgstr ""
+
+msgid "Plantilla:"
+msgstr ""
+
+msgid "Nombre:"
+msgstr ""
+
+msgid "Texto del prompt:"
+msgstr ""
+
+msgid "Texto del prompt"
+msgstr ""
+
+msgid "Guardar plantilla"
+msgstr ""
+
+msgid "Borrar plantilla"
+msgstr ""
+
+msgid "Abrir carpeta de plantillas"
+msgstr ""
+
+msgid "Abre en el Explorador de Windows la carpeta donde se guarda cada plantilla como un archivo .txt independiente, editable desde fuera de la app."
+msgstr ""
+
+msgid "El nombre y el texto del prompt no pueden estar vacíos."
+msgstr ""
+
+msgid "Plantilla «{nombre}» guardada."
+msgstr ""
+
+msgid "¿Borrar la plantilla «{nombre}»?"
+msgstr ""
+
+msgid "Plantilla «{nombre}» borrada."
+msgstr ""
+
+msgid "No se puede borrar: tiene que quedar al menos una plantilla."
+msgstr ""
+
+msgid "No se pudo abrir la carpeta de plantillas."
+msgstr ""
+
+msgid "Árbol de categorías de ajustes. Usa las flechas Arriba y Abajo para navegar entre categorías. Flecha Derecha expande una rama; Flecha Izquierda la contrae. Tab salta al primer control de la habitación seleccionada."
+msgstr ""
+
+msgid "Configuración General"
+msgstr ""
+
+msgid "Credenciales y API Keys"
+msgstr ""
+
+msgid "Voces Locales SAPI5"
+msgstr ""
+
+msgid "Reglas del Diccionario"
+msgstr ""
+
+msgid "Atajos de Teclado"
+msgstr ""
+
+msgid "Efectos de Sonido"
+msgstr ""
+
+msgid "Guardado."
+msgstr ""
+
+msgid "Error al guardar."
+msgstr ""
+
+msgid "Ajustes"
+msgstr ""
+
+msgid "Catálogos de Voces"
+msgstr ""
+
+msgid "Tienes cambios sin guardar en el diccionario de pronunciación.\n¿Deseas descartarlos y continuar?"
+msgstr ""
+
+msgid "Cambios sin guardar"
+msgstr ""
+
+msgid "No se pudo guardar la configuración."
+msgstr ""
+
+msgid "Cuota insuficiente para continuar"
+msgstr ""
+
+msgid "{proveedor} no tiene cuota suficiente para este texto ({caracteres} caracteres)."
+msgstr ""
+
+msgid "Proveedor alternativo:"
+msgstr ""
+
+msgid "{nombre} (Disponible: {saldo} caracteres)"
+msgstr ""
+
+msgid "Ningún proveedor de nube configurado tiene cuota suficiente"
+msgstr ""
+
+msgid "Proveedores de nube configurados que sí tienen cuota disponible para este texto, ordenados de mayor a menor saldo. Al cambiar de proveedor se actualiza el catálogo de voces de abajo."
+msgstr ""
+
+msgid "Velocidad de preescucha:"
+msgstr ""
+
+msgid "Velocidad de preescucha"
+msgstr ""
+
+msgid "Velocidad usada solo para la preescucha (Alt+P) y devuelta a la ventana principal al aceptar. 0 es la más lenta, 100 la más rápida. Flechas: ±1. RePág/AvPág: ±5."
+msgstr ""
+
+msgid "Voz local para «Usar voz local»:"
+msgstr ""
+
+msgid "Cargando voces locales..."
+msgstr ""
+
+msgid "Voz SAPI5 (64 o 32 bits) que se usará si pulsas «Usar voz local». Incluye todas las voces instaladas en tu equipo, no solo las favoritas."
+msgstr ""
+
+msgid "Usar proveedor alternativo"
+msgstr ""
+
+msgid "Continúa la exportación con el proveedor y la voz seleccionados arriba."
+msgstr ""
+
+msgid "Usar voz local"
+msgstr ""
+
+msgid "Continúa la exportación con la voz local SAPI5 elegida en el combo de arriba, sin coste ni límite de cuota."
+msgstr ""
+
+msgid "Dividir en partes"
+msgstr ""
+
+msgid "Genera hasta donde alcance la cuota actual y guarda el resto como parte pendiente para retomar más tarde. Solo disponible en modo Libro completo."
+msgstr ""
+
+msgid "Este proveedor no tiene voces favoritas guardadas. Se muestran todas sus voces."
+msgstr ""
+
+msgid "{proveedor} sin cuota suficiente. Ningún otro proveedor de nube tiene saldo disponible. Puedes usar la voz local o dividir en partes."
+msgstr ""
+
+msgid "proveedor alternativo"
+msgstr ""
+
+msgid "proveedores alternativos"
+msgstr ""
+
+msgid "{proveedor} sin cuota suficiente. {n} {plural} disponible con saldo."
+msgstr ""
+
+msgid "Selecciona un proveedor con cuota disponible."
+msgstr ""
+
+msgid "Selecciona una voz del catálogo antes de continuar."
+msgstr ""
+
+msgid "No se encontró ninguna voz SAPI5 instalada"
+msgstr ""
+
+msgid "Voz local (SAPI5)"
+msgstr ""
+
+msgid "Libro cargado:"
+msgstr ""
+
+msgid "Ningún libro cargado. Ve a Biblioteca (Ctrl+1) y usa «Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
+msgstr ""
+
+msgid "Eliminar libro cargado"
+msgstr ""
+
+msgid "Quita el libro actual de esta pestaña, por si se cargó el libro equivocado, sin afectar a la Biblioteca ni al archivo original."
+msgstr ""
+
+msgid "Retomar exportación pendiente"
+msgstr ""
+
+msgid "Continúa una exportación que se quedó a medias por falta de cuota o un corte de conexión, sin regrabar lo que ya se generó."
+msgstr ""
+
+msgid "Modo de exportación:"
+msgstr ""
+
+msgid "Libro completo"
+msgstr ""
+
+msgid "Por capítulos"
+msgstr ""
+
+msgid "Libro completo genera un único archivo MP3 con todo el libro. Por capítulos genera un MP3 independiente por cada capítulo, numerado."
+msgstr ""
+
+msgid "Voz para la exportación:"
+msgstr ""
+
+msgid "Cargando voces favoritas..."
+msgstr ""
+
+msgid "Voz favorita que se usará para la exportación, de cualquier proveedor configurado, incluidas las voces locales SAPI5. Marca tus favoritas desde Ajustes; esta lista se actualiza sola."
+msgstr ""
+
+msgid "Reproduce una muestra corta con la voz seleccionada arriba, a la velocidad y volumen configurados en esta pestaña. Púlsalo de nuevo para detener la reproducción."
+msgstr ""
+
+msgid "Calcular presupuesto"
+msgstr ""
+
+msgid "Cuenta los caracteres del libro (o de los capítulos) y comprueba si caben en la cuota configurada, sin generar audio."
+msgstr ""
+
+msgid "Iniciar exportación"
+msgstr ""
+
+msgid "Empieza a generar el audiolibro. Se habilita después de calcular el presupuesto con la configuración actual."
+msgstr ""
+
+msgid "Abortar exportación"
+msgstr ""
+
+msgid "Detiene la exportación en curso. Lo ya generado hasta ese punto se conserva y queda registrado como pendiente para retomarlo más tarde."
+msgstr ""
+
+msgid "Abrir carpeta"
+msgstr ""
+
+msgid "Abre en el Explorador la carpeta donde se guardan los audiolibros exportados de este libro."
+msgstr ""
+
+msgid "Velocidad:"
+msgstr ""
+
+msgid "Velocidad de exportación"
+msgstr ""
+
+msgid "Volumen de exportación"
+msgstr ""
+
+msgid "Sin exportación en curso."
+msgstr ""
+
+msgid "Progreso de la exportación actual."
+msgstr ""
+
+msgid "Capítulos"
+msgstr ""
+
+msgid "Nº"
+msgstr ""
+
+msgid "Capítulos del libro. Todos empiezan marcados para incluirse en la exportación; desmarca con Intro o Espacio los que no quieras (índice, dedicatoria, agradecimientos...). El estado de cada uno se actualiza durante la exportación por capítulos."
+msgstr ""
+
+msgid "(sin título)"
+msgstr ""
+
+msgid "Libro cargado en el Creador de Audiolibros: {descripcion}"
+msgstr ""
+
+msgid "Hay una exportación pendiente de completar para este libro."
+msgstr ""
+
+msgid "Ya hay una operación en curso."
+msgstr ""
+
+msgid "Elige una voz favorita antes de retomar la exportación."
+msgstr ""
+
+msgid "Cargando capítulos para retomar la exportación..."
+msgstr ""
+
+msgid "Completado (ya existe)"
+msgstr ""
+
+msgid "Capítulos cargados. Los primeros {n} ya estaban completados y quedan excluidos. Pulsa Calcular presupuesto para continuar con el resto."
+msgstr ""
+
+msgid "El Creador de Audiolibros no admite el formato «{formato}»."
+msgstr ""
+
+msgid "Preparando la continuación de la exportación..."
+msgstr ""
+
+msgid "Continuando la exportación como parte {n}."
+msgstr ""
+
+msgid "No se puede eliminar el libro mientras hay una exportación en curso."
+msgstr ""
+
+msgid "Libro eliminado del Creador de Audiolibros."
+msgstr ""
+
+msgid "No hay ninguna voz favorita seleccionada para escuchar."
+msgstr ""
+
+msgid "Hola, mi nombre es {nombre}. Esta es una muestra de voz para el audiolibro."
+msgstr ""
+
+msgid "Error al reproducir la muestra: {error}"
+msgstr ""
+
+msgid "Esta pestaña solo trabaja con libros de la Biblioteca. Ve a Biblioteca con Ctrl+1 y usa «Enviar a Creador de Audiolibros» sobre el libro que quieras exportar."
+msgstr ""
+
+msgid "Sin voces favoritas — marca alguna en Ajustes"
+msgstr ""
+
+msgid "Calculando presupuesto..."
+msgstr ""
+
+msgid "No has incluido ningún capítulo. Marca al menos uno para calcular el presupuesto."
+msgstr ""
+
+msgid "Excluido (no se exportará)"
+msgstr ""
+
+msgid "cabe en la cuota actual"
+msgstr ""
+
+msgid "NO cabe en la cuota actual del proveedor elegido"
+msgstr ""
+
+msgid "Presupuesto calculado: {caracteres} caracteres. Estado: {estado}."
+msgstr ""
+
+msgid "Coste estimado con tarifa de referencia: unos {coste} dólares (puede no ser exacto)."
+msgstr ""
+
+msgid "{h} h {min} min"
+msgstr ""
+
+msgid "{min} min"
+msgstr ""
+
+msgid "Duración estimada del audio: {duracion}."
+msgstr ""
+
+msgid "Error al calcular presupuesto: {error}"
+msgstr ""
+
+msgid "Calcula el presupuesto antes de iniciar la exportación."
+msgstr ""
+
+msgid "el proveedor actual"
+msgstr ""
+
+msgid "Exportación cancelada."
+msgstr ""
+
+msgid "Iniciando exportación..."
+msgstr ""
+
+msgid "Exportando: {actual} de {total} — {etiqueta}"
+msgstr ""
+
+msgid "Último capítulo generado ({etiqueta}). Finalizando exportación..."
+msgstr ""
+
+msgid "Capítulo completado ({actual} de {total}): {etiqueta}."
+msgstr ""
+
+msgid "Último bloque generado. Finalizando exportación..."
+msgstr ""
+
+msgid "Exportación al {pct}%."
+msgstr ""
+
+msgid "Exportación cancelada. {completados} de {total} capítulos completados. Queda registrado como pendiente."
+msgstr ""
+
+msgid "Exportación detenida por falta de cuota. {completados} de {total} capítulos completados. Queda registrado como pendiente."
+msgstr ""
+
+msgid "Exportación finalizada. {total} capítulos completados."
+msgstr ""
+
+msgid "Exportación del libro completo finalizada."
+msgstr ""
+
+msgid "Exportación cancelada. Se guardó una parte pendiente para retomar más tarde."
+msgstr ""
+
+msgid "Exportación detenida por falta de cuota. Se guardó una parte pendiente para retomar más tarde."
+msgstr ""
+
+msgid "Error durante la exportación: {error}"
+msgstr ""
+
+msgid "Cancelando exportación..."
+msgstr ""
+
+msgid "Capítulo"
+msgstr ""
+
+msgid "Lista de capítulos del EPUB. Flechas Arriba y Abajo para navegar. Espacio para marcar o desmarcar el capítulo enfocado. Los capítulos marcados se exportarán como archivos TXT individuales. El número de cada capítulo coincide con el número del archivo TXT generado."
+msgstr ""
+
+msgid "Archivo EPUB de origen"
+msgstr ""
+
+msgid "Ruta del archivo EPUB seleccionado. Solo lectura. Usa el botón 'Examinar EPUB' para seleccionar un archivo."
+msgstr ""
+
+msgid "Examinar EPUB…"
+msgstr ""
+
+msgid "Abre un diálogo para seleccionar el archivo EPUB que deseas dividir en capítulos."
+msgstr ""
+
+msgid "Examinar EPUB"
+msgstr ""
+
+msgid "Capítulos detectados (Espacio para marcar o desmarcar)"
+msgstr ""
+
+msgid "Seleccionar todo"
+msgstr ""
+
+msgid "Deseleccionar todo"
+msgstr ""
+
+msgid "Limpiar lista"
+msgstr ""
+
+msgid "Marca todos los capítulos de la lista."
+msgstr ""
+
+msgid "Desmarca todos los capítulos de la lista."
+msgstr ""
+
+msgid "Resetea el diálogo: borra la lista y la ruta del EPUB para poder cargar otro archivo sin cerrar la ventana."
+msgstr ""
+
+msgid "Dividir seleccionados"
+msgstr ""
+
+msgid "Genera un archivo TXT por cada capítulo marcado. Los archivos se guardan en Grabaciones_Epub-TTS/<Nombre del libro>/capitulos/."
+msgstr ""
+
+msgid "Progreso de la división y resultado final. NVDA lo leerá al enfocar esta etiqueta."
+msgstr ""
+
+msgid "Abrir carpeta capitulos"
+msgstr ""
+
+msgid "Abre en el Explorador la carpeta /capitulos/ donde se generaron los TXT."
+msgstr ""
+
+msgid "Cerrar (Escape)"
+msgstr ""
+
+msgid "Cierra este diálogo. También puedes pulsar Escape."
+msgstr ""
+
+msgid "Cerrar diálogo"
+msgstr ""
+
+msgid "Seleccionar archivo EPUB"
+msgstr ""
+
+msgid "Archivos EPUB (*.epub)|*.epub|Todos (*.*)|*.*"
+msgstr ""
+
+msgid "Cargando índice del EPUB…"
+msgstr ""
+
+msgid "Error al cargar: {error}"
+msgstr ""
+
+msgid "No se pudo leer el EPUB:\n{error}"
+msgstr ""
+
+msgid "Error al abrir EPUB"
+msgstr ""
+
+msgid "{n} sección(es) en el índice. Marca las que quieres exportar."
+msgstr ""
+
+msgid "Marca al menos un capítulo antes de iniciar la división."
+msgstr ""
+
+msgid "Nada seleccionado"
+msgstr ""
+
+msgid "Dividiendo…"
+msgstr ""
+
+msgid "Procesando {actual}/{total}: {titulo}"
+msgstr ""
+
+msgid "Error durante la división: {error}"
+msgstr ""
+
+msgid "Se produjo un error durante la división:\n{error}"
+msgstr ""
+
+msgid "Error al dividir"
+msgstr ""
+
+msgid "División completada: {n} archivo(s) TXT generado(s)."
+msgstr ""
+
+msgid "Se han generado {n} archivo(s).\n¿Abrir carpeta de destino?"
+msgstr ""
+
+msgid "División completada"
+msgstr ""
+
+msgid "Dividir EPUB{sufijo}"
+msgstr ""
+
+msgid "La carpeta de destino no existe todavía o no se ha generado correctamente."
+msgstr ""
+
+msgid "Carpeta no encontrada"
+msgstr ""
+
+msgid "Error al abrir carpeta"
+msgstr ""
+
+msgid "Idioma:"
+msgstr ""
+
+msgid "Filtra las voces de {proveedor} por idioma. Elige Todos para ver el catálogo completo del proveedor."
+msgstr ""
+
+msgid "Marcada: muestra solo las voces de este proveedor que ya tienes marcadas como favoritas."
+msgstr ""
+
+msgid "Solo nuevas voces"
+msgstr ""
+
+msgid "Marcada: muestra solo las voces de este proveedor añadidas desde la última actualización."
+msgstr ""
+
+msgid "Buscar nombre de voz:"
+msgstr ""
+
+msgid "Escribe parte del nombre de una voz para filtrar la lista en tiempo real. Borra el campo para ver todas las voces del filtro activo."
+msgstr ""
+
+msgid "Lista de voces de {proveedor}. Usa las flechas para navegar. Pulsa Intro para marcar o desmarcar una voz como favorita. Las voces marcadas aparecerán en Lectura, Creador de Audiolibros y Grabación."
+msgstr ""
+
+msgid "Reproduce una muestra de texto con la voz seleccionada. Púlsalo de nuevo para detener la reproducción."
+msgstr ""
+
+msgid "Hola, mi nombre es {nombre}. El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar."
+msgstr ""
+
