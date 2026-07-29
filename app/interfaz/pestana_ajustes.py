@@ -1028,6 +1028,12 @@ class PanelClaves(wx.ScrolledWindow):
     def al_guardar(self, evento, mensaje=None):
         if mensaje is None:
             mensaje = _("Ajustes de proveedores guardados correctamente.")
+        # El modelo real que se persiste NUNCA se decide comparando el texto
+        # traducido del combo: el índice 0 es siempre "automático" (id
+        # técnico "auto"), venga o no envuelto en _() para mostrarse; los
+        # demás índices son ids de modelo reales devueltos por la API de
+        # Gemini (sin traducir), así que se usan tal cual.
+        indice_ge = self.combo_ge_modelo.GetSelection()
         seleccion_ge = self.combo_ge_modelo.GetStringSelection()
         claves = {
             "azure": {
@@ -1043,7 +1049,7 @@ class PanelClaves(wx.ScrolledWindow):
             "deepgram": {"api_key": self.txt_dg_key.GetValue().strip()},
             "gemini": {
                 "api_key": self.txt_ge_key.GetValue().strip(),
-                "modelo": "auto" if seleccion_ge in ("", _("Automático")) else seleccion_ge,
+                "modelo": "auto" if indice_ge <= 0 else seleccion_ge,
                 "temperatura": round(self.slider_ge_temperatura.GetValue() / 100, 2),
             },
         }
@@ -1153,9 +1159,13 @@ class PanelAzure(PanelProveedorIA):
     def _construir_controles_extra(self, sizer):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(
-            wx.StaticText(self, label="Característica:"),
+            wx.StaticText(self, label=_("Característica:")),
             0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
         )
+        # "Todas" y las claves de _CARACTERISTICAS_ETIQUETA se comparan
+        # literalmente en _obtener_filtros_extra() — no se envuelven en _()
+        # para no romper esa comparación (ver corrección del combo de
+        # modelo Gemini: nunca comparar lógica contra texto ya traducido).
         self.combo_caracteristica = wx.ComboBox(
             self,
             style=wx.CB_READONLY,
@@ -1163,9 +1173,9 @@ class PanelAzure(PanelProveedorIA):
         )
         self.combo_caracteristica.SetSelection(0)
         self.combo_caracteristica.SetHelpText(
-            "Filtra las voces de Azure por características detectadas en su "
-            "nombre técnico: Multilingüe (varios idiomas), Dragon (calidad HD "
-            "más reciente), MaiVoice, Flash (baja latencia) o Neural genérica."
+            _("Filtra las voces de Azure por características detectadas en su "
+              "nombre técnico: Multilingüe (varios idiomas), Dragon (calidad HD "
+              "más reciente), MaiVoice, Flash (baja latencia) o Neural genérica.")
         )
         self.combo_caracteristica.Bind(wx.EVT_COMBOBOX, self._al_filtrar)
         hbox.Add(self.combo_caracteristica, 0)
@@ -1230,9 +1240,12 @@ class PanelPolly(PanelProveedorIA):
     def _construir_controles_extra(self, sizer):
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         hbox.Add(
-            wx.StaticText(self, label="Tipo de motor:"),
+            wx.StaticText(self, label=_("Tipo de motor:")),
             0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
         )
+        # "Todos" y las claves de _MOTORES_ETIQUETA se comparan literalmente
+        # en _obtener_filtros_extra() — sin envolver, mismo motivo que en
+        # PanelAzure._construir_controles_extra().
         self.combo_motor = wx.ComboBox(
             self,
             style=wx.CB_READONLY,
@@ -1240,11 +1253,11 @@ class PanelPolly(PanelProveedorIA):
         )
         self.combo_motor.SetSelection(0)
         self.combo_motor.SetHelpText(
-            "Filtra las voces de Amazon Polly por tipo de motor. "
-            "Neural: mayor calidad y naturalidad. "
-            "Estándar: compatible con todos los planes. "
-            "Generativa Long-form: optimizada para textos largos. "
-            "Generativa: motor generativo estándar."
+            _("Filtra las voces de Amazon Polly por tipo de motor. "
+              "Neural: mayor calidad y naturalidad. "
+              "Estándar: compatible con todos los planes. "
+              "Generativa Long-form: optimizada para textos largos. "
+              "Generativa: motor generativo estándar.")
         )
         self.combo_motor.Bind(wx.EVT_COMBOBOX, self._al_filtrar)
         hbox.Add(self.combo_motor, 0)
@@ -1293,26 +1306,26 @@ class PanelSapi5(wx.Panel):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(
-            wx.StaticText(self, label="Voces SAPI5 instaladas en este equipo:"),
+            wx.StaticText(self, label=_("Voces SAPI5 instaladas en este equipo:")),
             0, wx.ALL, 8,
         )
 
-        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+        self.chk_solo_favs = wx.CheckBox(self, label=_("Solo favoritas"))
         self.chk_solo_favs.SetHelpText(
-            "Marcada: muestra solo las voces SAPI5 marcadas como favoritas. "
-            "Desmarcada: muestra todas las voces SAPI5 del sistema."
+            _("Marcada: muestra solo las voces SAPI5 marcadas como favoritas. "
+              "Desmarcada: muestra todas las voces SAPI5 del sistema.")
         )
         self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self._al_filtrar)
         sizer.Add(self.chk_solo_favs, 0, wx.LEFT | wx.BOTTOM, 8)
 
         self.lista_voces = ListaVocesCheck(self)
-        self.lista_voces.InsertColumn(0, "Nombre", width=320)
-        self.lista_voces.InsertColumn(1, "Idioma", width=200)
+        self.lista_voces.InsertColumn(0, _("Nombre"), width=320)
+        self.lista_voces.InsertColumn(1, _("Idioma"), width=200)
         self.lista_voces.SetHelpText(
-            "Lista de voces SAPI5 locales instaladas en este equipo. "
-            "Usa las flechas para navegar. "
-            "Pulsa Intro para marcar o desmarcar una voz como favorita. "
-            "Las voces marcadas aparecerán en las pestañas Lectura, Creador de Audiolibros y Grabación."
+            _("Lista de voces SAPI5 locales instaladas en este equipo. "
+              "Usa las flechas para navegar. "
+              "Pulsa Intro para marcar o desmarcar una voz como favorita. "
+              "Las voces marcadas aparecerán en las pestañas Lectura, Creador de Audiolibros y Grabación.")
         )
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)
@@ -1321,10 +1334,10 @@ class PanelSapi5(wx.Panel):
         from app.motor.reproductor_voz import ReproductorVoz
         self._reproductor = ReproductorVoz()
 
-        self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar = wx.Button(self, label=_("Escuchar muestra (Alt+P)"))
         self.btn_escuchar.SetHelpText(
-            "Reproduce una muestra de texto con la voz SAPI5 seleccionada. "
-            "Púlsalo de nuevo para detener la reproducción."
+            _("Reproduce una muestra de texto con la voz SAPI5 seleccionada. "
+              "Púlsalo de nuevo para detener la reproducción.")
         )
         self.btn_escuchar.Bind(wx.EVT_BUTTON, self._al_escuchar)
         sizer.Add(self.btn_escuchar, 0, wx.ALL, 8)
@@ -1439,30 +1452,30 @@ class PanelSapi5(wx.Panel):
     def _al_escuchar(self, evento):
         if self._reproductor.obtener_estado() == "reproduciendo":
             self._reproductor.detener()
-            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
+            self.btn_escuchar.SetLabel(_("Escuchar muestra (Alt+P)"))
             return
         idx = self.lista_voces.GetFirstSelected()
         if idx == -1:
             reproducir(ERROR)
-            wx.MessageBox("Selecciona una voz.", "Info")
+            wx.MessageBox(_("Selecciona una voz."), _("Info"))
             return
         voz = self.mapa_indices.get(idx)
         nombre = voz.get('nombre', '')
         try:
             self._reproductor.fijar_voz(voz)
-            texto = (
-                f"Hola, mi nombre es {nombre}. "
+            texto = _(
+                "Hola, mi nombre es {nombre}. "
                 "Esta es una muestra de voz local de tu sistema."
-            )
-            self.btn_escuchar.SetLabel("Detener preescucha (Alt+P)")
+            ).format(nombre=nombre)
+            self.btn_escuchar.SetLabel(_("Detener preescucha (Alt+P)"))
             self._reproductor.cargar_texto(texto, callback_completado=self._al_terminar_escucha)
         except Exception as e:
-            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
+            self.btn_escuchar.SetLabel(_("Escuchar muestra (Alt+P)"))
             reproducir(ERROR)
-            wx.MessageBox(f"Error: {e}", "Error")
+            wx.MessageBox(_("Error: {error}").format(error=e), _("Error"))
 
     def _al_terminar_escucha(self):
-        wx.CallAfter(self.btn_escuchar.SetLabel, "Escuchar muestra (Alt+P)")
+        wx.CallAfter(self.btn_escuchar.SetLabel, _("Escuchar muestra (Alt+P)"))
 # ANCLAJE_FIN: PANEL_SAPI5
 
 
@@ -1493,21 +1506,23 @@ class PanelDiccionario(wx.Panel):
         # ANCLAJE_INICIO: SELECTOR_ALCANCE_DICCIONARIO
         sz_alcance = wx.BoxSizer(wx.HORIZONTAL)
         sz_alcance.Add(
-            wx.StaticText(self, label="Alcance:"), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5,
+            wx.StaticText(self, label=_("Alcance:")), 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5,
         )
-        self.combo_alcance = wx.Choice(self, choices=["Global", "Este libro", "Esta saga"])
+        self.combo_alcance = wx.Choice(
+            self, choices=[_("Global"), _("Este libro"), _("Esta saga")]
+        )
         self.combo_alcance.SetSelection(0)
         self.combo_alcance.SetHelpText(
-            "Global aplica a todos los libros. Este libro o Esta saga solo afectan "
-            "al libro o a la saga/etiqueta que elijas a la derecha, sin tocar el resto "
-            "de tu biblioteca."
+            _("Global aplica a todos los libros. Este libro o Esta saga solo afectan "
+              "al libro o a la saga/etiqueta que elijas a la derecha, sin tocar el resto "
+              "de tu biblioteca.")
         )
         self.combo_alcance.Bind(wx.EVT_CHOICE, self._al_cambiar_alcance)
         sz_alcance.Add(self.combo_alcance, 0, wx.RIGHT, 15)
 
         self.combo_referencia = wx.Choice(self, choices=[])
         self.combo_referencia.SetHelpText(
-            "Elige el libro o la saga/etiqueta a la que se aplicarán las reglas de esta lista."
+            _("Elige el libro o la saga/etiqueta a la que se aplicarán las reglas de esta lista.")
         )
         self.combo_referencia.Bind(wx.EVT_CHOICE, self._al_cambiar_referencia)
         self.combo_referencia.Hide()
@@ -1516,7 +1531,7 @@ class PanelDiccionario(wx.Panel):
         # ANCLAJE_FIN: SELECTOR_ALCANCE_DICCIONARIO
 
         sizer.Add(
-            wx.StaticText(self, label="Palabras con pronunciación personalizada:"),
+            wx.StaticText(self, label=_("Palabras con pronunciación personalizada:")),
             0, wx.ALL, 8,
         )
 
