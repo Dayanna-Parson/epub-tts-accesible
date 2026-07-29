@@ -551,7 +551,7 @@ class PestanaLectura(wx.Panel):
         # tiempo suficiente para responder antes de que termine el fragmento.
         idx_siguiente = self._idx_fragmento_actual + 1
         if self._cola_lectura and idx_siguiente < len(self._cola_lectura):
-            texto_sig, _ = self._cola_lectura[idx_siguiente]
+            texto_sig, _pos_sig_sin_usar = self._cola_lectura[idx_siguiente]
             if texto_sig.strip():
                 self._precarga_solicitada = True
                 voz = self.combo_voz.GetClientData(self.combo_voz.GetSelection())
@@ -645,7 +645,7 @@ class PestanaLectura(wx.Panel):
                         tiempo_transcurrido / tiempo_estimado_total >= 0.70):
                     idx_siguiente = self._idx_fragmento_actual + 1
                     if self._cola_lectura and idx_siguiente < len(self._cola_lectura):
-                        texto_sig, _ = self._cola_lectura[idx_siguiente]
+                        texto_sig, _voz_sig_sin_usar = self._cola_lectura[idx_siguiente]
                         if texto_sig.strip():
                             self._precarga_solicitada = True
                             voz = self.combo_voz.GetClientData(

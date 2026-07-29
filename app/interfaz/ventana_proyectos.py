@@ -1097,7 +1097,7 @@ class VentanaProyectos(wx.Frame):
         nombre = proyecto.get("nombre", "")
         carpeta_audio = os.path.join(RAIZ, "Grabaciones_Epub-TTS", _limpiar(nombre), "grabaciones")
         if os.path.isdir(carpeta_audio):
-            for _, _, archivos in os.walk(carpeta_audio):
+            for _raiz_sin_usar, _subcarpetas_sin_usar, archivos in os.walk(carpeta_audio):
                 if any(f.endswith(('.mp3', '.wav')) for f in archivos):
                     return _("Grabado")
 

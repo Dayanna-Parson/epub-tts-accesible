@@ -412,7 +412,7 @@ class PanelGeneral(wx.ScrolledWindow):
         total_bytes = 0
         errores = 0
 
-        for dirpath, dirnames, _ in os.walk(RAIZ):
+        for dirpath, dirnames, _archivos_sin_usar in os.walk(RAIZ):
             dirnames[:] = [
                 d for d in dirnames
                 if not d.startswith('.') and d not in ('venv', '.venv', 'env', 'node_modules')
@@ -2474,7 +2474,7 @@ class PestanaAjustes(wx.Panel):
     def _seleccionar_nodo_inicial(self):
         raiz = self.arbol_cat.GetRootItem()
         if raiz.IsOk():
-            primer_hijo, _ = self.arbol_cat.GetFirstChild(raiz)
+            primer_hijo, _cookie_sin_usar = self.arbol_cat.GetFirstChild(raiz)
             if primer_hijo.IsOk():
                 self.arbol_cat.SelectItem(primer_hijo)
 

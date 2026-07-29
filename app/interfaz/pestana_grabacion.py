@@ -683,7 +683,7 @@ class PestanaGrabacion(wx.Panel):
         nombre_sugerido = self._resolver_titulo()
         dlg = DialogoBautizo(self, self.gestor_proyectos, nombre_sugerido)
         if dlg.ShowModal() == wx.ID_OK:
-            proyecto_id, _ = dlg.obtener_resultado()
+            proyecto_id, _titulo_sin_usar = dlg.obtener_resultado()
             if proyecto_id:
                 self.gestor_proyectos.asociar_archivo(proyecto_id, self.ruta_txt_actual)
                 self.proyecto_actual = self.gestor_proyectos.obtener_proyecto(proyecto_id)
@@ -779,7 +779,7 @@ class PestanaGrabacion(wx.Panel):
 
         # Etiquetas únicas preservando orden de aparición
         vistas, self.etiquetas_detectadas = set(), []
-        for etiq, _ in self.fragmentos:
+        for etiq, _texto_frag_sin_usar in self.fragmentos:
             if etiq not in vistas:
                 self.etiquetas_detectadas.append(etiq)
                 vistas.add(etiq)

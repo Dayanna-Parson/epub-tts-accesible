@@ -770,7 +770,7 @@ msgid "{n} libro(s): "
 msgstr "{n} book(s): "
 
 msgid "Saga: {nombre}"
-msgstr "Saga: {nombre}"
+msgstr "Series: {nombre}"
 
 msgid "Género: {nombre}"
 msgstr "Genre: {nombre}"
