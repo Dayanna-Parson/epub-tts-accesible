@@ -1826,46 +1826,51 @@ class PanelAtajos(wx.Panel):
         super().__init__(padre)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(wx.StaticText(self, label=(
+        sizer.Add(wx.StaticText(self, label=_(
             "Lista de atajos de teclado. Selecciona uno y pulsa Intro o el botón Asignar para cambiarlo. "
             "La tecla predeterminada aparece entre paréntesis junto al nombre."
         )), 0, wx.ALL, 10)
 
         self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
-        self.lista.InsertColumn(0, "Acción (tecla predeterminada entre paréntesis)", width=340)
-        self.lista.InsertColumn(1, "Tecla asignada actualmente", width=200)
+        self.lista.InsertColumn(0, _("Acción (tecla predeterminada entre paréntesis)"), width=340)
+        self.lista.InsertColumn(1, _("Tecla asignada actualmente"), width=200)
         self.lista.SetHelpText(
-            "Lista de acciones con sus atajos de teclado. "
-            "Usa las flechas Arriba y Abajo para navegar. "
-            "Pulsa Intro para abrir el diálogo de asignación de la acción seleccionada."
+            _("Lista de acciones con sus atajos de teclado. "
+              "Usa las flechas Arriba y Abajo para navegar. "
+              "Pulsa Intro para abrir el diálogo de asignación de la acción seleccionada.")
         )
         self.lista.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista)
         sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_asignar = wx.Button(self, label="Asignar nueva tecla al atajo seleccionado")
+        self.btn_asignar = wx.Button(self, label=_("Asignar nueva tecla al atajo seleccionado"))
         self.btn_asignar.SetHelpText(
-            "Abre un diálogo donde puedes pulsar la combinación de teclas que quieres asignar."
+            _("Abre un diálogo donde puedes pulsar la combinación de teclas que quieres asignar.")
         )
-        self.btn_eliminar = wx.Button(self, label="Eliminar asignación personalizada")
+        self.btn_eliminar = wx.Button(self, label=_("Eliminar asignación personalizada"))
         self.btn_eliminar.SetHelpText(
-            "Elimina la asignación personalizada y vuelve a la tecla predeterminada."
+            _("Elimina la asignación personalizada y vuelve a la tecla predeterminada.")
         )
-        self.btn_restablecer = wx.Button(self, label="Restablecer todos los atajos a valores predeterminados")
+        self.btn_restablecer = wx.Button(
+            self, label=_("Restablecer todos los atajos a valores predeterminados")
+        )
         self.btn_restablecer.SetHelpText(
-            "Borra todas las personalizaciones y devuelve todos los atajos a sus valores de fábrica."
+            _("Borra todas las personalizaciones y devuelve todos los atajos a sus valores de fábrica.")
         )
         self.btn_asignar.Bind(wx.EVT_BUTTON, self._al_asignar)
         self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
         self.btn_restablecer.Bind(wx.EVT_BUTTON, self._al_restablecer)
-        aplicar_icono_boton(self.btn_eliminar, "eliminar", "Eliminar asignación personalizada")
-        aplicar_icono_boton(self.btn_restablecer, "restablecer", "Restablecer todos los atajos a valores predeterminados")
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", _("Eliminar asignación personalizada"))
+        aplicar_icono_boton(
+            self.btn_restablecer, "restablecer",
+            _("Restablecer todos los atajos a valores predeterminados"),
+        )
         hbox.Add(self.btn_asignar, 0, wx.RIGHT, 10)
         hbox.Add(self.btn_eliminar, 0, wx.RIGHT, 10)
         hbox.Add(self.btn_restablecer, 0)
         sizer.Add(hbox, 0, wx.ALL, 10)
 
-        sb_fijos = wx.StaticBox(self, label="Atajos fijos del menú (no configurables)")
+        sb_fijos = wx.StaticBox(self, label=_("Atajos fijos del menú (no configurables)"))
         sz_fijos = wx.StaticBoxSizer(sb_fijos, wx.VERTICAL)
         # Lista corregida: tenía "Ctrl+A" y "Ctrl+B" que no existen en ningún
         # sitio real de la app, y "Ctrl+G"/"Ctrl+M" duplicados con la lista
@@ -1880,17 +1885,17 @@ class PanelAtajos(wx.Panel):
         # muerto (_al_tecla_contenido y compañía) se retiró de
         # pestana_lectura.py.
         _FIJOS = [
-            ("Ctrl+1 a Ctrl+5", "Cambiar de pestaña (Biblioteca, Lectura, Creador de Audiolibros, Grabación, Ajustes)"),
-            ("Ctrl+O",       "Cargar libro (Lectura) / Abrir carpeta (Biblioteca o Grabación) — según la pestaña activa"),
-            ("Ctrl+T",       "Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)"),
-            ("Ctrl+Shift+P", "Abrir gestor de proyectos (menú Proyectos)"),
-            ("Ctrl+I",       "Anunciar página actual (Lectura) / Info del libro seleccionado (Biblioteca) — según la pestaña activa"),
-            ("Ctrl+Shift+F", "Marcar/desmarcar como favorito el libro seleccionado (pestaña Biblioteca)"),
-            ("Alt+P",        "Escuchar muestra de la voz seleccionada (Creador de Audiolibros, Grabación)"),
-            ("Ctrl+S",       "Guardar configuración general (pestaña Ajustes)"),
-            ("Tecla Menú / Mayús+F10", "Abrir el menú contextual de la pestaña activa"),
-            ("Ctrl+Shift+B", "Abrir el Asistente de Biblioteca (Gemini)"),
-            ("Alt+F4",       "Salir de la aplicación"),
+            ("Ctrl+1 a Ctrl+5", _("Cambiar de pestaña (Biblioteca, Lectura, Creador de Audiolibros, Grabación, Ajustes)")),
+            ("Ctrl+O",       _("Cargar libro (Lectura) / Abrir carpeta (Biblioteca o Grabación) — según la pestaña activa")),
+            ("Ctrl+T",       _("Abrir TXT para grabar (menú Archivo, activo en pestaña Grabación)")),
+            ("Ctrl+Shift+P", _("Abrir gestor de proyectos (menú Proyectos)")),
+            ("Ctrl+I",       _("Anunciar página actual (Lectura) / Info del libro seleccionado (Biblioteca) — según la pestaña activa")),
+            ("Ctrl+Shift+F", _("Marcar/desmarcar como favorito el libro seleccionado (pestaña Biblioteca)")),
+            ("Alt+P",        _("Escuchar muestra de la voz seleccionada (Creador de Audiolibros, Grabación)")),
+            ("Ctrl+S",       _("Guardar configuración general (pestaña Ajustes)")),
+            ("Tecla Menú / Mayús+F10", _("Abrir el menú contextual de la pestaña activa")),
+            ("Ctrl+Shift+B", _("Abrir el Asistente de Biblioteca (Gemini)")),
+            ("Alt+F4",       _("Salir de la aplicación")),
         ]
         for atajo, desc in _FIJOS:
             sz_fijos.Add(wx.StaticText(self, label=f"  {atajo:<20}  {desc}"), 0, wx.LEFT | wx.TOP, 4)
@@ -1917,7 +1922,10 @@ class PanelAtajos(wx.Panel):
             tecla_def = texto_atajo(entrada_def)
             tecla_actual = texto_atajo(entrada)
             col_accion = f"{desc} ({tecla_def})"
-            col_tecla = tecla_actual if tecla_actual == tecla_def else f"{tecla_actual}  [personalizada]"
+            col_tecla = (
+                tecla_actual if tecla_actual == tecla_def
+                else "{tecla}  {marca}".format(tecla=tecla_actual, marca=_("[personalizada]"))
+            )
             self.lista.InsertItem(i, col_accion)
             self.lista.SetItem(i, 1, col_tecla)
         if self.lista.GetItemCount() > 0:
@@ -1942,7 +1950,7 @@ class PanelAtajos(wx.Panel):
         idx = self.lista.GetFirstSelected()
         if idx == -1:
             reproducir(ERROR)
-            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+            wx.MessageBox(_("Selecciona un atajo de la lista primero."), _("Info"))
             return
         clave = self._claves[idx]
         desc = self._atajos[clave].get("descripcion", clave)
@@ -1962,7 +1970,7 @@ class PanelAtajos(wx.Panel):
         idx = self.lista.GetFirstSelected()
         if idx == -1:
             reproducir(ERROR)
-            wx.MessageBox("Selecciona un atajo de la lista primero.", "Info")
+            wx.MessageBox(_("Selecciona un atajo de la lista primero."), _("Info"))
             return
         clave = self._claves[idx]
         eliminar_atajo_usuario(clave)
@@ -1974,14 +1982,14 @@ class PanelAtajos(wx.Panel):
     def _al_restablecer(self, evento):
         from app.motor.gestor_atajos import restablecer_todos
         if wx.MessageBox(
-            "¿Restablecer todos los atajos a los valores predeterminados?",
-            "Confirmar", wx.YES_NO | wx.ICON_QUESTION,
+            _("¿Restablecer todos los atajos a los valores predeterminados?"),
+            _("Confirmar"), wx.YES_NO | wx.ICON_QUESTION,
         ) == wx.YES:
             restablecer_todos()
             self._rellenar_lista()
             self._refrescar_aceleradores_frame()
             reproducir(SUCCESS)
-            wx.MessageBox("Todos los atajos han vuelto a sus valores predeterminados.", "Listo")
+            wx.MessageBox(_("Todos los atajos han vuelto a sus valores predeterminados."), _("Listo"))
 # ANCLAJE_FIN: PANEL_ATAJOS
 
 
@@ -1993,20 +2001,20 @@ class PanelSonidos(wx.Panel):
         super().__init__(padre)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
-        sizer.Add(wx.StaticText(self, label="Efectos de sonido:"), 0, wx.LEFT | wx.TOP, 8)
+        sizer.Add(wx.StaticText(self, label=_("Efectos de sonido:")), 0, wx.LEFT | wx.TOP, 8)
 
         self.chk_habilitados = wx.CheckBox(
-            self, label="Habilitar todos los efectos de sonido de la aplicación"
+            self, label=_("Habilitar todos los efectos de sonido de la aplicación")
         )
         self.chk_habilitados.SetValue(sonidos_habilitados())
         self.chk_habilitados.SetHelpText(
-            "Desmarca esta casilla para silenciar todos los sonidos de la app: "
-            "navegación, éxito, error, y el resto de efectos."
+            _("Desmarca esta casilla para silenciar todos los sonidos de la app: "
+              "navegación, éxito, error, y el resto de efectos.")
         )
         self.chk_habilitados.Bind(wx.EVT_CHECKBOX, self.al_cambiar_habilitados)
         sizer.Add(self.chk_habilitados, 0, wx.ALL, 8)
 
-        sizer.Add(wx.StaticText(self, label="Probar un efecto:"), 0, wx.LEFT, 8)
+        sizer.Add(wx.StaticText(self, label=_("Probar un efecto:")), 0, wx.LEFT, 8)
         self._ids_sonidos = list(SONIDOS_DISPONIBLES.keys())
         self.combo_sonidos = wx.ComboBox(self, style=wx.CB_READONLY)
         self.combo_sonidos.Set([SONIDOS_DISPONIBLES[i] for i in self._ids_sonidos])
@@ -2014,10 +2022,10 @@ class PanelSonidos(wx.Panel):
         self.combo_sonidos.Bind(wx.EVT_COMBOBOX, self.al_cambiar_sonido_seleccionado)
         sizer.Add(self.combo_sonidos, 0, wx.EXPAND | wx.ALL, 8)
 
-        self.btn_probar = wx.Button(self, label="Probar sonido")
+        self.btn_probar = wx.Button(self, label=_("Probar sonido"))
         self.btn_probar.SetHelpText(
-            "Reproduce el efecto seleccionado, incluso si está desactivado "
-            "(individualmente o con la casilla global)."
+            _("Reproduce el efecto seleccionado, incluso si está desactivado "
+              "(individualmente o con la casilla global).")
         )
         self.btn_probar.Bind(wx.EVT_BUTTON, self.al_probar_sonido)
         sizer.Add(self.btn_probar, 0, wx.ALL, 8)
@@ -2062,9 +2070,13 @@ class PanelSonidos(wx.Panel):
         # el mismo patrón ya usado en los botones de Retroceder/Avanzar de
         # Lectura, que también cambian de texto según el ajuste actual.
         if sonido_habilitado(nombre_id):
-            self.btn_alternar_individual.SetLabel(f"Desactivar sonido «{nombre_legible}»")
+            self.btn_alternar_individual.SetLabel(
+                _("Desactivar sonido «{nombre}»").format(nombre=nombre_legible)
+            )
         else:
-            self.btn_alternar_individual.SetLabel(f"Activar sonido «{nombre_legible}»")
+            self.btn_alternar_individual.SetLabel(
+                _("Activar sonido «{nombre}»").format(nombre=nombre_legible)
+            )
 
     def al_alternar_individual(self, evento):
         nombre_id = self._sonido_seleccionado()
