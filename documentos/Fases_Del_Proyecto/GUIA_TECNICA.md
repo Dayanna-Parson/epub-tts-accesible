@@ -272,6 +272,26 @@ hace el código más legible,
 
 es coherente con la interfaz.
 
+Esto no entra en conflicto con que, desde la Fase 7, la interfaz sí hable dos idiomas (español e inglés) de cara al usuario final. El código sigue en español sin excepción; lo que cambia con el idioma es únicamente el texto que ve o escucha quien usa la aplicación.
+
+#### Arquitectura de internacionalización (i18n)
+
+La interfaz usa `gettext`, de la librería estándar de Python, en vez de una librería de terceros (Babel, `python-i18n`...). La razón es de portabilidad: `gettext` no añade ninguna dependencia nueva a `requisitos.txt`, y el compilador de catálogos que necesita (`msgfmt`) no viene incluido en una instalación estándar de Windows — exigiría que cada persona que quisiera compilar los catálogos instalara herramientas de gettext aparte, algo inviable para una app portable pensada para instalarse sin fricción. Por eso el proyecto tiene su propio compilador, `herramientas/compilar_i18n.py`: lee cada `.po` y escribe el `.mo` binario correspondiente usando solo `struct` y `array` de la librería estándar, sin invocar ningún binario externo.
+
+La convención de import es siempre explícita, nunca por inyección en `builtins`:
+
+```python
+from app.motor.gestor_idioma import traducir as _
+```
+
+Inyectar `_` en `builtins` (patrón común en otros proyectos con gettext) se descartó a propósito: en este proyecto hay un proceso auxiliar aparte (el puente SAPI5 de 32 bits, `auxiliar_sapi32.py`) y varios diálogos de wxPython que pueden instanciarse antes de que el intérprete principal termine de inicializarse del todo; en ambos casos depender de un builtin global es una fuente de fallos silenciosos difíciles de depurar. El import explícito por módulo es más verboso, pero nunca falla de forma invisible.
+
+`app/motor/gestor_idioma.py` resuelve el idioma activo con una prioridad fija: parámetro explícito → variable de entorno `EPUB_TTS_IDIOMA` (para pruebas locales) → clave `"idioma"` en `ajustes.json` (el selector de Ajustes → General) → idioma detectado de Windows → español como último recurso. `traducir()` delega en `gettext.translation(...).gettext()`, con `fallback=True`: si no existe una entrada para una cadena en el idioma activo, o no hay `.mo` compilado para ese idioma, se devuelve el propio texto en español sin lanzar ninguna excepción.
+
+Estructura del catálogo: `locale/epub_tts.pot` es la plantilla (un `msgid` por cada cadena única envuelta en `_()` en toda la app), y de ahí se derivan `locale/es/LC_MESSAGES/epub_tts.po` y `locale/en/LC_MESSAGES/epub_tts.po`. Regla fija del proyecto: en `es.po`, `msgstr` es siempre igual al `msgid` — nunca una entrada vacía — porque el español es el idioma de referencia y una entrada vacía se traduciría, en tiempo de ejecución, como una cadena vacía en vez de caer de vuelta al texto original.
+
+La regla arquitectónica que no se negocia es que ninguna cadena usada para lógica de control se envuelve en `_()`: claves de diccionario o de JSON persistido, ids internos de proveedor (`"azure"`, `"local_32"`...), rutas de archivo, ni ningún texto de menú o combo que la propia aplicación lea de vuelta con `GetStringSelection()`/`GetItemText()` para decidir un flujo. Envolver esas cadenas las haría depender del idioma activo, y el enrutamiento interno de la app dejaría de funcionar en cuanto alguien cambiara el idioma a inglés.
+
 ---
 
 ### 14. Qué no forma parte del proyecto

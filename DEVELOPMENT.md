@@ -349,6 +349,49 @@ Las búsquedas en la lista de voces usan un temporizador de 300ms para no lanzar
 
 ---
 
+## Internacionalización (i18n)
+
+La interfaz soporta español e inglés con `gettext` de la librería estándar. No hace falta instalar nada nuevo — es la razón por la que se eligió, en vez de una librería de terceros que complicara el portable de Windows.
+
+### Cómo añadir una cadena nueva de interfaz
+
+1. Envuélvela en `_()` en el código, con el import explícito al principio del módulo:
+   ```python
+   from app.motor.gestor_idioma import traducir as _
+   ...
+   wx.MessageBox(_("Guardado correctamente."), _("Aviso"))
+   ```
+   Si la cadena necesita datos variables, nunca uses un f-string dentro de `_(...)`: traduce primero la plantilla y aplica `.format()` después, con marcadores nombrados:
+   ```python
+   _("Se han importado {cantidad} libros.").format(cantidad=n)
+   ```
+2. Añade el `msgid` a `locale/epub_tts.pot` (una entrada `msgid "..."` / `msgstr ""`).
+3. Cópialo a `locale/es/LC_MESSAGES/epub_tts.po` con `msgstr` **igual** al `msgid` (nunca vacío — es la regla del proyecto: el español es siempre la referencia legible).
+4. Añade su traducción real a `locale/en/LC_MESSAGES/epub_tts.po`, conservando cualquier marcador `{...}`, salto de línea `\n` y marca de acelerador `&`/`\t` tal cual.
+5. Recompila los catálogos:
+   ```
+   python herramientas/compilar_i18n.py
+   ```
+   Este script sustituye a `msgfmt` (que en Windows exigiría instalar gettext aparte): solo depende de la librería estándar de Python y genera el `.mo` binario que la app carga en tiempo de ejecución. La aplicación lee directamente el `.mo`, nunca el `.po` — si se te olvida este paso, el texto seguirá viéndose en español aunque el `.po` en inglés ya esté traducido.
+
+Nunca envuelvas en `_()` una cadena cuyo valor se usa para lógica interna: claves de diccionario o JSON, ids de proveedor (`"azure"`, `"local_32"`...), rutas de archivo, ni texto de menú que la propia app compare de vuelta con `GetStringSelection()`/`GetItemText()`. Traducir esas rompería el enrutamiento en cuanto el idioma activo no fuera español.
+
+### Cómo probar un idioma en local
+
+Sin cambiar el idioma completo de Windows, hay tres formas, en orden de prioridad creciente (la primera gana sobre las siguientes):
+
+```
+set EPUB_TTS_IDIOMA=en          (cmd)
+$env:EPUB_TTS_IDIOMA="en"       (PowerShell)
+python iniciar_epub_tts.py
+```
+
+O bien fija manualmente la clave `"idioma": "en"` en `configuraciones/ajustes.json`, o usa el propio selector de la interfaz: **Ajustes → General → Idioma de la interfaz**. Cualquiera de las tres formas requiere reiniciar la aplicación para que el cambio se aplique por completo.
+
+`crear_portable.py` ya compila `locale/*.po` a `.mo` y empaqueta la carpeta `locale/` dentro del `.zip` portable automáticamente — no hace falta ningún paso manual adicional al generar una release.
+
+---
+
 ## Logs
 
 El sistema de logs está centralizado en `iniciar_epub_tts.py`:

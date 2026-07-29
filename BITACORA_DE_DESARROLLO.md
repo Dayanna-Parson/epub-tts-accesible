@@ -352,4 +352,18 @@ También cayó un control mal elegido: el deslizador de temperatura de Gemini em
 
 Y de propina, una reorganización pendiente desde hacía tiempo: las copias de seguridad de la biblioteca y de los proyectos vivían mezcladas en la misma carpeta, y la de la biblioteca se creaba en cada arranque de la pestaña aunque no hubiera cambiado nada. Ahora cada una tiene su propia carpeta, se compara la fecha de modificación contra la última copia antes de crear una nueva, y el nombre del archivo se acortó a algo que se sigue de oído sin esfuerzo.
 
+## Fase 7 (cierre): idioma de interfaz y primer manifiesto Winget (julio 2026)
+
+Con la Biblioteca, el Creador de Audiolibros y el Asistente de Gemini ya asentados, quedaba una tarea pendiente desde el principio de la Fase 7: que la interfaz pudiera hablar en otro idioma además del español, sin depender de traducir a mano cada `SetLabel()` que se fuera añadiendo.
+
+La solución se apoyó en `gettext`, de la propia librería estándar de Python, en vez de cualquier librería externa de traducción: cada cadena visible al usuario se envuelve en una función `_()` (importada explícitamente como `from app.motor.gestor_idioma import traducir as _` en cada módulo, nunca inyectada en `builtins`, porque eso puede fallar en silencio dentro del proceso puente de SAPI5 de 32 bits o en diálogos que se instancian antes de que el intérprete principal termine de arrancar). Un catálogo de plantilla (`locale/epub_tts.pot`) reúne cada cadena única, y de ahí se derivan los catálogos por idioma (`locale/es/` y `locale/en/`), con la regla de que el español siempre lleva `msgstr` igual al `msgid` — nunca vacío — para que quede como referencia legible del texto original.
+
+En vez de depender de `msgfmt`, que en Windows exige instalar herramientas de gettext aparte, se escribió un compilador propio y minúsculo, `herramientas/compilar_i18n.py`, que convierte cada `.po` a su `.mo` binario sin más dependencia que la propia librería estándar. El catálogo terminó reuniendo cerca de mil cadenas de interfaz completas, con el inglés traducido en su totalidad.
+
+Un barrido posterior con el propio AST de Python (buscando llamadas a `wx.MessageBox`, `SetLabel`, `SetToolTip` y `voz.hablar` con texto español embebido) encontró dos archivos que se habían quedado completamente fuera del primer paso de envoltura —`ventana_principal.py` y `reproductor_voz.py`— además de un par de avisos sueltos en `cliente_sapi5.py` y `control_cuota.py`. Se completaron con el mismo patrón y se añadieron sus cadenas nuevas a los tres catálogos.
+
+En Ajustes → General se añadió el selector de idioma de la interfaz (español/inglés), que guarda su elección en `ajustes.json` y se aplica por completo al reiniciar la aplicación; `crear_portable.py` ahora compila los catálogos y empaqueta `locale/` dentro del portable automáticamente, así que un `.zip` publicado ya lleva ambos idiomas listos para usar.
+
+Por último, se preparó —sin publicarla todavía— una primera versión de los manifiestos de Winget (`winget/version.yaml`, `winget/installer.yaml`, `winget/locale.yaml`), marcados explícitamente como provisionales: el nombre comercial definitivo de la aplicación sigue sin decidirse (TifloReader, TifloVoice y TifloEstudio ya se descartaron), así que el identificador de paquete usado por ahora, `TifloTutos.EpubTTSAccesible`, es solo un nombre de trabajo a la espera de esa decisión y de la primera Release real en GitHub.
+
 — Dayanna Parson, julio de 2026

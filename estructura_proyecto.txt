@@ -87,9 +87,11 @@ epub-tts-accesible/
 │   │   ├── control_cuota.py             Cuota mensual por proveedor + coste.
 │   │   ├── gestor_proyectos.py          Proyectos de Grabación de Fragmentos.
 │   │   ├── gestor_atajos.py             Atajos de teclado configurables.
-│   │   └── gestor_backups.py            Copias rotativas de biblioteca.db y
-│   │                                     proyectos.json (carpetas separadas,
-│   │                                     solo si hubo cambios reales).
+│   │   ├── gestor_backups.py            Copias rotativas de biblioteca.db y
+│   │   │                                 proyectos.json (carpetas separadas,
+│   │   │                                 solo si hubo cambios reales).
+│   │   └── gestor_idioma.py             i18n con gettext: detecta/aplica el
+│   │                                     idioma de interfaz, expone traducir()/_().
 │   │
 │   └── servicios/                Un cliente por proveedor de voz (y por Gemini).
 │       ├── cliente_azure.py
@@ -117,6 +119,23 @@ epub-tts-accesible/
 │                                  backup_previo/ (respaldo durante la
 │                                  instalación). No se versiona (.gitignore).
 ├── tests/                        Pruebas (aún sin suite automatizada completa).
+├── herramientas/
+│   └── compilar_i18n.py          Compilador propio .po -> .mo (sin depender
+│                                  de msgfmt/gettext del sistema).
+├── locale/                       Catálogos de traducción (i18n con gettext).
+│   ├── epub_tts.pot               Plantilla: un msgid por cada cadena _().
+│   ├── es/LC_MESSAGES/
+│   │   ├── epub_tts.po             Catálogo español (msgstr = msgid siempre).
+│   │   └── epub_tts.mo             Compilado, se carga en tiempo de ejecución.
+│   └── en/LC_MESSAGES/
+│       ├── epub_tts.po             Catálogo inglés, traducido por completo.
+│       └── epub_tts.mo             Compilado, se carga en tiempo de ejecución.
+├── winget/                       Manifiestos de Winget (provisionales, ver
+│                                  winget/LEEME.txt antes de tocarlos).
+│   ├── version.yaml
+│   ├── installer.yaml
+│   ├── locale.yaml
+│   └── LEEME.txt
 │
 └── documentos/
     └── Fases_Del_Proyecto/

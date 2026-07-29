@@ -73,6 +73,12 @@ Nuevas funciones
   En lugar de recordar la última pestaña usada (que a veces dejaba
   caer a NVDA en Ajustes), el arranque aterriza siempre en tus libros.
 
+- Interfaz en español o inglés:
+  Toda la aplicación —menús, botones y avisos— ya está disponible
+  también en inglés. Cambia el idioma en Ajustes → General → Idioma
+  de la interfaz; el cambio se aplica por completo al reiniciar la
+  aplicación.
+
 Correcciones
 ────────────
 

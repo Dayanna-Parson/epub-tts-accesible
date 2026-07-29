@@ -364,6 +364,8 @@ Asistente de Biblioteca con Google Gemini: chat accesible sobre mis propios libr
 
 Piper TTS, previsto desde hacía tiempo como motor local futuro, queda descartado. SAPI5 sigue siendo, y se queda siendo, el único motor local.
 
+Interfaz en español e inglés, con un selector en Ajustes, para que la aplicación pueda llegar también a personas ciegas que no leen en español. Primer manifiesto de Winget preparado, todavía sin publicar, a la espera de decidir el nombre comercial definitivo del proyecto.
+
 El criterio ha sido el mismo a lo largo de todo el proceso: que funcione, que sea accesible, que el coste sea transparente.
 
 ---

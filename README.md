@@ -48,7 +48,9 @@ controlar el consumo de servicios TTS de pago,
 
 trabajar durante sesiones largas sin perder el contexto,
 
-consultar a un Asistente de Biblioteca con IA (Google Gemini) sobre tus libros, sagas y recomendaciones.
+consultar a un Asistente de Biblioteca con IA (Google Gemini) sobre tus libros, sagas y recomendaciones,
+
+usar la interfaz completa en español o en inglés.
 
 ---
 
@@ -151,6 +153,8 @@ python iniciar_epub_tts.py
 ```
 
 Requiere Python 3.12+ en Windows. La versión portable (sin necesidad de instalar Python) se genera con `crear_portable.py` y se publica en la sección de [Releases](https://github.com/Dayanna-Parson/epub-tts-accesible/releases).
+
+**Winget (pendiente):** hay un manifiesto de Winget preparado en [`winget/`](winget/), pero todavía no se ha enviado a `microsoft/winget-pkgs` — falta decidir el nombre comercial definitivo y publicar la primera Release con el instalador. No es, por ahora, un método de instalación disponible.
 
 ---
 
