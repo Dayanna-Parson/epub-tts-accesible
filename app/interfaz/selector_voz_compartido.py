@@ -6,6 +6,7 @@ import wx.lib.mixins.listctrl as listmix
 
 from app.config_rutas import ruta_config
 from app.motor.reproductor_sonidos import reproducir, LIST_NAV, ERROR
+from app.motor.gestor_idioma import traducir as _
 
 logger = logging.getLogger(__name__)
 
@@ -108,14 +109,19 @@ class PanelProveedorIA(wx.Panel):
         # 1. Idioma
         hbox_idioma = wx.BoxSizer(wx.HORIZONTAL)
         hbox_idioma.Add(
-            wx.StaticText(self, label="Idioma:"),
+            wx.StaticText(self, label=_("Idioma:")),
             0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
         )
+        # "Todos" se compara literalmente en filtrar_y_mostrar() — no se
+        # envuelve en _() por el mismo motivo que las claves de filtro de
+        # PanelAzure/PanelPolly en pestana_ajustes.py.
         self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY, choices=["Todos"])
         self.combo_idioma.SetSelection(0)
         self.combo_idioma.SetHelpText(
-            f"Filtra las voces de {self.nombre_proveedor} por idioma. "
-            "Elige Todos para ver el catálogo completo del proveedor."
+            _("Filtra las voces de {proveedor} por idioma. "
+              "Elige Todos para ver el catálogo completo del proveedor.").format(
+                proveedor=self.nombre_proveedor
+            )
         )
         self.combo_idioma.Bind(wx.EVT_COMBOBOX, self._al_filtrar)
         hbox_idioma.Add(self.combo_idioma, 1)
@@ -126,16 +132,16 @@ class PanelProveedorIA(wx.Panel):
 
         # 2. Casillas de filtro local (independientes por panel)
         hbox_filtros = wx.BoxSizer(wx.HORIZONTAL)
-        self.chk_solo_favs = wx.CheckBox(self, label="Solo favoritas")
+        self.chk_solo_favs = wx.CheckBox(self, label=_("Solo favoritas"))
         self.chk_solo_favs.SetHelpText(
-            "Marcada: muestra solo las voces de este proveedor que ya tienes marcadas como favoritas."
+            _("Marcada: muestra solo las voces de este proveedor que ya tienes marcadas como favoritas.")
         )
         self.chk_solo_favs.Bind(wx.EVT_CHECKBOX, self._al_filtrar)
         hbox_filtros.Add(self.chk_solo_favs, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 20)
 
-        self.chk_solo_nuevas = wx.CheckBox(self, label="Solo nuevas voces")
+        self.chk_solo_nuevas = wx.CheckBox(self, label=_("Solo nuevas voces"))
         self.chk_solo_nuevas.SetHelpText(
-            "Marcada: muestra solo las voces de este proveedor añadidas desde la última actualización."
+            _("Marcada: muestra solo las voces de este proveedor añadidas desde la última actualización.")
         )
         self.chk_solo_nuevas.Bind(wx.EVT_CHECKBOX, self._al_filtrar)
         hbox_filtros.Add(self.chk_solo_nuevas, 0, wx.ALIGN_CENTER_VERTICAL)
@@ -144,13 +150,13 @@ class PanelProveedorIA(wx.Panel):
         # 3. Búsqueda de texto con debounce (300 ms)
         hbox_busqueda = wx.BoxSizer(wx.HORIZONTAL)
         hbox_busqueda.Add(
-            wx.StaticText(self, label="Buscar nombre de voz:"),
+            wx.StaticText(self, label=_("Buscar nombre de voz:")),
             0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8,
         )
         self.txt_buscar = wx.TextCtrl(self, style=wx.TE_PROCESS_ENTER)
         self.txt_buscar.SetHelpText(
-            "Escribe parte del nombre de una voz para filtrar la lista en tiempo real. "
-            "Borra el campo para ver todas las voces del filtro activo."
+            _("Escribe parte del nombre de una voz para filtrar la lista en tiempo real. "
+              "Borra el campo para ver todas las voces del filtro activo.")
         )
         self.txt_buscar.Bind(wx.EVT_TEXT, self._al_filtrar_texto)
         hbox_busqueda.Add(self.txt_buscar, 1, wx.EXPAND)
@@ -158,13 +164,15 @@ class PanelProveedorIA(wx.Panel):
 
         # 4. ListCtrl de voces con casillas nativas
         self.lista_voces = ListaVocesCheck(self)
-        self.lista_voces.InsertColumn(0, "Nombre", width=280)
-        self.lista_voces.InsertColumn(1, "Género", width=80)
-        self.lista_voces.InsertColumn(2, "Idioma", width=200)
+        self.lista_voces.InsertColumn(0, _("Nombre"), width=280)
+        self.lista_voces.InsertColumn(1, _("Género"), width=80)
+        self.lista_voces.InsertColumn(2, _("Idioma"), width=200)
         self.lista_voces.SetHelpText(
-            f"Lista de voces de {self.nombre_proveedor}. Usa las flechas para navegar. "
-            "Pulsa Intro para marcar o desmarcar una voz como favorita. "
-            "Las voces marcadas aparecerán en Lectura, Creador de Audiolibros y Grabación."
+            _("Lista de voces de {proveedor}. Usa las flechas para navegar. "
+              "Pulsa Intro para marcar o desmarcar una voz como favorita. "
+              "Las voces marcadas aparecerán en Lectura, Creador de Audiolibros y Grabación.").format(
+                proveedor=self.nombre_proveedor
+            )
         )
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_CHECKED, self._al_marcar_favorito)
         self.lista_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self._al_desmarcar_favorito)
@@ -201,10 +209,10 @@ class PanelProveedorIA(wx.Panel):
         self._reproductor = ReproductorVoz()
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.btn_escuchar = wx.Button(self, label="Escuchar muestra (Alt+P)")
+        self.btn_escuchar = wx.Button(self, label=_("Escuchar muestra (Alt+P)"))
         self.btn_escuchar.SetHelpText(
-            "Reproduce una muestra de texto con la voz seleccionada. "
-            "Púlsalo de nuevo para detener la reproducción."
+            _("Reproduce una muestra de texto con la voz seleccionada. "
+              "Púlsalo de nuevo para detener la reproducción.")
         )
         self.btn_escuchar.Bind(wx.EVT_BUTTON, self._al_escuchar)
         hbox.Add(self.btn_escuchar, 0, wx.RIGHT, 8)
@@ -397,30 +405,30 @@ class PanelProveedorIA(wx.Panel):
     def _al_escuchar(self, evento):
         if self._reproductor.obtener_estado() == "reproduciendo":
             self._reproductor.detener()
-            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
+            self.btn_escuchar.SetLabel(_("Escuchar muestra (Alt+P)"))
             return
 
         idx = self.lista_voces.GetFirstSelected()
         if idx == -1:
             reproducir(ERROR)
-            wx.MessageBox("Selecciona una voz.", "Info")
+            wx.MessageBox(_("Selecciona una voz."), _("Info"))
             return
 
         voz = self.mapa_indices.get(idx)
         nombre = voz.get('nombre', '')
         try:
             self._reproductor.fijar_voz(voz)
-            texto = (
-                f"Hola, mi nombre es {nombre}. "
+            texto = _(
+                "Hola, mi nombre es {nombre}. "
                 "El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar."
-            )
-            self.btn_escuchar.SetLabel("Detener preescucha (Alt+P)")
+            ).format(nombre=nombre)
+            self.btn_escuchar.SetLabel(_("Detener preescucha (Alt+P)"))
             self._reproductor.cargar_texto(texto, callback_completado=self._al_terminar_escucha)
         except Exception as e:
-            self.btn_escuchar.SetLabel("Escuchar muestra (Alt+P)")
+            self.btn_escuchar.SetLabel(_("Escuchar muestra (Alt+P)"))
             reproducir(ERROR)
-            wx.MessageBox(f"Error: {e}", "Error")
+            wx.MessageBox(_("Error: {error}").format(error=e), _("Error"))
 
     def _al_terminar_escucha(self):
-        wx.CallAfter(self.btn_escuchar.SetLabel, "Escuchar muestra (Alt+P)")
+        wx.CallAfter(self.btn_escuchar.SetLabel, _("Escuchar muestra (Alt+P)"))
 # ANCLAJE_FIN: BASE_PANEL_PROVEEDOR_IA
