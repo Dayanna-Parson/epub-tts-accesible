@@ -1,0 +1,47 @@
+# NOTA PROVISIONAL — ver winget/version.yaml para el detalle completo
+# sobre el PackageIdentifier/PackageName pendientes de nombre comercial
+# definitivo (TifloTutos.EpubTTSAccesible es un nombre de trabajo).
+PackageIdentifier: TifloTutos.EpubTTSAccesible
+PackageVersion: 3.0.0
+PackageLocale: en-US
+Publisher: TifloTutos
+PublisherUrl: https://tiflotutos.com
+PublisherSupportUrl: https://github.com/Dayanna-Parson/epub-tts-accesible/issues
+Author: Dayanna Parson
+PackageName: Epub TTS Accesible
+PackageUrl: https://github.com/Dayanna-Parson/epub-tts-accesible
+# Licencia: Creative Commons Atribución-NoComercial 4.0 Internacional
+# (CC BY-NC 4.0) — ver LICENSE en la raíz del repositorio. No es
+# software de dominio público ni de código totalmente libre: uso
+# personal/educativo/comunidad con discapacidad visual permitido,
+# uso comercial prohibido.
+License: CC BY-NC 4.0
+LicenseUrl: https://github.com/Dayanna-Parson/epub-tts-accesible/blob/main/LICENSE
+Copyright: Copyright (c) 2025-2026 Dayanna Jacqueline Parson Olave (TifloTutos)
+ShortDescription: Accessible EPUB/PDF to audiobook converter for blind users
+Description: |-
+  Epub TTS Accesible is a Windows desktop application that converts EPUB and
+  PDF books into multi-voice audiobooks. It is designed by and for blind
+  people, with NVDA screen reader accessibility as a non-negotiable
+  requirement.
+
+  Supports cloud neural text-to-speech voices (Microsoft Azure, Amazon Polly,
+  Deepgram Aura-2, ElevenLabs) as well as local SAPI5 voices (64-bit and
+  32-bit via a compatibility bridge, including Eloquence/RealSpeak). Includes
+  a Library manager for EPUB/PDF collections, a Reading mode with bookmarks
+  and search, a full Audiobook Creator (whole book or by chapter), and a
+  multi-voice Fragment Recording workflow using {{@character}} tags. The
+  interface is available in Spanish and English.
+Moniker: epub-tts-accesible
+Tags:
+  - accessibility
+  - screen-reader
+  - nvda
+  - text-to-speech
+  - audiobook
+  - epub
+  - pdf
+  - blind
+ReleaseNotesUrl: https://github.com/Dayanna-Parson/epub-tts-accesible/blob/main/novedades.txt
+ManifestType: defaultLocale
+ManifestVersion: 1.9.0

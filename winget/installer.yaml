@@ -1,0 +1,27 @@
+# NOTA PROVISIONAL — ver winget/version.yaml para el detalle completo
+# sobre el PackageIdentifier pendiente de nombre comercial definitivo.
+#
+# InstallerSha256 es un PLACEHOLDER: todavía no existe una release de
+# GitHub publicada con el .zip portable de la v3.0.0. Antes de enviar
+# este manifiesto a microsoft/winget-pkgs hay que:
+#   1. Publicar la release v3.0.0 con el .zip generado por
+#      crear_portable.py como asset (epub-tts-accesible-v3.0.0.zip).
+#   2. Calcular el hash real del .zip publicado:
+#        certutil -hashfile epub-tts-accesible-v3.0.0.zip SHA256
+#      (o en PowerShell: Get-FileHash epub-tts-accesible-v3.0.0.zip -Algorithm SHA256)
+#   3. Sustituir el valor de InstallerSha256 por ese hash real.
+PackageIdentifier: TifloTutos.EpubTTSAccesible
+PackageVersion: 3.0.0
+MinimumOSVersion: 10.0.19041.0
+InstallerType: zip
+Installers:
+  - Architecture: x64
+    InstallerType: zip
+    InstallerUrl: https://github.com/Dayanna-Parson/epub-tts-accesible/releases/download/v3.0.0/epub-tts-accesible-v3.0.0.zip
+    InstallerSha256: PENDIENTE_SHA256_AL_PUBLICAR_RELEASE
+    NestedInstallerType: portable
+    NestedInstallerFiles:
+      - RelativeFilePath: epubtts.exe
+        PortableCommandAlias: epubtts
+ManifestType: installer
+ManifestVersion: 1.9.0

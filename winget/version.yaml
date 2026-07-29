@@ -1,0 +1,19 @@
+# NOTA PROVISIONAL — léase antes de usar
+# ------------------------------------------------------------------
+# PackageIdentifier y PackageName son PROVISIONALES. El nombre
+# comercial definitivo de la aplicación todavía no está decidido
+# ("TifloReader" se descartó por colisión con un lector físico ya
+# existente en el mercado; "TifloVoice" y "TifloEstudio" también se
+# descartaron). En cuanto se decida el nombre final habrá que:
+#   1. Actualizar PackageIdentifier/PackageName en los tres manifiestos.
+#   2. Volver a registrar el paquete en microsoft/winget-pkgs con la
+#      nueva ruta de carpetas (manifests/<letra>/<Editor>/<Nombre>/...).
+# El nombre del repositorio de GitHub (epub-tts-accesible, propiedad
+# de Dayanna-Parson) NO cambia — esto solo afecta al identificador
+# comercial de winget.
+# ------------------------------------------------------------------
+PackageIdentifier: TifloTutos.EpubTTSAccesible
+PackageVersion: 3.0.0
+DefaultLocale: en-US
+ManifestType: version
+ManifestVersion: 1.9.0

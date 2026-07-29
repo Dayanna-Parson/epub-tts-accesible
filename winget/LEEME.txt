@@ -1,0 +1,49 @@
+MANIFIESTOS WINGET — ESTADO PROVISIONAL
+========================================
+
+Estos tres archivos (version.yaml, installer.yaml, locale.yaml) son la
+copia de trabajo del proyecto de un manifiesto winget estándar (schema
+v1.9). Todavía NO se han enviado a microsoft/winget-pkgs. Esta carpeta
+no es la ruta real de envío del repositorio de Microsoft, es solo
+nuestro borrador listo para revisar y, cuando corresponda, copiar allí.
+
+Pendiente antes de poder enviarlos de verdad:
+
+1. Decidir el nombre comercial definitivo de la aplicación.
+   "TifloReader" se descartó (colisión con un lector físico existente).
+   "TifloVoice" y "TifloEstudio" también se descartaron. Mientras no
+   haya nombre definitivo, se usa el identificador provisional
+   TifloTutos.EpubTTSAccesible (marca de la desarrolladora +
+   nombre descriptivo basado en el repositorio). En cuanto se decida
+   el nombre real, hay que actualizar PackageIdentifier y PackageName
+   en los tres archivos, y volver a registrar el paquete con la ruta
+   de carpetas correspondiente en winget-pkgs.
+
+2. Publicar una release de GitHub con el .zip portable de la versión
+   3.0.0 (el que genera crear_portable.py) como asset adjunto, en
+   https://github.com/Dayanna-Parson/epub-tts-accesible/releases
+
+3. Calcular el hash SHA256 real de ese .zip publicado:
+     certutil -hashfile epub-tts-accesible-v3.0.0.zip SHA256
+   o en PowerShell:
+     Get-FileHash epub-tts-accesible-v3.0.0.zip -Algorithm SHA256
+   y sustituir el valor placeholder "PENDIENTE_SHA256_AL_PUBLICAR_RELEASE"
+   en installer.yaml por ese hash real.
+
+4. Validar los manifiestos localmente con el winget CLI:
+     winget validate winget/
+     winget install --manifest winget/
+   (requiere tener winget instalado; ambos comandos se ejecutan sobre
+   esta misma carpeta, apuntando a los tres archivos).
+
+5. Enviar el paquete a microsoft/winget-pkgs mediante un Pull Request,
+   colocando los tres archivos (con los nombres de archivo que exige
+   ese repositorio: <PackageIdentifier>.yaml,
+   <PackageIdentifier>.installer.yaml,
+   <PackageIdentifier>.locale.en-US.yaml) en la ruta de carpetas que
+   corresponde al PackageIdentifier definitivo, por ejemplo:
+     manifests/t/TifloTutos/EpubTTSAccesible/3.0.0/
+
+Hasta que estos pasos se completen, Winget NO es un método de
+instalación real de la aplicación — solo un manifiesto preparado para
+cuando el proyecto esté listo para publicarlo.
