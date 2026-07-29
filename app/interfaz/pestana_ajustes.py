@@ -118,6 +118,37 @@ class PanelGeneral(wx.ScrolledWindow):
         sizer.Add(sz_idioma, 0, wx.EXPAND | wx.ALL, 10)
         # ANCLAJE_FIN: IDIOMA_LIBRO_GENERAL
 
+        # ANCLAJE_INICIO: IDIOMA_INTERFAZ_GENERAL
+        from app.motor.gestor_idioma import IDIOMAS_DISPONIBLES, idioma_activo, inicializar as inicializar_idioma
+
+        sb_idioma_ui = wx.StaticBox(self, label=_("Idioma de la interfaz"))
+        sz_idioma_ui = wx.StaticBoxSizer(sb_idioma_ui, wx.VERTICAL)
+        sz_idioma_ui.Add(
+            wx.StaticText(
+                self,
+                label=_("Idioma en el que se muestran los menús, botones y avisos de la aplicación:"),
+            ),
+            0, wx.ALL, 2,
+        )
+        self._nombres_idioma_ui = {"es": _("Español"), "en": _("English")}
+        self.combo_idioma_ui = wx.ComboBox(
+            self,
+            choices=[self._nombres_idioma_ui.get(c, c) for c in IDIOMAS_DISPONIBLES],
+            style=wx.CB_READONLY,
+        )
+        self.combo_idioma_ui.SetHelpText(
+            _("Cambia el idioma de toda la interfaz. El cambio se aplica al reiniciar la aplicación.")
+        )
+        _codigo_ui_guardado = self.config.get("idioma", idioma_activo())
+        try:
+            self.combo_idioma_ui.SetSelection(IDIOMAS_DISPONIBLES.index(_codigo_ui_guardado))
+        except ValueError:
+            self.combo_idioma_ui.SetSelection(0)
+        self.combo_idioma_ui.Bind(wx.EVT_COMBOBOX, self._al_cambiar_idioma_ui)
+        sz_idioma_ui.Add(self.combo_idioma_ui, 0, wx.EXPAND | wx.ALL, 5)
+        sizer.Add(sz_idioma_ui, 0, wx.EXPAND | wx.ALL, 10)
+        # ANCLAJE_FIN: IDIOMA_INTERFAZ_GENERAL
+
         sb_cuota = wx.StaticBox(self, label=_("Control de Presupuesto y Límites"))
         sizer_cuota = wx.StaticBoxSizer(sb_cuota, wx.VERTICAL)
 
@@ -309,6 +340,25 @@ class PanelGeneral(wx.ScrolledWindow):
         if self._pestana_ajustes is not None:
             self._pestana_ajustes.guardar_config_en_archivo()
 
+    def _al_cambiar_idioma_ui(self, evento):
+        from app.motor.gestor_idioma import IDIOMAS_DISPONIBLES, inicializar as inicializar_idioma
+
+        indice = self.combo_idioma_ui.GetSelection()
+        if 0 <= indice < len(IDIOMAS_DISPONIBLES):
+            self.config["idioma"] = IDIOMAS_DISPONIBLES[indice]
+        if self._pestana_ajustes is not None:
+            self._pestana_ajustes.guardar_config_en_archivo()
+        # inicializar() ya vuelve a resolver el idioma desde ajustes.json en
+        # la siguiente llamada a traducir(), pero los controles ya construidos
+        # conservan su texto anterior — por eso se avisa de reiniciar.
+        inicializar_idioma()
+        voz.hablar(_("Idioma guardado. Reinicia la aplicación para aplicar el cambio."))
+        wx.MessageBox(
+            _("El idioma de la interfaz se aplicará por completo al reiniciar la aplicación."),
+            _("Idioma cambiado"),
+            wx.OK | wx.ICON_INFORMATION,
+        )
+
     def sincronizar_config(self):
         """Vuelca en self.config el valor actual de todos los controles del panel.
 
@@ -327,6 +377,10 @@ class PanelGeneral(wx.ScrolledWindow):
         self.config["idioma_libro_codigo"] = _mapa_idx_codigo.get(
             self.combo_idioma_libro.GetSelection(), "es-ES"
         )
+        from app.motor.gestor_idioma import IDIOMAS_DISPONIBLES
+        _indice_idioma_ui = self.combo_idioma_ui.GetSelection()
+        if 0 <= _indice_idioma_ui < len(IDIOMAS_DISPONIBLES):
+            self.config["idioma"] = IDIOMAS_DISPONIBLES[_indice_idioma_ui]
 
     def guardar_todo(self):
         self.sincronizar_config()

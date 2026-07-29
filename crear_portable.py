@@ -7,16 +7,17 @@ distribuir a usuarios finales invidentes.
 
 Pasos que ejecuta:
   1. Limpia el directorio de salida anterior (/dist/epubtts/).
-  2. Ejecuta PyInstaller con --noconsole para generar epubtts.exe.
-  3. Compila auxiliar_actualizador.py a bin/actualizador.exe (misma
+  2. Compila los catálogos de idioma (locale/*.po → *.mo).
+  3. Ejecuta PyInstaller con --noconsole para generar epubtts.exe.
+  4. Compila auxiliar_actualizador.py a bin/actualizador.exe (misma
      arquitectura que la app, por eso se automatiza aquí — a diferencia de
      auxiliar_sapi32.exe, que necesita un intérprete de 32 bits aparte y
      sigue siendo un paso manual, ver bin/INSTRUCCIONES.txt).
-  4. Copia bin/, recursos/ y documentos/ al portable.
-  5. Crea configuraciones/ vacía (ajustes.json de fábrica, carpetas de
+  5. Copia bin/, recursos/, locale/ y documentos/ al portable.
+  6. Crea configuraciones/ vacía (ajustes.json de fábrica, carpetas de
      backups separadas y carpeta de plantillas del Asistente de Biblioteca).
-  6. Copia INICIAR_APP.bat y novedades.txt a la raíz del portable.
-  7. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
+  7. Copia INICIAR_APP.bat y novedades.txt a la raíz del portable.
+  8. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
 
 Uso:
     python crear_portable.py
@@ -88,7 +89,7 @@ def _ocultar_archivo(ruta: str):
 
 
 def limpiar_destino():
-    print("[1/7] Limpiando directorios de salida anteriores...")
+    print("[1/8] Limpiando directorios de salida anteriores...")
     for ruta in (DIR_DIST_RAW, DIR_PORTABLE):
         if os.path.exists(ruta):
             shutil.rmtree(ruta)
@@ -99,8 +100,27 @@ def limpiar_destino():
     os.makedirs(os.path.join(RAIZ, "dist"), exist_ok=True)
 
 
+# ANCLAJE_INICIO: COMPILACION_CATALOGOS_IDIOMA
+def compilar_catalogos_idioma():
+    """
+    Recompila locale/*/LC_MESSAGES/*.mo a partir de los .po fuente antes de
+    empaquetar, para que el portable siempre lleve las traducciones al día
+    aunque alguien haya olvidado ejecutar herramientas/compilar_i18n.py a mano.
+    """
+    print("[2/8] Compilando catálogos de idioma (locale/*.po → *.mo)...")
+    script = os.path.join(RAIZ, "herramientas", "compilar_i18n.py")
+    if not os.path.isfile(script):
+        print("      AVISO: herramientas/compilar_i18n.py no encontrado; se omite.")
+        return
+    resultado = subprocess.run([sys.executable, script], cwd=RAIZ)
+    if resultado.returncode != 0:
+        print("ERROR: fallo al compilar los catálogos de idioma. Abortando.")
+        sys.exit(1)
+# ANCLAJE_FIN: COMPILACION_CATALOGOS_IDIOMA
+
+
 def ejecutar_pyinstaller():
-    print("[2/7] Ejecutando PyInstaller...")
+    print("[3/8] Ejecutando PyInstaller...")
     punto_entrada = os.path.join(RAIZ, "iniciar_epub_tts.py")
     icono         = os.path.join(RAIZ, "recursos", "iconos", "epubtts.ico")
     args = [
@@ -134,7 +154,7 @@ def compilar_actualizador():
     que se automatiza aquí para que cada portable lo lleve siempre
     actualizado sin depender de un paso manual adicional.
     """
-    print("[3/7] Compilando actualizador.exe (auxiliar de actualizaciones)...")
+    print("[4/8] Compilando actualizador.exe (auxiliar de actualizaciones)...")
     origen_script = os.path.join(RAIZ, "auxiliar_actualizador.py")
     if not os.path.isfile(origen_script):
         print("      AVISO: auxiliar_actualizador.py no encontrado; se omite bin/actualizador.exe.")
@@ -161,7 +181,7 @@ def compilar_actualizador():
 
 
 def copiar_recursos():
-    print("[4/7] Copiando recursos al portable...")
+    print("[5/8] Copiando recursos al portable...")
     os.makedirs(DIR_PORTABLE, exist_ok=True)
 
     # Mover el directorio generado por PyInstaller a DIR_PORTABLE
@@ -174,7 +194,7 @@ def copiar_recursos():
         shutil.rmtree(DIR_DIST_RAW, ignore_errors=True)
 
     # Carpetas de recursos
-    for carpeta in ("bin", "recursos"):
+    for carpeta in ("bin", "recursos", "locale"):
         origen = os.path.join(RAIZ, carpeta)
         destino = os.path.join(DIR_PORTABLE, carpeta)
         if os.path.isdir(origen):
@@ -207,7 +227,7 @@ def copiar_recursos():
 
 
 def crear_configuraciones_fabrica():
-    print("[5/7] Creando configuraciones/ de fábrica...")
+    print("[6/8] Creando configuraciones/ de fábrica...")
     dir_conf = os.path.join(DIR_PORTABLE, "configuraciones")
     os.makedirs(dir_conf, exist_ok=True)
 
@@ -261,7 +281,7 @@ def crear_configuraciones_fabrica():
 
 
 def comprimir_portable():
-    print(f"[6/7] Comprimiendo en {os.path.basename(ZIP_SALIDA)}...")
+    print(f"[7/8] Comprimiendo en {os.path.basename(ZIP_SALIDA)}...")
     raiz_zip = f"epub-tts-accesible-v{VERSION}"
     with zipfile.ZipFile(ZIP_SALIDA, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
         for carpeta_actual, _, archivos in os.walk(DIR_PORTABLE):
@@ -274,7 +294,7 @@ def comprimir_portable():
 
 
 def limpiar_temporal():
-    print("[7/7] Eliminando archivos temporales de compilación...")
+    print("[8/8] Eliminando archivos temporales de compilación...")
     dir_build = os.path.join(RAIZ, "build")
     if os.path.isdir(dir_build):
         shutil.rmtree(dir_build, ignore_errors=True)
@@ -286,6 +306,7 @@ def limpiar_temporal():
 if __name__ == "__main__":
     print(f"\n=== Construcción del portable Epub TTS Accesible v{VERSION} ===\n")
     limpiar_destino()
+    compilar_catalogos_idioma()
     ejecutar_pyinstaller()
     compilar_actualizador()
     copiar_recursos()
