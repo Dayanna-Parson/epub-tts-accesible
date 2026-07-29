@@ -7,6 +7,7 @@ from app.motor import anunciador_lector as voz
 from app.motor.control_cuota import ControlCuota
 from app.interfaz.pestana_ajustes import PanelAzure, PanelDeepgram, PanelPolly, PanelElevenLabs
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.gestor_idioma import traducir as _
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class DialogoProveedorAlternativo(wx.Dialog):
 
     def __init__(self, padre, texto_a_exportar, nombre_proveedor_actual, velocidad_actual=50, modo_libro_completo=True):
         super().__init__(
-            padre, title="Cuota insuficiente para continuar",
+            padre, title=_("Cuota insuficiente para continuar"),
             style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
         )
 
@@ -115,27 +116,29 @@ class DialogoProveedorAlternativo(wx.Dialog):
         caracteres = len(self.texto_a_exportar)
         lbl_info = wx.StaticText(
             self,
-            label=(
-                f"{nombre_proveedor_actual} no tiene cuota suficiente para este texto "
-                f"({self._formatear_saldo(caracteres)} caracteres)."
-            ),
+            label=_(
+                "{proveedor} no tiene cuota suficiente para este texto "
+                "({caracteres} caracteres)."
+            ).format(proveedor=nombre_proveedor_actual, caracteres=self._formatear_saldo(caracteres)),
         )
         sizer.Add(lbl_info, 0, wx.EXPAND | wx.ALL, 10)
 
         # 1. Selector de proveedor alternativo — primer control, recibe el foco inicial.
-        lbl_combo = wx.StaticText(self, label="Proveedor alternativo:")
+        lbl_combo = wx.StaticText(self, label=_("Proveedor alternativo:"))
         sizer.Add(lbl_combo, 0, wx.LEFT | wx.RIGHT, 10)
 
         opciones = [
-            f"{nombre} (Disponible: {self._formatear_saldo(saldo)} caracteres)"
-            for _, nombre, saldo in self._proveedores_disponibles
-        ] or ["Ningún proveedor de nube configurado tiene cuota suficiente"]
+            _("{nombre} (Disponible: {saldo} caracteres)").format(
+                nombre=nombre, saldo=self._formatear_saldo(saldo)
+            )
+            for _clave, nombre, saldo in self._proveedores_disponibles
+        ] or [_("Ningún proveedor de nube configurado tiene cuota suficiente")]
 
         self.combo_proveedores = wx.Choice(self, choices=opciones)
         self.combo_proveedores.SetHelpText(
-            "Proveedores de nube configurados que sí tienen cuota disponible para este "
-            "texto, ordenados de mayor a menor saldo. Al cambiar de proveedor se actualiza "
-            "el catálogo de voces de abajo."
+            _("Proveedores de nube configurados que sí tienen cuota disponible para este "
+              "texto, ordenados de mayor a menor saldo. Al cambiar de proveedor se actualiza "
+              "el catálogo de voces de abajo.")
         )
         if self._proveedores_disponibles:
             self.combo_proveedores.SetSelection(0)
@@ -153,13 +156,13 @@ class DialogoProveedorAlternativo(wx.Dialog):
 
         # 3. Velocidad independiente para la preescucha de este diálogo.
         sz_vel = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_vel = wx.StaticText(self, label="Velocidad de preescucha:")
+        lbl_vel = wx.StaticText(self, label=_("Velocidad de preescucha:"))
         self.slider_velocidad = wx.Slider(self, value=velocidad_actual, minValue=0, maxValue=100)
-        self.slider_velocidad.SetName("Velocidad de preescucha")
+        self.slider_velocidad.SetName(_("Velocidad de preescucha"))
         self.slider_velocidad.SetHelpText(
-            "Velocidad usada solo para la preescucha (Alt+P) y devuelta a la ventana "
-            "principal al aceptar. 0 es la más lenta, 100 la más rápida. "
-            "Flechas: ±1. RePág/AvPág: ±5."
+            _("Velocidad usada solo para la preescucha (Alt+P) y devuelta a la ventana "
+              "principal al aceptar. 0 es la más lenta, 100 la más rápida. "
+              "Flechas: ±1. RePág/AvPág: ±5.")
         )
         self.slider_velocidad.Bind(wx.EVT_SLIDER, self._al_cambiar_velocidad)
         self.slider_velocidad.Bind(wx.EVT_KEY_DOWN, self._al_tecla_velocidad)
@@ -171,12 +174,12 @@ class DialogoProveedorAlternativo(wx.Dialog):
         # la voz predeterminada del sistema (sin dejar elegir ninguna otra),
         # porque se le pasaba a GrabadorAudio un dict genérico sin id real.
         sz_local = wx.BoxSizer(wx.HORIZONTAL)
-        lbl_local = wx.StaticText(self, label="Voz local para «Usar voz local»:")
-        self.combo_voz_local = wx.Choice(self, choices=["Cargando voces locales..."])
+        lbl_local = wx.StaticText(self, label=_("Voz local para «Usar voz local»:"))
+        self.combo_voz_local = wx.Choice(self, choices=[_("Cargando voces locales...")])
         self.combo_voz_local.SetSelection(0)
         self.combo_voz_local.SetHelpText(
-            "Voz SAPI5 (64 o 32 bits) que se usará si pulsas «Usar voz local». "
-            "Incluye todas las voces instaladas en tu equipo, no solo las favoritas."
+            _("Voz SAPI5 (64 o 32 bits) que se usará si pulsas «Usar voz local». "
+              "Incluye todas las voces instaladas en tu equipo, no solo las favoritas.")
         )
         sz_local.Add(lbl_local, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         sz_local.Add(self.combo_voz_local, 1)
@@ -187,35 +190,35 @@ class DialogoProveedorAlternativo(wx.Dialog):
         # 4. Botonera de acciones.
         sz_botones = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btn_usar_alternativo = wx.Button(self, label="Usar proveedor alternativo")
+        self.btn_usar_alternativo = wx.Button(self, label=_("Usar proveedor alternativo"))
         self.btn_usar_alternativo.SetHelpText(
-            "Continúa la exportación con el proveedor y la voz seleccionados arriba."
+            _("Continúa la exportación con el proveedor y la voz seleccionados arriba.")
         )
         self.btn_usar_alternativo.Enable(bool(self._proveedores_disponibles))
         self.btn_usar_alternativo.Bind(wx.EVT_BUTTON, self._al_usar_alternativo)
         sz_botones.Add(self.btn_usar_alternativo, 0, wx.RIGHT, 8)
 
-        self.btn_usar_local = wx.Button(self, label="Usar voz local")
+        self.btn_usar_local = wx.Button(self, label=_("Usar voz local"))
         self.btn_usar_local.SetHelpText(
-            "Continúa la exportación con la voz local SAPI5 elegida en el combo de "
-            "arriba, sin coste ni límite de cuota."
+            _("Continúa la exportación con la voz local SAPI5 elegida en el combo de "
+              "arriba, sin coste ni límite de cuota.")
         )
         self.btn_usar_local.Bind(wx.EVT_BUTTON, self._al_usar_local)
         sz_botones.Add(self.btn_usar_local, 0, wx.RIGHT, 8)
 
-        self.btn_dividir = wx.Button(self, label="Dividir en partes")
+        self.btn_dividir = wx.Button(self, label=_("Dividir en partes"))
         self.btn_dividir.SetHelpText(
-            "Genera hasta donde alcance la cuota actual y guarda el resto como parte "
-            "pendiente para retomar más tarde. Solo disponible en modo Libro completo."
+            _("Genera hasta donde alcance la cuota actual y guarda el resto como parte "
+              "pendiente para retomar más tarde. Solo disponible en modo Libro completo.")
         )
         self.btn_dividir.Enable(self.modo_libro_completo)
         self.btn_dividir.Bind(wx.EVT_BUTTON, self._al_dividir)
-        aplicar_icono_boton(self.btn_dividir, "trocear", "Dividir en partes")
+        aplicar_icono_boton(self.btn_dividir, "trocear", _("Dividir en partes"))
         sz_botones.Add(self.btn_dividir, 0, wx.RIGHT, 8)
 
-        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, "Cancelar")
+        self.btn_cancelar = wx.Button(self, wx.ID_CANCEL, _("Cancelar"))
         self.btn_cancelar.Bind(wx.EVT_BUTTON, self._al_cancelar)
-        aplicar_icono_boton(self.btn_cancelar, "cerrar", "Cancelar")
+        aplicar_icono_boton(self.btn_cancelar, "cerrar", _("Cancelar"))
         sz_botones.Add(self.btn_cancelar, 0)
 
         sizer.Add(sz_botones, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
@@ -273,7 +276,7 @@ class DialogoProveedorAlternativo(wx.Dialog):
         panel_voces.chk_solo_favs.SetValue(False)
         panel_voces.filtrar_y_mostrar()
         voz.hablar(
-            "Este proveedor no tiene voces favoritas guardadas. Se muestran todas sus voces."
+            _("Este proveedor no tiene voces favoritas guardadas. Se muestran todas sus voces.")
         )
 
     def _sincronizar_velocidad_panel(self):
@@ -314,14 +317,16 @@ class DialogoProveedorAlternativo(wx.Dialog):
     def _anunciar_estado_inicial(self, nombre_proveedor_actual):
         n = len(self._proveedores_disponibles)
         if n == 0:
-            mensaje = (
-                f"{nombre_proveedor_actual} sin cuota suficiente. "
+            mensaje = _(
+                "{proveedor} sin cuota suficiente. "
                 "Ningún otro proveedor de nube tiene saldo disponible. "
                 "Puedes usar la voz local o dividir en partes."
-            )
+            ).format(proveedor=nombre_proveedor_actual)
         else:
-            plural = "proveedor alternativo" if n == 1 else "proveedores alternativos"
-            mensaje = f"{nombre_proveedor_actual} sin cuota suficiente. {n} {plural} disponible con saldo."
+            plural = _("proveedor alternativo") if n == 1 else _("proveedores alternativos")
+            mensaje = _("{proveedor} sin cuota suficiente. {n} {plural} disponible con saldo.").format(
+                proveedor=nombre_proveedor_actual, n=n, plural=plural
+            )
 
         voz.hablar(mensaje)
         # El foco va directo al selector de proveedor (primer control útil
@@ -340,17 +345,17 @@ class DialogoProveedorAlternativo(wx.Dialog):
     def _al_usar_alternativo(self, evento):
         idx = self.combo_proveedores.GetSelection()
         if idx == wx.NOT_FOUND or idx >= len(self._proveedores_disponibles) or not self._panel_voces:
-            wx.MessageBox("Selecciona un proveedor con cuota disponible.", "Info")
+            wx.MessageBox(_("Selecciona un proveedor con cuota disponible."), _("Info"))
             return
 
         idx_voz = self._panel_voces.lista_voces.GetFirstSelected()
         if idx_voz == -1:
-            wx.MessageBox("Selecciona una voz del catálogo antes de continuar.", "Info")
+            wx.MessageBox(_("Selecciona una voz del catálogo antes de continuar."), _("Info"))
             return
 
         voz = self._panel_voces.mapa_indices.get(idx_voz)
         if not voz:
-            wx.MessageBox("Selecciona una voz del catálogo antes de continuar.", "Info")
+            wx.MessageBox(_("Selecciona una voz del catálogo antes de continuar."), _("Info"))
             return
 
         clave, _nombre, _saldo = self._proveedores_disponibles[idx]
@@ -390,7 +395,7 @@ class DialogoProveedorAlternativo(wx.Dialog):
             self.combo_voz_local.Set([v.get("nombre", "") for v in voces])
             self.combo_voz_local.SetSelection(0)
         else:
-            self.combo_voz_local.Set(["No se encontró ninguna voz SAPI5 instalada"])
+            self.combo_voz_local.Set([_("No se encontró ninguna voz SAPI5 instalada")])
             self.combo_voz_local.SetSelection(0)
             self.btn_usar_local.Enable(False)
 
@@ -400,7 +405,7 @@ class DialogoProveedorAlternativo(wx.Dialog):
         if self._voces_locales and 0 <= idx < len(self._voces_locales):
             self.voz_elegida = dict(self._voces_locales[idx])
         else:
-            self.voz_elegida = {"proveedor_id": "local", "nombre": "Voz local (SAPI5)"}
+            self.voz_elegida = {"proveedor_id": "local", "nombre": _("Voz local (SAPI5)")}
         self.velocidad_elegida = self.slider_velocidad.GetValue()
         self._cerrar(wx.ID_OK)
 
