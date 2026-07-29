@@ -13,6 +13,7 @@ from app.interfaz.pestana_creador_audiolibros import PestanaCreadorAudiolibros
 from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config, RAIZ_RECURSOS
 from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS, ERROR
+from app.motor.gestor_idioma import traducir as _
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
@@ -86,23 +87,23 @@ class VentanaPrincipal(wx.Frame):
 
         # Pestaña 1: Biblioteca
         self.pestana_biblioteca = PestanaBiblioteca(self.notebook)
-        self.notebook.AddPage(self.pestana_biblioteca, "Biblioteca")
+        self.notebook.AddPage(self.pestana_biblioteca, _("Biblioteca"))
 
         # Pestaña 2: Lectura
         self.pestana_lectura = PestanaLectura(self.notebook)
-        self.notebook.AddPage(self.pestana_lectura, "Modo Lectura")
+        self.notebook.AddPage(self.pestana_lectura, _("Modo Lectura"))
 
         # Pestaña 3: Creador de Audiolibros
         self.pestana_creador = PestanaCreadorAudiolibros(self.notebook)
-        self.notebook.AddPage(self.pestana_creador, "Creador de Audiolibros")
+        self.notebook.AddPage(self.pestana_creador, _("Creador de Audiolibros"))
 
         # Pestaña 4: Grabación multivoz
         self.pestana_grabacion = PestanaGrabacion(self.notebook)
-        self.notebook.AddPage(self.pestana_grabacion, "Creación de fragmentos")
+        self.notebook.AddPage(self.pestana_grabacion, _("Creación de fragmentos"))
 
         # Pestaña 5: Ajustes
         self.pestana_ajustes = PestanaAjustes(self.notebook)
-        self.notebook.AddPage(self.pestana_ajustes, "Ajustes")
+        self.notebook.AddPage(self.pestana_ajustes, _("Ajustes"))
 
         # 2. La barra de menú clásica se ha eliminado.
         # Toda la funcionalidad está en los menús contextuales de cada pestaña
@@ -307,7 +308,7 @@ class VentanaPrincipal(wx.Frame):
         que _submenu_ayuda) para que el asistente sea accesible desde
         cualquier pestaña, no solo desde Biblioteca.
         """
-        item = menu.Append(wx.ID_ANY, "Asistente de Biblioteca (Gemini)...\tCtrl+Shift+B")
+        item = menu.Append(wx.ID_ANY, _("Asistente de Biblioteca (Gemini)...") + "\tCtrl+Shift+B")
         self.Bind(wx.EVT_MENU, self.al_abrir_asistente_biblioteca_global, item)
         menu.AppendSeparator()
     # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA_GLOBAL
@@ -450,7 +451,7 @@ class VentanaPrincipal(wx.Frame):
             self.pestana_grabacion.cargar_txt_desde_ruta(ruta)
             self.agregar_txt_a_recientes(ruta)
         else:
-            wx.MessageBox("El archivo ya no existe en disco.", "Archivo no encontrado")
+            wx.MessageBox(_("El archivo ya no existe en disco."), _("Archivo no encontrado"))
             if ruta in self.txt_recientes:
                 self.txt_recientes.remove(ruta)
                 self._guardar_txt_recientes()
@@ -458,8 +459,8 @@ class VentanaPrincipal(wx.Frame):
 
     def _al_borrar_txt_recientes(self, evento):
         if wx.MessageBox(
-            "¿Borrar el historial de TXT recientes?",
-            "Confirmar", wx.YES_NO | wx.ICON_QUESTION
+            _("¿Borrar el historial de TXT recientes?"),
+            _("Confirmar"), wx.YES_NO | wx.ICON_QUESTION
         ) == wx.YES:
             self.txt_recientes = []
             self._guardar_txt_recientes()
@@ -488,7 +489,7 @@ class VentanaPrincipal(wx.Frame):
         self.actualizar_menu_recientes()
 
     def al_borrar_recientes(self, evento):
-        if wx.MessageBox("¿Seguro que quieres borrar el historial de libros recientes?", "Confirmar", wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
+        if wx.MessageBox(_("¿Seguro que quieres borrar el historial de libros recientes?"), _("Confirmar"), wx.YES_NO | wx.ICON_QUESTION) == wx.YES:
             self.archivos_recientes = []
             self._guardar_recientes()
             self.actualizar_menu_recientes()
@@ -510,7 +511,7 @@ class VentanaPrincipal(wx.Frame):
             self.notebook.SetSelection(IDX_LECTURA)
             self.pestana_lectura.cargar_epub_desde_ruta(ruta)
         else:
-            wx.MessageBox("El archivo ya no existe", "Error")
+            wx.MessageBox(_("El archivo ya no existe"), _("Error"))
             if ruta in self.archivos_recientes:
                 self.archivos_recientes.remove(ruta)
                 self._guardar_recientes()
@@ -579,13 +580,13 @@ class VentanaPrincipal(wx.Frame):
         # Ningún control específico de la lista/árbol tiene el foco (por
         # ejemplo, el botón "Importar carpeta..."): menú mínimo genérico.
         menu = wx.Menu()
-        item_importar = menu.Append(wx.ID_ANY, "Importar carpeta...\tCtrl+O")
+        item_importar = menu.Append(wx.ID_ANY, _("Importar carpeta...") + "\tCtrl+O")
         self.Bind(wx.EVT_MENU, pb.al_importar_carpeta, item_importar)
         menu.AppendSeparator()
         self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
-        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        item_salir = menu.Append(wx.ID_EXIT, _("Salir"))
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
         self.PopupMenu(menu)
         menu.Destroy()
@@ -602,7 +603,7 @@ class VentanaPrincipal(wx.Frame):
         self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
-        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        item_salir = menu.Append(wx.ID_EXIT, _("Salir"))
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
         self.pestana_creador.PopupMenu(menu)
         menu.Destroy()
@@ -613,7 +614,7 @@ class VentanaPrincipal(wx.Frame):
         self._agregar_item_asistente_biblioteca(menu)
         self._submenu_ayuda(menu)
         menu.AppendSeparator()
-        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        item_salir = menu.Append(wx.ID_EXIT, _("Salir"))
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
         self.pestana_ajustes.PopupMenu(menu)
         menu.Destroy()
@@ -622,52 +623,52 @@ class VentanaPrincipal(wx.Frame):
         """Añade el submenú Ayuda al menú contextual recibido (compartido por todas las pestañas)."""
         sub = wx.Menu()
 
-        item_ayuda = sub.Append(wx.ID_ANY, "Abrir ayuda (F1)")
+        item_ayuda = sub.Append(wx.ID_ANY, _("Abrir ayuda (F1)"))
         self.Bind(wx.EVT_MENU, self._al_abrir_ayuda_global, item_ayuda)
 
-        item_atajos = sub.Append(wx.ID_ANY, "Ver atajos de teclado")
+        item_atajos = sub.Append(wx.ID_ANY, _("Ver atajos de teclado"))
         self.Bind(wx.EVT_MENU, self.al_ver_atajos, item_atajos)
 
         sub.AppendSeparator()
 
-        item_acerca = sub.Append(wx.ID_ANY, "Acerca de")
+        item_acerca = sub.Append(wx.ID_ANY, _("Acerca de"))
         self.Bind(wx.EVT_MENU, self.al_abrir_acerca_de, item_acerca)
 
         sub.AppendSeparator()
 
-        item_github = sub.Append(wx.ID_ANY, "Abrir repositorio en GitHub")
+        item_github = sub.Append(wx.ID_ANY, _("Abrir repositorio en GitHub"))
         self.Bind(wx.EVT_MENU, self.al_abrir_github, item_github)
 
-        item_releases = sub.Append(wx.ID_ANY, "Ver todas las versiones en Releases")
+        item_releases = sub.Append(wx.ID_ANY, _("Ver todas las versiones en Releases"))
         self.Bind(wx.EVT_MENU, self.al_abrir_releases, item_releases)
 
         sub.AppendSeparator()
 
-        item_tiflohistorias = sub.Append(wx.ID_ANY, "Escuchar audiolibros en Tiflohistorias")
+        item_tiflohistorias = sub.Append(wx.ID_ANY, _("Escuchar audiolibros en Tiflohistorias"))
         self.Bind(wx.EVT_MENU, self.al_abrir_tiflohistorias, item_tiflohistorias)
 
-        item_tiflotutos = sub.Append(wx.ID_ANY, "Visitar tiflotutos.com")
+        item_tiflotutos = sub.Append(wx.ID_ANY, _("Visitar tiflotutos.com"))
         self.Bind(wx.EVT_MENU, self.al_visitar_tiflotutos, item_tiflotutos)
 
         sub.AppendSeparator()
 
-        item_log = sub.Append(wx.ID_ANY, "Abrir carpeta de registros")
+        item_log = sub.Append(wx.ID_ANY, _("Abrir carpeta de registros"))
         self.Bind(wx.EVT_MENU, self.al_abrir_registros, item_log)
 
-        item_copiar_log = sub.Append(wx.ID_ANY, "Copiar registros al portapapeles")
+        item_copiar_log = sub.Append(wx.ID_ANY, _("Copiar registros al portapapeles"))
         self.Bind(wx.EVT_MENU, self.al_copiar_registros, item_copiar_log)
 
-        item_copiar_ultimo_error = sub.Append(wx.ID_ANY, "Copiar el último error al portapapeles")
+        item_copiar_ultimo_error = sub.Append(wx.ID_ANY, _("Copiar el último error al portapapeles"))
         self.Bind(wx.EVT_MENU, self.al_copiar_ultimo_error, item_copiar_ultimo_error)
 
-        menu.AppendSubMenu(sub, "Ayuda")
+        menu.AppendSubMenu(sub, _("Ayuda"))
 
     def _menu_contextual_lectura(self):
         """Menú contextual de la pestaña Lectura: abrir, recientes, navegación."""
         menu = wx.Menu()
 
         # Abrir libro
-        item_abrir = menu.Append(wx.ID_ANY, "Cargar libro")
+        item_abrir = menu.Append(wx.ID_ANY, _("Cargar libro"))
         self.Bind(wx.EVT_MENU, self.al_abrir_archivo, item_abrir)
 
         # Submenú libros recientes
@@ -676,7 +677,7 @@ class VentanaPrincipal(wx.Frame):
             for i, ruta in enumerate(self.archivos_recientes):
                 nombre = os.path.basename(ruta)
                 id_item = wx.NewIdRef()
-                sub_rec.Append(id_item, f"{i+1}. {nombre}")
+                sub_rec.Append(id_item, _("{indice}. {nombre}").format(indice=i + 1, nombre=nombre))
                 self.Bind(
                     wx.EVT_MENU,
                     lambda e, p=ruta: self.abrir_libro_reciente(p),
@@ -684,25 +685,25 @@ class VentanaPrincipal(wx.Frame):
                 )
             sub_rec.AppendSeparator()
             id_borrar = wx.NewIdRef()
-            sub_rec.Append(id_borrar, "Borrar historial")
+            sub_rec.Append(id_borrar, _("Borrar historial"))
             self.Bind(wx.EVT_MENU, self.al_borrar_recientes, id=id_borrar)
         else:
-            sub_rec.Append(wx.ID_ANY, "(Vacío)").Enable(False)
-        menu.AppendSubMenu(sub_rec, "Libros Recientes")
+            sub_rec.Append(wx.ID_ANY, _("(Vacío)")).Enable(False)
+        menu.AppendSubMenu(sub_rec, _("Libros Recientes"))
 
         menu.AppendSeparator()
 
         # Navegación por el texto
-        item_b = menu.Append(wx.ID_ANY, "Buscar en el texto\tCtrl+F")
+        item_b = menu.Append(wx.ID_ANY, _("Buscar en el texto") + "\tCtrl+F")
         self.Bind(wx.EVT_MENU, self.al_buscar, item_b)
-        item_g = menu.Append(wx.ID_ANY, "Ir a página / porcentaje...\tCtrl+G")
+        item_g = menu.Append(wx.ID_ANY, _("Ir a página / porcentaje...") + "\tCtrl+G")
         self.Bind(wx.EVT_MENU, self.al_ir_a_porcentaje, item_g)
-        item_m = menu.Append(wx.ID_ANY, "Gestor de Marcadores\tCtrl+M")
+        item_m = menu.Append(wx.ID_ANY, _("Gestor de Marcadores") + "\tCtrl+M")
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores, item_m)
 
         menu.AppendSeparator()
         self._agregar_item_asistente_biblioteca(menu)
-        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        item_salir = menu.Append(wx.ID_EXIT, _("Salir"))
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
         self.pestana_lectura.PopupMenu(menu)
@@ -721,9 +722,11 @@ class VentanaPrincipal(wx.Frame):
                 nombre = os.path.basename(ruta)
                 proyecto = gestor.proyecto_de_archivo(ruta)
                 etiqueta = (
-                    f"{i+1}. {nombre}  ({proyecto['nombre']})"
+                    _("{indice}. {nombre}  ({proyecto})").format(
+                        indice=i + 1, nombre=nombre, proyecto=proyecto['nombre']
+                    )
                     if proyecto else
-                    f"{i+1}. {nombre}"
+                    _("{indice}. {nombre}").format(indice=i + 1, nombre=nombre)
                 )
                 id_item = wx.NewIdRef()
                 sub_txt.Append(id_item, etiqueta)
@@ -734,20 +737,20 @@ class VentanaPrincipal(wx.Frame):
                 )
             sub_txt.AppendSeparator()
             id_borrar = wx.NewIdRef()
-            sub_txt.Append(id_borrar, "Borrar historial de TXT")
+            sub_txt.Append(id_borrar, _("Borrar historial de TXT"))
             self.Bind(wx.EVT_MENU, self._al_borrar_txt_recientes, id=id_borrar)
         else:
-            sub_txt.Append(wx.ID_ANY, "(Vacío)").Enable(False)
-        menu.AppendSubMenu(sub_txt, "TXT Recientes para grabar")
+            sub_txt.Append(wx.ID_ANY, _("(Vacío)")).Enable(False)
+        menu.AppendSubMenu(sub_txt, _("TXT Recientes para grabar"))
 
         menu.AppendSeparator()
 
-        item_proy = menu.Append(wx.ID_ANY, "Abrir Gestor de Proyectos")
+        item_proy = menu.Append(wx.ID_ANY, _("Abrir Gestor de Proyectos"))
         self.Bind(wx.EVT_MENU, self.al_abrir_gestor_proyectos, item_proy)
 
         menu.AppendSeparator()
         self._agregar_item_asistente_biblioteca(menu)
-        item_salir = menu.Append(wx.ID_EXIT, "Salir")
+        item_salir = menu.Append(wx.ID_EXIT, _("Salir"))
         self.Bind(wx.EVT_MENU, self.al_salir, item_salir)
 
         self.pestana_grabacion.PopupMenu(menu)
@@ -865,8 +868,8 @@ class VentanaPrincipal(wx.Frame):
         ruta_ayuda = os.path.join(RAIZ, "ayuda.html")
         if not os.path.exists(ruta_ayuda):
             wx.MessageBox(
-                f"No se encontró el archivo de ayuda en:\n{ruta_ayuda}",
-                "Ayuda no encontrada", wx.OK | wx.ICON_INFORMATION,
+                _("No se encontró el archivo de ayuda en:\n{ruta}").format(ruta=ruta_ayuda),
+                _("Ayuda no encontrada"), wx.OK | wx.ICON_INFORMATION,
             )
             return
         try:
@@ -875,7 +878,7 @@ class VentanaPrincipal(wx.Frame):
             try:
                 subprocess.Popen(["xdg-open", ruta_ayuda])
             except Exception as e:
-                wx.MessageBox(str(e), "Error al abrir ayuda")
+                wx.MessageBox(str(e), _("Error al abrir ayuda"))
 
     def al_ver_atajos(self, evento):
         """Muestra un diálogo con todos los atajos actuales (defaults + personalizados)."""
@@ -885,10 +888,10 @@ class VentanaPrincipal(wx.Frame):
         for clave, entrada in atajos.items():
             desc = entrada.get("descripcion", clave)
             tecla = texto_atajo(entrada)
-            lineas.append(f"• {desc}:  {tecla}")
+            lineas.append(_("• {descripcion}:  {tecla}").format(descripcion=desc, tecla=tecla))
         wx.MessageBox(
             "\n".join(lineas),
-            "Atajos de teclado actuales",
+            _("Atajos de teclado actuales"),
             wx.OK | wx.ICON_INFORMATION
         )
 
@@ -904,9 +907,9 @@ class VentanaPrincipal(wx.Frame):
                 version = json.load(f).get("version", "3.0.0")
         except Exception:
             version = "3.0.0"
-        texto = (
+        texto = _(
             "Epub TTS Accesible\n"
-            f"Versión: {version}\n\n"
+            "Versión: {version}\n\n"
             "Aplicación de texto a voz accesible para libros EPUB y PDF, con "
             "producción de audiolibros multivoz.\n"
             "Diseñada para usuarios de lectores de pantalla como NVDA.\n\n"
@@ -919,8 +922,8 @@ class VentanaPrincipal(wx.Frame):
             "  ElevenLabs\n"
             "  Microsoft SAPI5 (voces del sistema, sin coste)\n\n"
             "Repositorio: github.com/Dayanna-Parson/epub-tts-accesible"
-        )
-        wx.MessageBox(texto, "Acerca de Epub TTS Accesible", wx.OK | wx.ICON_INFORMATION)
+        ).format(version=version)
+        wx.MessageBox(texto, _("Acerca de Epub TTS Accesible"), wx.OK | wx.ICON_INFORMATION)
 
     def al_abrir_releases(self, evento):
         """Abre la sección de Releases en GitHub."""
@@ -951,7 +954,7 @@ class VentanaPrincipal(wx.Frame):
             try:
                 subprocess.Popen(["xdg-open", carpeta])
             except Exception as e:
-                wx.MessageBox(str(e), "Error al abrir carpeta de registros")
+                wx.MessageBox(str(e), _("Error al abrir carpeta de registros"))
 
     def al_copiar_registros(self, evento=None):
         """
@@ -966,18 +969,18 @@ class VentanaPrincipal(wx.Frame):
             with open(ruta_log, "r", encoding="utf-8") as f:
                 contenido = f.read()
         except Exception as e:
-            wx.MessageBox(f"No se pudo leer el registro:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(_("No se pudo leer el registro:\n{error}").format(error=e), _("Error"), wx.OK | wx.ICON_ERROR)
             return
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(contenido))
             wx.TheClipboard.Close()
             reproducir(SUCCESS)
             wx.MessageBox(
-                "Registros copiados al portapapeles. Ya puedes pegarlos donde quieras.",
-                "Registros copiados", wx.OK | wx.ICON_INFORMATION,
+                _("Registros copiados al portapapeles. Ya puedes pegarlos donde quieras."),
+                _("Registros copiados"), wx.OK | wx.ICON_INFORMATION,
             )
         else:
-            wx.MessageBox("No se pudo abrir el portapapeles.", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(_("No se pudo abrir el portapapeles."), _("Error"), wx.OK | wx.ICON_ERROR)
 
     def al_copiar_ultimo_error(self, evento=None):
         """
@@ -991,28 +994,28 @@ class VentanaPrincipal(wx.Frame):
         try:
             archivos = [os.path.join(carpeta, n) for n in os.listdir(carpeta)]
         except Exception as e:
-            wx.MessageBox(f"No se pudo leer la carpeta de errores:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(_("No se pudo leer la carpeta de errores:\n{error}").format(error=e), _("Error"), wx.OK | wx.ICON_ERROR)
             return
         if not archivos:
-            wx.MessageBox("No hay ningún error registrado todavía.", "Sin errores", wx.OK | wx.ICON_INFORMATION)
+            wx.MessageBox(_("No hay ningún error registrado todavía."), _("Sin errores"), wx.OK | wx.ICON_INFORMATION)
             return
         ultimo = max(archivos, key=os.path.getmtime)
         try:
             with open(ultimo, "r", encoding="utf-8") as f:
                 contenido = f.read()
         except Exception as e:
-            wx.MessageBox(f"No se pudo leer el error:\n{e}", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(_("No se pudo leer el error:\n{error}").format(error=e), _("Error"), wx.OK | wx.ICON_ERROR)
             return
         if wx.TheClipboard.Open():
             wx.TheClipboard.SetData(wx.TextDataObject(contenido))
             wx.TheClipboard.Close()
             reproducir(SUCCESS)
             wx.MessageBox(
-                f"Último error ({os.path.basename(ultimo)}) copiado al portapapeles.",
-                "Error copiado", wx.OK | wx.ICON_INFORMATION,
+                _("Último error ({nombre}) copiado al portapapeles.").format(nombre=os.path.basename(ultimo)),
+                _("Error copiado"), wx.OK | wx.ICON_INFORMATION,
             )
         else:
-            wx.MessageBox("No se pudo abrir el portapapeles.", "Error", wx.OK | wx.ICON_ERROR)
+            wx.MessageBox(_("No se pudo abrir el portapapeles."), _("Error"), wx.OK | wx.ICON_ERROR)
     # ANCLAJE_FIN: AYUDA
 
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS

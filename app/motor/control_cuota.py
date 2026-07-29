@@ -5,6 +5,7 @@ from datetime import datetime
 import wx
 from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
 from app.config_rutas import ruta_config
+from app.motor.gestor_idioma import traducir as _
 
 logger = logging.getLogger(__name__)
 
@@ -100,13 +101,16 @@ class ControlCuota:
             def _aviso_presupuesto():
                 reproducir(SND_ERROR)
                 wx.MessageBox(
-                    f"¡ALTO! Se ha detenido la lectura por seguridad.\n\n"
-                    f"Proveedor: {clave.upper()}\n"
-                    f"Has gastado: {gastado} caracteres\n"
-                    f"Intentaste leer: {cantidad} caracteres\n"
-                    f"Límite configurado: {limite}\n\n"
-                    "Se usará la voz LOCAL para no generar costes extra.",
-                    "Escudo de Presupuesto Activo"
+                    _("¡ALTO! Se ha detenido la lectura por seguridad.\n\n"
+                      "Proveedor: {proveedor}\n"
+                      "Has gastado: {gastado} caracteres\n"
+                      "Intentaste leer: {intentado} caracteres\n"
+                      "Límite configurado: {limite}\n\n"
+                      "Se usará la voz LOCAL para no generar costes extra.").format(
+                        proveedor=clave.upper(), gastado=gastado,
+                        intentado=cantidad, limite=limite,
+                    ),
+                    _("Escudo de Presupuesto Activo")
                 )
             wx.CallAfter(_aviso_presupuesto)
             return False

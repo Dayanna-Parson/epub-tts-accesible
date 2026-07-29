@@ -2773,3 +2773,205 @@ msgstr "Plays a text sample with the selected voice. Press it again to stop play
 msgid "Hola, mi nombre es {nombre}. El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar."
 msgstr "Hello, my name is {nombre}. The sun was slowly rising over the hills as the city began to wake up."
 
+
+msgid "(Vacío)"
+msgstr "(Empty)"
+
+msgid "Abrir Gestor de Proyectos"
+msgstr "Open Project Manager"
+
+msgid "Abrir ayuda (F1)"
+msgstr "Open help (F1)"
+
+msgid "Abrir carpeta de registros"
+msgstr "Open logs folder"
+
+msgid "Abrir repositorio en GitHub"
+msgstr "Open repository on GitHub"
+
+msgid "Acerca de"
+msgstr "About"
+
+msgid "Acerca de Epub TTS Accesible"
+msgstr "About Epub TTS Accesible"
+
+msgid "Asistente de Biblioteca (Gemini)..."
+msgstr "Library Assistant (Gemini)..."
+
+msgid "Atajos de teclado actuales"
+msgstr "Current keyboard shortcuts"
+
+msgid "Aviso sobre la voz de lectura"
+msgstr "Notice about the reading voice"
+
+msgid "Ayuda"
+msgstr "Help"
+
+msgid "Ayuda no encontrada"
+msgstr "Help not found"
+
+msgid "Biblioteca"
+msgstr "Library"
+
+msgid "Borrar historial de TXT"
+msgstr "Clear TXT history"
+
+msgid "Buscar en el texto"
+msgstr "Search in text"
+
+msgid "Cambia el idioma de toda la interfaz. El cambio se aplica al reiniciar la aplicación."
+msgstr "Changes the language of the whole interface. The change applies after restarting the application."
+
+msgid "Cargar libro"
+msgstr "Load book"
+
+msgid "Copiar el último error al portapapeles"
+msgstr "Copy the last error to clipboard"
+
+msgid "Copiar registros al portapapeles"
+msgstr "Copy logs to clipboard"
+
+msgid "Creación de fragmentos"
+msgstr "Fragment Creation"
+
+msgid "Creador de Audiolibros"
+msgstr "Audiobook Creator"
+
+msgid "Cuota agotada — aviso único"
+msgstr "Quota exhausted — one-time notice"
+
+msgid "El archivo ya no existe"
+msgstr "The file no longer exists"
+
+msgid "El archivo ya no existe en disco."
+msgstr "The file no longer exists on disk."
+
+msgid "El idioma de la interfaz se aplicará por completo al reiniciar la aplicación."
+msgstr "The interface language will be fully applied after restarting the application."
+
+msgid "El proveedor {proveedor} ha alcanzado el límite de su plan/cuota.\n\n• Este proveedor queda desactivado automáticamente para esta sesión.\n• La lectura continuará con tu voz local sin interrupciones.\n• Para reactivarlo, cambia de voz manualmente en el selector."
+msgstr "The {proveedor} provider has reached its plan/quota limit.\n\n• This provider is automatically disabled for this session.\n• Reading will continue with your local voice without interruptions.\n• To reactivate it, change voice manually in the selector."
+
+msgid "English"
+msgstr "English"
+
+msgid "Epub TTS Accesible\nVersión: {version}\n\nAplicación de texto a voz accesible para libros EPUB y PDF, con producción de audiolibros multivoz.\nDiseñada para usuarios de lectores de pantalla como NVDA.\n\nCréditos\nDesarrollo: Dayanna Parson (TifloTutos)\n\nProveedores de voz:\n  Microsoft Azure Text to Speech\n  Amazon Polly (AWS)\n  Deepgram Aura-2\n  ElevenLabs\n  Microsoft SAPI5 (voces del sistema, sin coste)\n\nRepositorio: github.com/Dayanna-Parson/epub-tts-accesible"
+msgstr "Epub TTS Accesible\nVersion: {version}\n\nAccessible text-to-speech application for EPUB and PDF books, with multi-voice audiobook production.\nDesigned for screen reader users such as NVDA.\n\nCredits\nDevelopment: Dayanna Parson (TifloTutos)\n\nVoice providers:\n  Microsoft Azure Text to Speech\n  Amazon Polly (AWS)\n  Deepgram Aura-2\n  ElevenLabs\n  Microsoft SAPI5 (system voices, free)\n\nRepository: github.com/Dayanna-Parson/epub-tts-accesible"
+
+msgid "Error al abrir ayuda"
+msgstr "Error opening help"
+
+msgid "Error al abrir carpeta de registros"
+msgstr "Error opening logs folder"
+
+msgid "Error copiado"
+msgstr "Error copied"
+
+msgid "Escuchar audiolibros en Tiflohistorias"
+msgstr "Listen to audiobooks on Tiflohistorias"
+
+msgid "Escudo de Presupuesto Activo"
+msgstr "Budget Shield Active"
+
+msgid "Español"
+msgstr "Spanish"
+
+msgid "Idioma cambiado"
+msgstr "Language changed"
+
+msgid "Idioma de la interfaz"
+msgstr "Interface language"
+
+msgid "Idioma en el que se muestran los menús, botones y avisos de la aplicación:"
+msgstr "Language in which the application's menus, buttons and notices are shown:"
+
+msgid "Idioma guardado. Reinicia la aplicación para aplicar el cambio."
+msgstr "Language saved. Restart the application to apply the change."
+
+msgid "Importar carpeta..."
+msgstr "Import folder..."
+
+msgid "Ir a página / porcentaje..."
+msgstr "Go to page / percentage..."
+
+msgid "La voz «{voz}» es de 32 bits y no puede usarse directamente en la aplicación de 64 bits.\n\nSe ha activado automáticamente el puente de compatibilidad de 32 bits incluido en la aplicación. Selecciona de nuevo la voz para usarla."
+msgstr "The voice «{voz}» is 32-bit and cannot be used directly in the 64-bit application.\n\nThe 32-bit compatibility bridge included in the application has been activated automatically. Select the voice again to use it."
+
+msgid "La voz «{voz}» no es compatible con esta versión de la aplicación.\n\nAlgunas voces de CodeFactory (Eloquence, RealSpeak) son motores de 32 bits y no funcionan en una aplicación de 64 bits.\n\nEsta versión no incluye el módulo de compatibilidad de 32 bits. Contacta con el soporte para obtener la versión con compatibilidad Eloquence."
+msgstr "The voice «{voz}» is not compatible with this version of the application.\n\nSome CodeFactory voices (Eloquence, RealSpeak) are 32-bit engines and do not work in a 64-bit application.\n\nThis version does not include the 32-bit compatibility module. Contact support to get the version with Eloquence compatibility."
+
+msgid "Libros Recientes"
+msgstr "Recent Books"
+
+msgid "Límite de cuota alcanzado"
+msgstr "Quota limit reached"
+
+msgid "Modo Lectura"
+msgstr "Reading Mode"
+
+msgid "No hay ningún error registrado todavía."
+msgstr "There is no error logged yet."
+
+msgid "No se encontró el archivo de ayuda en:\n{ruta}"
+msgstr "The help file was not found at:\n{ruta}"
+
+msgid "No se ha podido conectar con el servicio de voz con IA ({proveedor}).\n\nDetalle: {detalle}\n\nPara que la lectura no se detenga, continuaremos usando tu voz local."
+msgstr "Could not connect to the AI voice service ({proveedor}).\n\nDetail: {detalle}\n\nSo that reading doesn't stop, we'll continue using your local voice."
+
+msgid "No se pudo leer el error:\n{error}"
+msgstr "Could not read the error:\n{error}"
+
+msgid "No se pudo leer el registro:\n{error}"
+msgstr "Could not read the log:\n{error}"
+
+msgid "No se pudo leer la carpeta de errores:\n{error}"
+msgstr "Could not read the errors folder:\n{error}"
+
+msgid "Registros copiados"
+msgstr "Logs copied"
+
+msgid "Registros copiados al portapapeles. Ya puedes pegarlos donde quieras."
+msgstr "Logs copied to clipboard. You can now paste them anywhere."
+
+msgid "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\nSe usará la voz local para continuar sin generar costes adicionales."
+msgstr "The quota limit has been reached for all AI providers.\n\nThe local voice will be used to continue without generating additional costs."
+
+msgid "Sin errores"
+msgstr "No errors"
+
+msgid "TXT Recientes para grabar"
+msgstr "Recent TXT files to record"
+
+msgid "Ver atajos de teclado"
+msgstr "View keyboard shortcuts"
+
+msgid "Ver todas las versiones en Releases"
+msgstr "View all versions on Releases"
+
+msgid "Visitar tiflotutos.com"
+msgstr "Visit tiflotutos.com"
+
+msgid "Voz de 32 bits detectada"
+msgstr "32-bit voice detected"
+
+msgid "{indice}. {nombre}"
+msgstr "{indice}. {nombre}"
+
+msgid "{indice}. {nombre}  ({proyecto})"
+msgstr "{indice}. {nombre}  ({proyecto})"
+
+msgid "¡ALTO! Se ha detenido la lectura por seguridad.\n\nProveedor: {proveedor}\nHas gastado: {gastado} caracteres\nIntentaste leer: {intentado} caracteres\nLímite configurado: {limite}\n\nSe usará la voz LOCAL para no generar costes extra."
+msgstr "STOP! Reading has been halted for safety.\n\nProvider: {proveedor}\nSpent so far: {gastado} characters\nAttempted to read: {intentado} characters\nConfigured limit: {limite}\n\nThe LOCAL voice will be used to avoid extra costs."
+
+msgid "¿Borrar el historial de TXT recientes?"
+msgstr "Clear the recent TXT history?"
+
+msgid "¿Seguro que quieres borrar el historial de libros recientes?"
+msgstr "Are you sure you want to clear the recent books history?"
+
+msgid "Último error ({nombre}) copiado al portapapeles."
+msgstr "Last error ({nombre}) copied to clipboard."
+
+msgid "• {descripcion}:  {tecla}"
+msgstr "• {descripcion}:  {tecla}"
+

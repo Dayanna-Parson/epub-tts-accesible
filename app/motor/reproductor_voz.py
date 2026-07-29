@@ -16,6 +16,7 @@ from app.servicios.cliente_deepgram import ClienteDeepgram
 from app.motor.control_cuota import ControlCuota
 from app.motor.reproductor_sonidos import reproducir, ERROR as SND_ERROR
 from app.config_rutas import ruta_config
+from app.motor.gestor_idioma import traducir as _
 # ANCLAJE_FIN: IMPORTACIONES
 
 # ANCLAJE_INICIO: CLASE_REPRODUCTOR
@@ -190,9 +191,9 @@ class ReproductorVoz:
         def _aviso_cuota_total():
             reproducir(SND_ERROR)
             wx.MessageBox(
-                "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\n"
-                "Se usará la voz local para continuar sin generar costes adicionales.",
-                "Límite de cuota alcanzado"
+                _("Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\n"
+                  "Se usará la voz local para continuar sin generar costes adicionales."),
+                _("Límite de cuota alcanzado")
             )
         wx.CallAfter(_aviso_cuota_total)
         self.motor_activo = self.cliente_local
@@ -340,11 +341,13 @@ class ReproductorVoz:
         """
         reproducir(SND_ERROR)
         wx.MessageBox(
-            f"El proveedor {proveedor.upper()} ha alcanzado el límite de su plan/cuota.\n\n"
-            "• Este proveedor queda desactivado automáticamente para esta sesión.\n"
-            "• La lectura continuará con tu voz local sin interrupciones.\n"
-            "• Para reactivarlo, cambia de voz manualmente en el selector.",
-            "Cuota agotada — aviso único",
+            _("El proveedor {proveedor} ha alcanzado el límite de su plan/cuota.\n\n"
+              "• Este proveedor queda desactivado automáticamente para esta sesión.\n"
+              "• La lectura continuará con tu voz local sin interrupciones.\n"
+              "• Para reactivarlo, cambia de voz manualmente en el selector.").format(
+                proveedor=proveedor.upper()
+            ),
+            _("Cuota agotada — aviso único"),
             wx.OK | wx.ICON_INFORMATION
         )
     # ANCLAJE_FIN: GESTION_ERRORES_CUOTA
@@ -356,10 +359,12 @@ class ReproductorVoz:
         """
         reproducir(SND_ERROR)
         wx.MessageBox(
-            f"No se ha podido conectar con el servicio de voz con IA ({self.tipo_motor_actual.upper()}).\n\n"
-            f"Detalle: {error_msg}\n\n"
-            "Para que la lectura no se detenga, continuaremos usando tu voz local.", 
-            "Aviso sobre la voz de lectura"
+            _("No se ha podido conectar con el servicio de voz con IA ({proveedor}).\n\n"
+              "Detalle: {detalle}\n\n"
+              "Para que la lectura no se detenga, continuaremos usando tu voz local.").format(
+                proveedor=self.tipo_motor_actual.upper(), detalle=error_msg
+            ),
+            _("Aviso sobre la voz de lectura")
         )
         try:
             self.cliente_local.hablar(texto)

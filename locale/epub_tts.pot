@@ -2776,3 +2776,205 @@ msgstr ""
 msgid "Hola, mi nombre es {nombre}. El sol salía lentamente sobre las colinas cuando la ciudad comenzó a despertar."
 msgstr ""
 
+
+msgid "(Vacío)"
+msgstr ""
+
+msgid "Abrir Gestor de Proyectos"
+msgstr ""
+
+msgid "Abrir ayuda (F1)"
+msgstr ""
+
+msgid "Abrir carpeta de registros"
+msgstr ""
+
+msgid "Abrir repositorio en GitHub"
+msgstr ""
+
+msgid "Acerca de"
+msgstr ""
+
+msgid "Acerca de Epub TTS Accesible"
+msgstr ""
+
+msgid "Asistente de Biblioteca (Gemini)..."
+msgstr ""
+
+msgid "Atajos de teclado actuales"
+msgstr ""
+
+msgid "Aviso sobre la voz de lectura"
+msgstr ""
+
+msgid "Ayuda"
+msgstr ""
+
+msgid "Ayuda no encontrada"
+msgstr ""
+
+msgid "Biblioteca"
+msgstr ""
+
+msgid "Borrar historial de TXT"
+msgstr ""
+
+msgid "Buscar en el texto"
+msgstr ""
+
+msgid "Cambia el idioma de toda la interfaz. El cambio se aplica al reiniciar la aplicación."
+msgstr ""
+
+msgid "Cargar libro"
+msgstr ""
+
+msgid "Copiar el último error al portapapeles"
+msgstr ""
+
+msgid "Copiar registros al portapapeles"
+msgstr ""
+
+msgid "Creación de fragmentos"
+msgstr ""
+
+msgid "Creador de Audiolibros"
+msgstr ""
+
+msgid "Cuota agotada — aviso único"
+msgstr ""
+
+msgid "El archivo ya no existe"
+msgstr ""
+
+msgid "El archivo ya no existe en disco."
+msgstr ""
+
+msgid "El idioma de la interfaz se aplicará por completo al reiniciar la aplicación."
+msgstr ""
+
+msgid "El proveedor {proveedor} ha alcanzado el límite de su plan/cuota.\n\n• Este proveedor queda desactivado automáticamente para esta sesión.\n• La lectura continuará con tu voz local sin interrupciones.\n• Para reactivarlo, cambia de voz manualmente en el selector."
+msgstr ""
+
+msgid "English"
+msgstr ""
+
+msgid "Epub TTS Accesible\nVersión: {version}\n\nAplicación de texto a voz accesible para libros EPUB y PDF, con producción de audiolibros multivoz.\nDiseñada para usuarios de lectores de pantalla como NVDA.\n\nCréditos\nDesarrollo: Dayanna Parson (TifloTutos)\n\nProveedores de voz:\n  Microsoft Azure Text to Speech\n  Amazon Polly (AWS)\n  Deepgram Aura-2\n  ElevenLabs\n  Microsoft SAPI5 (voces del sistema, sin coste)\n\nRepositorio: github.com/Dayanna-Parson/epub-tts-accesible"
+msgstr ""
+
+msgid "Error al abrir ayuda"
+msgstr ""
+
+msgid "Error al abrir carpeta de registros"
+msgstr ""
+
+msgid "Error copiado"
+msgstr ""
+
+msgid "Escuchar audiolibros en Tiflohistorias"
+msgstr ""
+
+msgid "Escudo de Presupuesto Activo"
+msgstr ""
+
+msgid "Español"
+msgstr ""
+
+msgid "Idioma cambiado"
+msgstr ""
+
+msgid "Idioma de la interfaz"
+msgstr ""
+
+msgid "Idioma en el que se muestran los menús, botones y avisos de la aplicación:"
+msgstr ""
+
+msgid "Idioma guardado. Reinicia la aplicación para aplicar el cambio."
+msgstr ""
+
+msgid "Importar carpeta..."
+msgstr ""
+
+msgid "Ir a página / porcentaje..."
+msgstr ""
+
+msgid "La voz «{voz}» es de 32 bits y no puede usarse directamente en la aplicación de 64 bits.\n\nSe ha activado automáticamente el puente de compatibilidad de 32 bits incluido en la aplicación. Selecciona de nuevo la voz para usarla."
+msgstr ""
+
+msgid "La voz «{voz}» no es compatible con esta versión de la aplicación.\n\nAlgunas voces de CodeFactory (Eloquence, RealSpeak) son motores de 32 bits y no funcionan en una aplicación de 64 bits.\n\nEsta versión no incluye el módulo de compatibilidad de 32 bits. Contacta con el soporte para obtener la versión con compatibilidad Eloquence."
+msgstr ""
+
+msgid "Libros Recientes"
+msgstr ""
+
+msgid "Límite de cuota alcanzado"
+msgstr ""
+
+msgid "Modo Lectura"
+msgstr ""
+
+msgid "No hay ningún error registrado todavía."
+msgstr ""
+
+msgid "No se encontró el archivo de ayuda en:\n{ruta}"
+msgstr ""
+
+msgid "No se ha podido conectar con el servicio de voz con IA ({proveedor}).\n\nDetalle: {detalle}\n\nPara que la lectura no se detenga, continuaremos usando tu voz local."
+msgstr ""
+
+msgid "No se pudo leer el error:\n{error}"
+msgstr ""
+
+msgid "No se pudo leer el registro:\n{error}"
+msgstr ""
+
+msgid "No se pudo leer la carpeta de errores:\n{error}"
+msgstr ""
+
+msgid "Registros copiados"
+msgstr ""
+
+msgid "Registros copiados al portapapeles. Ya puedes pegarlos donde quieras."
+msgstr ""
+
+msgid "Se ha alcanzado el límite de cuota de todos los proveedores de IA.\n\nSe usará la voz local para continuar sin generar costes adicionales."
+msgstr ""
+
+msgid "Sin errores"
+msgstr ""
+
+msgid "TXT Recientes para grabar"
+msgstr ""
+
+msgid "Ver atajos de teclado"
+msgstr ""
+
+msgid "Ver todas las versiones en Releases"
+msgstr ""
+
+msgid "Visitar tiflotutos.com"
+msgstr ""
+
+msgid "Voz de 32 bits detectada"
+msgstr ""
+
+msgid "{indice}. {nombre}"
+msgstr ""
+
+msgid "{indice}. {nombre}  ({proyecto})"
+msgstr ""
+
+msgid "¡ALTO! Se ha detenido la lectura por seguridad.\n\nProveedor: {proveedor}\nHas gastado: {gastado} caracteres\nIntentaste leer: {intentado} caracteres\nLímite configurado: {limite}\n\nSe usará la voz LOCAL para no generar costes extra."
+msgstr ""
+
+msgid "¿Borrar el historial de TXT recientes?"
+msgstr ""
+
+msgid "¿Seguro que quieres borrar el historial de libros recientes?"
+msgstr ""
+
+msgid "Último error ({nombre}) copiado al portapapeles."
+msgstr ""
+
+msgid "• {descripcion}:  {tecla}"
+msgstr ""
+
