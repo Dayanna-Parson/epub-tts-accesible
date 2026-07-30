@@ -1,6 +1,6 @@
 Epub TTS Accesible — estructura del proyecto
 ==============================================
-Versión 3.0.0 · julio 2026
+Versión 4.0.0 · julio 2026
 
 Vista rápida de dónde vive cada cosa. Para el porqué de cada decisión,
 ver DEVELOPMENT.md (arquitectura técnica) y CLAUDE.md (reglas del
@@ -96,6 +96,9 @@ epub-tts-accesible/
 │   │   ├── control_cuota.py             Cuota mensual por proveedor + coste.
 │   │   ├── gestor_proyectos.py          Proyectos de Grabación de Fragmentos.
 │   │   ├── gestor_atajos.py             Atajos de teclado configurables.
+│   │   ├── gestor_perfiles.py           CRUD de perfiles de usuario: voz,
+│   │   │                                 velocidad, volumen, segundos de
+│   │   │                                 salto y pausa, en perfiles.json.
 │   │   ├── gestor_backups.py            Copias rotativas de biblioteca.db y
 │   │   │                                 proyectos.json (carpetas separadas,
 │   │   │                                 solo si hubo cambios reales).
@@ -115,8 +118,9 @@ epub-tts-accesible/
 │                                  actualizador (Fase C, compilado automáticamente).
 ├── recursos/                     Sonidos, iconos, version.json.
 ├── configuraciones/               JSON/SQLite del usuario (claves, ajustes,
-│                                  biblioteca.db, proyectos...). Casi todo en
-│                                  .gitignore por ser datos personales.
+│                                  biblioteca.db, proyectos, perfiles...).
+│                                  Casi todo en .gitignore por ser datos
+│                                  personales.
 │   ├── backups_proyectos/         Copias rotativas (últimas 5) de proyectos.json.
 │   ├── backups_biblioteca/        Copias rotativas (últimas 5) de biblioteca.db.
 │   └── asistente_biblioteca/      Plantillas de prompt (plantillas/*.txt),
@@ -127,7 +131,10 @@ epub-tts-accesible/
 │                                  actualizacion/ (descarga verificada) y
 │                                  backup_previo/ (respaldo durante la
 │                                  instalación). No se versiona (.gitignore).
-├── tests/                        Pruebas (aún sin suite automatizada completa).
+├── tests/                        tests/test_suite.py: pruebas unitarias de
+│                                  la lógica pura (etiquetas, limpieza de
+│                                  texto, proyectos, cuota, config, perfiles).
+│                                  Sin cobertura de interfaz gráfica (wx).
 ├── locale/                       Catálogos de traducción (i18n con gettext).
 │   ├── epub_tts.pot               Plantilla: un msgid por cada cadena _().
 │   ├── es/LC_MESSAGES/

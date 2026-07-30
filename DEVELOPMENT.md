@@ -91,6 +91,7 @@ app/
 │   ├── gestor_pdf.py             # Extrae texto/índice de PDF (fitz) para Lectura, misma forma que gestor_epub
 │   ├── gestor_proyectos.py       # Lógica de proyectos de Grabación. Persistencia en proyectos.json
 │   ├── gestor_atajos.py          # Atajos de teclado configurables por el usuario
+│   ├── gestor_perfiles.py        # CRUD de perfiles de usuario: voz, velocidad, volumen, segundos de salto y pausa (perfiles.json)
 │   ├── gestor_chat_biblioteca.py     # Historial de conversación del Asistente de Biblioteca
 │   ├── gestor_prompts_asistente.py   # Plantillas de prompt de sistema, un .txt por plantilla
 │   ├── gestor_backups.py         # Copias rotativas de proyectos.json y biblioteca.db, solo si cambiaron
@@ -390,7 +391,7 @@ O bien fija manualmente la clave `"idioma": "en"` en `configuraciones/ajustes.js
 
 `crear_portable.py` ya compila `locale/*.po` a `.mo` y empaqueta la carpeta `locale/` dentro del `.zip` portable automáticamente — no hace falta ningún paso manual adicional al generar una release.
 
-**Cuidado con `_` como variable de descarte:** si un archivo importa el traductor (`from app.motor.gestor_idioma import traducir as _`), no uses `_` como nombre de variable de descarte en desempaquetados de tupla (`for etiq, _ in ...`, `x, _ = ...`) dentro de ninguna función que también llame a `_("...")`. Python trata `_` como local a toda la función en cuanto se le asigna en algún punto, así que las llamadas a `_("...")` anteriores a esa asignación revientan con `UnboundLocalError` en tiempo de ejecución (no en tiempo de compilación, así que no salta hasta que se ejecuta esa rama). Usa un nombre descriptivo en su lugar (`_sin_usar`, `_cookie`, etc.).
+**Cuidado con `_` como variable de descarte:** si un archivo importa el traductor (`from app.motor.gestor_idioma import traducir as _`), no uses `_` como nombre de variable de descarte en desempaquetados de tupla (`for etiq, _ in ...`, `x, _ = ...`) dentro de ninguna función que también llame a `_("...")`. Python trata `_` como local a toda la función en cuanto se le asigna en algún punto, así que las llamadas a `_("...")` anteriores o posteriores a esa asignación revientan en tiempo de ejecución (no en tiempo de compilación, así que no salta hasta que se ejecuta esa rama exacta): `UnboundLocalError` si la asignación va después de la primera llamada, `TypeError: 'str' object is not callable` si va antes. Usa un nombre descriptivo en su lugar (`_sin_usar`, `_cookie`, etc.). Este bug ya ha aparecido dos veces: en la Fase 7 con un `for etiq, _ in ...`, y en la Fase 8 (Perfiles de usuario) con `_, datos = gestor_perfiles.obtener_perfil_activo()` — ver la sección de Perfiles de usuario más abajo. No es un caso aislado, es un patrón a vigilar en cualquier código nuevo.
 
 Para el paso a paso completo de publicación de una versión (traducir, compilar `.mo`, subir de versión, empaquetar, y cuándo enviar el manifiesto de Winget), ver [`GUIA_SCRIPTS.md`](GUIA_SCRIPTS.md).
 
@@ -412,7 +413,7 @@ Cada módulo obtiene su logger con `logging.getLogger(__name__)`. No uses `print
 
 ## Pruebas manuales antes de un commit
 
-No hay suite de tests automatizados todavía. Antes de hacer commit de cambios en la interfaz, comprueba manualmente con NVDA activo:
+`tests/test_suite.py` cubre con `unittest` la lógica pura que no depende de wx ni de hardware de audio (procesador de etiquetas, limpieza de texto, gestor de proyectos, control de cuota, config_rutas, gestor de perfiles — 106 tests a fecha de la Fase 8). Sigue sin haber ninguna cobertura automatizada de la interfaz gráfica. Antes de hacer commit de cambios en la interfaz, comprueba manualmente con NVDA activo:
 
 1. ¿El foco llega a donde debe al cambiar de pestaña?
 2. ¿Los diálogos devuelven el foco al cerrarse?
@@ -771,5 +772,33 @@ Además de la casilla global ya existente para silenciar todos los sonidos (`son
 ### Catálogo completo para el Asistente en modo general
 
 En modo general (sin libro/saga/categoría seleccionados), el Asistente de Biblioteca recibía solo un resumen agregado (`GestorBiblioteca.resumen_para_asistente()`: géneros/autores/sagas *más frecuentes*, con un límite de 5-10). Eso podía hacer que negara tener una saga real si esta no estaba entre las más repetidas. `GestorBiblioteca.catalogo_para_asistente()` añade el listado completo de título/autor/saga de toda la biblioteca (hasta un límite de 800 libros, por sentido común más que por coste real), calculado en vivo sobre `biblioteca.db` en cada apertura del chat — deliberadamente sin caché ni detección de cambios: el coste de recalcular una consulta SQL y reenviar texto plano de títulos es insignificante frente al de mantener sincronizada una caché.
+
+---
+
+## Decisiones técnicas — Fase 8 (v4.0, julio 2026)
+
+### Perfiles de usuario: un formulario, no un reparto entre pestañas
+
+`app/motor/gestor_perfiles.py` guarda, por perfil, la voz activa (proveedor + voz), las voces favoritas por proveedor, velocidad, volumen, `segundos_salto` y `pausa_entre_fragmentos_ms`, en `configuraciones/perfiles.json` con escritura atómica (mismo patrón `.tmp` + `os.replace()` que el resto de la app). Nunca claves API ni límites de cuota: eso es global de la app, no depende de qué persona o qué tipo de libro esté usando el perfil.
+
+El primer diseño del panel en Ajustes tenía botones separados «Crear con el estado actual de Lectura» y «Guardar estado actual en el perfil seleccionado»: para crear o actualizar un perfil, había que ir primero a Lectura a elegir voz/velocidad/volumen, y aparte a Ajustes → Configuración General para segundos de salto y pausa, y solo entonces volver a Perfiles a guardar. La autora lo probó y pidió el cambio directamente: «primero que todo esté en la lista de perfiles y un botón para crear un nuevo perfil donde se puedan traer todos los ajustes necesarios […] pulso Guardar perfil». El rediseño reúne los cinco campos en un único diálogo modal (`_DialogoPerfil` en `pestana_ajustes.py`), que se abre con «Crear perfil nuevo...» o «Editar perfil seleccionado...» y, al guardar, crea/actualiza el perfil, lo marca activo y lo aplica de inmediato — sin visitar ninguna otra pestaña. El combo de voz del diálogo no reimplementa la carga de voces: copia los ítems ya cargados en `PestanaLectura.combo_voz` (mismo nombre mostrado, mismo `GetClientData()`), para no duplicar la lógica de favoritos/proveedores en dos sitios.
+
+`PestanaLectura.aplicar_perfil_usuario()` es el punto de aplicación real: mueve los deslizadores de velocidad/volumen y selecciona la voz (reutilizando el mismo mecanismo que la memoria por libro), pero además persiste `segundos_salto` y `pausa_entre_fragmentos_ms` en `ajustes.json` con el mismo helper que ya usan los sliders (`_guardar_ajuste_slider`), y sincroniza en caliente los widgets de `PanelGeneral` (`txt_salto`, `spin_pausa`) y su diccionario `config` compartido — si no se sincronizara ese diccionario, un Ctrl+S posterior en Ajustes sobrescribiría en el archivo los valores recién aplicados por el perfil con los valores antiguos que seguían en memoria.
+
+### El atajo `Ctrl+Shift+U`, no `Ctrl+Shift+P`
+
+El primer atajo propuesto para alternar perfiles fue `Ctrl+Shift+P`, por ser el estándar de facto para "perfiles" en muchas apps. La autora lo señaló antes de implementarlo: ese atajo ya abre el gestor de proyectos (`al_abrir_gestor_proyectos`, en `_FIJOS_EXTRA` de `ventana_principal.py`). Un repaso de todos los `AcceleratorTable` del proyecto confirmó que `Ctrl+Shift+U` estaba libre, y se usó ese en su lugar. Lección operativa: antes de fijar un atajo nuevo, `grep -rn "ACCEL_CTRL\|ACCEL_SHIFT"` sobre `app/interfaz/` es más fiable que asumir un estándar externo.
+
+### El bug de `_` como variable de descarte, otra vez
+
+Ya documentado en la sección de i18n más arriba, pero merece la mención aquí por lo concreto del caso: `_al_activar_seleccionado()` en `PanelPerfiles` hacía `_, datos = gestor_perfiles.obtener_perfil_activo()`, y la siguiente línea, `voz.hablar(_("Perfil activo: {nombre}").format(...))`, crasheaba en producción con `TypeError: 'str' object is not callable` — `_` ya no era la función de traducir, era el nombre del perfil descartado. Se corrigió en todo el panel evitando el patrón de desempaquetado con `_`, usando siempre un nombre descriptivo (`nombre_activo`, `datos_previos`...). Es el mismo bug de fondo que ya rompió Modo Lectura en la Fase 7, solo que esta vez por tupla en vez de por `for`.
+
+### Tests para gestor_perfiles.py
+
+`tests/test_suite.py` incorpora `TestGestorPerfiles`, con el mismo patrón que `TestGestorProyectos` (parchear la ruta del JSON a un directorio temporal con `unittest.mock.patch`, sin tocar nunca `configuraciones/` real): CRUD básico, alternancia circular (`siguiente_perfil()`), reasignación del perfil activo al eliminarlo, y persistencia atómica. Es un primer paso concreto, acotado a este módulo nuevo — no una cobertura general del proyecto.
+
+### Pendiente para la fase de estabilización (no en el alcance de esta fase)
+
+Al cerrar esta fase se identificaron `except: pass`/`except Exception: pass` sin logging en unos 19 archivos de `app/servicios/`, `app/motor/` y `app/interfaz/`, señalados también en una revisión externa del proyecto. Es una limpieza real, pero transversal a módulos que esta fase no tocó y que no se pueden validar aquí sin NVDA ni wxPython instalados en el entorno de desarrollo. Queda anotado explícitamente para la fase de estabilización posterior a la v4.0 (pulir y dar soporte, en vez de añadir funciones — ver `documentos/Fases_Del_Proyecto/Fase 8 (V4.)/Cosas para la v4.txt`), no para resolverse de rondón dentro de esta rama.
 
 ---

@@ -40,6 +40,8 @@ añadir y gestionar marcadores,
 
 elegir qué voces usar mediante un sistema de favoritas,
 
+guardar perfiles de usuario con tu voz, velocidad, volumen y preferencias de lectura, y alternar entre ellos con `Ctrl+Shift+U`,
+
 exportar un libro completo a audiolibro, en un único MP3 o dividido por capítulos, sin intervención manual,
 
 producir audiolibros multivoz a mano con etiquetas de personaje,
@@ -93,6 +95,15 @@ La aplicación se organiza de forma clara y predecible:
 - Historial de conversación por libro, exportable a texto.
 
 Todo está pensado para poder usarse únicamente con teclado y lector de pantalla.
+
+---
+
+### Perfiles de usuario
+
+- Cada perfil guarda la voz activa, la velocidad, el volumen y las preferencias de pausa y segundos de salto de Lectura.
+- Panel accesible en **Ajustes → Perfiles de Usuario**: un único formulario para crear o editar un perfil (nombre, voz, velocidad, volumen, segundos de salto, pausa). Al guardar, el perfil se crea o actualiza, se activa y se aplica de inmediato.
+- `Ctrl+Shift+U` alterna entre los perfiles ya creados, desde cualquier pestaña.
+- Pensado para equipos compartidos, o para cambiar de configuración según el tipo de libro (novela, técnico, idioma extranjero).
 
 ---
 
@@ -174,7 +185,7 @@ Requiere Python 3.12+ en Windows. La versión portable (sin necesidad de instala
 
 ### Estado actual del proyecto
 
-Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 3.0.0.**
+Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 4.0.0.**
 
 - Biblioteca: organización de EPUB y PDF por géneros y sagas, importación de carpetas o de libros sueltos.
 - Modo lectura con voces de Azure, Amazon Polly, Deepgram, ElevenLabs y SAPI5 (64 y 32 bits), con soporte de EPUB y PDF.
@@ -185,6 +196,7 @@ Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 3.0
 - Control de cuota, coste estimado y avisos de gasto por proveedor.
 - Gestor de Proyectos con árbol jerárquico, papelera y acceso directo a las grabaciones.
 - Asistente de Biblioteca con IA (Google Gemini): recomendaciones y consultas sobre tu catálogo, con plantillas de prompt personalizables.
+- Perfiles de usuario: voz, velocidad, volumen y preferencias de pausa/segundos de salto guardadas por perfil, con atajo `Ctrl+Shift+U` para alternar entre ellos.
 - 14 sonidos contextuales (activables/desactivables de forma individual o global) y resalte en negrita de los encabezados (h1-h6) en el contenido leído.
 - Copias de seguridad automáticas y rotativas de la biblioteca y los proyectos, separadas por tipo.
 - Ajustes en árbol de navegación y actualizaciones automáticas desde la propia app.

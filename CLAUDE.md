@@ -9,7 +9,7 @@ Léelo entero antes de tocar nada. Estas reglas no son sugerencias.
 **Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB y PDF en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
 
 - Desarrolladora: Dayanna Parson (TifloTutos · tiflotutos.com)
-- Versión actual: 3.0.0
+- Versión actual: 4.0.0
 - Python 3.12+ · wxPython 4.2+ · Windows como plataforma principal
 
 ---
@@ -88,6 +88,7 @@ app/
 │   ├── gestor_pdf.py             # Extrae texto/índice de PDF (fitz) para Lectura, misma forma que gestor_epub
 │   ├── gestor_proyectos.py       # Lógica de proyectos de Grabación. Persistencia en proyectos.json
 │   ├── gestor_atajos.py          # Atajos de teclado configurables
+│   ├── gestor_perfiles.py        # CRUD de perfiles de usuario: voz, velocidad, volumen, segundos de salto y pausa
 │   ├── gestor_chat_biblioteca.py     # Historial de conversación del Asistente de Biblioteca
 │   ├── gestor_prompts_asistente.py   # Plantillas de prompt de sistema del Asistente (un .txt por plantilla)
 │   ├── gestor_backups.py         # Copias rotativas de proyectos.json y biblioteca.db, solo si cambiaron
@@ -140,6 +141,7 @@ Archivos de configuración (en `/configuraciones/`):
 | `ajustes.json` | Velocidad, volumen, tiempos, favoritas, límites de cuota | No |
 | `biblioteca.db` | SQLite: libros, categorías, etiquetas/sagas, exportaciones pendientes | Sí |
 | `proyectos.json` | Jerarquía completa de proyectos de Grabación de Fragmentos | No |
+| `perfiles.json` | Perfiles de usuario: voz activa, voces favoritas por proveedor, velocidad, volumen, segundos de salto y pausa | Sí |
 | `pronunciacion.json` | Reglas del diccionario de pronunciación | No |
 | `voces_conocidas.json` | IDs de voces ya vistas (historial para filtro «solo nuevas») | No |
 | `backups_proyectos/` | Copias rotativas (últimas 5) de `proyectos.json` | Sí |
@@ -165,6 +167,15 @@ El campo `proveedor_id` de cada voz indica cuál de los dos usa. El reproductor 
 
 ---
 
+### Perfiles de usuario
+
+- Cada perfil (`app/motor/gestor_perfiles.py`, persistido en `configuraciones/perfiles.json` con escritura atómica) guarda: `voz_activa` (proveedor_id + voz), `voces_favoritas` por proveedor, `velocidad`, `volumen`, `segundos_salto` y `pausa_entre_fragmentos_ms`. Nunca claves API ni límites de cuota — eso es global de la app, no del perfil.
+- Atajo global `Ctrl+Shift+U` (`alternar_perfil` en `gestor_atajos.py`, despachado desde `ventana_principal.py` sin restricción de pestaña): cicla circularmente al siguiente perfil (`gestor_perfiles.siguiente_perfil()`), lo activa y lo aplica de inmediato. Se descartó `Ctrl+Shift+P` por colisionar con «Abrir gestor de proyectos», ya existente.
+- Panel `PanelPerfiles` en Ajustes → Perfiles de Usuario: lista de perfiles con botones Crear, Editar, Activar y Eliminar. Crear y Editar abren un único formulario (`_DialogoPerfil` en `pestana_ajustes.py`) con los cinco campos del perfil a la vez — voz, velocidad, volumen, segundos de salto y pausa —, precargado con los valores de Lectura o del perfil seleccionado. Al pulsar «Guardar perfil» se crea/actualiza, se activa y se aplica en el acto, sin tener que configurar antes en Lectura y luego en Ajustes → Configuración General por separado.
+- Al aplicar un perfil, `PestanaLectura.aplicar_perfil_usuario()` no solo mueve los deslizadores de velocidad/volumen y selecciona la voz: también persiste `segundos_salto` y `pausa_entre_fragmentos_ms` en `ajustes.json` (mismo mecanismo que `_guardar_ajuste_slider`) y sincroniza los widgets de `PanelGeneral` si ya están construidos, para que Ajustes no se quede con datos obsoletos si se guarda desde ahí con Ctrl+S.
+
+---
+
 ## Reglas críticas de arquitectura
 
 ### Internacionalización (i18n): toda cadena nueva de interfaz va envuelta en `_()`
@@ -184,6 +195,7 @@ Desde la Fase 7, la interfaz soporta español e inglés mediante `gettext` (libr
 - **Nunca envuelvas** una cadena cuyo valor literal se compare, persista o use para lógica de programa: claves de `dict`/JSON, ids de proveedor, rutas de archivo, constantes técnicas, ni texto de menú/acelerador que la propia app lea de vuelta con `GetStringSelection()`/`GetItemText()` para decidir algo. Traducir esas rompería la lógica en cuanto el idioma activo no fuera español.
 - Cada cadena nueva se añade como `msgid` en `locale/epub_tts.pot`, con `msgstr` igual al `msgid` en `locale/es/LC_MESSAGES/epub_tts.po` (nunca vacío) y con su traducción real en `locale/en/LC_MESSAGES/epub_tts.po`.
 - Tras tocar cualquier `.po`, hay que recompilar los `.mo` con `python compilar_i18n.py` antes de dar el cambio por terminado — la app carga el `.mo` directamente, no el `.po`.
+- **Nunca uses `_` como variable de descarte** (`_, valor = tupla`, `for _, x in ...`) en ningún archivo que importe `_` como traductor. Python trata `_` como local a toda la función en cuanto se le asigna una vez, así que cualquier llamada anterior o posterior a `_("...")` en esa misma función revienta con `TypeError: 'str' object is not callable` o `UnboundLocalError` en tiempo de ejecución, no de compilación. Ya ha pasado dos veces en este proyecto (Fase 7, en un `for etiq, _ in ...`; Fase 8, en un `_, datos = obtener_perfil_activo()`). Usa siempre un nombre descriptivo (`_sin_usar`, `_cookie`, `nombre_activo`...).
 
 ### Rutas: siempre absolutas
 Nunca uses rutas relativas. Usa siempre `RAIZ` de `config_rutas.py` como base:

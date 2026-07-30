@@ -386,6 +386,10 @@ Piper TTS, que figuraba como motor local previsto desde la Fase 4, queda descart
 
 En desarrollo dentro de v3.0.0 (Fase C — actualizador automático): sustitución del script `.bat` generado al vuelo (v2.0) por un ejecutable auxiliar fijo, `bin/actualizador.exe`, con el mismo patrón de compilación que `auxiliar_sapi32.exe`. Respaldo por copia verificada (no por movimiento) antes de reemplazar cualquier archivo, y rollback automático si algo falla. Implementado y probado con simulaciones y con el tramo de descarga/verificación en Windows real; pendiente de validar en Windows real el ciclo completo de instalación antes de retirar el sistema anterior, que sigue activo en producción mientras tanto.
 
+Añadido en v4.0.0 (Fase 8):
+
+Perfiles de usuario (`gestor_perfiles.py`): cada perfil guarda la voz activa, las voces favoritas por proveedor, velocidad, volumen, segundos de salto y pausa entre fragmentos, en `configuraciones/perfiles.json`. Panel único en Ajustes → Perfiles de Usuario, con un formulario que reúne los cinco campos a la vez (crear o editar), aplicando el perfil de inmediato al guardar. Atajo global `Ctrl+Shift+U` para alternar circularmente entre perfiles desde cualquier pestaña. Primeros tests unitarios del proyecto (`tests/test_suite.py`), cubriendo la lógica de proyectos, cuota, config y ahora también perfiles — sin cobertura todavía de la interfaz gráfica.
+
 Nada más pendiente en las funciones esenciales.
 
 ---

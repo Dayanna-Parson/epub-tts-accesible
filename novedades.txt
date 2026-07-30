@@ -1,3 +1,26 @@
+=== v4.0.0 (30/07/2026) ===
+
+Versión 4.0.0 — 2026-07-30
+
+Nuevas funciones
+────────────────
+
+- Perfiles de usuario:
+  Guarda de un tirón la voz activa, la velocidad, el volumen y las
+  preferencias de pausa y segundos de salto de la pestaña Lectura, todo
+  en un mismo perfil con nombre. Útil para quien comparte el ordenador
+  con otra persona, o para tener una configuración distinta según el
+  tipo de lectura (novela, técnico, idioma extranjero). Nuevo panel en
+  Ajustes → Perfiles de Usuario, con un único formulario para crear o
+  editar un perfil (nombre, voz, velocidad, volumen, segundos de salto
+  y pausa): al pulsar «Guardar perfil», se crea o actualiza, se marca
+  como activo y se aplica de inmediato, sin tener que pasar antes por
+  Lectura ni por Ajustes → Configuración General por separado. El atajo
+  Ctrl+Shift+U alterna entre los perfiles ya creados desde cualquier
+  pestaña de la aplicación.
+
+───────────────────────────────────────────────────────────────────────────
+
 === v3.0.0 (17/07/2026) ===
 
 Versión 3.0.0 — 2026-07-17

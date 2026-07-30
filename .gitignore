@@ -24,6 +24,7 @@ configuraciones/historial_grabacion.json
 configuraciones/historial_epub.json
 configuraciones/estado_lectura.json
 configuraciones/proyectos.json
+configuraciones/perfiles.json
 configuraciones/mapeo_etiquetas.json
 configuraciones/uso_cuota.json
 configuraciones/teclas_predeterminadas.json

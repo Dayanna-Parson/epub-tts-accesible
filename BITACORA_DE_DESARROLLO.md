@@ -371,3 +371,35 @@ Nada más probar el cambio de idioma en caliente saltó un crash repetido en Mod
 Y para no tener que recordar de memoria el orden de los scripts de publicación (traducir, subir de versión, empaquetar, y cuándo —si alguna vez— tocaría enviar Winget), se documentó todo en `GUIA_SCRIPTS.md`, con una tabla resumen y el paso a paso de cada uno.
 
 — Dayanna Parson, julio de 2026
+
+---
+
+## Fase 8: V4.0 — Perfiles de usuario (julio 2026)
+
+Con la Biblioteca, el Creador de Audiolibros y el Asistente de Gemini ya asentados, la última pieza de la lista de "cosas para la v4" era mucho más pequeña en superficie, pero tocaba directamente el día a día de usar la app: perfiles de usuario. Guardar de un tirón la voz, la velocidad, el volumen y las preferencias de lectura, para compartir el ordenador con otra persona o para tener listas distintas configuraciones según el tipo de libro.
+
+### La primera versión no era la buena
+
+El primer diseño del panel en Ajustes → Perfiles de Usuario tenía botones separados: "Crear perfil con el estado actual de Lectura" y "Guardar estado actual en el perfil seleccionado". Para crear o actualizar un perfil había que ir primero a la pestaña Lectura a dejar puestas la voz, la velocidad y el volumen que se querían guardar, y aparte a Ajustes → Configuración General para los segundos de salto y la pausa entre fragmentos, y solo entonces volver a Perfiles a pulsar el botón de guardar.
+
+Después de probarlo de verdad, la respuesta fue directa: demasiados pasos, demasiados saltos de foco entre pestañas para algo que debería sentirse simple. La petición fue clara — "que todo esté en la lista de perfiles y un botón para crear un nuevo perfil donde se puedan traer todos los ajustes necesarios [...] pulso Guardar perfil para que se guarde y se aplique directamente". El panel se rediseñó con un único formulario (voz, velocidad, volumen, segundos de salto y pausa, los cinco campos a la vez) que al guardar crea o actualiza el perfil, lo marca activo y lo aplica de inmediato, sin salir de Ajustes → Perfiles de Usuario para nada. Fue el mismo tipo de corrección de rumbo que ya pasó con el selector de voz del Creador de Audiolibros en la Fase 7: proponer algo, que el uso real lo tumbe, y reconstruir con lo aprendido.
+
+### El atajo que casi colisiona
+
+`Ctrl+Shift+P` parecía la elección obvia para alternar entre perfiles — es casi un estándar de facto en otras apps para "perfiles" o "paletas de comandos". Antes de que llegara a implementarse, surgió la duda correcta: "¿este atajo no lo uso ya para abrir la ventana de proyectos?". Sí, lo usaba. Un repaso completo de todos los atajos ya asignados en la app confirmó que `Ctrl+Shift+U` estaba libre, y se usó ese en su lugar. Un recordatorio de que "lo que hacen otras apps" no sustituye a comprobar lo que ya hace la propia.
+
+### El mismo bug de `_`, otra vez
+
+Este fue el momento más irónico de la fase. En la Fase 7, un `UnboundLocalError` sobre la propia función de traducir `_()` había costado una ronda entera de investigación: la costumbre de usar `_` como variable de descarte en desempaquetados de tupla, en un archivo que también usa `_` como el traductor de `gettext`. Se documentó la regla en `DEVELOPMENT.md` para que no volviera a pasar.
+
+Volvió a pasar. Esta vez en el panel de Perfiles recién construido: `_, datos = gestor_perfiles.obtener_perfil_activo()`, seguido a las pocas líneas de `voz.hablar(_("Perfil activo: {nombre}").format(...))`. La app crasheó en cuanto se activaba un perfil, con `TypeError: 'str' object is not callable` en vez del `UnboundLocalError` de la vez anterior (la diferencia: esta vez la asignación a `_` iba antes de la llamada a `_("...")`, no después, así que el fallo se manifestó de otra forma, pero la causa de fondo es exactamente la misma). Se corrigió en todo el panel, y quedó anotado en `CLAUDE.md` y en `DEVELOPMENT.md` con las dos apariciones documentadas juntas, no solo una: si ha pasado dos veces en dos fases distintas, es un patrón a vigilar activamente en cualquier código nuevo, no un accidente aislado.
+
+### Un primer paso hacia los tests
+
+Junto con el panel se añadió `TestGestorPerfiles` a `tests/test_suite.py`: CRUD básico, alternancia circular entre perfiles, reasignación del perfil activo al eliminarlo, persistencia atómica. No es la "suite de tests automatizados" completa que llevaba pendiente desde la Fase 4 — sigue sin haber ninguna cobertura de la interfaz gráfica —, pero es el primer módulo del proyecto que nace con sus propios tests desde el primer commit, en vez de sumarlos después.
+
+### Lo que se queda anotado, no resuelto, para la fase de estabilización
+
+Al cerrar esta fase se revisó también, de forma externa, el estado general del proyecto: las librerías elegidas, la profundidad real de la accesibilidad, y dos puntos de mejora concretos. `requisitos.txt` ya existía y cubre las dependencias reales del proyecto, así que ese punto ya estaba resuelto. El otro punto sí es real: hay `except: pass` o `except Exception: pass` sin logging en unos 19 archivos, repartidos entre clientes de voz, motor y interfaz — código que esta fase no tocó y que no se puede validar sin NVDA ni wxPython instalados en el entorno de desarrollo actual. En vez de tocarlo de rondón dentro de la rama de Perfiles de usuario, queda anotado explícitamente aquí y en `DEVELOPMENT.md` como tarea pendiente para la fase de estabilización que viene después de la v4.0: la propia planificación de esta fase ya decía que, más allá de la v4.0, el foco del proyecto debía pasar de añadir funciones a pulir, estabilizar y dar soporte a quien use la app. Esta limpieza, y ampliar la cobertura de tests más allá de `gestor_perfiles.py`, son justo ese tipo de trabajo.
+
+— Dayanna Parson, julio de 2026
