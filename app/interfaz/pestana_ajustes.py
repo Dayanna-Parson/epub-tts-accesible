@@ -611,6 +611,7 @@ class PanelGeneral(wx.ScrolledWindow):
 
         lanzador = os.path.join(raiz, "INICIAR_APP.bat")
         bat_path = os.path.join(raiz, "actualizador.bat")
+        ruta_log = os.path.join(raiz, "actualizacion", "actualizador_log.txt")
 
         # Carpetas y archivos que el .bat debe conservar intactos
         # Solo se preservan los datos del usuario; todo lo demás (recursos/,
@@ -624,17 +625,21 @@ class PanelGeneral(wx.ScrolledWindow):
             "INICIAR_APP.bat",
         }
 
-        # Genera las líneas del .bat que borran lo que NO está en _PRESERVAR
+        # ANCLAJE_INICIO: BORRADO_BAT_CON_REINTENTOS
+        # Genera las líneas del .bat que borran lo que NO está en _PRESERVAR,
+        # llamando a la subrutina :borrar_con_reintentos en vez de rmdir/del
+        # directos. Antes, un solo intento inmediato tras solo 2 segundos de
+        # espera podía fallar en silencio (2>nul) si Windows todavía no había
+        # soltado del todo algún archivo del proceso recién cerrado (el log,
+        # sobre todo) — la app se reiniciaba con la versión vieja intacta y
+        # sin ningún aviso de que la actualización no se había completado.
         lineas_borrado = []
         try:
             for entrada in os.listdir(raiz):
                 if entrada in _PRESERVAR or entrada == "actualizador.bat":
                     continue
                 ruta_entrada = os.path.join(raiz, entrada)
-                if os.path.isdir(ruta_entrada):
-                    lineas_borrado.append(f'rmdir /s /q "{ruta_entrada}"')
-                else:
-                    lineas_borrado.append(f'del /f /q "{ruta_entrada}"')
+                lineas_borrado.append(f'call :borrar_con_reintentos "{ruta_entrada}"')
         except Exception:
             logger.exception("Error al listar raíz para el script de borrado")
 
@@ -642,29 +647,57 @@ class PanelGeneral(wx.ScrolledWindow):
 
         contenido_bat = (
             "@echo off\n"
-            "timeout /t 2 /nobreak >nul\n"
+            f'set "LOG={ruta_log}"\n'
+            'echo [%date% %time%] Iniciando actualizador > "%LOG%"\n'
             "\n"
-            ":: Eliminar archivos y carpetas de la versión anterior\n"
+            ":: Espera más margen del que tenía antes (2s -> 5s) para que\n"
+            ":: Windows termine de soltar archivos del proceso recien cerrado.\n"
+            "timeout /t 5 /nobreak >nul\n"
+            "\n"
+            ":: Eliminar archivos y carpetas de la version anterior (con reintentos)\n"
             f"{bloque_borrado}\n"
             "\n"
-            ":: Descomprimir la nueva versión (PowerShell incluido en Windows 10+)\n"
-            f'powershell -Command "Expand-Archive -Path \\"{ruta_zip}\\" -DestinationPath \\"{raiz}\\" -Force"\n'
+            ":: Descomprimir la nueva version (PowerShell incluido en Windows 10+)\n"
+            f'powershell -Command "Expand-Archive -Path \\"{ruta_zip}\\" -DestinationPath \\"{raiz}\\" -Force" >> "%LOG%" 2>&1\n'
             "\n"
-            ":: Mover el contenido de la subcarpeta del ZIP a la raíz del portable\n"
+            ":: Mover el contenido de la subcarpeta del ZIP a la raiz del portable.\n"
+            ":: /r:5 /w:2 -> reintenta hasta 5 veces con 2s de espera si algun\n"
+            ":: archivo sigue bloqueado, en vez de fallar a la primera.\n"
             f'for /d %%D in ("{raiz}\\epub-tts-accesible-*") do (\n'
-            f'    robocopy "%%D" "{raiz}" /e /move /xd configuraciones Grabaciones_Epub-TTS bin actualizacion >nul\n'
-            "    rmdir /s /q \"%%D\" 2>nul\n"
+            f'    robocopy "%%D" "{raiz}" /e /move /r:5 /w:2 /xd configuraciones Grabaciones_Epub-TTS bin actualizacion >> "%LOG%" 2>&1\n'
+            '    call :borrar_con_reintentos "%%D"\n'
             ")\n"
             "\n"
-            ":: Eliminar el ZIP temporal\n"
-            f'rmdir /s /q "{os.path.join(raiz, "actualizacion")}"\n'
+            'echo [%date% %time%] Actualizador terminado >> "%LOG%"\n'
             "\n"
-            ":: Relanzar la aplicación\n"
+            ":: Eliminar el ZIP temporal (y el propio log; ya no hace falta si\n"
+            ":: se ha llegado hasta aqui sin errores)\n"
+            f'call :borrar_con_reintentos "{os.path.join(raiz, "actualizacion")}"\n'
+            "\n"
+            ":: Relanzar la aplicacion\n"
             f'start "" "{lanzador}"\n'
             "\n"
             ":: Autoeliminar este script\n"
             "del %0\n"
+            "goto :eof\n"
+            "\n"
+            ":: Reintenta borrar un archivo o carpeta hasta 5 veces con espera,\n"
+            ":: en vez de fallar (en silencio) al primer bloqueo momentaneo.\n"
+            ":borrar_con_reintentos\n"
+            "set \"objetivo=%~1\"\n"
+            "for /l %%i in (1,1,5) do (\n"
+            '    if exist "%objetivo%\\" (\n'
+            '        rmdir /s /q "%objetivo%" 2>>"%LOG%"\n'
+            '    ) else if exist "%objetivo%" (\n'
+            '        del /f /q "%objetivo%" 2>>"%LOG%"\n'
+            "    )\n"
+            '    if not exist "%objetivo%" exit /b 0\n'
+            "    ping -n 3 127.0.0.1 >nul\n"
+            ")\n"
+            'echo [%date% %time%] AVISO: no se pudo borrar "%objetivo%" tras 5 intentos >> "%LOG%"\n'
+            "exit /b 1\n"
         )
+        # ANCLAJE_FIN: BORRADO_BAT_CON_REINTENTOS
 
         ruta_bat_tmp = bat_path + ".tmp"
         with open(ruta_bat_tmp, "w", encoding="cp1252", errors="replace") as f:
