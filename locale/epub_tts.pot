@@ -2984,3 +2984,84 @@ msgstr ""
 
 msgid "Perfil activo: {nombre}"
 msgstr ""
+
+msgid "Cada perfil guarda la voz activa, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura. El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+msgstr ""
+
+msgid "Nombre del perfil"
+msgstr ""
+
+msgid "Lista de perfiles de usuario. Usa las flechas Arriba y Abajo para navegar. El perfil activo aparece marcado en la columna Estado."
+msgstr ""
+
+msgid "Crear perfil con el estado actual de Lectura"
+msgstr ""
+
+msgid "Pide un nombre y crea un perfil nuevo con la voz, velocidad, volumen y preferencias de pausa que tiene ahora mismo la pestaña Lectura."
+msgstr ""
+
+msgid "Activar perfil seleccionado"
+msgstr ""
+
+msgid "Aplica en Lectura la voz, velocidad, volumen y preferencias de pausa guardadas en el perfil seleccionado, y lo marca como perfil activo."
+msgstr ""
+
+msgid "Guardar estado actual en el perfil seleccionado"
+msgstr ""
+
+msgid "Sobrescribe el perfil seleccionado con la voz, velocidad, volumen y preferencias de pausa que tiene ahora mismo la pestaña Lectura."
+msgstr ""
+
+msgid "Renombrar perfil seleccionado"
+msgstr ""
+
+msgid "Eliminar perfil seleccionado"
+msgstr ""
+
+msgid "Nombre del perfil nuevo:"
+msgstr ""
+
+msgid "Crear perfil"
+msgstr ""
+
+msgid "El nombre del perfil no puede estar vacío."
+msgstr ""
+
+msgid "Ya existe un perfil con ese nombre."
+msgstr ""
+
+msgid "Perfil {nombre} creado."
+msgstr ""
+
+msgid "No se pudo crear el perfil."
+msgstr ""
+
+msgid "Selecciona un perfil de la lista primero."
+msgstr ""
+
+msgid "No se pudo leer el estado actual de Lectura."
+msgstr ""
+
+msgid "Perfil {nombre} actualizado."
+msgstr ""
+
+msgid "No se pudo actualizar el perfil."
+msgstr ""
+
+msgid "Nuevo nombre para el perfil:"
+msgstr ""
+
+msgid "Renombrar perfil"
+msgstr ""
+
+msgid "No se pudo renombrar: revisa que el nombre nuevo no esté ya en uso."
+msgstr ""
+
+msgid "¿Eliminar el perfil «{nombre}»?"
+msgstr ""
+
+msgid "No se pudo eliminar el perfil."
+msgstr ""
+
+msgid "Perfiles de Usuario"
+msgstr ""

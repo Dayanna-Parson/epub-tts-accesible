@@ -2294,6 +2294,260 @@ class PanelAsistenteBiblioteca(wx.Panel):
 # ANCLAJE_FIN: PANEL_ASISTENTE_BIBLIOTECA
 
 
+# ANCLAJE_INICIO: PANEL_PERFILES
+class PanelPerfiles(wx.Panel):
+    """
+    Perfiles de usuario: guardan la voz activa, la velocidad, el volumen y
+    las preferencias de pausa/segundos de salto de la pestaña Lectura.
+    Pensado para equipos compartidos o para cambiar de configuración según
+    el tipo de libro (novela, técnico, idioma extranjero). El atajo global
+    Ctrl+Shift+U alterna entre los perfiles ya creados desde aquí.
+    """
+
+    def __init__(self, padre):
+        super().__init__(padre)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(wx.StaticText(self, label=_(
+            "Cada perfil guarda la voz activa, la velocidad, el volumen y las "
+            "preferencias de pausa y segundos de salto de la pestaña Lectura. "
+            "El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+        )), 0, wx.EXPAND | wx.ALL, 10)
+
+        self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.lista.InsertColumn(0, _("Nombre del perfil"), width=280)
+        self.lista.InsertColumn(1, _("Estado"), width=140)
+        self.lista.SetHelpText(
+            _("Lista de perfiles de usuario. Usa las flechas Arriba y Abajo para navegar. "
+              "El perfil activo aparece marcado en la columna Estado.")
+        )
+        self.lista.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista)
+        sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_crear = wx.Button(self, label=_("Crear perfil con el estado actual de Lectura"))
+        self.btn_crear.SetHelpText(
+            _("Pide un nombre y crea un perfil nuevo con la voz, velocidad, volumen y "
+              "preferencias de pausa que tiene ahora mismo la pestaña Lectura.")
+        )
+        self.btn_activar = wx.Button(self, label=_("Activar perfil seleccionado"))
+        self.btn_activar.SetHelpText(
+            _("Aplica en Lectura la voz, velocidad, volumen y preferencias de pausa "
+              "guardadas en el perfil seleccionado, y lo marca como perfil activo.")
+        )
+        self.btn_actualizar = wx.Button(self, label=_("Guardar estado actual en el perfil seleccionado"))
+        self.btn_actualizar.SetHelpText(
+            _("Sobrescribe el perfil seleccionado con la voz, velocidad, volumen y "
+              "preferencias de pausa que tiene ahora mismo la pestaña Lectura.")
+        )
+        self.btn_renombrar = wx.Button(self, label=_("Renombrar perfil seleccionado"))
+        self.btn_eliminar = wx.Button(self, label=_("Eliminar perfil seleccionado"))
+
+        self.btn_crear.Bind(wx.EVT_BUTTON, self._al_crear)
+        self.btn_activar.Bind(wx.EVT_BUTTON, self._al_activar_seleccionado)
+        self.btn_actualizar.Bind(wx.EVT_BUTTON, self._al_actualizar)
+        self.btn_renombrar.Bind(wx.EVT_BUTTON, self._al_renombrar)
+        self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", _("Eliminar perfil seleccionado"))
+
+        for boton in (self.btn_crear, self.btn_activar, self.btn_actualizar,
+                      self.btn_renombrar, self.btn_eliminar):
+            hbox.Add(boton, 0, wx.RIGHT, 10)
+        sizer.Add(hbox, 0, wx.ALL, 10)
+
+        self.SetSizer(sizer)
+        self.primer_control = self.lista
+        self.ultimo_control = self.btn_eliminar
+        self._rellenar_lista()
+
+    def al_activar(self):
+        """Llamado por PestanaAjustes cada vez que se entra en este nodo del árbol."""
+        self._rellenar_lista()
+
+    def _al_tecla_lista(self, evento):
+        if evento.GetKeyCode() in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
+        evento.Skip()
+
+    def _rellenar_lista(self):
+        from app.motor import gestor_perfiles
+        datos = gestor_perfiles.cargar_perfiles()
+        self._nombres = list(datos["perfiles"].keys())
+        activo = datos["perfil_activo"]
+        self.lista.DeleteAllItems()
+        for i, nombre in enumerate(self._nombres):
+            self.lista.InsertItem(i, nombre)
+            self.lista.SetItem(i, 1, _("Activo") if nombre == activo else "")
+        if self.lista.GetItemCount() > 0 and self.lista.GetFirstSelected() == -1:
+            self.lista.Select(0)
+
+    def _nombre_seleccionado(self):
+        idx = self.lista.GetFirstSelected()
+        if idx == -1 or idx >= len(self._nombres):
+            return None
+        return self._nombres[idx]
+
+    def _obtener_pestana_lectura(self):
+        ventana = wx.GetTopLevelParent(self)
+        return getattr(ventana, 'pestana_lectura', None)
+
+    def _estado_actual_lectura(self):
+        """
+        Lee de la pestaña Lectura la voz activa, velocidad, volumen y
+        preferencias de pausa/segundos de salto tal como están ahora mismo.
+        Devuelve None si la pestaña Lectura no está disponible.
+        """
+        pl = self._obtener_pestana_lectura()
+        if pl is None:
+            return None
+        idx_voz = pl.combo_voz.GetSelection()
+        voz_datos = pl.combo_voz.GetClientData(idx_voz) if idx_voz != wx.NOT_FOUND else None
+        nombre_voz = pl.combo_voz.GetStringSelection()
+        proveedor_id = (voz_datos or {}).get("proveedor_id", "")
+        return {
+            "voz_activa": {"proveedor_id": proveedor_id, "id_voz": nombre_voz},
+            "proveedor_id": proveedor_id,
+            "nombre_voz": nombre_voz,
+            "velocidad": pl.deslizador_velocidad.GetValue(),
+            "volumen": pl.deslizador_volumen.GetValue(),
+            "segundos_salto": getattr(pl, 'segundos_salto', 10),
+            "pausa_entre_fragmentos_ms": getattr(pl, '_pausa_entre_fragmentos_ms', 0),
+        }
+
+    def _al_crear(self, evento):
+        from app.motor import gestor_perfiles
+        dlg = wx.TextEntryDialog(self, _("Nombre del perfil nuevo:"), _("Crear perfil"))
+        if dlg.ShowModal() != wx.ID_OK:
+            dlg.Destroy()
+            return
+        nombre = dlg.GetValue().strip()
+        dlg.Destroy()
+        if not nombre:
+            reproducir(ERROR)
+            wx.MessageBox(_("El nombre del perfil no puede estar vacío."), _("Error"))
+            return
+        if gestor_perfiles.existe_perfil(nombre):
+            reproducir(ERROR)
+            wx.MessageBox(_("Ya existe un perfil con ese nombre."), _("Error"))
+            return
+        estado = self._estado_actual_lectura()
+        datos_perfil = None
+        if estado is not None:
+            voces_favoritas = {estado["proveedor_id"]: estado["nombre_voz"]} if estado["proveedor_id"] else {}
+            datos_perfil = {
+                "voz_activa": estado["voz_activa"],
+                "voces_favoritas": voces_favoritas,
+                "velocidad": estado["velocidad"],
+                "volumen": estado["volumen"],
+                "segundos_salto": estado["segundos_salto"],
+                "pausa_entre_fragmentos_ms": estado["pausa_entre_fragmentos_ms"],
+            }
+        if gestor_perfiles.crear_perfil(nombre, datos_perfil):
+            reproducir(SUCCESS)
+            self._rellenar_lista()
+            self._seleccionar_por_nombre(nombre)
+            voz.hablar(_("Perfil {nombre} creado.").format(nombre=nombre))
+        else:
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo crear el perfil."), _("Error"))
+
+    def _al_actualizar(self, evento):
+        from app.motor import gestor_perfiles
+        nombre = self._nombre_seleccionado()
+        if nombre is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("Selecciona un perfil de la lista primero."), _("Info"))
+            return
+        estado = self._estado_actual_lectura()
+        if estado is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo leer el estado actual de Lectura."), _("Error"))
+            return
+        datos_previos = gestor_perfiles.cargar_perfiles()["perfiles"].get(nombre, {})
+        voces_favoritas = dict(datos_previos.get("voces_favoritas", {}))
+        if estado["proveedor_id"]:
+            voces_favoritas[estado["proveedor_id"]] = estado["nombre_voz"]
+        if gestor_perfiles.guardar_estado_en_perfil(
+            nombre, estado["voz_activa"], voces_favoritas,
+            estado["velocidad"], estado["volumen"],
+            estado["segundos_salto"], estado["pausa_entre_fragmentos_ms"],
+        ):
+            reproducir(SUCCESS)
+            voz.hablar(_("Perfil {nombre} actualizado.").format(nombre=nombre))
+        else:
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo actualizar el perfil."), _("Error"))
+
+    def _al_activar_seleccionado(self, evento):
+        from app.motor import gestor_perfiles
+        nombre = self._nombre_seleccionado()
+        if nombre is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("Selecciona un perfil de la lista primero."), _("Info"))
+            return
+        gestor_perfiles.fijar_perfil_activo(nombre)
+        _, datos = gestor_perfiles.obtener_perfil_activo()
+        pl = self._obtener_pestana_lectura()
+        if pl is not None and hasattr(pl, 'aplicar_perfil_usuario'):
+            pl.aplicar_perfil_usuario(datos)
+        reproducir(SUCCESS)
+        self._rellenar_lista()
+        self._seleccionar_por_nombre(nombre)
+        voz.hablar(_("Perfil activo: {nombre}").format(nombre=nombre))
+
+    def _al_renombrar(self, evento):
+        from app.motor import gestor_perfiles
+        nombre = self._nombre_seleccionado()
+        if nombre is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("Selecciona un perfil de la lista primero."), _("Info"))
+            return
+        dlg = wx.TextEntryDialog(self, _("Nuevo nombre para el perfil:"), _("Renombrar perfil"), value=nombre)
+        if dlg.ShowModal() != wx.ID_OK:
+            dlg.Destroy()
+            return
+        nombre_nuevo = dlg.GetValue().strip()
+        dlg.Destroy()
+        if not nombre_nuevo:
+            reproducir(ERROR)
+            wx.MessageBox(_("El nombre del perfil no puede estar vacío."), _("Error"))
+            return
+        if gestor_perfiles.renombrar_perfil(nombre, nombre_nuevo):
+            reproducir(SUCCESS)
+            self._rellenar_lista()
+            self._seleccionar_por_nombre(nombre_nuevo)
+        else:
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo renombrar: revisa que el nombre nuevo no esté ya en uso."), _("Error"))
+
+    def _al_eliminar(self, evento):
+        from app.motor import gestor_perfiles
+        nombre = self._nombre_seleccionado()
+        if nombre is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("Selecciona un perfil de la lista primero."), _("Info"))
+            return
+        if wx.MessageBox(
+            _("¿Eliminar el perfil «{nombre}»?").format(nombre=nombre),
+            _("Confirmar"), wx.YES_NO | wx.ICON_QUESTION,
+        ) != wx.YES:
+            return
+        if gestor_perfiles.eliminar_perfil(nombre):
+            reproducir(SUCCESS)
+            self._rellenar_lista()
+        else:
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo eliminar el perfil."), _("Error"))
+
+    def _seleccionar_por_nombre(self, nombre):
+        if nombre in self._nombres:
+            idx = self._nombres.index(nombre)
+            self.lista.Select(idx)
+            self.lista.EnsureVisible(idx)
+            self.lista.SetFocus()
+# ANCLAJE_FIN: PANEL_PERFILES
+
+
 # ANCLAJE_INICIO: PESTANA_AJUSTES_PRINCIPAL
 class PestanaAjustes(wx.Panel):
     """
@@ -2322,6 +2576,7 @@ class PestanaAjustes(wx.Panel):
     _PAG_ATAJOS     = 8
     _PAG_SONIDOS    = 9
     _PAG_ASISTENTE  = 10
+    _PAG_PERFILES   = 11
 
     def __init__(self, padre):
         super().__init__(padre)
@@ -2361,6 +2616,7 @@ class PestanaAjustes(wx.Panel):
         self.pag_atajos      = PanelAtajos(self.panel_derecho)
         self.pag_sonidos     = PanelSonidos(self.panel_derecho)
         self.pag_asistente   = PanelAsistenteBiblioteca(self.panel_derecho)
+        self.pag_perfiles    = PanelPerfiles(self.panel_derecho)
 
         self.panel_derecho.AddPage(self.pag_general,     _("Configuración General"))
         self.panel_derecho.AddPage(self.pag_claves,      _("Credenciales y API Keys"))
@@ -2373,6 +2629,7 @@ class PestanaAjustes(wx.Panel):
         self.panel_derecho.AddPage(self.pag_atajos,      _("Atajos de Teclado"))
         self.panel_derecho.AddPage(self.pag_sonidos,     _("Efectos de Sonido"))
         self.panel_derecho.AddPage(self.pag_asistente,   _("Asistente de Biblioteca"))
+        self.panel_derecho.AddPage(self.pag_perfiles,    _("Perfiles de Usuario"))
 
         self.splitter.SetMinimumPaneSize(180)
         self.splitter.SplitVertically(self.arbol_cat, self.panel_derecho, 220)
@@ -2465,6 +2722,9 @@ class PestanaAjustes(wx.Panel):
 
         nodo_asistente = self.arbol_cat.AppendItem(raiz, _("Asistente de Biblioteca"))
         self._nodos[nodo_asistente] = self._PAG_ASISTENTE
+
+        nodo_perfiles = self.arbol_cat.AppendItem(raiz, _("Perfiles de Usuario"))
+        self._nodos[nodo_perfiles] = self._PAG_PERFILES
 
         # Expandir todas las ramas para que el usuario ciego conozca la estructura
         # completa desde el primer momento que el árbol recibe el foco.
@@ -2563,6 +2823,7 @@ class PestanaAjustes(wx.Panel):
             self.pag_elevenlabs, self.pag_sapi5,
             self.pag_diccionario, self.pag_atajos,
             self.pag_sonidos, self.pag_asistente,
+            self.pag_perfiles,
         ]
         if 0 <= idx < len(paneles):
             return paneles[idx]

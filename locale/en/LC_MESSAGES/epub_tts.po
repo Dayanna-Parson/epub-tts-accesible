@@ -2981,3 +2981,84 @@ msgstr "No user profiles created yet. Create them in Settings, User Profiles."
 
 msgid "Perfil activo: {nombre}"
 msgstr "Active profile: {nombre}"
+
+msgid "Cada perfil guarda la voz activa, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura. El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+msgstr "Each profile stores the active voice, speed, volume and the pause/skip-seconds preferences of the Reading tab. Ctrl+Shift+U cycles through the profiles in the list."
+
+msgid "Nombre del perfil"
+msgstr "Profile name"
+
+msgid "Lista de perfiles de usuario. Usa las flechas Arriba y Abajo para navegar. El perfil activo aparece marcado en la columna Estado."
+msgstr "List of user profiles. Use the Up and Down arrows to navigate. The active profile is marked in the Status column."
+
+msgid "Crear perfil con el estado actual de Lectura"
+msgstr "Create profile from Reading's current state"
+
+msgid "Pide un nombre y crea un perfil nuevo con la voz, velocidad, volumen y preferencias de pausa que tiene ahora mismo la pestaña Lectura."
+msgstr "Asks for a name and creates a new profile with the voice, speed, volume and pause preferences the Reading tab currently has."
+
+msgid "Activar perfil seleccionado"
+msgstr "Activate selected profile"
+
+msgid "Aplica en Lectura la voz, velocidad, volumen y preferencias de pausa guardadas en el perfil seleccionado, y lo marca como perfil activo."
+msgstr "Applies the voice, speed, volume and pause preferences saved in the selected profile to Reading, and marks it as the active profile."
+
+msgid "Guardar estado actual en el perfil seleccionado"
+msgstr "Save current state to the selected profile"
+
+msgid "Sobrescribe el perfil seleccionado con la voz, velocidad, volumen y preferencias de pausa que tiene ahora mismo la pestaña Lectura."
+msgstr "Overwrites the selected profile with the voice, speed, volume and pause preferences the Reading tab currently has."
+
+msgid "Renombrar perfil seleccionado"
+msgstr "Rename selected profile"
+
+msgid "Eliminar perfil seleccionado"
+msgstr "Delete selected profile"
+
+msgid "Nombre del perfil nuevo:"
+msgstr "Name of the new profile:"
+
+msgid "Crear perfil"
+msgstr "Create profile"
+
+msgid "El nombre del perfil no puede estar vacío."
+msgstr "The profile name cannot be empty."
+
+msgid "Ya existe un perfil con ese nombre."
+msgstr "A profile with that name already exists."
+
+msgid "Perfil {nombre} creado."
+msgstr "Profile {nombre} created."
+
+msgid "No se pudo crear el perfil."
+msgstr "Could not create the profile."
+
+msgid "Selecciona un perfil de la lista primero."
+msgstr "Select a profile from the list first."
+
+msgid "No se pudo leer el estado actual de Lectura."
+msgstr "Could not read Reading's current state."
+
+msgid "Perfil {nombre} actualizado."
+msgstr "Profile {nombre} updated."
+
+msgid "No se pudo actualizar el perfil."
+msgstr "Could not update the profile."
+
+msgid "Nuevo nombre para el perfil:"
+msgstr "New name for the profile:"
+
+msgid "Renombrar perfil"
+msgstr "Rename profile"
+
+msgid "No se pudo renombrar: revisa que el nombre nuevo no esté ya en uso."
+msgstr "Could not rename: check that the new name is not already in use."
+
+msgid "¿Eliminar el perfil «{nombre}»?"
+msgstr "Delete the profile «{nombre}»?"
+
+msgid "No se pudo eliminar el perfil."
+msgstr "Could not delete the profile."
+
+msgid "Perfiles de Usuario"
+msgstr "User Profiles"
