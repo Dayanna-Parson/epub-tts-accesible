@@ -30,6 +30,7 @@ Requisitos previos:
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -90,31 +91,55 @@ def _ocultar_archivo(ruta: str):
 
 
 # ANCLAJE_INICIO: BORRADO_CON_REINTENTOS
-def _borrar_arbol_con_reintentos(ruta: str, intentos: int = 5, espera_seg: float = 1.5):
+def _quitar_solo_lectura_y_reintentar(func, ruta_item, exc_info):
     """
-    shutil.rmtree() falla con PermissionError (WinError 5) en Windows si algo
-    dentro de ruta sigue abierto: el epubtts.exe de una construcción anterior
-    todavía en ejecución, el Explorador generando miniaturas de los iconos, o
-    un antivirus escaneando la carpeta en ese instante. Un solo intento
-    inmediato es frágil porque ese bloqueo suele ser momentáneo. Reintenta
-    con una pequeña espera antes de dar el error por definitivo.
+    Callback de shutil.rmtree(onexc=...). La causa más frecuente de
+    PermissionError (WinError 5) al borrar un árbol en Windows no es un
+    proceso con el archivo abierto, sino que el archivo o carpeta quedó
+    marcado como "solo lectura" (habitual tras clonar o copiar un repo en
+    Windows) — rmtree no puede borrar eso sin quitarle antes el atributo.
+    Se quita con os.chmod() y se reintenta la operación exacta que falló
+    (os.remove/os.rmdir, recibida en func).
+    """
+    try:
+        os.chmod(ruta_item, stat.S_IWRITE)
+        func(ruta_item)
+    except Exception:
+        pass  # Si tampoco así se puede, se deja que el reintento exterior lo capture
+
+
+def _borrar_arbol_con_reintentos(ruta: str, intentos: int = 8, espera_seg: float = 2.0):
+    """
+    Reintenta shutil.rmtree() varias veces, quitando el atributo de solo
+    lectura en cada intento (ver _quitar_solo_lectura_y_reintentar). Si tras
+    todos los intentos sigue sin poder borrarse, algo tiene un archivo
+    concreto realmente abierto (el epubtts.exe de una construcción anterior,
+    el Explorador generando miniaturas, o un antivirus escaneando) — se lista
+    qué archivos quedan dentro para poder identificar cuál es.
     """
     ultimo_error = None
     for intento in range(1, intentos + 1):
         try:
-            shutil.rmtree(ruta)
+            shutil.rmtree(ruta, onexc=_quitar_solo_lectura_y_reintentar)
             return
         except PermissionError as e:
             ultimo_error = e
             if intento < intentos:
                 print(f"      Acceso denegado al borrar {ruta} (intento {intento}/{intentos}), reintentando...")
                 time.sleep(espera_seg)
+    restantes = [
+        os.path.join(carpeta, archivo)
+        for carpeta, _dirs, archivos in os.walk(ruta)
+        for archivo in archivos
+    ][:20]
+    detalle = "\n".join(f"  - {r}" for r in restantes) if restantes else "  (la carpeta ya no tiene archivos, pero Windows sigue sin dejar borrarla)"
     raise PermissionError(
-        f"No se pudo borrar '{ruta}' tras {intentos} intentos.\n"
-        "Causas probables: el epubtts.exe de una construcción anterior sigue abierto, "
-        "el Explorador de Windows tiene esa carpeta abierta (cierra la ventana), "
-        "o un antivirus la está escaneando en este momento.\n"
-        "Cierra la aplicación y la carpeta en el Explorador, espera unos segundos y vuelve a ejecutar el script."
+        f"No se pudo borrar '{ruta}' tras {intentos} intentos, ni siquiera quitando el atributo de solo lectura.\n"
+        f"Archivos que siguen dentro:\n{detalle}\n"
+        "Causas probables: el epubtts.exe de una construcción anterior sigue en marcha (revisa el "
+        "Administrador de tareas), el Explorador tiene esa carpeta abierta, o un antivirus la está "
+        "escaneando. Prueba a borrar esa carpeta a mano desde el Explorador; si Windows tampoco te "
+        "deja, reinicia el equipo y vuelve a intentarlo."
     ) from ultimo_error
 # ANCLAJE_FIN: BORRADO_CON_REINTENTOS
 
