@@ -14,6 +14,7 @@ from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config, RAIZ_RECURSOS
 from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS, ERROR
 from app.motor.gestor_idioma import traducir as _
+from app.motor import anunciador_lector as voz
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
@@ -312,6 +313,27 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_asistente_biblioteca_global, item)
         menu.AppendSeparator()
     # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA_GLOBAL
+
+    # ANCLAJE_INICIO: ALTERNAR_PERFIL_GLOBAL
+    def al_alternar_perfil_global(self, evento=None):
+        """
+        Ctrl+Shift+U: alterna al siguiente perfil de usuario (velocidad,
+        volumen y voz activa) desde cualquier pestaña, y anuncia el nombre
+        del perfil ya aplicado con accessible_output3. Si todavía no hay
+        ningún perfil creado, avisa dónde crearlos en vez de no hacer nada.
+        """
+        from app.motor import gestor_perfiles
+        nombre_siguiente = gestor_perfiles.siguiente_perfil()
+        if not nombre_siguiente:
+            voz.hablar(_("No hay perfiles de usuario creados todavía. Créalos en Ajustes, Perfiles de Usuario."))
+            return
+        gestor_perfiles.fijar_perfil_activo(nombre_siguiente)
+        nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        if hasattr(self.pestana_lectura, 'aplicar_perfil_usuario'):
+            self.pestana_lectura.aplicar_perfil_usuario(datos)
+        reproducir(CLICK)
+        voz.hablar(_("Perfil activo: {nombre}").format(nombre=nombre))
+    # ANCLAJE_FIN: ALTERNAR_PERFIL_GLOBAL
 
     def al_abrir_txt_grabacion(self, evento):
         """Activa la pestaña Grabación y llama al método Examinar del panel."""
@@ -835,6 +857,8 @@ class VentanaPrincipal(wx.Frame):
             # el Asistente de Biblioteca debe abrirse desde cualquier parte
             # de la aplicación, no solo con Biblioteca activa.
             "asistente_biblioteca": lambda: self.al_abrir_asistente_biblioteca_global(),
+            # Alternar perfil de usuario: tampoco depende de la pestaña activa.
+            "alternar_perfil": lambda: self.al_alternar_perfil_global(),
         }
         if clave in _ACCIONES:
             if clave in _ATAJOS_SOLO_LECTURA and not en_lectura:

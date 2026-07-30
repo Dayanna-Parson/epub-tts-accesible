@@ -2980,3 +2980,9 @@ msgstr "Último error ({nombre}) copiado al portapapeles."
 msgid "• {descripcion}:  {tecla}"
 msgstr "• {descripcion}:  {tecla}"
 
+
+msgid "No hay perfiles de usuario creados todavía. Créalos en Ajustes, Perfiles de Usuario."
+msgstr "No hay perfiles de usuario creados todavía. Créalos en Ajustes, Perfiles de Usuario."
+
+msgid "Perfil activo: {nombre}"
+msgstr "Perfil activo: {nombre}"

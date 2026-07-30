@@ -2975,3 +2975,9 @@ msgstr "Last error ({nombre}) copied to clipboard."
 msgid "• {descripcion}:  {tecla}"
 msgstr "• {descripcion}:  {tecla}"
 
+
+msgid "No hay perfiles de usuario creados todavía. Créalos en Ajustes, Perfiles de Usuario."
+msgstr "No user profiles created yet. Create them in Settings, User Profiles."
+
+msgid "Perfil activo: {nombre}"
+msgstr "Active profile: {nombre}"

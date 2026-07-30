@@ -2978,3 +2978,9 @@ msgstr ""
 msgid "• {descripcion}:  {tecla}"
 msgstr ""
 
+
+msgid "No hay perfiles de usuario creados todavía. Créalos en Ajustes, Perfiles de Usuario."
+msgstr ""
+
+msgid "Perfil activo: {nombre}"
+msgstr ""

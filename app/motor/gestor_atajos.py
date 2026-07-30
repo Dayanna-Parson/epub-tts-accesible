@@ -51,6 +51,13 @@ _DEFAULTS_EMBEBIDOS = {
         "tecla": "B",
     },
     # ANCLAJE_FIN: ATAJO_ASISTENTE_BIBLIOTECA
+    # ANCLAJE_INICIO: ATAJO_ALTERNAR_PERFIL
+    "alternar_perfil": {
+        "descripcion": "Alternar entre perfiles de usuario",
+        "modificador": "Ctrl+Shift",
+        "tecla": "U",
+    },
+    # ANCLAJE_FIN: ATAJO_ALTERNAR_PERFIL
 }
 
 

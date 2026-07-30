@@ -1173,6 +1173,34 @@ class PestanaLectura(wx.Panel):
             print(f"[Error] No se pudieron cargar los datos del libro '{nombre}': {e}")
             self.marcadores = {}
     # ANCLAJE_FIN: GESTION_DATOS_LIBRO
+
+    # ANCLAJE_INICIO: APLICAR_PERFIL_USUARIO
+    def aplicar_perfil_usuario(self, datos_perfil):
+        """
+        Aplica a los controles de Lectura el estado guardado en un perfil
+        de usuario (velocidad, volumen y voz activa), reutilizando el mismo
+        mecanismo de restauración que la memoria por libro. La memoria por
+        libro sigue existiendo aparte: un perfil fija el punto de partida,
+        no sustituye lo que cada libro recuerda de su propia sesión.
+        """
+        try:
+            vel = datos_perfil.get("velocidad")
+            if vel is not None:
+                self.deslizador_velocidad.SetValue(int(vel))
+                self.reproductor.fijar_velocidad(int(vel))
+            vol = datos_perfil.get("volumen")
+            if vol is not None:
+                self.deslizador_volumen.SetValue(int(vol))
+                self.reproductor.fijar_volumen(int(vol))
+            nombre_voz = datos_perfil.get("voz_activa", {}).get("id_voz", "")
+            if nombre_voz:
+                idx = self.combo_voz.FindString(nombre_voz)
+                if idx != wx.NOT_FOUND:
+                    self.combo_voz.SetSelection(idx)
+                    self.al_cambiar_voz(None)
+        except Exception:
+            logger.exception("Error al aplicar el perfil de usuario en Lectura")
+    # ANCLAJE_FIN: APLICAR_PERFIL_USUARIO
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
