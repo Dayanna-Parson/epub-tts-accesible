@@ -1178,26 +1178,52 @@ class PestanaLectura(wx.Panel):
     def aplicar_perfil_usuario(self, datos_perfil):
         """
         Aplica a los controles de Lectura el estado guardado en un perfil
-        de usuario (velocidad, volumen y voz activa), reutilizando el mismo
-        mecanismo de restauración que la memoria por libro. La memoria por
-        libro sigue existiendo aparte: un perfil fija el punto de partida,
-        no sustituye lo que cada libro recuerda de su propia sesión.
+        de usuario: velocidad, volumen, voz activa, segundos de salto y
+        pausa entre fragmentos. Persiste también estos valores en
+        ajustes.json (igual que _guardar_ajuste_slider) para que sigan
+        activos aunque se cambie de pestaña o se reinicie la app, y
+        refresca las etiquetas de los botones Retroceder/Avanzar.
+        La memoria por libro sigue existiendo aparte: un perfil fija el
+        punto de partida, no sustituye lo que cada libro recuerda de su
+        propia sesión.
         """
         try:
             vel = datos_perfil.get("velocidad")
             if vel is not None:
                 self.deslizador_velocidad.SetValue(int(vel))
                 self.reproductor.fijar_velocidad(int(vel))
+                self._guardar_ajuste_slider("velocidad_lectura", int(vel))
             vol = datos_perfil.get("volumen")
             if vol is not None:
                 self.deslizador_volumen.SetValue(int(vol))
                 self.reproductor.fijar_volumen(int(vol))
+                self._guardar_ajuste_slider("volumen_lectura", int(vol))
             nombre_voz = datos_perfil.get("voz_activa", {}).get("id_voz", "")
             if nombre_voz:
                 idx = self.combo_voz.FindString(nombre_voz)
                 if idx != wx.NOT_FOUND:
                     self.combo_voz.SetSelection(idx)
                     self.al_cambiar_voz(None)
+            segundos_salto = datos_perfil.get("segundos_salto")
+            pausa_ms = datos_perfil.get("pausa_entre_fragmentos_ms")
+            if segundos_salto is not None or pausa_ms is not None:
+                if segundos_salto is not None:
+                    self.segundos_salto = int(segundos_salto)
+                    self._guardar_ajuste_slider("segundos_salto", self.segundos_salto)
+                    self.btn_atras.SetLabel(_("Retroceder {s}s").format(s=self.segundos_salto))
+                    self.btn_adelante.SetLabel(_("Avanzar {s}s").format(s=self.segundos_salto))
+                if pausa_ms is not None:
+                    self._pausa_entre_fragmentos_ms = int(pausa_ms)
+                    self._guardar_ajuste_slider("pausa_entre_fragmentos_ms", self._pausa_entre_fragmentos_ms)
+                ventana = wx.GetTopLevelParent(self)
+                pag_general = getattr(getattr(ventana, 'pestana_ajustes', None), 'pag_general', None)
+                if pag_general is not None:
+                    if segundos_salto is not None and hasattr(pag_general, 'txt_salto'):
+                        pag_general.txt_salto.SetValue(str(self.segundos_salto))
+                        pag_general.config["segundos_salto"] = self.segundos_salto
+                    if pausa_ms is not None and hasattr(pag_general, 'spin_pausa'):
+                        pag_general.spin_pausa.SetValue(self._pausa_entre_fragmentos_ms)
+                        pag_general.config["pausa_entre_fragmentos_ms"] = self._pausa_entre_fragmentos_ms
         except Exception:
             logger.exception("Error al aplicar el perfil de usuario en Lectura")
     # ANCLAJE_FIN: APLICAR_PERFIL_USUARIO

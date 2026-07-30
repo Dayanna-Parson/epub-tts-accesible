@@ -689,5 +689,119 @@ class TestConfigRutas(unittest.TestCase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# GESTOR DE PERFILES DE USUARIO (v4.0)
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor import gestor_perfiles
+
+
+class TestGestorPerfiles(unittest.TestCase):
+    """Usa un archivo temporal aislado para no tocar configuraciones reales."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        patcher = patch(
+            "app.motor.gestor_perfiles._RUTA_PERFILES",
+            os.path.join(self.tmpdir, "perfiles.json"),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_cargar_perfiles_sin_archivo_devuelve_estructura_vacia(self):
+        datos = gestor_perfiles.cargar_perfiles()
+        self.assertEqual(datos["perfiles"], {})
+        self.assertIsNone(datos["perfil_activo"])
+
+    def test_crear_perfil_lo_deja_como_activo_por_defecto(self):
+        self.assertTrue(gestor_perfiles.crear_perfil("Novela"))
+        nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(nombre, "Novela")
+        self.assertEqual(datos["velocidad"], 50)
+
+    def test_crear_perfil_duplicado_falla(self):
+        gestor_perfiles.crear_perfil("Novela")
+        self.assertFalse(gestor_perfiles.crear_perfil("Novela"))
+
+    def test_crear_perfil_nombre_vacio_falla(self):
+        self.assertFalse(gestor_perfiles.crear_perfil("   "))
+
+    def test_renombrar_perfil(self):
+        gestor_perfiles.crear_perfil("Antiguo")
+        self.assertTrue(gestor_perfiles.renombrar_perfil("Antiguo", "Nuevo"))
+        self.assertTrue(gestor_perfiles.existe_perfil("Nuevo"))
+        self.assertFalse(gestor_perfiles.existe_perfil("Antiguo"))
+
+    def test_renombrar_a_nombre_ya_usado_falla(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.crear_perfil("B")
+        self.assertFalse(gestor_perfiles.renombrar_perfil("A", "B"))
+
+    def test_renombrar_perfil_activo_actualiza_referencia(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.renombrar_perfil("A", "B")
+        nombre, _datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(nombre, "B")
+
+    def test_eliminar_perfil(self):
+        gestor_perfiles.crear_perfil("A")
+        self.assertTrue(gestor_perfiles.eliminar_perfil("A"))
+        self.assertFalse(gestor_perfiles.existe_perfil("A"))
+
+    def test_eliminar_perfil_activo_pasa_activo_a_otro_restante(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.crear_perfil("B")
+        gestor_perfiles.fijar_perfil_activo("A")
+        gestor_perfiles.eliminar_perfil("A")
+        nombre, _datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(nombre, "B")
+
+    def test_eliminar_ultimo_perfil_deja_activo_en_none(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.eliminar_perfil("A")
+        nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertIsNone(nombre)
+        self.assertIsNone(datos)
+
+    def test_siguiente_perfil_sin_perfiles_devuelve_vacio(self):
+        self.assertEqual(gestor_perfiles.siguiente_perfil(), "")
+
+    def test_siguiente_perfil_cicla_circularmente(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.crear_perfil("B")
+        gestor_perfiles.crear_perfil("C")
+        gestor_perfiles.fijar_perfil_activo("A")
+        self.assertEqual(gestor_perfiles.siguiente_perfil(), "B")
+        gestor_perfiles.fijar_perfil_activo("C")
+        self.assertEqual(gestor_perfiles.siguiente_perfil(), "A")
+
+    def test_guardar_estado_en_perfil_sobrescribe_valores(self):
+        gestor_perfiles.crear_perfil("A")
+        ok = gestor_perfiles.guardar_estado_en_perfil(
+            "A",
+            voz_activa={"proveedor_id": "azure", "id_voz": "Elvira"},
+            voces_favoritas={"azure": "Elvira"},
+            velocidad=80, volumen=60,
+            segundos_salto=15, pausa_entre_fragmentos_ms=300,
+        )
+        self.assertTrue(ok)
+        _nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(datos["velocidad"], 80)
+        self.assertEqual(datos["voz_activa"]["id_voz"], "Elvira")
+        self.assertEqual(datos["pausa_entre_fragmentos_ms"], 300)
+
+    def test_guardar_estado_en_perfil_inexistente_falla(self):
+        self.assertFalse(gestor_perfiles.guardar_estado_en_perfil(
+            "NoExiste", {}, {}, 50, 100, 10, 0,
+        ))
+
+    def test_persistencia_atomica_sobrevive_recarga(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.fijar_perfil_activo("A")
+        # Simula una nueva ejecución de la app releyendo el archivo desde cero
+        datos_releidos = gestor_perfiles.cargar_perfiles()
+        self.assertIn("A", datos_releidos["perfiles"])
+        self.assertEqual(datos_releidos["perfil_activo"], "A")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)

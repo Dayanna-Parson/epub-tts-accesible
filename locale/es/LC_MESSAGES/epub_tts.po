@@ -3067,3 +3067,48 @@ msgstr "No se pudo eliminar el perfil."
 
 msgid "Perfiles de Usuario"
 msgstr "Perfiles de Usuario"
+
+msgid "Abre el formulario de perfil para configurar voz, velocidad, volumen, segundos de salto y pausa, y crea el perfil aplicándolo de inmediato."
+msgstr "Abre el formulario de perfil para configurar voz, velocidad, volumen, segundos de salto y pausa, y crea el perfil aplicándolo de inmediato."
+
+msgid "Abre el formulario de perfil precargado con los valores guardados del perfil seleccionado, y aplica los cambios al guardar."
+msgstr "Abre el formulario de perfil precargado con los valores guardados del perfil seleccionado, y aplica los cambios al guardar."
+
+msgid "Activo"
+msgstr "Activo"
+
+msgid "Cada perfil guarda la voz, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura, todo en un mismo formulario. El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+msgstr "Cada perfil guarda la voz, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura, todo en un mismo formulario. El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+
+msgid "Crear perfil nuevo..."
+msgstr "Crear perfil nuevo..."
+
+msgid "Editar perfil"
+msgstr "Editar perfil"
+
+msgid "Editar perfil seleccionado..."
+msgstr "Editar perfil seleccionado..."
+
+msgid "Guardar perfil"
+msgstr "Guardar perfil"
+
+msgid "No se pudo renombrar el perfil."
+msgstr "No se pudo renombrar el perfil."
+
+msgid "Nombre del perfil:"
+msgstr "Nombre del perfil:"
+
+msgid "Perfil {nombre} actualizado y activado."
+msgstr "Perfil {nombre} actualizado y activado."
+
+msgid "Perfil {nombre} creado y activado."
+msgstr "Perfil {nombre} creado y activado."
+
+msgid "Segundos de salto (Retroceder y Avanzar en Lectura):"
+msgstr "Segundos de salto (Retroceder y Avanzar en Lectura):"
+
+msgid "Voz que usará este perfil en la pestaña Lectura. La lista muestra las mismas voces favoritas ya cargadas en Lectura."
+msgstr "Voz que usará este perfil en la pestaña Lectura. La lista muestra las mismas voces favoritas ya cargadas en Lectura."
+
+msgid "Voz:"
+msgstr "Voz:"

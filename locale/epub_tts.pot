@@ -3065,3 +3065,48 @@ msgstr ""
 
 msgid "Perfiles de Usuario"
 msgstr ""
+
+msgid "Abre el formulario de perfil para configurar voz, velocidad, volumen, segundos de salto y pausa, y crea el perfil aplicándolo de inmediato."
+msgstr ""
+
+msgid "Abre el formulario de perfil precargado con los valores guardados del perfil seleccionado, y aplica los cambios al guardar."
+msgstr ""
+
+msgid "Activo"
+msgstr ""
+
+msgid "Cada perfil guarda la voz, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura, todo en un mismo formulario. El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+msgstr ""
+
+msgid "Crear perfil nuevo..."
+msgstr ""
+
+msgid "Editar perfil"
+msgstr ""
+
+msgid "Editar perfil seleccionado..."
+msgstr ""
+
+msgid "Guardar perfil"
+msgstr ""
+
+msgid "No se pudo renombrar el perfil."
+msgstr ""
+
+msgid "Nombre del perfil:"
+msgstr ""
+
+msgid "Perfil {nombre} actualizado y activado."
+msgstr ""
+
+msgid "Perfil {nombre} creado y activado."
+msgstr ""
+
+msgid "Segundos de salto (Retroceder y Avanzar en Lectura):"
+msgstr ""
+
+msgid "Voz que usará este perfil en la pestaña Lectura. La lista muestra las mismas voces favoritas ya cargadas en Lectura."
+msgstr ""
+
+msgid "Voz:"
+msgstr ""
