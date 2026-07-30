@@ -32,6 +32,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
 
 # ── Raíz del proyecto ─────────────────────────────────────────────────────────
@@ -88,11 +89,41 @@ def _ocultar_archivo(ruta: str):
         pass  # En sistemas no-Windows se ignora silenciosamente
 
 
+# ANCLAJE_INICIO: BORRADO_CON_REINTENTOS
+def _borrar_arbol_con_reintentos(ruta: str, intentos: int = 5, espera_seg: float = 1.5):
+    """
+    shutil.rmtree() falla con PermissionError (WinError 5) en Windows si algo
+    dentro de ruta sigue abierto: el epubtts.exe de una construcción anterior
+    todavía en ejecución, el Explorador generando miniaturas de los iconos, o
+    un antivirus escaneando la carpeta en ese instante. Un solo intento
+    inmediato es frágil porque ese bloqueo suele ser momentáneo. Reintenta
+    con una pequeña espera antes de dar el error por definitivo.
+    """
+    ultimo_error = None
+    for intento in range(1, intentos + 1):
+        try:
+            shutil.rmtree(ruta)
+            return
+        except PermissionError as e:
+            ultimo_error = e
+            if intento < intentos:
+                print(f"      Acceso denegado al borrar {ruta} (intento {intento}/{intentos}), reintentando...")
+                time.sleep(espera_seg)
+    raise PermissionError(
+        f"No se pudo borrar '{ruta}' tras {intentos} intentos.\n"
+        "Causas probables: el epubtts.exe de una construcción anterior sigue abierto, "
+        "el Explorador de Windows tiene esa carpeta abierta (cierra la ventana), "
+        "o un antivirus la está escaneando en este momento.\n"
+        "Cierra la aplicación y la carpeta en el Explorador, espera unos segundos y vuelve a ejecutar el script."
+    ) from ultimo_error
+# ANCLAJE_FIN: BORRADO_CON_REINTENTOS
+
+
 def limpiar_destino():
     print("[1/8] Limpiando directorios de salida anteriores...")
     for ruta in (DIR_DIST_RAW, DIR_PORTABLE):
         if os.path.exists(ruta):
-            shutil.rmtree(ruta)
+            _borrar_arbol_con_reintentos(ruta)
             print(f"      Eliminado: {ruta}")
     if os.path.exists(ZIP_SALIDA):
         os.remove(ZIP_SALIDA)
