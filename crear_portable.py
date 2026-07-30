@@ -349,6 +349,29 @@ def comprimir_portable():
     print(f"      ZIP creado: {tam:.1f} MB")
 
 
+def verificar_contenido_zip():
+    """
+    Lista el contenido de primer nivel del ZIP ya generado, para comprobar
+    a simple vista en la consola que el portable no lleva nada de más
+    (código fuente, .git, documentación interna...) sin depender de abrir
+    el Explorador de Windows y arriesgarse a confundir esta carpeta con
+    otra copia del repo que hubiera al lado.
+    """
+    print("[Verificación] Contenido de primer nivel del ZIP:")
+    prefijo = f"epub-tts-accesible-v{VERSION}/"
+    nivel_superior = set()
+    with zipfile.ZipFile(ZIP_SALIDA) as zf:
+        total_entradas = len(zf.namelist())
+        for nombre in zf.namelist():
+            resto = nombre[len(prefijo):] if nombre.startswith(prefijo) else nombre
+            primero = resto.split("/")[0]
+            if primero:
+                nivel_superior.add(primero)
+    for entrada in sorted(nivel_superior):
+        print(f"      - {entrada}")
+    print(f"      ({total_entradas} archivos en total dentro del ZIP)")
+
+
 def limpiar_temporal():
     print("[8/8] Eliminando archivos temporales de compilación...")
     dir_build = os.path.join(RAIZ, "build")
@@ -368,6 +391,7 @@ if __name__ == "__main__":
     copiar_recursos()
     crear_configuraciones_fabrica()
     comprimir_portable()
+    verificar_contenido_zip()
     limpiar_temporal()
     print(f"\n✓ Portable listo: dist/epub-tts-accesible-v{VERSION}.zip\n")
 # ANCLAJE_FIN: SCRIPT_CONSTRUCCION_PORTABLE

@@ -145,6 +145,12 @@ class VentanaPrincipal(wx.Frame):
         # Verificación automática de voces nuevas (una vez al día, hilo de fondo)
         wx.CallAfter(self._iniciar_verificacion_voces)
 
+        # Resumen de bienvenida si se acaba de instalar una actualización
+        # (se dispara como mucho una vez por versión). Va antes que la
+        # comprobación de nuevas actualizaciones, para no mostrar dos
+        # diálogos seguidos si además hay otra versión disponible.
+        wx.CallLater(3000, self._comprobar_novedades_bienvenida)
+
         # Comprobación automática de actualizaciones al arranque (5 s de margen
         # para que NVDA lea la ventana antes de que aparezca el diálogo).
         wx.CallLater(5000, self._comprobar_actualizaciones_arranque)
@@ -1041,6 +1047,86 @@ class VentanaPrincipal(wx.Frame):
         else:
             wx.MessageBox(_("No se pudo abrir el portapapeles."), _("Error"), wx.OK | wx.ICON_ERROR)
     # ANCLAJE_FIN: AYUDA
+
+    # ANCLAJE_INICIO: NOVEDADES_BIENVENIDA_POST_ACTUALIZACION
+    def _comprobar_novedades_bienvenida(self):
+        """
+        Tras instalar una actualización y reiniciar, muestra un resumen de
+        las novedades ya instaladas (modo_bienvenida=True en DialogoNovedades).
+        Antes solo existía el diálogo previo a instalar (¿quieres actualizar?);
+        no había ninguna confirmación posterior a que la actualización ya
+        estuviera aplicada. Se dispara una sola vez por versión, comparando
+        recursos/version.json contra 'version_novedades_vista' en ajustes.json.
+        """
+        import json
+        from app.config_rutas import ruta_config, RAIZ_RECURSOS
+
+        ruta_version = os.path.join(RAIZ_RECURSOS, "recursos", "version.json")
+        try:
+            with open(ruta_version, encoding="utf-8") as f:
+                version_actual = json.load(f).get("version", "")
+        except Exception:
+            return
+        if not version_actual:
+            return
+
+        ruta_ajustes = ruta_config("ajustes.json")
+        conf = {}
+        try:
+            if os.path.exists(ruta_ajustes):
+                with open(ruta_ajustes, encoding="utf-8") as f:
+                    conf = json.load(f)
+        except Exception:
+            logger.exception("Error al leer ajustes.json para el aviso de novedades")
+            return
+
+        if conf.get("version_novedades_vista") == version_actual:
+            return  # Ya se mostró el resumen de esta versión
+
+        ruta_novedades = os.path.join(RAIZ_RECURSOS, "novedades.txt")
+        try:
+            with open(ruta_novedades, encoding="utf-8") as f:
+                texto_completo = f.read()
+        except Exception:
+            texto_completo = ""
+
+        from app.interfaz.dialogo_novedades import DialogoNovedades
+        dlg = DialogoNovedades(
+            self, version_actual,
+            self._extraer_bloque_version_actual(texto_completo),
+            modo_bienvenida=True,
+        )
+        dlg.ShowModal()
+        dlg.Destroy()
+
+        conf["version_novedades_vista"] = version_actual
+        try:
+            os.makedirs(os.path.dirname(ruta_ajustes), exist_ok=True)
+            ruta_tmp = ruta_ajustes + ".tmp"
+            with open(ruta_tmp, "w", encoding="utf-8") as f:
+                json.dump(conf, f, ensure_ascii=False, indent=4)
+            os.replace(ruta_tmp, ruta_ajustes)
+        except Exception:
+            logger.exception("Error al guardar version_novedades_vista en ajustes.json")
+
+    @staticmethod
+    def _extraer_bloque_version_actual(texto_completo: str) -> str:
+        """
+        novedades.txt acumula el historial completo de versiones; para el
+        resumen de bienvenida solo interesa el bloque de la versión recién
+        instalada (el primero del archivo), no todo el historial.
+        """
+        marcador = "=== v"
+        primera = texto_completo.find(marcador)
+        if primera == -1:
+            return texto_completo.strip()
+        segunda = texto_completo.find(marcador, primera + len(marcador))
+        bloque = texto_completo[primera:segunda] if segunda != -1 else texto_completo[primera:]
+        lineas = bloque.rstrip().splitlines()
+        while lineas and set(lineas[-1].strip()) <= {"─"}:
+            lineas.pop()
+        return "\n".join(lineas).strip()
+    # ANCLAJE_FIN: NOVEDADES_BIENVENIDA_POST_ACTUALIZACION
 
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS
     # ANCLAJE_INICIO: COMPROBACION_ACTUALIZACIONES_ARRANQUE

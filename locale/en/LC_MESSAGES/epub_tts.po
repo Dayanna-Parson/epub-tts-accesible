@@ -3107,3 +3107,18 @@ msgstr "Voice this profile will use in the Reading tab. The list shows the same 
 
 msgid "Voz:"
 msgstr "Voice:"
+
+msgid "&Aceptar"
+msgstr "&Accept"
+
+msgid "Cierra este resumen de novedades."
+msgstr "Closes this summary of what's new."
+
+msgid "La actualización ya está instalada. Este es un resumen de las novedades."
+msgstr "The update is already installed. This is a summary of what's new."
+
+msgid "Novedades de la versión {version}"
+msgstr "What's new in version {version}"
+
+msgid "Se ha actualizado a la versión {version}. Esto es lo que ha cambiado:"
+msgstr "Updated to version {version}. Here's what changed:"

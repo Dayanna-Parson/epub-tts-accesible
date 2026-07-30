@@ -3112,3 +3112,18 @@ msgstr "Voz que usará este perfil en la pestaña Lectura. La lista muestra las 
 
 msgid "Voz:"
 msgstr "Voz:"
+
+msgid "&Aceptar"
+msgstr "&Aceptar"
+
+msgid "Cierra este resumen de novedades."
+msgstr "Cierra este resumen de novedades."
+
+msgid "La actualización ya está instalada. Este es un resumen de las novedades."
+msgstr "La actualización ya está instalada. Este es un resumen de las novedades."
+
+msgid "Novedades de la versión {version}"
+msgstr "Novedades de la versión {version}"
+
+msgid "Se ha actualizado a la versión {version}. Esto es lo que ha cambiado:"
+msgstr "Se ha actualizado a la versión {version}. Esto es lo que ha cambiado:"

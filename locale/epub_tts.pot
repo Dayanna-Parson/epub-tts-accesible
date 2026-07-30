@@ -3110,3 +3110,18 @@ msgstr ""
 
 msgid "Voz:"
 msgstr ""
+
+msgid "&Aceptar"
+msgstr ""
+
+msgid "Cierra este resumen de novedades."
+msgstr ""
+
+msgid "La actualización ya está instalada. Este es un resumen de las novedades."
+msgstr ""
+
+msgid "Novedades de la versión {version}"
+msgstr ""
+
+msgid "Se ha actualizado a la versión {version}. Esto es lo que ha cambiado:"
+msgstr ""
