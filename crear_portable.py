@@ -188,6 +188,14 @@ def ejecutar_pyinstaller():
         f"--distpath={os.path.join(RAIZ, 'dist')}",
         f"--workpath={os.path.join(RAIZ, 'build')}",
         f"--specpath={os.path.join(RAIZ, 'build')}",
+        # accessible_output3.outputs.auto.Auto() detecta el lector de pantalla
+        # disponible con importes/DLLs que el análisis estático de PyInstaller
+        # no siempre traza (a diferencia de pyttsx3 o sounddevice, no hay un
+        # hook dedicado para accessible_output3 en _pyinstaller_hooks_contrib).
+        # Sin esto, el portable puede quedarse mudo con voz.hablar() aunque
+        # NVDA esté corriendo: la llamada no lanza ninguna excepción, pero
+        # Auto() nunca llega a encontrar ningún backend funcional.
+        "--collect-all=accessible_output3",
     ]
     if os.path.isfile(icono):
         args.append(f"--icon={icono}")

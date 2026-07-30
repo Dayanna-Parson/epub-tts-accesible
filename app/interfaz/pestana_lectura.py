@@ -1308,6 +1308,12 @@ class PestanaLectura(wx.Panel):
         mover el foco en ningún momento (antes usaba el patrón _anunciador,
         que le hacía anunciar a NVDA el rol del control oculto — "edición,
         solo lectura" — en cada pulsación, como si saltara un diálogo).
+
+        No toca lbl_progreso: esa etiqueta es el progreso real de
+        reproducción (líneas más abajo la actualizan durante la lectura) y
+        sobrescribirla aquí la dejaba mostrando el texto de la página para
+        siempre, hasta la siguiente reproducción — voz.hablar() ya es el
+        canal correcto para este anuncio puntual.
         """
         if not self.longitud_texto:
             return
@@ -1316,7 +1322,6 @@ class PestanaLectura(wx.Panel):
             "Página {pag_cap} de {total_cap} del capítulo. "
             "Página {pag_libro} de {total_libro} del libro."
         ).format(pag_cap=pag_cap, total_cap=total_cap, pag_libro=pag_libro, total_libro=total_libro)
-        self.lbl_progreso.SetLabel(texto)
         voz.hablar(texto)
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
 
