@@ -327,24 +327,28 @@ class PestanaBiblioteca(wx.Panel):
         self.btn_importar_archivo.MoveAfterInTabOrder(self.btn_importar)
 
     def _configurar_atajos(self):
-        # Ctrl+O (apertura universal, contextual por pestaña) se gestiona a
-        # nivel de VentanaPrincipal y llama a al_importar_carpeta() desde
-        # allí — no se duplica aquí para no pisar el atajo global. Ctrl+Shift+B
-        # (Asistente de Biblioteca) también se gestiona a nivel de
-        # VentanaPrincipal (AcceleratorTable del Frame, con prioridad sobre
-        # los de cualquier panel hijo) para que funcione desde cualquier
-        # pestaña, no solo con el foco dentro de Biblioteca.
+        # Ctrl+O (apertura universal, contextual por pestaña) y Ctrl+I
+        # (anunciar/info, también contextual) se gestionan a nivel de
+        # VentanaPrincipal y llaman a al_importar_carpeta()/al_anunciar_info_libro()
+        # desde allí — no se duplican aquí para no pisar el atajo global.
+        # Ctrl+I sí estuvo duplicado aquí y en pestana_lectura.py a la vez:
+        # cada pestaña con su propia AcceleratorTable para la misma tecla,
+        # sin ninguna autoridad central. En el build congelado (PyInstaller)
+        # eso hacía que Ctrl+I activara el manejador de Biblioteca aunque el
+        # foco estuviera claramente en Lectura — se centralizó para quitar
+        # la ambigüedad de raíz. Ctrl+Shift+B (Asistente de Biblioteca)
+        # también se gestiona a nivel de VentanaPrincipal (AcceleratorTable
+        # del Frame, con prioridad sobre los de cualquier panel hijo) para
+        # que funcione desde cualquier pestaña, no solo con el foco dentro
+        # de Biblioteca.
         id_buscar = wx.NewIdRef()
-        id_info = wx.NewIdRef()
         id_favorito = wx.NewIdRef()
 
         self.Bind(wx.EVT_MENU, lambda e: self.txt_filtro.SetFocus(), id=id_buscar)
-        self.Bind(wx.EVT_MENU, self.al_anunciar_info_libro, id=id_info)
         self.Bind(wx.EVT_MENU, self.al_alternar_favorito, id=id_favorito)
 
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('F'), id_buscar),
-            (wx.ACCEL_CTRL, ord('I'), id_info),
             (wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('F'), id_favorito),
         ]))
 

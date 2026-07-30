@@ -1230,14 +1230,17 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(7)]
+        # Ctrl+I se quitó de aquí: ahora se despacha de forma centralizada
+        # desde ventana_principal.py (_al_ctrl_i_contextual), igual que
+        # Ctrl+O — ver ese método para el porqué (ambigüedad de tabla de
+        # aceleradores observada en el build congelado con PyInstaller).
+        ids = [wx.NewIdRef() for _ in range(6)]
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,                id=ids[0])
         self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,           id=ids[1])
         self.Bind(wx.EVT_MENU, self.al_detener,                         id=ids[2])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),       id=ids[3])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(),    id=ids[4])
         self.Bind(wx.EVT_MENU, self.al_cargar_libro,                    id=ids[5])
-        self.Bind(wx.EVT_MENU, lambda e: self.anunciar_pagina_actual(), id=ids[6])
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('M'), ids[0]),
             (wx.ACCEL_CTRL, ord('P'), ids[1]),
@@ -1245,7 +1248,6 @@ class PestanaLectura(wx.Panel):
             (wx.ACCEL_CTRL, ord('F'), ids[3]),
             (wx.ACCEL_CTRL, ord('G'), ids[4]),
             (wx.ACCEL_CTRL, ord('O'), ids[5]),
-            (wx.ACCEL_CTRL, ord('I'), ids[6]),
         ]))
 
     # ANCLAJE_INICIO: PAGINAS_VIRTUALES

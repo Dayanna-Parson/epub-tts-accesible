@@ -817,11 +817,12 @@ class VentanaPrincipal(wx.Frame):
                       lambda e, c=clave: self._ejecutar_atajo_global(c),
                       id=id_atajo)
 
-        # Atajos fijos adicionales (Ctrl+T, Ctrl+Shift+P, Ctrl+O, F1)
+        # Atajos fijos adicionales (Ctrl+T, Ctrl+Shift+P, Ctrl+O, Ctrl+I, F1)
         _FIJOS_EXTRA = [
             ("ctrl_t",  wx.ACCEL_CTRL,              ord('T'), self.al_abrir_txt_grabacion),
             ("ctrl_sp", wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('P'), self.al_abrir_gestor_proyectos),
             ("ctrl_o",  wx.ACCEL_CTRL,              ord('O'), self._al_ctrl_o_contextual),
+            ("ctrl_i",  wx.ACCEL_CTRL,              ord('I'), self._al_ctrl_i_contextual),
             ("f1",      wx.ACCEL_NORMAL,            wx.WXK_F1, self._al_abrir_ayuda_global),
         ]
         for clave, flag, keycode, handler in _FIJOS_EXTRA:
@@ -890,6 +891,25 @@ class VentanaPrincipal(wx.Frame):
             self.pestana_creador.al_ctrl_o(None)
         elif indice == IDX_GRABACION:
             self.pestana_grabacion.al_examinar(None)
+
+    def _al_ctrl_i_contextual(self, evento=None):
+        """
+        Ctrl+I: anuncia la página actual en Lectura, o la info del libro
+        seleccionado en Biblioteca, según la pestaña activa. Antes cada
+        pestaña registraba este atajo por separado en su propia
+        AcceleratorTable (patrón que sí funciona bien para Ctrl+M/P/D/F/G);
+        se centraliza aquí, con el mismo patrón ya probado que usa Ctrl+O,
+        porque en el build congelado (PyInstaller) el atajo llegaba a
+        activar el manejador de Biblioteca aunque el foco estuviera
+        claramente dentro de Lectura. Con una única entrada en la tabla
+        de aceleradores del Frame no hay ninguna tabla de otra pestaña con
+        la que pueda confundirse.
+        """
+        indice = self.notebook.GetSelection()
+        if indice == IDX_BIBLIOTECA:
+            self.pestana_biblioteca.al_anunciar_info_libro(None)
+        elif indice == IDX_LECTURA:
+            self.pestana_lectura.anunciar_pagina_actual()
 
     def _al_abrir_ayuda_global(self, evento=None):
         """F1: abre ayuda.html con el visor predeterminado del sistema."""
