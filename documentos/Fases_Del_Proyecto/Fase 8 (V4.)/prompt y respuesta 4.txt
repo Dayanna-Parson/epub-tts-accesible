@@ -1,0 +1,29 @@
+prompt y respuesta 4
+
+si, sigue
+Mostrar acciones del mensaje
+Claude ha respondido: Bien, ya tengo el estilo.
+Buscado código, leer pestana_ajustes.py
+Bien, ya tengo el estilo. Ahora escribo PanelPerfiles justo antes de PESTANA_AJUSTES_PRINCIPAL.
+Editado pestana_ajustes.py, buscado código+254-0
+voz ya está importado. Ahora conecto el panel nuevo dentro de PestanaAjustes: índice de página, árbol y lista de paneles.
+Editado y leer pestana_ajustes.py+7-0
+All los símbolos que usé (reproducir, LIST_NAV, SUCCESS, ERROR, aplicar_icono_boton, voz) ya están importados. Verifico sintaxis y sumo las cadenas nuevas al i18n.
+Ejecutado 2 comandos
+Ya existen esos tres. Añado el resto de cadenas nuevas a los tres catálogos.
+Creado nuevos_msgid.txt, ejecutado un comando+28-0
+Recompilo los .mo.
+Ejecutadoun comando
+Ahora una comprobación funcional rápida: importar el módulo y validar que la app arranca sin errores de sintaxis/importación (headless, sin wx.App real, solo chequeo de import).
+Ejecutado 2 comandos
+Reviso un detalle: en _al_actualizar fusionaba voces_favoritas a partir del perfil activo, no del perfil seleccionado en la lista (pueden ser distintos). Lo corrijo.
+Editado pestana_ajustes.py, ejecutado un comando+2-2
+Confirmo y hago commit de todo el Paso 4.
+Ejecutado 2 comandos
+Paso 4 hecho y empujado. Resumen:
+• PanelPerfiles nuevo en Ajustes → Perfiles de Usuario: lista accesible (Nombre / Estado) + botones Crear, Activar, Actualizar, Renombrar, Eliminar.
+• "Crear" y "Actualizar" leen en vivo la voz/velocidad/volumen/segundos de salto/pausa de la pestaña Lectura.
+• Corregí un bug antes de commitear: al actualizar un perfil, la fusión de voces_favoritas leía del perfil activo en vez del perfil seleccionado en la lista — ya usa el seleccionado.
+• Todo envuelto en _(), catálogos de idioma actualizados y .mo recompilados.
+Aviso importante sobre pruebas: este entorno no tiene wxPython instalado (es un sandbox Linux headless), así que solo pude verificar sintaxis e imports con py_compile, no ejecutar la app real ni comprobar con NVDA. La checklist de accesibilidad de CLAUDE.md (foco tras crear/eliminar, anuncios, etc.) queda pendiente de tu validación manual en Windows antes de dar por cerrada esta fase.
+Con esto quedan cerrados los 3 requisitos de la v4.0.0 que pediste: motor de perfiles, alternancia con atajo (Ctrl+Shift+U) y panel accesible en Ajustes con create/renombrar/eliminar/activar. ¿Quieres que revise algo más (por ejemplo, añadir la entrada de "Perfiles de Usuario" al diálogo "Ver atajos actuales" o al submenú de ayuda), o lo dejamos aquí para que tú lo pruebes en Windows con NVDA?

@@ -1,0 +1,10 @@
+prompt 2
+
+"Vale, no te inventes hashes raros como -uas4fc, pero el plan técnico me parece correcto.
+Respecto a tus preguntas:
+1. 
+Atajo de teclado: Usa Ctrl+Shift+P como atajo por defecto para alternar perfiles (es el estándar para perfiles/paletas en muchas apps y no colisiona con nada actual).
+2. 
+Campos del perfil: Guarda la voz favorita por proveedor (o la voz activa actual), velocidad, volumen, y las preferencias de pausa/tiempos de ajustes.json. No metas ahí la clave API ni los límites de cuota, que eso es global de la app.
+Empieza directamente con el Paso 1 (app/motor/gestor_perfiles.py) respetando el sistema de ANCLAJES, la escritura atómica y las reglas de CLAUDE.md."
+ Vale. Pero no me has dicho nada sobre mi conversación con chat gpt, y todo lo que te dijo, que está en el documento cosas para la V4.txt

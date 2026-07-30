@@ -1,0 +1,24 @@
+respuesta 2
+
+Sobre el documento y la charla con ChatGPT: la lectura me parece acertada en lo importante y la comparto —la arquitectura centrada en accesibilidad real (no cosmética), el fallback SAPI5, el puente de 32 bits y la elección de wxPython son decisiones de producto serias, no relleno de IA. Dos matices honestos:
+
+- El punto de ChatGPT sobre "los avisos inmediatos usan el patrón del control oculto" ya no aplica: `CLAUDE.md` documenta que ese patrón se retiró en favor de `accessible_output3` (`anunciador_lector.py`). Su análisis quedó desactualizado en ese detalle concreto.
+- Las debilidades que señala (sin tests automatizados, sin `requirements.txt`, algún `except: pass` suelto pese a que `CLAUDE.md` los prohíbe) me parecen reales y razonables como próximos frentes **después** de cerrar la v4.0 — no bloquean Perfiles de Usuario, pero merece la pena anotarlos para una fase de estabilización posterior, tal como dice la nota final del documento.
+
+No cambia el plan técnico. Voy con el Paso 1.
+
+Confirmado el nombre exacto de las claves de `ajustes.json` que voy a reutilizar dentro del perfil: `segundos_salto` y `pausa_entre_fragmentos_ms`. Ahora creo el gestor.
+
+Verifico que el módulo compila y no rompe importaciones existentes.
+
+`app/motor/gestor_perfiles.py` (Paso 1) está listo:
+
+- **Estructura**: `configuraciones/perfiles.json` con `{"perfiles": {...}, "perfil_activo": nombre}`. Cada perfil guarda `voz_activa` (proveedor + id), `voces_favoritas` por proveedor, `velocidad`, `volumen`, `segundos_salto` y `pausa_entre_fragmentos_ms` — nada de claves API ni cuota, tal como pediste.
+- **ANCLAJES**: `ESTRUCTURA_PERFIL_DEFECTO`, `CARGA_Y_GUARDADO_PERFILES`, `CRUD_PERFILES`, `ESTADO_Y_ALTERNANCIA_PERFILES`.
+- **Escritura atómica** vía `.tmp` + `os.replace`, igual que el resto de la app.
+- **`siguiente_perfil()`** ya calcula el perfil circular siguiente, pensado para el atajo `Ctrl+Shift+P`.
+- Sin `except: pass`: todo error se loggea con `logger.exception` y devuelve un valor seguro (nunca lanza).
+
+Falta añadir el atajo en `gestor_atajos.py`, el despacho en `ventana_principal.py`, y el panel en `pestana_ajustes.py`. ¿Sigo con el Paso 2 (atajo `Ctrl+Shift+P` en `gestor_atajos.py`)?
+
+Commit y push hechos en `claude/v4-perfiles-usuario`. Sigo con el Paso 2 (atajo `Ctrl+Shift+P` en `gestor_atajos.py`) cuando confirmes.

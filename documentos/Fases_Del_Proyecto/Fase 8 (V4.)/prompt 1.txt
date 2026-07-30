@@ -1,0 +1,17 @@
+Claude, estamos en la rama limpia `claude/v4-perfiles-usuario` para implementar la última fase del desarrollo de la app (v4.0.0): Perfiles de usuario.
+Claude, antes de hacer absolutamente nada o proponer cualquier línea de código, debes LEER OBLIGATORIAMENTE los siguientes dos archivos completos de la raíz del proyecto para alinear el contexto y las reglas de trabajo:
+
+1. `CLAUDE.md` (las reglas absolutas de estilo, arquitectura, accesibilidad NVDA, sistema de ANCLAJES y prohibición de inglés en código o comentarios).
+2. `documentos/Fases_Del_Proyecto/Fase 8, Cosas para la v4/Cosas para la v4.txt`
+
+REGLAS DE TRABAJO PARA ESTA SESIÓN:
+- Trabajas de forma EXCLUSIVA sobre la rama `claude/v4-perfiles-usuario`. Prohibido operar o tocar cualquier otra rama del repositorio.
+- No te inventes nada ni propongas sobre-ingeniería fuera de la especificación técnica de la Fase 8.
+- Mantén el sistema de comentarios ANCLAJE, el uso de accesible_output3 para avisos a lector de pantalla y la codificación íntegramente en español.
+
+Requisitos para la v4.0.0:
+1. Crear un sistema de perfiles de usuario que guarde la combinación completa de voz favorita, velocidad, volumen y ajustes personalizados.
+2. Permitir al usuario crear, renombrar, eliminar y alternar entre perfiles fácilmente mediante un atajo de teclado y un nuevo panel/sección accesible en Ajustes.
+3. Asegurar que las cadenas de texto del nuevo panel de perfiles estén envueltas en `_()` e integradas en el flujo i18n sin romper la lógica interna de la app.
+
+Confirma que lees el repositorio actualizado y dime cuál es el plan de acción paso a paso para dejar los Perfiles de usuario cerrados.

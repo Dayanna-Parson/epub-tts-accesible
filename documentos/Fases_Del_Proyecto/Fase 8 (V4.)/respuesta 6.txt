@@ -1,0 +1,52 @@
+Árbol limpio, nada pendiente. Ahora reviso cada documento antes de tocarlo, empezando por los más cortos.
+
+Encontrados en `documentos/Fases_Del_Proyecto/`. Voy a leer todos los documentos, uno por uno, para entender tono y estructura antes de editar nada.
+
+Empiezo por los archivos más pequeños y mecánicos, y sigo con los narrativos.
+
+Ahora `.gitignore`: añado `configuraciones/perfiles.json`, que faltaba junto a sus análogos (`proyectos.json`, `ajustes.json`).
+
+Ahora `README.md`.
+
+Ahora `estructura_proyecto.txt`.
+
+Ahora `CLAUDE.md`: versión, tabla de configuración, listado de `app/motor/`, aviso i18n sobre `_`, y nueva sección de Perfiles de usuario.
+
+Ah, un espacio de menos en mi copia. Corrijo.
+
+Ahora la tabla de archivos de configuración y la nueva sección "Perfiles de usuario".
+
+Ahora añado el aviso sobre `_` como variable de descarte en la sección de i18n, ya que este bug real ya ha aparecido dos veces (Fase 7 y Fase 8).
+
+Ahora `DEVELOPMENT.md`.
+
+Ahora la sección de pruebas manuales, y la nueva sección "Fase 8" al final.
+
+Ahora `GUIA_TECNICA.md`: añado el bloque de la v4.0.0 al final de "Estado actual del proyecto".
+
+Ahora `idea_app_audiolibros.md`.
+
+Ahora `VISION_PERSONAL.md`, sección 17.
+
+Ahora `BITACORA_DE_DESARROLLO.md`, la más narrativa — aquí dejo anotado también lo de la fase de estabilización.
+
+Ahora `ayuda.html`, el manual de usuario.
+
+Ahora añado una subsección "Perfiles de usuario" dentro de la sección de Ajustes (§7), antes del cierre de esa `<section>`.
+
+Verifico que no haya quedado nada roto y reviso el estado final del árbol.
+
+Todo bien. Confirmé que `requisitos.txt`, `subir_version.py` y `crear_portable.py` no necesitaban cambios (los revisé y explico por qué abajo). Commit y push.
+
+## Todo cerrado y la rama está limpia
+
+**¡Gracias, me alegro muchísimo de que te guste el resultado final!** 🎉
+
+Resumen del chequeo final:
+
+- **Git**: `claude/v4-perfiles-usuario` está sincronizada con origin, árbol de trabajo limpio, sin cambios pendientes. Tests (106) pasan.
+- **Nota de estabilización dejada por escrito**, tal como pediste: en `BITACORA_DE_DESARROLLO.md` (Fase 8, sección final) y en `DEVELOPMENT.md` (final de la sección Fase 8) queda anotado explícitamente que los ~19 archivos con `except: pass` sin logging quedan pendientes para la fase de estabilización posterior a la v4.0 — no se tocaron aquí.
+- **Documentación actualizada** (12 archivos): versión subida a **4.0.0** en `recursos/version.json`, `README.md`, `estructura_proyecto.txt`, `CLAUDE.md` y `ayuda.html`; `novedades.txt` y `ayuda.html` con la entrada de Perfiles de usuario cara al usuario; `CLAUDE.md`/`DEVELOPMENT.md` con la arquitectura real y un aviso reforzado sobre el bug de `_` (que ya documentaba `DEVELOPMENT.md` desde la Fase 7 y volvió a morder aquí); `BITACORA_DE_DESARROLLO.md`, `GUIA_TECNICA.md`, `idea_app_audiolibros.md` y `VISION_PERSONAL.md` con sus entradas de v4.0.0 en el tono propio de cada documento; `.gitignore` con `perfiles.json` añadido (faltaba junto a sus análogos).
+- **No hizo falta tocar**: `requisitos.txt` (sin dependencias nuevas), `subir_version.py` (script genérico) ni `crear_portable.py` (el módulo ya maneja con seguridad la ausencia de `perfiles.json`, no necesita sembrarse vacío en el portable).
+
+La Fase 8 (v4.0.0 — Perfiles de usuario) queda cerrada.
