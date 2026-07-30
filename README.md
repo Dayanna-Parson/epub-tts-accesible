@@ -167,6 +167,8 @@ Requiere Python 3.12+ en Windows. La versión portable (sin necesidad de instala
 - [`estructura_proyecto.txt`](estructura_proyecto.txt) — mapa rápido de archivos.
 - [`documentos/Fases_Del_Proyecto/VISION_PERSONAL.md`](documentos/Fases_Del_Proyecto/VISION_PERSONAL.md) — por qué existe el proyecto.
 - [`documentos/Fases_Del_Proyecto/GUIA_TECNICA.md`](documentos/Fases_Del_Proyecto/GUIA_TECNICA.md) — visión técnica completa para desarrolladores externos.
+- [`documentos/Fases_Del_Proyecto/idea_app_audiolibros.md`](documentos/Fases_Del_Proyecto/idea_app_audiolibros.md) — la conversación original en la que surgió la idea, y cómo evolucionó versión a versión.
+- [`TRADUCCION.md`](TRADUCCION.md) — cómo traducir o corregir una cadena de la interfaz.
 
 ---
 

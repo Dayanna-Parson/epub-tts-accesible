@@ -8,7 +8,7 @@ Este documento explica **para qué sirve cada script del repositorio, cuándo ha
 
 | Script | ¿Cuándo se ejecuta? | ¿Qué hace? |
 |---|---|---|
-| `herramientas/compilar_i18n.py` | Cada vez que edites un `.po` | Compila `locale/*.po` → `locale/*.mo` |
+| `compilar_i18n.py` | Cada vez que edites un `.po` | Compila `locale/*.po` → `locale/*.mo` |
 | `subir_version.py` | Al cerrar una versión | Sube el número de versión, prepara `novedades.txt`, hace commit |
 | `crear_portable.py` | Al publicar el ZIP portable | Compila `.mo`, empaqueta con PyInstaller, genera el `.zip` de `dist/` |
 | `auxiliar_sapi32.py` | Solo si cambias el puente de 32 bits | Se compila **a mano** a `bin/auxiliar_sapi32.exe` (Python de 32 bits) |
@@ -19,7 +19,7 @@ El orden habitual para publicar una versión nueva es:
 
 ```
 1. Terminar los cambios y probarlos.
-2. python herramientas/compilar_i18n.py     (si tocaste algún .po)
+2. python compilar_i18n.py     (si tocaste algún .po)
 3. python subir_version.py [patch|minor|major]
 4. git push origin main
 5. python crear_portable.py
@@ -29,19 +29,19 @@ El orden habitual para publicar una versión nueva es:
 
 ---
 
-## `herramientas/compilar_i18n.py` — compilador de traducciones
+## `compilar_i18n.py` — compilador de traducciones
 
 **Cuándo usarlo:** cada vez que edites cualquier archivo `.po` en `locale/` — ya sea porque añadiste una cadena nueva envuelta en `_()` en el código, ya sea porque corregiste una traducción existente.
 
 **Qué hace:** lee `locale/es/LC_MESSAGES/epub_tts.po` y `locale/en/LC_MESSAGES/epub_tts.po` y genera los `.mo` binarios que `gettext` carga en tiempo real. Es un compilador propio (no depende de `msgfmt` del sistema, para no atar la app a tener gettext instalado en Windows), y si hay un error de sintaxis en algún `.po` te dice exactamente el archivo y la línea.
 
 ```
-python herramientas/compilar_i18n.py
+python compilar_i18n.py
 ```
 
 **Importante:** la app carga el `.mo` directamente, no el `.po`. Si olvidas compilar después de editar un `.po`, el cambio no se verá reflejado al ejecutar la app desde el código fuente. `crear_portable.py` ya lo compila automáticamente antes de empaquetar, así que el portable siempre lleva las traducciones al día aunque tú te olvides — pero al desarrollar en local, hazlo tú mismo tras cada cambio.
 
-Para saber cómo añadir una cadena nueva a `_()` y traducirla, consulta `docs/TRADUCCION.md`.
+Para saber cómo añadir una cadena nueva a `_()` y traducirla, consulta `TRADUCCION.md`.
 
 ---
 
@@ -146,5 +146,5 @@ Más detalle y contexto en `winget/LEEME.txt`.
 ## Otros archivos que no son scripts pero conviene ubicar
 
 - `bin/INSTRUCCIONES.txt` — qué colocar a mano en `bin/` antes de generar el portable (FFmpeg, y opcionalmente el `.exe` de `auxiliar_sapi32.py`).
-- `docs/TRADUCCION.md` — guía paso a paso para traducir cadenas nuevas, pensada para quien no conoce el formato `.po`.
+- `TRADUCCION.md` — guía paso a paso para traducir cadenas nuevas, pensada para quien no conoce el formato `.po`.
 - `iniciar_epub_tts.py` — el punto de entrada de la app cuando se ejecuta desde el código fuente (`python iniciar_epub_tts.py`); es lo que empaqueta `crear_portable.py` con PyInstaller, no un script de mantenimiento.

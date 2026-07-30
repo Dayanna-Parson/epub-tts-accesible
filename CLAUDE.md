@@ -121,8 +121,7 @@ app/
 auxiliar_sapi32.py                # Proceso auxiliar de 32 bits. Se compila a bin/auxiliar_sapi32.exe.
 auxiliar_actualizador.py           # Fase C: instalador auxiliar de actualizaciones. Se compila a bin/actualizador.exe
                                    # (automáticamente, desde crear_portable.py — a diferencia de auxiliar_sapi32.exe).
-herramientas/
-└── compilar_i18n.py               # Compilador propio .po → .mo (sin depender de msgfmt/gettext del sistema).
+compilar_i18n.py                   # Compilador propio .po → .mo (sin depender de msgfmt/gettext del sistema).
 locale/
 ├── epub_tts.pot                   # Plantilla: un msgid por cada cadena envuelta en _() en app/.
 ├── es/LC_MESSAGES/epub_tts.po(.mo)  # Catálogo español. msgstr siempre igual al msgid (nunca vacío).
@@ -184,7 +183,7 @@ Desde la Fase 7, la interfaz soporta español e inglés mediante `gettext` (libr
   ```
 - **Nunca envuelvas** una cadena cuyo valor literal se compare, persista o use para lógica de programa: claves de `dict`/JSON, ids de proveedor, rutas de archivo, constantes técnicas, ni texto de menú/acelerador que la propia app lea de vuelta con `GetStringSelection()`/`GetItemText()` para decidir algo. Traducir esas rompería la lógica en cuanto el idioma activo no fuera español.
 - Cada cadena nueva se añade como `msgid` en `locale/epub_tts.pot`, con `msgstr` igual al `msgid` en `locale/es/LC_MESSAGES/epub_tts.po` (nunca vacío) y con su traducción real en `locale/en/LC_MESSAGES/epub_tts.po`.
-- Tras tocar cualquier `.po`, hay que recompilar los `.mo` con `python herramientas/compilar_i18n.py` antes de dar el cambio por terminado — la app carga el `.mo` directamente, no el `.po`.
+- Tras tocar cualquier `.po`, hay que recompilar los `.mo` con `python compilar_i18n.py` antes de dar el cambio por terminado — la app carga el `.mo` directamente, no el `.po`.
 
 ### Rutas: siempre absolutas
 Nunca uses rutas relativas. Usa siempre `RAIZ` de `config_rutas.py` como base:
@@ -345,4 +344,4 @@ Sustituye el enfoque de la v2.0 de generar un `.bat` al vuelo (bloque `ANCLAJE_I
 - No uses `CheckListCtrlMixin.__init__(self)` — en wxPython 4.2+ genera `DeprecationWarning`. Usa solo `EnableCheckBoxes(True)` directamente sobre el `ListCtrl`.
 - No uses `StaticText.SetLabel()` para mensajes que NVDA deba verbalizar sin foco — usa `accessible_output3` (`app.motor.anunciador_lector.hablar()`).
 - No dejes ninguna cadena nueva de interfaz sin envolver en `_()` (ver "Internacionalización" más arriba), ni uses f-strings dentro de `_(...)`.
-- No olvides recompilar los `.mo` (`python herramientas/compilar_i18n.py`) después de tocar cualquier `.po`.
+- No olvides recompilar los `.mo` (`python compilar_i18n.py`) después de tocar cualquier `.po`.

@@ -5,7 +5,7 @@ sistema. Reimplementa el formato .mo (mismo algoritmo que la herramienta
 msgfmt.py de CPython) usando únicamente la librería estándar de Python.
 
 Uso:
-    python herramientas/compilar_i18n.py
+    python compilar_i18n.py
 
 Recompila todos los .po encontrados bajo locale/. Pensado para que
 cualquier colaborador pueda probar una traducción en local sin instalar
@@ -20,7 +20,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-RAIZ_PROYECTO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RAIZ_PROYECTO = os.path.dirname(os.path.abspath(__file__))
 CARPETA_LOCALE = os.path.join(RAIZ_PROYECTO, "locale")
 
 

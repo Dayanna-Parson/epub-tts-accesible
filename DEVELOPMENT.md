@@ -370,7 +370,7 @@ La interfaz soporta español e inglés con `gettext` de la librería estándar. 
 4. Añade su traducción real a `locale/en/LC_MESSAGES/epub_tts.po`, conservando cualquier marcador `{...}`, salto de línea `\n` y marca de acelerador `&`/`\t` tal cual.
 5. Recompila los catálogos:
    ```
-   python herramientas/compilar_i18n.py
+   python compilar_i18n.py
    ```
    Este script sustituye a `msgfmt` (que en Windows exigiría instalar gettext aparte): solo depende de la librería estándar de Python y genera el `.mo` binario que la app carga en tiempo de ejecución. La aplicación lee directamente el `.mo`, nunca el `.po` — si se te olvida este paso, el texto seguirá viéndose en español aunque el `.po` en inglés ya esté traducido.
 

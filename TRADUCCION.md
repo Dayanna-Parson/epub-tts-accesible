@@ -42,7 +42,7 @@ msgstr "Traducción en el idioma de este archivo"
 Los archivos `.po` no se leen directamente en tiempo de ejecución — hay que compilarlos primero a su formato binario `.mo`. Para no depender de tener `gettext`/`msgfmt` instalado en el sistema (especialmente en Windows), el proyecto incluye su propio compilador:
 
 ```
-python herramientas/compilar_i18n.py
+python compilar_i18n.py
 ```
 
 Esto recorre todos los `.po` bajo `locale/` y genera (o actualiza) el `.mo` correspondiente junto a cada uno. Ejecútalo cada vez que edites un `.po`, antes de abrir la app, para ver el resultado.
@@ -53,5 +53,5 @@ La aplicación detecta el idioma de Windows al arrancar y usa automáticamente e
 
 1. Crea la carpeta `locale/<código>/LC_MESSAGES/` (por ejemplo, `locale/fr/LC_MESSAGES/`).
 2. Copia `locale/epub_tts.pot` dentro como `epub_tts.po` y traduce cada `msgstr`.
-3. Ejecuta `python herramientas/compilar_i18n.py`.
+3. Ejecuta `python compilar_i18n.py`.
 4. Añade el código de idioma a `IDIOMAS_DISPONIBLES` en `app/motor/gestor_idioma.py`.

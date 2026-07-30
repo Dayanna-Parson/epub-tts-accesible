@@ -20,7 +20,9 @@ epub-tts-accesible/
 ├── crear_portable.py            Empaqueta la app en un .zip portable.
 ├── subir_version.py             Sube el número de versión y actualiza
 │                                 novedades.txt.
-├── CREAR_PORTABLE.bat           Atajos de Windows para los dos scripts
+├── compilar_i18n.py             Compilador propio .po -> .mo (sin depender
+│                                 de msgfmt/gettext del sistema).
+├── CREAR_PORTABLE.bat           Atajos de Windows para los tres scripts
 ├── SUBIR_VERSION.bat            anteriores.
 ├── INICIAR_APP.bat              Lanza la app sin abrir una consola visible.
 │
@@ -37,6 +39,8 @@ epub-tts-accesible/
 ├── GUIA_SCRIPTS.md               Cuándo y cómo usar cada script del repo
 │                                 (subir_version.py, crear_portable.py,
 │                                 compilar_i18n.py, envío de winget/).
+├── TRADUCCION.md                 Guía paso a paso para traducir o corregir
+│                                 una cadena de la interfaz (locale/*.po).
 ├── BITACORA_DE_DESARROLLO.md    Historia narrada del proyecto, fase a fase.
 ├── estructura_proyecto.txt      Este archivo.
 │
@@ -124,9 +128,6 @@ epub-tts-accesible/
 │                                  backup_previo/ (respaldo durante la
 │                                  instalación). No se versiona (.gitignore).
 ├── tests/                        Pruebas (aún sin suite automatizada completa).
-├── herramientas/
-│   └── compilar_i18n.py          Compilador propio .po -> .mo (sin depender
-│                                  de msgfmt/gettext del sistema).
 ├── locale/                       Catálogos de traducción (i18n con gettext).
 │   ├── epub_tts.pot               Plantilla: un msgid por cada cadena _().
 │   ├── es/LC_MESSAGES/
@@ -148,7 +149,6 @@ epub-tts-accesible/
         │                                  desarrolladores externos.
         ├── VISION_PERSONAL.md            Por qué existe el proyecto,
         │                                  documento privado de referencia.
-        ├── idea_app_audiolibros.md       Origen de la idea, conversación
-        │                                  fundacional con Gemini.
-        └── README.md                     Notas sobre la organización de
-                                            este directorio de documentos.
+        └── idea_app_audiolibros.md       Origen de la idea, conversación
+                                           fundacional con Gemini, y cómo
+                                           evolucionó versión a versión.

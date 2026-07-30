@@ -105,12 +105,12 @@ def compilar_catalogos_idioma():
     """
     Recompila locale/*/LC_MESSAGES/*.mo a partir de los .po fuente antes de
     empaquetar, para que el portable siempre lleve las traducciones al día
-    aunque alguien haya olvidado ejecutar herramientas/compilar_i18n.py a mano.
+    aunque alguien haya olvidado ejecutar compilar_i18n.py a mano.
     """
     print("[2/8] Compilando catálogos de idioma (locale/*.po → *.mo)...")
-    script = os.path.join(RAIZ, "herramientas", "compilar_i18n.py")
+    script = os.path.join(RAIZ, "compilar_i18n.py")
     if not os.path.isfile(script):
-        print("      AVISO: herramientas/compilar_i18n.py no encontrado; se omite.")
+        print("      AVISO: compilar_i18n.py no encontrado; se omite.")
         return
     resultado = subprocess.run([sys.executable, script], cwd=RAIZ)
     if resultado.returncode != 0:

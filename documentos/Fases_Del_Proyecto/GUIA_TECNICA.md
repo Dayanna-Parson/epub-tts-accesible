@@ -276,7 +276,7 @@ Esto no entra en conflicto con que, desde la Fase 7, la interfaz sí hable dos i
 
 #### Arquitectura de internacionalización (i18n)
 
-La interfaz usa `gettext`, de la librería estándar de Python, en vez de una librería de terceros (Babel, `python-i18n`...). La razón es de portabilidad: `gettext` no añade ninguna dependencia nueva a `requisitos.txt`, y el compilador de catálogos que necesita (`msgfmt`) no viene incluido en una instalación estándar de Windows — exigiría que cada persona que quisiera compilar los catálogos instalara herramientas de gettext aparte, algo inviable para una app portable pensada para instalarse sin fricción. Por eso el proyecto tiene su propio compilador, `herramientas/compilar_i18n.py`: lee cada `.po` y escribe el `.mo` binario correspondiente usando solo `struct` y `array` de la librería estándar, sin invocar ningún binario externo.
+La interfaz usa `gettext`, de la librería estándar de Python, en vez de una librería de terceros (Babel, `python-i18n`...). La razón es de portabilidad: `gettext` no añade ninguna dependencia nueva a `requisitos.txt`, y el compilador de catálogos que necesita (`msgfmt`) no viene incluido en una instalación estándar de Windows — exigiría que cada persona que quisiera compilar los catálogos instalara herramientas de gettext aparte, algo inviable para una app portable pensada para instalarse sin fricción. Por eso el proyecto tiene su propio compilador, `compilar_i18n.py`: lee cada `.po` y escribe el `.mo` binario correspondiente usando solo `struct` y `array` de la librería estándar, sin invocar ningún binario externo.
 
 La convención de import es siempre explícita, nunca por inyección en `builtins`:
 
