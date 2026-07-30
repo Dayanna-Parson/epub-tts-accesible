@@ -1,0 +1,43 @@
+respuesta 14
+Voy a ejecutar la limpieza. Primero, muevo `compilar_i18n.py` a la raíz (para no tener una carpeta con un único archivo) y elimino `herramientas/`:
+
+Ahora actualizo las referencias de ruta en `crear_portable.py` y en los documentos que la mencionan:
+
+Ahora resuelvo el duplicado de `idea_app_audiolibros.md` (fusiono el párrafo final más reciente en la copia canónica de `documentos/Fases_Del_Proyecto/` y elimino la de la raíz):
+
+Ahora elimino la copia duplicada de la raíz y la del `README.md` obsoleto en `documentos/Fases_Del_Proyecto/`, y añado el enlace que faltaba en el README principal:
+
+Ahora actualizo el `README.md` de la raíz para enlazar `idea_app_audiolibros.md` en su ubicación real, y `estructura_proyecto.txt` para reflejar los cambios:
+
+Ahora actualizo `estructura_proyecto.txt` para reflejar todos estos cambios (movimiento de `compilar_i18n.py`, `TRADUCCION.md` en raíz, eliminación de duplicados):
+
+Ahora quito la entrada `herramientas/` (ya no existe) y actualizo `docs/` si aparece:
+
+Ahora reviso `DEVELOPMENT.md` y el `GUIA_TECNICA.md` de `documentos/Fases_Del_Proyecto/` por si tienen un árbol similar con `herramientas/`:
+
+Bien, esas son solo menciones normales de la palabra, no rutas. Ahora reviso `TRADUCCION.md` completo por si menciona la carpeta `docs/` en algún otro sitio:
+
+Limpio. Verifico que todo funciona (rutas, sintaxis) antes de commitear:
+
+Ahí está el bug de la mudanza: asumía que estaba un nivel dentro de `herramientas/`. Lo arreglo:
+
+Ahora verifico que hay otras referencias con la misma suposición de doble nivel (`dirname(dirname(...))`) en el propio archivo, y reejecuto:
+
+Corregido. Ahora una verificación completa antes de commitear:
+
+Todo funciona. Ahora commiteo y empujo.
+
+## Qué encontré y qué hice
+
+**`herramientas/`** — tenías razón, se quedó con un único archivo (`compilar_i18n.py`) tras sacar `TRADUCCION.md`. Lo moví a la raíz, junto a `subir_version.py` y `crear_portable.py` — los otros scripts de mantenimiento. De paso encontré (y corregí) un bug real que la mudanza habría causado: el script calculaba su raíz como `dirname(dirname(__file__))`, asumiendo que seguía un nivel dentro de una carpeta — con el archivo ya en la raíz, eso apuntaba a la carpeta *superior* al proyecto y fallaba con "no existe la carpeta locale/". Ya corregido y probado.
+
+**Duplicados reales que encontré** (ninguno lo generé yo esta sesión — ya estaban en el repo, pero uno lo edité sin saber que había dos copias):
+
+- **`idea_app_audiolibros.md`** existía a la vez en la raíz y en `documentos/Fases_Del_Proyecto/`. Son la misma copia divergida solo en el párrafo final: la de la raíz tenía mi actualización de la fase pasada, la de `Fases_Del_Proyecto` no. Fusioné ese párrafo en la copia de `Fases_Del_Proyecto` (donde vive junto a `VISION_PERSONAL.md` y `GUIA_TECNICA.md`, que tiene más sentido) y borré la de la raíz. Añadí el enlace que faltaba en el `README.md` principal.
+- **`README.md`** — la de `documentos/Fases_Del_Proyecto/` resultó ser un borrador antiguo y desactualizado del README real (268 líneas de una versión anterior del proyecto), sin ninguna referencia desde ningún otro documento. La eliminé.
+
+Actualicé todas las rutas afectadas (`docs/TRADUCCION.md` → `TRADUCCION.md`, `herramientas/compilar_i18n.py` → `compilar_i18n.py`) en `GUIA_SCRIPTS.md`, `DEVELOPMENT.md`, `CLAUDE.md`, `TRADUCCION.md`, `GUIA_TECNICA.md`, `estructura_proyecto.txt` y `README.md`, y verifiqué que `compilar_i18n.py` y `crear_portable.py` siguen funcionando desde su nueva ubicación.
+
+**No toqué** los registros de prompts/respuestas en `documentos/Fases_Del_Proyecto/Fase 7 (i18n winget)/` — son un historial y no deben reescribirse.
+
+Todo commiteado y subido (`8312380`) a `claude/fase7-i18n-winget`.

@@ -1,0 +1,32 @@
+prompt y respuesta 15
+
+genial. entonces, ya no hay mas documentos duplicados? ya está todo actualizado? Y, Has actualizado portable.py, y el gitignore por si acaso? y cuando ejecute el portable, se va a crear, junto con todo lo importante para el usuario final?
+respuesta:
+Perfecto, cero duplicados problemáticos — todo lo que sale duplicado es legítimo (`.gitkeep`, `__init__.py` por módulo, y los catálogos `es`/`en` que *deben* llamarse igual en carpetas distintas). Ahora reviso `.gitignore` y el bundling real del portable.
+
+Bien — solo `dist/` y `build/` se ignoran (correcto, son artefactos de construcción); `.mo`, `.po`, `compilar_i18n.py` y `winget/*.yaml` **no** están ignorados, es decir, siguen versionados como debe ser. Ahora confirmo que el portable realmente empaqueta todo, ejecutándolo de verdad (sin PyInstaller real, pero simulando el flujo de copia):
+
+Confirmado: `locale/` se copia entera al portable, junto a `bin/` y `recursos/`. Ahora verifico también que el paso de compilación de catálogos (paso 2/8) sigue funcionando desde la ruta corregida:
+
+Todo confirmado. Respondo a tus tres preguntas:
+
+## 1. ¿Ya no hay documentos duplicados y todo está actualizado?
+
+Sí. Revisé el árbol completo del repo comparando nombres de archivo (excluyendo los registros de prompts de cada fase, que legítimamente se repiten por convención de nombre `prompt N.txt`). Lo único que aparece "duplicado" son casos correctos y esperables:
+- `__init__.py` × 4 (uno por paquete Python — normal).
+- `.gitkeep` × 2 (marcadores de carpeta vacía en sitios distintos — normal).
+- `epub_tts.po`/`.mo` × 2 (uno en `es/`, otro en `en/` — es justamente la estructura de gettext).
+
+Cero duplicados reales. Ya quedó resuelto en el paso anterior.
+
+## 2. ¿Actualicé `crear_portable.py` y el `.gitignore` por la mudanza de `compilar_i18n.py`?
+
+`crear_portable.py` sí, ya en el commit anterior (apunta a `compilar_i18n.py` en la raíz, no a `herramientas/`). Acabo de volver a probarlo y funciona.
+
+El `.gitignore` no necesitaba cambios — lo revisé ahora mismo: solo ignora `dist/` y `build/` (los artefactos de construcción), y ni `compilar_i18n.py`, ni los `.po`/`.mo`, ni `winget/*.yaml` están ignorados. Todo sigue versionado correctamente.
+
+## 3. ¿El portable incluye todo lo importante al ejecutarlo?
+
+Sí, lo comprobé simulando el paso de copiado real de `crear_portable.py`: `locale/` (con los catálogos `.po`/`.mo` de español e inglés) se copia íntegra junto a `bin/` y `recursos/`, exactamente igual que antes de la mudanza — la corrección de ruta que hice no rompió nada del empaquetado, solo el cálculo interno de `compilar_i18n.py` cuando se ejecuta como script suelto (ya arreglado y verificado: compila los `.mo` sin errores desde su nueva ubicación en la raíz).
+
+Todo en orden — no hace falta ningún commit nuevo, esto era solo verificación.

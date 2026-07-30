@@ -1,0 +1,26 @@
+mira. E subido los prompts y respuestas a esta fase, y estaba revisando los documentos que has creado, y porqué en la carpeta docs, que por cierto, e sacado el documento de traducción, y lo e dejado en la raíz del proyecto. y e eliminado la carpeta. Y en la carpeta de herramientas, solo hay un archivo?
+Y además. en la carpeta documentos / fases, están estos. GUIA_TECNICA.md
+idea_app_audiolibros.md
+README.md
+VISION_PERSONAL.md
+
+Y en la raíz del proyecto están estos: ayuda.html
+BITACORA_DE_DESARROLLO.md
+CLAUDE.md
+CREAR_PORTABLE.bat
+crear_portable.py
+DEVELOPMENT.md
+estructura_proyecto.txt
+GUIA_SCRIPTS.md
+idea_app_audiolibros.md
+INICIAR_APP.bat
+iniciar_epub_tts.py
+LICENSE
+novedades.txt
+README.md
+requisitos.txt
+SUBIR_VERSION.bat
+subir_version.py
+TRADUCCION.md.
+Que creo que algunos se llaman igual.
+Y me pregunto, cuales son los que están modificados? los que has actualizado? porque no quiero tener nada duplicado, y vas a tener que actualizarlos de nuevo, sobre todo el de traducción, creo, y los demás... Y tampoco quiero tener una carpeta con un solo documento o archivo suelto... No es mejor tenerlo todo ordenado? y que se vea un proyecto profesional?
