@@ -162,6 +162,7 @@ Requiere Python 3.12+ en Windows. La versión portable (sin necesidad de instala
 
 - [`BITACORA_DE_DESARROLLO.md`](BITACORA_DE_DESARROLLO.md) — historia narrada del proyecto, fase a fase.
 - [`DEVELOPMENT.md`](DEVELOPMENT.md) — arquitectura técnica para quien colabore en el código.
+- [`GUIA_SCRIPTS.md`](GUIA_SCRIPTS.md) — cuándo y cómo usar `subir_version.py`, `crear_portable.py`, `compilar_i18n.py` y el envío del manifiesto de Winget.
 - [`CLAUDE.md`](CLAUDE.md) — reglas del proyecto (idioma, estilo, accesibilidad).
 - [`estructura_proyecto.txt`](estructura_proyecto.txt) — mapa rápido de archivos.
 - [`documentos/Fases_Del_Proyecto/VISION_PERSONAL.md`](documentos/Fases_Del_Proyecto/VISION_PERSONAL.md) — por qué existe el proyecto.

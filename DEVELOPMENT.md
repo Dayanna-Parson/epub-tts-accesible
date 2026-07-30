@@ -390,6 +390,10 @@ O bien fija manualmente la clave `"idioma": "en"` en `configuraciones/ajustes.js
 
 `crear_portable.py` ya compila `locale/*.po` a `.mo` y empaqueta la carpeta `locale/` dentro del `.zip` portable automáticamente — no hace falta ningún paso manual adicional al generar una release.
 
+**Cuidado con `_` como variable de descarte:** si un archivo importa el traductor (`from app.motor.gestor_idioma import traducir as _`), no uses `_` como nombre de variable de descarte en desempaquetados de tupla (`for etiq, _ in ...`, `x, _ = ...`) dentro de ninguna función que también llame a `_("...")`. Python trata `_` como local a toda la función en cuanto se le asigna en algún punto, así que las llamadas a `_("...")` anteriores a esa asignación revientan con `UnboundLocalError` en tiempo de ejecución (no en tiempo de compilación, así que no salta hasta que se ejecuta esa rama). Usa un nombre descriptivo en su lugar (`_sin_usar`, `_cookie`, etc.).
+
+Para el paso a paso completo de publicación de una versión (traducir, compilar `.mo`, subir de versión, empaquetar, y cuándo enviar el manifiesto de Winget), ver [`GUIA_SCRIPTS.md`](GUIA_SCRIPTS.md).
+
 ---
 
 ## Logs

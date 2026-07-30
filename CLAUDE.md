@@ -129,6 +129,8 @@ locale/
 └── en/LC_MESSAGES/epub_tts.po(.mo)  # Catálogo inglés, con traducción completa.
 winget/                            # Manifiestos de Winget (version/installer/locale.yaml + LEEME.txt),
                                    # provisionales: ver LEEME.txt antes de tocarlos.
+GUIA_SCRIPTS.md                    # Cuándo y cómo usar subir_version.py, crear_portable.py,
+                                   # compilar_i18n.py y cuándo enviar winget/ a microsoft/winget-pkgs.
 ```
 
 Archivos de configuración (en `/configuraciones/`):

@@ -4,7 +4,9 @@ Versión 3.0.0 · julio 2026
 
 Vista rápida de dónde vive cada cosa. Para el porqué de cada decisión,
 ver DEVELOPMENT.md (arquitectura técnica) y CLAUDE.md (reglas del
-proyecto). Para la historia completa, BITACORA_DE_DESARROLLO.md.
+proyecto). Para la historia completa, BITACORA_DE_DESARROLLO.md. Para
+saber cuándo y cómo usar cada script de este árbol (subir_version.py,
+crear_portable.py, compilar_i18n.py, envío de winget/), ver GUIA_SCRIPTS.md.
 
 epub-tts-accesible/
 │
@@ -32,6 +34,9 @@ epub-tts-accesible/
 │                                 en el código (humano o asistente IA).
 ├── DEVELOPMENT.md                Arquitectura técnica: por qué está hecho
 │                                 así, con ejemplos de código.
+├── GUIA_SCRIPTS.md               Cuándo y cómo usar cada script del repo
+│                                 (subir_version.py, crear_portable.py,
+│                                 compilar_i18n.py, envío de winget/).
 ├── BITACORA_DE_DESARROLLO.md    Historia narrada del proyecto, fase a fase.
 ├── estructura_proyecto.txt      Este archivo.
 │
