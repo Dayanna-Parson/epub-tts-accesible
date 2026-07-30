@@ -3127,3 +3127,9 @@ msgstr "Novedades de la versión {version}"
 
 msgid "Se ha actualizado a la versión {version}. Esto es lo que ha cambiado:"
 msgstr "Se ha actualizado a la versión {version}. Esto es lo que ha cambiado:"
+
+msgid "Aplicando etiquetas... {procesados} de {total} carpetas."
+msgstr "Aplicando etiquetas... {procesados} de {total} carpetas."
+
+msgid "Aplicando etiquetas... {procesadas} de {total} carpeta(s)."
+msgstr "Aplicando etiquetas... {procesadas} de {total} carpeta(s)."

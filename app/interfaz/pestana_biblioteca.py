@@ -116,6 +116,10 @@ class PestanaBiblioteca(wx.Panel):
         self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz.detener(), e.Skip()))
 
         self._progreso_actual = (0, 0)
+        # "escaneo" o "agrupando": mismo temporizador y misma barra para las
+        # dos operaciones de fondo largas de esta pestaña, solo cambia el
+        # texto anunciado por voz cada 2.5s (al_temporizador_progreso).
+        self._modo_progreso = "escaneo"
         self._timer_progreso = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.al_temporizador_progreso, self._timer_progreso)
 
@@ -886,6 +890,7 @@ class PestanaBiblioteca(wx.Panel):
         ) == wx.YES
 
         voz.hablar(_("Escaneando carpeta, por favor espera..."))
+        self._modo_progreso = "escaneo"
         self.barra_progreso.SetValue(0)
         self.barra_progreso.Show()
         self.Layout()
@@ -961,7 +966,15 @@ class PestanaBiblioteca(wx.Panel):
 
     def al_temporizador_progreso(self, evento):
         procesados, total = self._progreso_actual
-        if total > 0:
+        if total <= 0:
+            return
+        if self._modo_progreso == "agrupando":
+            self._voz.hablar(
+                _("Aplicando etiquetas... {procesados} de {total} carpetas.").format(
+                    procesados=procesados, total=total
+                )
+            )
+        else:
             self._voz.hablar(
                 _("Procesando... {procesados} de {total} libros.").format(
                     procesados=procesados, total=total
@@ -1006,8 +1019,18 @@ class PestanaBiblioteca(wx.Panel):
         # rato perceptible con muchas carpetas — sin este aviso, NVDA se
         # queda en silencio y parece que la app se ha colgado. El
         # etiquetado en sí se hace en un hilo de fondo (ver
-        # _agrupar_carpetas_en_hilo) para no bloquear la interfaz.
+        # _agrupar_carpetas_en_hilo) para no bloquear la interfaz. Igual
+        # que en el escaneo, la barra y el aviso periódico por temporizador
+        # cubren el hueco mientras dura (antes solo había este aviso inicial
+        # y el de "Etiquetas aplicadas" al final, sin nada en medio).
         voz.hablar(_("Aplicando etiquetas, por favor espera..."))
+        self._modo_progreso = "agrupando"
+        self._progreso_actual = (0, len(carpetas_a_agrupar))
+        self.barra_progreso.SetRange(len(carpetas_a_agrupar))
+        self.barra_progreso.SetValue(0)
+        self.barra_progreso.Show()
+        self.Layout()
+        self._timer_progreso.Start(2500)
         self._ultima_etiqueta_creada = next(iter(carpetas_a_agrupar.values()), None)
         threading.Thread(
             target=self._agrupar_carpetas_en_hilo,
@@ -1028,6 +1051,8 @@ class PestanaBiblioteca(wx.Panel):
         llegue al callback de finalización en vez de dejar a NVDA
         colgado en silencio para siempre.
         """
+        total = len(carpetas_candidatas)
+        procesadas = 0
         total_fallos = 0
         try:
             for carpeta in carpetas_candidatas:
@@ -1041,12 +1066,30 @@ class PestanaBiblioteca(wx.Panel):
                     logger.exception(
                         "[PestanaBiblioteca] Fallo agrupando la carpeta: %s", carpeta
                     )
+                finally:
+                    procesadas += 1
+                    wx.CallAfter(self._al_progresar_agrupamiento, procesadas, total)
         except Exception:
             logger.exception("[PestanaBiblioteca] Fallo inesperado al agrupar por carpeta")
         finally:
             wx.CallAfter(self._al_terminar_agrupamiento, total_fallos)
 
+    def _al_progresar_agrupamiento(self, procesadas, total):
+        # Mismo criterio que _al_progresar_escaneo: solo actualiza el
+        # estado visual aquí, el aviso de voz va aparte por temporizador.
+        self._progreso_actual = (procesadas, total)
+        if total > 0:
+            self.barra_progreso.SetRange(total)
+            self.barra_progreso.SetValue(min(procesadas, total))
+        self.lbl_estado.SetLabel(
+            _("Aplicando etiquetas... {procesadas} de {total} carpeta(s).").format(
+                procesadas=procesadas, total=total
+            )
+        )
+
     def _al_terminar_agrupamiento(self, total_fallos: int):
+        self._timer_progreso.Stop()
+        self.barra_progreso.Hide()
         id_etiqueta_nueva = None
         nombre_etiqueta_nueva = getattr(self, "_ultima_etiqueta_creada", None)
         if nombre_etiqueta_nueva:
