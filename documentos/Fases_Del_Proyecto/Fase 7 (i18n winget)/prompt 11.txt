@@ -1,0 +1,27 @@
+Claude, genial trabajo con la extracción masiva del catálogo i18n y la compilación de los archivos .mo.
+
+Antes de cerrar la Fase D con los manifiestos de Winget, confírmame estas consultas sobre i18n y el empaquetado:
+
+1. ¿Está implementado en `PanelGeneral` de Ajustes el cuadro combinado (`wx.Choice`/`wx.ComboBox`) para que el usuario pueda cambiar manualmente el idioma de la interfaz (por ejemplo, seleccionar "Español", "English", etc.) y guardarlo en `ajustes.json`? Si no está en la UI de Ajustes, añádelo para que el usuario pueda cambiarlo sin depender de variables de entorno ni del idioma del SO.
+2. ¿Queda algún literal de texto visible o anuncio a NVDA pendiente de envolver en `_()`, o la interfaz de la app está ya traducida e internacionalizada al 100% y lista para recibir nuevos idiomas desde la carpeta `locale/`?
+3. Revisa `crear_portable.py` (o el script de construcción de la versión ejecutable): ¿incluye la compilación previa de los `.mo` y la copia de la carpeta `locale/` (con los `.mo` traducidos) dentro del paquete final ejecutable/portable para que los usuarios que descarguen la app tengan los idiomas listos?
+
+Tras confirmar/implementar estos puntos, procede con el último paso de la Fase D: crear la carpeta `winget/` con los tres archivos de manifiesto estándar (`installer.yaml`, `locale.yaml` y `version.yaml`) según la sección 7.4 de la planificación, configurados para la v3.0.0.
+
+Avísame al terminar para hacer la revisión final antes de fusionar la rama a main.
+Y actualiza todos estos documentos con el tono y propósitos adecuados de cada uno:
+ayuda.html
+BITACORA_DE_DESARROLLO.md
+CLAUDE.md
+DEVELOPMENT.md
+estructura_proyecto.txt
+novedades.txt
+README.md
+requisitos.txt (Si fuese necesario)
+subir_version.py (si fuese necesario)
+GUIA_TECNICA.md
+idea_app_audiolibros.md
+VISION_PERSONAL.md
+crear_portable.py (Si fuese necesario)
+
+.gitignore (Si es necesario)

@@ -1,0 +1,9 @@
+respuesta 6
+
+Corrijo la comparación: nunca debe depender del texto traducido. Uso el índice del combo en vez de comparar cadenas.
+
+Corregido: ahora la lógica de persistencia usa el índice del combo, no el texto traducido. Continúo con `PanelAzure` y el resto de `pestana_ajustes.py`.
+
+Ahora `PanelAzure`, `PanelDeepgram`, `PanelPolly`, `PanelElevenLabs`. Nota: dejo sin traducir las etiquetas de los combos de filtro (`"Todas"`, `"Todos"`, y las claves de `_CARACTERISTICAS_ETIQUETA`/`_MOTORES_ETIQUETA`) porque el propio código las compara literalmente (`if etiqueta == "Todas"`) — traducirlas rompería esa lógica exactamente como el caso que acabas de corregirme.
+
+Ahora `PanelSapi5`.

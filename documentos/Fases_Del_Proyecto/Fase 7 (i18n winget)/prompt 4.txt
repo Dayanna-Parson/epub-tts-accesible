@@ -1,0 +1,9 @@
+Claude, antes de continuar con las siguientes pestañas, corrige el enfoque y aplica estas REGLAS ESTRICTAS de i18n para no romper la app:
+
+1. CATÁLOGOS BASE (`es`): NO dejes los `msgstr` vacíos en el archivo `.po` de español. Completa los `msgstr` con el mismo texto del `msgid` para evitar que una mala compilación o falta de coincidencia devuelva cadenas vacías en tiempo de ejecución.
+2. F-STRINGS Y CADENAS DINÁMICAS: Prohibido envolver f-strings directas tipo `_(f"Texto {var}")`. Usa OBLIGATORIAMENTE el método `.format()` con marcadores explícitos:
+   `_("Página {pagina} de {total}").format(pagina=pag, total=tot)`
+3. SINTAXIS INTERNA Y PARÁMETROS: NUNCA envuelvas etiquetas de control (como `{{@voz}}`), IDs de proveedores de voz (`azure`, `sapi5`, etc.), claves JSON ni rutas de archivo. Solo se envuelve texto 100% visible para el usuario o audible para NVDA.
+4. FLUJO DE TRABAJO: No pierdas tiempo traduciendo a mano el `.pot` ni el `.po` de inglés pestaña por pestaña. Limítate a envolver con `_()` el código Python en las pestañas restantes (`pestana_lectura.py`, `pestana_creador_audiolibros.py`, `pestana_grabacion.py`, `pestana_ajustes.py` y diálogos compartidos). De la extracción masiva final al `.pot` nos encargaremos al terminar la interfaz.
+
+Confirma que entiendes estas 4 restricciones y procede con `pestana_lectura.py`.

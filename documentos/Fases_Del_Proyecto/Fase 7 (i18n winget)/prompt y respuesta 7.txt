@@ -1,0 +1,66 @@
+prompt y respuesta 7
+
+Sigue por donde ibas
+respuesta:
+
+Continúo con `_al_escuchar` y `_al_terminar_escucha` de `PanelSapi5`.
+
+Estos sí se pueden traducir con seguridad — el código usa `GetSelection()` (índice), no el texto.
+
+Commit de este tramo antes de continuar con el resto de `PanelDiccionario` y los paneles siguientes.
+
+Continúo con el resto de `PanelDiccionario`.
+
+Ahora los mensajes de `_al_anadir`, `_al_eliminar`, `_al_guardar_cambios`.
+
+Verifico y hago commit de este tramo (`PanelDiccionario` completo + `_DialogoCapturaTecla`) antes de seguir con `PanelAtajos`.
+
+Continúo con `PanelAtajos` y el resto del archivo.
+
+Ahora los mensajes de `_al_asignar`, `_al_eliminar`, `_al_restablecer`.
+
+Ahora `PanelSonidos`.
+
+Verifico y hago commit de `PanelAtajos` + `PanelSonidos` antes de continuar con `PanelAsistenteBiblioteca` y el resto.
+
+Continúo con `PanelAsistenteBiblioteca` y el resto del archivo.
+
+Ahora `PestanaAjustes`: pestañas del Simplebook, árbol de categorías, y mensajes de guardado global.
+
+Ahora `_al_guardar_global` y `_construir_arbol` (nodos del árbol).
+
+Ahora el diálogo de cambios sin guardar y el resto de mensajes finales.
+
+Ahora el final: `guardar_config_en_archivo` (los botones Retroceder/Avanzar de Lectura).
+
+Verifico todo el archivo completo y hago el commit final de `pestana_ajustes.py`.
+
+Ya son solo marcas de proveedor (Azure, Amazon Polly, ElevenLabs, Deepgram, Google Gemini), intencionalmente sin traducir. `pestana_ajustes.py` queda completo.
+
+`pestana_ajustes.py` está completo (2573 líneas, 6 commits). Paso a `dialogo_asistente_biblioteca.py`, incluyendo el requisito de inyectar el idioma activo en el prompt de sistema de Gemini.
+
+Añado un getter de idioma activo en `gestor_idioma.py` (no existe todavía) para poder consultarlo desde el Asistente de Biblioteca.
+
+Ahora envuelvo `dialogo_asistente_biblioteca.py` en `_()` e inyecto el idioma activo en la instrucción de sistema para Gemini.
+
+Ahora inyecto esa instrucción en `al_enviar`.
+
+Ahora envuelvo el resto de cadenas visibles del diálogo.
+
+Ahora `al_enviar`, `_al_recibir_respuesta`, `_al_fallar_respuesta` y el resto.
+
+Ahora `_copiar_al_portapapeles` y sus llamadas, `al_guardar_conversacion`, `al_borrar_historial`.
+
+Verifico sintaxis, compilo catálogo y hago commit.
+
+Verifico rápidamente que `idioma_activo()` funciona correctamente.
+
+Funciona correctamente. Hago commit de `dialogo_asistente_biblioteca.py` + el nuevo `idioma_activo()` de `gestor_idioma.py`.
+
+Completado y pusheado:
+
+1. **Corrección confirmada**: el modelo de Gemini ahora se persiste comparando el **índice** del combo (`GetSelection()`), nunca el texto traducido — ninguna lógica del archivo depende ya de `_()`.
+2. **`pestana_ajustes.py` cerrado al 100%** (6 commits): `PanelGeneral`, `PanelClaves`, `PanelAzure`/`PanelPolly` (dejando sin traducir las claves de filtro que se comparan literalmente), `PanelSapi5`, `PanelDiccionario`, `_DialogoCapturaTecla`, `PanelAtajos`, `PanelSonidos`, `PanelAsistenteBiblioteca` y `PestanaAjustes`.
+3. **`dialogo_asistente_biblioteca.py` completado**, incluyendo el requisito de idioma: añadí `gestor_idioma.idioma_activo()` y una instrucción de sistema (`_instruccion_idioma()`) que se anexa al prompt antes de cada llamada a Gemini, para que el Asistente responda en el idioma activo de la interfaz.
+
+Quedan por el inventario: `ventana_proyectos.py` y los diálogos compartidos (`dialogos.py`, `selector_voz_compartido.py`, `dialogo_proveedor_alternativo.py`, `dialogo_troceador.py`, `dialogo_voces_nuevas.py`, `dialogo_novedades.py`). ¿Sigo con `ventana_proyectos.py`?

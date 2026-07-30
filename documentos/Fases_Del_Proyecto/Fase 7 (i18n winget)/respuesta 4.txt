@@ -1,0 +1,64 @@
+Confirmo las 4 reglas:
+
+1. Completar `msgstr` = `msgid` en el `.po` de español (nunca vacío).
+2. Prohibido `_(f"...")`; siempre `_("...").format(...)`.
+3. Nunca envolver anclas de control (`{{@voz}}`), IDs de proveedor, claves JSON ni rutas.
+4. En las pestañas restantes solo envuelvo con `_()` el código; la extracción/traducción masiva al `.pot`/`.po` se hace al final.
+
+Primero corrijo el punto 1 en el `.po` de español ya existente.
+
+Correcto. Ahora reviso `pestana_lectura.py` para envolver el código con `_()` siguiendo las 4 reglas (sin f-strings directas, sin tocar `{{@voz}}`/IDs/rutas/claves).
+
+Ahora aplico `_()` a `pestana_lectura.py`, siguiendo las 4 reglas: sin f-strings directas dentro de `_()`, sin tocar IDs de proveedor/rutas/claves JSON.
+
+Ahora `al_cambiar_pestana_padre`, `combo_voz.Append("No hay voces disponibles")` y `al_actualizar_ui`.
+
+Ahora búsqueda de texto (`iniciar_busqueda`) y el diálogo "Ir a página".
+
+Ahora el diálogo "Ir a página" completo.
+
+Ahora la escala de velocidad (`_aplicar_escala_velocidad`, `_etiqueta_multiplicador`), carga de libro y anuncio de página.
+
+Ahora `al_cargar_libro` (diálogo de archivo), el mensaje de error al cargar, y `anunciar_pagina_actual`.
+
+Ahora el slider semántico de velocidad (`_al_slider_velocidad_cambio`).
+
+Verifico sintaxis y que no queden f-strings o literales sin envolver dentro de textos visibles.
+
+Sin coincidencias — sintaxis correcta y sin f-strings dentro de `_()` ni literales visibles sueltos. Compilo el catálogo para confirmar que nada se rompió.
+
+`pestana_lectura.py` queda envuelto en `_()` respetando las 4 reglas (sin `_(f"...")`, `.format()` explícito, sin tocar IDs de proveedor/rutas/claves). Dejé sin traducir las tablas internas `_LOCALES_ES`/`_GENEROS_ES`/`_PROVEEDORES` y las etiquetas `[Dragon]`/`[HD]`/`[Local]`/`[32 bits]` de la construcción del nombre de voz — son datos de catálogo de voces, no texto de interfaz fijo, y envolverlas en el import del módulo fijaría el idioma al arrancar antes de que `gestor_idioma` esté inicializado con el idioma real. Lo señalo por si quieres que se aborde en una pasada aparte más adelante.
+
+Hago commit de este avance (código únicamente, sin tocar `.pot`/`.po` de esta pestaña, tal como pediste) y sigo con `pestana_creador_audiolibros.py`.
+
+Pusheado. Sigo con `pestana_creador_audiolibros.py`.
+
+Ahora aplico `_()` en todo el archivo, empezando por el import y `_NOMBRES_PROVEEDOR` (nombres de proveedor visibles, no IDs).
+
+Ahora la construcción de la interfaz.
+
+Ahora `cargar_libro`, mensajes de anuncio, y demás métodos con f-strings.
+
+Ahora `al_eliminar_libro`, `al_cambiar_voz`, `al_escuchar_voz`, `al_ctrl_o`.
+
+Ahora `al_calcular_presupuesto` y el resto de mensajes de presupuesto/exportación.
+
+Ahora `voz.get('proveedor_id', 'local')` con nombre por defecto `"Voz local (SAPI5)"` (aparece 3 veces) y el bloque de presupuesto calculado.
+
+Ahora el bloque de resultado del presupuesto y estimación de duración.
+
+Ahora `al_iniciar_exportacion`, el diálogo de proveedor alternativo, y `_arrancar_exportacion`.
+
+Ahora reviso `_arrancar_exportacion`, la exportación en hilo, y los mensajes de progreso/finalización.
+
+Ahora los mensajes de finalización de exportación por capítulos/completa.
+
+Ahora `al_abrir_carpeta` (título por defecto "Audiolibro" y mensaje de error).
+
+Verifico sintaxis y ausencia de `_(f"...")` u otros literales sueltos.
+
+Sintaxis correcta y sin coincidencias sueltas. Compilo el catálogo y hago commit.
+
+`pestana_creador_audiolibros.py` completado y pusheado. Quedan `pestana_grabacion.py`, `pestana_ajustes.py` y los diálogos compartidos. Dado el volumen de trabajo restante (archivos de tamaño similar o mayor), ¿continúo ahora con `pestana_grabacion.py` o prefieres revisar el progreso hasta aquí primero?
+
+Cambio pendiente (recompilación binaria del `.mo` en español) ya committeado y pusheado. Todo al día en `claude/fase7-i18n-winget`.

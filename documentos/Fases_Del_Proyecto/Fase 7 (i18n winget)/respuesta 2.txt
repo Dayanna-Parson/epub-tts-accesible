@@ -1,0 +1,30 @@
+Sí, de acuerdo con las tres correcciones. Ajusto el plan:
+
+1. **Sin `_` en `builtins`**: `gestor_idioma.py` expondrá una función explícita `traducir(texto)` (o el nombre que prefiera importarse como `from app.motor.gestor_idioma import traducir as _`), sin tocar el espacio global. Cada módulo la importa explícitamente. Esto evita fallos de import en el proceso puente de `cliente_sapi32_bridge.py` y en diálogos que se instancian antes de que la traducción esté lista.
+2. **`herramientas/compilar_i18n.py`**: usa el módulo estándar `msgfmt` de Python (viene en `Tools/i18n/` del propio CPython, no como paquete instalable — lo incorporaré como copia local dentro de `herramientas/` ya que no forma parte de la librería estándar importable directamente) para compilar `.po` → `.mo` sin depender de `msgfmt.exe`/gettext del sistema.
+3. **Anuncios NVDA traducidos**: las cadenas pasadas a `anunciador_lector.hablar(...)` y `anunciador_voz` también se envuelven con `_("texto")`.
+
+Y añado `docs/TRADUCCION.md` con la guía para colaboradores.
+
+Empiezo por `gestor_idioma.py`, la estructura `locale/` y `herramientas/compilar_i18n.py`.
+
+Ahora creo `gestor_idioma.py`.
+
+Ahora la estructura `locale/` con un `.pot`/`.po` base y el compilador.
+
+Ahora pruebo que el compilador funciona de verdad antes de seguir.
+
+Detecté un fallo: con `msgstr` vacío, `gettext` devuelve cadena vacía, no el `msgid` — así que "Biblioteca" en español salía en blanco. Lo corrijo excluyendo del `.mo` las entradas sin traducir (dejando que gettext caiga al `msgid` original).
+
+Corregido y verificado. Ahora pruebo `gestor_idioma.py` end-to-end.
+
+Funciona correctamente. Ahora la guía para colaboradores.
+
+Base de i18n creada y pusheada a `claude/fase7-i18n-winget`:
+
+- **`app/motor/gestor_idioma.py`**: `traducir()`/`_` explícitos (nada de `builtins`), detección de idioma de Windows con fallback a español.
+- **`locale/`**: `epub_tts.pot` + `.po`/`.mo` para `es` y `en`, con las 5 pestañas como prueba de concepto. Probé el compilador y detecté que un `msgstr` vacío devolvía cadena vacía en vez de caer al `msgid` — ya corregido y verificado.
+- **`herramientas/compilar_i18n.py`**: compilador `.po→.mo` autocontenido, sin depender de `gettext`/`msgfmt` del sistema.
+- **`docs/TRADUCCION.md`**: guía para colaboradores (Notepad++/Poedit, cómo compilar y probar).
+
+Falta por hacer para completar 7.3: envolver las cadenas reales de cada pestaña con `_("texto")` (incluidas las que van a `anunciador_lector.hablar()`/`anunciador_voz`, como pediste), y luego el manifiesto de Winget (7.4). ¿Quieres que continúe con la pestaña Biblioteca primero, o prefieres revisar este commit antes de que siga tocando las pestañas?

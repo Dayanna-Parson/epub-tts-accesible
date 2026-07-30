@@ -1,0 +1,24 @@
+Leí ambos archivos completos. Confirmo:
+
+- **CLAUDE.md** — reglas de anclajes, español estricto, `accessible_output3`, rutas absolutas vía `RAIZ`, etc.
+- **`documentos/Fases_Del_Proyecto/Fase 7 (V3.0)/planificacion_v3.md`**, Sección 7 completa (7.1 orden de notebook, 7.2 interfaz Biblioteca, 7.3 i18n, 7.4 Winget, 7.5 nombre pendiente).
+
+Estoy en la rama `claude/fase7-i18n-winget` (ya existía remota, hice checkout y pull; no toco `claude/new-session-4aa3ce`).
+
+**Hallazgo previo:** revisé `ventana_principal.py` y el orden del notebook (7.1) **ya está correcto** — Biblioteca, Modo Lectura, Creador de Audiolibros, Creación de fragmentos, Ajustes. No hay nada que reordenar ahí; lo dejo tal cual salvo que la revisión de código encuentre algo puntual desalineado.
+
+## Plan paso a paso
+
+**Punto 1 — i18n (7.3)**
+1. Crear `locale/es/LC_MESSAGES/` y `locale/en/LC_MESSAGES/` con `.po`/`.mo` base (dominio, p. ej. `epub_tts.po`).
+2. Módulo nuevo `app/motor/gestor_idioma.py`: detecta idioma de Windows (`locale.getlocale()`/`ctypes` para el idioma de UI del sistema), instala `gettext.translation(...)` con fallback a español si no hay `.mo` para ese idioma, expone `_` global (vía `gettext.install` o inyección explícita en `builtins`, decidiré según lo que ya exista en el proyecto para no inventar un mecanismo nuevo).
+3. Envolver en `_("texto")` las cadenas visibles de la interfaz — esto toca muchos archivos de `app/interfaz/`. Dado el volumen, lo haré módulo por módulo, marcando cada bloque tocado con anclaje si sustituye una sección identificable, y sin tocar nombres de variables/funciones/logs (quedan en español, sin `_()`).
+4. Extraer cadenas a `.pot`/`.po` (con `pygettext`/`msgfmt` de la librería estándar o instrucciones para hacerlo, ya que compilar `.mo` requiere `msgfmt` — verificaré si está disponible o si genero los `.mo` con el módulo `msgfmt.py` de Python).
+
+**Punto 2 — Winget (7.4)**
+1. Carpeta `winget/` (o similar) con plantilla `installer.yaml`, `locale.yaml`, `version.yaml` según el esquema estándar de manifiestos de winget-pkgs, apuntando al release ya publicado en GitHub.
+2. Sin tocar código de la app — solo empaquetado.
+
+**Orden de trabajo:** primero i18n (motor de detección + primer lote de cadenas envueltas como prueba de concepto en una pestaña), commit; luego el resto de pestañas; luego Winget; commits separados y descriptivos, push final a `claude/fase7-i18n-winget`.
+
+¿Confirmas que empiece por el motor de detección de idioma (`gestor_idioma.py`) y la estructura de `locale/`, o prefieres que primero revise qué pestaña envolver primero en `_()`?

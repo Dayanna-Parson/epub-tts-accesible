@@ -1,0 +1,5 @@
+Claude:
+
+1. Revisa `app/motor/gestor_idioma.py`: debe permitir forzar el idioma desde un parámetro de configuración o variable de entorno para pruebas localmente (por ejemplo, poder probar la traducción al inglés o francés en un Windows configurado en español). De lo contrario, un colaborador no puede probar su archivo `.mo` sin cambiar el idioma completo de su sistema operativo.
+2. Verifica que `herramientas/compilar_i18n.py` fuerce la lectura de archivos `.po` en UTF-8 estricto ignorando si llevan o no BOM de Windows, y muestre en consola la línea exacta donde ocurre un error sintáctico (por ejemplo, comillas sin cerrar) para facilitar la corrección a personas que usen lector de pantalla.
+3. Tras asegurar estos dos puntos, procede con el envoltorio de cadenas `_("texto")` empezando por `pestana_biblioteca.py`, asegurándote de incluir los avisos dirigidos a `anunciador_lector.hablar()`.

@@ -1,0 +1,89 @@
+prompt y respuesta 8
+
+Sí, continúa con ventana_proyectos.py
+Y puedes seguir con todo lo que queda por traducir
+
+respuesta:
+
+Ahora aplico `_()` a todo el archivo, dejando sin traducir `ListaCategorias` (persiste literalmente el texto de categoría en `proyecto["tipo"]`).
+
+Ahora la construcción de la interfaz principal.
+
+Ahora `_cargar_arbol`, `_navegar_a_archivo`.
+
+Verifico progreso y hago commit parcial antes de continuar con el resto (menú contextual, mensajes de estado, diálogos de creación).
+
+Continúo con el menú contextual y el resto de mensajes.
+
+Ahora el menú contextual completo.
+
+Ahora `_asociar_txt_actual`, cortar/pegar, mover nodo.
+
+Ahora `_mover_nodo`.
+
+Ahora guardar nombre/categorías, añadir/quitar TXT, crear proyectos.
+
+Ahora `_pedir_nombre_y_tipo` y los creadores de proyecto.
+
+Ahora la papelera y eliminación.
+
+Ahora `_estado_proyecto`, `_etiqueta_nodo`, `_abrir_carpeta_proyecto`, y `_anunciar_estado`/`_restaurar_titulo`.
+
+Verifico sintaxis y hago commit final de `ventana_proyectos.py`.
+
+`ventana_proyectos.py` completado y pusheado. Sigo con los diálogos compartidos: `dialogos.py`.
+
+Aplico `_()` a todo `dialogos.py`.
+
+Ahora `DialogoAgruparCarpetas`.
+
+Ahora `DialogoArchivoNoEncontrado`.
+
+Verifico y hago commit de `dialogos.py`.
+
+Sigo con `selector_voz_compartido.py`.
+
+Verifico y hago commit.
+
+Sigo con `dialogo_proveedor_alternativo.py`.
+
+Ahora `_comprobar_favoritas_vacias`, `_anunciar_estado_inicial`, y las acciones finales.
+
+Verifico y hago commit.
+
+Sigo con `dialogo_troceador.py`.
+
+Aplico `_()` a todo el archivo.
+
+Ahora `_al_examinar`, `_cargar_epub`, `_al_epub_cargado`, `_al_dividir`, `_al_division_completada`, `_set_progreso`, `_abrir_carpeta_capitulos`.
+
+Ahora `_al_dividir`, `_progreso`, `_al_division_completada`, `_set_progreso`, `_abrir_carpeta_capitulos`.
+
+Verifico y hago commit.
+
+Sigo con los dos últimos archivos: `dialogo_voces_nuevas.py` y `dialogo_novedades.py`.
+
+Ahora `dialogo_novedades.py`.
+
+Verifico ambos archivos, compilo y hago commit final.
+
+Inventario completo. Los 8 archivos pendientes están envueltos en `_()` y pusheados a `claude/fase7-i18n-winget`:
+
+1. `pestana_grabacion.py` ✅ (sesión anterior)
+2. `pestana_ajustes.py` ✅ (sesión anterior, 6 partes)
+3. `dialogo_asistente_biblioteca.py` ✅ (sesión anterior, con idioma inyectado a Gemini)
+4. `ventana_proyectos.py` ✅
+5. `dialogos.py` ✅
+6. `selector_voz_compartido.py` ✅
+7. `dialogo_proveedor_alternativo.py` ✅
+8. `dialogo_troceador.py` ✅
+9. `dialogo_voces_nuevas.py` ✅
+10. `dialogo_novedades.py` ✅
+
+En todos apliqué las mismas 4 reglas de forma consistente:
+- `.format()` en vez de f-strings dentro de `_()`.
+- Sin traducir claves comparadas literalmente en lógica interna (p. ej. `"Todos"`/`"Todas"` en filtros de voz, `ListaCategorias` de `ventana_proyectos.py` que persiste texto en `proyecto["tipo"]`, `_NUEVA` de plantillas).
+- Tablas de metadatos de voz (`_LOCALES_ES`, `_GENEROS_ES`, `_NOMBRES_PROVEEDOR`) sin envolver por ser constantes de clase/módulo evaluadas al importar.
+- Marcas de proveedor (Azure, Amazon Polly, ElevenLabs, Deepgram, Google Gemini) sin traducir.
+
+Con esto queda cerrada la fase de envoltura de código en `_()` de toda la interfaz. Según la planificación (sección 7.3), la extracción masiva al `.pot`/`.po` de todas estas cadenas nuevas y el manifiesto de Winget (7.4) quedan como los últimos pasos de la Fase D. ¿Quieres que continúe con la extracción/traducción del catálogo ahora, o paso directamente al manifiesto de Winget?

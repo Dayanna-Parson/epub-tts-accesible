@@ -1,0 +1,9 @@
+Claude:
+
+1. CORRECCIÓN URGENTE EN `pestana_ajustes.py`: Prohibido hacer comparaciones de lógica interna o selectores usando el texto traducido `_("Automático")`. Las condicionales y comparaciones en Python deben evaluar SIEMPRE la clave técnica en español/código original o el índice seleccionado (`if modelo == "Automático"` o mediante claves constantes), NUNCA el valor que devuelva `_()`. El envoltorio `_()` es EXCLUSIVAMENTE para presentar el texto en la interfaz gráfica/pantalla. Corrige esa comparación de inmediato.
+
+2. ORDEN DE TRABAJO: Termina de una vez todo `pestana_ajustes.py` (incluyendo `PanelAzure` y los paneles restantes de voz/atajos) antes de saltar a otro archivo. No dejemos módulos a medio envolver.
+
+3. SIGUIENTE PASO: Una vez cerrado `pestana_ajustes.py` al 100%, pasa directamente a `dialogo_asistente_biblioteca.py`, recordando inyectar el idioma activo de la interfaz en el prompt de sistema para Gemini.
+
+Confirma la corrección de la lógica de comparación y procede con el resto de `pestana_ajustes.py`.

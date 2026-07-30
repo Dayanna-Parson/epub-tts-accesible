@@ -1,0 +1,11 @@
+Claude, antes de modificar código en la rama `claude/fase7-i18n-winget`, revisa estas directrices sobre la arquitectura de i18n:
+
+1. NO inyectes `_` en `builtins`. Crea `app/motor/gestor_idioma.py` como un módulo explícito que gestione el fallback a español y exponga la función `_()` de forma segura para evitar errores de importación en subprocesos o diálogos de wxPython.
+2. Crea la carpeta `herramientas/` con un script `compilar_i18n.py` (usando el módulo estándar `msgfmt` de Python) para convertir archivos `.po` a `.mo` sin requerir herramientas externas del sistema.
+3. Asegúrate de que las cadenas de voz enviadas a `accessible_output3` (anuncios para NVDA) también estén envueltas en `_("texto")` para que los lectores de pantalla hablen en el idioma seleccionado.
+
+Escribe una guía breve en `docs/TRADUCCION.md` en español explicando a colaboradores (desarrolladores o usuarios finales):
+- Cómo editar el archivo `.po` usando un editor de texto plano (Bloc de notas/Notepad++) o Poedit.
+- Cómo ejecutar `python herramientas/compilar_i18n.py` para probar la traducción localmente antes de enviarla.
+
+Confirma que entiendes estas correcciones y procede con la creación de `gestor_idioma.py`, la estructura `locale/` y el script de herramientas.

@@ -1,0 +1,13 @@
+prompt 5
+
+Claude, para que no quede nada en el tintero, este es el inventario exacto de lo que falta por envolver con `_()` antes de dar por cerrada la fase de internacionalización de código:
+
+1. `pestana_grabacion.py`
+2. `pestana_ajustes.py`
+3. `dialogo_asistente_biblioteca.py` (Asegúrate de pasar el idioma activo de la UI al prompt del sistema de Gemini para que responda en el idioma configurado).
+4. `ventana_proyectos.py`
+5. Diálogos y componentes compartidos: `dialogos.py`, `selector_voz_compartido.py`, `dialogo_proveedor_alternativo.py`, `dialogo_troceador.py`, `dialogo_voces_nuevas.py` y `dialogo_novedades.py`.
+
+Mantén las 4 reglas (sin f-strings en `_()`, uso de `.format()`, protección de etiquetas/IDs).
+
+Empieza por `pestana_grabacion.py` y `pestana_ajustes.py`.

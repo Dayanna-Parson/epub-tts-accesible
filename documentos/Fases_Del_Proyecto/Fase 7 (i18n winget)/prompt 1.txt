@@ -1,0 +1,22 @@
+Claude, antes de hacer absolutamente nada o proponer cualquier línea de código, debes LEER OBLIGATORIAMENTE los siguientes dos archivos completos de la raíz del proyecto para alinear el contexto y las reglas de trabajo:
+
+1. `CLAUDE.md` (las reglas absolutas de estilo, arquitectura, accesibilidad NVDA, sistema de ANCLAJES y prohibición de inglés en código o comentarios).
+2. `documentos/Fases_Del_Proyecto/Fase 7, planificacion_v3.md` (especialmente la Sección 7: "Fase D — Distribución de pestañas, i18n y Winget").
+
+REGLAS DE TRABAJO PARA ESTA SESIÓN:
+- Trabajas de forma EXCLUSIVA sobre la rama `claude/fase7-i18n-winget`. Prohibido operar o tocar cualquier otra rama del repositorio.
+- No te inventes nada ni propongas sobre-ingeniería fuera de la especificación técnica de la Fase D.
+- Mantén el sistema de comentarios ANCLAJE, el uso de accesible_output3 para avisos a lector de pantalla y la codificación íntegramente en español.
+
+ALCANCE DE LA FASE D (lo que vamos a abordar):
+1. **Reordenación de pestañas del Notebook (sección 7.1 de la planificación):**
+   Garantizar el orden oficial: 1. Biblioteca, 2. Lectura, 3. Creador de Audiolibros, 4. Grabación de Fragmentos, 5. Ajustes.
+2. **Internacionalización - i18n (sección 7.3 de la planificación):**
+   - Implementar el envoltorio de cadenas visibles para el usuario final con `gettext` mediante `_("texto")` usando la librería estándar de Python.
+   - Crear la estructura de carpetas `locale/es/LC_MESSAGES/` y `locale/en/LC_MESSAGES/`.
+   - Implementar la detección del idioma del sistema operativo Windows al arrancar con fallback automático a español si no hay traducción.
+   - Todo el código interno (variables, funciones, logs y comentarios) DEBE seguir en español estricto.
+3. **Manifiesto de Winget (sección 7.4 de la planificación):**
+   - Crear la plantilla y archivos YAML del manifiesto estándar de Winget (`installer.yaml`, `locale.yaml`, `version.yaml`).
+
+Por favor, confirma que has leído los dos archivos indicados, que estás operando sobre la rama `claude/fase7-i18n-winget` y preséntame el plan paso a paso ANTES de escribir o modificar código.

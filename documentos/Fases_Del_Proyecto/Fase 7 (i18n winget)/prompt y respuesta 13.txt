@@ -1,0 +1,38 @@
+vale. todo funciona super bien! ahora, una pregunta. podrías redactarme un documento en el proyecto, que me explique, cuando utilizar, el escript, subirversion.py, el portable.py, el de la traducción? y algún otro que seguro que se me está olvidando jaja. Y también actualiza los 13 documentos con el tono adecuado... A, y también explica lo de winget, y como devería y cuando también... subirlo...
+respuesta:
+
+Añado la referencia en README.md:
+
+Ahora en `estructura_proyecto.txt` y `CLAUDE.md` (breve mención) y `DEVELOPMENT.md`:
+
+Bien, ya está mapeado. Añado la mención de `GUIA_SCRIPTS.md` en la cabecera:
+
+Ahora, una mención breve en `CLAUDE.md` y `BITACORA_DE_DESARROLLO.md`:
+
+Ahora `BITACORA_DE_DESARROLLO.md`, revisando el formato de la última entrada para añadir una línea coherente:
+
+Voy a añadir un párrafo final de cierre, en primera persona como el resto del diario, contando el bug del `_` compartido y la creación de `GUIA_SCRIPTS.md`:
+
+Ahora una mención breve en `DEVELOPMENT.md`, que ya tiene una sección de i18n del trabajo anterior:
+
+Ya está bien cubierto en `DEVELOPMENT.md`. Añado solo un enlace cruzado a la nueva guía:
+
+Verifico y hago commit final.
+
+Listo, ya está commiteado y subido (`1fe5896`).
+
+## Qué hice
+
+Creé **`GUIA_SCRIPTS.md`** en la raíz del proyecto, con una tabla resumen ("¿cuándo se ejecuta cada uno?") y una sección detallada por cada script:
+
+- **`herramientas/compilar_i18n.py`** — cuándo tras editar un `.po`.
+- **`subir_version.py`** — cuándo cerrar una versión, cómo sube patch/minor/major, y por qué nunca hace `git push` solo.
+- **`crear_portable.py`** — qué hace paso a paso (incluida la compilación de traducciones que añadí la sesión pasada) y cuándo NO hace falta (desarrollo normal).
+- **`auxiliar_sapi32.py`** — el único ejecutable que se sigue compilando a mano (necesita Python 32 bits).
+- **`auxiliar_actualizador.py`** — nunca a mano, lo compila `crear_portable.py` solo; y por qué el botón de prueba de Fase C sigue en Ajustes.
+- **`winget/`** — expliqué que **no es un script**, es un manifiesto a enviar como PR, y detallé los 3 requisitos antes de poder enviarlo (nombre comercial definitivo, Release publicada, SHA256 real) más el paso a paso de la PR contra `microsoft/winget-pkgs`.
+- Un apartado final con `bin/INSTRUCCIONES.txt`, `docs/TRADUCCION.md` e `iniciar_epub_tts.py` para que quede completo el mapa.
+
+También añadí el orden recomendado end-to-end para publicar una versión (traducir → compilar → subir versión → push → empaquetar → Release → Winget solo cuando toque).
+
+**Los 13 documentos ya estaban actualizados** de la tarea anterior (Fase D); esta vez añadí referencias cruzadas a la nueva guía donde tenía sentido — `README.md`, `CLAUDE.md`, `DEVELOPMENT.md` (más una nota explícita sobre el bug del `_` compartido, para que no vuelva a colarse) y `estructura_proyecto.txt` — y sumé una entrada nueva en `BITACORA_DE_DESARROLLO.md`, en primera persona como el resto del diario, contando tanto el crash como la creación de la guía.

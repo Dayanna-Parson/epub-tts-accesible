@@ -1,0 +1,853 @@
+prompt 12
+
+ mira, no se si fue al cambiar de idioma o qué... pero me aparecieron estos errores en la consola
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_lectura.py", line 622, in al_actualizar_ui
+    if self.btn_reproducir.GetLabel() != _("Reproducir (Ctrl+P)"):
+                                         ^
+UnboundLocalError: cannot access local variable '_' where it is not associated with a value
+
+
+Funciona todo perfecto! Pero, me acabo de dar cuenta, esto se te olvidó eliminarlo no? funciona todo esto de las actualizaciones?
+
+Test download and verification (Phase C)  botón
+
+Lo copié en inglés... pero bueno... Y hay algunas cositas que se te han olvidado traducir...

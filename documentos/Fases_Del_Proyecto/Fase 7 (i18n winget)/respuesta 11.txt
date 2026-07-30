@@ -1,0 +1,71 @@
+respuesta 11
+
+Now I'll add a language selector to `PanelGeneral`, right after the "Idioma del libro" block.
+
+Now the handler and syncing into `sincronizar_config`:
+
+Also update `sincronizar_config` so the language is persisted even via Ctrl+S without touching the combo:
+
+Now let's verify syntax and check `main.py`/entry point calls `gestor_idioma.inicializar()` at startup:
+
+Now update the remaining step numbers and add `locale` to the copied folders:
+
+Now add the call to `compilar_catalogos_idioma()` in the main sequence, and add "idioma" to factory settings default:
+
+Found real gaps — `ventana_principal.py` and `reproductor_voz.py` were never wrapped. Let me check them fully.
+
+These two files were missed from the original wrapping inventory — no `_()` import at all. Given the scope, I'll delegate wrapping these plus a full final audit to a background agent, then have it also build the Winget manifests and update the docs, so I'm not serializing everything through this turn.
+
+Given the scope remaining (wrap 2 missed files + full audit, add new strings to catalog, build Winget manifests, update ~13 docs), I'll commit my current changes now and dispatch the rest to a background agent.
+
+Now I'll dispatch the remaining work to a background agent: wrapping the two missed files, extending the catalog, building the Winget manifests, and updating all the documentation files.
+
+Ya confirmé y resolví los tres puntos que preguntaste, y dejé en marcha el resto:
+
+## Confirmado / implementado ahora mismo
+
+1. **Selector de idioma en `PanelGeneral`** — no existía, lo añadí. Nuevo bloque `IDIOMA_INTERFAZ_GENERAL` en `pestana_ajustes.py`: combo con "Español"/"English", guarda `"idioma"` en `ajustes.json`, y avisa (con `MessageBox` + anuncio NVDA) que el cambio se aplica al reiniciar. Ya commiteado y subido (`7671798`).
+
+2. **Auditoría de `_()` pendientes** — encontré que **dos archivos se quedaron fuera** de la pasada anterior: `app/interfaz/ventana_principal.py` y `app/motor/reproductor_voz.py` (sin import de `_`, con `MessageBox` en español sin envolver). No estaba al 100%. Delegué su envoltura completa (más una segunda pasada de auditoría sobre todo `app/`) al agente en curso.
+
+3. **`crear_portable.py`** — no compilaba ni empaquetaba `locale/`. Ya lo corregí: nuevo paso `compilar_catalogos_idioma()` (recompila `.po`→`.mo` antes de construir) y `locale/` añadido a las carpetas copiadas al portable, junto a `bin/` y `recursos/`. Ya commiteado y subido.
+
+## En marcha (agente en segundo plano)
+
+Un agente está terminando ahora mismo:
+- Envolver `ventana_principal.py` y `reproductor_voz.py` en `_()`, más una auditoría final de todo `app/`.
+- Añadir las cadenas nuevas encontradas al catálogo (`.pot`/`es.po`/`en.po`), recompilar y verificar.
+- Crear `winget/` con `installer.yaml`, `locale.yaml`, `version.yaml` (más un `LEEME.txt` explicando qué falta antes de publicar: nombre comercial definitivo, primer Release de GitHub, SHA256 real).
+- Actualizar los 13 documentos que pediste, con criterio por documento (algunos como `idea_app_audiolibros.md` o `VISION_PERSONAL.md` solo si su tono lo permite, sin forzar nada).
+
+Te aviso en cuanto termine para que hagas la revisión final antes de fusionar a `main`.
+
+Do a quick sanity check to confirm everything's clean before handing back for review.
+
+Good — just a truncated test string on my part; the real msgid translates correctly. Everything checks out.
+
+Todo revisado y en orden. Fase D está completa en la rama `claude/fase7-i18n-winget`.
+
+## Resumen final
+
+**1. Selector de idioma en Ajustes** — añadido en `PanelGeneral` (combo Español/English, guarda `"idioma"` en `ajustes.json`, avisa que requiere reinicio).
+
+**2. i18n al 100%** — la auditoría final encontró que faltaban **4 archivos**, no solo los 2 que yo detecté:
+- `ventana_principal.py`, `reproductor_voz.py` (los que yo había encontrado)
+- `cliente_sapi5.py`, `control_cuota.py` (encontrados por el agente en la segunda pasada, incluyendo un f-string que había que convertir a `.format()`)
+
+Total: **989 cadenas únicas** en el catálogo (subió de 922), todas en `es.po` (msgstr=msgid) y `en.po` (traducidas). Compilador corre limpio, `.mo` verificados con `gettext.translation(...)` — confirmé yo mismo con una prueba adicional.
+
+**3. `crear_portable.py`** — ya compila y empaqueta `locale/` en el portable.
+
+**4. `winget/`** — creada con `installer.yaml`, `locale.yaml`, `version.yaml` (schema v1.9) + `LEEME.txt`. `PackageIdentifier: TifloTutos.EpubTTSAccesible` marcado explícitamente como **provisional** en comentarios (pendiente el nombre comercial definitivo). `InstallerSha256` es un placeholder claro hasta que exista una Release real en GitHub. Usa `zip` + `NestedInstallerType: portable` apuntando a `epubtts.exe`. Licencia tomada del `LICENSE` real del repo (CC BY-NC 4.0).
+
+**5. Documentación** — actualizados: `ayuda.html`, `novedades.txt`, `README.md`, `BITACORA_DE_DESARROLLO.md`, `CLAUDE.md`, `DEVELOPMENT.md`, `estructura_proyecto.txt`, `GUIA_TECNICA.md`, `VISION_PERSONAL.md`, `idea_app_audiolibros.md`. Dejados sin tocar (con motivo): `requisitos.txt` (gettext es stdlib, sin dependencia nueva), `subir_version.py` (sin punto de integración claro), `.gitignore` (los `.mo` deben seguir versionados para que un clon nuevo funcione sin pasos manuales).
+
+**Commits en `claude/fase7-i18n-winget`** (todo empujado, sin conflictos):
+- `7671798` selector de idioma + empaquetado de locale/
+- `8c18d9a` envoltura completa de los 4 archivos + catálogo
+- `81c4ca1` manifiestos winget
+- `027fddf` documentación
+
+Todo listo para tu revisión final antes de fusionar a `main`.

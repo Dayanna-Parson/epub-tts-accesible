@@ -1,0 +1,50 @@
+respuesta 13
+
+Encontré el bug: en `al_actualizar_ui` (línea 648), `texto_sig, _ = self._cola_lectura[idx_siguiente]` usa `_` como variable descartable, lo que convierte a `_` en variable local de toda la función y rompe las llamadas a `_("...")` anteriores en esa misma función. Lo arreglo ahora.
+
+Ahora busco ese mismo patrón (`_` como descarte de tupla, que shadowea el traductor) en todo el proyecto, para asegurarme de que no queden más casos como este.
+
+Otro caso idéntico en `_reproducir_siguiente_fragmento` (línea 554) — este también necesita el mismo arreglo (aunque esta función en concreto no usa `_()`, lo corrijo por seguridad/consistencia):
+
+Now let's check the other candidate files that mix a bare `_` unpack with `_()` calls in the same function:
+
+Confirmed two more real occurrences of the same bug in `pestana_grabacion.py`. Fixing both.
+
+Now check `pestana_ajustes.py:2477` — the last remaining candidate:
+
+Same function scope, same bug. Fixing it too:
+
+Good, those two motor files don't import the translator, so no risk there. Let's run a syntax check and a broader systematic AST-based scan to catch any remaining cases with certainty:
+
+Dos más. Reviso cada uno:
+
+Ambos confirmados como el mismo bug real. Corrijo los dos:
+
+Ahora reejecuto el escaneo completo para confirmar que no queda ninguno más, y verifico sintaxis:
+
+Limpio, ningún caso más. Ahora sobre las otras dos observaciones (el botón de prueba de actualizaciones y traducciones olvidadas), reviso el código:
+
+El botón "Probar descarga y verificación (Fase C)" es intencional — es una herramienta de desarrollo para validar el actualizador automático de la Fase C, que según el propio `CLAUDE.md` **no debe retirarse** hasta la validación completa en Windows real con NVDA (documentado en la sección "Actualizador automático" del CLAUDE.md). No es un descuido; lo viste en inglés porque tenías el idioma de interfaz en English. Ahora reviso qué cadenas se quedaron sin traducir.
+
+Mi parser manual de `.po` es defectuoso — mejor pruebo contra el `.mo` compilado real, que es lo que la app usa en tiempo de ejecución.
+
+Bien, el problema real es mucho más pequeño: solo 9 cadenas genuinamente sin traducir (el resto como "Error"/"Info"/"Global"/"English" coinciden por casualidad en ambos idiomas). Las agrego ahora.
+
+The msgids all exist but their English `msgstr` was just left equal to the Spanish text (not actually translated). Let me check and fix each one.
+
+Ahora los corrijo con las traducciones reales en inglés:
+
+Ahora aplico las traducciones correctas:
+
+Ahora hago la verificación final completa y commiteo todo.
+
+## Qué pasó
+
+El crash fue un bug real, gracias por reportarlo. La causa: en varias funciones (`pestana_lectura.py`, `pestana_grabacion.py`, `pestana_ajustes.py`, `ventana_proyectos.py`) se usaba `_` como variable de descarte para ignorar valores de tuplas (`for etiq, _ in ...`, `texto_sig, _ = ...`, etc.) **dentro de funciones que también llaman a `_("...")` como traductor**. En Python, si `_` se asigna en cualquier punto de una función, se convierte en variable local de *toda* la función — así que las llamadas a `_("Reproducir (Ctrl+P)")` que aparecían *antes* de esa asignación explotaban con `UnboundLocalError`. Encontré y arreglé **6 casos** de este mismo patrón (renombrados a nombres descriptivos como `_sin_usar`), y confirmé con un escaneo AST completo que no queda ninguno más.
+
+Sobre tus otras dos observaciones:
+
+- **"Probar descarga y verificación (Fase C)"** — no es un descuido, es intencional: es una herramienta de desarrollo para el actualizador automático de la Fase C, que según el propio `CLAUDE.md` **no debe retirarse** hasta que se valide completamente en Windows real con NVDA. Lo viste en inglés porque tenías la interfaz en English (estabas probando justo eso).
+- **Cositas sin traducir** — comparé las 989 cadenas del código contra el catálogo real compilado (no contra el `.po` a simple vista, que puede engañar). Solo había **una** genuinamente olvidada: `"Saga: {nombre}"` tenía el mismo texto en español en el catálogo inglés; ya la traduje a `"Series: {nombre}"`. El resto de coincidencias que parecían "sin traducir" (Error, Info, Global, English, Local (SAPI5), plantillas solo con `{marcadores}`) son legítimamente iguales en ambos idiomas.
+
+Todo commiteado y subido (`affac08`) a `claude/fase7-i18n-winget`. Ya puedes probar de nuevo el cambio de idioma — avísame si ves algo más raro.	

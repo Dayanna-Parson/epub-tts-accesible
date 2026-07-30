@@ -1,0 +1,49 @@
+Ahora la construcción de la interfaz principal.
+
+Ahora la carga de voces disponibles y mensajes relacionados.
+
+Ahora los mensajes de `_ofrecer_guardar_en_proyecto`, `al_examinar`, `_cargar_y_escanear`.
+
+Ahora `al_limpiar`.
+
+Ahora `al_marcar_voz`, `al_probar_voz`, `al_preescucha_general`.
+
+Ahora `_actualizar_resumen_asignaciones`, `al_cambiar_division`, `_cargar_mapeo`, y el bloque de credenciales/errores de grabación.
+
+Ahora `al_cambiar_division` y `_cargar_mapeo`.
+
+Ahora los mensajes de verificación de credenciales y el flujo de grabación.
+
+Ahora los mensajes de progreso de grabación y finalización.
+
+Ahora `_al_terminar_grabacion`, `_al_error_grabacion`, `al_abortar`, `_abrir_carpeta_en_explorador`.
+
+Verifico sintaxis y ausencia de literales sueltos.
+
+Sintaxis correcta y sin cadenas sueltas. Compilo y hago commit de `pestana_grabacion.py`.
+
+`pestana_grabacion.py` completado y pusheado. Sigo ahora con `pestana_ajustes.py` (2510 líneas — el archivo más grande de los pendientes).
+
+Ahora `PanelGeneral`: idioma del libro, cuotas, navegación, actualizaciones, escala de velocidad.
+
+Ahora `_crear_fila_limite`, mensajes de borrar recientes/limpiar caché, y el bloque de actualizador.
+
+Ahora el bloque completo del actualizador (`ACTUALIZADOR_SCRIPT_CLON` y `ACTUALIZADOR_DESCARGA_VERIFICACION_FASE_C`).
+
+Verifico esta sección antes de continuar con `PanelClaves`.
+
+`PanelGeneral` (líneas 1–743) completado. Hago commit parcial de este avance antes de continuar con `PanelClaves` y el resto del archivo, dado su tamaño.
+
+`PanelGeneral` completado y pusheado (commit parte 1/N de `pestana_ajustes.py`). Este archivo es el más grande de todos (2510 líneas) y le quedan varios paneles más (`PanelClaves`, y probablemente paneles de voces, atajos y Asistente de Biblioteca que aún no he leído). Voy a continuar con `PanelClaves` a continuación.
+
+Ahora el bloque de Gemini.
+
+Corrijo la comparación para que use el texto traducido, ya que ahora el combo muestra `_("Automático")`.
+
+Ahora el resto del slider de temperatura, botones de Gemini y `PanelClaves` métodos (`al_guardar`, `al_borrar_*`, `al_comprobar*`).
+
+Verifico y hago commit de `PanelClaves` antes de seguir con `PanelAzure` y los paneles restantes.
+
+He completado `PanelGeneral` y `PanelClaves` de `pestana_ajustes.py` (ambos pusheados). El archivo tiene ~1400 líneas más por delante (paneles de proveedores de voz como `PanelAzure`, y probablemente atajos/Asistente de Biblioteca), y después quedan `dialogo_asistente_biblioteca.py`, `ventana_proyectos.py` y los 6 diálogos compartidos del inventario.
+
+Dado el volumen (este es el archivo más grande del proyecto), ¿quieres que continúe ahora con `PanelAzure` y el resto de `pestana_ajustes.py`, o prefieres que pase primero a `dialogo_asistente_biblioteca.py` (que tiene el requisito especial del idioma para Gemini) y deje el resto de `pestana_ajustes.py` para después?
