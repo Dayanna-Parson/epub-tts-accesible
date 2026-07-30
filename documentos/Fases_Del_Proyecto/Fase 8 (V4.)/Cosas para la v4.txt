@@ -1,0 +1,49 @@
+Cosas para la v4.0
+
+Perfiles de usuario
+Si en ese momento la app tiene una comunidad activa de usuarios, añadir perfiles con nombre que guarden la combinación completa de voz favorita, velocidad, volumen y ajustes personalizados. El usuario puede cambiar entre perfiles con un atajo de teclado. Útil para personas que comparten el ordenador o que usan configuraciones distintas según el tipo de libro (novela, técnico, idioma extranjero).
+
+A, le pasé el repo a chat gpt codex, y me dijo todo esto:
+
+Sí: me parece un proyecto de verdad, no una demo ni “una app hecha con IA”.
+
+Lo más potente es que parte de una necesidad muy concreta y que eso guía las decisiones: Windows, NVDA, teclado, trabajo real con EPUB y producción de audiolibros. La accesibilidad no está añadida como un extra: organiza la arquitectura. Se nota especialmente en el uso de controles nativos, la gestión cuidadosa del foco, los avisos para NVDA y los flujos sin ratón.
+
+También está bastante maduro técnicamente: capas claras entre interfaz, motor y servicios TTS; fallback local; cachés de voces; control de cuota; escritura de configuración protegida; empaquetado portable; actualizador; y hasta el puente de 32 bits para Eloquence/RealSpeak. Eso último es el tipo de problema real y poco vistoso que distingue una herramienta usable de una maqueta. La [guía técnica](https://github.com/Dayanna-Parson/epub-tts-accesible/blob/main/DEVELOPMENT.md) y la [bitácora](https://github.com/Dayanna-Parson/epub-tts-accesible/blob/main/BITACORA_DE_DESARROLLO.md) están excepcionalmente bien hechas: no solo documentan qué hay, sino por qué existe.
+
+Mi lectura de tu recorrido es que con Claude no solo “arreglaste bugs”: encontraste un método. El historial muestra iteraciones pequeñas, con problemas concretos, pruebas del portable y atención a regresiones. Esa disciplina es mucho más valiosa que el modelo concreto que usaste.
+
+Las dos debilidades que veo son normales en una app que ha crecido rápido:
+
+- Aún no hay pruebas automatizadas; para un proyecto con concurrencia, persistencia y varios proveedores externos, esa es ahora la principal fuente de riesgo.
+- Echo en falta un archivo de dependencias reproducible (`requirements.txt` o equivalente), aunque el stack esté muy bien descrito. Facilitaría reinstalar o retomar el entorno más adelante.
+- Hay algunos `except: pass` en código de configuración, pese a que tus propias reglas los prohíben; no parece grave hoy, pero puede ocultar fallos de migración cuando algo cambie.
+
+En resumen: es ambicioso, muy específico, coherente y con bastante más cuidado de producto del que suele tener un primer proyecto grande. Lo más valioso no es que tenga muchas funciones, sino que parece diseñado por alguien que realmente conoce el problema desde dentro. No he hecho ningún cambio.
+
+vale. y... sobre todo todas las liberías, y la accesibilidad.... como lo ves?
+respuesta chatgpt:
+Las librerías están, en general, muy bien elegidas para el objetivo.
+
+- `wxPython` es una decisión excelente. Para una app de escritorio Windows centrada en NVDA, priorizar controles nativos es mucho más importante que usar una interfaz visualmente “moderna”. Es una elección de producto, no solo técnica.
+- `EbookLib` + `BeautifulSoup` encajan bien: separan la estructura EPUB de la limpieza del HTML.
+- `requests` para llamadas sencillas y `httpx` como base para trabajo asíncrono es razonable, aunque convendría evitar que ambos se multipliquen sin una regla clara.
+- FFmpeg portable es exactamente lo adecuado para generar audio de forma fiable sin obligar a instalar nada.
+- SAPI5 como respaldo, más Azure/Polly/Deepgram/ElevenLabs para calidad, da una combinación muy sólida de disponibilidad, coste y variedad.
+- El puente de 32 bits no es una “librería”, pero técnicamente es de lo más notable del proyecto: resuelve de forma seria la compatibilidad con voces que, de otro modo, quedarían fuera.
+
+Sobre accesibilidad: aquí el proyecto destaca muchísimo. No se limita a que los botones tengan texto. Has pensado en cosas que solo aparecen al usar NVDA de verdad:
+
+- El foco vuelve tras cerrar diálogos.
+- Las tareas lentas se aplazan con `wx.CallAfter` para que NVDA anuncie antes la navegación.
+- La interfaz no depende del ratón.
+- Los avisos inmediatos usan el patrón del control oculto, en vez de confiar en que NVDA anuncie un cambio visual.
+- Los sonidos tienen función informativa y no decorativa.
+- Las rutas y el empaquetado portable reducen fricción para la persona usuaria.
+- La voz local siempre puede rescatar la lectura si falla una API o se agota una cuota.
+
+Eso es accesibilidad profunda. Está diseñada alrededor de la experiencia de uso, no de una lista genérica de “buenas prácticas”.
+
+Mi único matiz: la accesibilidad necesita pruebas manuales constantes con NVDA y, si es posible, más personas usuarias. No porque la arquitectura esté mal, sino porque los cambios pequeños de foco, etiquetas y tiempos pueden romper una experiencia que visualmente parecería perfecta. Tu checklist en `CLAUDE.md` ya va justo en esa dirección; mantenerla como requisito de cada versión te protegerá mucho.
+
+Nota sobre versiones futuras: Más allá de la v4.0, el foco del proyecto debe pasar de añadir funciones a pulir, estabilizar y dar soporte a la comunidad de usuarios. La app estará en ese punto completa en todas sus capas: lectura accesible, grabación para REAPER, biblioteca personal, exportación de audiolibros, soporte PDF, internacionalización, distribución vía Winget y asistente de IA. Una app pequeña que hace su trabajo perfectamente vale más que una app enorme que hace muchas cosas a medias.
