@@ -1162,7 +1162,7 @@ class VentanaPrincipal(wx.Frame):
         try:
             with open(ruta_config("ajustes.json"), encoding="utf-8") as f:
                 conf = json.load(f)
-            if not conf.get("actualizar_automaticamente", True):
+            if not conf.get("actualizar_automaticamente", False):
                 return
         except Exception:
             pass

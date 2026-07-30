@@ -209,7 +209,7 @@ class PanelGeneral(wx.ScrolledWindow):
         self.chk_actualizar = wx.CheckBox(
             self, label=_("Buscar actualizaciones automáticamente al iniciar la app")
         )
-        self.chk_actualizar.SetValue(self.config.get("actualizar_automaticamente", True))
+        self.chk_actualizar.SetValue(self.config.get("actualizar_automaticamente", False))
         self.chk_actualizar.SetHelpText(
             _("Si está marcado, la aplicación comprueba si hay una nueva versión disponible "
               "cada vez que se inicia. La comprobación se hace en segundo plano.")

@@ -72,7 +72,11 @@ _AJUSTES_FABRICA = {
         "volumen_lectura": 100,
         "segundos_salto": 10,
         "pausa_entre_fragmentos_ms": 0,
-        "actualizar_automaticamente": True,
+        # Desmarcada por defecto: la comprobación/instalación automática al
+        # arrancar debe ser una decisión explícita de quien instala, no un
+        # comportamiento de fábrica que se cuela mientras se está probando
+        # una versión concreta a propósito.
+        "actualizar_automaticamente": False,
         "escala_velocidad": "porcentaje",
         "idioma_libro_codigo": "es-ES",
         "sonidos_habilitados": True,
