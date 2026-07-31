@@ -8,6 +8,7 @@ import webbrowser
 
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 from app.motor import anunciador_lector as voz
+from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor import gestor_prompts_asistente as prompts
 from app.motor.reproductor_sonidos import (
     reproducir, LIST_NAV, SUCCESS, ERROR, OPEN_FOLDER,
@@ -86,6 +87,13 @@ class PanelGeneral(wx.ScrolledWindow):
         self._pestana_ajustes = pestana_ajustes
         from app.motor.control_cuota import ControlCuota
         self.cuota = ControlCuota()
+
+        # Cola de voz para el progreso de descarga/instalación de
+        # actualizaciones: llega en ráfagas rápidas (varios KB por segundo),
+        # así que se descarta lo intermedio y solo se dice lo más reciente,
+        # igual que ya hace el escaneo de Biblioteca.
+        self._voz_actualizacion = AnunciadorVoz()
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz_actualizacion.detener(), e.Skip()))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -719,12 +727,25 @@ class PanelGeneral(wx.ScrolledWindow):
 
         self.btn_probar_descarga_nueva.Disable()
         wx.CallAfter(self.lbl_progreso.SetLabel, _("Iniciando descarga de prueba..."))
+        voz.hablar(_("Iniciando descarga de prueba..."))
 
         gestor = GestorDescargaActualizacion()
         gestor.descargar_y_verificar_en_hilo(
             callback_resultado=lambda r: wx.CallAfter(self._al_resultado_descarga_nueva, r),
-            callback_progreso=lambda msg, pct: wx.CallAfter(self.lbl_progreso.SetLabel, msg),
+            callback_progreso=lambda msg, pct: wx.CallAfter(self._al_progreso_descarga_nueva, msg),
         )
+
+    def _al_progreso_descarga_nueva(self, msg: str):
+        """
+        Antes solo se actualizaba lbl_progreso (visible, pero sin nada que
+        lo verbalice sin foco): la descarga y verificación de la Fase C se
+        quedaba muda para NVDA hasta el sonido final. self._voz_actualizacion
+        descarta los mensajes intermedios que lleguen demasiado rápido y
+        dice siempre el más reciente, igual que ya hace el escaneo de
+        Biblioteca con su propia cola de voz.
+        """
+        self.lbl_progreso.SetLabel(msg)
+        self._voz_actualizacion.hablar(msg)
 
     def _al_resultado_descarga_nueva(self, resultado: dict):
         self.btn_probar_descarga_nueva.Enable()
