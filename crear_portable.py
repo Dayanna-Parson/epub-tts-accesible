@@ -13,11 +13,14 @@ Pasos que ejecuta:
      arquitectura que la app, por eso se automatiza aquí — a diferencia de
      auxiliar_sapi32.exe, que necesita un intérprete de 32 bits aparte y
      sigue siendo un paso manual, ver bin/INSTRUCCIONES.txt).
-  5. Copia bin/, recursos/, locale/ y documentos/ al portable.
+  5. Copia bin/, recursos/, locale/, ayuda.html y novedades.txt al portable
+     (novedades.txt directamente en la raíz, junto a ayuda.html y
+     epubtts.exe — no en una subcarpeta documentos/ para un único archivo).
   6. Crea configuraciones/ vacía (ajustes.json de fábrica, carpetas de
-     backups separadas y carpeta de plantillas del Asistente de Biblioteca).
-  7. Copia INICIAR_APP.bat y novedades.txt a la raíz del portable.
-  8. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
+     backups separadas y carpeta de plantillas del Asistente de Biblioteca)
+     y registros/ vacía, para que un fallo en el portable escriba ahí
+     mismo, igual que en el entorno de desarrollo.
+  7. Comprime todo en dist/epub-tts-accesible-vX.Y.Z.zip.
 
 Uso:
     python crear_portable.py
@@ -271,27 +274,27 @@ def copiar_recursos():
         else:
             print(f"      AVISO: carpeta '{carpeta}/' no encontrada, omitida.")
 
-    # Carpeta documentos: solo ayuda y novedades
-    dir_docs_orig  = os.path.join(RAIZ, "documentos")
-    dir_docs_dest  = os.path.join(DIR_PORTABLE, "documentos")
-    os.makedirs(dir_docs_dest, exist_ok=True)
-    _archivos_docs = ("Manual de usuario.pdf", "novedades.txt", "Léeme.txt")
-    for nombre in _archivos_docs:
-        origen = os.path.join(RAIZ, nombre) if not os.path.isdir(dir_docs_orig) \
-                 else os.path.join(dir_docs_orig, nombre)
-        if not os.path.isfile(origen):
-            origen = os.path.join(RAIZ, nombre)
-        if os.path.isfile(origen):
-            shutil.copy2(origen, os.path.join(dir_docs_dest, nombre))
-            print(f"      Copiado: documentos/{nombre}")
+    # bin/ffmpeg.exe y bin/auxiliar_sapi32.exe no van al repositorio (ver
+    # bin/INSTRUCCIONES.txt) y hay que colocarlos a mano antes de empaquetar.
+    # Sin ellos el portable arranca igual, pero se queda cojo en Windows
+    # real: sin ffmpeg no hay MP3 320 kbps con Polly/SAPI5, y sin el puente
+    # de 32 bits las voces Eloquence/RealSpeak no aparecen en la lista. Se
+    # avisa aquí, en vez de descubrirlo ya distribuido a un usuario final.
+    for nombre_exe in ("ffmpeg.exe", "auxiliar_sapi32.exe"):
+        if not os.path.isfile(os.path.join(DIR_PORTABLE, "bin", nombre_exe)):
+            print(f"      AVISO: bin/{nombre_exe} no está presente — "
+                  f"revisa bin/INSTRUCCIONES.txt antes de distribuir este portable.")
 
-    # ayuda.html en la raíz del portable (F1 la busca junto al ejecutable)
-    ayuda_origen = os.path.join(RAIZ, "ayuda.html")
-    if os.path.isfile(ayuda_origen):
-        shutil.copy2(ayuda_origen, os.path.join(DIR_PORTABLE, "ayuda.html"))
-        print("      Copiado: ayuda.html")
-    else:
-        print("      AVISO: ayuda.html no encontrado en la raíz del proyecto, omitido.")
+    # ayuda.html y novedades.txt van directos a la raíz del portable, junto a
+    # epubtts.exe (F1 busca ayuda.html ahí mismo) — sin carpeta documentos/
+    # de por medio, que solo llegó a contener este único archivo.
+    for nombre in ("ayuda.html", "novedades.txt"):
+        origen = os.path.join(RAIZ, nombre)
+        if os.path.isfile(origen):
+            shutil.copy2(origen, os.path.join(DIR_PORTABLE, nombre))
+            print(f"      Copiado: {nombre}")
+        else:
+            print(f"      AVISO: {nombre} no encontrado en la raíz del proyecto, omitido.")
 
 
 def crear_configuraciones_fabrica():
@@ -346,6 +349,22 @@ def crear_configuraciones_fabrica():
     open(_gitkeep_plantillas, "w").close()
     _ocultar_archivo(_gitkeep_plantillas)
     print("      Creado: configuraciones/asistente_biblioteca/plantillas/")
+
+    # registros/: iniciar_epub_tts.py ya la crea sola en el primer arranque
+    # (os.makedirs(..., exist_ok=True)), pero se siembra de fábrica en el
+    # portable para que quede visible desde el primer momento junto al
+    # .exe, igual que en el entorno de desarrollo — así un fallo temprano
+    # (antes de que la app termine de arrancar) tiene dónde escribirse.
+    dir_registros = os.path.join(DIR_PORTABLE, "registros")
+    dir_registros_errores = os.path.join(dir_registros, "errores")
+    os.makedirs(dir_registros_errores, exist_ok=True)
+    _gitkeep_registros = os.path.join(dir_registros, ".gitkeep")
+    open(_gitkeep_registros, "w").close()
+    _ocultar_archivo(_gitkeep_registros)
+    _gitkeep_registros_errores = os.path.join(dir_registros_errores, ".gitkeep")
+    open(_gitkeep_registros_errores, "w").close()
+    _ocultar_archivo(_gitkeep_registros_errores)
+    print("      Creado: registros/ y registros/errores/ (logs de la app)")
 
 
 def comprimir_portable():
