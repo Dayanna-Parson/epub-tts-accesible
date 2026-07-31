@@ -964,6 +964,324 @@ class TestDiccionarioPronunciacion(unittest.TestCase):
         self.assertEqual(self.dic.aplicar(""), "")
 
 
+class TestGestorBiblioteca(unittest.TestCase):
+    """Usa una base de datos SQLite temporal aislada para no tocar la real."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        patcher = patch(
+            "app.motor.gestor_biblioteca.RUTA_BIBLIOTECA",
+            os.path.join(self.tmpdir, "biblioteca.db"),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.ruta_db = os.path.join(self.tmpdir, "biblioteca.db")
+        self.gestor = GestorBiblioteca(self.ruta_db)
+
+    # ── Inserción y consulta de libros ──────────────────────────────────────
+
+    def test_insertar_libro_devuelve_id(self):
+        id_libro = self.gestor.insertar_libro("/ruta/libro.epub", "Mi libro", "epub")
+        self.assertIsInstance(id_libro, int)
+        self.assertGreater(id_libro, 0)
+
+    def test_obtener_libro_creado(self):
+        id_libro = self.gestor.insertar_libro("/ruta/libro.epub", "Mi libro", "epub")
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertIsNotNone(libro)
+        self.assertEqual(libro["titulo"], "Mi libro")
+        self.assertEqual(libro["formato"], "epub")
+
+    def test_obtener_libro_inexistente_devuelve_none(self):
+        self.assertIsNone(self.gestor.obtener_libro(9999))
+
+    def test_obtener_libro_por_ruta(self):
+        self.gestor.insertar_libro("/ruta/libro.epub", "Mi libro", "epub")
+        libro = self.gestor.obtener_libro_por_ruta("/ruta/libro.epub")
+        self.assertIsNotNone(libro)
+        self.assertEqual(libro["titulo"], "Mi libro")
+
+    def test_obtener_libro_por_ruta_inexistente_devuelve_none(self):
+        self.assertIsNone(self.gestor.obtener_libro_por_ruta("/no/existe.epub"))
+
+    def test_insertar_libro_con_autores_y_categorias(self):
+        id_libro = self.gestor.insertar_libro(
+            "/ruta/libro.epub",
+            "Mi libro",
+            "epub",
+            autores=["Tolkien"],
+            categorias=[["Fantasía", "Fantasía épica"]],
+        )
+        autores = self.gestor.obtener_autores_de_libro(id_libro)
+        self.assertEqual(len(autores), 1)
+        self.assertEqual(autores[0]["nombre"], "Tolkien")
+        categorias = self.gestor.obtener_categorias_de_libro(id_libro)
+        self.assertEqual(len(categorias), 1)
+        self.assertEqual(categorias[0]["nombre"], "Fantasía épica")
+
+    def test_insertar_libros_lote(self):
+        libros = [
+            {"ruta_archivo": "/a.epub", "titulo": "A", "formato": "epub"},
+            {"ruta_archivo": "/b.epub", "titulo": "B", "formato": "epub"},
+        ]
+        total = self.gestor.insertar_libros_lote(libros)
+        self.assertEqual(total, 2)
+
+    def test_insertar_libros_lote_omite_ruta_duplicada(self):
+        self.gestor.insertar_libro("/a.epub", "A", "epub")
+        libros = [
+            {"ruta_archivo": "/a.epub", "titulo": "A duplicado", "formato": "epub"},
+            {"ruta_archivo": "/b.epub", "titulo": "B", "formato": "epub"},
+        ]
+        total = self.gestor.insertar_libros_lote(libros)
+        self.assertEqual(total, 1)
+
+    # ── Actualización de metadatos y estado ─────────────────────────────────
+
+    def test_establecer_bandera_favorito(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.establecer_bandera(id_libro, "favorito", True)
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertEqual(libro["favorito"], 1)
+
+    def test_establecer_bandera_en_pendientes(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.establecer_bandera(id_libro, "en_pendientes", True)
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertEqual(libro["en_pendientes"], 1)
+
+    def test_establecer_bandera_leyendo_ahora_desmarca_las_otras(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.establecer_bandera(id_libro, "en_pendientes", True)
+        self.gestor.establecer_bandera(id_libro, "leyendo_ahora", True)
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertEqual(libro["leyendo_ahora"], 1)
+        self.assertEqual(libro["en_pendientes"], 0)
+
+    def test_establecer_bandera_leido_desmarca_leyendo_ahora(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.establecer_bandera(id_libro, "leyendo_ahora", True)
+        self.gestor.establecer_bandera(id_libro, "leido", True)
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertEqual(libro["leido"], 1)
+        self.assertEqual(libro["leyendo_ahora"], 0)
+
+    def test_establecer_bandera_favorito_no_afecta_estado_lectura(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.establecer_bandera(id_libro, "leyendo_ahora", True)
+        self.gestor.establecer_bandera(id_libro, "favorito", True)
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertEqual(libro["favorito"], 1)
+        self.assertEqual(libro["leyendo_ahora"], 1)
+
+    def test_establecer_bandera_campo_invalido_lanza_valueerror(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        with self.assertRaises(ValueError):
+            self.gestor.establecer_bandera(id_libro, "campo_inventado", True)
+
+    def test_actualizar_punto_lectura(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.actualizar_punto_lectura(id_libro, 42)
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertEqual(libro["ultimo_punto_lectura"], 42)
+
+    def test_confirmar_titulo_revisado(self):
+        id_libro = self.gestor.insertar_libro(
+            "/a.epub", "Sin revisar", "epub", titulo_revisado=False
+        )
+        self.gestor.confirmar_titulo_revisado(id_libro, "/a_final.epub", "Título final")
+        libro = self.gestor.obtener_libro(id_libro)
+        self.assertEqual(libro["titulo"], "Título final")
+        self.assertEqual(libro["ruta_archivo"], "/a_final.epub")
+        self.assertEqual(libro["titulo_revisado"], 1)
+
+    def test_obtener_pendientes_de_revision(self):
+        self.gestor.insertar_libro("/a.epub", "A", "epub", titulo_revisado=False)
+        self.gestor.insertar_libro("/b.epub", "B", "epub", titulo_revisado=True)
+        pendientes = self.gestor.obtener_pendientes_de_revision()
+        self.assertEqual(len(pendientes), 1)
+        self.assertEqual(pendientes[0]["titulo"], "A")
+
+    def test_quitar_libro(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.quitar_libro(id_libro)
+        self.assertIsNone(self.gestor.obtener_libro(id_libro))
+
+    # ── Categorías con jerarquía padre-hijo ─────────────────────────────────
+
+    def test_crear_categoria_raiz(self):
+        id_categoria = self.gestor.crear_categoria("Fantasía")
+        self.assertIsInstance(id_categoria, int)
+
+    def test_crear_categoria_hija(self):
+        id_padre = self.gestor.crear_categoria("Fantasía")
+        id_hija = self.gestor.crear_categoria("Fantasía épica", id_padre)
+        ruta = self.gestor.obtener_ruta_categoria(id_hija)
+        self.assertEqual(ruta, ["Fantasía", "Fantasía épica"])
+
+    def test_listar_categorias_hijas_raiz(self):
+        self.gestor.crear_categoria("Fantasía")
+        self.gestor.crear_categoria("Distopía")
+        raices = self.gestor.listar_categorias_hijas(None)
+        nombres = [c["nombre"] for c in raices]
+        self.assertEqual(set(nombres), {"Fantasía", "Distopía"})
+
+    def test_listar_categorias_hijas_de_un_padre(self):
+        id_padre = self.gestor.crear_categoria("Fantasía")
+        self.gestor.crear_categoria("Fantasía épica", id_padre)
+        hijas = self.gestor.listar_categorias_hijas(id_padre)
+        self.assertEqual(len(hijas), 1)
+        self.assertEqual(hijas[0]["nombre"], "Fantasía épica")
+
+    def test_renombrar_categoria(self):
+        id_categoria = self.gestor.crear_categoria("Fantasía")
+        self.assertTrue(self.gestor.renombrar_categoria(id_categoria, "Fantástico"))
+        ruta = self.gestor.obtener_ruta_categoria(id_categoria)
+        self.assertEqual(ruta, ["Fantástico"])
+
+    def test_eliminar_categoria_elimina_subarbol(self):
+        id_padre = self.gestor.crear_categoria("Fantasía")
+        id_hija = self.gestor.crear_categoria("Fantasía épica", id_padre)
+        self.gestor.eliminar_categoria(id_padre)
+        hijas = self.gestor.listar_categorias_hijas(id_padre)
+        self.assertEqual(hijas, [])
+
+    def test_asignar_categoria_por_ruta(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.asignar_categoria_por_ruta(id_libro, ["Fantasía", "Fantasía épica"])
+        categorias = self.gestor.obtener_categorias_de_libro(id_libro)
+        self.assertEqual(len(categorias), 1)
+        self.assertEqual(categorias[0]["nombre"], "Fantasía épica")
+
+    def test_quitar_categoria_de_libro(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        id_categoria = self.gestor.asignar_categoria_por_ruta(id_libro, ["Fantasía"])
+        self.gestor.quitar_categoria_de_libro(id_libro, id_categoria)
+        self.assertEqual(self.gestor.obtener_categorias_de_libro(id_libro), [])
+
+    # ── Etiquetas / sagas ────────────────────────────────────────────────────
+
+    def test_crear_etiqueta(self):
+        id_etiqueta = self.gestor.crear_etiqueta("Trilogía del Anillo")
+        self.assertIsInstance(id_etiqueta, int)
+
+    def test_asignar_etiqueta_a_libro(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.asignar_etiqueta(id_libro, "Saga X")
+        etiquetas = self.gestor.obtener_etiquetas_de_libro(id_libro)
+        self.assertEqual(len(etiquetas), 1)
+        self.assertEqual(etiquetas[0]["nombre"], "Saga X")
+
+    def test_quitar_etiqueta_de_libro(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.asignar_etiqueta(id_libro, "Saga X")
+        id_etiqueta = self.gestor.listar_etiquetas()[0]["id"]
+        self.gestor.quitar_etiqueta_de_libro(id_libro, id_etiqueta)
+        self.assertEqual(self.gestor.obtener_etiquetas_de_libro(id_libro), [])
+
+    def test_renombrar_etiqueta(self):
+        id_etiqueta = self.gestor.crear_etiqueta("Saga X")
+        self.assertTrue(self.gestor.renombrar_etiqueta(id_etiqueta, "Saga Y"))
+        nombres = [e["nombre"] for e in self.gestor.listar_etiquetas()]
+        self.assertIn("Saga Y", nombres)
+
+    def test_renombrar_etiqueta_a_nombre_ya_usado_falla(self):
+        self.gestor.crear_etiqueta("Saga X")
+        id_etiqueta_y = self.gestor.crear_etiqueta("Saga Y")
+        self.assertFalse(self.gestor.renombrar_etiqueta(id_etiqueta_y, "Saga X"))
+
+    def test_eliminar_etiqueta(self):
+        id_etiqueta = self.gestor.crear_etiqueta("Saga X")
+        self.gestor.eliminar_etiqueta(id_etiqueta)
+        self.assertEqual(self.gestor.listar_etiquetas(), [])
+
+    # ── Exportaciones pendientes ─────────────────────────────────────────────
+
+    def test_registrar_exportacion_pendiente(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        id_exportacion = self.gestor.registrar_exportacion_pendiente(
+            id_libro, "completo", "azure", punto_corte=1000
+        )
+        self.assertIsInstance(id_exportacion, int)
+
+    def test_obtener_exportaciones_pendientes(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.registrar_exportacion_pendiente(id_libro, "completo", "azure")
+        pendientes = self.gestor.obtener_exportaciones_pendientes(id_libro)
+        self.assertEqual(len(pendientes), 1)
+        self.assertEqual(pendientes[0]["proveedor"], "azure")
+
+    def test_obtener_exportaciones_pendientes_libro_sin_pendientes(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.assertEqual(self.gestor.obtener_exportaciones_pendientes(id_libro), [])
+
+    def test_obtener_ids_libros_con_exportacion_pendiente(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.registrar_exportacion_pendiente(id_libro, "completo", "azure")
+        ids = self.gestor.obtener_ids_libros_con_exportacion_pendiente()
+        self.assertEqual(ids, {id_libro})
+
+    def test_eliminar_exportacion_pendiente(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        id_exportacion = self.gestor.registrar_exportacion_pendiente(id_libro, "completo", "azure")
+        self.gestor.eliminar_exportacion_pendiente(id_exportacion)
+        self.assertEqual(self.gestor.obtener_exportaciones_pendientes(id_libro), [])
+
+    def test_eliminar_exportaciones_pendientes_de_libro(self):
+        id_libro = self.gestor.insertar_libro("/a.epub", "A", "epub")
+        self.gestor.registrar_exportacion_pendiente(id_libro, "completo", "azure")
+        self.gestor.registrar_exportacion_pendiente(id_libro, "capitulos", "polly")
+        self.gestor.eliminar_exportaciones_pendientes_de_libro(id_libro)
+        self.assertEqual(self.gestor.obtener_exportaciones_pendientes(id_libro), [])
+
+    # ── Migración de esquema ─────────────────────────────────────────────────
+
+    def test_crear_gestor_dos_veces_no_falla(self):
+        """Regresión: ALTER TABLE ADD COLUMN no debe fallar si ya existe la columna."""
+        try:
+            GestorBiblioteca(self.ruta_db)
+            GestorBiblioteca(self.ruta_db)
+        except Exception as error:
+            self.fail(f"Crear el gestor dos veces lanzó una excepción: {error}")
+
+    def test_buscar_libros_devuelve_lista_vacia_sin_coincidencias(self):
+        self.assertEqual(self.gestor.buscar_libros(texto="No existe"), [])
+
+
+class TestPersistenciaJsonAtomica(unittest.TestCase):
+    """Verifica el patrón de escritura atómica (.tmp + os.replace) de gestor_perfiles."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        self.ruta_perfiles = os.path.join(self.tmpdir, "perfiles.json")
+        patcher = patch("app.motor.gestor_perfiles._RUTA_PERFILES", self.ruta_perfiles)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_guardar_perfil_deja_json_valido_en_destino(self):
+        gestor_perfiles.crear_perfil("Novela")
+        with open(self.ruta_perfiles, "r", encoding="utf-8") as f:
+            contenido = json.load(f)
+        self.assertIn("Novela", contenido["perfiles"])
+
+    def test_guardar_perfil_no_deja_archivo_tmp_residual(self):
+        gestor_perfiles.crear_perfil("Novela")
+        self.assertFalse(os.path.exists(self.ruta_perfiles + ".tmp"))
+
+    def test_escritura_interrumpida_no_corrompe_archivo_original(self):
+        gestor_perfiles.crear_perfil("Novela")
+        with open(self.ruta_perfiles, "r", encoding="utf-8") as f:
+            contenido_original = f.read()
+
+        with patch("os.replace", side_effect=OSError("fallo simulado a mitad de escritura")):
+            self.assertFalse(gestor_perfiles.crear_perfil("Otro perfil"))
+
+        with open(self.ruta_perfiles, "r", encoding="utf-8") as f:
+            contenido_tras_fallo = f.read()
+        self.assertEqual(contenido_original, contenido_tras_fallo)
+        self.assertTrue(os.path.exists(self.ruta_perfiles + ".tmp"))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)
