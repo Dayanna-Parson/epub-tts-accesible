@@ -1230,24 +1230,29 @@ class PestanaLectura(wx.Panel):
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        # Ctrl+I se quitó de aquí: ahora se despacha de forma centralizada
-        # desde ventana_principal.py (_al_ctrl_i_contextual), igual que
-        # Ctrl+O — ver ese método para el porqué (ambigüedad de tabla de
-        # aceleradores observada en el build congelado con PyInstaller).
-        ids = [wx.NewIdRef() for _ in range(6)]
+        # Ctrl+I y Ctrl+O se quitaron de aquí: se despachan de forma
+        # centralizada desde ventana_principal.py (_al_ctrl_i_contextual /
+        # _al_ctrl_o_contextual) — la duplicación de Ctrl+I (aquí y en
+        # pestana_biblioteca.py a la vez, sin autoridad central) causó un
+        # bug real y reproducible en el build congelado con PyInstaller
+        # (activaba el manejador de la otra pestaña con el foco claramente
+        # en Lectura). Ctrl+O tenía exactamente la misma duplicación
+        # latente — pestana_biblioteca.py ya documentaba no repetirlo "para
+        # no pisar el atajo global", pero aquí sí estaba repetido — se
+        # quita por el mismo motivo, como prevención, no porque se haya
+        # observado fallar todavía.
+        ids = [wx.NewIdRef() for _ in range(5)]
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,                id=ids[0])
         self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,           id=ids[1])
         self.Bind(wx.EVT_MENU, self.al_detener,                         id=ids[2])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),       id=ids[3])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(),    id=ids[4])
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                    id=ids[5])
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('M'), ids[0]),
             (wx.ACCEL_CTRL, ord('P'), ids[1]),
             (wx.ACCEL_CTRL, ord('D'), ids[2]),
             (wx.ACCEL_CTRL, ord('F'), ids[3]),
             (wx.ACCEL_CTRL, ord('G'), ids[4]),
-            (wx.ACCEL_CTRL, ord('O'), ids[5]),
         ]))
 
     # ANCLAJE_INICIO: PAGINAS_VIRTUALES
