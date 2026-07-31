@@ -3148,3 +3148,6 @@ msgstr "No se pudo descargar la actualización."
 
 msgid "No se pudo descargar la actualización:\n{error}"
 msgstr "No se pudo descargar la actualización:\n{error}"
+
+msgid "Dividiendo... {actual} de {total} capítulos."
+msgstr "Dividiendo... {actual} de {total} capítulos."

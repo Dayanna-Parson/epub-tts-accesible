@@ -239,23 +239,6 @@ class PanelGeneral(wx.ScrolledWindow):
         )
         sizer_updates.Add(self.lbl_progreso, 0, wx.ALL, 5)
 
-        # ANCLAJE_INICIO: BOTON_PRUEBA_ACTUALIZADOR_FASE_C
-        # Botón temporal de desarrollo, independiente del flujo de producción
-        # de arriba (btn_buscar_updates). Prueba en aislamiento el nuevo
-        # gestor de descarga/verificación a temp/actualizacion/ (Fase C).
-        # Se retira cuando el flujo completo con actualizador.exe sustituya
-        # al bloque ACTUALIZADOR_SCRIPT_CLON.
-        self.btn_probar_descarga_nueva = wx.Button(
-            self, label=_("Probar descarga y verificación (Fase C)")
-        )
-        self.btn_probar_descarga_nueva.SetHelpText(
-            _("Descarga la última versión a temp/actualizacion/ y verifica su estructura, "
-              "sin instalar nada. Herramienta de desarrollo de la Fase C.")
-        )
-        self.btn_probar_descarga_nueva.Bind(wx.EVT_BUTTON, self._al_probar_descarga_nueva)
-        sizer_updates.Add(self.btn_probar_descarga_nueva, 0, wx.ALL, 5)
-        # ANCLAJE_FIN: BOTON_PRUEBA_ACTUALIZADOR_FASE_C
-
         sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
 
         # ANCLAJE_INICIO: SELECTOR_ESCALA_VELOCIDAD_AJUSTES
@@ -781,20 +764,7 @@ class PanelGeneral(wx.ScrolledWindow):
         wx.CallAfter(wx.GetTopLevelParent(self).Close)
     # ANCLAJE_FIN: ACTUALIZADOR_SCRIPT_CLON
 
-    # ANCLAJE_INICIO: ACTUALIZADOR_DESCARGA_VERIFICACION_FASE_C
-    def _al_probar_descarga_nueva(self, evento=None):
-        from app.motor.actualizador_descarga import GestorDescargaActualizacion
-
-        self.btn_probar_descarga_nueva.Disable()
-        wx.CallAfter(self.lbl_progreso.SetLabel, _("Iniciando descarga de prueba..."))
-        voz.hablar(_("Iniciando descarga de prueba..."))
-
-        gestor = GestorDescargaActualizacion()
-        gestor.descargar_y_verificar_en_hilo(
-            callback_resultado=lambda r: wx.CallAfter(self._al_resultado_descarga_nueva, r),
-            callback_progreso=lambda msg, pct: wx.CallAfter(self._al_progreso_descarga_nueva, msg),
-        )
-
+    # ANCLAJE_INICIO: ACTUALIZADOR_FASE_C_INSTALACION_AUXILIAR
     def _al_progreso_descarga_nueva(self, msg: str):
         """
         Antes solo se actualizaba lbl_progreso (visible, pero sin nada que
@@ -806,62 +776,6 @@ class PanelGeneral(wx.ScrolledWindow):
         """
         self.lbl_progreso.SetLabel(msg)
         self._voz_actualizacion.hablar(msg)
-
-    def _al_resultado_descarga_nueva(self, resultado: dict):
-        self.btn_probar_descarga_nueva.Enable()
-        wx.CallAfter(self.lbl_progreso.SetLabel, "")
-
-        if not resultado.get("ok"):
-            logger.warning(
-                "Verificación de la descarga de prueba fallida: %s",
-                resultado.get("error"),
-            )
-            reproducir(ERROR)
-            wx.MessageBox(
-                _("No se pudo verificar la actualización descargada:\n{error}").format(
-                    error=resultado.get("error")
-                ),
-                _("Verificación fallida"), wx.OK | wx.ICON_ERROR,
-            )
-            return
-
-        reproducir(SUCCESS)
-        ruta_extraida = resultado.get("ruta_extraida")
-
-        from app.config_rutas import RAIZ
-        ruta_exe = os.path.join(RAIZ, "bin", "actualizador.exe")
-
-        if not os.path.isfile(ruta_exe):
-            # Todavía no se ha compilado/copiado actualizador.exe a bin/ — es
-            # el caso esperado mientras se prueba solo la descarga/verificación
-            # (Fase C en desarrollo). Se avisa sin ambigüedad y sin cerrar la
-            # app, dejando temp/actualizacion/ intacto para poder revisarlo.
-            reproducir(ERROR)
-            wx.MessageBox(
-                _(
-                    "Descarga y verificación completadas correctamente en:\n"
-                    "«{ruta_extraida}».\n\n"
-                    "El instalador auxiliar todavía no está disponible en:\n{ruta_exe}\n\n"
-                    "No se instalará nada. Los archivos ya verificados se conservan "
-                    "en temp/actualizacion/ para que puedas revisarlos."
-                ).format(ruta_extraida=ruta_extraida, ruta_exe=ruta_exe),
-                _("Instalador no disponible"), wx.OK | wx.ICON_WARNING,
-            )
-            return
-
-        respuesta = wx.MessageBox(
-            _("Descarga y verificación completadas correctamente.\n\n"
-              "Para instalarla, la aplicación se cerrará y un proceso auxiliar "
-              "independiente (actualizador.exe) hará el cambio con respaldo "
-              "automático. ¿Instalar ahora?"),
-            _("Verificación correcta"), wx.YES_NO | wx.ICON_QUESTION,
-        )
-        if respuesta != wx.YES:
-            from app.motor.actualizador_descarga import GestorDescargaActualizacion
-            GestorDescargaActualizacion().limpiar()
-            return
-
-        self._lanzar_actualizador_auxiliar(ruta_extraida)
 
     def _lanzar_actualizador_auxiliar(self, ruta_extraida: str):
         """
