@@ -36,6 +36,7 @@ def _texto_ayuda_limite(proveedor, gastado, limite_chars):
         lim = int(limite_chars)
         gas = int(gastado)
     except (ValueError, TypeError):
+        logger.debug("Límite o gasto no numérico al calcular texto de ayuda de cuota", exc_info=True)
         return ""
     if lim <= 0:
         return ""
@@ -151,6 +152,7 @@ class PanelGeneral(wx.ScrolledWindow):
         try:
             self.combo_idioma_ui.SetSelection(IDIOMAS_DISPONIBLES.index(_codigo_ui_guardado))
         except ValueError:
+            logger.warning("Código de idioma guardado '%s' no está en IDIOMAS_DISPONIBLES", _codigo_ui_guardado)
             self.combo_idioma_ui.SetSelection(0)
         self.combo_idioma_ui.Bind(wx.EVT_COMBOBOX, self._al_cambiar_idioma_ui)
         sz_idioma_ui.Add(self.combo_idioma_ui, 0, wx.EXPAND | wx.ALL, 5)
@@ -420,6 +422,7 @@ class PanelGeneral(wx.ScrolledWindow):
                     total_archivos += n
                     total_bytes += size
                 except Exception:
+                    logger.exception("Error al borrar la carpeta __pycache__ '%s'", dirpath)
                     errores += 1
 
         for dirpath, dirnames, filenames in os.walk(RAIZ):
@@ -435,6 +438,7 @@ class PanelGeneral(wx.ScrolledWindow):
                         os.remove(fpath)
                         total_archivos += 1
                     except Exception:
+                        logger.exception("Error al borrar el archivo temporal '%s'", fpath)
                         errores += 1
 
         carpeta_cache = os.path.join(RAIZ, 'cache')
@@ -447,6 +451,7 @@ class PanelGeneral(wx.ScrolledWindow):
                         os.remove(fpath)
                         total_archivos += 1
                     except Exception:
+                        logger.exception("Error al borrar el archivo de caché de audio '%s'", fpath)
                         errores += 1
 
         if total_bytes >= 1_048_576:

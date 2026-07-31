@@ -80,7 +80,7 @@ try:
         logger.info(f"[GrabadorAudio] ffmpeg local detectado: {_FFMPEG_LOCAL}")
     del _AS
 except ImportError:
-    pass  # pydub no instalado — los métodos individuales manejan el fallback
+    logger.warning("pydub no está instalado: los métodos individuales manejan el fallback")
 
 # ── Suprimir ventanas de consola en Windows (ffmpeg/ffprobe) ──────────────────
 # Sin este parche, pydub crea un subproceso visible por cada llamada a ffmpeg;
@@ -101,7 +101,7 @@ try:
         _subprocess.Popen = _SilentPopen
     del _sys
 except Exception:
-    pass
+    logger.exception("Error aplicando el parche de ventanas ocultas para ffmpeg/ffprobe")
 
 # Ruta absoluta → funciona independientemente del directorio de trabajo actual
 CARPETA_RAIZ_GRABACIONES = os.path.join(_RAIZ, "Grabaciones_Epub-TTS")
@@ -331,7 +331,7 @@ class GrabadorAudio:
                     if os.path.exists(t):
                         os.remove(t)
                 except Exception:
-                    pass
+                    logger.exception("Error borrando archivo temporal '%s' tras concatenar audios", t)
 
         return archivos_generados, errores
 
@@ -484,6 +484,7 @@ class GrabadorAudio:
                     try:
                         archivos_tmp[indice] = futuro.result()
                     except Exception as e:
+                        logger.exception("Error generando el trozo %s en paralelo (proveedor '%s')", indice, proveedor)
                         if excepcion_pendiente is None:
                             excepcion_pendiente = e
                             for f in futuros:
@@ -507,7 +508,7 @@ class GrabadorAudio:
                         if os.path.exists(tmp):
                             os.remove(tmp)
                     except Exception:
-                        pass
+                        logger.exception("Error borrando archivo temporal '%s' de trozo paralelo", tmp)
 
     def _llamar_motor(self, texto: str, datos_voz, ruta_salida: str, proveedor: str):
         """Despacha al motor correspondiente según el proveedor."""

@@ -165,7 +165,7 @@ class ClienteDeepgram:
                 try:
                     detalle = respuesta.json().get("err_msg", "")
                 except Exception:
-                    pass
+                    logger.exception("[Deepgram] No se pudo interpretar el detalle de error de la respuesta")
             raise Exception(f"Error Deepgram: {codigo} {detalle}".strip())
 
         data, fs = sf.read(io.BytesIO(respuesta.content))
@@ -211,6 +211,7 @@ class ClienteDeepgram:
             self._audio_preparado = (data, fs)
             self._texto_preparado = texto
         except Exception:
+            logger.exception("[Deepgram] Fallo al precargar audio en preparar()")
             self._audio_preparado = None
             self._texto_preparado = None
 
@@ -221,11 +222,11 @@ class ClienteDeepgram:
             self._sesion.close()
             self._sesion = requests.Session()
         except Exception:
-            pass
+            logger.exception("[Deepgram] Fallo al reiniciar la sesión HTTP en detener()")
         try:
             sd.stop()
         except Exception:
-            pass
+            logger.exception("[Deepgram] Fallo al detener la reproducción de audio en detener()")
 
     def pausar(self):
         self.detener()

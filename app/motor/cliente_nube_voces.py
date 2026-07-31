@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import requests
 import warnings
@@ -7,6 +8,8 @@ from app.config_rutas import ruta_config, cargar_claves
 
 # Suprimimos advertencias técnicas de conexión segura
 warnings.filterwarnings("ignore")
+
+logger = logging.getLogger(__name__)
 
 
 class GestorVoces:
@@ -40,7 +43,7 @@ class GestorVoces:
                 with open(ruta, "r", encoding="utf-8") as f:
                     return {str(x).strip() for x in json.load(f) if x}
         except Exception:
-            pass
+            logger.exception("Error leyendo voces_conocidas.json")
         return set()
 
     def _guardar_ids_conocidos(self, ids: set):
@@ -52,8 +55,8 @@ class GestorVoces:
             with open(ruta_tmp, "w", encoding="utf-8") as f:
                 json.dump(sorted(ids), f, ensure_ascii=False)
             os.replace(ruta_tmp, ruta)
-        except Exception as e:
-            print(f"[GestorVoces] Error guardando voces_conocidas.json: {e}")
+        except Exception:
+            logger.exception("Error guardando voces_conocidas.json")
 
     def _aplicar_marca_nuevas(self, primera_vez: bool, ids_conocidos: set) -> set:
         """
@@ -103,6 +106,7 @@ class GestorVoces:
                 self.voces_cache["azure"] = voces
                 resumen.append(f"Azure: {len(voces)} voces encontradas.")
             except Exception as e:
+                logger.exception("Error descargando voces de Azure")
                 resumen.append(f"Azure Error: {str(e)}")
         else:
             resumen.append("Azure: Faltan datos (Key/Región).")
@@ -117,6 +121,7 @@ class GestorVoces:
                 self.voces_cache["elevenlabs"] = voces
                 resumen.append(f"ElevenLabs: {len(voces)} voces encontradas.")
             except Exception as e:
+                logger.exception("Error descargando voces de ElevenLabs")
                 resumen.append(f"ElevenLabs Error: {str(e)}")
         else:
             resumen.append("ElevenLabs: Falta API Key.")
@@ -133,8 +138,10 @@ class GestorVoces:
                 self.voces_cache["polly"] = voces
                 resumen.append(f"Amazon Polly: {len(voces)} voces encontradas.")
             except ImportError:
+                logger.warning("boto3 no está instalado: no se pueden descargar voces de Amazon Polly")
                 resumen.append("Amazon Polly Error: boto3 no está instalado (pip install boto3).")
             except Exception as e:
+                logger.exception("Error descargando voces de Amazon Polly")
                 resumen.append(f"Amazon Polly Error: {str(e)}")
         else:
             resumen.append("Amazon Polly: Faltan credenciales (Access Key / Secret Key).")
@@ -149,6 +156,7 @@ class GestorVoces:
                 self.voces_cache["deepgram"] = voces
                 resumen.append(f"Deepgram: {len(voces)} voces encontradas.")
             except Exception as e:
+                logger.exception("Error descargando voces de Deepgram")
                 resumen.append(f"Deepgram Error: {str(e)}")
         else:
             resumen.append("Deepgram: Falta API Key.")
@@ -292,7 +300,7 @@ class GestorVoces:
                             for m in ("generative", "long-form", "neural")
                         )
             except Exception as e:
-                print(f"[Polly] Motor '{engine_extra}' no disponible en esta región: {e}")
+                logger.warning("Motor '%s' de Polly no disponible en esta región: %s", engine_extra, e)
 
         return voces_procesadas
 
@@ -410,7 +418,7 @@ class GestorVoces:
                 with open(self.ruta_cache_voces, 'r', encoding='utf-8') as f:
                     self.voces_cache = json.load(f)
             except Exception:
-                pass
+                logger.exception("Error leyendo caché de voces existente en voces_disponibles.json")
 
         config = self.cargar_configuracion()
 
@@ -426,6 +434,7 @@ class GestorVoces:
                 self._marcar_y_guardar()
                 return f"Azure: {len(voces)} voces descargadas."
             except Exception as e:
+                logger.exception("Error actualizando voces de Azure")
                 return f"Azure Error: {e}"
 
         elif proveedor == "polly":
@@ -441,8 +450,10 @@ class GestorVoces:
                 self._marcar_y_guardar()
                 return f"Amazon Polly: {len(voces)} voces descargadas."
             except ImportError:
+                logger.warning("boto3 no está instalado: no se pueden actualizar voces de Amazon Polly")
                 return "Amazon Polly Error: boto3 no instalado (pip install boto3)."
             except Exception as e:
+                logger.exception("Error actualizando voces de Amazon Polly")
                 return f"Amazon Polly Error: {e}"
 
         elif proveedor == "elevenlabs":
@@ -456,6 +467,7 @@ class GestorVoces:
                 self._marcar_y_guardar()
                 return f"ElevenLabs: {len(voces)} voces descargadas."
             except Exception as e:
+                logger.exception("Error actualizando voces de ElevenLabs")
                 return f"ElevenLabs Error: {e}"
 
         elif proveedor == "deepgram":
@@ -469,6 +481,7 @@ class GestorVoces:
                 self._marcar_y_guardar()
                 return f"Deepgram: {len(voces)} voces descargadas."
             except Exception as e:
+                logger.exception("Error actualizando voces de Deepgram")
                 return f"Deepgram Error: {e}"
 
         return f"Proveedor desconocido: {proveedor}"
@@ -479,8 +492,8 @@ class GestorVoces:
             os.makedirs(os.path.dirname(self.ruta_cache_voces), exist_ok=True)
             with open(self.ruta_cache_voces, 'w', encoding='utf-8') as f:
                 json.dump(self.voces_cache, f, indent=4, ensure_ascii=False)
-        except Exception as e:
-            print(f"[GestorVoces] Error guardando caché de voces: {e}")
+        except Exception:
+            logger.exception("Error guardando caché de voces en voces_disponibles.json")
 
     def obtener_todas_las_voces(self):
         """Devuelve el diccionario de voces guardado. Si no existe, devuelve vacío."""
@@ -489,5 +502,6 @@ class GestorVoces:
                 with open(self.ruta_cache_voces, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception:
+                logger.exception("Error leyendo voces_disponibles.json, devolviendo caché en memoria")
                 return self.voces_cache
         return self.voces_cache

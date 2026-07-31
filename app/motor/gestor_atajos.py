@@ -9,8 +9,11 @@ Al cargar se fusionan ambos: el usuario puede sobrescribir cualquier default,
 y restaurar todo borrando/vaciando teclas_usuario.json (restablecer_todos).
 """
 import json
+import logging
 import os
 from app.config_rutas import ruta_config
+
+logger = logging.getLogger(__name__)
 
 _RUTA_DEFAULTS = ruta_config("teclas_predeterminadas.json")
 _RUTA_USUARIO = ruta_config("teclas_usuario.json")
@@ -85,7 +88,7 @@ def _asegurar_defaults():
                 json.dump(datos, f, ensure_ascii=False, indent=4)
             return
         except Exception:
-            pass
+            logger.exception("No se pudo leer/actualizar teclas_predeterminadas.json, se reescribirá desde cero")
     os.makedirs(os.path.dirname(_RUTA_DEFAULTS), exist_ok=True)
     with open(_RUTA_DEFAULTS, 'w', encoding='utf-8') as f:
         json.dump(_DEFAULTS_EMBEBIDOS, f, ensure_ascii=False, indent=4)
@@ -101,6 +104,7 @@ def cargar_atajos():
         with open(_RUTA_DEFAULTS, 'r', encoding='utf-8') as f:
             defaults = json.load(f)
     except Exception:
+        logger.exception("No se pudo leer teclas_predeterminadas.json, se usan los defaults embebidos")
         defaults = dict(_DEFAULTS_EMBEBIDOS)
 
     usuario = {}
@@ -109,6 +113,7 @@ def cargar_atajos():
             with open(_RUTA_USUARIO, 'r', encoding='utf-8') as f:
                 usuario = json.load(f)
         except Exception:
+            logger.exception("No se pudo leer teclas_usuario.json, se ignoran los overrides")
             usuario = {}
 
     resultado = {}
@@ -129,6 +134,7 @@ def cargar_defaults():
         with open(_RUTA_DEFAULTS, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception:
+        logger.exception("No se pudo leer teclas_predeterminadas.json, se devuelven los defaults embebidos")
         return dict(_DEFAULTS_EMBEBIDOS)
 
 
@@ -140,6 +146,7 @@ def guardar_atajo_usuario(clave, modificador, tecla):
             with open(_RUTA_USUARIO, 'r', encoding='utf-8') as f:
                 usuario = json.load(f)
         except Exception:
+            logger.exception("No se pudo leer teclas_usuario.json, se sobrescribirá con este override")
             usuario = {}
 
     usuario[clave] = {"modificador": modificador, "tecla": tecla}
@@ -160,7 +167,7 @@ def eliminar_atajo_usuario(clave):
             with open(_RUTA_USUARIO, 'w', encoding='utf-8') as f:
                 json.dump(usuario, f, indent=4, ensure_ascii=False)
     except Exception:
-        pass
+        logger.exception("No se pudo eliminar el override de usuario para '%s'", clave)
 
 
 def restablecer_todos():

@@ -69,8 +69,12 @@ class _HandlerErrorIndividual(logging.Handler):
             with open(ruta, "w", encoding="utf-8") as f:
                 f.write(self.format(record))
             self._purgar_antiguos()
-        except Exception:
-            pass
+        except Exception as _e:
+            # No se usa el logger aquí: este método se ejecuta dentro del
+            # propio manejador de logging, y volver a llamar a logger.*
+            # dentro de emit() puede reentrar en el sistema de logging.
+            # stderr directo es el canal seguro para este caso concreto.
+            print(f"[_HandlerErrorIndividual] fallo al escribir log individual: {_e}", file=sys.stderr)
 
     def _purgar_antiguos(self):
         archivos = sorted(
@@ -80,8 +84,10 @@ class _HandlerErrorIndividual(logging.Handler):
         for ruta_vieja in archivos[:-self._MAXIMO_ARCHIVOS]:
             try:
                 os.remove(ruta_vieja)
-            except OSError:
-                pass
+            except OSError as _e:
+                # Mismo motivo que en emit(): evitar reentrar en logging
+                # desde dentro de un manejador de logging.
+                print(f"[_HandlerErrorIndividual] no se pudo purgar {ruta_vieja}: {_e}", file=sys.stderr)
 
 
 _handler_error_individual = _HandlerErrorIndividual(
@@ -150,7 +156,10 @@ def _limpiar_temporales_huerfanos():
             mtime = os.path.getmtime(ruta)
             size  = os.path.getsize(ruta)
             candidatos.append((mtime, size, ruta))
-        except OSError:
+        except OSError as _e:
+            logging.getLogger(__name__).debug(
+                "No se pudo leer metadatos de temporal huérfano %s: %s", ruta, _e
+            )
             continue
 
     # Eliminar archivos mayores de 7 días
@@ -161,8 +170,10 @@ def _limpiar_temporales_huerfanos():
                 logging.getLogger(__name__).debug(
                     "Temporal huérfano eliminado (>7 días): %s", ruta
                 )
-            except OSError:
-                pass
+            except OSError as _e:
+                logging.getLogger(__name__).warning(
+                    "No se pudo eliminar temporal huérfano %s: %s", ruta, _e
+                )
 
     # Si la carpeta sigue superando el límite, eliminar los más antiguos
     candidatos = [(m, s, r) for m, s, r in candidatos if os.path.exists(r)]

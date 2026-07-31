@@ -78,6 +78,7 @@ class ClienteAzure:
             else:
                 idioma_destino = "es-ES"
         except Exception:
+            logger.warning("[Azure] No se pudo leer idioma_libro_codigo de ajustes.json, se usa 'es-ES' por defecto", exc_info=True)
             idioma_destino = "es-ES"
 
         if not key or not region:
@@ -196,6 +197,7 @@ class ClienteAzure:
             self._audio_preparado = (data, fs)
             self._texto_preparado = texto
         except Exception:
+            logger.exception("[Azure] Fallo al precargar audio en preparar()")
             self._audio_preparado = None
             self._texto_preparado = None
 
@@ -210,11 +212,11 @@ class ClienteAzure:
             self._sesion.close()
             self._sesion = requests.Session()
         except Exception:
-            pass
+            logger.exception("[Azure] Fallo al reiniciar la sesión HTTP en detener()")
         try:
             sd.stop()
         except Exception:
-            pass
+            logger.exception("[Azure] Fallo al detener la reproducción de audio en detener()")
 
     def pausar(self):
         self.detener()

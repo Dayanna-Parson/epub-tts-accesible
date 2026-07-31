@@ -1,9 +1,12 @@
 import io
+import logging
 import time
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
 from app.config_rutas import cargar_claves
+
+logger = logging.getLogger(__name__)
 
 # ── Comprobación inmediata de boto3 ──────────────────────────────────────────
 # Se comprueba al importar el módulo para que el fallo sea visible desde
@@ -22,10 +25,9 @@ except ImportError:
     print("=" * 60)
     # Escribir al log del sistema si ya está configurado (se configura en iniciar_epub_tts.py)
     try:
-        import logging as _logging
-        _logging.getLogger(__name__).warning(_MSG_BOTO3)
+        logging.getLogger(__name__).warning(_MSG_BOTO3)
     except Exception:
-        pass
+        logger.exception("No se pudo registrar en el log la ausencia de boto3")
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Mapeo de nombres de región descriptivos a códigos AWS estándar.
@@ -271,6 +273,7 @@ class ClientePolly:
             self._audio_preparado = (data, fs)
             self._texto_preparado = texto
         except Exception:
+            logger.exception("[Polly] Fallo al precargar audio en preparar()")
             self._audio_preparado = None
             self._texto_preparado = None
 
@@ -280,7 +283,7 @@ class ClientePolly:
         try:
             sd.stop()
         except Exception:
-            pass
+            logger.exception("[Polly] Fallo al detener la reproducción de audio en detener()")
 
     def pausar(self):
         self.detener()

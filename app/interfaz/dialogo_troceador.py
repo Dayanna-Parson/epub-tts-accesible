@@ -22,6 +22,7 @@ Accesibilidad:
   · Todos los botones usan aplicar_icono_boton() → AccessibleName siempre presente.
 """
 
+import logging
 import os
 import threading
 
@@ -33,6 +34,8 @@ from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_N
 from app.interfaz.ui_recursos import aplicar_icono_boton
 from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.gestor_idioma import traducir as _
+
+logger = logging.getLogger(__name__)
 
 
 # ── Lista de capítulos con casillas ──────────────────────────────────────────
@@ -240,6 +243,7 @@ class DialogoTroceador(wx.Dialog):
                 caps = self._troceador.cargar(ruta)
                 wx.CallAfter(self._al_epub_cargado, caps, None)
             except Exception as exc:
+                logger.exception("Error al cargar el índice del EPUB para trocear")
                 wx.CallAfter(self._al_epub_cargado, [], str(exc))
 
         threading.Thread(target=_tarea, daemon=True).start()
@@ -329,6 +333,7 @@ class DialogoTroceador(wx.Dialog):
                 n = self._troceador.dividir(indices, carpeta, _progreso)
                 wx.CallAfter(self._al_division_completada, n, carpeta, None)
             except Exception as exc:
+                logger.exception("Error al dividir el EPUB en capítulos")
                 wx.CallAfter(self._al_division_completada, 0, carpeta, str(exc))
 
         threading.Thread(target=_tarea, daemon=True).start()

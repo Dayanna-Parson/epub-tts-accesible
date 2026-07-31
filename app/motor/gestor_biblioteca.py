@@ -166,7 +166,7 @@ class GestorBiblioteca:
                     try:
                         conexion.execute(sentencia)
                     except sqlite3.OperationalError:
-                        pass
+                        logger.debug("La columna de la sentencia ya existía, se omite: %s", sentencia)
                 # A las filas ya existentes sin orden se les da uno según
                 # su orden actual (por id de creación), para no perder ni
                 # desordenar nada de golpe al actualizar.

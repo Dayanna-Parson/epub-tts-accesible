@@ -141,6 +141,7 @@ def listar_backups() -> list:
             reverse=True,
         )
     except Exception:
+        logger.exception("No se pudo listar los backups de proyectos.json")
         return []
 
 

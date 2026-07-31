@@ -96,7 +96,8 @@ class ClienteSapi32Bridge:
                 if not linea:
                     continue
                 datos = json.loads(linea.decode("utf-8", errors="replace").strip())
-            except Exception:
+            except Exception as e:
+                logger.debug("[SAPI32] Línea de evento descartada por no ser JSON válido: %s", e)
                 continue
 
             evento = datos.get("evento")
@@ -223,6 +224,7 @@ class ClienteSapi32Bridge:
                 self._enviar({"cmd": "salir"})
                 self._proceso.wait(timeout=3.0)
             except Exception:
+                logger.exception("[SAPI32] El auxiliar no cerró limpio a tiempo, se fuerza su terminación")
                 self._proceso.kill()
             self._proceso = None
         self.conectado = False
@@ -231,5 +233,5 @@ class ClienteSapi32Bridge:
         try:
             self.cerrar()
         except Exception:
-            pass
+            logger.exception("[SAPI32] Fallo al cerrar el proceso auxiliar en __del__")
 # ANCLAJE_FIN: CLIENTE_SAPI32_BRIDGE

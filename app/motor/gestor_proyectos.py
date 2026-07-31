@@ -27,11 +27,14 @@ Nota de arquitectura:
 """
 
 import json
+import logging
 import os
 import uuid
 from typing import Optional
 
 from app.config_rutas import ruta_config
+
+logger = logging.getLogger(__name__)
 
 
 # ── Categorías de proyecto disponibles ───────────────────────────────────────
@@ -107,7 +110,7 @@ class GestorProyectos:
                             p["tipo"] = [t] if t else []
                     return datos
         except Exception:
-            pass
+            logger.exception("No se pudo leer proyectos.json, se empieza con un estado vacío")
         return {"version": 1, "proyectos": {}}
 
     def guardar(self):
@@ -123,7 +126,7 @@ class GestorProyectos:
             from app.motor.gestor_backups import crear_backup_proyectos
             crear_backup_proyectos()
         except Exception:
-            pass
+            logger.exception("No se pudo crear la copia de seguridad de proyectos.json")
 
     def recargar(self):
         """Recarga desde disco (útil si otra instancia modificó el archivo)."""

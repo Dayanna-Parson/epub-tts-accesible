@@ -1,9 +1,12 @@
+import logging
 import time
 import requests
 import sounddevice as sd
 import soundfile as sf
 import io
 from app.config_rutas import cargar_claves
+
+logger = logging.getLogger(__name__)
 
 _MAX_CACHE = 5
 
@@ -106,6 +109,7 @@ class ClienteEleven:
             self._audio_preparado = (data, fs_efectiva)
             self._texto_preparado = texto
         except Exception:
+            logger.exception("[ElevenLabs] Fallo al precargar audio en preparar()")
             self._audio_preparado = None
             self._texto_preparado = None
 
@@ -116,11 +120,11 @@ class ClienteEleven:
             self._sesion.close()
             self._sesion = requests.Session()
         except Exception:
-            pass
+            logger.exception("[ElevenLabs] Fallo al reiniciar la sesión HTTP en detener()")
         try:
             sd.stop()
         except Exception:
-            pass
+            logger.exception("[ElevenLabs] Fallo al detener la reproducción de audio en detener()")
 
     def pausar(self):
         self.detener()
