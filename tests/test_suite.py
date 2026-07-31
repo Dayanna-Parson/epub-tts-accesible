@@ -2,11 +2,15 @@
 Suite de tests para Epub-TTS Accessible
 ========================================
 Cubre las partes testables sin GUI ni hardware de audio:
-  - procesador_etiquetas  (puro Python)
-  - limpiador_lectura     (puro Python)
-  - gestor_proyectos      (stdlib + fichero temporal)
-  - control_cuota         (lógica con wx + reproductor_sonidos mockeados)
-  - config_rutas          (utils de rutas)
+  - procesador_etiquetas       (puro Python)
+  - limpiador_lectura          (puro Python)
+  - gestor_proyectos           (stdlib + fichero temporal)
+  - control_cuota              (lógica con wx + reproductor_sonidos mockeados)
+  - config_rutas               (utils de rutas)
+  - gestor_perfiles            (CRUD de perfiles de usuario, fichero temporal)
+  - comprobador_actualizaciones (comparación de versiones semánticas)
+  - gestor_atajos              (CRUD de atajos de teclado, ficheros temporales)
+  - diccionario_pronunciacion  (sustituciones fonéticas, fichero temporal)
 """
 
 import sys
@@ -800,6 +804,163 @@ class TestGestorPerfiles(unittest.TestCase):
         datos_releidos = gestor_perfiles.cargar_perfiles()
         self.assertIn("A", datos_releidos["perfiles"])
         self.assertEqual(datos_releidos["perfil_activo"], "A")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPROBADOR DE ACTUALIZACIONES (comparación de versiones semánticas)
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
+
+
+class TestComprobadorActualizaciones(unittest.TestCase):
+    """
+    hay_actualizacion() es la comparación que decide si se ofrece instalar
+    algo: un fallo aquí ya causó un bug real en esta fase (leer_version_local
+    apuntando a una ruta equivocada, sin lanzar ninguna excepción visible).
+    """
+
+    def setUp(self):
+        self.comp = ComprobadorActualizaciones()
+
+    def test_remota_mayor_hay_actualizacion(self):
+        self.assertTrue(self.comp.hay_actualizacion("3.0.0", "4.0.0"))
+
+    def test_remota_menor_no_hay_actualizacion(self):
+        self.assertFalse(self.comp.hay_actualizacion("4.0.0", "3.0.0"))
+
+    def test_versiones_iguales_no_hay_actualizacion(self):
+        self.assertFalse(self.comp.hay_actualizacion("3.0.0", "3.0.0"))
+
+    def test_local_con_menos_segmentos_que_remota(self):
+        # "1.0" (sin parche) frente a "3.0.0": la comparación por tuplas debe
+        # seguir decidiendo bien aunque los segmentos no cuadren en longitud.
+        self.assertTrue(self.comp.hay_actualizacion("1.0", "3.0.0"))
+
+    def test_local_vacia_no_lanza_excepcion(self):
+        self.assertFalse(self.comp.hay_actualizacion("", "3.0.0"))
+
+    def test_version_no_numerica_no_lanza_excepcion(self):
+        self.assertFalse(self.comp.hay_actualizacion("no-es-una-version", "3.0.0"))
+
+    def test_leer_version_local_sin_archivo_devuelve_0_0_0(self):
+        with patch(
+            "app.motor.comprobador_actualizaciones._RUTA_VERSION_LOCAL",
+            "/ruta/que/no/existe/version.json",
+        ):
+            self.assertEqual(self.comp.leer_version_local(), "0.0.0")
+
+    def test_leer_version_local_lee_el_archivo_real(self):
+        with tempfile.TemporaryDirectory() as d:
+            ruta = os.path.join(d, "version.json")
+            with open(ruta, "w", encoding="utf-8") as f:
+                json.dump({"version": "4.0.0"}, f)
+            with patch("app.motor.comprobador_actualizaciones._RUTA_VERSION_LOCAL", ruta):
+                self.assertEqual(self.comp.leer_version_local(), "4.0.0")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GESTOR DE ATAJOS DE TECLADO
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor import gestor_atajos
+
+
+class TestGestorAtajos(unittest.TestCase):
+    """Usa archivos temporales aislados para no tocar teclas_*.json reales."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        patcher_def = patch(
+            "app.motor.gestor_atajos._RUTA_DEFAULTS",
+            os.path.join(self.tmpdir, "teclas_predeterminadas.json"),
+        )
+        patcher_usr = patch(
+            "app.motor.gestor_atajos._RUTA_USUARIO",
+            os.path.join(self.tmpdir, "teclas_usuario.json"),
+        )
+        patcher_def.start()
+        patcher_usr.start()
+        self.addCleanup(patcher_def.stop)
+        self.addCleanup(patcher_usr.stop)
+
+    def test_cargar_atajos_crea_defaults_si_no_existen(self):
+        atajos = gestor_atajos.cargar_atajos()
+        self.assertIn("reproducir_pausar", atajos)
+        self.assertEqual(atajos["reproducir_pausar"]["tecla"], "P")
+
+    def test_guardar_atajo_usuario_sobrescribe_el_default(self):
+        gestor_atajos.guardar_atajo_usuario("reproducir_pausar", "Ctrl+Shift", "Z")
+        atajos = gestor_atajos.cargar_atajos()
+        self.assertEqual(atajos["reproducir_pausar"]["modificador"], "Ctrl+Shift")
+        self.assertEqual(atajos["reproducir_pausar"]["tecla"], "Z")
+
+    def test_eliminar_atajo_usuario_restaura_el_default(self):
+        gestor_atajos.guardar_atajo_usuario("detener", "Alt", "X")
+        gestor_atajos.eliminar_atajo_usuario("detener")
+        atajos = gestor_atajos.cargar_atajos()
+        defaults = gestor_atajos.cargar_defaults()
+        self.assertEqual(atajos["detener"], defaults["detener"])
+
+    def test_restablecer_todos_borra_todos_los_overrides(self):
+        gestor_atajos.guardar_atajo_usuario("detener", "Alt", "X")
+        gestor_atajos.guardar_atajo_usuario("buscar", "Alt", "Y")
+        gestor_atajos.restablecer_todos()
+        atajos = gestor_atajos.cargar_atajos()
+        defaults = gestor_atajos.cargar_defaults()
+        self.assertEqual(atajos, defaults)
+
+    def test_texto_atajo_con_modificador_y_tecla(self):
+        self.assertEqual(
+            gestor_atajos.texto_atajo({"modificador": "Ctrl+Shift", "tecla": "U"}),
+            "Ctrl+Shift+U",
+        )
+
+    def test_texto_atajo_sin_asignar(self):
+        self.assertEqual(gestor_atajos.texto_atajo({"modificador": "", "tecla": ""}), "(sin asignar)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DICCIONARIO DE PRONUNCIACIÓN
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
+
+
+class TestDiccionarioPronunciacion(unittest.TestCase):
+    """Usa un archivo temporal aislado para no tocar pronunciacion.json real."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        patcher = patch(
+            "app.motor.diccionario_pronunciacion._RUTA",
+            os.path.join(self.tmpdir, "pronunciacion.json"),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.dic = DiccionarioPronunciacion()
+
+    def test_diccionario_vacio_sin_archivo(self):
+        self.assertEqual(self.dic.obtener_tabla(), {})
+
+    def test_anadir_entrada_y_aplicar_sustitucion(self):
+        self.dic.anadir_entrada("EPUB", "í-pub")
+        self.assertEqual(self.dic.aplicar("Un archivo EPUB nuevo"), "Un archivo í-pub nuevo")
+
+    def test_aplicar_respeta_limites_de_palabra(self):
+        # "EPUB" no debe sustituirse dentro de "EPUBook" (coincidencia parcial).
+        self.dic.anadir_entrada("EPUB", "í-pub")
+        self.assertEqual(self.dic.aplicar("Un EPUBook nuevo"), "Un EPUBook nuevo")
+
+    def test_eliminar_entrada(self):
+        self.dic.anadir_entrada("NVDA", "en-ví-di-ei")
+        self.dic.eliminar_entrada("NVDA")
+        self.assertEqual(self.dic.aplicar("Uso NVDA a diario"), "Uso NVDA a diario")
+
+    def test_guardar_y_recargar_persiste_en_disco(self):
+        self.dic.anadir_entrada("Tolkien", "Tól-kien")
+        otro = DiccionarioPronunciacion()
+        self.assertEqual(otro.obtener_tabla(), {"Tolkien": "Tól-kien"})
+
+    def test_texto_vacio_devuelve_igual(self):
+        self.assertEqual(self.dic.aplicar(""), "")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
