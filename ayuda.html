@@ -24,8 +24,22 @@
 <header>
     <h1>MANUAL DE USUARIO: EPUB TTS ACCESIBLE</h1>
     <p>Desarrolladora: Dayanna Parson (TifloTutos) | tiflotutos.com</p>
-    <p>Versión 4.0.0</p>
+    <p>Versión 4.1.0</p>
 </header>
+
+<section id="novedades-41">
+    <h2>Novedades de la versión 4.1.0</h2>
+    <div class="novedad-box">
+        <p>Esta versión no añade funciones nuevas: es una puesta a punto completa para dejar la aplicación lista y estable de cara a su distribución pública.</p>
+        <strong>Mejoras:</strong>
+        <ul>
+            <li><strong>Aplicación más estable:</strong> se revisó a fondo todo el código en busca de fallos internos que podían pasar completamente desapercibidos, y ahora todos quedan registrados en el archivo de registro para poder diagnosticarlos si algo va mal.</li>
+            <li><strong>Rendimiento en Lectura:</strong> al abrir un PDF largo con reglas de pronunciación propias del libro, la carga es notablemente más rápida.</li>
+            <li><strong>Menos parpadeo al abrir listas largas:</strong> la lista de voces en Grabación de Fragmentos, el índice de capítulos al dividir un EPUB, la lista de atajos y de perfiles en Ajustes, y el árbol de Proyectos cargan ahora de un tirón.</li>
+            <li><strong>Empaquetado más limpio:</strong> el portable ya no lleva una carpeta separada solo para <code>novedades.txt</code> — va directo en la carpeta principal, junto a este manual y el ejecutable.</li>
+        </ul>
+    </div>
+</section>
 
 <section id="novedades-40">
     <h2>Novedades de la versión 4.0.0</h2>
@@ -216,7 +230,76 @@
 
 <section id="ajustes">
     <h2>7. Ajustes y Presupuesto</h2>
-    <p>Controla tu consumo de APIs de forma inteligente. La app viene configurada con límites por defecto para cuentas gratuitas o de acceso básico:</p>
+
+    <h3>¿Necesito una clave de API?</h3>
+    <p>Depende de qué voces quieras usar. La aplicación siempre trae voces locales de Windows (SAPI5) que funcionan sin conexión, sin cuenta y sin límite de uso — es la alternativa segura si no quieres complicarte con nada más.</p>
+    <p>Pero si quieres usar las voces neuronales de alta calidad (Azure, Amazon Polly, ElevenLabs o Deepgram) o el Asistente de Biblioteca con inteligencia artificial (Google Gemini), necesitas tu propia clave de API de ese servicio. Ninguna de estas claves viene incluida con la aplicación: cada persona debe crear su propia cuenta gratuita en el servicio que quiera usar y generar ahí su propia clave. Más abajo tienes el paso a paso para conseguir cada una.</p>
+
+    <div class="aviso-box">
+        <strong>Importante — lee esto antes de crear ninguna cuenta:</strong>
+        <ul>
+            <li>Todos estos servicios (Azure, Amazon Polly, ElevenLabs, Deepgram y Google Gemini) tienen un <strong>nivel gratuito</strong> con un límite de caracteres o de uso mensual — lo tienes detallado en la tabla más abajo. Mientras no superes ese límite, no pagas nada.</li>
+            <li>Si superas el límite gratuito, la mayoría de estos servicios te pedirán añadir una tarjeta de pago para seguir usándolos. A partir de ahí tu cuenta pasa a funcionar por «pago por uso»: pagas según la cantidad de caracteres que envíes a sintetizar. Cuanto más leas con estas voces, más te cobrará el proveedor a principios del mes siguiente.</li>
+            <li>La aplicación incluye un <strong>control de cuota</strong> (más abajo, en esta misma sección) para avisarte antes de que eso pase, pero la responsabilidad de vigilar tu consumo y tu facturación en la web de cada proveedor es tuya.</li>
+            <li>Guarda tu clave de API con cuidado y no la compartas con nadie: quien tenga tu clave puede usarla y generar gastos en tu cuenta. La desarrolladora de esta aplicación no se hace responsable del uso que cada persona le dé a sus propias claves, ni de los gastos, filtraciones o problemas que puedan surgir por su mal manejo. La aplicación solo te da las herramientas; cómo las uses es responsabilidad de cada usuario.</li>
+        </ul>
+    </div>
+
+    <h3>Cómo obtener una API Key de Microsoft Azure (voz neuronal)</h3>
+    <ol>
+        <li>Entra en <strong>portal.azure.com</strong> y crea una cuenta gratuita (piden una tarjeta para verificar tu identidad, pero no te cobra nada mientras te mantengas dentro del nivel gratuito).</li>
+        <li>Una vez dentro, busca <strong>«Crear un recurso»</strong> y escribe <strong>«Speech service»</strong> (o «Servicio de voz») en el buscador.</li>
+        <li>Rellena el formulario: elige una suscripción, un grupo de recursos (puedes crear uno nuevo si no tienes ninguno), una región cercana a ti, y en el plan de precios elige el nivel <strong>Free (F0)</strong>.</li>
+        <li>Pulsa <strong>«Revisar y crear»</strong> y después <strong>«Crear»</strong>. Espera a que Azure termine de implementar el recurso.</li>
+        <li>Entra al recurso ya creado y busca en el menú lateral <strong>«Claves y punto de conexión»</strong>. Ahí verás dos claves (Clave 1 y Clave 2, cualquiera de las dos sirve) y la región.</li>
+        <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega la clave y la región en los campos de Azure.</li>
+    </ol>
+
+    <h3>Cómo obtener una API Key de Amazon Polly</h3>
+    <ol>
+        <li>Entra en <strong>aws.amazon.com</strong> y crea una cuenta de AWS gratuita (también pide una tarjeta para verificar tu identidad).</li>
+        <li>Una vez dentro de la consola de AWS, busca <strong>«IAM»</strong> (Identity and Access Management) en el buscador superior.</li>
+        <li>En el menú lateral de IAM, entra en <strong>«Usuarios»</strong> y pulsa <strong>«Crear usuario»</strong>. Dale un nombre y avanza sin marcar acceso a la consola web (solo necesitas acceso por API).</li>
+        <li>En el paso de permisos, elige <strong>«Adjuntar políticas directamente»</strong> y busca y marca la política <strong>«AmazonPollyFullAccess»</strong>.</li>
+        <li>Termina de crear el usuario, entra en él, ve a la pestaña <strong>«Credenciales de seguridad»</strong> y pulsa <strong>«Crear clave de acceso»</strong>. Elige la opción de uso «Aplicación local» o similar.</li>
+        <li>Copia el <strong>ID de clave de acceso</strong> y la <strong>clave de acceso secreta</strong> que se generan (la clave secreta solo se muestra una vez, guárdala en un lugar seguro).</li>
+        <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega ambos valores, junto con la región de AWS que prefieras, en los campos de Amazon Polly.</li>
+    </ol>
+
+    <h3>Cómo obtener una API Key de Deepgram</h3>
+    <ol>
+        <li>Ve a <strong>console.deepgram.com</strong> y crea una cuenta gratuita.</li>
+        <li>Dentro del panel, selecciona <strong>API Keys → Create a new API Key</strong>.</li>
+        <li>Copia la clave generada (solo se muestra una vez).</li>
+        <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega la clave en el campo de Deepgram.</li>
+    </ol>
+    <p>Deepgram funciona con un modelo de pago por uso (pay-as-you-go). La síntesis de voz cuesta aproximadamente 0,015 $ por cada 1 000 caracteres. No hay suscripción mensual obligatoria; solo pagas lo que consumes.</p>
+
+    <h3>Cómo obtener una API Key de ElevenLabs</h3>
+    <ol>
+        <li>Entra en <strong>elevenlabs.io</strong> y crea una cuenta gratuita (con correo o con tu cuenta de Google).</li>
+        <li>Una vez dentro, pulsa sobre tu perfil (esquina superior derecha) y entra en <strong>«API Keys»</strong> (o «Claves de API»).</li>
+        <li>Pulsa <strong>«Create API Key»</strong>, dale un nombre identificativo y confirma.</li>
+        <li>Copia la clave generada.</li>
+        <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega la clave en el campo de ElevenLabs.</li>
+    </ol>
+
+    <h3>Cómo obtener una API Key de Google Gemini (Asistente de Biblioteca)</h3>
+    <ol>
+        <li>Entra en <strong>aistudio.google.com</strong> con tu cuenta de Google (no hace falta crear una cuenta nueva si ya tienes Gmail).</li>
+        <li>Busca el botón <strong>«Get API key»</strong> (u «Obtener clave de API») en el menú lateral o superior.</li>
+        <li>Pulsa <strong>«Create API key»</strong> (o «Crear clave de API») y elige un proyecto de Google Cloud, o deja que se cree uno automáticamente.</li>
+        <li>Copia la clave generada.</li>
+        <li>En la aplicación, abre <strong>Ajustes → Credenciales y API Keys</strong>, sección Google Gemini, y pega la clave.</li>
+    </ol>
+    <p>El nivel gratuito de Gemini permite un número limitado de consultas al día, más que suficiente para el uso normal del Asistente de Biblioteca (recomendaciones, resúmenes y preguntas sobre tu catálogo).</p>
+
+    <div class="info-box">
+        <strong>Nota:</strong> los pasos exactos de cada web pueden cambiar con el tiempo, ya que estos servicios actualizan sus paneles de vez en cuando. Si algún paso no coincide exactamente con lo que ves en pantalla, busca la opción equivalente — el concepto general (crear cuenta, buscar «API Keys» o «Claves de acceso», copiar el valor generado) se mantiene igual en todos.
+    </div>
+
+    <h3>Límites gratuitos por proveedor</h3>
+    <p>La app viene configurada con límites por defecto pensados para no pasarte del nivel gratuito de cada proveedor:</p>
 
     <table>
         <thead>
@@ -252,6 +335,11 @@
                 <td>Sin límite</td>
                 <td>Uso libre, sin conexión</td>
             </tr>
+            <tr>
+                <td><strong>Google Gemini</strong> (Asistente de Biblioteca)</td>
+                <td>No gestionado por la app</td>
+                <td>Nivel gratuito con límite de consultas al día — revisa tu cuota en aistudio.google.com</td>
+            </tr>
         </tbody>
     </table>
     <p><em>Nota: 1 millón de caracteres equivale a unas 15-18 horas de audio.</em></p>
@@ -259,15 +347,6 @@
     <div class="aviso-box">
         <strong>Nota sobre ElevenLabs:</strong> ElevenLabs sigue disponible en la aplicación y funciona correctamente. Sin embargo, su sistema de créditos puede resultar muy costoso en sesiones largas: los planes gratuito y de entrada se agotan con rapidez, y los planes de pago son significativamente más caros que el modelo pay-as-you-go de Deepgram. Si buscas la mejor relación calidad-coste, Deepgram es la opción recomendada.
     </div>
-
-    <h3>Cómo obtener una API Key de Deepgram</h3>
-    <ol>
-        <li>Ve a <strong>console.deepgram.com</strong> y crea una cuenta gratuita.</li>
-        <li>Dentro del panel, selecciona <strong>API Keys → Create a new API Key</strong>.</li>
-        <li>Copia la clave generada (solo se muestra una vez).</li>
-        <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega la clave en el campo de Deepgram.</li>
-    </ol>
-    <p>Deepgram funciona con un modelo de pago por uso (pay-as-you-go). La síntesis de voz cuesta aproximadamente 0,015 $ por cada 1 000 caracteres. No hay suscripción mensual obligatoria; solo pagas lo que consumes.</p>
 
     <h3>Actualizaciones automáticas</h3>
     <p>La aplicación puede comprobar al arranque si existe una versión nueva. Si hay novedades, se muestra un diálogo con el resumen de cambios. También puedes comprobarlo manualmente desde el botón <strong>«Buscar actualizaciones ahora»</strong> en la pestaña Ajustes.</p>
@@ -338,7 +417,7 @@
 </section>
 
 <div class="footer">
-    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 4.0.0</p>
+    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 4.1.0</p>
 </div>
 
 </body>
