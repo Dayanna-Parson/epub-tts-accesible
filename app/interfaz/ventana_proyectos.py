@@ -342,6 +342,7 @@ class VentanaProyectos(wx.Frame):
         try:
             nodo = self.arbol.GetSelection()
         except RuntimeError:
+            logger.debug("Árbol de proyectos ya destruido al obtener la selección", exc_info=True)
             return None
         if not nodo or not nodo.IsOk():
             return None
@@ -410,6 +411,7 @@ class VentanaProyectos(wx.Frame):
             self._actualizar_lista_archivos(proyecto)
             self._actualizar_lista_voces(proyecto["id"])
         except RuntimeError:
+            logger.debug("Widget ya destruido al actualizar listas del proyecto", exc_info=True)
             pass
         # NO SetFocus aquí: el foco se queda en el árbol para que NVDA lea el nodo
         evento.Skip()

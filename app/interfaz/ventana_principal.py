@@ -508,8 +508,8 @@ class VentanaPrincipal(wx.Frame):
             if os.path.exists(self.ruta_recientes):
                 with open(self.ruta_recientes, "r", encoding="utf-8") as archivo:
                     self.archivos_recientes = json.load(archivo)
-        except Exception as e:
-            print(f"[Aviso] No se pudo leer el historial de recientes: {e}")
+        except Exception:
+            logger.exception("No se pudo leer el historial de recientes")
             self.archivos_recientes = []
         self.actualizar_menu_recientes()
 
@@ -533,8 +533,8 @@ class VentanaPrincipal(wx.Frame):
             os.makedirs(os.path.dirname(self.ruta_recientes), exist_ok=True)
             with open(self.ruta_recientes, "w", encoding="utf-8") as archivo:
                 json.dump(self.archivos_recientes, archivo)
-        except Exception as e:
-            print(f"Error guardando recientes: {e}")
+        except Exception:
+            logger.exception("Error guardando recientes")
 
     def actualizar_menu_recientes(self):
         """No-op: los libros recientes se construyen dinámicamente en _menu_contextual_lectura."""
@@ -879,6 +879,7 @@ class VentanaPrincipal(wx.Frame):
             try:
                 _ACCIONES[clave]()
             except Exception:
+                logger.exception("Error al ejecutar la acción del atajo global '%s'", clave)
                 pass
     # ANCLAJE_FIN: ACELERADORES_GLOBALES
 
@@ -962,6 +963,7 @@ class VentanaPrincipal(wx.Frame):
             with open(os.path.join(RAIZ_RECURSOS, "recursos", "version.json"), "r", encoding="utf-8") as f:
                 version = json.load(f).get("version", "3.0.0")
         except Exception:
+            logger.exception("Error al leer version.json para el diálogo Acerca de")
             version = "3.0.0"
         texto = _(
             "Epub TTS Accesible\n"
@@ -1092,6 +1094,7 @@ class VentanaPrincipal(wx.Frame):
             with open(ruta_version, encoding="utf-8") as f:
                 version_actual = json.load(f).get("version", "")
         except Exception:
+            logger.exception("Error al leer version.json para el aviso de novedades")
             return
         if not version_actual:
             return
@@ -1114,6 +1117,7 @@ class VentanaPrincipal(wx.Frame):
             with open(ruta_novedades, encoding="utf-8") as f:
                 texto_completo = f.read()
         except Exception:
+            logger.exception("Error al leer el archivo de novedades de la versión")
             texto_completo = ""
 
         from app.interfaz.dialogo_novedades import DialogoNovedades
@@ -1171,6 +1175,7 @@ class VentanaPrincipal(wx.Frame):
             if not conf.get("actualizar_automaticamente", False):
                 return
         except Exception:
+            logger.exception("Error al leer ajustes.json para la comprobación automática al arranque")
             pass
         try:
             from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
