@@ -17,6 +17,9 @@
         th { background-color: #3498db; color: white; }
         code { background: #eee; padding: 2px 5px; border-radius: 4px; font-family: monospace; }
         .footer { text-align: center; margin-top: 40px; font-size: 0.9em; color: #7f8c8d; }
+        nav#indice ul { columns: 1; }
+        nav#indice li { margin-bottom: 4px; }
+        nav#indice ul ul { margin-top: 4px; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -26,6 +29,39 @@
     <p>Desarrolladora: Dayanna Parson (TifloTutos) | tiflotutos.com</p>
     <p>Versión 4.1.0</p>
 </header>
+
+<nav id="indice" aria-label="Índice del manual">
+    <h2>Índice</h2>
+    <ul>
+        <li><a href="#novedades-41">Novedades de la versión 4.1.0</a></li>
+        <li><a href="#introduccion">1. Introducción</a></li>
+        <li><a href="#primeros-pasos">2. Antes de empezar: tus primeros minutos con la app</a></li>
+        <li><a href="#atajos">3. Atajos que vas a usar siempre</a></li>
+        <li><a href="#biblioteca">4. Pestaña Biblioteca</a></li>
+        <li><a href="#lectura">5. Pestaña Modo Lectura</a></li>
+        <li><a href="#creador">6. Creador de Audiolibros</a></li>
+        <li><a href="#grabacion">7. Grabación de Fragmentos</a></li>
+        <li><a href="#proyectos">8. Ventana de Gestión de Proyectos</a></li>
+        <li><a href="#voces">9. Voces: favoritas, filtros y motores disponibles</a></li>
+        <li>
+            <a href="#ajustes">10. Ajustes</a>
+            <ul>
+                <li><a href="#ajustes-api">10.1. Claves de API</a></li>
+                <li><a href="#ajustes-cuota">10.2. Límites gratuitos y control de cuota</a></li>
+                <li><a href="#ajustes-actualizaciones">10.3. Actualizaciones automáticas</a></li>
+                <li><a href="#ajustes-idioma">10.4. Idioma de la interfaz</a></li>
+                <li><a href="#ajustes-gemini">10.5. Google Gemini (modelo y temperatura)</a></li>
+                <li><a href="#ajustes-sonidos">10.6. Efectos de sonido</a></li>
+                <li><a href="#ajustes-plantillas">10.7. Plantillas del Asistente de Biblioteca</a></li>
+                <li><a href="#ajustes-perfiles">10.8. Perfiles de usuario</a></li>
+            </ul>
+        </li>
+        <li><a href="#diccionario">11. Diccionario de Pronunciación</a></li>
+        <li><a href="#sonidos">12. Qué significa cada sonido</a></li>
+        <li><a href="#faq">13. Preguntas frecuentes</a></li>
+        <li><a href="#contacto">14. Contacto y soporte</a></li>
+    </ul>
+</nav>
 
 <section id="novedades-41">
     <h2>Novedades de la versión 4.1.0</h2>
@@ -37,6 +73,7 @@
             <li><strong>Rendimiento en Lectura:</strong> al abrir un PDF largo con reglas de pronunciación propias del libro, la carga es notablemente más rápida.</li>
             <li><strong>Menos parpadeo al abrir listas largas:</strong> la lista de voces en Grabación de Fragmentos, el índice de capítulos al dividir un EPUB, la lista de atajos y de perfiles en Ajustes, y el árbol de Proyectos cargan ahora de un tirón.</li>
             <li><strong>Empaquetado más limpio:</strong> el portable ya no lleva una carpeta separada solo para <code>novedades.txt</code> — va directo en la carpeta principal, junto a este manual y el ejecutable.</li>
+            <li><strong>Este manual se revisó de arriba abajo</strong> para cubrir partes de la aplicación que antes no explicaba (la Ventana de Proyectos, el sistema de voces favoritas, el significado de cada sonido) y para que sea más fácil de seguir si es la primera vez que usas la app.</li>
         </ul>
     </div>
 </section>
@@ -51,8 +88,8 @@
         </ul>
         <strong>Correcciones:</strong>
         <ul>
-            <li>La comprobación de actualizaciones comparaba siempre contra la versión «0.0.0» por un fallo de ruta, así que cualquier versión publicada parecía «nueva» una y otra vez, incluso justo después de instalar una actualización real.</li>
-            <li>Los avisos de voz durante el escaneo de una carpeta grande en Biblioteca, el aplicado de etiquetas por carpeta y el divisor de EPUB en capítulos podían quedarse mudos en el portable (sin afectar a la versión de desarrollo).</li>
+            <li>La comprobación de actualizaciones comparaba siempre contra la versión «0.0.0» por un fallo de ruta, así que cualquier versión publicada le parecía «nueva» una y otra vez, incluso justo después de instalar una actualización real.</li>
+            <li>Los avisos de voz durante el escaneo de una carpeta grande en Biblioteca, el aplicado de etiquetas por carpeta y el divisor de EPUB en capítulos podían quedarse mudos en el instalador portable (sin afectar a la versión de desarrollo).</li>
             <li>En Grabación de Fragmentos, el anuncio de cada fragmento en modo «dividir por etiquetas» podía dejar de sonar a partir del segundo o tercero en grabaciones largas, sin ningún aviso de que había fallado.</li>
             <li>En Grabación de Fragmentos, el modo «un único archivo MP3 unificado» no anunciaba nada por voz durante toda la grabación (solo el pitido de progreso y la barra), hasta el mensaje final. Ahora también anuncia cada fragmento, igual que en modo «dividir por etiquetas».</li>
             <li><strong>Control + I</strong> (anunciar página en Lectura / info del libro en Biblioteca) podía activar el aviso de la pestaña equivocada en el portable.</li>
@@ -125,31 +162,72 @@
 
 <section id="introduccion">
     <h2>1. Introducción</h2>
-    <p>Epub TTS Accesible es una herramienta única diseñada para unificar la lectura de alta calidad y la producción de audiolibros multivoz en una sola aplicación portable para Windows.</p>
+    <p>Epub TTS Accesible es un programa para Windows que hace dos cosas: te lee en voz alta tus libros EPUB y PDF, y te ayuda a convertirlos en audiolibros. Todo desde el teclado, sin necesidad de ratón.</p>
 
     <div class="info-box">
-        <strong>Propósito:</strong> Organizar tu biblioteca de libros EPUB y PDF, leerlos con voces neuronales, y producir audiolibros —a mano con etiquetas de personajes, o de un libro entero con un solo clic— exportados en MP3 a 320 kbps, normalizados a 44 100 Hz para máxima compatibilidad.
+        <strong>¿Para quién es esta app?</strong> Está pensada y construida, de principio a fin, por y para personas ciegas o con baja visión que usan un lector de pantalla. Cada pantalla, cada botón y cada aviso están hechos para navegarse con NVDA o JAWS sin sorpresas. Dicho esto, si ves bien y quieres usarla igualmente —para escuchar libros mientras haces otra cosa, o para producir audiolibros— puedes usarla sin ningún problema: la interfaz es simple a la vista y no vas a encontrar nada raro. Solo ten en cuenta que algunas decisiones de diseño (por ejemplo, que no se pueda usar la barra espaciadora como atajo, o que los mensajes se lean por voz aunque el foco no se mueva) están pensadas primero para quien no ve la pantalla.</p>
+    </div>
+
+    <p>Con la aplicación puedes:</p>
+    <ul>
+        <li>Organizar tu colección de libros EPUB y PDF por géneros y sagas, en la pestaña Biblioteca.</li>
+        <li>Leer esos libros en voz alta, con marcadores, búsqueda de texto y memoria de por dónde ibas, en Modo Lectura.</li>
+        <li>Convertir un libro entero en un audiolibro en MP3, de un tirón o capítulo a capítulo, en el Creador de Audiolibros.</li>
+        <li>Producir audiolibros multivoz a mano, asignando una voz distinta a cada personaje, en Grabación de Fragmentos.</li>
+        <li>Preguntarle a un asistente con inteligencia artificial sobre tus libros y que te recomiende qué leer.</li>
+    </ul>
+
+    <p>Todo el audio que produces —ya sea con el Creador de Audiolibros o con Grabación de Fragmentos— se exporta en MP3 a 320 kbps y 44 100 Hz, el formato estándar que necesitas si luego quieres editarlo en Reaper o cualquier otro programa de audio.</p>
+</section>
+
+<section id="primeros-pasos">
+    <h2>2. Antes de empezar: tus primeros minutos con la app</h2>
+    <p>Si es la primera vez que abres Epub TTS Accesible, esto es lo que te vas a encontrar y lo que te conviene hacer, en orden.</p>
+
+    <h3>Lo primero que verás</h3>
+    <p>Al abrir la aplicación oirás un sonido corto que confirma que ya está lista, y tu lector de pantalla anunciará la ventana principal. La aplicación se organiza en <strong>cinco pestañas</strong>: Biblioteca, Modo Lectura, Creador de Audiolibros, Grabación de Fragmentos y Ajustes. Te mueves entre ellas con <code>Control + 1</code> a <code>Control + 5</code> desde cualquier punto de la aplicación (más detalle en la siguiente sección). No hace falta usar el ratón para nada: todo tiene su atajo o se navega con Tab.</p>
+
+    <h3>Tu primera decisión: ¿voz local o voz de nube?</h3>
+    <p>La aplicación trae ya voces de Windows (SAPI5) listas para usar sin hacer nada más: sin crear ninguna cuenta, sin internet, sin límite de uso. Son la opción más simple para empezar y probar la app.</p>
+    <p>Si más adelante quieres voces con una calidad mucho más natural (Azure, Amazon Polly, Deepgram o ElevenLabs), necesitarás una clave de API propia de ese servicio. No hace falta que te ocupes de esto ahora: puedes empezar a usar la app entera con las voces locales, y añadir una voz de nube cuando quieras, desde <strong>Ajustes → Claves API</strong>. El paso a paso completo para conseguir cada clave está en el <a href="#ajustes-api">apartado 10.1</a> de este mismo manual.</p>
+
+    <h3>Tu primer libro</h3>
+    <p>Tienes dos caminos igual de válidos para tu primer libro:</p>
+    <ol>
+        <li><strong>Camino rápido, sin organizar nada todavía:</strong> ve a la pestaña <strong>Modo Lectura</strong> (<code>Control + 2</code>) y pulsa <code>Control + O</code> para abrir un EPUB o PDF suelto directamente. Empieza a leer en el acto.</li>
+        <li><strong>Camino recomendado si vas a usar la app a menudo:</strong> ve primero a <strong>Biblioteca</strong> (<code>Control + 1</code>) y usa <strong>Importar carpeta...</strong> para añadir de golpe todos los libros que tengas guardados, o <strong>Importar libro...</strong> para uno solo. A partir de ahí, cualquier libro de tu Biblioteca se abre en Lectura con solo seleccionarlo y pulsar Entrar (o desde el menú contextual, tecla Menú o Mayús+F10).</li>
+    </ol>
+
+    <h3>Cómo saber qué tecla hace qué, sin memorizar nada</h3>
+    <p>No hace falta que te aprendas todos los atajos de golpe. Con NVDA o JAWS activo, casi cualquier control te dice para qué sirve al recibir el foco (con Tab). La sección <a href="#atajos">3. Atajos que vas a usar siempre</a> reúne los más importantes, y cada pestaña de este manual tiene los suyos propios explicados en su propio apartado. Si en algún momento te pierdes, puedes volver a abrir este manual con <code>F1</code> desde cualquier pantalla de la aplicación.</p>
+
+    <div class="aviso-box">
+        <strong>Un aviso sobre la primera vez que abras el .exe portable:</strong> si Windows Defender u otro antivirus muestra un aviso al abrir <code>epubtts.exe</code> por primera vez, no te alarmes: es un falso positivo habitual en programas pequeños e independientes que no llevan una firma digital comercial (esa firma tiene un coste que no es viable para un proyecto de este tamaño). Si tu antivirus lo bloquea, añade una excepción para la carpeta donde tengas la aplicación. No hay nada malicioso: puedes revisar tú mismo el código fuente completo en el repositorio de GitHub.
     </div>
 </section>
 
-<section id="modos">
-    <h2>2. Modos de Uso y Atajos Principales</h2>
+<section id="atajos">
+    <h2>3. Atajos que vas a usar siempre</h2>
+    <p>Estos funcionan desde cualquier pestaña de la aplicación, no solo en una concreta:</p>
     <ul>
         <li><strong>Control + 1:</strong> Biblioteca (tus libros).</li>
         <li><strong>Control + 2:</strong> Modo Lectura (tiempo real).</li>
         <li><strong>Control + 3:</strong> Creador de Audiolibros (exportación de un libro entero).</li>
         <li><strong>Control + 4:</strong> Grabación de Fragmentos (producción multivoz con etiquetas).</li>
         <li><strong>Control + 5:</strong> Ajustes de la aplicación.</li>
-        <li><strong>Control + O:</strong> Cargar libro (en Lectura), abrir carpeta (en Biblioteca o Grabación) — contextual según la pestaña activa.</li>
-        <li><strong>Control + P:</strong> Reproducir / Pausar.</li>
+        <li><strong>Control + O:</strong> Cargar libro (en Lectura), abrir carpeta (en Biblioteca o Grabación) — hace algo distinto según la pestaña en la que estés, siempre lo más lógico para esa pantalla.</li>
+        <li><strong>Control + I:</strong> Anuncia información contextual: la página actual en Lectura, o los datos del libro seleccionado en Biblioteca.</li>
+        <li><strong>Control + P:</strong> Reproducir / Pausar. Es el atajo universal para esto en toda la app — deliberadamente no se usa la barra espaciadora, para no chocar con lo que NVDA o JAWS hacen con esa tecla en muchos controles.</li>
         <li><strong>Control + Mayús + B:</strong> Abrir el Asistente de Biblioteca (Gemini), desde cualquier pestaña.</li>
-        <li><strong>Control + Mayús + U:</strong> Alternar entre perfiles de usuario, desde cualquier pestaña.</li>
+        <li><strong>Control + Mayús + U:</strong> Alternar entre tus perfiles de usuario, desde cualquier pestaña.</li>
+        <li><strong>Control + Mayús + P:</strong> Abrir la Ventana de Gestión de Proyectos.</li>
         <li><strong>F1:</strong> Abrir este manual.</li>
     </ul>
+    <p>Todos estos atajos (salvo el de Proyectos y este manual) se pueden reconfigurar a tu gusto desde <strong>Ajustes → Atajos de teclado</strong>, por si alguno choca con tu lector de pantalla o con otro programa que uses a la vez.</p>
 </section>
 
 <section id="biblioteca">
-    <h2>3. Pestaña Biblioteca</h2>
+    <h2>4. Pestaña Biblioteca</h2>
     <p>El punto de entrada a tus libros. Admite EPUB y PDF.</p>
     <ul>
         <li><strong>Importar carpeta...:</strong> escanea una carpeta entera en segundo plano y añade todos los libros que encuentre. Puede sugerir agrupar por sagas si detecta varios libros en una misma subcarpeta.</li>
@@ -163,14 +241,14 @@
     <h3>Asistente de Biblioteca (Gemini)</h3>
     <p>Con <strong>Control + Mayús + B</strong> (desde cualquier pestaña) abres un chat accesible con un asistente basado en Google Gemini. Si tienes un libro, una saga o una categoría seleccionados, el asistente ya conoce ese contexto; si no hay nada seleccionado, conoce el catálogo completo de tu biblioteca (títulos, autores y sagas), para responder con precisión sobre lo que sí tienes y no inventar datos.</p>
     <ul>
-        <li><strong>Estilo del asistente:</strong> combo con las plantillas de prompt disponibles (recomendaciones, análisis crítico, resúmenes rápidos...). Se crean, editan y borran desde <strong>Ajustes → Asistente de Biblioteca</strong>, no aquí.</li>
+        <li><strong>Estilo del asistente:</strong> combo con las plantillas de prompt disponibles (recomendaciones, análisis crítico, resúmenes rápidos...). Se crean, editan y borran desde <strong>Ajustes → Asistente de Biblioteca</strong>, no aquí — ver <a href="#ajustes-plantillas">apartado 10.7</a>.</li>
         <li>El historial de la conversación se guarda por libro y puede exportarse a un archivo de texto con el botón <strong>«Guardar conversación...»</strong>.</li>
-        <li>Necesitas una clave de API de Google Gemini, configurable en <strong>Ajustes → Credenciales y API Keys</strong>, junto con el modelo a usar (automático o uno concreto) y la temperatura de las respuestas.</li>
+        <li>Necesitas una clave de API de Google Gemini, configurable en <strong>Ajustes → Credenciales y API Keys</strong> (ver <a href="#ajustes-api">apartado 10.1</a>), junto con el modelo a usar (automático o uno concreto) y la temperatura de las respuestas.</li>
     </ul>
 </section>
 
 <section id="lectura">
-    <h2>4. Pestaña Modo Lectura</h2>
+    <h2>5. Pestaña Modo Lectura</h2>
     <p>Navega por tus libros favoritos con control total:</p>
     <ul>
         <li><strong>Control + F:</strong> Buscar texto en el libro.</li>
@@ -188,7 +266,7 @@
 </section>
 
 <section id="creador">
-    <h2>5. Creador de Audiolibros</h2>
+    <h2>6. Creador de Audiolibros</h2>
     <p>Exporta un libro entero de tu Biblioteca a MP3, sin pasar por el flujo manual de etiquetas.</p>
     <ul>
         <li><strong>Modo de exportación:</strong> Libro completo (un único MP3) o Por capítulos (un MP3 por capítulo, numerado).</li>
@@ -204,7 +282,7 @@
 </section>
 
 <section id="grabacion">
-    <h2>6. Grabación de Fragmentos (SAPI 5 y Nube)</h2>
+    <h2>7. Grabación de Fragmentos (SAPI 5 y Nube)</h2>
     <p>Epub TTS Accesible permite asignar voces a etiquetas como <code>{{@narrador}}</code> o <code>{{@personaje1}}</code> dentro de un archivo TXT.</p>
 
     <h3>Etiquetas de personaje</h3>
@@ -226,26 +304,73 @@
 
     <h3>Dividir EPUB en capítulos TXT</h3>
     <p>El botón <strong>«Dividir EPUB…»</strong> extrae cada capítulo del libro en un archivo TXT independiente, listo para etiquetar y grabar. Los archivos se guardan en <code>Grabaciones_Epub-TTS/&lt;Título&gt;/capitulos/</code>.</p>
+
+    <p>Si estás grabando un proyecto grande, con muchos archivos TXT relacionados entre sí (una saga completa, un libro con muchos capítulos), la <a href="#proyectos">Ventana de Gestión de Proyectos</a> te ayuda a organizarlos todos juntos, con sus voces asignadas heredadas de un nivel a otro.</p>
+</section>
+
+<section id="proyectos">
+    <h2>8. Ventana de Gestión de Proyectos</h2>
+    <p>Se abre con <strong>Control + Mayús + P</strong> desde cualquier pestaña, o desde <strong>Aplicación → Abrir Gestor de Proyectos</strong> en la barra de menú. Es una ventana aparte (no bloquea el resto de la aplicación mientras está abierta), pensada para organizar producciones grandes de Grabación de Fragmentos: una saga completa, un libro con muchos capítulos, o cualquier otro tipo de trabajo por voces que quieras tener bajo un mismo árbol.</p>
+
+    <h3>Cómo se organiza</h3>
+    <p>Los proyectos se organizan en un árbol jerárquico de tres niveles como máximo: por ejemplo, <strong>Saga → Libro → Capítulo</strong>, o <strong>Podcast → Episodio</strong>, según el tipo de trabajo que elijas. No estás limitado a libros: también sirve para podcasts, vídeos, guiones o cualquier otro proyecto de voz por etiquetas.</p>
+    <ul>
+        <li><strong>Crear proyecto:</strong> le das un nombre, eliges su tipo (o varios tipos a la vez) y, si corresponde, un proyecto «padre» dentro del cual vive (por ejemplo, un capítulo dentro de un libro).</li>
+        <li><strong>Herencia de voces:</strong> si asignas una voz a un narrador o personaje en el proyecto de más arriba (la Saga, por ejemplo), todos los proyectos que cuelguen de él (Libro, Capítulo) heredan automáticamente esa misma asignación de voz, sin tener que repetirla en cada nivel. Puedes sobreescribirla en un nivel más específico si ese capítulo concreto necesita una voz distinta.</li>
+        <li><strong>Papelera:</strong> un proyecto eliminado no desaparece de inmediato — pasa a la papelera del propio gestor, desde donde puedes restaurarlo o borrarlo definitivamente.</li>
+        <li><strong>Acceso directo a las grabaciones:</strong> desde cada proyecto puedes abrir directamente en el Explorador la carpeta donde se guardan sus archivos de audio, sin tener que buscarla a mano.</li>
+    </ul>
+
+    <div class="info-box">
+        <strong>¿Es obligatorio usar la Ventana de Proyectos?</strong> No. Grabación de Fragmentos funciona igual de bien sin ella si solo estás grabando algo puntual. Los Proyectos son una capa organizativa extra, pensada para cuando el trabajo crece (una saga de varios libros, por ejemplo) y necesitas un mapa claro de qué llevas grabado y qué te falta.
+    </div>
+</section>
+
+<section id="voces">
+    <h2>9. Voces: favoritas, filtros y motores disponibles</h2>
+    <p>Epub TTS Accesible te da acceso a varios motores de síntesis de voz, cada uno con su propio catálogo (a veces de cientos de voces). Para no perderte entre tantas opciones, la aplicación usa un sistema de <strong>favoritas</strong>: eliges de antemano qué voces te interesan, y a partir de ahí solo esas aparecen en los selectores rápidos de Lectura, Grabación y el Creador de Audiolibros.</p>
+
+    <h3>Motores disponibles</h3>
+    <ul>
+        <li><strong>Voces locales SAPI5</strong> (64 y 32 bits, incluidas Eloquence y RealSpeak si las tienes instaladas): sin coste, sin conexión, sin cuenta.</li>
+        <li><strong>Microsoft Azure</strong>, <strong>Amazon Polly</strong>, <strong>Deepgram Aura-2</strong> y <strong>ElevenLabs</strong>: voces de nube de mucha más calidad, cada una con su propia clave de API — ver <a href="#ajustes-api">apartado 10.1</a> para conseguirlas.</li>
+    </ul>
+    <p>Si no hay conexión a internet, o si se agota tu cuota mensual de un proveedor de nube, la aplicación cambia automáticamente a voz local para que la lectura no se interrumpa.</p>
+
+    <h3>Cómo marcar una voz como favorita</h3>
+    <p>Desde <strong>Ajustes → Voces e idiomas</strong>, en la lista de voces de cada proveedor, navega con las flechas hasta la voz que te interese y pulsa Entrar (o usa la casilla de verificación) para marcarla o desmarcarla como favorita. Solo las voces marcadas aparecerán después en los selectores rápidos de Lectura, Grabación y el Creador de Audiolibros — así no tienes que revisar un catálogo entero de cientos de voces cada vez que quieres cambiar de una a otra.</p>
+
+    <h3>Filtros disponibles</h3>
+    <p>Dentro de cada catálogo de voces puedes filtrar por:</p>
+    <ul>
+        <li><strong>Idioma.</strong></li>
+        <li><strong>Solo favoritas:</strong> muestra solo las que ya marcaste.</li>
+        <li><strong>Solo nuevas voces:</strong> muestra solo las que el proveedor ha añadido a su catálogo desde la última vez que lo consultaste.</li>
+        <li><strong>Texto de búsqueda</strong> por nombre de la voz.</li>
+        <li>Filtros propios de cada proveedor (por ejemplo, en Azure puedes filtrar por Multilingüe, Dragon, MaiVoice, Flash o Neural genérica).</li>
+    </ul>
+    <p>Tus preferencias de favoritas y filtros se recuerdan entre sesiones: no tienes que volver a configurarlas cada vez que abres la aplicación.</p>
 </section>
 
 <section id="ajustes">
-    <h2>7. Ajustes y Presupuesto</h2>
+    <h2>10. Ajustes</h2>
+    <p>Todo lo que se puede personalizar de la aplicación vive aquí, organizado en un árbol de navegación por categorías. Esta sección del manual está dividida igual que ese árbol, para que encuentres rápido lo que buscas.</p>
 
-    <h3>¿Necesito una clave de API?</h3>
+    <h3 id="ajustes-api">10.1. Claves de API</h3>
     <p>Depende de qué voces quieras usar. La aplicación siempre trae voces locales de Windows (SAPI5) que funcionan sin conexión, sin cuenta y sin límite de uso — es la alternativa segura si no quieres complicarte con nada más.</p>
-    <p>Pero si quieres usar las voces neuronales de alta calidad (Azure, Amazon Polly, ElevenLabs o Deepgram) o el Asistente de Biblioteca con inteligencia artificial (Google Gemini), necesitas tu propia clave de API de ese servicio. Ninguna de estas claves viene incluida con la aplicación: cada persona debe crear su propia cuenta gratuita en el servicio que quiera usar y generar ahí su propia clave. Más abajo tienes el paso a paso para conseguir cada una.</p>
+    <p>Pero si quieres usar las voces neuronales de alta calidad (Azure, Amazon Polly, ElevenLabs o Deepgram) o el Asistente de Biblioteca con inteligencia artificial (Google Gemini), necesitas tu propia clave de API de ese servicio. Ninguna de estas claves viene incluida con la aplicación: cada persona debe crear su propia cuenta gratuita en el servicio que quiera usar y generar ahí su propia clave.</p>
 
     <div class="aviso-box">
         <strong>Importante — lee esto antes de crear ninguna cuenta:</strong>
         <ul>
-            <li>Todos estos servicios (Azure, Amazon Polly, ElevenLabs, Deepgram y Google Gemini) tienen un <strong>nivel gratuito</strong> con un límite de caracteres o de uso mensual — lo tienes detallado en la tabla más abajo. Mientras no superes ese límite, no pagas nada.</li>
+            <li>Todos estos servicios (Azure, Amazon Polly, ElevenLabs, Deepgram y Google Gemini) tienen un <strong>nivel gratuito</strong> con un límite de caracteres o de uso mensual — lo tienes detallado en la tabla del <a href="#ajustes-cuota">apartado 10.2</a>. Mientras no superes ese límite, no pagas nada.</li>
             <li>Si superas el límite gratuito, la mayoría de estos servicios te pedirán añadir una tarjeta de pago para seguir usándolos. A partir de ahí tu cuenta pasa a funcionar por «pago por uso»: pagas según la cantidad de caracteres que envíes a sintetizar. Cuanto más leas con estas voces, más te cobrará el proveedor a principios del mes siguiente.</li>
-            <li>La aplicación incluye un <strong>control de cuota</strong> (más abajo, en esta misma sección) para avisarte antes de que eso pase, pero la responsabilidad de vigilar tu consumo y tu facturación en la web de cada proveedor es tuya.</li>
+            <li>La aplicación incluye un <strong>control de cuota</strong> (apartado 10.2) para avisarte antes de que eso pase, pero la responsabilidad de vigilar tu consumo y tu facturación en la web de cada proveedor es tuya.</li>
             <li>Guarda tu clave de API con cuidado y no la compartas con nadie: quien tenga tu clave puede usarla y generar gastos en tu cuenta. La desarrolladora de esta aplicación no se hace responsable del uso que cada persona le dé a sus propias claves, ni de los gastos, filtraciones o problemas que puedan surgir por su mal manejo. La aplicación solo te da las herramientas; cómo las uses es responsabilidad de cada usuario.</li>
         </ul>
     </div>
 
-    <h3>Cómo obtener una API Key de Microsoft Azure (voz neuronal)</h3>
+    <h4>Cómo obtener una API Key de Microsoft Azure (voz neuronal)</h4>
     <ol>
         <li>Entra en <strong>portal.azure.com</strong> y crea una cuenta gratuita (piden una tarjeta para verificar tu identidad, pero no te cobra nada mientras te mantengas dentro del nivel gratuito).</li>
         <li>Una vez dentro, busca <strong>«Crear un recurso»</strong> y escribe <strong>«Speech service»</strong> (o «Servicio de voz») en el buscador.</li>
@@ -255,7 +380,7 @@
         <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega la clave y la región en los campos de Azure.</li>
     </ol>
 
-    <h3>Cómo obtener una API Key de Amazon Polly</h3>
+    <h4>Cómo obtener una API Key de Amazon Polly</h4>
     <ol>
         <li>Entra en <strong>aws.amazon.com</strong> y crea una cuenta de AWS gratuita (también pide una tarjeta para verificar tu identidad).</li>
         <li>Una vez dentro de la consola de AWS, busca <strong>«IAM»</strong> (Identity and Access Management) en el buscador superior.</li>
@@ -266,7 +391,7 @@
         <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega ambos valores, junto con la región de AWS que prefieras, en los campos de Amazon Polly.</li>
     </ol>
 
-    <h3>Cómo obtener una API Key de Deepgram</h3>
+    <h4>Cómo obtener una API Key de Deepgram</h4>
     <ol>
         <li>Ve a <strong>console.deepgram.com</strong> y crea una cuenta gratuita.</li>
         <li>Dentro del panel, selecciona <strong>API Keys → Create a new API Key</strong>.</li>
@@ -275,7 +400,7 @@
     </ol>
     <p>Deepgram funciona con un modelo de pago por uso (pay-as-you-go). La síntesis de voz cuesta aproximadamente 0,015 $ por cada 1 000 caracteres. No hay suscripción mensual obligatoria; solo pagas lo que consumes.</p>
 
-    <h3>Cómo obtener una API Key de ElevenLabs</h3>
+    <h4>Cómo obtener una API Key de ElevenLabs</h4>
     <ol>
         <li>Entra en <strong>elevenlabs.io</strong> y crea una cuenta gratuita (con correo o con tu cuenta de Google).</li>
         <li>Una vez dentro, pulsa sobre tu perfil (esquina superior derecha) y entra en <strong>«API Keys»</strong> (o «Claves de API»).</li>
@@ -284,7 +409,7 @@
         <li>En la aplicación, abre <strong>Ajustes → Claves API</strong> y pega la clave en el campo de ElevenLabs.</li>
     </ol>
 
-    <h3>Cómo obtener una API Key de Google Gemini (Asistente de Biblioteca)</h3>
+    <h4>Cómo obtener una API Key de Google Gemini (Asistente de Biblioteca)</h4>
     <ol>
         <li>Entra en <strong>aistudio.google.com</strong> con tu cuenta de Google (no hace falta crear una cuenta nueva si ya tienes Gmail).</li>
         <li>Busca el botón <strong>«Get API key»</strong> (u «Obtener clave de API») en el menú lateral o superior.</li>
@@ -298,7 +423,7 @@
         <strong>Nota:</strong> los pasos exactos de cada web pueden cambiar con el tiempo, ya que estos servicios actualizan sus paneles de vez en cuando. Si algún paso no coincide exactamente con lo que ves en pantalla, busca la opción equivalente — el concepto general (crear cuenta, buscar «API Keys» o «Claves de acceso», copiar el valor generado) se mantiene igual en todos.
     </div>
 
-    <h3>Límites gratuitos por proveedor</h3>
+    <h3 id="ajustes-cuota">10.2. Límites gratuitos y control de cuota</h3>
     <p>La app viene configurada con límites por defecto pensados para no pasarte del nivel gratuito de cada proveedor:</p>
 
     <table>
@@ -348,7 +473,9 @@
         <strong>Nota sobre ElevenLabs:</strong> ElevenLabs sigue disponible en la aplicación y funciona correctamente. Sin embargo, su sistema de créditos puede resultar muy costoso en sesiones largas: los planes gratuito y de entrada se agotan con rapidez, y los planes de pago son significativamente más caros que el modelo pay-as-you-go de Deepgram. Si buscas la mejor relación calidad-coste, Deepgram es la opción recomendada.
     </div>
 
-    <h3>Actualizaciones automáticas</h3>
+    <p>Desde <strong>Ajustes → Control de Presupuesto</strong> puedes cambiar estos límites a tu gusto, ver cuánto llevas gastado (real o estimado) de cada proveedor en el mes en curso, y la aplicación te avisará al acercarte al límite que hayas configurado. Al alcanzarlo del todo, cambia sola a voz local para que no te quedes a mitad de una lectura o exportación.</p>
+
+    <h3 id="ajustes-actualizaciones">10.3. Actualizaciones automáticas</h3>
     <p>La aplicación puede comprobar al arranque si existe una versión nueva. Si hay novedades, se muestra un diálogo con el resumen de cambios. También puedes comprobarlo manualmente desde el botón <strong>«Buscar actualizaciones ahora»</strong> en la pestaña Ajustes.</p>
     <p>En el diálogo de novedades encontrarás el botón <strong>«Actualizar automáticamente»</strong>. Al pulsarlo la aplicación:</p>
     <ol>
@@ -357,21 +484,21 @@
         <li>Copia los archivos nuevos a la carpeta de instalación sin borrar tus datos: <code>configuraciones/</code>, <code>Grabaciones_Epub-TTS/</code> y <code>bin/</code> se conservan intactos.</li>
         <li>Muestra el botón <strong>«Reiniciar ahora»</strong> para relanzar la aplicación con la versión actualizada.</li>
     </ol>
-    <p>Si la descarga falla (sin conexión, corte de red…) el botón cambia a <strong>«Reintentar actualización»</strong> para volver a intentarlo.</p>
+    <p>Si la descarga falla (sin conexión, corte de red…) el botón cambia a <strong>«Reintentar actualización»</strong> para volver a intentarlo. La comprobación automática al arrancar viene <strong>desmarcada por defecto</strong>: si la quieres, actívala tú mismo desde Ajustes.</p>
 
-    <h3>Idioma de la interfaz</h3>
+    <h3 id="ajustes-idioma">10.4. Idioma de la interfaz</h3>
     <p>En <strong>Ajustes → General → Idioma de la interfaz</strong> puedes elegir en qué idioma se muestran los menús, botones y avisos de la aplicación: español o inglés. La aplicación detecta el idioma de Windows al arrancar por primera vez, pero puedes cambiarlo manualmente en cualquier momento con este selector. El cambio se aplica por completo la próxima vez que reinicies la aplicación.</p>
 
-    <h3>Google Gemini (Asistente de Biblioteca)</h3>
-    <p>En <strong>Ajustes → Credenciales y API Keys</strong>, sección Google Gemini, se configura la clave de API (consíguela en Google AI Studio), el modelo (automático, o uno concreto de la lista real de tu cuenta tras pulsar «Comprobar clave y listar modelos Gemini») y la <strong>temperatura</strong>: un deslizador de 0 a 100 que controla cuánto se ajusta el asistente a los datos reales. El número que anuncia NVDA es la temperatura real multiplicada por 100: si marca «30» es una temperatura de 0.3, si marca «40» (el valor de fábrica) es 0.4. Valores bajos (10 a 40) dan respuestas más precisas y con menos probabilidad de inventar títulos o autores; valores altos (70 a 100) dan respuestas más variadas, a costa de más alucinaciones ocasionales.</p>
+    <h3 id="ajustes-gemini">10.5. Google Gemini (modelo y temperatura)</h3>
+    <p>En <strong>Ajustes → Credenciales y API Keys</strong>, sección Google Gemini, se configura la clave de API (ver <a href="#ajustes-api">apartado 10.1</a>), el modelo (automático, o uno concreto de la lista real de tu cuenta tras pulsar «Comprobar clave y listar modelos Gemini») y la <strong>temperatura</strong>: un deslizador de 0 a 100 que controla cuánto se ajusta el asistente a los datos reales. El número que anuncia NVDA es la temperatura real multiplicada por 100: si marca «30» es una temperatura de 0.3, si marca «40» (el valor de fábrica) es 0.4. Valores bajos (10 a 40) dan respuestas más precisas y con menos probabilidad de inventar títulos o autores; valores altos (70 a 100) dan respuestas más variadas, a costa de más alucinaciones ocasionales.</p>
 
-    <h3>Efectos de Sonido</h3>
-    <p>En <strong>Ajustes → Efectos de Sonido</strong> hay una casilla para silenciar todos los sonidos de la aplicación, y un selector con un botón para activar o desactivar un efecto concreto (por ejemplo, el sonido de cambio de página en Lectura) de forma independiente a esa casilla general. El botón «Probar sonido» reproduce el efecto elegido aunque esté desactivado, para poder escucharlo antes de decidir.</p>
+    <h3 id="ajustes-sonidos">10.6. Efectos de sonido</h3>
+    <p>En <strong>Ajustes → Efectos de Sonido</strong> hay una casilla para silenciar todos los sonidos de la aplicación, y un selector con un botón para activar o desactivar un efecto concreto (por ejemplo, el sonido de cambio de página en Lectura) de forma independiente a esa casilla general. El botón «Probar sonido» reproduce el efecto elegido aunque esté desactivado, para poder escucharlo antes de decidir. En el <a href="#sonidos">apartado 12</a> tienes la lista completa de qué significa cada uno.</p>
 
-    <h3>Asistente de Biblioteca: plantillas de prompt</h3>
+    <h3 id="ajustes-plantillas">10.7. Plantillas del Asistente de Biblioteca</h3>
     <p>En <strong>Ajustes → Asistente de Biblioteca</strong> se gestionan las plantillas de prompt de sistema que puedes elegir en el combo «Estilo del asistente» del chat: crear una nueva, editar el nombre o el texto de una existente, o borrarla (siempre debe quedar al menos una). El botón «Abrir carpeta de plantillas» abre en el Explorador de Windows la carpeta donde se guarda cada plantilla como un archivo de texto independiente, editable también desde fuera de la aplicación.</p>
 
-    <h3>Perfiles de usuario</h3>
+    <h3 id="ajustes-perfiles">10.8. Perfiles de usuario</h3>
     <p>En <strong>Ajustes → Perfiles de Usuario</strong> puedes guardar la voz activa, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura, todas juntas bajo un nombre de perfil. Útil si compartes el ordenador con otra persona, o si prefieres una configuración distinta según el tipo de libro.</p>
     <ul>
         <li><strong>Crear perfil nuevo...:</strong> abre un formulario con los cinco campos a la vez (nombre, voz, velocidad, volumen, segundos de salto, pausa). Al pulsar <strong>«Guardar perfil»</strong>, el perfil se crea, se marca como activo y se aplica de inmediato en Lectura, sin tener que ir a ninguna otra pestaña antes.</li>
@@ -383,7 +510,7 @@
 </section>
 
 <section id="diccionario">
-    <h2>8. Diccionario de Pronunciación</h2>
+    <h2>11. Diccionario de Pronunciación</h2>
     <p>Disponible en <strong>Ajustes → Voces e idiomas</strong>. Permite corregir la pronunciación de palabras que los motores de voz neuronal lean de forma incorrecta: nombres propios de fantasía, siglas, palabras en otros idiomas o términos técnicos.</p>
     <p>Las reglas del diccionario se aplican automáticamente a todos los motores (Azure, Polly, Deepgram, ElevenLabs y SAPI5) antes de enviar el texto a la síntesis.</p>
 
@@ -409,11 +536,68 @@
     <div class="info-box">
         <strong>Nota:</strong> Las sustituciones son sensibles a mayúsculas y minúsculas. Si una palabra puede aparecer en ambas formas en el texto, crea dos reglas (una para cada variante).
     </div>
+
+    <p>Además de reglas globales (válidas en toda la app), desde la ficha de un libro en Biblioteca puedes crear reglas que solo se apliquen a ese libro o a toda su saga — útil para nombres propios que solo aparecen en una historia concreta, sin tener que aplicar la sustitución a todo lo demás que leas.</p>
+</section>
+
+<section id="sonidos">
+    <h2>12. Qué significa cada sonido</h2>
+    <p>La aplicación usa sonidos cortos y discretos como confirmación de que algo ha pasado, sin interrumpir ni competir con lo que esté diciendo tu lector de pantalla en ese momento. Puedes silenciarlos todos, o solo alguno en concreto, desde el <a href="#ajustes-sonidos">apartado 10.6</a>. Esta es la lista completa de lo que oyes y por qué:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Sonido</th>
+                <th>Cuándo lo escuchas</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Inicio de la aplicación</td><td>Al terminar de arrancar la app, confirmando que ya está lista para usarse.</td></tr>
+            <tr><td>Inicio de grabación</td><td>Al empezar a grabar en Grabación de Fragmentos o el Creador de Audiolibros.</td></tr>
+            <tr><td>Fin de grabación</td><td>Al terminar una grabación o exportación con éxito.</td></tr>
+            <tr><td>Progreso</td><td>Marca avances puntuales durante una operación larga (escaneo, exportación), sin saturarte con un pitido por cada pequeño paso.</td></tr>
+            <tr><td>Navegación por listas</td><td>Al moverte entre elementos de ciertas listas con las flechas.</td></tr>
+            <tr><td>Mover hacia arriba / hacia abajo</td><td>Al reordenar un elemento dentro de una lista (por ejemplo, el orden de capítulos o de reglas del diccionario).</td></tr>
+            <tr><td>Abrir carpeta</td><td>Al usar un botón «Abrir carpeta» que te lleva al Explorador de Windows.</td></tr>
+            <tr><td>Operación completada</td><td>Confirma que una acción (guardar, exportar, aplicar un cambio) terminó bien.</td></tr>
+            <tr><td>Clic</td><td>Sonido genérico de confirmación al pulsar ciertos botones.</td></tr>
+            <tr><td>Error</td><td>Algo no salió bien — revisa el mensaje que te muestre o te lea la aplicación en ese momento.</td></tr>
+            <tr><td>Borrar</td><td>Al eliminar un elemento (un libro, una regla, un marcador...).</td></tr>
+            <tr><td>Asistente pensando (bucle)</td><td>Suena en bucle mientras esperas la respuesta del Asistente de Biblioteca (Gemini); se detiene solo al llegar la respuesta.</td></tr>
+            <tr><td>Cambio de página en Lectura</td><td>Al cruzar el límite de una página virtual en Modo Lectura, tanto navegando con flechas como durante la lectura continua.</td></tr>
+        </tbody>
+    </table>
+</section>
+
+<section id="faq">
+    <h2>13. Preguntas frecuentes</h2>
+
+    <h3>No oigo nada al pulsar Reproducir, ¿qué hago?</h3>
+    <p>Comprueba primero que tienes una voz seleccionada (en Ajustes → Voces e idiomas, o en el selector rápido de la propia pestaña). Si estás usando una voz de nube, revisa que la clave de API esté bien pegada en Ajustes → Claves API y que no hayas agotado tu cuota mensual (apartado 10.2) — en ese caso la app debería avisarte y cambiar sola a voz local, pero si tienes dudas, prueba primero con una voz SAPI5 local para descartar un problema de conexión o de clave.</p>
+
+    <h3>¿Necesito internet para usar la aplicación?</h3>
+    <p>No, si usas voces locales SAPI5: funcionan sin conexión. Sí necesitas internet para usar cualquier voz de nube (Azure, Polly, Deepgram, ElevenLabs), el Asistente de Biblioteca (Gemini), la sincronización de la Biblioteca en línea de voces nuevas, o para comprobar actualizaciones.</p>
+
+    <h3>¿Puedo usar la aplicación sin crear ninguna cuenta ni clave de API?</h3>
+    <p>Sí, completamente. Con las voces locales SAPI5 tienes acceso a toda la funcionalidad de la app —Biblioteca, Lectura, Creador de Audiolibros, Grabación de Fragmentos— sin necesidad de ninguna cuenta externa. Las claves de API solo son necesarias si quieres las voces neuronales de nube o el Asistente de Biblioteca con IA.</p>
+
+    <h3>¿Qué pasa si se me agota la cuota gratuita a mitad de una exportación larga?</h3>
+    <p>La app te avisa y te ofrece varias salidas en el momento: cambiar a otro proveedor de nube que aún tengas cuota disponible, dividir la exportación en partes para retomarla después, o seguir con una voz local SAPI5 sin cortar el trabajo. Nada de lo ya generado se pierde.</p>
+
+    <h3>Mi antivirus (o Windows Defender) marca el .exe como sospechoso</h3>
+    <p>Es un falso positivo común en aplicaciones pequeñas e independientes sin firma digital comercial (esa firma tiene un coste elevado que no es viable para un proyecto de este tamaño). El código fuente completo es público en GitHub, así que puedes revisarlo tú mismo si lo necesitas. Si tu antivirus bloquea el ejecutable, añade una excepción para la carpeta donde tengas instalada la aplicación.</p>
+
+    <h3>Uso JAWS en vez de NVDA, ¿va a funcionar igual de bien?</h3>
+    <p>La aplicación se desarrolla y se prueba principalmente con NVDA, pero está construida sobre controles nativos estándar de Windows (wxPython), los mismos que JAWS entiende sin configuración especial. No debería haber diferencias relevantes, pero si te encuentras con algo que no se comporta bien en JAWS, repórtalo — ver el <a href="#contacto">apartado 14</a>.</p>
+
+    <h3>¿Puedo usar la aplicación si veo bien, aunque esté pensada para personas ciegas?</h3>
+    <p>Sí. La interfaz es simple, ordenada y perfectamente usable con ratón y pantalla si lo prefieres. Solo ten en cuenta que algunas decisiones (como no usar la barra espaciadora de atajo) están pensadas primero para el uso con lector de pantalla, y que el manual y los mensajes de la app dan por hecho, en general, que quien la usa navega con teclado.</p>
 </section>
 
 <section id="contacto">
-    <h2>9. Contacto y Soporte</h2>
-    <p>Si tienes problemas, envía el archivo <code>app.log</code> a: <strong>contacto@tiflotutos.com</strong></p>
+    <h2>14. Contacto y soporte</h2>
+    <p>Si tienes un problema, una duda o una sugerencia, puedes escribir a <strong>contacto@tiflotutos.com</strong>.</p>
+    <p>Si el problema es un fallo o un comportamiento inesperado de la aplicación, adjunta si puedes el archivo de registro más reciente, en <code>registros/app.log</code> (junto a la carpeta donde tengas instalada la aplicación) — nos ayuda muchísimo a encontrar la causa sin tener que reproducir el problema a ciegas (nunca mejor dicho).</p>
+    <p>También puedes abrir un issue en el repositorio de GitHub del proyecto si prefieres ese canal, o visitar <strong>tiflotutos.com</strong> para más recursos y contenido relacionado.</p>
 </section>
 
 <div class="footer">

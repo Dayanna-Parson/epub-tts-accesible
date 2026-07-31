@@ -77,15 +77,15 @@ python subir_version.py 3.1.5       # fuerza una versión concreta
 2. Compila `locale/*.po` → `*.mo` (para que el portable siempre lleve las traducciones al día).
 3. Ejecuta PyInstaller para generar `epubtts.exe`.
 4. Compila `auxiliar_actualizador.py` a `bin/actualizador.exe` (automático, misma arquitectura que la app).
-5. Copia `bin/`, `recursos/`, `locale/` y la documentación de usuario al portable.
-6. Crea `configuraciones/` de fábrica (ajustes vacíos, carpetas de backups, etc.).
+5. Copia `bin/`, `recursos/`, `locale/` al portable, y `ayuda.html` y `novedades.txt` directo a su raíz (junto a `epubtts.exe`, sin carpeta `documentos/` de por medio). Avisa por consola si falta `bin/ffmpeg.exe` o `bin/auxiliar_sapi32.exe`.
+6. Crea `configuraciones/` de fábrica (ajustes vacíos, carpetas de backups, etc.) y siembra `registros/` y `registros/errores/` vacías, para que un fallo en el portable tenga dónde escribirse desde el primer arranque.
 7. Comprime todo en `dist/epub-tts-accesible-vX.Y.Z.zip`.
 
 ```
 python crear_portable.py
 ```
 
-**Requisitos previos:** `pip install pyinstaller`, y `bin/ffmpeg.exe` ya colocado a mano (ver `bin/INSTRUCCIONES.txt`). El `.exe` de `auxiliar_sapi32.py` (ver abajo) también debe existir ya en `bin/` si quieres que el portable soporte voces de 32 bits (Eloquence, RealSpeak) — este script no lo genera, porque necesita un intérprete de Python de 32 bits aparte.
+**Requisitos previos:** `pip install pyinstaller`, y `bin/ffmpeg.exe` ya colocado a mano (ver `bin/INSTRUCCIONES.txt`). El `.exe` de `auxiliar_sapi32.py` (ver abajo) también debe existir ya en `bin/` si quieres que el portable soporte voces de 32 bits (Eloquence, RealSpeak) — este script no lo genera, porque necesita un intérprete de Python de 32 bits aparte. Si falta cualquiera de los dos, el script avisa por consola al llegar al paso 5, pero sigue empaquetando igual.
 
 **Cuándo NO hace falta ejecutarlo:** durante el desarrollo normal, cuando pruebas la app con `python iniciar_epub_tts.py`. Es solo para el paso de empaquetado final.
 
@@ -111,7 +111,7 @@ Copia el `.exe` resultante a `bin/auxiliar_sapi32.exe`. Si no está presente, la
 
 **Nunca lo compiles a mano** — a diferencia de `auxiliar_sapi32.py`, `crear_portable.py` ya lo compila automáticamente en su paso 4 (misma arquitectura que la app principal, sin necesidad de un intérprete aparte).
 
-**Estado actual:** implementado y probado con simulaciones, pero **pendiente de una validación completa en Windows real con NVDA** antes de sustituir el sistema activo en producción (el bloque `ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py`). Por eso el botón "Probar descarga y verificación (Fase C)" en Ajustes sigue presente: es la herramienta para hacer esa validación, no un descuido — no lo retires hasta confirmarla.
+**Estado actual:** validado de extremo a extremo en Windows real con NVDA (descarga, verificación, respaldo, reemplazo y reinicio automático) y ya conectado a producción, tanto al botón «Buscar actualizaciones ahora» como a la comprobación automática al arrancar. El botón interno "Probar descarga y verificación (Fase C)" que servía solo para esa validación ya se retiró de Ajustes, porque cumplió su función. El bloque `ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py` se conserva sin usarse, como red de seguridad, hasta confirmar dos o tres actualizaciones reales seguidas sin sobresaltos con este mecanismo — entonces se retira del todo.
 
 ---
 
