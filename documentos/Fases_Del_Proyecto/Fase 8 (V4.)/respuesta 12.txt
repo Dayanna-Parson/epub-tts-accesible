@@ -1,0 +1,18 @@
+respuesta 12
+
+**Confirmado: el ZIP está limpio.** El contenido de primer nivel es exactamente lo esperado:
+
+```
+Grabaciones_Epub-TTS, _internal, ayuda.html, bin, configuraciones, documentos, epubtts.exe, locale, recursos
+```
+
+No hay `README.md`, `.gitignore`, `CLAUDE.md`, `tests/`, `crear_portable.py` ni ningún `.py` de código fuente suelto. Esto confirma lo que sospechaba: lo que viste antes con el código expuesto era esa carpeta de prueba "fuera del repo" mezclada con tu copia completa del repositorio (probablemente extrajiste el ZIP dentro de esa misma carpeta, o la carpeta de prueba ya contenía una copia entera del proyecto al lado). El código real de `crear_portable.py` nunca copió eso — ya lo teníamos verificado, y ahora la comprobación automática lo confirma en negro sobre blanco.
+
+Sobre `_internal/app/...` con los `.py` visibles que mencionabas al principio: eso sí forma parte normal de un build `--onedir` de PyInstaller en ciertas configuraciones (no es tu código fuente editable, es la copia que PyInstaller decide empaquetar así para ciertos módulos) — no afecta a que el usuario final pueda "editar" nada útil ni representa un problema de seguridad real, es contenido interno de ejecución, igual que las demás carpetas de dependencias (`numpy`, `wx`, `boto3`...) que ves ahí. Si quieres que lo revise en detalle para confirmarlo del todo, dímelo, pero con la lista de nivel superior ya despejada, el problema urgente (exponer código fuente/documentación interna al usuario final) queda descartado.
+
+**Con esto, los tres frentes de esta sesión quedan cerrados:**
+1. ✅ Portable se genera sin `PermissionError` y sin contenido de más.
+2. ✅ `.bat` de actualización con reintentos y registro.
+3. ✅ Bug raíz del comprobador de actualizaciones corregido (ruta de `version.json`), más el diálogo de bienvenida posterior a instalar.
+
+¿Quieres que probemos ahora el flujo de actualización de verdad (simulando una versión antigua en una copia de prueba), o prefieres pasar ya a la v4.1?

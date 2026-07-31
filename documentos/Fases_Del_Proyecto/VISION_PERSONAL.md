@@ -366,6 +366,12 @@ Piper TTS, previsto desde hacía tiempo como motor local futuro, queda descartad
 
 Interfaz en español e inglés, con un selector en Ajustes, para que la aplicación pueda llegar también a personas ciegas que no leen en español. Primer manifiesto de Winget preparado, todavía sin publicar, a la espera de decidir el nombre comercial definitivo del proyecto.
 
+Versión 4.0.0:
+
+Perfiles de usuario: cada uno guarda mi voz, velocidad, volumen y preferencias de pausa/segundos de salto de Lectura, con un atajo (`Ctrl+Shift+U`) para alternar entre ellos sin tener que reconfigurar nada a mano. Pensado para compartir el ordenador con otra persona, o para tener listas distintas configuraciones según si estoy leyendo una novela o un libro técnico.
+
+Probé la primera versión del panel y no me gustó cómo quedaba: tenía que ir a Lectura a elegir voz, velocidad y volumen, y luego aparte a Ajustes → Configuración General para los tiempos de salto, y solo entonces volver a guardar el perfil. Demasiados pasos, demasiados saltos de foco. Pedí que todo se reuniera en un único formulario, con un botón «Guardar perfil» que lo aplicara todo de una vez. Simplificar en cuanto algo se siente tedioso de usar, aunque ya "funcione", sigue siendo el mismo criterio de siempre.
+
 El criterio ha sido el mismo a lo largo de todo el proceso: que funcione, que sea accesible, que el coste sea transparente.
 
 ---

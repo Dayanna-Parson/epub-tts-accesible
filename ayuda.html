@@ -24,8 +24,27 @@
 <header>
     <h1>MANUAL DE USUARIO: EPUB TTS ACCESIBLE</h1>
     <p>Desarrolladora: Dayanna Parson (TifloTutos) | tiflotutos.com</p>
-    <p>Versión 3.0.0</p>
+    <p>Versión 4.0.0</p>
 </header>
+
+<section id="novedades-40">
+    <h2>Novedades de la versión 4.0.0</h2>
+    <div class="novedad-box">
+        <strong>Nuevas funciones:</strong>
+        <ul>
+            <li><strong>Perfiles de usuario</strong>: guarda de un tirón la voz activa, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura, todo en un mismo perfil con nombre. Útil si compartes el ordenador con otra persona, o si quieres una configuración distinta según el tipo de lectura (novela, técnico, idioma extranjero). Panel accesible en <strong>Ajustes → Perfiles de Usuario</strong>: los botones «Crear perfil nuevo...» y «Editar perfil seleccionado...» abren un único formulario con los cinco campos a la vez (nombre, voz, velocidad, volumen, segundos de salto, pausa); al pulsar «Guardar perfil» se crea o actualiza, se marca como activo y se aplica de inmediato. <strong>Control + Mayús + U</strong> alterna entre los perfiles ya creados, desde cualquier pestaña de la aplicación.</li>
+            <li><strong>Actualizaciones más fiables</strong>: «Buscar actualizaciones ahora» instala ahora con respaldo verificado y reinicio automático, con avisos de voz en cada paso del proceso (comprobar, descargar, verificar, instalar), no solo al principio y al final. La búsqueda automática al arrancar viene desmarcada por defecto: se activa quien quiera desde Ajustes.</li>
+        </ul>
+        <strong>Correcciones:</strong>
+        <ul>
+            <li>La comprobación de actualizaciones comparaba siempre contra la versión «0.0.0» por un fallo de ruta, así que cualquier versión publicada parecía «nueva» una y otra vez, incluso justo después de instalar una actualización real.</li>
+            <li>Los avisos de voz durante el escaneo de una carpeta grande en Biblioteca, el aplicado de etiquetas por carpeta y el divisor de EPUB en capítulos podían quedarse mudos en el portable (sin afectar a la versión de desarrollo).</li>
+            <li>En Grabación de Fragmentos, el anuncio de cada fragmento en modo «dividir por etiquetas» podía dejar de sonar a partir del segundo o tercero en grabaciones largas, sin ningún aviso de que había fallado.</li>
+            <li>En Grabación de Fragmentos, el modo «un único archivo MP3 unificado» no anunciaba nada por voz durante toda la grabación (solo el pitido de progreso y la barra), hasta el mensaje final. Ahora también anuncia cada fragmento, igual que en modo «dividir por etiquetas».</li>
+            <li><strong>Control + I</strong> (anunciar página en Lectura / info del libro en Biblioteca) podía activar el aviso de la pestaña equivocada en el portable.</li>
+        </ul>
+    </div>
+</section>
 
 <section id="novedades-30">
     <h2>Novedades de la versión 3.0.0</h2>
@@ -110,6 +129,7 @@
         <li><strong>Control + O:</strong> Cargar libro (en Lectura), abrir carpeta (en Biblioteca o Grabación) — contextual según la pestaña activa.</li>
         <li><strong>Control + P:</strong> Reproducir / Pausar.</li>
         <li><strong>Control + Mayús + B:</strong> Abrir el Asistente de Biblioteca (Gemini), desde cualquier pestaña.</li>
+        <li><strong>Control + Mayús + U:</strong> Alternar entre perfiles de usuario, desde cualquier pestaña.</li>
         <li><strong>F1:</strong> Abrir este manual.</li>
     </ul>
 </section>
@@ -271,6 +291,16 @@
 
     <h3>Asistente de Biblioteca: plantillas de prompt</h3>
     <p>En <strong>Ajustes → Asistente de Biblioteca</strong> se gestionan las plantillas de prompt de sistema que puedes elegir en el combo «Estilo del asistente» del chat: crear una nueva, editar el nombre o el texto de una existente, o borrarla (siempre debe quedar al menos una). El botón «Abrir carpeta de plantillas» abre en el Explorador de Windows la carpeta donde se guarda cada plantilla como un archivo de texto independiente, editable también desde fuera de la aplicación.</p>
+
+    <h3>Perfiles de usuario</h3>
+    <p>En <strong>Ajustes → Perfiles de Usuario</strong> puedes guardar la voz activa, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura, todas juntas bajo un nombre de perfil. Útil si compartes el ordenador con otra persona, o si prefieres una configuración distinta según el tipo de libro.</p>
+    <ul>
+        <li><strong>Crear perfil nuevo...:</strong> abre un formulario con los cinco campos a la vez (nombre, voz, velocidad, volumen, segundos de salto, pausa). Al pulsar <strong>«Guardar perfil»</strong>, el perfil se crea, se marca como activo y se aplica de inmediato en Lectura, sin tener que ir a ninguna otra pestaña antes.</li>
+        <li><strong>Editar perfil seleccionado...:</strong> abre el mismo formulario, precargado con los valores guardados del perfil elegido en la lista.</li>
+        <li><strong>Activar perfil seleccionado:</strong> aplica el perfil elegido sin abrir el formulario.</li>
+        <li><strong>Eliminar perfil seleccionado:</strong> borra el perfil, previa confirmación.</li>
+        <li><strong>Control + Mayús + U</strong> alterna circularmente entre los perfiles ya creados, desde cualquier pestaña de la aplicación, y anuncia por voz cuál ha quedado activo.</li>
+    </ul>
 </section>
 
 <section id="diccionario">
@@ -308,7 +338,7 @@
 </section>
 
 <div class="footer">
-    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 3.0.0</p>
+    <p>&copy; 2026 TifloTutos — Desarrollado por Dayanna Parson | Versión 4.0.0</p>
 </div>
 
 </body>

@@ -91,6 +91,7 @@ app/
 │   ├── gestor_pdf.py             # Extrae texto/índice de PDF (fitz) para Lectura, misma forma que gestor_epub
 │   ├── gestor_proyectos.py       # Lógica de proyectos de Grabación. Persistencia en proyectos.json
 │   ├── gestor_atajos.py          # Atajos de teclado configurables por el usuario
+│   ├── gestor_perfiles.py        # CRUD de perfiles de usuario: voz, velocidad, volumen, segundos de salto y pausa (perfiles.json)
 │   ├── gestor_chat_biblioteca.py     # Historial de conversación del Asistente de Biblioteca
 │   ├── gestor_prompts_asistente.py   # Plantillas de prompt de sistema, un .txt por plantilla
 │   ├── gestor_backups.py         # Copias rotativas de proyectos.json y biblioteca.db, solo si cambiaron
@@ -390,7 +391,7 @@ O bien fija manualmente la clave `"idioma": "en"` en `configuraciones/ajustes.js
 
 `crear_portable.py` ya compila `locale/*.po` a `.mo` y empaqueta la carpeta `locale/` dentro del `.zip` portable automáticamente — no hace falta ningún paso manual adicional al generar una release.
 
-**Cuidado con `_` como variable de descarte:** si un archivo importa el traductor (`from app.motor.gestor_idioma import traducir as _`), no uses `_` como nombre de variable de descarte en desempaquetados de tupla (`for etiq, _ in ...`, `x, _ = ...`) dentro de ninguna función que también llame a `_("...")`. Python trata `_` como local a toda la función en cuanto se le asigna en algún punto, así que las llamadas a `_("...")` anteriores a esa asignación revientan con `UnboundLocalError` en tiempo de ejecución (no en tiempo de compilación, así que no salta hasta que se ejecuta esa rama). Usa un nombre descriptivo en su lugar (`_sin_usar`, `_cookie`, etc.).
+**Cuidado con `_` como variable de descarte:** si un archivo importa el traductor (`from app.motor.gestor_idioma import traducir as _`), no uses `_` como nombre de variable de descarte en desempaquetados de tupla (`for etiq, _ in ...`, `x, _ = ...`) dentro de ninguna función que también llame a `_("...")`. Python trata `_` como local a toda la función en cuanto se le asigna en algún punto, así que las llamadas a `_("...")` anteriores o posteriores a esa asignación revientan en tiempo de ejecución (no en tiempo de compilación, así que no salta hasta que se ejecuta esa rama exacta): `UnboundLocalError` si la asignación va después de la primera llamada, `TypeError: 'str' object is not callable` si va antes. Usa un nombre descriptivo en su lugar (`_sin_usar`, `_cookie`, etc.). Este bug ya ha aparecido dos veces: en la Fase 7 con un `for etiq, _ in ...`, y en la Fase 8 (Perfiles de usuario) con `_, datos = gestor_perfiles.obtener_perfil_activo()` — ver la sección de Perfiles de usuario más abajo. No es un caso aislado, es un patrón a vigilar en cualquier código nuevo.
 
 Para el paso a paso completo de publicación de una versión (traducir, compilar `.mo`, subir de versión, empaquetar, y cuándo enviar el manifiesto de Winget), ver [`GUIA_SCRIPTS.md`](GUIA_SCRIPTS.md).
 
@@ -412,7 +413,7 @@ Cada módulo obtiene su logger con `logging.getLogger(__name__)`. No uses `print
 
 ## Pruebas manuales antes de un commit
 
-No hay suite de tests automatizados todavía. Antes de hacer commit de cambios en la interfaz, comprueba manualmente con NVDA activo:
+`tests/test_suite.py` cubre con `unittest` la lógica pura que no depende de wx ni de hardware de audio (procesador de etiquetas, limpieza de texto, gestor de proyectos, control de cuota, config_rutas, gestor de perfiles — 106 tests a fecha de la Fase 8). Sigue sin haber ninguna cobertura automatizada de la interfaz gráfica. Antes de hacer commit de cambios en la interfaz, comprueba manualmente con NVDA activo:
 
 1. ¿El foco llega a donde debe al cambiar de pestaña?
 2. ¿Los diálogos devuelven el foco al cerrarse?
@@ -771,5 +772,69 @@ Además de la casilla global ya existente para silenciar todos los sonidos (`son
 ### Catálogo completo para el Asistente en modo general
 
 En modo general (sin libro/saga/categoría seleccionados), el Asistente de Biblioteca recibía solo un resumen agregado (`GestorBiblioteca.resumen_para_asistente()`: géneros/autores/sagas *más frecuentes*, con un límite de 5-10). Eso podía hacer que negara tener una saga real si esta no estaba entre las más repetidas. `GestorBiblioteca.catalogo_para_asistente()` añade el listado completo de título/autor/saga de toda la biblioteca (hasta un límite de 800 libros, por sentido común más que por coste real), calculado en vivo sobre `biblioteca.db` en cada apertura del chat — deliberadamente sin caché ni detección de cambios: el coste de recalcular una consulta SQL y reenviar texto plano de títulos es insignificante frente al de mantener sincronizada una caché.
+
+---
+
+## Decisiones técnicas — Fase 8 (v4.0, julio 2026)
+
+### Perfiles de usuario: un formulario, no un reparto entre pestañas
+
+`app/motor/gestor_perfiles.py` guarda, por perfil, la voz activa (proveedor + voz), las voces favoritas por proveedor, velocidad, volumen, `segundos_salto` y `pausa_entre_fragmentos_ms`, en `configuraciones/perfiles.json` con escritura atómica (mismo patrón `.tmp` + `os.replace()` que el resto de la app). Nunca claves API ni límites de cuota: eso es global de la app, no depende de qué persona o qué tipo de libro esté usando el perfil.
+
+El primer diseño del panel en Ajustes tenía botones separados «Crear con el estado actual de Lectura» y «Guardar estado actual en el perfil seleccionado»: para crear o actualizar un perfil, había que ir primero a Lectura a elegir voz/velocidad/volumen, y aparte a Ajustes → Configuración General para segundos de salto y pausa, y solo entonces volver a Perfiles a guardar. La autora lo probó y pidió el cambio directamente: «primero que todo esté en la lista de perfiles y un botón para crear un nuevo perfil donde se puedan traer todos los ajustes necesarios […] pulso Guardar perfil». El rediseño reúne los cinco campos en un único diálogo modal (`_DialogoPerfil` en `pestana_ajustes.py`), que se abre con «Crear perfil nuevo...» o «Editar perfil seleccionado...» y, al guardar, crea/actualiza el perfil, lo marca activo y lo aplica de inmediato — sin visitar ninguna otra pestaña. El combo de voz del diálogo no reimplementa la carga de voces: copia los ítems ya cargados en `PestanaLectura.combo_voz` (mismo nombre mostrado, mismo `GetClientData()`), para no duplicar la lógica de favoritos/proveedores en dos sitios.
+
+`PestanaLectura.aplicar_perfil_usuario()` es el punto de aplicación real: mueve los deslizadores de velocidad/volumen y selecciona la voz (reutilizando el mismo mecanismo que la memoria por libro), pero además persiste `segundos_salto` y `pausa_entre_fragmentos_ms` en `ajustes.json` con el mismo helper que ya usan los sliders (`_guardar_ajuste_slider`), y sincroniza en caliente los widgets de `PanelGeneral` (`txt_salto`, `spin_pausa`) y su diccionario `config` compartido — si no se sincronizara ese diccionario, un Ctrl+S posterior en Ajustes sobrescribiría en el archivo los valores recién aplicados por el perfil con los valores antiguos que seguían en memoria.
+
+### El atajo `Ctrl+Shift+U`, no `Ctrl+Shift+P`
+
+El primer atajo propuesto para alternar perfiles fue `Ctrl+Shift+P`, por ser el estándar de facto para "perfiles" en muchas apps. La autora lo señaló antes de implementarlo: ese atajo ya abre el gestor de proyectos (`al_abrir_gestor_proyectos`, en `_FIJOS_EXTRA` de `ventana_principal.py`). Un repaso de todos los `AcceleratorTable` del proyecto confirmó que `Ctrl+Shift+U` estaba libre, y se usó ese en su lugar. Lección operativa: antes de fijar un atajo nuevo, `grep -rn "ACCEL_CTRL\|ACCEL_SHIFT"` sobre `app/interfaz/` es más fiable que asumir un estándar externo.
+
+### El bug de `_` como variable de descarte, otra vez
+
+Ya documentado en la sección de i18n más arriba, pero merece la mención aquí por lo concreto del caso: `_al_activar_seleccionado()` en `PanelPerfiles` hacía `_, datos = gestor_perfiles.obtener_perfil_activo()`, y la siguiente línea, `voz.hablar(_("Perfil activo: {nombre}").format(...))`, crasheaba en producción con `TypeError: 'str' object is not callable` — `_` ya no era la función de traducir, era el nombre del perfil descartado. Se corrigió en todo el panel evitando el patrón de desempaquetado con `_`, usando siempre un nombre descriptivo (`nombre_activo`, `datos_previos`...). Es el mismo bug de fondo que ya rompió Modo Lectura en la Fase 7, solo que esta vez por tupla en vez de por `for`.
+
+### Tests para gestor_perfiles.py
+
+`tests/test_suite.py` incorpora `TestGestorPerfiles`, con el mismo patrón que `TestGestorProyectos` (parchear la ruta del JSON a un directorio temporal con `unittest.mock.patch`, sin tocar nunca `configuraciones/` real): CRUD básico, alternancia circular (`siguiente_perfil()`), reasignación del perfil activo al eliminarlo, y persistencia atómica. Es un primer paso concreto, acotado a este módulo nuevo — no una cobertura general del proyecto.
+
+### El primer portable real de la Fase 8: cuatro bugs que solo aparecen congelados
+
+Construir y probar el primer portable de verdad de esta fase (en vez de solo `python iniciar_epub_tts.py`) sacó a la luz una familia entera de bugs que el modo desarrollo no reproduce, porque todos comparten la misma raíz: **código que asume que `sys.executable` es siempre un intérprete de Python real**. En un build congelado con PyInstaller, `sys.executable` es el propio `.exe` de la app.
+
+**`AnunciadorVoz` mudo en el portable.** `app/motor/anunciador_voz.py` lanzaba cada anuncio como `subprocess.run([sys.executable, "-c", "<código pyttsx3>", texto])`. En desarrollo funciona porque `sys.executable` es `python.exe`. En el portable, ese mismo comando intenta pasarle `-c` al propio `epubtts.exe`, que no lo entiende — el subproceso falla, el `except Exception: logger.warning(...)` de `_worker()` lo captura, y no suena nada, sin ningún rastro salvo un WARNING en el log. La solución no fue parchear el subproceso: fue darle a `AnunciadorVoz` un modo auxiliar dentro del propio punto de entrada de la app.
+
+```python
+# iniciar_epub_tts.py — antes de crear wx.App
+if len(sys.argv) >= 3 and sys.argv[1] == "--hablar-interno":
+    import pyttsx3
+    motor = pyttsx3.init()
+    motor.say(sys.argv[2])
+    motor.runAndWait()
+    sys.exit(0)
+```
+
+`AnunciadorVoz` ahora relanza `[sys.executable, "--hablar-interno", texto]` si `sys.frozen`, o `[sys.executable, ruta_a_iniciar_epub_tts.py, "--hablar-interno", texto]` en desarrollo — el mismo patrón de "relanzar el propio entry point con un argumento oculto" que ya usa `multiprocessing.freeze_support()` internamente, pero explícito y sin esa dependencia.
+
+Este bug afectaba a **todo** lo que ya usaba `AnunciadorVoz`: el progreso de escaneo y agrupamiento en Biblioteca, y ahora también la Fase C del actualizador y el divisor de EPUB — de ahí que la autora describiera el síntoma como "va tan rápido que NVDA no llega a verbalizar nada": no era velocidad, era que casi ningún intento llegaba a sonar.
+
+**`Ctrl+I` activaba el manejador de la pestaña equivocada.** `pestana_lectura.py` y `pestana_biblioteca.py` registraban `Ctrl+I` cada uno en su propia `AcceleratorTable`, sin ninguna autoridad central — a diferencia de `Ctrl+O`, que `pestana_biblioteca.py` ya documentaba explícitamente no duplicar "para no pisar el atajo global". En el build congelado, con el foco claramente en el texto de Lectura, `Ctrl+I` activaba el anuncio de info de libro de Biblioteca de forma reproducible siempre, no de forma intermitente. Se centralizó en `ventana_principal.py` (`_al_ctrl_i_contextual`, mismo patrón que `_al_ctrl_o_contextual`) y se retiraron los dos registros locales — incluido el de `Ctrl+O`, que tenía la misma duplicación latente sin haberse manifestado todavía.
+
+**`comprobador_actualizaciones.py` comparaba siempre contra `0.0.0`.** El bug más simple de los cuatro y el que más confusión causó: `_RUTA_VERSION_LOCAL = os.path.join(RAIZ_RECURSOS, "version.json")` — sin el segmento `recursos/` que sí tienen todos los demás usos de esta misma ruta en el proyecto (`subir_version.py`, `crear_portable.py`, `ventana_principal.py`, `actualizador_descarga.py`). El archivo real nunca se encontraba, `leer_version_local()` capturaba la excepción y devolvía `"0.0.0"` — así que la app creía tener siempre la versión más antigua posible, y cualquier versión publicada le parecía "nueva", una y otra vez, incluso justo después de instalar una actualización real. Una sola línea de fix, pero explicaba de raíz los dos síntomas más confusos reportados en las pruebas manuales.
+
+**Empaquetado incompleto de `accessible_output3`.** A diferencia de `pyttsx3` o `sounddevice`, no hay un hook de PyInstaller dedicado a `accessible_output3` en `_pyinstaller_hooks_contrib`. Su detección automática del lector de pantalla activo (`accessible_output3.outputs.auto.Auto()`) usa imports/DLLs que el análisis estático de PyInstaller no traza por completo, así que el portable podía quedarse mudo con `accessible_output3` sin ninguna excepción visible. Se añadió `--collect-all=accessible_output3` a la invocación de PyInstaller en `crear_portable.py`, forzando la inclusión de todos sus submódulos y datos de paquete.
+
+**Corolario:** de los cuatro bugs, tres solo se manifestaban en el build congelado y ninguno de los tres estaba relacionado con Perfiles de Usuario en sí — todos salieron de probar el portable de verdad por primera vez en esta fase, no de una revisión de código. Confirma otra vez el patrón ya documentado en fases anteriores: "funciona en la teoría" y "funciona de verdad" son cosas distintas, y hace falta construir y ejecutar el artefacto real, no solo razonar sobre el código fuente.
+
+### `grabador_audio.py` no fue el único con el problema de pyttsx3 en el mismo proceso
+
+Al revisar el resto de la app buscando el mismo patrón que rompió `AnunciadorVoz`, apareció un bug independiente en `pestana_grabacion.py`: su propio `_hablar()` creaba una instancia de `pyttsx3` nueva **dentro del mismo proceso** en cada fragmento anunciado — exactamente el problema documentado en `anunciador_voz.py` ("el driver SAPI5 deja de sonar a partir de la segunda o tercera llamada, sin lanzar ninguna excepción"), envuelto además en un `except Exception: pass` que lo tragaba sin dejar ni rastro en el log. En una grabación larga en modo "dividir por etiquetas", buena parte de los anuncios de fragmento podían quedarse mudos sin que nadie se enterara. Sustituido por la propia `AnunciadorVoz` de la app, ya corregida.
+
+### Barrido de `except: pass` sin logging: alcance real
+
+Un recorrido con el propio AST de Python (no una búsqueda de texto) sobre `app/` completo encontró **65 apariciones** de `except: pass` / `except Exception: pass` sin ningún logging, repartidas en unos 20 archivos de `app/servicios/`, `app/motor/` y `app/interfaz/` — el número exacto de ocurrencias, más preciso que la estimación "unos 19 archivos" de la revisión externa de esta fase (que contaba archivos, no apariciones). Revisando una muestra, la mayoría son limpieza defensiva deliberada (p. ej. `reproductor_voz.py: detener()` intenta parar los cinco clientes de voz uno a uno, ignorando el fallo de cualquiera para no dejar de intentar con los demás) — no bugs escondidos como los cuatro de más arriba. Sigue sin encontrarse ningún caso, aparte de los cuatro ya corregidos, que explique un síntoma reportado. Se deja anotado para la fase de estabilización posterior a la v4.0: revisar los 65 uno a uno, sin poder probar cada cambio en Windows con NVDA en el momento, es más riesgo que beneficio hacerlo de rondón aquí.
+
+### Ampliación de tests: comprobador de versiones, atajos, pronunciación
+
+Junto con los fixes de esta ronda se añadieron 20 tests más a `tests/test_suite.py` (106 → 126), con el mismo patrón de fichero temporal ya establecido: `TestComprobadorActualizaciones` (incluyendo el caso real "1.0" frente a "3.0.0" con distinto número de segmentos, que fue precisamente el escenario de las pruebas manuales que expuso el bug de la ruta), `TestGestorAtajos` y `TestDiccionarioPronunciacion`.
 
 ---

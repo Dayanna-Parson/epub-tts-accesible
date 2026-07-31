@@ -1,0 +1,8 @@
+respuesta 9
+¡Genial, ya te ha creado el portable entero (llegó hasta el paso 7, comprimiendo el ZIP)!
+
+Sobre el porqué: casi seguro es exactamente la causa que sospechaba — algunos archivos de `dist\epub-tts-accesible\` (probablemente dentro de `recursos/iconos`, que es donde fallaba) habían quedado marcados como **solo lectura** en tu disco, de una construcción anterior. `shutil.rmtree()` no puede borrar un archivo así sin quitarle antes ese atributo. El primer arreglo que hice (reintentar con espera) no servía para eso porque el bloqueo no era temporal, era permanente hasta que alguien quitara el atributo; el segundo arreglo (`os.chmod(..., stat.S_IWRITE)` antes de reintentar) es el que realmente lo destrabó, quitando ese atributo archivo por archivo antes de borrar.
+
+Con eso limpio, la carpeta ya se pudo borrar del todo y el resto del proceso (compilar catálogos, PyInstaller, empaquetar) corrió sin problema.
+
+¿Ya tienes el ZIP final en `dist\`? Si quieres, dime si todo salió bien hasta el paso 8 (comprimido) o si se cortó ahí.

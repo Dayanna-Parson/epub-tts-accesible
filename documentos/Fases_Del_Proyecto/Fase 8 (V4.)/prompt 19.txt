@@ -1,0 +1,3 @@
+prompt 19
+
+Y porqué cuando pulso en el botón de buscar actualizaciones, me decía que ya tenía la versión mas reciente, y en cambio, cuando pulsaba en el otro botón, si hacía todo el proceso de primero preguntarme, y ya lo has visto como a actualizado perfectamente toa la app, y la a cerrado y abierto sin problemas! yo creo que ya podemos pues ya meter el sistema que si funciona,directamente en el botón buscar actualizaciones no? y cuando lo pruebe otra vez, y te verifique que si funciona, pues eliminar el de botón de la fase C no? para si quedarnos con el otro... definitivamente no? que piensas?

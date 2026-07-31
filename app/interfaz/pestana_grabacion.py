@@ -272,6 +272,9 @@ class PestanaGrabacion(wx.Panel):
 
         # ── Estado interno ────────────────────────────────────────────────
         from app.motor.gestor_proyectos import GestorProyectos
+        from app.motor.anunciador_voz import AnunciadorVoz
+        self._voz_grabacion = AnunciadorVoz()
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz_grabacion.detener(), e.Skip()))
         self.proyecto_actual   = None          # dict del proyecto activo o None
         self.gestor_proyectos  = GestorProyectos()
         self._ofrecio_proyecto = False         # evita mostrar el diálogo dos veces por TXT
@@ -1213,18 +1216,18 @@ class PestanaGrabacion(wx.Panel):
 
     def _hablar(self, texto: str):
         """
-        Verbaliza texto con la voz del sistema mediante pyttsx3.
-        No falla si la librería no está instalada: lo omite silenciosamente.
-        Se ejecuta siempre en un hilo de fondo para no bloquear la UI.
+        Verbaliza texto con la voz del sistema. Antes creaba una instancia
+        de pyttsx3 nueva en el mismo proceso en cada llamada: ese patrón
+        deja de sonar a partir del segundo o tercer aviso sin lanzar
+        ninguna excepción (problema conocido del driver SAPI5, documentado
+        en anunciador_voz.py), y el except: pass lo tragaba en silencio —
+        así que la mitad de los fragmentos de una grabación larga podían
+        quedar sin anunciar y nadie se enteraba. self._voz_grabacion
+        (AnunciadorVoz) ya resuelve esto lanzando cada anuncio en un
+        proceso nuevo, con el mismo mecanismo que usan el escaneo de
+        Biblioteca y la Fase C del actualizador.
         """
-        try:
-            import pyttsx3
-            engine = pyttsx3.init()
-            engine.say(texto)
-            engine.runAndWait()
-            engine.stop()
-        except Exception:
-            pass
+        self._voz_grabacion.hablar(texto)
 
     # ================================================================== #
     # Proceso de grabación
@@ -1338,17 +1341,18 @@ class PestanaGrabacion(wx.Panel):
         wx.CallAfter(self._actualizar_progreso_ui, pct, msg)
 
         modo_dividido = self._modo_dividido
+        texto_voz = _("Fragmento {actual} de {total}. Etiqueta {etiqueta}.").format(
+            actual=actual, total=total, etiqueta=etiqueta
+        )
+        # self._hablar() ya encola en AnunciadorVoz (su propio hilo de
+        # fondo); envolverlo en otro hilo aquí era redundante.
+        self._hablar(texto_voz)
         if not modo_dividido:
-            # Modo audio único: SAPI no informa por voz → tick de progreso rítmico
+            # Modo audio único: el tick de progreso rítmico se mantiene como
+            # refuerzo sonoro, pero ya no es la única señal — antes era el
+            # único aviso mientras se grababa, y la voz se quedaba muda hasta
+            # el final (solo decía cuántos archivos se habían completado).
             wx.CallAfter(reproducir, PROGRESS)
-        else:
-            # Modo dividido: SAPI verbaliza cada fragmento → sin tick sonoro adicional
-            texto_voz = _("Fragmento {actual} de {total}. Etiqueta {etiqueta}.").format(
-                actual=actual, total=total, etiqueta=etiqueta
-            )
-            threading.Thread(
-                target=self._hablar, args=(texto_voz,), daemon=True
-            ).start()
 
     def _actualizar_progreso_ui(self, pct, msg):
         self.gauge.SetValue(pct)

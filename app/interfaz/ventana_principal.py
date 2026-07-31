@@ -14,6 +14,7 @@ from app.interfaz.ventana_proyectos import VentanaProyectos
 from app.config_rutas import ruta_config, RAIZ_RECURSOS
 from app.motor.reproductor_sonidos import reproducir, APP_READY, CLICK, SUCCESS, ERROR
 from app.motor.gestor_idioma import traducir as _
+from app.motor import anunciador_lector as voz
 # ANCLAJE_FIN: DEPENDENCIAS_PRINCIPALES
 
 # URL del repositorio (actualizar si cambia la ubicación del proyecto)
@@ -143,6 +144,12 @@ class VentanaPrincipal(wx.Frame):
 
         # Verificación automática de voces nuevas (una vez al día, hilo de fondo)
         wx.CallAfter(self._iniciar_verificacion_voces)
+
+        # Resumen de bienvenida si se acaba de instalar una actualización
+        # (se dispara como mucho una vez por versión). Va antes que la
+        # comprobación de nuevas actualizaciones, para no mostrar dos
+        # diálogos seguidos si además hay otra versión disponible.
+        wx.CallLater(3000, self._comprobar_novedades_bienvenida)
 
         # Comprobación automática de actualizaciones al arranque (5 s de margen
         # para que NVDA lea la ventana antes de que aparezca el diálogo).
@@ -312,6 +319,27 @@ class VentanaPrincipal(wx.Frame):
         self.Bind(wx.EVT_MENU, self.al_abrir_asistente_biblioteca_global, item)
         menu.AppendSeparator()
     # ANCLAJE_FIN: ABRIR_ASISTENTE_BIBLIOTECA_GLOBAL
+
+    # ANCLAJE_INICIO: ALTERNAR_PERFIL_GLOBAL
+    def al_alternar_perfil_global(self, evento=None):
+        """
+        Ctrl+Shift+U: alterna al siguiente perfil de usuario (velocidad,
+        volumen y voz activa) desde cualquier pestaña, y anuncia el nombre
+        del perfil ya aplicado con accessible_output3. Si todavía no hay
+        ningún perfil creado, avisa dónde crearlos en vez de no hacer nada.
+        """
+        from app.motor import gestor_perfiles
+        nombre_siguiente = gestor_perfiles.siguiente_perfil()
+        if not nombre_siguiente:
+            voz.hablar(_("No hay perfiles de usuario creados todavía. Créalos en Ajustes, Perfiles de Usuario."))
+            return
+        gestor_perfiles.fijar_perfil_activo(nombre_siguiente)
+        nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        if hasattr(self.pestana_lectura, 'aplicar_perfil_usuario'):
+            self.pestana_lectura.aplicar_perfil_usuario(datos)
+        reproducir(CLICK)
+        voz.hablar(_("Perfil activo: {nombre}").format(nombre=nombre))
+    # ANCLAJE_FIN: ALTERNAR_PERFIL_GLOBAL
 
     def al_abrir_txt_grabacion(self, evento):
         """Activa la pestaña Grabación y llama al método Examinar del panel."""
@@ -789,11 +817,12 @@ class VentanaPrincipal(wx.Frame):
                       lambda e, c=clave: self._ejecutar_atajo_global(c),
                       id=id_atajo)
 
-        # Atajos fijos adicionales (Ctrl+T, Ctrl+Shift+P, Ctrl+O, F1)
+        # Atajos fijos adicionales (Ctrl+T, Ctrl+Shift+P, Ctrl+O, Ctrl+I, F1)
         _FIJOS_EXTRA = [
             ("ctrl_t",  wx.ACCEL_CTRL,              ord('T'), self.al_abrir_txt_grabacion),
             ("ctrl_sp", wx.ACCEL_CTRL | wx.ACCEL_SHIFT, ord('P'), self.al_abrir_gestor_proyectos),
             ("ctrl_o",  wx.ACCEL_CTRL,              ord('O'), self._al_ctrl_o_contextual),
+            ("ctrl_i",  wx.ACCEL_CTRL,              ord('I'), self._al_ctrl_i_contextual),
             ("f1",      wx.ACCEL_NORMAL,            wx.WXK_F1, self._al_abrir_ayuda_global),
         ]
         for clave, flag, keycode, handler in _FIJOS_EXTRA:
@@ -835,6 +864,8 @@ class VentanaPrincipal(wx.Frame):
             # el Asistente de Biblioteca debe abrirse desde cualquier parte
             # de la aplicación, no solo con Biblioteca activa.
             "asistente_biblioteca": lambda: self.al_abrir_asistente_biblioteca_global(),
+            # Alternar perfil de usuario: tampoco depende de la pestaña activa.
+            "alternar_perfil": lambda: self.al_alternar_perfil_global(),
         }
         if clave in _ACCIONES:
             if clave in _ATAJOS_SOLO_LECTURA and not en_lectura:
@@ -860,6 +891,25 @@ class VentanaPrincipal(wx.Frame):
             self.pestana_creador.al_ctrl_o(None)
         elif indice == IDX_GRABACION:
             self.pestana_grabacion.al_examinar(None)
+
+    def _al_ctrl_i_contextual(self, evento=None):
+        """
+        Ctrl+I: anuncia la página actual en Lectura, o la info del libro
+        seleccionado en Biblioteca, según la pestaña activa. Antes cada
+        pestaña registraba este atajo por separado en su propia
+        AcceleratorTable (patrón que sí funciona bien para Ctrl+M/P/D/F/G);
+        se centraliza aquí, con el mismo patrón ya probado que usa Ctrl+O,
+        porque en el build congelado (PyInstaller) el atajo llegaba a
+        activar el manejador de Biblioteca aunque el foco estuviera
+        claramente dentro de Lectura. Con una única entrada en la tabla
+        de aceleradores del Frame no hay ninguna tabla de otra pestaña con
+        la que pueda confundirse.
+        """
+        indice = self.notebook.GetSelection()
+        if indice == IDX_BIBLIOTECA:
+            self.pestana_biblioteca.al_anunciar_info_libro(None)
+        elif indice == IDX_LECTURA:
+            self.pestana_lectura.anunciar_pagina_actual()
 
     def _al_abrir_ayuda_global(self, evento=None):
         """F1: abre ayuda.html con el visor predeterminado del sistema."""
@@ -1018,6 +1068,86 @@ class VentanaPrincipal(wx.Frame):
             wx.MessageBox(_("No se pudo abrir el portapapeles."), _("Error"), wx.OK | wx.ICON_ERROR)
     # ANCLAJE_FIN: AYUDA
 
+    # ANCLAJE_INICIO: NOVEDADES_BIENVENIDA_POST_ACTUALIZACION
+    def _comprobar_novedades_bienvenida(self):
+        """
+        Tras instalar una actualización y reiniciar, muestra un resumen de
+        las novedades ya instaladas (modo_bienvenida=True en DialogoNovedades).
+        Antes solo existía el diálogo previo a instalar (¿quieres actualizar?);
+        no había ninguna confirmación posterior a que la actualización ya
+        estuviera aplicada. Se dispara una sola vez por versión, comparando
+        recursos/version.json contra 'version_novedades_vista' en ajustes.json.
+        """
+        import json
+        from app.config_rutas import ruta_config, RAIZ_RECURSOS
+
+        ruta_version = os.path.join(RAIZ_RECURSOS, "recursos", "version.json")
+        try:
+            with open(ruta_version, encoding="utf-8") as f:
+                version_actual = json.load(f).get("version", "")
+        except Exception:
+            return
+        if not version_actual:
+            return
+
+        ruta_ajustes = ruta_config("ajustes.json")
+        conf = {}
+        try:
+            if os.path.exists(ruta_ajustes):
+                with open(ruta_ajustes, encoding="utf-8") as f:
+                    conf = json.load(f)
+        except Exception:
+            logger.exception("Error al leer ajustes.json para el aviso de novedades")
+            return
+
+        if conf.get("version_novedades_vista") == version_actual:
+            return  # Ya se mostró el resumen de esta versión
+
+        ruta_novedades = os.path.join(RAIZ_RECURSOS, "novedades.txt")
+        try:
+            with open(ruta_novedades, encoding="utf-8") as f:
+                texto_completo = f.read()
+        except Exception:
+            texto_completo = ""
+
+        from app.interfaz.dialogo_novedades import DialogoNovedades
+        dlg = DialogoNovedades(
+            self, version_actual,
+            self._extraer_bloque_version_actual(texto_completo),
+            modo_bienvenida=True,
+        )
+        dlg.ShowModal()
+        dlg.Destroy()
+
+        conf["version_novedades_vista"] = version_actual
+        try:
+            os.makedirs(os.path.dirname(ruta_ajustes), exist_ok=True)
+            ruta_tmp = ruta_ajustes + ".tmp"
+            with open(ruta_tmp, "w", encoding="utf-8") as f:
+                json.dump(conf, f, ensure_ascii=False, indent=4)
+            os.replace(ruta_tmp, ruta_ajustes)
+        except Exception:
+            logger.exception("Error al guardar version_novedades_vista en ajustes.json")
+
+    @staticmethod
+    def _extraer_bloque_version_actual(texto_completo: str) -> str:
+        """
+        novedades.txt acumula el historial completo de versiones; para el
+        resumen de bienvenida solo interesa el bloque de la versión recién
+        instalada (el primero del archivo), no todo el historial.
+        """
+        marcador = "=== v"
+        primera = texto_completo.find(marcador)
+        if primera == -1:
+            return texto_completo.strip()
+        segunda = texto_completo.find(marcador, primera + len(marcador))
+        bloque = texto_completo[primera:segunda] if segunda != -1 else texto_completo[primera:]
+        lineas = bloque.rstrip().splitlines()
+        while lineas and set(lineas[-1].strip()) <= {"─"}:
+            lineas.pop()
+        return "\n".join(lineas).strip()
+    # ANCLAJE_FIN: NOVEDADES_BIENVENIDA_POST_ACTUALIZACION
+
     # ANCLAJE_INICIO: VERIFICACION_VOCES_NUEVAS
     # ANCLAJE_INICIO: COMPROBACION_ACTUALIZACIONES_ARRANQUE
     def _comprobar_actualizaciones_arranque(self):
@@ -1032,7 +1162,7 @@ class VentanaPrincipal(wx.Frame):
         try:
             with open(ruta_config("ajustes.json"), encoding="utf-8") as f:
                 conf = json.load(f)
-            if not conf.get("actualizar_automaticamente", True):
+            if not conf.get("actualizar_automaticamente", False):
                 return
         except Exception:
             pass
@@ -1056,7 +1186,13 @@ class VentanaPrincipal(wx.Frame):
         respuesta = dlg.ShowModal()
         dlg.Destroy()
         if respuesta == wx.ID_OK:
-            self.pestana_ajustes._hilo_descargar_e_instalar_desde_arranque(v_remota)
+            # Bug preexistente: este método vive en PanelGeneral (pag_general),
+            # no en PestanaAjustes directamente — llamarlo sobre
+            # self.pestana_ajustes habría lanzado AttributeError la primera
+            # vez que alguien aceptara instalar desde la comprobación
+            # automática al arrancar. Aprovechado para migrar también este
+            # camino a _instalar_actualizacion_fase_c (ver pestana_ajustes.py).
+            self.pestana_ajustes.pag_general._instalar_actualizacion_fase_c(v_remota)
     # ANCLAJE_FIN: COMPROBACION_ACTUALIZACIONES_ARRANQUE
 
     def _iniciar_verificacion_voces(self):

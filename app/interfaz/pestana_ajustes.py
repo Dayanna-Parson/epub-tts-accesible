@@ -8,6 +8,7 @@ import webbrowser
 
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 from app.motor import anunciador_lector as voz
+from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor import gestor_prompts_asistente as prompts
 from app.motor.reproductor_sonidos import (
     reproducir, LIST_NAV, SUCCESS, ERROR, OPEN_FOLDER,
@@ -86,6 +87,13 @@ class PanelGeneral(wx.ScrolledWindow):
         self._pestana_ajustes = pestana_ajustes
         from app.motor.control_cuota import ControlCuota
         self.cuota = ControlCuota()
+
+        # Cola de voz para el progreso de descarga/instalación de
+        # actualizaciones: llega en ráfagas rápidas (varios KB por segundo),
+        # así que se descarta lo intermedio y solo se dice lo más reciente,
+        # igual que ya hace el escaneo de Biblioteca.
+        self._voz_actualizacion = AnunciadorVoz()
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz_actualizacion.detener(), e.Skip()))
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -209,7 +217,7 @@ class PanelGeneral(wx.ScrolledWindow):
         self.chk_actualizar = wx.CheckBox(
             self, label=_("Buscar actualizaciones automáticamente al iniciar la app")
         )
-        self.chk_actualizar.SetValue(self.config.get("actualizar_automaticamente", True))
+        self.chk_actualizar.SetValue(self.config.get("actualizar_automaticamente", False))
         self.chk_actualizar.SetHelpText(
             _("Si está marcado, la aplicación comprueba si hay una nueva versión disponible "
               "cada vez que se inicia. La comprobación se hace en segundo plano.")
@@ -230,23 +238,6 @@ class PanelGeneral(wx.ScrolledWindow):
             _("Estado del proceso de actualización. NVDA lo leerá automáticamente al cambiar.")
         )
         sizer_updates.Add(self.lbl_progreso, 0, wx.ALL, 5)
-
-        # ANCLAJE_INICIO: BOTON_PRUEBA_ACTUALIZADOR_FASE_C
-        # Botón temporal de desarrollo, independiente del flujo de producción
-        # de arriba (btn_buscar_updates). Prueba en aislamiento el nuevo
-        # gestor de descarga/verificación a temp/actualizacion/ (Fase C).
-        # Se retira cuando el flujo completo con actualizador.exe sustituya
-        # al bloque ACTUALIZADOR_SCRIPT_CLON.
-        self.btn_probar_descarga_nueva = wx.Button(
-            self, label=_("Probar descarga y verificación (Fase C)")
-        )
-        self.btn_probar_descarga_nueva.SetHelpText(
-            _("Descarga la última versión a temp/actualizacion/ y verifica su estructura, "
-              "sin instalar nada. Herramienta de desarrollo de la Fase C.")
-        )
-        self.btn_probar_descarga_nueva.Bind(wx.EVT_BUTTON, self._al_probar_descarga_nueva)
-        sizer_updates.Add(self.btn_probar_descarga_nueva, 0, wx.ALL, 5)
-        # ANCLAJE_FIN: BOTON_PRUEBA_ACTUALIZADOR_FASE_C
 
         sizer.Add(sizer_updates, 0, wx.EXPAND | wx.ALL, 10)
 
@@ -526,21 +517,81 @@ class PanelGeneral(wx.ScrolledWindow):
             wx.CallAfter(self.lbl_progreso.SetLabel, "")
             return
 
+        self.btn_buscar_updates.Disable()
+        self._instalar_actualizacion_fase_c(v_remota)
+
+    # ANCLAJE_INICIO: INSTALACION_VIA_FASE_C
+    def _instalar_actualizacion_fase_c(self, version_remota: str):
+        """
+        Descarga, verifica e instala la actualización con el mecanismo de
+        la Fase C (GestorDescargaActualizacion + bin/actualizador.exe:
+        respaldo por copia verificada y rollback automático si algo falla),
+        validado en Windows real. Sustituye al antiguo Script Clon
+        (_hilo_descargar_e_instalar/_escribir_y_lanzar_bat, que seguían
+        aquí sin usarse por si hiciera falta un rollback rápido) tanto
+        desde el botón "Buscar actualizaciones ahora" como desde la
+        comprobación automática al arrancar.
+        """
+        from app.motor.actualizador_descarga import GestorDescargaActualizacion
+
         wx.CallAfter(
             self.lbl_progreso.SetLabel,
-            _("Descargando el archivo de actualización en segundo plano, por favor espera..."),
+            _("Descargando actualización, por favor espera..."),
         )
-        self.btn_buscar_updates.Disable()
-        import threading
-        hilo = threading.Thread(
-            target=self._hilo_descargar_e_instalar,
-            args=(v_remota,),
-            daemon=True,
+        voz.hablar(_("Descargando actualización, por favor espera..."))
+
+        gestor = GestorDescargaActualizacion()
+        gestor.descargar_y_verificar_en_hilo(
+            callback_resultado=lambda r: wx.CallAfter(self._al_resultado_instalacion_fase_c, r),
+            callback_progreso=lambda msg, pct: wx.CallAfter(self._al_progreso_descarga_nueva, msg),
         )
-        hilo.start()
+
+    def _al_resultado_instalacion_fase_c(self, resultado: dict):
+        self.btn_buscar_updates.Enable()
+        wx.CallAfter(self.lbl_progreso.SetLabel, "")
+
+        if not resultado.get("ok"):
+            logger.warning(
+                "Descarga/verificación de actualización fallida: %s", resultado.get("error"),
+            )
+            reproducir(ERROR)
+            voz.hablar(_("No se pudo descargar la actualización."))
+            wx.MessageBox(
+                _("No se pudo descargar la actualización:\n{error}").format(
+                    error=resultado.get("error")
+                ),
+                _("Error de descarga"), wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        ruta_extraida = resultado.get("ruta_extraida")
+        from app.config_rutas import RAIZ
+        ruta_exe = os.path.join(RAIZ, "bin", "actualizador.exe")
+        if not os.path.isfile(ruta_exe):
+            reproducir(ERROR)
+            wx.MessageBox(
+                _("Descarga y verificación completadas correctamente en:\n"
+                  "«{ruta_extraida}».\n\n"
+                  "El instalador auxiliar no está disponible en:\n{ruta_exe}\n\n"
+                  "No se instalará nada.").format(ruta_extraida=ruta_extraida, ruta_exe=ruta_exe),
+                _("Instalador no disponible"), wx.OK | wx.ICON_WARNING,
+            )
+            from app.motor.actualizador_descarga import GestorDescargaActualizacion
+            GestorDescargaActualizacion().limpiar()
+            return
+
+        voz.hablar(_("Descarga completada. Instalando la actualización..."))
+        self._lanzar_actualizador_auxiliar(ruta_extraida)
+    # ANCLAJE_FIN: INSTALACION_VIA_FASE_C
 
     def _hilo_descargar_e_instalar_desde_arranque(self, version_remota: str):
-        """Lanza la descarga e instalación desde la comprobación automática al arrancar."""
+        """
+        Descarga e instala desde la comprobación automática al arrancar.
+        Ya no se llama desde ningún sitio del flujo en uso (ver
+        _instalar_actualizacion_fase_c, ahora también usado desde el
+        arranque vía ventana_principal.py) — se conserva el Script Clon
+        completo un ciclo más como red de seguridad ante un rollback.
+        """
         import threading
         hilo = threading.Thread(
             target=self._hilo_descargar_e_instalar,
@@ -611,6 +662,7 @@ class PanelGeneral(wx.ScrolledWindow):
 
         lanzador = os.path.join(raiz, "INICIAR_APP.bat")
         bat_path = os.path.join(raiz, "actualizador.bat")
+        ruta_log = os.path.join(raiz, "actualizacion", "actualizador_log.txt")
 
         # Carpetas y archivos que el .bat debe conservar intactos
         # Solo se preservan los datos del usuario; todo lo demás (recursos/,
@@ -624,17 +676,21 @@ class PanelGeneral(wx.ScrolledWindow):
             "INICIAR_APP.bat",
         }
 
-        # Genera las líneas del .bat que borran lo que NO está en _PRESERVAR
+        # ANCLAJE_INICIO: BORRADO_BAT_CON_REINTENTOS
+        # Genera las líneas del .bat que borran lo que NO está en _PRESERVAR,
+        # llamando a la subrutina :borrar_con_reintentos en vez de rmdir/del
+        # directos. Antes, un solo intento inmediato tras solo 2 segundos de
+        # espera podía fallar en silencio (2>nul) si Windows todavía no había
+        # soltado del todo algún archivo del proceso recién cerrado (el log,
+        # sobre todo) — la app se reiniciaba con la versión vieja intacta y
+        # sin ningún aviso de que la actualización no se había completado.
         lineas_borrado = []
         try:
             for entrada in os.listdir(raiz):
                 if entrada in _PRESERVAR or entrada == "actualizador.bat":
                     continue
                 ruta_entrada = os.path.join(raiz, entrada)
-                if os.path.isdir(ruta_entrada):
-                    lineas_borrado.append(f'rmdir /s /q "{ruta_entrada}"')
-                else:
-                    lineas_borrado.append(f'del /f /q "{ruta_entrada}"')
+                lineas_borrado.append(f'call :borrar_con_reintentos "{ruta_entrada}"')
         except Exception:
             logger.exception("Error al listar raíz para el script de borrado")
 
@@ -642,29 +698,57 @@ class PanelGeneral(wx.ScrolledWindow):
 
         contenido_bat = (
             "@echo off\n"
-            "timeout /t 2 /nobreak >nul\n"
+            f'set "LOG={ruta_log}"\n'
+            'echo [%date% %time%] Iniciando actualizador > "%LOG%"\n'
             "\n"
-            ":: Eliminar archivos y carpetas de la versión anterior\n"
+            ":: Espera más margen del que tenía antes (2s -> 5s) para que\n"
+            ":: Windows termine de soltar archivos del proceso recien cerrado.\n"
+            "timeout /t 5 /nobreak >nul\n"
+            "\n"
+            ":: Eliminar archivos y carpetas de la version anterior (con reintentos)\n"
             f"{bloque_borrado}\n"
             "\n"
-            ":: Descomprimir la nueva versión (PowerShell incluido en Windows 10+)\n"
-            f'powershell -Command "Expand-Archive -Path \\"{ruta_zip}\\" -DestinationPath \\"{raiz}\\" -Force"\n'
+            ":: Descomprimir la nueva version (PowerShell incluido en Windows 10+)\n"
+            f'powershell -Command "Expand-Archive -Path \\"{ruta_zip}\\" -DestinationPath \\"{raiz}\\" -Force" >> "%LOG%" 2>&1\n'
             "\n"
-            ":: Mover el contenido de la subcarpeta del ZIP a la raíz del portable\n"
+            ":: Mover el contenido de la subcarpeta del ZIP a la raiz del portable.\n"
+            ":: /r:5 /w:2 -> reintenta hasta 5 veces con 2s de espera si algun\n"
+            ":: archivo sigue bloqueado, en vez de fallar a la primera.\n"
             f'for /d %%D in ("{raiz}\\epub-tts-accesible-*") do (\n'
-            f'    robocopy "%%D" "{raiz}" /e /move /xd configuraciones Grabaciones_Epub-TTS bin actualizacion >nul\n'
-            "    rmdir /s /q \"%%D\" 2>nul\n"
+            f'    robocopy "%%D" "{raiz}" /e /move /r:5 /w:2 /xd configuraciones Grabaciones_Epub-TTS bin actualizacion >> "%LOG%" 2>&1\n'
+            '    call :borrar_con_reintentos "%%D"\n'
             ")\n"
             "\n"
-            ":: Eliminar el ZIP temporal\n"
-            f'rmdir /s /q "{os.path.join(raiz, "actualizacion")}"\n'
+            'echo [%date% %time%] Actualizador terminado >> "%LOG%"\n'
             "\n"
-            ":: Relanzar la aplicación\n"
+            ":: Eliminar el ZIP temporal (y el propio log; ya no hace falta si\n"
+            ":: se ha llegado hasta aqui sin errores)\n"
+            f'call :borrar_con_reintentos "{os.path.join(raiz, "actualizacion")}"\n'
+            "\n"
+            ":: Relanzar la aplicacion\n"
             f'start "" "{lanzador}"\n'
             "\n"
             ":: Autoeliminar este script\n"
             "del %0\n"
+            "goto :eof\n"
+            "\n"
+            ":: Reintenta borrar un archivo o carpeta hasta 5 veces con espera,\n"
+            ":: en vez de fallar (en silencio) al primer bloqueo momentaneo.\n"
+            ":borrar_con_reintentos\n"
+            "set \"objetivo=%~1\"\n"
+            "for /l %%i in (1,1,5) do (\n"
+            '    if exist "%objetivo%\\" (\n'
+            '        rmdir /s /q "%objetivo%" 2>>"%LOG%"\n'
+            '    ) else if exist "%objetivo%" (\n'
+            '        del /f /q "%objetivo%" 2>>"%LOG%"\n'
+            "    )\n"
+            '    if not exist "%objetivo%" exit /b 0\n'
+            "    ping -n 3 127.0.0.1 >nul\n"
+            ")\n"
+            'echo [%date% %time%] AVISO: no se pudo borrar "%objetivo%" tras 5 intentos >> "%LOG%"\n'
+            "exit /b 1\n"
         )
+        # ANCLAJE_FIN: BORRADO_BAT_CON_REINTENTOS
 
         ruta_bat_tmp = bat_path + ".tmp"
         with open(ruta_bat_tmp, "w", encoding="cp1252", errors="replace") as f:
@@ -680,74 +764,18 @@ class PanelGeneral(wx.ScrolledWindow):
         wx.CallAfter(wx.GetTopLevelParent(self).Close)
     # ANCLAJE_FIN: ACTUALIZADOR_SCRIPT_CLON
 
-    # ANCLAJE_INICIO: ACTUALIZADOR_DESCARGA_VERIFICACION_FASE_C
-    def _al_probar_descarga_nueva(self, evento=None):
-        from app.motor.actualizador_descarga import GestorDescargaActualizacion
-
-        self.btn_probar_descarga_nueva.Disable()
-        wx.CallAfter(self.lbl_progreso.SetLabel, _("Iniciando descarga de prueba..."))
-
-        gestor = GestorDescargaActualizacion()
-        gestor.descargar_y_verificar_en_hilo(
-            callback_resultado=lambda r: wx.CallAfter(self._al_resultado_descarga_nueva, r),
-            callback_progreso=lambda msg, pct: wx.CallAfter(self.lbl_progreso.SetLabel, msg),
-        )
-
-    def _al_resultado_descarga_nueva(self, resultado: dict):
-        self.btn_probar_descarga_nueva.Enable()
-        wx.CallAfter(self.lbl_progreso.SetLabel, "")
-
-        if not resultado.get("ok"):
-            logger.warning(
-                "Verificación de la descarga de prueba fallida: %s",
-                resultado.get("error"),
-            )
-            reproducir(ERROR)
-            wx.MessageBox(
-                _("No se pudo verificar la actualización descargada:\n{error}").format(
-                    error=resultado.get("error")
-                ),
-                _("Verificación fallida"), wx.OK | wx.ICON_ERROR,
-            )
-            return
-
-        reproducir(SUCCESS)
-        ruta_extraida = resultado.get("ruta_extraida")
-
-        from app.config_rutas import RAIZ
-        ruta_exe = os.path.join(RAIZ, "bin", "actualizador.exe")
-
-        if not os.path.isfile(ruta_exe):
-            # Todavía no se ha compilado/copiado actualizador.exe a bin/ — es
-            # el caso esperado mientras se prueba solo la descarga/verificación
-            # (Fase C en desarrollo). Se avisa sin ambigüedad y sin cerrar la
-            # app, dejando temp/actualizacion/ intacto para poder revisarlo.
-            reproducir(ERROR)
-            wx.MessageBox(
-                _(
-                    "Descarga y verificación completadas correctamente en:\n"
-                    "«{ruta_extraida}».\n\n"
-                    "El instalador auxiliar todavía no está disponible en:\n{ruta_exe}\n\n"
-                    "No se instalará nada. Los archivos ya verificados se conservan "
-                    "en temp/actualizacion/ para que puedas revisarlos."
-                ).format(ruta_extraida=ruta_extraida, ruta_exe=ruta_exe),
-                _("Instalador no disponible"), wx.OK | wx.ICON_WARNING,
-            )
-            return
-
-        respuesta = wx.MessageBox(
-            _("Descarga y verificación completadas correctamente.\n\n"
-              "Para instalarla, la aplicación se cerrará y un proceso auxiliar "
-              "independiente (actualizador.exe) hará el cambio con respaldo "
-              "automático. ¿Instalar ahora?"),
-            _("Verificación correcta"), wx.YES_NO | wx.ICON_QUESTION,
-        )
-        if respuesta != wx.YES:
-            from app.motor.actualizador_descarga import GestorDescargaActualizacion
-            GestorDescargaActualizacion().limpiar()
-            return
-
-        self._lanzar_actualizador_auxiliar(ruta_extraida)
+    # ANCLAJE_INICIO: ACTUALIZADOR_FASE_C_INSTALACION_AUXILIAR
+    def _al_progreso_descarga_nueva(self, msg: str):
+        """
+        Antes solo se actualizaba lbl_progreso (visible, pero sin nada que
+        lo verbalice sin foco): la descarga y verificación de la Fase C se
+        quedaba muda para NVDA hasta el sonido final. self._voz_actualizacion
+        descarta los mensajes intermedios que lleguen demasiado rápido y
+        dice siempre el más reciente, igual que ya hace el escaneo de
+        Biblioteca con su propia cola de voz.
+        """
+        self.lbl_progreso.SetLabel(msg)
+        self._voz_actualizacion.hablar(msg)
 
     def _lanzar_actualizador_auxiliar(self, ruta_extraida: str):
         """
@@ -2294,6 +2322,346 @@ class PanelAsistenteBiblioteca(wx.Panel):
 # ANCLAJE_FIN: PANEL_ASISTENTE_BIBLIOTECA
 
 
+# ANCLAJE_INICIO: DIALOGO_FORMULARIO_PERFIL
+class _DialogoPerfil(wx.Dialog):
+    """
+    Formulario único de un perfil de usuario: nombre, voz, velocidad,
+    volumen, segundos de salto y pausa entre fragmentos, todo en el mismo
+    sitio. Antes había que elegir voz/velocidad/volumen en la pestaña
+    Lectura y luego ir aparte a Ajustes > Configuración General para los
+    segundos de salto y la pausa — este formulario reúne ambos pasos en
+    uno solo. Al pulsar «Guardar perfil» se devuelve todo en self.resultado;
+    quien abre el diálogo es responsable de crear/actualizar el perfil y
+    aplicarlo de inmediato.
+    """
+
+    def __init__(self, padre, pestana_lectura, titulo, nombre_inicial="", datos_iniciales=None):
+        super().__init__(padre, title=titulo, style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
+        datos_iniciales = datos_iniciales or {}
+        self.resultado = None
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(wx.StaticText(self, label=_("Nombre del perfil:")), 0, wx.LEFT | wx.TOP, 10)
+        self.txt_nombre = wx.TextCtrl(self, value=nombre_inicial)
+        sizer.Add(self.txt_nombre, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+
+        sizer.Add(wx.StaticText(self, label=_("Voz:")), 0, wx.LEFT | wx.TOP, 10)
+        self.combo_voz = wx.ComboBox(self, style=wx.CB_READONLY)
+        self._datos_voz = []
+        nombres_voz = []
+        if pestana_lectura is not None and hasattr(pestana_lectura, 'combo_voz'):
+            for i in range(pestana_lectura.combo_voz.GetCount()):
+                nombres_voz.append(pestana_lectura.combo_voz.GetString(i))
+                self._datos_voz.append(pestana_lectura.combo_voz.GetClientData(i))
+        self.combo_voz.Set(nombres_voz)
+        self.combo_voz.SetHelpText(
+            _("Voz que usará este perfil en la pestaña Lectura. La lista muestra las "
+              "mismas voces favoritas ya cargadas en Lectura.")
+        )
+        nombre_voz_previo = datos_iniciales.get("voz_activa", {}).get("id_voz", "")
+        idx_previo = self.combo_voz.FindString(nombre_voz_previo) if nombre_voz_previo else wx.NOT_FOUND
+        if idx_previo == wx.NOT_FOUND and pestana_lectura is not None:
+            idx_previo = pestana_lectura.combo_voz.GetSelection()
+        if idx_previo != wx.NOT_FOUND and idx_previo < self.combo_voz.GetCount():
+            self.combo_voz.SetSelection(idx_previo)
+        elif self.combo_voz.GetCount() > 0:
+            self.combo_voz.SetSelection(0)
+        sizer.Add(self.combo_voz, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+
+        vel_defecto = pestana_lectura.deslizador_velocidad.GetValue() if pestana_lectura is not None else 50
+        vel_inicial = int(datos_iniciales.get("velocidad", vel_defecto))
+        sizer.Add(wx.StaticText(self, label=_("Velocidad:")), 0, wx.LEFT | wx.TOP, 10)
+        self.slider_velocidad = wx.Slider(
+            self, value=vel_inicial, minValue=0, maxValue=100,
+            style=wx.SL_HORIZONTAL | wx.SL_LABELS,
+        )
+        sizer.Add(self.slider_velocidad, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+
+        vol_defecto = pestana_lectura.deslizador_volumen.GetValue() if pestana_lectura is not None else 100
+        vol_inicial = int(datos_iniciales.get("volumen", vol_defecto))
+        sizer.Add(wx.StaticText(self, label=_("Volumen:")), 0, wx.LEFT | wx.TOP, 10)
+        self.slider_volumen = wx.Slider(
+            self, value=vol_inicial, minValue=0, maxValue=100,
+            style=wx.SL_HORIZONTAL | wx.SL_LABELS,
+        )
+        sizer.Add(self.slider_volumen, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 10)
+
+        salto_defecto = getattr(pestana_lectura, 'segundos_salto', 10) if pestana_lectura is not None else 10
+        salto_inicial = int(datos_iniciales.get("segundos_salto", salto_defecto))
+        sizer.Add(
+            wx.StaticText(self, label=_("Segundos de salto (Retroceder y Avanzar en Lectura):")),
+            0, wx.LEFT | wx.TOP, 10,
+        )
+        self.spin_salto = wx.SpinCtrl(self, value=str(salto_inicial), min=1, max=120)
+        sizer.Add(self.spin_salto, 0, wx.LEFT | wx.RIGHT, 10)
+
+        pausa_defecto = getattr(pestana_lectura, '_pausa_entre_fragmentos_ms', 0) if pestana_lectura is not None else 0
+        pausa_inicial = int(datos_iniciales.get("pausa_entre_fragmentos_ms", pausa_defecto))
+        sizer.Add(
+            wx.StaticText(self, label=_("Pausa entre párrafos en voces de IA (milisegundos):")),
+            0, wx.LEFT | wx.TOP, 10,
+        )
+        self.spin_pausa = wx.SpinCtrl(self, value=str(pausa_inicial), min=0, max=3000)
+        sizer.Add(self.spin_pausa, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        botones = wx.StdDialogButtonSizer()
+        btn_guardar = wx.Button(self, wx.ID_OK, label=_("Guardar perfil"))
+        btn_guardar.SetDefault()
+        btn_cancelar = wx.Button(self, wx.ID_CANCEL, label=_("Cancelar"))
+        botones.AddButton(btn_guardar)
+        botones.AddButton(btn_cancelar)
+        botones.Realize()
+        sizer.Add(botones, 0, wx.ALIGN_RIGHT | wx.ALL, 10)
+
+        btn_guardar.Bind(wx.EVT_BUTTON, self._al_guardar)
+
+        self.SetSizerAndFit(sizer)
+        self.txt_nombre.SetFocus()
+
+    def _al_guardar(self, evento):
+        nombre = self.txt_nombre.GetValue().strip()
+        if not nombre:
+            reproducir(ERROR)
+            wx.MessageBox(_("El nombre del perfil no puede estar vacío."), _("Error"))
+            self.txt_nombre.SetFocus()
+            return
+        idx_voz = self.combo_voz.GetSelection()
+        voz_datos = self._datos_voz[idx_voz] if 0 <= idx_voz < len(self._datos_voz) else None
+        nombre_voz = self.combo_voz.GetStringSelection()
+        proveedor_id = (voz_datos or {}).get("proveedor_id", "")
+        self.resultado = {
+            "nombre": nombre,
+            "voz_activa": {"proveedor_id": proveedor_id, "id_voz": nombre_voz},
+            "proveedor_id": proveedor_id,
+            "nombre_voz": nombre_voz,
+            "velocidad": self.slider_velocidad.GetValue(),
+            "volumen": self.slider_volumen.GetValue(),
+            "segundos_salto": self.spin_salto.GetValue(),
+            "pausa_entre_fragmentos_ms": self.spin_pausa.GetValue(),
+        }
+        self.EndModal(wx.ID_OK)
+# ANCLAJE_FIN: DIALOGO_FORMULARIO_PERFIL
+
+
+# ANCLAJE_INICIO: PANEL_PERFILES
+class PanelPerfiles(wx.Panel):
+    """
+    Perfiles de usuario: cada uno guarda la voz activa, la velocidad, el
+    volumen y las preferencias de pausa/segundos de salto de la pestaña
+    Lectura, todo configurable desde un único formulario (_DialogoPerfil).
+    Pensado para equipos compartidos o para cambiar de configuración según
+    el tipo de libro (novela, técnico, idioma extranjero). El atajo global
+    Ctrl+Shift+U alterna entre los perfiles ya creados desde aquí.
+    """
+
+    def __init__(self, padre):
+        super().__init__(padre)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(wx.StaticText(self, label=_(
+            "Cada perfil guarda la voz, la velocidad, el volumen y las preferencias de "
+            "pausa y segundos de salto de la pestaña Lectura, todo en un mismo formulario. "
+            "El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+        )), 0, wx.EXPAND | wx.ALL, 10)
+
+        self.lista = wx.ListCtrl(self, style=wx.LC_REPORT | wx.LC_SINGLE_SEL)
+        self.lista.InsertColumn(0, _("Nombre del perfil"), width=280)
+        self.lista.InsertColumn(1, _("Estado"), width=140)
+        self.lista.SetHelpText(
+            _("Lista de perfiles de usuario. Usa las flechas Arriba y Abajo para navegar. "
+              "El perfil activo aparece marcado en la columna Estado.")
+        )
+        self.lista.Bind(wx.EVT_KEY_DOWN, self._al_tecla_lista)
+        sizer.Add(self.lista, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_crear = wx.Button(self, label=_("Crear perfil nuevo..."))
+        self.btn_crear.SetHelpText(
+            _("Abre el formulario de perfil para configurar voz, velocidad, volumen, "
+              "segundos de salto y pausa, y crea el perfil aplicándolo de inmediato.")
+        )
+        self.btn_editar = wx.Button(self, label=_("Editar perfil seleccionado..."))
+        self.btn_editar.SetHelpText(
+            _("Abre el formulario de perfil precargado con los valores guardados del "
+              "perfil seleccionado, y aplica los cambios al guardar.")
+        )
+        self.btn_activar = wx.Button(self, label=_("Activar perfil seleccionado"))
+        self.btn_activar.SetHelpText(
+            _("Aplica en Lectura la voz, velocidad, volumen y preferencias de pausa "
+              "guardadas en el perfil seleccionado, y lo marca como perfil activo.")
+        )
+        self.btn_eliminar = wx.Button(self, label=_("Eliminar perfil seleccionado"))
+
+        self.btn_crear.Bind(wx.EVT_BUTTON, self._al_crear)
+        self.btn_editar.Bind(wx.EVT_BUTTON, self._al_editar)
+        self.btn_activar.Bind(wx.EVT_BUTTON, self._al_activar_seleccionado)
+        self.btn_eliminar.Bind(wx.EVT_BUTTON, self._al_eliminar)
+        aplicar_icono_boton(self.btn_eliminar, "eliminar", _("Eliminar perfil seleccionado"))
+
+        for boton in (self.btn_crear, self.btn_editar, self.btn_activar, self.btn_eliminar):
+            hbox.Add(boton, 0, wx.RIGHT, 10)
+        sizer.Add(hbox, 0, wx.ALL, 10)
+
+        self.SetSizer(sizer)
+        self.primer_control = self.lista
+        self.ultimo_control = self.btn_eliminar
+        self._rellenar_lista()
+
+    def al_activar(self):
+        """Llamado por PestanaAjustes cada vez que se entra en este nodo del árbol."""
+        self._rellenar_lista()
+
+    def _al_tecla_lista(self, evento):
+        if evento.GetKeyCode() in (wx.WXK_UP, wx.WXK_DOWN):
+            reproducir(LIST_NAV)
+        evento.Skip()
+
+    def _rellenar_lista(self):
+        from app.motor import gestor_perfiles
+        datos = gestor_perfiles.cargar_perfiles()
+        self._nombres = list(datos["perfiles"].keys())
+        activo = datos["perfil_activo"]
+        self.lista.DeleteAllItems()
+        for i, nombre in enumerate(self._nombres):
+            self.lista.InsertItem(i, nombre)
+            self.lista.SetItem(i, 1, _("Activo") if nombre == activo else "")
+        if self.lista.GetItemCount() > 0 and self.lista.GetFirstSelected() == -1:
+            self.lista.Select(0)
+
+    def _nombre_seleccionado(self):
+        idx = self.lista.GetFirstSelected()
+        if idx == -1 or idx >= len(self._nombres):
+            return None
+        return self._nombres[idx]
+
+    def _obtener_pestana_lectura(self):
+        ventana = wx.GetTopLevelParent(self)
+        return getattr(ventana, 'pestana_lectura', None)
+
+    def _aplicar_y_activar(self, nombre):
+        """
+        Marca el perfil como activo, lo aplica de inmediato en Lectura (voz,
+        velocidad, volumen, segundos de salto y pausa) y refresca la lista.
+        """
+        from app.motor import gestor_perfiles
+        gestor_perfiles.fijar_perfil_activo(nombre)
+        nombre_activo, datos_activo = gestor_perfiles.obtener_perfil_activo()
+        pl = self._obtener_pestana_lectura()
+        if pl is not None and hasattr(pl, 'aplicar_perfil_usuario'):
+            pl.aplicar_perfil_usuario(datos_activo)
+        self._rellenar_lista()
+        self._seleccionar_por_nombre(nombre_activo)
+        return nombre_activo
+
+    def _al_crear(self, evento):
+        from app.motor import gestor_perfiles
+        pl = self._obtener_pestana_lectura()
+        dlg = _DialogoPerfil(self, pl, _("Crear perfil"))
+        if dlg.ShowModal() != wx.ID_OK or dlg.resultado is None:
+            dlg.Destroy()
+            return
+        resultado = dlg.resultado
+        dlg.Destroy()
+        nombre = resultado["nombre"]
+        if gestor_perfiles.existe_perfil(nombre):
+            reproducir(ERROR)
+            wx.MessageBox(_("Ya existe un perfil con ese nombre."), _("Error"))
+            return
+        voces_favoritas = {resultado["proveedor_id"]: resultado["nombre_voz"]} if resultado["proveedor_id"] else {}
+        datos_perfil = {
+            "voz_activa": resultado["voz_activa"],
+            "voces_favoritas": voces_favoritas,
+            "velocidad": resultado["velocidad"],
+            "volumen": resultado["volumen"],
+            "segundos_salto": resultado["segundos_salto"],
+            "pausa_entre_fragmentos_ms": resultado["pausa_entre_fragmentos_ms"],
+        }
+        if not gestor_perfiles.crear_perfil(nombre, datos_perfil):
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo crear el perfil."), _("Error"))
+            return
+        self._aplicar_y_activar(nombre)
+        reproducir(SUCCESS)
+        voz.hablar(_("Perfil {nombre} creado y activado.").format(nombre=nombre))
+
+    def _al_editar(self, evento):
+        from app.motor import gestor_perfiles
+        nombre = self._nombre_seleccionado()
+        if nombre is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("Selecciona un perfil de la lista primero."), _("Info"))
+            return
+        datos_previos = gestor_perfiles.cargar_perfiles()["perfiles"].get(nombre, {})
+        pl = self._obtener_pestana_lectura()
+        dlg = _DialogoPerfil(self, pl, _("Editar perfil"), nombre_inicial=nombre, datos_iniciales=datos_previos)
+        if dlg.ShowModal() != wx.ID_OK or dlg.resultado is None:
+            dlg.Destroy()
+            return
+        resultado = dlg.resultado
+        dlg.Destroy()
+        nombre_nuevo = resultado["nombre"]
+        if nombre_nuevo != nombre and gestor_perfiles.existe_perfil(nombre_nuevo):
+            reproducir(ERROR)
+            wx.MessageBox(_("Ya existe un perfil con ese nombre."), _("Error"))
+            return
+        if nombre_nuevo != nombre and not gestor_perfiles.renombrar_perfil(nombre, nombre_nuevo):
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo renombrar el perfil."), _("Error"))
+            return
+        voces_favoritas = dict(datos_previos.get("voces_favoritas", {}))
+        if resultado["proveedor_id"]:
+            voces_favoritas[resultado["proveedor_id"]] = resultado["nombre_voz"]
+        if not gestor_perfiles.guardar_estado_en_perfil(
+            nombre_nuevo, resultado["voz_activa"], voces_favoritas,
+            resultado["velocidad"], resultado["volumen"],
+            resultado["segundos_salto"], resultado["pausa_entre_fragmentos_ms"],
+        ):
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo actualizar el perfil."), _("Error"))
+            return
+        self._aplicar_y_activar(nombre_nuevo)
+        reproducir(SUCCESS)
+        voz.hablar(_("Perfil {nombre} actualizado y activado.").format(nombre=nombre_nuevo))
+
+    def _al_activar_seleccionado(self, evento):
+        nombre = self._nombre_seleccionado()
+        if nombre is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("Selecciona un perfil de la lista primero."), _("Info"))
+            return
+        nombre_activo = self._aplicar_y_activar(nombre)
+        reproducir(SUCCESS)
+        voz.hablar(_("Perfil activo: {nombre}").format(nombre=nombre_activo))
+
+    def _al_eliminar(self, evento):
+        from app.motor import gestor_perfiles
+        nombre = self._nombre_seleccionado()
+        if nombre is None:
+            reproducir(ERROR)
+            wx.MessageBox(_("Selecciona un perfil de la lista primero."), _("Info"))
+            return
+        if wx.MessageBox(
+            _("¿Eliminar el perfil «{nombre}»?").format(nombre=nombre),
+            _("Confirmar"), wx.YES_NO | wx.ICON_QUESTION,
+        ) != wx.YES:
+            return
+        if gestor_perfiles.eliminar_perfil(nombre):
+            reproducir(SUCCESS)
+            self._rellenar_lista()
+        else:
+            reproducir(ERROR)
+            wx.MessageBox(_("No se pudo eliminar el perfil."), _("Error"))
+
+    def _seleccionar_por_nombre(self, nombre):
+        if nombre in self._nombres:
+            idx = self._nombres.index(nombre)
+            self.lista.Select(idx)
+            self.lista.EnsureVisible(idx)
+            self.lista.SetFocus()
+# ANCLAJE_FIN: PANEL_PERFILES
+
+
 # ANCLAJE_INICIO: PESTANA_AJUSTES_PRINCIPAL
 class PestanaAjustes(wx.Panel):
     """
@@ -2322,6 +2690,7 @@ class PestanaAjustes(wx.Panel):
     _PAG_ATAJOS     = 8
     _PAG_SONIDOS    = 9
     _PAG_ASISTENTE  = 10
+    _PAG_PERFILES   = 11
 
     def __init__(self, padre):
         super().__init__(padre)
@@ -2361,6 +2730,7 @@ class PestanaAjustes(wx.Panel):
         self.pag_atajos      = PanelAtajos(self.panel_derecho)
         self.pag_sonidos     = PanelSonidos(self.panel_derecho)
         self.pag_asistente   = PanelAsistenteBiblioteca(self.panel_derecho)
+        self.pag_perfiles    = PanelPerfiles(self.panel_derecho)
 
         self.panel_derecho.AddPage(self.pag_general,     _("Configuración General"))
         self.panel_derecho.AddPage(self.pag_claves,      _("Credenciales y API Keys"))
@@ -2373,6 +2743,7 @@ class PestanaAjustes(wx.Panel):
         self.panel_derecho.AddPage(self.pag_atajos,      _("Atajos de Teclado"))
         self.panel_derecho.AddPage(self.pag_sonidos,     _("Efectos de Sonido"))
         self.panel_derecho.AddPage(self.pag_asistente,   _("Asistente de Biblioteca"))
+        self.panel_derecho.AddPage(self.pag_perfiles,    _("Perfiles de Usuario"))
 
         self.splitter.SetMinimumPaneSize(180)
         self.splitter.SplitVertically(self.arbol_cat, self.panel_derecho, 220)
@@ -2465,6 +2836,9 @@ class PestanaAjustes(wx.Panel):
 
         nodo_asistente = self.arbol_cat.AppendItem(raiz, _("Asistente de Biblioteca"))
         self._nodos[nodo_asistente] = self._PAG_ASISTENTE
+
+        nodo_perfiles = self.arbol_cat.AppendItem(raiz, _("Perfiles de Usuario"))
+        self._nodos[nodo_perfiles] = self._PAG_PERFILES
 
         # Expandir todas las ramas para que el usuario ciego conozca la estructura
         # completa desde el primer momento que el árbol recibe el foco.
@@ -2563,6 +2937,7 @@ class PestanaAjustes(wx.Panel):
             self.pag_elevenlabs, self.pag_sapi5,
             self.pag_diccionario, self.pag_atajos,
             self.pag_sonidos, self.pag_asistente,
+            self.pag_perfiles,
         ]
         if 0 <= idx < len(paneles):
             return paneles[idx]

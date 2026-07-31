@@ -31,6 +31,7 @@ import wx.lib.mixins.listctrl as listmix
 from app.motor.troceador_epub import TroceadorEpub
 from app.motor.reproductor_sonidos import reproducir, ERROR, OPEN_FOLDER, LIST_NAV, SUCCESS, PROGRESS, CLEAR
 from app.interfaz.ui_recursos import aplicar_icono_boton
+from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.gestor_idioma import traducir as _
 
 
@@ -89,6 +90,16 @@ class DialogoTroceador(wx.Dialog):
         self._construir()
         self.CentreOnScreen()
         self.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_global)
+
+        # Antes la división de capítulos solo se veía en la barra y el
+        # título de la ventana — nada que NVDA verbalizara sin más mientras
+        # duraba. Misma cola de voz con descarte de mensajes intermedios ya
+        # usada en el escaneo de Biblioteca y en la Fase C del actualizador.
+        self._voz_progreso = AnunciadorVoz()
+        self._progreso_actual = (0, 0)
+        self._timer_progreso = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self._al_temporizador_progreso, self._timer_progreso)
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz_progreso.detener(), e.Skip()))
 
     # ── Construcción de la interfaz ───────────────────────────────────────────
 
@@ -302,6 +313,7 @@ class DialogoTroceador(wx.Dialog):
         self.barra_progreso.SetValue(0)
         self.barra_progreso.Show()
         self.Layout()
+        self._timer_progreso.Start(2500)
 
         reproducir(PROGRESS)
 
@@ -322,11 +334,20 @@ class DialogoTroceador(wx.Dialog):
         threading.Thread(target=_tarea, daemon=True).start()
 
     def _actualizar_barra(self, actual: int, total: int):
+        self._progreso_actual = (actual, total)
         if total > 0:
             self.barra_progreso.SetRange(total)
             self.barra_progreso.SetValue(min(actual, total))
 
+    def _al_temporizador_progreso(self, evento):
+        actual, total = self._progreso_actual
+        if total > 0:
+            self._voz_progreso.hablar(
+                _("Dividiendo... {actual} de {total} capítulos.").format(actual=actual, total=total)
+            )
+
     def _al_division_completada(self, n_archivos: int, carpeta: str, error: str):
+        self._timer_progreso.Stop()
         self.btn_dividir.Enable()
         self.btn_examinar.Enable()
         self.barra_progreso.Hide()

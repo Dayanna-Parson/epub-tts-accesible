@@ -371,3 +371,61 @@ Nada más probar el cambio de idioma en caliente saltó un crash repetido en Mod
 Y para no tener que recordar de memoria el orden de los scripts de publicación (traducir, subir de versión, empaquetar, y cuándo —si alguna vez— tocaría enviar Winget), se documentó todo en `GUIA_SCRIPTS.md`, con una tabla resumen y el paso a paso de cada uno.
 
 — Dayanna Parson, julio de 2026
+
+---
+
+## Fase 8: V4.0 — Perfiles de usuario (julio 2026)
+
+Con la Biblioteca, el Creador de Audiolibros y el Asistente de Gemini ya asentados, la última pieza de la lista de "cosas para la v4" era mucho más pequeña en superficie, pero tocaba directamente el día a día de usar la app: perfiles de usuario. Guardar de un tirón la voz, la velocidad, el volumen y las preferencias de lectura, para compartir el ordenador con otra persona o para tener listas distintas configuraciones según el tipo de libro.
+
+### La primera versión no era la buena
+
+El primer diseño del panel en Ajustes → Perfiles de Usuario tenía botones separados: "Crear perfil con el estado actual de Lectura" y "Guardar estado actual en el perfil seleccionado". Para crear o actualizar un perfil había que ir primero a la pestaña Lectura a dejar puestas la voz, la velocidad y el volumen que se querían guardar, y aparte a Ajustes → Configuración General para los segundos de salto y la pausa entre fragmentos, y solo entonces volver a Perfiles a pulsar el botón de guardar.
+
+Después de probarlo de verdad, la respuesta fue directa: demasiados pasos, demasiados saltos de foco entre pestañas para algo que debería sentirse simple. La petición fue clara — "que todo esté en la lista de perfiles y un botón para crear un nuevo perfil donde se puedan traer todos los ajustes necesarios [...] pulso Guardar perfil para que se guarde y se aplique directamente". El panel se rediseñó con un único formulario (voz, velocidad, volumen, segundos de salto y pausa, los cinco campos a la vez) que al guardar crea o actualiza el perfil, lo marca activo y lo aplica de inmediato, sin salir de Ajustes → Perfiles de Usuario para nada. Fue el mismo tipo de corrección de rumbo que ya pasó con el selector de voz del Creador de Audiolibros en la Fase 7: proponer algo, que el uso real lo tumbe, y reconstruir con lo aprendido.
+
+### El atajo que casi colisiona
+
+`Ctrl+Shift+P` parecía la elección obvia para alternar entre perfiles — es casi un estándar de facto en otras apps para "perfiles" o "paletas de comandos". Antes de que llegara a implementarse, surgió la duda correcta: "¿este atajo no lo uso ya para abrir la ventana de proyectos?". Sí, lo usaba. Un repaso completo de todos los atajos ya asignados en la app confirmó que `Ctrl+Shift+U` estaba libre, y se usó ese en su lugar. Un recordatorio de que "lo que hacen otras apps" no sustituye a comprobar lo que ya hace la propia.
+
+### El mismo bug de `_`, otra vez
+
+Este fue el momento más irónico de la fase. En la Fase 7, un `UnboundLocalError` sobre la propia función de traducir `_()` había costado una ronda entera de investigación: la costumbre de usar `_` como variable de descarte en desempaquetados de tupla, en un archivo que también usa `_` como el traductor de `gettext`. Se documentó la regla en `DEVELOPMENT.md` para que no volviera a pasar.
+
+Volvió a pasar. Esta vez en el panel de Perfiles recién construido: `_, datos = gestor_perfiles.obtener_perfil_activo()`, seguido a las pocas líneas de `voz.hablar(_("Perfil activo: {nombre}").format(...))`. La app crasheó en cuanto se activaba un perfil, con `TypeError: 'str' object is not callable` en vez del `UnboundLocalError` de la vez anterior (la diferencia: esta vez la asignación a `_` iba antes de la llamada a `_("...")`, no después, así que el fallo se manifestó de otra forma, pero la causa de fondo es exactamente la misma). Se corrigió en todo el panel, y quedó anotado en `CLAUDE.md` y en `DEVELOPMENT.md` con las dos apariciones documentadas juntas, no solo una: si ha pasado dos veces en dos fases distintas, es un patrón a vigilar activamente en cualquier código nuevo, no un accidente aislado.
+
+### Un primer paso hacia los tests
+
+Junto con el panel se añadió `TestGestorPerfiles` a `tests/test_suite.py`: CRUD básico, alternancia circular entre perfiles, reasignación del perfil activo al eliminarlo, persistencia atómica. No es la "suite de tests automatizados" completa que llevaba pendiente desde la Fase 4 — sigue sin haber ninguna cobertura de la interfaz gráfica —, pero es el primer módulo del proyecto que nace con sus propios tests desde el primer commit, en vez de sumarlos después.
+
+### Lo que se queda anotado, no resuelto, para la fase de estabilización
+
+Al cerrar esta fase se revisó también, de forma externa, el estado general del proyecto: las librerías elegidas, la profundidad real de la accesibilidad, y dos puntos de mejora concretos. `requisitos.txt` ya existía y cubre las dependencias reales del proyecto, así que ese punto ya estaba resuelto. El otro punto sí es real: hay `except: pass` o `except Exception: pass` sin logging repartidos entre clientes de voz, motor e interfaz — código que esta fase no tocó y que no se puede validar sin NVDA ni wxPython instalados en el entorno de desarrollo actual. En vez de tocarlo de rondón dentro de la rama de Perfiles de usuario, queda anotado explícitamente aquí y en `DEVELOPMENT.md` como tarea pendiente para la fase de estabilización que viene después de la v4.0: la propia planificación de esta fase ya decía que, más allá de la v4.0, el foco del proyecto debía pasar de añadir funciones a pulir, estabilizar y dar soporte a quien use la app. Esta limpieza, y ampliar la cobertura de tests más allá de `gestor_perfiles.py`, son justo ese tipo de trabajo.
+
+### El primer portable real: cuatro bugs que solo existían congelados
+
+Con Perfiles ya terminado y aprobado, tocaba probar todo el ciclo de verdad: generar el `.zip` portable con `crear_portable.py` y usarlo en Windows, no solo el modo desarrollo con Python instalado. Y como suele pasar, el portable encontró errores que el modo desarrollo llevaba meses sin mostrar, porque solo existen cuando la app corre congelada con PyInstaller.
+
+El más ruidoso: el anunciador de voz de las colas rápidas (`AnunciadorVoz`, pyttsx3) se quedaba completamente mudo en el `.exe`, tanto en el progreso de escaneo de Biblioteca como en cualquier otro sitio que lo usara. La causa no era velocidad ni una cola mal gestionada, como parecía a primera vista — cada anuncio lanzaba un proceso auxiliar con `sys.executable -c "código"`, y `sys.executable` dentro de un ejecutable PyInstaller ya no es un intérprete de Python real: es el propio `.exe` de la app, que no entiende `-c`. El proceso auxiliar fallaba en silencio en cada intento. Se corrigió con un modo de re-ejecución explícito: `iniciar_epub_tts.py` ahora intercepta `--hablar-interno <texto>` al arrancar, antes de crear la `wx.App`, y en el `.exe` congelado el propio `sys.executable` se relanza con ese flag en vez de intentar `-c`.
+
+El segundo, más sutil: `Ctrl+I` (anunciar página) a veces caía en la pestaña equivocada. La causa era que varias pestañas registraban su propio acelerador local para la misma combinación además del despacho centralizado en `ventana_principal.py` — con dos tablas de aceleradores compitiendo por la misma tecla, cuál ganaba dependía de detalles de foco poco predecibles. Se centralizó del todo en la ventana principal y se quitaron los registros duplicados en `pestana_lectura.py` y `pestana_biblioteca.py`. De paso se hizo la misma limpieza preventiva en `Ctrl+O`, aunque ese no había dado síntomas todavía.
+
+El tercero fue el que más despistó en las pruebas: el comprobador de actualizaciones ofrecía instalar versiones antiguas, o repetía la misma pregunta después de "actualizar". La causa, una vez encontrada, era ridículamente simple: `comprobador_actualizaciones.py` leía la versión local desde una ruta a la que le faltaba el segmento `recursos/`, así que nunca encontraba el `version.json` real y siempre asumía la versión `0.0.0` de fábrica. Cualquier versión remota parecía más nueva, incluida una v2.0 puesta a mano para probar. Corregida la ruta, el comprobador empezó a comparar versiones de verdad.
+
+El cuarto fue de empaquetado: `accessible_output3` no llevaba hook propio de PyInstaller, así que el `.exe` no incluía todo lo necesario para hablarle al lector de pantalla activo. Se añadió `--collect-all=accessible_output3` a los argumentos de PyInstaller en `crear_portable.py`.
+
+### Grabación de Fragmentos tenía el mismo problema de fondo que el escaneo de Biblioteca
+
+Al revisar `pestana_grabacion.py` con el bug de `AnunciadorVoz` ya resuelto, apareció otro caso del mismo patrón: los anuncios de voz de la pestaña lanzaban `pyttsx3` directamente dentro de un hilo del propio proceso de la app, en vez de en un proceso auxiliar aparte. `pyttsx3` con el motor SAPI5 de Windows no tolera bien compartir el mismo proceso con wxPython — es la misma razón por la que `grabador_audio.py` ya usaba un proceso separado desde hace tiempo. Se sustituyó por el mismo `AnunciadorVoz` ya corregido, quitando el `threading.Thread` manual que envolvía la llamada porque `AnunciadorVoz.hablar()` ya es seguro para llamarse desde cualquier hilo.
+
+### El actualizador automático, validado de extremo a extremo por fin
+
+Con el bug de la ruta de `version.json` corregido, se pudo por fin probar en Windows real el mecanismo de la Fase C (`actualizador_descarga.py` + `bin/actualizador.exe`) con casos reales: instalación correcta, y confirmación de que la barra de progreso y los anuncios de voz llegaban a NVDA sin cortes ni solapamientos. El resultado fue bueno — "me lo han leído absolutamente todo" — así que se conectó el mecanismo ya validado al botón real de producción "Buscar actualizaciones ahora", sustituyendo el viejo "Script Clon" como ruta activa para la instalación (el Script Clon se mantiene aparte, sin usarse, como red de seguridad durante un tiempo antes de retirarlo del todo). El botón de prueba interno que solo servía para validar la descarga durante el desarrollo se retiró, porque ya cumplió su función. También se corrigió un `AttributeError` que habría hecho fallar la ruta de "actualización aceptada al arrancar la app": llamaba a un método que en realidad vive en `PanelGeneral`, no en `PestanaAjustes`.
+
+Aparte, se probó el proceso de construir el propio portable: un `PermissionError` al borrar la carpeta anterior del build (resultó ser atributos de solo lectura en los archivos, no un bloqueo temporal) y los tres `.bat` fallando con "no encuentro el archivo" al lanzarse sin el directorio de trabajo correcto — les faltaba fijar su propio directorio antes de llamar a Python. Ambos, corregidos.
+
+### Ampliando la búsqueda de bugs y los tests
+
+Después de esta ronda de pruebas reales se hizo un repaso más amplio de todo el código en busca de patrones similares, y se ampliaron los tests automatizados con `TestComprobadorActualizaciones`, `TestGestorAtajos` y `TestDiccionarioPronunciacion` — de 106 a 126 tests en total. El barrido de `except: pass` sin logging, revisado con más detalle esta vez, resultó tener 65 apariciones en unos 20 archivos; la mayoría son patrones defensivos deliberados y no bugs escondidos, así que la limpieza sigue tal y como se planificó: pendiente para la fase de estabilización, no para esta rama.
+
+— Dayanna Parson, julio de 2026

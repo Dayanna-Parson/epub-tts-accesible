@@ -1,0 +1,33 @@
+prompt y respuesta 3
+
+si, sigue. y no te detengas si son tareas pequeñas, o que no requieran confirmación por mi parte. Y sobre el atajo, no estoy muy segura pero, este atajo control shift p no lo utilizo ya para abrir la ventana de proyectos? busca alguno, que no tenga conflicto con ninguno. Y sobre los requeriments.... no hay un documento que es el de requisitos.txt que haría supongo esa función, o lo que pide chat gpt?
+Mostrar acciones del mensaje
+Sesión reanudada
+Claude ha respondido: Buen ojo con el atajo: Ctrl+Shift+P ya está tomado por "Abrir gestor de proyectos" (ventanaprincipal.
+Buscado código, ejecutado un comando
+Buen ojo con el atajo: Ctrl+Shift+P ya está tomado por "Abrir gestor de proyectos" (ventana_principal.py:795, al_abrir_gestor_proyectos). Revisé todos los AcceleratorTable de la app y Ctrl+Shift+U está libre (no colisiona con nada: ni Biblioteca, ni Lectura, ni Grabación, ni Proyectos). Uso ese en su lugar.
+Y sí, existe requisitos.txt en la raíz — es justo el requirements.txt que ChatGPT echaba en falta.
+Leerrequisitos.txt
+Ya existe y está completo (cubre wxPython, PDF, TTS, Polly, accesibilidad...). ChatGPT no tuvo acceso a él simplemente porque probablemente no exploró la raíz del repo a fondo. Nada que hacer ahí.
+Sigo con el Paso 2 sin pausas, ya que son cambios pequeños y mecánicos.
+Editadogestor_atajos.py+7-0
+Ahora conecto el atajo en ventana_principal.py: acción de despacho global + un manejador ligero que alterna al siguiente perfil y lo anuncia con accessible_output3.
+Leer ventana_principal.py, buscado código
+Necesito ver cómo se importa anunciador_lector (voz) en este archivo, si ya está.
+Buscado código, leer un archivo, editado un archivo+22-0
+Ahora registro la acción en el diccionario _ACCIONES del despachador global, sin restricción de pestaña (igual que el Asistente de Biblioteca).
+Editadoventana_principal.py+2-0
+Ahora añado el método de aplicación en pestana_lectura.py, justo después de cargar_datos_libro.
+Editado pestana_lectura.py, buscado código+28-0
+Bien, logger ya existe ahí. Ahora reviso la entrada del menú del "Ver atajos actuales" para asegurar que alternar_perfil se lista automáticamente (ya lo hace, porque itera cargar_atajos()), y actualizo el i18n.
+Ejecutado 2 comandos
+Añado los dos msgid nuevos a los tres catálogos (pot, es, en).
+Ejecutado 2 comandos
+Recompilado. Verifico que todo importa correctamente antes de commitear.
+Ejecutado 3 comandos
+Paso 2 hecho y empujado. Resumen:
+• Cambié el atajo a Ctrl+Shift+U (tu duda estaba bien fundada: Ctrl+Shift+P ya abre el gestor de proyectos).
+• requisitos.txt ya existe y cubre lo que pedía ChatGPT — no hacía falta crear nada.
+• Añadido: entrada en gestor_atajos.py, despacho global en ventana_principal.py (al_alternar_perfil_global), y PestanaLectura.aplicar_perfil_usuario() que aplica velocidad/volumen/voz al ciclar de perfil, con anuncio por accessible_output3.
+• i18n actualizado y .mo recompilados.
+Sigo directo con el Paso 4: panel PanelPerfiles en Ajustes (crear, renombrar, eliminar, activar perfiles), que es lo que falta para que el atajo tenga perfiles reales que alternar.

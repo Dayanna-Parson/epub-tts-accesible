@@ -15,19 +15,15 @@ con éxito en la ventana de gestión de Proyectos.
 """
 
 import logging
+import os
 import queue
 import subprocess
 import sys
 import threading
 
-logger = logging.getLogger(__name__)
+from app.config_rutas import RAIZ
 
-_CODIGO_HABLAR_SUBPROCESO = (
-    "import pyttsx3, sys\n"
-    "motor = pyttsx3.init()\n"
-    "motor.say(sys.argv[1])\n"
-    "motor.runAndWait()\n"
-)
+logger = logging.getLogger(__name__)
 
 
 class AnunciadorVoz:
@@ -66,12 +62,33 @@ class AnunciadorVoz:
         SAPI5 queda inconsistente y solo un proceso nuevo lo resetea del
         todo. Es el mismo motivo por el que SAPI de 32 bits ya se puentea
         a un proceso aparte en cliente_sapi32_bridge.py. Lanzar un
-        proceso de Python nuevo por cada anuncio es más lento, pero es la
-        forma fiable de que suene siempre y no solo las primeras veces.
+        proceso nuevo por cada anuncio es más lento, pero es la forma
+        fiable de que suene siempre y no solo las primeras veces.
+
+        Antes se lanzaba "sys.executable -c <código pyttsx3 inline>",
+        asumiendo que sys.executable es siempre un intérprete de Python
+        real. En el build congelado con PyInstaller, sys.executable es el
+        propio epubtts.exe, que no entiende -c como argumento — cada
+        intento de hablar fallaba en silencio (registrado como WARNING,
+        nunca audible) sin verbalizar nada durante procesos rápidos como
+        la descarga de una actualización. Ahora se relanza el propio
+        punto de entrada de la app (iniciar_epub_tts.py en desarrollo, el
+        propio .exe si está congelado) con el argumento --hablar-interno,
+        que ese mismo script intercepta antes de levantar la interfaz
+        gráfica — funciona igual en los dos casos.
         """
         logger.debug("[AnunciadorVoz] Verbalizando: %s", texto)
+        if getattr(sys, "frozen", False):
+            comando = [sys.executable, "--hablar-interno", texto]
+        else:
+            comando = [
+                sys.executable,
+                os.path.join(RAIZ, "iniciar_epub_tts.py"),
+                "--hablar-interno",
+                texto,
+            ]
         subprocess.run(
-            [sys.executable, "-c", _CODIGO_HABLAR_SUBPROCESO, texto],
+            comando,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
             timeout=20,
             check=False,

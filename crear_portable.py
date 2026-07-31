@@ -30,8 +30,10 @@ Requisitos previos:
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
+import time
 import zipfile
 
 # ── Raíz del proyecto ─────────────────────────────────────────────────────────
@@ -70,7 +72,11 @@ _AJUSTES_FABRICA = {
         "volumen_lectura": 100,
         "segundos_salto": 10,
         "pausa_entre_fragmentos_ms": 0,
-        "actualizar_automaticamente": True,
+        # Desmarcada por defecto: la comprobación/instalación automática al
+        # arrancar debe ser una decisión explícita de quien instala, no un
+        # comportamiento de fábrica que se cuela mientras se está probando
+        # una versión concreta a propósito.
+        "actualizar_automaticamente": False,
         "escala_velocidad": "porcentaje",
         "idioma_libro_codigo": "es-ES",
         "sonidos_habilitados": True,
@@ -88,11 +94,65 @@ def _ocultar_archivo(ruta: str):
         pass  # En sistemas no-Windows se ignora silenciosamente
 
 
+# ANCLAJE_INICIO: BORRADO_CON_REINTENTOS
+def _quitar_solo_lectura_y_reintentar(func, ruta_item, exc_info):
+    """
+    Callback de shutil.rmtree(onexc=...). La causa más frecuente de
+    PermissionError (WinError 5) al borrar un árbol en Windows no es un
+    proceso con el archivo abierto, sino que el archivo o carpeta quedó
+    marcado como "solo lectura" (habitual tras clonar o copiar un repo en
+    Windows) — rmtree no puede borrar eso sin quitarle antes el atributo.
+    Se quita con os.chmod() y se reintenta la operación exacta que falló
+    (os.remove/os.rmdir, recibida en func).
+    """
+    try:
+        os.chmod(ruta_item, stat.S_IWRITE)
+        func(ruta_item)
+    except Exception:
+        pass  # Si tampoco así se puede, se deja que el reintento exterior lo capture
+
+
+def _borrar_arbol_con_reintentos(ruta: str, intentos: int = 8, espera_seg: float = 2.0):
+    """
+    Reintenta shutil.rmtree() varias veces, quitando el atributo de solo
+    lectura en cada intento (ver _quitar_solo_lectura_y_reintentar). Si tras
+    todos los intentos sigue sin poder borrarse, algo tiene un archivo
+    concreto realmente abierto (el epubtts.exe de una construcción anterior,
+    el Explorador generando miniaturas, o un antivirus escaneando) — se lista
+    qué archivos quedan dentro para poder identificar cuál es.
+    """
+    ultimo_error = None
+    for intento in range(1, intentos + 1):
+        try:
+            shutil.rmtree(ruta, onexc=_quitar_solo_lectura_y_reintentar)
+            return
+        except PermissionError as e:
+            ultimo_error = e
+            if intento < intentos:
+                print(f"      Acceso denegado al borrar {ruta} (intento {intento}/{intentos}), reintentando...")
+                time.sleep(espera_seg)
+    restantes = [
+        os.path.join(carpeta, archivo)
+        for carpeta, _dirs, archivos in os.walk(ruta)
+        for archivo in archivos
+    ][:20]
+    detalle = "\n".join(f"  - {r}" for r in restantes) if restantes else "  (la carpeta ya no tiene archivos, pero Windows sigue sin dejar borrarla)"
+    raise PermissionError(
+        f"No se pudo borrar '{ruta}' tras {intentos} intentos, ni siquiera quitando el atributo de solo lectura.\n"
+        f"Archivos que siguen dentro:\n{detalle}\n"
+        "Causas probables: el epubtts.exe de una construcción anterior sigue en marcha (revisa el "
+        "Administrador de tareas), el Explorador tiene esa carpeta abierta, o un antivirus la está "
+        "escaneando. Prueba a borrar esa carpeta a mano desde el Explorador; si Windows tampoco te "
+        "deja, reinicia el equipo y vuelve a intentarlo."
+    ) from ultimo_error
+# ANCLAJE_FIN: BORRADO_CON_REINTENTOS
+
+
 def limpiar_destino():
     print("[1/8] Limpiando directorios de salida anteriores...")
     for ruta in (DIR_DIST_RAW, DIR_PORTABLE):
         if os.path.exists(ruta):
-            shutil.rmtree(ruta)
+            _borrar_arbol_con_reintentos(ruta)
             print(f"      Eliminado: {ruta}")
     if os.path.exists(ZIP_SALIDA):
         os.remove(ZIP_SALIDA)
@@ -132,6 +192,14 @@ def ejecutar_pyinstaller():
         f"--distpath={os.path.join(RAIZ, 'dist')}",
         f"--workpath={os.path.join(RAIZ, 'build')}",
         f"--specpath={os.path.join(RAIZ, 'build')}",
+        # accessible_output3.outputs.auto.Auto() detecta el lector de pantalla
+        # disponible con importes/DLLs que el análisis estático de PyInstaller
+        # no siempre traza (a diferencia de pyttsx3 o sounddevice, no hay un
+        # hook dedicado para accessible_output3 en _pyinstaller_hooks_contrib).
+        # Sin esto, el portable puede quedarse mudo con voz.hablar() aunque
+        # NVDA esté corriendo: la llamada no lanza ninguna excepción, pero
+        # Auto() nunca llega a encontrar ningún backend funcional.
+        "--collect-all=accessible_output3",
     ]
     if os.path.isfile(icono):
         args.append(f"--icon={icono}")
@@ -293,6 +361,29 @@ def comprimir_portable():
     print(f"      ZIP creado: {tam:.1f} MB")
 
 
+def verificar_contenido_zip():
+    """
+    Lista el contenido de primer nivel del ZIP ya generado, para comprobar
+    a simple vista en la consola que el portable no lleva nada de más
+    (código fuente, .git, documentación interna...) sin depender de abrir
+    el Explorador de Windows y arriesgarse a confundir esta carpeta con
+    otra copia del repo que hubiera al lado.
+    """
+    print("[Verificación] Contenido de primer nivel del ZIP:")
+    prefijo = f"epub-tts-accesible-v{VERSION}/"
+    nivel_superior = set()
+    with zipfile.ZipFile(ZIP_SALIDA) as zf:
+        total_entradas = len(zf.namelist())
+        for nombre in zf.namelist():
+            resto = nombre[len(prefijo):] if nombre.startswith(prefijo) else nombre
+            primero = resto.split("/")[0]
+            if primero:
+                nivel_superior.add(primero)
+    for entrada in sorted(nivel_superior):
+        print(f"      - {entrada}")
+    print(f"      ({total_entradas} archivos en total dentro del ZIP)")
+
+
 def limpiar_temporal():
     print("[8/8] Eliminando archivos temporales de compilación...")
     dir_build = os.path.join(RAIZ, "build")
@@ -312,6 +403,7 @@ if __name__ == "__main__":
     copiar_recursos()
     crear_configuraciones_fabrica()
     comprimir_portable()
+    verificar_contenido_zip()
     limpiar_temporal()
     print(f"\n✓ Portable listo: dist/epub-tts-accesible-v{VERSION}.zip\n")
 # ANCLAJE_FIN: SCRIPT_CONSTRUCCION_PORTABLE

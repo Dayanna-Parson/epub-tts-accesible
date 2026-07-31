@@ -2,11 +2,15 @@
 Suite de tests para Epub-TTS Accessible
 ========================================
 Cubre las partes testables sin GUI ni hardware de audio:
-  - procesador_etiquetas  (puro Python)
-  - limpiador_lectura     (puro Python)
-  - gestor_proyectos      (stdlib + fichero temporal)
-  - control_cuota         (lógica con wx + reproductor_sonidos mockeados)
-  - config_rutas          (utils de rutas)
+  - procesador_etiquetas       (puro Python)
+  - limpiador_lectura          (puro Python)
+  - gestor_proyectos           (stdlib + fichero temporal)
+  - control_cuota              (lógica con wx + reproductor_sonidos mockeados)
+  - config_rutas               (utils de rutas)
+  - gestor_perfiles            (CRUD de perfiles de usuario, fichero temporal)
+  - comprobador_actualizaciones (comparación de versiones semánticas)
+  - gestor_atajos              (CRUD de atajos de teclado, ficheros temporales)
+  - diccionario_pronunciacion  (sustituciones fonéticas, fichero temporal)
 """
 
 import sys
@@ -686,6 +690,277 @@ class TestConfigRutas(unittest.TestCase):
             with patch("app.config_rutas.ruta_config", return_value=ruta):
                 claves = cargar_claves()
         self.assertIn("azure", claves)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GESTOR DE PERFILES DE USUARIO (v4.0)
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor import gestor_perfiles
+
+
+class TestGestorPerfiles(unittest.TestCase):
+    """Usa un archivo temporal aislado para no tocar configuraciones reales."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        patcher = patch(
+            "app.motor.gestor_perfiles._RUTA_PERFILES",
+            os.path.join(self.tmpdir, "perfiles.json"),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_cargar_perfiles_sin_archivo_devuelve_estructura_vacia(self):
+        datos = gestor_perfiles.cargar_perfiles()
+        self.assertEqual(datos["perfiles"], {})
+        self.assertIsNone(datos["perfil_activo"])
+
+    def test_crear_perfil_lo_deja_como_activo_por_defecto(self):
+        self.assertTrue(gestor_perfiles.crear_perfil("Novela"))
+        nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(nombre, "Novela")
+        self.assertEqual(datos["velocidad"], 50)
+
+    def test_crear_perfil_duplicado_falla(self):
+        gestor_perfiles.crear_perfil("Novela")
+        self.assertFalse(gestor_perfiles.crear_perfil("Novela"))
+
+    def test_crear_perfil_nombre_vacio_falla(self):
+        self.assertFalse(gestor_perfiles.crear_perfil("   "))
+
+    def test_renombrar_perfil(self):
+        gestor_perfiles.crear_perfil("Antiguo")
+        self.assertTrue(gestor_perfiles.renombrar_perfil("Antiguo", "Nuevo"))
+        self.assertTrue(gestor_perfiles.existe_perfil("Nuevo"))
+        self.assertFalse(gestor_perfiles.existe_perfil("Antiguo"))
+
+    def test_renombrar_a_nombre_ya_usado_falla(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.crear_perfil("B")
+        self.assertFalse(gestor_perfiles.renombrar_perfil("A", "B"))
+
+    def test_renombrar_perfil_activo_actualiza_referencia(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.renombrar_perfil("A", "B")
+        nombre, _datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(nombre, "B")
+
+    def test_eliminar_perfil(self):
+        gestor_perfiles.crear_perfil("A")
+        self.assertTrue(gestor_perfiles.eliminar_perfil("A"))
+        self.assertFalse(gestor_perfiles.existe_perfil("A"))
+
+    def test_eliminar_perfil_activo_pasa_activo_a_otro_restante(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.crear_perfil("B")
+        gestor_perfiles.fijar_perfil_activo("A")
+        gestor_perfiles.eliminar_perfil("A")
+        nombre, _datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(nombre, "B")
+
+    def test_eliminar_ultimo_perfil_deja_activo_en_none(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.eliminar_perfil("A")
+        nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertIsNone(nombre)
+        self.assertIsNone(datos)
+
+    def test_siguiente_perfil_sin_perfiles_devuelve_vacio(self):
+        self.assertEqual(gestor_perfiles.siguiente_perfil(), "")
+
+    def test_siguiente_perfil_cicla_circularmente(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.crear_perfil("B")
+        gestor_perfiles.crear_perfil("C")
+        gestor_perfiles.fijar_perfil_activo("A")
+        self.assertEqual(gestor_perfiles.siguiente_perfil(), "B")
+        gestor_perfiles.fijar_perfil_activo("C")
+        self.assertEqual(gestor_perfiles.siguiente_perfil(), "A")
+
+    def test_guardar_estado_en_perfil_sobrescribe_valores(self):
+        gestor_perfiles.crear_perfil("A")
+        ok = gestor_perfiles.guardar_estado_en_perfil(
+            "A",
+            voz_activa={"proveedor_id": "azure", "id_voz": "Elvira"},
+            voces_favoritas={"azure": "Elvira"},
+            velocidad=80, volumen=60,
+            segundos_salto=15, pausa_entre_fragmentos_ms=300,
+        )
+        self.assertTrue(ok)
+        _nombre, datos = gestor_perfiles.obtener_perfil_activo()
+        self.assertEqual(datos["velocidad"], 80)
+        self.assertEqual(datos["voz_activa"]["id_voz"], "Elvira")
+        self.assertEqual(datos["pausa_entre_fragmentos_ms"], 300)
+
+    def test_guardar_estado_en_perfil_inexistente_falla(self):
+        self.assertFalse(gestor_perfiles.guardar_estado_en_perfil(
+            "NoExiste", {}, {}, 50, 100, 10, 0,
+        ))
+
+    def test_persistencia_atomica_sobrevive_recarga(self):
+        gestor_perfiles.crear_perfil("A")
+        gestor_perfiles.fijar_perfil_activo("A")
+        # Simula una nueva ejecución de la app releyendo el archivo desde cero
+        datos_releidos = gestor_perfiles.cargar_perfiles()
+        self.assertIn("A", datos_releidos["perfiles"])
+        self.assertEqual(datos_releidos["perfil_activo"], "A")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# COMPROBADOR DE ACTUALIZACIONES (comparación de versiones semánticas)
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor.comprobador_actualizaciones import ComprobadorActualizaciones
+
+
+class TestComprobadorActualizaciones(unittest.TestCase):
+    """
+    hay_actualizacion() es la comparación que decide si se ofrece instalar
+    algo: un fallo aquí ya causó un bug real en esta fase (leer_version_local
+    apuntando a una ruta equivocada, sin lanzar ninguna excepción visible).
+    """
+
+    def setUp(self):
+        self.comp = ComprobadorActualizaciones()
+
+    def test_remota_mayor_hay_actualizacion(self):
+        self.assertTrue(self.comp.hay_actualizacion("3.0.0", "4.0.0"))
+
+    def test_remota_menor_no_hay_actualizacion(self):
+        self.assertFalse(self.comp.hay_actualizacion("4.0.0", "3.0.0"))
+
+    def test_versiones_iguales_no_hay_actualizacion(self):
+        self.assertFalse(self.comp.hay_actualizacion("3.0.0", "3.0.0"))
+
+    def test_local_con_menos_segmentos_que_remota(self):
+        # "1.0" (sin parche) frente a "3.0.0": la comparación por tuplas debe
+        # seguir decidiendo bien aunque los segmentos no cuadren en longitud.
+        self.assertTrue(self.comp.hay_actualizacion("1.0", "3.0.0"))
+
+    def test_local_vacia_no_lanza_excepcion(self):
+        self.assertFalse(self.comp.hay_actualizacion("", "3.0.0"))
+
+    def test_version_no_numerica_no_lanza_excepcion(self):
+        self.assertFalse(self.comp.hay_actualizacion("no-es-una-version", "3.0.0"))
+
+    def test_leer_version_local_sin_archivo_devuelve_0_0_0(self):
+        with patch(
+            "app.motor.comprobador_actualizaciones._RUTA_VERSION_LOCAL",
+            "/ruta/que/no/existe/version.json",
+        ):
+            self.assertEqual(self.comp.leer_version_local(), "0.0.0")
+
+    def test_leer_version_local_lee_el_archivo_real(self):
+        with tempfile.TemporaryDirectory() as d:
+            ruta = os.path.join(d, "version.json")
+            with open(ruta, "w", encoding="utf-8") as f:
+                json.dump({"version": "4.0.0"}, f)
+            with patch("app.motor.comprobador_actualizaciones._RUTA_VERSION_LOCAL", ruta):
+                self.assertEqual(self.comp.leer_version_local(), "4.0.0")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GESTOR DE ATAJOS DE TECLADO
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor import gestor_atajos
+
+
+class TestGestorAtajos(unittest.TestCase):
+    """Usa archivos temporales aislados para no tocar teclas_*.json reales."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        patcher_def = patch(
+            "app.motor.gestor_atajos._RUTA_DEFAULTS",
+            os.path.join(self.tmpdir, "teclas_predeterminadas.json"),
+        )
+        patcher_usr = patch(
+            "app.motor.gestor_atajos._RUTA_USUARIO",
+            os.path.join(self.tmpdir, "teclas_usuario.json"),
+        )
+        patcher_def.start()
+        patcher_usr.start()
+        self.addCleanup(patcher_def.stop)
+        self.addCleanup(patcher_usr.stop)
+
+    def test_cargar_atajos_crea_defaults_si_no_existen(self):
+        atajos = gestor_atajos.cargar_atajos()
+        self.assertIn("reproducir_pausar", atajos)
+        self.assertEqual(atajos["reproducir_pausar"]["tecla"], "P")
+
+    def test_guardar_atajo_usuario_sobrescribe_el_default(self):
+        gestor_atajos.guardar_atajo_usuario("reproducir_pausar", "Ctrl+Shift", "Z")
+        atajos = gestor_atajos.cargar_atajos()
+        self.assertEqual(atajos["reproducir_pausar"]["modificador"], "Ctrl+Shift")
+        self.assertEqual(atajos["reproducir_pausar"]["tecla"], "Z")
+
+    def test_eliminar_atajo_usuario_restaura_el_default(self):
+        gestor_atajos.guardar_atajo_usuario("detener", "Alt", "X")
+        gestor_atajos.eliminar_atajo_usuario("detener")
+        atajos = gestor_atajos.cargar_atajos()
+        defaults = gestor_atajos.cargar_defaults()
+        self.assertEqual(atajos["detener"], defaults["detener"])
+
+    def test_restablecer_todos_borra_todos_los_overrides(self):
+        gestor_atajos.guardar_atajo_usuario("detener", "Alt", "X")
+        gestor_atajos.guardar_atajo_usuario("buscar", "Alt", "Y")
+        gestor_atajos.restablecer_todos()
+        atajos = gestor_atajos.cargar_atajos()
+        defaults = gestor_atajos.cargar_defaults()
+        self.assertEqual(atajos, defaults)
+
+    def test_texto_atajo_con_modificador_y_tecla(self):
+        self.assertEqual(
+            gestor_atajos.texto_atajo({"modificador": "Ctrl+Shift", "tecla": "U"}),
+            "Ctrl+Shift+U",
+        )
+
+    def test_texto_atajo_sin_asignar(self):
+        self.assertEqual(gestor_atajos.texto_atajo({"modificador": "", "tecla": ""}), "(sin asignar)")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DICCIONARIO DE PRONUNCIACIÓN
+# ─────────────────────────────────────────────────────────────────────────────
+from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
+
+
+class TestDiccionarioPronunciacion(unittest.TestCase):
+    """Usa un archivo temporal aislado para no tocar pronunciacion.json real."""
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        patcher = patch(
+            "app.motor.diccionario_pronunciacion._RUTA",
+            os.path.join(self.tmpdir, "pronunciacion.json"),
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.dic = DiccionarioPronunciacion()
+
+    def test_diccionario_vacio_sin_archivo(self):
+        self.assertEqual(self.dic.obtener_tabla(), {})
+
+    def test_anadir_entrada_y_aplicar_sustitucion(self):
+        self.dic.anadir_entrada("EPUB", "í-pub")
+        self.assertEqual(self.dic.aplicar("Un archivo EPUB nuevo"), "Un archivo í-pub nuevo")
+
+    def test_aplicar_respeta_limites_de_palabra(self):
+        # "EPUB" no debe sustituirse dentro de "EPUBook" (coincidencia parcial).
+        self.dic.anadir_entrada("EPUB", "í-pub")
+        self.assertEqual(self.dic.aplicar("Un EPUBook nuevo"), "Un EPUBook nuevo")
+
+    def test_eliminar_entrada(self):
+        self.dic.anadir_entrada("NVDA", "en-ví-di-ei")
+        self.dic.eliminar_entrada("NVDA")
+        self.assertEqual(self.dic.aplicar("Uso NVDA a diario"), "Uso NVDA a diario")
+
+    def test_guardar_y_recargar_persiste_en_disco(self):
+        self.dic.anadir_entrada("Tolkien", "Tól-kien")
+        otro = DiccionarioPronunciacion()
+        self.assertEqual(otro.obtener_tabla(), {"Tolkien": "Tól-kien"})
+
+    def test_texto_vacio_devuelve_igual(self):
+        self.assertEqual(self.dic.aplicar(""), "")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

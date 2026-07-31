@@ -1,0 +1,48 @@
+respuesta 5
+
+Voy por partes. Primero el bug que rompe la app (es lo urgente), luego el rediseño del panel de Perfiles.
+
+Confirmado: `_, datos = ...` sobrescribía la función de traducción `_` dentro del método (un clásico de gettext: nunca usar `_` como variable de descarte). Lo corrijo de raíz reescribiendo el panel completo con el flujo que pediste.
+
+Ahora localizo el bloque completo `PANEL_PERFILES` para sustituirlo entero por el nuevo diseño (un solo formulario con todo: voz, velocidad, volumen, segundos de salto y pausa).
+
+Ahora actualizo `aplicar_perfil_usuario` en `pestana_lectura.py` para que también persista segundos de salto y pausa globalmente (igual que ya hace con velocidad/volumen) y sincronice las etiquetas de los botones.
+
+Verifico sintaxis de ambos archivos.
+
+Reviso que no quede ningún otro caso del mismo bug (`_` usado como variable de descarte) en los archivos tocados.
+
+Limpio. Ahora reviso el diálogo "Ver atajos actuales" — como está impulsado por datos (`cargar_atajos()`), debería incluir ya `alternar_perfil` automáticamente. Lo confirmo.
+
+Confirmado: `alternar_perfil` ya aparece automáticamente tanto en "Ver atajos actuales" como en el panel de Ajustes > Atajos de Teclado (ambos se generan desde `cargar_atajos()`), gracias al trabajo del Paso 2. No hace falta tocar nada ahí.
+
+Ahora reviso lo pendiente de ChatGPT: busco los `except: pass` reales (silenciosos, sin logging) para ver el alcance real.
+
+Voy a añadir pruebas automatizadas para el módulo nuevo (`gestor_perfiles.py`) — es lo único de la lista de ChatGPT que puedo abordar de forma segura y acotada dentro de esta rama sin arriesgar el resto de la app.
+
+Ahora ejecuto la suite completa para asegurarme de que no rompo nada existente y de que las pruebas nuevas pasan.
+
+Los 106 tests pasan, incluidas las 15 nuevas de `gestor_perfiles`. Compruebo también el i18n para las cadenas nuevas del panel rediseñado y del diálogo.
+
+15 cadenas nuevas de verdad (el resto ya existían de pasos anteriores). Las añado con traducción al inglés y recompilo.
+
+Verifico sintaxis final y ejecuto de nuevo toda la suite antes de commitear.
+
+Todo compila y todos los tests pasan. Commit y push.
+
+## Resumen de lo hecho
+
+**Bug crítico corregido**: `_, datos = gestor_perfiles.obtener_perfil_activo()` sobrescribía la función de traducción `_` dentro del método (un clásico de gettext: nunca uses `_` como variable de descarte). Por eso crasheaba justo al anunciar el perfil activo.
+
+**Panel de Perfiles rediseñado como pediste**: ahora hay un único formulario (`_DialogoPerfil`) con nombre, voz, velocidad, volumen, segundos de salto y pausa — todo junto. Los botones son:
+- **Crear perfil nuevo...** → abre el formulario, y al «Guardar perfil» se crea, se activa y se aplica de inmediato.
+- **Editar perfil seleccionado...** → mismo formulario, precargado, aplica al guardar.
+- **Activar perfil seleccionado** / **Eliminar perfil seleccionado**.
+
+Ya no hace falta ir a Lectura y luego a Ajustes > General por separado: todo se aplica y persiste desde el mismo sitio (incluidos `segundos_salto`/`pausa_entre_fragmentos_ms`, que ahora también se guardan en `ajustes.json` igual que ya hacía velocidad/volumen).
+
+**"Ver atajos actuales"**: comprobé el código y `Ctrl+Shift+U` (alternar perfiles) ya aparecía ahí automáticamente, porque ese diálogo y el panel de Ajustes > Atajos se generan solos a partir de `gestor_atajos.cargar_atajos()`. No hacía falta tocar nada.
+
+**Sobre lo de ChatGPT**: añadí 15 tests unitarios para `gestor_perfiles.py` (los 106 tests de la suite pasan) como avance concreto y acotado sobre "falta de pruebas automatizadas". El `requirements.txt` ya existía (`requisitos.txt`), así que ese punto ya estaba resuelto. El tercer punto —los `except: pass` silenciosos— aparece en **19 archivos** de todo el proyecto (servicios de voz, biblioteca, grabación, etc.), no solo en código de perfiles: es una limpieza real pero grande y transversal, fuera del alcance de la Fase 8 y arriesgada de tocar a ciegas sin poder probar con wxPython/NVDA en este entorno. Prefiero no meterla de rondón en esta rama de Perfiles de Usuario.
+
+¿Quieres que abra esa limpieza de `except: pass` como una tarea aparte (otra rama, después de v4.0), o la dejamos anotada para la fase de estabilización que menciona el propio documento de la v4?

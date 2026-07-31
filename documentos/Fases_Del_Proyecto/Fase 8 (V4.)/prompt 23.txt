@@ -1,0 +1,854 @@
+prompt 23
+
+Tengo buenas y malas noticias con las actualizaciones.
+
+e probado tanto con versiones anteriores a la v4
+y no se actualiza bien...
+pero, e cambiado en la v4, el version.json, y e puesto la v2.0, y no se porqué dice que las novedades no están disponibles...  y e actualizado a la 3.0... y ahora si que a funcionado mas o menos lo de los procesos de fondo, pero , creo que lo hace tan rápido, que a NVDA da igual a la velocidad que lo tengas, no le da tiempo a vebalizar casi nada. mira, este es el log, espero que te ayude.
+
+
+Pausa entre párrafos en voces de IA (milisegundos):  edición  seleccionado 0
+Actualizaciones  agrupación
+Buscar actualizaciones automáticamente al iniciar la app  casilla de verificación  sin marcar
+Buscar actualizaciones ahora  botón
+Probar descarga y verificación (Fase C)  botón
+Buscar actualizaciones ahora  botón
+pulsado
+Probar descarga y verificación (Fase C)  botón
+Sin actualizaciones  diálogo  Ya tienes la versión más reciente (3.0.0).
+OK  botón
+pulsado
+Epub-TTS
+lista de pestañas
+Actualizaciones  agrupación
+Probar descarga y verificación (Fase C)  botón
+Sin título 2 - Sonarpad *
+edición  Verbalizar 
+multilínea
+Claude  fila 1  columna 2
+Claude  ventana
+Claude  documento
+versión, no un número editado a mano), y los tres deberían acabar igual: detectar que hay algo más 
+Sin título 2 - Sonarpad *  fila 1  columna 2
+Epub-TTS  columna 3
+Epub-TTS
+lista de pestañas
+lista
+Importar carpeta... (Ctrl+O)  botón
+lista
+Claude  ventana
+Claude  documento
+versión, no un número editado a mano), y los tres deberían acabar igual: detectar que hay algo más 
+Sin título 2 - Sonarpad *  fila 1  columna 2
+epub-tts-accesible-v4.0.0 - Explorador de archivos  columna 3
+dist - Explorador de archivos  fila 2  columna 1
+epub-tts-accesible-v4.0.0 - Explorador de archivos  fila 1  columna 3
+epub-tts-accesible-v4.0.0 - Explorador de archivos  ventana
+Vista Elementos  lista
+epubtts.exe
+DEVELOPMENT.md
+epubtts.exe
+README.md
+requisitos.txt
+recursos
+Vista Elementos  lista
+iconos  sin seleccionar
+sonidos
+Vista Elementos  lista
+.gitkeep  sin seleccionar
+app_ready.wav
+Vista Elementos  lista
+sonidos
+version.json
+Abrir  a
+WinRAR  contraído  w
+Editar en el Bloc de notas
+recursos - Explorador de archivos  ventana
+Vista Elementos  lista
+version.json
+Bloc de notas
+version.json: Bloc de notas
+Editor de texto  documento  {
+{
+  "version": "3.0.0",
+espacio
+espacio
+comillas
+v
+e
+r
+s
+i
+o
+n
+comillas
+dos puntos
+espacio
+comillas
+3
+punto
+3
+*version.json: Bloc de notas  ventana
+Archivo  contraído  Alt,   A
+expandido
+Elemento emergente  ventana
+Nueva ventana  Alt,   V    Ctrl+Mayús+  N
+Nueva pestaña de Markdown  Alt,   M
+Abrir  Alt,   A    Ctrl+  A
+Recientes  contraído  Alt,   R
+Guardar  Alt,   G    Ctrl+  G
+Guardar como  Alt,   U    Ctrl+Mayús+  S
+Guardar  Alt,   G    Ctrl+  G
+Editor de texto  documento    "version": "2.0.0",
+recursos - Explorador de archivos  ventana
+Vista Elementos  lista
+version.json
+Vista Elementos  lista
+recursos
+epubtts.exe
+Epub-TTS
+lista de pestañas
+árbol
+Configuración General
+Novedades de la versión 2.0.0  diálogo  Se ha actualizado a la versión 2.0.0. Esto es lo que ha cambiado:
+=== v3.0.0 (17/07/2026) ===
+
+Versión 3.0.0 — 2026-07-17
+
+Nuevas funciones
+────────────────
+
+- Pestaña Biblioteca:
+  Nueva pestaña para organizar tu colección de EPUB y PDF: importa una
+  carpeta entera de golpe o un único libro suelto, clasifica por
+  géneros y por sagas/colecciones, y busca por título o autor. Es el
+  punto de entrada común para abrir un libro en Lectura o enviarlo al
+  Creador de Audiolibros.
+
+- Creador de Audiolibros:
+  Exporta un libro completo de tu Biblioteca a MP3 en un único archivo
+  o dividido por capítulos, sin pasar por el flujo manual de
+  etiquetas. Incluye:
+    · Calculador de presupuesto: caracteres totales, coste estimado
+      con la tarifa de referencia de cada proveedor y duración prevista
+      del audio final.
+    · Selector de voz embebido en la propia pestaña, con tus voces
+      favoritas de todos los proveedores (incluidas las locales SAPI5)
+      y preescucha con Alt+P.
+    · Exclusión de capítulos antes de exportar (útil para dejar fuera
+      índice, dedicatoria, agradecimientos...).
+    · Carpetas de salida organizadas automáticamente por saga si el
+      libro tiene alguna etiqueta en Biblioteca.
+    · Exportación en paralelo: varios fragmentos o capítulos se
+      generan a la vez en vez de uno detrás de otro, acortando el
+      tiempo total de forma notable.
+    · Reanudación de exportaciones que se cortaron por falta de cuota
+      o un corte de conexión: retoma justo donde se quedó, sin
+      regrabar lo ya hecho.
+
+- Soporte de PDF además de EPUB:
+  Tanto en Lectura como en el Creador de Audiolibros. En Lectura, la
+  navegación por capítulos usa el índice de contenidos embebido del
+  PDF si lo tiene; si no lo tiene, navega página a página, igual que
+  hacen otros lectores accesibles de referencia.
+
+- Filtro de características en las voces de Azure:
+  Nuevo desplegable en Ajustes → Azure para filtrar por Multilingüe,
+  Dragon, MaiVoice, Flash o Neural genérica.
+
+- Asistente de Biblioteca (Google Gemini):
+  Chat accesible con Control + Mayús + B desde cualquier pestaña. Con
+  un libro, saga o categoría seleccionados en Biblioteca, el asistente
+  ya conoce ese contexto; en modo general conoce el catálogo completo
+  de tu biblioteca (títulos, autores y sagas), no solo un resumen, para
+  no dar respuestas erróneas sobre lo que sí tienes. Las plantillas de
+  prompt de sistema (distintos "estilos" de asistente) se crean,
+  editan y borran desde Ajustes → Asistente de Biblioteca, guardadas
+  como archivos de texto independientes editables desde fuera de la
+  app. Modelo y temperatura de Gemini son configurables en Ajustes →
+  Credenciales y API Keys.
+
+- Efectos de sonido configurables:
+  En Ajustes → Efectos de Sonido hay una casilla para silenciar todos
+  los sonidos de la app, y un selector para activar o desactivar un
+  efecto concreto de forma independiente, con botón de prueba. Nuevo
+  sonido sutil de cambio de página en Lectura (con flechas o durante
+  la lectura continua) y sonido de espera mientras el Asistente de
+  Biblioteca consulta a Gemini.
+
+- Copias de seguridad automáticas:
+  La biblioteca y los proyectos de grabación se respaldan por
+  separado, con un historial rotativo de las últimas 5 copias de cada
+  una. Solo se crea una copia nueva cuando hay cambios reales, no por
+  el mero hecho de abrir la app.
+
+- La app arranca siempre en Biblioteca:
+  En lugar de recordar la última pestaña usada (que a veces dejaba
+  caer a NVDA en Ajustes), el arranque aterriza siempre en tus libros.
+
+- Interfaz en español o inglés:
+  Toda la aplicación —menús, botones y avisos— ya está disponible
+  también en inglés. Cambia el idioma en Ajustes → General → Idioma
+  de la interfaz; el cambio se aplica por completo al reiniciar la
+  aplicación.
+
+Correcciones
+────────────
+
+- Voces SAPI5 de 32 bits (Eloquence, RealSpeak) mudas de forma
+  intermitente:
+  El objeto COM de la voz se creaba en un hilo y se usaba desde otro,
+  lo que a veces rompía la comunicación con el motor de 32 bits sin
+  ningún aviso. Ahora cada hilo que habla crea y usa su propia
+  instancia del motor, sin compartir nada entre hilos.
+
+- Amazon Polly (voces estándar) se comía la última sílaba a
+  velocidades altas:
+  Se añade un pequeño margen de silencio digital real al final de
+  cada síntesis antes de reproducirla, así el hardware de audio nunca
+  llega a cortar sonido real.
+
+- La velocidad "por puntos" (multiplicador) en Lectura no tenía
+  ningún efecto real sobre el motor de voz: ya vuelve a funcionar en
+  todo su rango.
+
+- Cambiar de voz o de proveedor durante la lectura dejaba de respetar
+  la velocidad y el volumen que ya tenías puestos: se reaplican
+  automáticamente al motor recién activado.
+
+- Un fallo de red o de API repetido durante una lectura larga podía
+  encadenar una ventana de aviso tras otra: ahora se avisa una sola
+  vez por proveedor y sesión, y la lectura sigue con la voz local sin
+  más interrupciones.
+
+- Exportación de audiolibro «generada» sin ningún sonido dentro (SAPI5):
+  Un WAV con cabecera pero sin fotogramas de audio pasaba la
+  comprobación de tamaño de archivo sin más, así que un fallo de
+  síntesis silencioso se daba por exportación válida. Ahora se
+  comprueba la duración real del audio generado; si sale en silencio,
+  se avisa como error en vez de dar el archivo por bueno. Además, las
+  exportaciones con voz local (SAPI5 64 y 32 bits) se fuerzan a
+  generarse siempre en serie, nunca en paralelo, para no arriesgar
+  varios objetos COM de voz creándose a la vez.
+
+- El botón «Usar voz local» al agotarse la cuota siempre grababa con la
+  voz predeterminada del sistema, sin dejar elegir otra: ahora ofrece
+  un desplegable con todas las voces SAPI5 instaladas (64 y 32 bits).
+
+- Las voces SAPI5 de 32 bits (Eloquence, RealSpeak) elegidas para
+  exportar un audiolibro se enrutaban por error al motor de 64 bits,
+  que nunca las encuentra, y acababan hablando con la voz por defecto
+  sin ningún aviso. El Creador de Audiolibros ya sabe exportar de
+  verdad con voces de 32 bits a través del proceso auxiliar.
+
+- Desbordamiento ocasional al unir varios trozos de audio de distinta
+  frecuencia de muestreo o profundidad de bits (por ejemplo, el motor
+  «generative» de Amazon Polly frente a otro trozo): cada trozo se
+  normaliza ahora antes de unirlo, no solo el resultado final.
+
+- Biblioteca: los libros con una exportación de audiolibro cortada por
+  falta de cuota o corte de conexión ahora se marcan como «Audiolibro
+  a medias» en la columna Estado, con un filtro dedicado para
+  encontrarlos sin tener que recordar cuál era el último libro que se
+  estaba exportando.
+
+- Biblioteca: el orden de tabulación del buscador, el filtro de Estado
+  y «Solo favoritos» se había quedado descolgado al final de la
+  pestaña (después incluso de los botones de importar); ahora van en
+  su sitio, justo antes de la lista de libros.
+
+- El estado de lectura «Pendiente» se renombra a «Pendiente de leer»
+  en Biblioteca, para no confundirlo con una exportación de audiolibro
+  pendiente.
+Se ha actualizado a la versión 2.0.0. Esto es lo que ha cambiado:  edición  sólo lectura  === v3.0.0 (17/07/2026) ===
+multilínea
+Aceptar  botón  Alt+  a
+Se ha actualizado a la versión 2.0.0. Esto es lo que ha cambiado:  edición  sólo lectura  === v3.0.0 (17/07/2026) ===
+multilínea
+en blanco
+Versión 3.0.0 — 2026-07-17
+en blanco
+Nuevas funciones
+────────────────
+en blanco
+Aceptar  botón  Alt+  a
+pulsado
+Epub-TTS
+lista de pestañas
+Biblioteca  pestaña  seleccionado
+Ajustes  pestaña  seleccionado
+árbol
+Configuración General
+Idioma del libro  agrupación
+Idioma principal del libro (preselecciona el acento de voz en Lectura):  cuadro combinado  Español (ES)  contraído
+Idioma de la interfaz  agrupación
+Idioma en el que se muestran los menús, botones y avisos de la aplicación:  cuadro combinado  Español  contraído
+Control de Presupuesto y Límites  agrupación
+Azure (Gastado: 0):  edición  seleccionado 500000
+Polly (Gastado: 0):  edición  seleccionado 1000000
+ElevenLabs (Gastado: 0):  edición  seleccionado 10000
+Deepgram (Gastado: 0):  edición  seleccionado 500000
+Navegación  agrupación
+Segundos de salto (botones Retroceder y Avanzar en Lectura):  edición  seleccionado 10
+Pausa entre párrafos en voces de IA (milisegundos):  edición  seleccionado 0
+Actualizaciones  agrupación
+Buscar actualizaciones automáticamente al iniciar la app  casilla de verificación  sin marcar
+Buscar actualizaciones ahora  botón
+pulsado
+Probar descarga y verificación (Fase C)  botón
+Nueva versión disponible: 3.0.0  diálogo  Hay una nueva versión disponible: 3.0.0
+¿Deseas instalarla ahora?
+=== v3.0.0 (17/07/2026) ===
+
+Versión 3.0.0 — 2026-07-17
+
+Nuevas funciones
+────────────────
+
+- Pestaña Biblioteca:
+  Nueva pestaña para organizar tu colección de EPUB y PDF: importa una
+  carpeta entera de golpe o un único libro suelto, clasifica por
+  géneros y por sagas/colecciones, y busca por título o autor. Es el
+  punto de entrada común para abrir un libro en Lectura o enviarlo al
+  Creador de Audiolibros.
+
+- Creador de Audiolibros:
+  Exporta un libro completo de tu Biblioteca a MP3 en un único archivo
+  o dividido por capítulos, sin pasar por el flujo manual de
+  etiquetas. Incluye:
+    · Calculador de presupuesto: caracteres totales, coste estimado
+      con la tarifa de referencia de cada proveedor y duración prevista
+      del audio final.
+    · Selector de voz embebido en la propia pestaña, con tus voces
+      favoritas de todos los proveedores (incluidas las locales SAPI5)
+      y preescucha con Alt+P.
+    · Exclusión de capítulos antes de exportar (útil para dejar fuera
+      índice, dedicatoria, agradecimientos...).
+    · Carpetas de salida organizadas automáticamente por saga si el
+      libro tiene alguna etiqueta en Biblioteca.
+    · Exportación en paralelo: varios fragmentos o capítulos se
+      generan a la vez en vez de uno detrás de otro, acortando el
+      tiempo total de forma notable.
+    · Reanudación de exportaciones que se cortaron por falta de cuota
+      o un corte de conexión: retoma justo donde se quedó, sin
+      regrabar lo ya hecho.
+
+- Soporte de PDF además de EPUB:
+  Tanto en Lectura como en el Creador de Audiolibros. En Lectura, la
+  navegación por capítulos usa el índice de contenidos embebido del
+  PDF si lo tiene; si no lo tiene, navega página a página, igual que
+  hacen otros lectores accesibles de referencia.
+
+- Filtro de características en las voces de Azure:
+  Nuevo desplegable en Ajustes → Azure para filtrar por Multilingüe,
+  Dragon, MaiVoice, Flash o Neural genérica.
+
+- Asistente de Biblioteca (Google Gemini):
+  Chat accesible con Control + Mayús + B desde cualquier pestaña. Con
+  un libro, saga o categoría seleccionados en Biblioteca, el asistente
+  ya conoce ese contexto; en modo general conoce el catálogo completo
+  de tu biblioteca (títulos, autores y sagas), no solo un resumen, para
+  no dar respuestas erróneas sobre lo que sí tienes. Las plantillas de
+  prompt de sistema (distintos "estilos" de asistente) se crean,
+  editan y borran desde Ajustes → Asistente de Biblioteca, guardadas
+  como archivos de texto independientes editables desde fuera de la
+  app. Modelo y temperatura de Gemini son configurables en Ajustes →
+  Credenciales y API Keys.
+
+- Efectos de sonido configurables:
+  En Ajustes → Efectos de Sonido hay una casilla para silenciar todos
+  los sonidos de la app, y un selector para activar o desactivar un
+  efecto concreto de forma independiente, con botón de prueba. Nuevo
+  sonido sutil de cambio de página en Lectura (con flechas o durante
+  la lectura continua) y sonido de espera mientras el Asistente de
+  Biblioteca consulta a Gemini.
+
+- Copias de seguridad automáticas:
+  La biblioteca y los proyectos de grabación se respaldan por
+  separado, con un historial rotativo de las últimas 5 copias de cada
+  una. Solo se crea una copia nueva cuando hay cambios reales, no por
+  el mero hecho de abrir la app.
+
+- La app arranca siempre en Biblioteca:
+  En lugar de recordar la última pestaña usada (que a veces dejaba
+  caer a NVDA en Ajustes), el arranque aterriza siempre en tus libros.
+
+- Interfaz en español o inglés:
+  Toda la aplicación —menús, botones y avisos— ya está disponible
+  también en inglés. Cambia el idioma en Ajustes → General → Idioma
+  de la interfaz; el cambio se aplica por completo al reiniciar la
+  aplicación.
+
+Correcciones
+────────────
+
+- Voces SAPI5 de 32 bits (Eloquence, RealSpeak) mudas de forma
+  intermitente:
+  El objeto COM de la voz se creaba en un hilo y se usaba desde otro,
+  lo que a veces rompía la comunicación con el motor de 32 bits sin
+  ningún aviso. Ahora cada hilo que habla crea y usa su propia
+  instancia del motor, sin compartir nada entre hilos.
+
+- Amazon Polly (voces estándar) se comía la última sílaba a
+  velocidades altas:
+  Se añade un pequeño margen de silencio digital real al final de
+  cada síntesis antes de reproducirla, así el hardware de audio nunca
+  llega a cortar sonido real.
+
+- La velocidad "por puntos" (multiplicador) en Lectura no tenía
+  ningún efecto real sobre el motor de voz: ya vuelve a funcionar en
+  todo su rango.
+
+- Cambiar de voz o de proveedor durante la lectura dejaba de respetar
+  la velocidad y el volumen que ya tenías puestos: se reaplican
+  automáticamente al motor recién activado.
+
+- Un fallo de red o de API repetido durante una lectura larga podía
+  encadenar una ventana de aviso tras otra: ahora se avisa una sola
+  vez por proveedor y sesión, y la lectura sigue con la voz local sin
+  más interrupciones.
+
+- Exportación de audiolibro «generada» sin ningún sonido dentro (SAPI5):
+  Un WAV con cabecera pero sin fotogramas de audio pasaba la
+  comprobación de tamaño de archivo sin más, así que un fallo de
+  síntesis silencioso se daba por exportación válida. Ahora se
+  comprueba la duración real del audio generado; si sale en silencio,
+  se avisa como error en vez de dar el archivo por bueno. Además, las
+  exportaciones con voz local (SAPI5 64 y 32 bits) se fuerzan a
+  generarse siempre en serie, nunca en paralelo, para no arriesgar
+  varios objetos COM de voz creándose a la vez.
+
+- El botón «Usar voz local» al agotarse la cuota siempre grababa con la
+  voz predeterminada del sistema, sin dejar elegir otra: ahora ofrece
+  un desplegable con todas las voces SAPI5 instaladas (64 y 32 bits).
+
+- Las voces SAPI5 de 32 bits (Eloquence, RealSpeak) elegidas para
+  exportar un audiolibro se enrutaban por error al motor de 64 bits,
+  que nunca las encuentra, y acababan hablando con la voz por defecto
+  sin ningún aviso. El Creador de Audiolibros ya sabe exportar de
+  verdad con voces de 32 bits a través del proceso auxiliar.
+
+- Desbordamiento ocasional al unir varios trozos de audio de distinta
+  frecuencia de muestreo o profundidad de bits (por ejemplo, el motor
+  «generative» de Amazon Polly frente a otro trozo): cada trozo se
+  normaliza ahora antes de unirlo, no solo el resultado final.
+
+- Biblioteca: los libros con una exportación de audiolibro cortada por
+  falta de cuota o corte de conexión ahora se marcan como «Audiolibro
+  a medias» en la columna Estado, con un filtro dedicado para
+  encontrarlos sin tener que recordar cuál era el último libro que se
+  estaba exportando.
+
+- Biblioteca: el orden de tabulación del buscador, el filtro de Estado
+  y «Solo favoritos» se había quedado descolgado al final de la
+  pestaña (después incluso de los botones de importar); ahora van en
+  su sitio, justo antes de la lista de libros.
+
+- El estado de lectura «Pendiente» se renombra a «Pendiente de leer»
+  en Biblioteca, para no confundirlo con una exportación de audiolibro
+  pendiente.
+
+───────────────────────────────────────────────────────────────────────────
+
+=== v2.0.0 (24/06/2026) ===
+
+Versión 2.0.0 — 2026-06-24
+
+Nuevas funciones
+────────────────
+
+- Ajustes rediseñados con árbol de navegación:
+  La pestaña de Ajustes usa ahora un árbol expandible a la izquierda
+  (wx.TreeCtrl) y un panel de contenido a la derecha. Cada sección
+  (General, Credenciales, Catálogos de Voces, Diccionario, Atajos) se
+  carga solo cuando se selecciona, sin bloquear el foco de NVDA.
+  Navega con flechas por el árbol y Tab para entrar en cada panel.
+
+- Actualizaciones automáticas desde la propia app (Script Clon):
+  Al detectar una versión nueva en GitHub, la app te avisa de forma
+  accesible. Si aceptas, descarga el ZIP en segundo plano, escribe un
+  script externo (actualizador.bat) y se cierra para que el script
+  reemplace los archivos. Al volver a abrir, aparecen estas novedades
+  como confirmación de que la actualización fue correcta.
+  Tus configuraciones, grabaciones y la carpeta bin/ se conservan
+  siempre. Solo se actualiza el código.
+
+- Compatibilidad con voces SAPI5 de 32 bits (Eloquence, RealSpeak):
+  Las voces de CodeFactory (Eloquence, RealSpeak) son motores de 32
+  bits y antes no funcionaban en la app de 64 bits. A partir de esta
+  versión, el portable incluye auxiliar_sapi32.exe en /bin/. Al
+  seleccionar una voz de 32 bits, la app lanza este proceso auxiliar
+  en segundo plano de forma transparente. No hace falta configurar
+  nada en Windows ni instalar ningún programa adicional.
+
+- Ctrl+I: estado de lectura inmediato para NVDA:
+  Pulsa Ctrl+I en cualquier momento para que NVDA verbalice
+  inmediatamente en qué página estás, tanto del capítulo como del
+  libro completo. El cálculo es dinámico: cada libro y cada capítulo
+  tienen su propio número de páginas según su extensión real.
+  La unidad de página virtual equivale a 1800 caracteres normalizados
+  (espacios y saltos de línea extra de los EPUB quedan descartados).
+
+- Ctrl+G: saltar a una página o posición concreta:
+  Abre un diálogo con tres campos independientes: página del capítulo,
+  página del libro y porcentaje. Rellena el que prefieras y pulsa
+  Aceptar. El sistema da prioridad al porcentaje, luego al número de
+  página del libro, y por último al del capítulo.
+
+- Selector de escala de velocidad:
+  En Ajustes → Configuración General puedes elegir entre el sistema en
+  Porcentajes (0-100) o en Multiplicadores (0.5× a 3.0×). Al guardar
+  con Ctrl+S, el deslizador del modo lectura cambia de escala al
+  instante sin necesidad de reiniciar la app.
+
+- Ctrl+S en Ajustes con confirmación vocal:
+  Al pulsar Ctrl+S en cualquier panel de Ajustes, la configuración se
+  guarda y NVDA verbaliza inmediatamente "Guardado." mediante un foco
+  relámpago en un control oculto, sin mover el foco visible.
+
+Correcciones
+────────────
+
+- Pestaña renombrada a "Crear Audiolibro":
+  La pestaña de producción de audio pasa a llamarse así para dejar
+  claro su propósito principal. El atajo Ctrl+2 sigue funcionando igual.
+
+- Sin silencios entre fragmentos al cambiar de voz o pausar:
+  Al detener la reproducción, el reproductor invalida de inmediato
+  todos los hilos de descarga en vuelo (contador _generacion). Las
+  voces de nube ya no descargan fragmentos de más que después causan
+  silencios de 7 segundos o frases solapadas.
+
+- Las voces SAPI5 respetan ahora el filtro de favoritas:
+  En el combo de voces del modo lectura, las voces locales SAPI5
+  (incluyendo las de 32 bits) se filtran por el mismo archivo de
+  favoritas que los proveedores de nube. Si no tienes ninguna SAPI5
+  marcada como favorita, se muestran todas como respaldo.
+
+- Limpieza automática de archivos temporales al arrancar:
+  Si la app se cerró de forma abrupta durante una grabación, los
+  archivos .mp3/.wav temporales que quedaron en el directorio del
+  sistema se eliminan al volver a abrir. Solo se borran los que
+  tengan más de 7 días o si la carpeta supera 50 MB. Nunca se tocan
+  archivos de configuración.
+
+- Aviso claro al seleccionar una voz de 32 bits sin el puente:
+  Si un usuario selecciona Eloquence u otra voz de 32 bits y el
+  portable no incluye auxiliar_sapi32.exe, la app muestra un mensaje
+  explicativo en lugar de fallar en silencio.
+
+───────────────────────────────────────────────────────────────────────────
+
+Versión 1.2.0 — 2026-06-16
+
+Nuevas funciones
+────────────────
+
+- Deepgram Aura-2 — Nuevo motor de voz neuronal:
+  Deepgram Aura-2 es la alternativa principal recomendada para síntesis en
+  la nube. Ofrece velocidad de respuesta superior, calidad natural
+  sobresaliente en inglés y español, y solo necesita una API Key propia
+  (sin suscripción mensual fija). Para configurarlo: Ajustes → Claves API.
+
+  ElevenLabs sigue completamente disponible en la aplicación para quien
+  desee utilizarlo. Sin embargo, su sistema de créditos puede resultar
+  muy costoso en sesiones largas: los planes gratuito y de entrada se
+  agotan con rapidez y los planes de pago son significativamente más caros
+  que el modelo pay-as-you-go de Deepgram. Deepgram es la opción
+  recomendada por eficiencia y coste.
+
+- Diccionario de pronunciación:
+  Nueva herramienta disponible en Ajustes → Voces e idiomas.
+  Permite definir sustituciones fonéticas para cualquier palabra que las
+  voces neuronales pronuncien mal: nombres de fantasía, siglas,
+  extranjerismos o términos técnicos. Las reglas se aplican a todos los
+  motores antes de enviar el texto a la síntesis.
+
+- Historial de voces nuevas:
+  La casilla "Solo nuevas voces" ahora funciona correctamente.
+  La primera vez que descargas el catálogo de un proveedor se establece
+  la línea base. En descargas siguientes solo aparecen las voces que la
+  API haya añadido desde la última actualización.
+
+- Control de cuota para Deepgram:
+  Deepgram aparece ahora en el panel de Control de Presupuesto dentro de
+  Ajustes. Puedes ver el gasto mensual y fijar un límite de caracteres
+  igual que con Azure, Polly y ElevenLabs.
+
+Correcciones
+────────────
+
+- Lectura continua sin pausas entre bloques:
+  Las voces de nube (Azure, Polly, Deepgram, ElevenLabs) ya no hacen una
+  pausa audible entre fragmentos. El audio descargado en segundo plano
+  arranca de forma inmediata (~5 ms), sin silencios ni esperas.
+
+- Límite de 2000 caracteres en Deepgram eliminado:
+  Los textos largos se dividen automáticamente en fragmentos de tamaño
+  seguro antes de enviarse a la API. No hace falta editar el EPUB ni
+  dividir el texto a mano.
+
+- Mensajes de arranque silenciados:
+  Al abrir la app desde INICIAR_APP.bat, la ventana de terminal ya no
+  muestra ni emite los textos técnicos de inicio (ruta del log, detección
+  de ffmpeg). NVDA no los verbaliza al abrir la aplicación por primera
+  vez. Solo aparecen en la consola mensajes de advertencia o error reales.
+
+
+───────────────────────────────────────────────────────────────────────────
+
+Versión 1.1.0 — 2026-04-15
+
+Nuevas funciones
+────────────────
+- Deslizadores de velocidad y volumen en la pestaña de grabación.
+  Funcionan con todas las voces: Azure (SSML), Amazon Polly (SSML),
+  ElevenLabs (ajuste con pydub) y SAPI5 local.
+  Los valores se guardan en ajustes.json y se restauran entre sesiones.
+  RePág/AvPág mueven el deslizador en pasos de ±5.
+
+- Nuevo formato de nombres de archivo en modo «Dividir por etiquetas»:
+  antes: 001_narr.mp3 · ahora: 1. Narr.mp3
+
+- Descarga automática de actualizaciones: el diálogo de novedades
+  incluye ahora el botón «Actualizar automáticamente». Al pulsarlo se
+  descarga el ZIP de la rama main desde GitHub, se extrae en un
+  directorio temporal y se instala sobre la carpeta actual sin borrar
+  configuraciones/, Grabaciones_Epub-TTS/ ni bin/. Una barra de
+  progreso informa del avance. Al terminar aparece el botón
+  «Reiniciar ahora» para aplicar la actualización de inmediato.
+
+Correcciones
+────────────
+- [Reaper / importación por lotes] Todos los MP3 generados se normalizan
+  ahora a 44 100 Hz mono. Se elimina el bug de AudioSegment.empty() que
+  producía metadatos de frecuencia incorrectos al concatenar fragmentos,
+  lo que hacía que algunos archivos fallaran al importarlos en lotes en
+  DAW como Reaper o en reproductores estrictos.
+
+- [NVDA] Las ventanas de consola de ffmpeg/ffprobe ya no aparecen durante
+  la grabación. NVDA dejará de verbalizar las rutas de los ejecutables
+  de audio entre fragmento y fragmento.
+
+- [Modo Grabación] NVDA ya no anuncia repetidamente la ruta de la carpeta
+  de salida entre fragmento y fragmento. El callback de progreso
+  actualizaba el label de estado con la ruta completa de salida en cada
+  fragmento procesado, causando que NVDA la verbalizara una y otra vez.
+  El fix limita los mensajes de progreso a contadores de fragmento; solo
+  aparece el nombre corto de la carpeta en el mensaje final de éxito.
+
+- [TXT exportados] Los capítulos generados al dividir un EPUB ya no
+  contienen líneas en blanco entre cada línea de texto. El problema era
+  causado por espacios de no separación (&nbsp;) en EPUBs creados con
+  Word o LibreOffice.
+
+- [Voces TTS] Los dobles guiones bajos (__) al inicio de una línea de
+  diálogo y los tabuladores ya no se envían a las voces; se eliminan
+  antes de la síntesis para evitar que sean verbalizados como «guión».
+
+- [Ejecutable .exe] Las carpetas Grabaciones_Epub-TTS y ayuda.html se
+  buscan ahora junto al .exe en lugar de dentro de la carpeta temporal
+  de extracción de PyInstaller. Los archivos ya no desaparecen al cerrar
+  la aplicación.
+
+Dependencias
+────────────
+Versiones mínimas actualizadas: wxPython 4.2.2, requests 2.32, httpx 0.28,
+sounddevice 0.5, numpy 2.0, beautifulsoup4 4.12.3, boto3 1.35.
+
+
+───────────────────────────────────────────────────────────────────────────
+
+Versión 1.0.0 — 2026-03-11
+
+Esta es la primera versión pública de Epub TTS Accesible.
+
+Para descargar esta versión visita:
+https://github.com/Dayanna-Parson/epub-tts-accesible/releases
+Hay una nueva versión disponible: 3.0.0
+¿Deseas instalarla ahora?  edición  sólo lectura  === v3.0.0 (17/07/2026) ===
+multilínea
+Descargando actualización, por favor espera...
+Epub-TTS
+lista de pestañas
+Actualizaciones  agrupación
+Probar descarga y verificación (Fase C)  botón
+Descarga completada. Instalando la actualización...
+epub-tts-accesible-v4.0.0 - Explorador de archivos  ventana
+Vista Elementos  lista
+epubtts.exe
+Epub-TTS
+lista de pestañas
+árbol
+Configuración General
+Epub-TTS
+lista de pestañas
+árbol
+Configuración General
+Novedades de la versión 3.0.0  diálogo  Se ha actualizado a la versión 3.0.0. Esto es lo que ha cambiado:
+=== v3.0.0 (17/07/2026) ===
+
+Versión 3.0.0 — 2026-07-17
+
+Nuevas funciones
+────────────────
+
+- Pestaña Biblioteca:
+  Nueva pestaña para organizar tu colección de EPUB y PDF: importa una
+  carpeta entera de golpe o un único libro suelto, clasifica por
+  géneros y por sagas/colecciones, y busca por título o autor. Es el
+  punto de entrada común para abrir un libro en Lectura o enviarlo al
+  Creador de Audiolibros.
+
+- Creador de Audiolibros:
+  Exporta un libro completo de tu Biblioteca a MP3 en un único archivo
+  o dividido por capítulos, sin pasar por el flujo manual de
+  etiquetas. Incluye:
+    · Calculador de presupuesto: caracteres totales, coste estimado
+      con la tarifa de referencia de cada proveedor y duración prevista
+      del audio final.
+    · Selector de voz embebido en la propia pestaña, con tus voces
+      favoritas de todos los proveedores (incluidas las locales SAPI5)
+      y preescucha con Alt+P.
+    · Exclusión de capítulos antes de exportar (útil para dejar fuera
+      índice, dedicatoria, agradecimientos...).
+    · Carpetas de salida organizadas automáticamente por saga si el
+      libro tiene alguna etiqueta en Biblioteca.
+    · Exportación en paralelo: varios fragmentos o capítulos se
+      generan a la vez en vez de uno detrás de otro, acortando el
+      tiempo total de forma notable.
+    · Reanudación de exportaciones que se cortaron por falta de cuota
+      o un corte de conexión: retoma justo donde se quedó, sin
+      regrabar lo ya hecho.
+
+- Soporte de PDF además de EPUB:
+  Tanto en Lectura como en el Creador de Audiolibros. En Lectura, la
+  navegación por capítulos usa el índice de contenidos embebido del
+  PDF si lo tiene; si no lo tiene, navega página a página, igual que
+  hacen otros lectores accesibles de referencia.
+
+- Filtro de características en las voces de Azure:
+  Nuevo desplegable en Ajustes → Azure para filtrar por Multilingüe,
+  Dragon, MaiVoice, Flash o Neural genérica.
+
+- Asistente de Biblioteca (Google Gemini):
+  Chat accesible con Control + Mayús + B desde cualquier pestaña. Con
+  un libro, saga o categoría seleccionados en Biblioteca, el asistente
+  ya conoce ese contexto; en modo general conoce el catálogo completo
+  de tu biblioteca (títulos, autores y sagas), no solo un resumen, para
+  no dar respuestas erróneas sobre lo que sí tienes. Las plantillas de
+  prompt de sistema (distintos "estilos" de asistente) se crean,
+  editan y borran desde Ajustes → Asistente de Biblioteca, guardadas
+  como archivos de texto independientes editables desde fuera de la
+  app. Modelo y temperatura de Gemini son configurables en Ajustes →
+  Credenciales y API Keys.
+
+- Efectos de sonido configurables:
+  En Ajustes → Efectos de Sonido hay una casilla para silenciar todos
+  los sonidos de la app, y un selector para activar o desactivar un
+  efecto concreto de forma independiente, con botón de prueba. Nuevo
+  sonido sutil de cambio de página en Lectura (con flechas o durante
+  la lectura continua) y sonido de espera mientras el Asistente de
+  Biblioteca consulta a Gemini.
+
+- Copias de seguridad automáticas:
+  La biblioteca y los proyectos de grabación se respaldan por
+  separado, con un historial rotativo de las últimas 5 copias de cada
+  una. Solo se crea una copia nueva cuando hay cambios reales, no por
+  el mero hecho de abrir la app.
+
+- La app arranca siempre en Biblioteca:
+  En lugar de recordar la última pestaña usada (que a veces dejaba
+  caer a NVDA en Ajustes), el arranque aterriza siempre en tus libros.
+
+- Interfaz en español o inglés:
+  Toda la aplicación —menús, botones y avisos— ya está disponible
+  también en inglés. Cambia el idioma en Ajustes → General → Idioma
+  de la interfaz; el cambio se aplica por completo al reiniciar la
+  aplicación.
+
+Correcciones
+────────────
+
+- Voces SAPI5 de 32 bits (Eloquence, RealSpeak) mudas de forma
+  intermitente:
+  El objeto COM de la voz se creaba en un hilo y se usaba desde otro,
+  lo que a veces rompía la comunicación con el motor de 32 bits sin
+  ningún aviso. Ahora cada hilo que habla crea y usa su propia
+  instancia del motor, sin compartir nada entre hilos.
+
+- Amazon Polly (voces estándar) se comía la última sílaba a
+  velocidades altas:
+  Se añade un pequeño margen de silencio digital real al final de
+  cada síntesis antes de reproducirla, así el hardware de audio nunca
+  llega a cortar sonido real.
+
+- La velocidad "por puntos" (multiplicador) en Lectura no tenía
+  ningún efecto real sobre el motor de voz: ya vuelve a funcionar en
+  todo su rango.
+
+- Cambiar de voz o de proveedor durante la lectura dejaba de respetar
+  la velocidad y el volumen que ya tenías puestos: se reaplican
+  automáticamente al motor recién activado.
+
+- Un fallo de red o de API repetido durante una lectura larga podía
+  encadenar una ventana de aviso tras otra: ahora se avisa una sola
+  vez por proveedor y sesión, y la lectura sigue con la voz local sin
+  más interrupciones.
+
+- Exportación de audiolibro «generada» sin ningún sonido dentro (SAPI5):
+  Un WAV con cabecera pero sin fotogramas de audio pasaba la
+  comprobación de tamaño de archivo sin más, así que un fallo de
+  síntesis silencioso se daba por exportación válida. Ahora se
+  comprueba la duración real del audio generado; si sale en silencio,
+  se avisa como error en vez de dar el archivo por bueno. Además, las
+  exportaciones con voz local (SAPI5 64 y 32 bits) se fuerzan a
+  generarse siempre en serie, nunca en paralelo, para no arriesgar
+  varios objetos COM de voz creándose a la vez.
+
+- El botón «Usar voz local» al agotarse la cuota siempre grababa con la
+  voz predeterminada del sistema, sin dejar elegir otra: ahora ofrece
+  un desplegable con todas las voces SAPI5 instaladas (64 y 32 bits).
+
+- Las voces SAPI5 de 32 bits (Eloquence, RealSpeak) elegidas para
+  exportar un audiolibro se enrutaban por error al motor de 64 bits,
+  que nunca las encuentra, y acababan hablando con la voz por defecto
+  sin ningún aviso. El Creador de Audiolibros ya sabe exportar de
+  verdad con voces de 32 bits a través del proceso auxiliar.
+
+- Desbordamiento ocasional al unir varios trozos de audio de distinta
+  frecuencia de muestreo o profundidad de bits (por ejemplo, el motor
+  «generative» de Amazon Polly frente a otro trozo): cada trozo se
+  normaliza ahora antes de unirlo, no solo el resultado final.
+
+- Biblioteca: los libros con una exportación de audiolibro cortada por
+  falta de cuota o corte de conexión ahora se marcan como «Audiolibro
+  a medias» en la columna Estado, con un filtro dedicado para
+  encontrarlos sin tener que recordar cuál era el último libro que se
+  estaba exportando.
+
+- Biblioteca: el orden de tabulación del buscador, el filtro de Estado
+  y «Solo favoritos» se había quedado descolgado al final de la
+  pestaña (después incluso de los botones de importar); ahora van en
+  su sitio, justo antes de la lista de libros.
+
+- El estado de lectura «Pendiente» se renombra a «Pendiente de leer»
+  en Biblioteca, para no confundirlo con una exportación de audiolibro
+  pendiente.
+Se ha actualizado a la versión 3.0.0. Esto es lo que ha cambiado:  edición  sólo lectura  === v3.0.0 (17/07/2026) ===
+multilínea
+Aceptar  botón  Alt+  a
+pulsado
+Epub-TTS
+lista de pestañas
+Biblioteca  pestaña  seleccionado
+
+Y esto que me has dicho, sobre todo los revisados, no te e entendido
+
+Resultado de la búsqueda de bugs
+Hice un barrido dirigido a las clases de problemas que ya nos han mordido esta sesión, no una revisión genérica al azar:
+1. Encontrado y corregido (importante): Ctrl+O tenía la misma duplicación exacta que causó el bug real de Ctrl+I (registrado a la vez en pestana_lectura.py y en el Frame, sin autoridad central) — pese a que pestana_biblioteca.py ya documentaba no hacerlo. No se había manifestado (todavía), pero dado que el mismo patrón sí falló con Ctrl+I en el build congelado, lo quité por prevención en vez de esperar a que la sufrieras en mitad de una lectura.
+2. Revisado, sin hallazgos: el bug de _ como variable de descarte (con un script propio que recorre el AST) — no queda ninguna otra función que asigne a _ y llame a _(...) a la vez.
+3. Revisado, sin hallazgos: except: desnudo (peor que except Exception:) — no hay ninguno en todo app/.
+4. Revisado, sin hallazgos: otras llamadas cruzadas tipo self.pestana_ajustes.<método> que pudieran apuntar a la clase equivocada (como pasó con el bug del arranque que ya corregimos) — las demás sí apuntan bien.
+5. Comprobado, ya está bien: el Creador de Audiolibros ya tiene avisos de voz durante la exportación larga, no es un caso silencioso como el que arreglamos en Biblioteca/Fase C.

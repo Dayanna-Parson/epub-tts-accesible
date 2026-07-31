@@ -1,0 +1,32 @@
+respuesta 10
+
+Vale, voy directo al código para confirmar qué está pasando realmente. Primero reviso la parte de `crear_portable.py` que copia y comprime — no la he visto entera todavía.
+
+Entiendo, dos temas distintos. Voy a diagnosticar cada uno con el código real antes de tocar nada.
+
+Antes de seguir con nada más, tengo que preguntarte algo importante por seguridad de tu repo.
+
+**¿Desde dónde pulsaste "Buscar actualizaciones" / instalar la actualización — desde tu copia de trabajo real del repo (`C:\Users\Jacqueline\git_repos\epub-tts-accesible`, la misma que tiene `.git`), o desde una copia/portable aparte?**
+
+Te lo pregunto porque el sistema de actualización activo ahora mismo (el bloque `ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py`) genera un `.bat` que hace esto en la carpeta raíz donde se ejecuta la app:
+
+```python
+_PRESERVAR = {"configuraciones", "Grabaciones_Epub-TTS", "bin", "actualizacion", "INICIAR_APP.bat"}
+for entrada in os.listdir(raiz):
+    if entrada in _PRESERVAR or entrada == "actualizador.bat":
+        continue
+    # ...borra rmdir /s /q o del /f /q...
+```
+
+Esto borra **todo lo que no esté en esa lista**, incluida la carpeta `.git`, `app/`, `tests/`, todos tus `.md`, `crear_portable.py`, etc. Está pensado para usarse solo dentro de un **portable ya construido** (donde no hay `.git` ni historial, solo `epubtts.exe` + `_internal/` + `recursos/`), nunca dentro de tu checkout de desarrollo con Git. Si lo lanzaste desde `INICIAR_APP.bat` en tu carpeta de repo real (que es justo el mismo `.bat` que usas para desarrollo), podría haber intentado borrar tu `.git` y tu código fuente.
+
+**Por favor, antes de nada, ejecuta esto en tu carpeta del repo y dime qué te sale:**
+
+```
+cd C:\Users\Jacqueline\git_repos\epub-tts-accesible
+git status
+git log --oneline -3
+dir /a
+```
+
+Si `.git` sigue ahí y `git status`/`git log` funcionan con normalidad, no ha pasado nada grave. Si `.git` ha desaparecido o `git status` falla, dímelo inmediatamente y lo recuperamos (el remoto en GitHub tiene todo a salvo, así que sería cuestión de volver a clonar, no se perdería nada del historial). Espero tu confirmación antes de seguir mirando el resto de fallos del actualizador.

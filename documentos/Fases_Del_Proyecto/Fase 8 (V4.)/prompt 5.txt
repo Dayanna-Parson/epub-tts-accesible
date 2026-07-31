@@ -1,0 +1,25 @@
+Solo me a dado este error en la consola:
+
+
+---------------------------------------------------
+   INICIANDO EPUB-TTS...
+---------------------------------------------------
+[Polly] Conexión establecida | 0.75s | Motor: long-form | Voz: Raul | 353 chars
+CRITICAL  __main__  CRASH NO CONTROLADO:
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\app\interfaz\pestana_ajustes.py", line 2496, in _al_activar_seleccionado
+    voz.hablar(_("Perfil activo: {nombre}").format(nombre=nombre))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+
+[Polly] Conexión establecida | 0.10s | Motor: long-form | Voz: Raul | 498 chars
+[Polly] Conexión establecida | 0.73s | Motor: long-form | Voz: Raul | 441 chars
+[Polly] Conexión establecida | 0.11s | Motor: long-form | Voz: Raul | 492 chars
+
+
+Me acabo de acordar de otra cosa que no me gusta, y es que tengo que ir a la pestaña de lectura y hacer una serie de configuraciones —me refiero a elegir la voz, la velocidad y el volumen—, y después tengo que ir a General, dentro de Ajustes, y hacer allí otra serie de configuraciones. Esto es muy tedioso porque tengo que dar muchos pasos, sobre todo al tener que moverme de donde estaba.
+
+Así que creo que la idea sería al revés: primero, que todo esté en la lista de perfiles y poner un botón para crear un nuevo perfil donde se puedan traer todos los ajustes necesarios. Cuando termine de configurarlo todo a mi gusto, simplemente pulso en el botón «Guardar perfil» para que se guarde y se aplique directamente. Así nos ahorraríamos muchos pasos. Creo que hacerlo así es más directo y, a largo plazo, más fácil de mantener. Siempre es mejor simplificar las cosas, y así funcionará. Un profesor me decía: «el tiempo es oro».
+
+añadir la entrada de "Perfiles de Usuario" al diálogo "Ver atajos actuales"
+Y también que hagas todo lo que quede pendiente... incluido lo que me dijiste de chat GPT....

@@ -1,0 +1,44 @@
+respuesta 1
+
+Ambas ramas apuntan exactamente al mismo commit, así que no hay riesgo de perder trabajo al cambiar. Voy a moverme a `claude/v4-perfiles-usuario` como pediste explícitamente.
+
+## Confirmación de lectura
+
+He leído `CLAUDE.md` completo y `documentos/Fases_Del_Proyecto/Fase 8 (V4.)/Cosas para la v4.txt` (la ruta real difiere ligeramente de la que diste: es `Fase 8 (V4.)`, no `Fase 8, Cosas para la v4`). Ya estoy en la rama `claude/v4-perfiles-usuario` (coincide byte a byte con `-uas4fc`, así que no se pierde nada).
+
+También he inspeccionado el código relevante para no improvisar sobre la arquitectura:
+
+- **`app/config_rutas.py`**: patrón `RAIZ`/`ruta_config()` para cualquier archivo nuevo de configuración.
+- **`app/motor/gestor_atajos.py`**: sistema de atajos configurables (defaults embebidos + overrides de usuario), con `ATAJO_ASISTENTE_BIBLIOTECA` como precedente exacto de "atajo global nuevo".
+- **`app/interfaz/ventana_principal.py`** (`ACELERADORES_GLOBALES`): cómo se despachan atajos globales sin importar la pestaña activa.
+- **`app/interfaz/pestana_ajustes.py`** (`PESTANA_AJUSTES_PRINCIPAL`): árbol de categorías + Simplebook de paneles; así se añade una categoría nueva ("Perfiles de Usuario").
+- **`app/interfaz/pestana_lectura.py`**: hoy velocidad/volumen/voz se guardan **por libro** (`datos_lectura.json`), no hay concepto global de "ajustes activos" reutilizable entre libros — el perfil de usuario es una capa nueva por encima de eso.
+
+## Plan de acción — Perfiles de Usuario (v4.0.0)
+
+**1. Motor nuevo: `app/motor/gestor_perfiles.py`**
+- Persistencia en `configuraciones/perfiles.json` (escritura atómica: tmp + `os.replace`), vía `ruta_config()`.
+- Estructura: lista de perfiles con `nombre`, `voz` (id + `proveedor_id`), `velocidad`, `volumen`, y el resto de "ajustes personalizados" que hoy vive en `ajustes.json` (escala de velocidad, segundos de salto, pausa entre fragmentos, etc. — a definir el subconjunto exacto contigo si quieres acotarlo).
+- Un `perfil_activo` (nombre) guardado aparte para saber cuál aplicar al arrancar.
+- Funciones: `cargar_perfiles()`, `crear_perfil()`, `renombrar_perfil()`, `eliminar_perfil()`, `guardar_estado_en_perfil()`, `aplicar_perfil()`, `obtener_perfil_activo()`.
+- Nunca `except: pass` — logging siempre.
+
+**2. Atajo nuevo en `gestor_atajos.py`**
+- Añadir `ANCLAJE_INICIO/FIN: ATAJO_ALTERNAR_PERFIL` en `_DEFAULTS_EMBEBIDOS`, siguiendo el mismo patrón que `asistente_biblioteca` (ej. `Ctrl+Shift+U` para "alternar entre perfiles", a confirmar tecla contigo para evitar colisión).
+
+**3. Despacho global en `ventana_principal.py`**
+- Registrar la acción en `_ACCIONES` de `_ejecutar_atajo_global` (sin restricción de pestaña, igual que el Asistente de Biblioteca), disparando un ciclo rápido entre perfiles existentes o un diálogo ligero de selección, con anuncio por `anunciador_lector.hablar()`.
+
+**4. Panel nuevo en Ajustes: `PanelPerfiles`**
+- Nuevo nodo en el árbol (`_construir_arbol`) y nueva página en el Simplebook (`_PAG_PERFILES`), junto al resto (`PanelAtajos`, `PanelSonidos` como referencia de estilo).
+- Lista accesible de perfiles (`wx.ListCtrl` o similar) + botones: Crear, Renombrar, Eliminar, Activar/Aplicar.
+- Todas las cadenas nuevas envueltas en `_()`, añadidas a `locale/epub_tts.pot` y ambos `.po`, con recompilación posterior via `python compilar_i18n.py`.
+
+**5. Integración con Lectura**
+- Al aplicar un perfil, sincronizar `deslizador_velocidad`, `deslizador_volumen` y `combo_voz` de `pestana_lectura.py` (reutilizando la lógica ya existente en `cargar_datos_libro` para fijar velocidad/volumen/voz), respetando que la memoria por libro sigue existiendo como capa aparte.
+
+**6. Checklist NVDA obligatorio** antes de cerrar: foco tras crear/eliminar perfil, anuncio de perfil activo al alternar, checkbox states si los hay, sonidos sin solaparse.
+
+### Antes de escribir una sola línea
+
+¿Quieres que te pregunte por la tecla exacta del atajo y el subconjunto exacto de "ajustes personalizados" a incluir en el perfil (todo `ajustes.json` o solo voz/velocidad/volumen + un par de campos clave), o prefieres que decida yo con un criterio razonable y avances rápido? Dime y empiezo con el `gestor_perfiles.py`.

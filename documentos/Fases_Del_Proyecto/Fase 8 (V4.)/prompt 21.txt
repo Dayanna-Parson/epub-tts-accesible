@@ -1,0 +1,3 @@
+prompt 21
+
+vale. y eso de que me dices, que lo pruebe con un par de versiones de prueba... a que te refieres exactamente? si la V4.1 va a ser la última? podría probarlo con dos versiones viejas que tengo, tengo desde la 2.0, hasta esta 4.0. en la 1.01, no, porque en ese momento no hice ningún portable, y no estaba el código preparado para ello.

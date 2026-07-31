@@ -23,6 +23,7 @@ Función de descarga:
 
 import io
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -32,9 +33,11 @@ import zipfile
 
 from app.config_rutas import RAIZ, RAIZ_RECURSOS
 
+logger = logging.getLogger(__name__)
+
 # ── Rutas y URLs ──────────────────────────────────────────────────────────────
 
-_RUTA_VERSION_LOCAL = os.path.join(RAIZ_RECURSOS, "version.json")
+_RUTA_VERSION_LOCAL = os.path.join(RAIZ_RECURSOS, "recursos", "version.json")
 
 _URL_BASE = (
     "https://raw.githubusercontent.com"
@@ -96,6 +99,7 @@ class ComprobadorActualizaciones:
                 datos = json.load(f)
             return datos.get("version", "0.0.0")
         except Exception:
+            logger.exception("No se pudo leer la versión local desde %s", _RUTA_VERSION_LOCAL)
             return "0.0.0"
 
     def obtener_version_remota(self) -> dict:

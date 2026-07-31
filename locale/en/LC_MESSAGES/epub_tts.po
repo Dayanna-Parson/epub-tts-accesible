@@ -2975,3 +2975,174 @@ msgstr "Last error ({nombre}) copied to clipboard."
 msgid "• {descripcion}:  {tecla}"
 msgstr "• {descripcion}:  {tecla}"
 
+
+msgid "No hay perfiles de usuario creados todavía. Créalos en Ajustes, Perfiles de Usuario."
+msgstr "No user profiles created yet. Create them in Settings, User Profiles."
+
+msgid "Perfil activo: {nombre}"
+msgstr "Active profile: {nombre}"
+
+msgid "Cada perfil guarda la voz activa, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura. El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+msgstr "Each profile stores the active voice, speed, volume and the pause/skip-seconds preferences of the Reading tab. Ctrl+Shift+U cycles through the profiles in the list."
+
+msgid "Nombre del perfil"
+msgstr "Profile name"
+
+msgid "Lista de perfiles de usuario. Usa las flechas Arriba y Abajo para navegar. El perfil activo aparece marcado en la columna Estado."
+msgstr "List of user profiles. Use the Up and Down arrows to navigate. The active profile is marked in the Status column."
+
+msgid "Crear perfil con el estado actual de Lectura"
+msgstr "Create profile from Reading's current state"
+
+msgid "Pide un nombre y crea un perfil nuevo con la voz, velocidad, volumen y preferencias de pausa que tiene ahora mismo la pestaña Lectura."
+msgstr "Asks for a name and creates a new profile with the voice, speed, volume and pause preferences the Reading tab currently has."
+
+msgid "Activar perfil seleccionado"
+msgstr "Activate selected profile"
+
+msgid "Aplica en Lectura la voz, velocidad, volumen y preferencias de pausa guardadas en el perfil seleccionado, y lo marca como perfil activo."
+msgstr "Applies the voice, speed, volume and pause preferences saved in the selected profile to Reading, and marks it as the active profile."
+
+msgid "Guardar estado actual en el perfil seleccionado"
+msgstr "Save current state to the selected profile"
+
+msgid "Sobrescribe el perfil seleccionado con la voz, velocidad, volumen y preferencias de pausa que tiene ahora mismo la pestaña Lectura."
+msgstr "Overwrites the selected profile with the voice, speed, volume and pause preferences the Reading tab currently has."
+
+msgid "Renombrar perfil seleccionado"
+msgstr "Rename selected profile"
+
+msgid "Eliminar perfil seleccionado"
+msgstr "Delete selected profile"
+
+msgid "Nombre del perfil nuevo:"
+msgstr "Name of the new profile:"
+
+msgid "Crear perfil"
+msgstr "Create profile"
+
+msgid "El nombre del perfil no puede estar vacío."
+msgstr "The profile name cannot be empty."
+
+msgid "Ya existe un perfil con ese nombre."
+msgstr "A profile with that name already exists."
+
+msgid "Perfil {nombre} creado."
+msgstr "Profile {nombre} created."
+
+msgid "No se pudo crear el perfil."
+msgstr "Could not create the profile."
+
+msgid "Selecciona un perfil de la lista primero."
+msgstr "Select a profile from the list first."
+
+msgid "No se pudo leer el estado actual de Lectura."
+msgstr "Could not read Reading's current state."
+
+msgid "Perfil {nombre} actualizado."
+msgstr "Profile {nombre} updated."
+
+msgid "No se pudo actualizar el perfil."
+msgstr "Could not update the profile."
+
+msgid "Nuevo nombre para el perfil:"
+msgstr "New name for the profile:"
+
+msgid "Renombrar perfil"
+msgstr "Rename profile"
+
+msgid "No se pudo renombrar: revisa que el nombre nuevo no esté ya en uso."
+msgstr "Could not rename: check that the new name is not already in use."
+
+msgid "¿Eliminar el perfil «{nombre}»?"
+msgstr "Delete the profile «{nombre}»?"
+
+msgid "No se pudo eliminar el perfil."
+msgstr "Could not delete the profile."
+
+msgid "Perfiles de Usuario"
+msgstr "User Profiles"
+
+msgid "Abre el formulario de perfil para configurar voz, velocidad, volumen, segundos de salto y pausa, y crea el perfil aplicándolo de inmediato."
+msgstr "Opens the profile form to configure voice, speed, volume, skip seconds and pause, and creates the profile applying it immediately."
+
+msgid "Abre el formulario de perfil precargado con los valores guardados del perfil seleccionado, y aplica los cambios al guardar."
+msgstr "Opens the profile form pre-filled with the selected profile's saved values, and applies the changes on save."
+
+msgid "Activo"
+msgstr "Active"
+
+msgid "Cada perfil guarda la voz, la velocidad, el volumen y las preferencias de pausa y segundos de salto de la pestaña Lectura, todo en un mismo formulario. El atajo Ctrl+Shift+U alterna entre los perfiles de la lista."
+msgstr "Each profile stores the voice, speed, volume and the pause/skip-seconds preferences of the Reading tab, all in a single form. Ctrl+Shift+U cycles through the profiles in the list."
+
+msgid "Crear perfil nuevo..."
+msgstr "Create new profile..."
+
+msgid "Editar perfil"
+msgstr "Edit profile"
+
+msgid "Editar perfil seleccionado..."
+msgstr "Edit selected profile..."
+
+msgid "Guardar perfil"
+msgstr "Save profile"
+
+msgid "No se pudo renombrar el perfil."
+msgstr "Could not rename the profile."
+
+msgid "Nombre del perfil:"
+msgstr "Profile name:"
+
+msgid "Perfil {nombre} actualizado y activado."
+msgstr "Profile {nombre} updated and activated."
+
+msgid "Perfil {nombre} creado y activado."
+msgstr "Profile {nombre} created and activated."
+
+msgid "Segundos de salto (Retroceder y Avanzar en Lectura):"
+msgstr "Skip seconds (Back and Forward in Reading):"
+
+msgid "Voz que usará este perfil en la pestaña Lectura. La lista muestra las mismas voces favoritas ya cargadas en Lectura."
+msgstr "Voice this profile will use in the Reading tab. The list shows the same favorite voices already loaded in Reading."
+
+msgid "Voz:"
+msgstr "Voice:"
+
+msgid "&Aceptar"
+msgstr "&Accept"
+
+msgid "Cierra este resumen de novedades."
+msgstr "Closes this summary of what's new."
+
+msgid "La actualización ya está instalada. Este es un resumen de las novedades."
+msgstr "The update is already installed. This is a summary of what's new."
+
+msgid "Novedades de la versión {version}"
+msgstr "What's new in version {version}"
+
+msgid "Se ha actualizado a la versión {version}. Esto es lo que ha cambiado:"
+msgstr "Updated to version {version}. Here's what changed:"
+
+msgid "Aplicando etiquetas... {procesados} de {total} carpetas."
+msgstr "Applying tags... {procesados} of {total} folders."
+
+msgid "Aplicando etiquetas... {procesadas} de {total} carpeta(s)."
+msgstr "Applying tags... {procesadas} of {total} folder(s)."
+
+msgid "Descarga completada. Instalando la actualización..."
+msgstr "Download complete. Installing the update..."
+
+msgid "Descarga y verificación completadas correctamente en:\n«{ruta_extraida}».\n\nEl instalador auxiliar no está disponible en:\n{ruta_exe}\n\nNo se instalará nada."
+msgstr "Download and verification completed successfully at:\n«{ruta_extraida}».\n\nThe auxiliary installer is not available at:\n{ruta_exe}\n\nNothing will be installed."
+
+msgid "Descargando actualización, por favor espera..."
+msgstr "Downloading update, please wait..."
+
+msgid "No se pudo descargar la actualización."
+msgstr "Could not download the update."
+
+msgid "No se pudo descargar la actualización:\n{error}"
+msgstr "Could not download the update:\n{error}"
+
+msgid "Dividiendo... {actual} de {total} capítulos."
+msgstr "Splitting... {actual} of {total} chapters."

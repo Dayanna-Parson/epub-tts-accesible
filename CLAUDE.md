@@ -9,7 +9,7 @@ Léelo entero antes de tocar nada. Estas reglas no son sugerencias.
 **Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB y PDF en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
 
 - Desarrolladora: Dayanna Parson (TifloTutos · tiflotutos.com)
-- Versión actual: 3.0.0
+- Versión actual: 4.0.0
 - Python 3.12+ · wxPython 4.2+ · Windows como plataforma principal
 
 ---
@@ -88,6 +88,7 @@ app/
 │   ├── gestor_pdf.py             # Extrae texto/índice de PDF (fitz) para Lectura, misma forma que gestor_epub
 │   ├── gestor_proyectos.py       # Lógica de proyectos de Grabación. Persistencia en proyectos.json
 │   ├── gestor_atajos.py          # Atajos de teclado configurables
+│   ├── gestor_perfiles.py        # CRUD de perfiles de usuario: voz, velocidad, volumen, segundos de salto y pausa
 │   ├── gestor_chat_biblioteca.py     # Historial de conversación del Asistente de Biblioteca
 │   ├── gestor_prompts_asistente.py   # Plantillas de prompt de sistema del Asistente (un .txt por plantilla)
 │   ├── gestor_backups.py         # Copias rotativas de proyectos.json y biblioteca.db, solo si cambiaron
@@ -140,6 +141,7 @@ Archivos de configuración (en `/configuraciones/`):
 | `ajustes.json` | Velocidad, volumen, tiempos, favoritas, límites de cuota | No |
 | `biblioteca.db` | SQLite: libros, categorías, etiquetas/sagas, exportaciones pendientes | Sí |
 | `proyectos.json` | Jerarquía completa de proyectos de Grabación de Fragmentos | No |
+| `perfiles.json` | Perfiles de usuario: voz activa, voces favoritas por proveedor, velocidad, volumen, segundos de salto y pausa | Sí |
 | `pronunciacion.json` | Reglas del diccionario de pronunciación | No |
 | `voces_conocidas.json` | IDs de voces ya vistas (historial para filtro «solo nuevas») | No |
 | `backups_proyectos/` | Copias rotativas (últimas 5) de `proyectos.json` | Sí |
@@ -165,6 +167,15 @@ El campo `proveedor_id` de cada voz indica cuál de los dos usa. El reproductor 
 
 ---
 
+### Perfiles de usuario
+
+- Cada perfil (`app/motor/gestor_perfiles.py`, persistido en `configuraciones/perfiles.json` con escritura atómica) guarda: `voz_activa` (proveedor_id + voz), `voces_favoritas` por proveedor, `velocidad`, `volumen`, `segundos_salto` y `pausa_entre_fragmentos_ms`. Nunca claves API ni límites de cuota — eso es global de la app, no del perfil.
+- Atajo global `Ctrl+Shift+U` (`alternar_perfil` en `gestor_atajos.py`, despachado desde `ventana_principal.py` sin restricción de pestaña): cicla circularmente al siguiente perfil (`gestor_perfiles.siguiente_perfil()`), lo activa y lo aplica de inmediato. Se descartó `Ctrl+Shift+P` por colisionar con «Abrir gestor de proyectos», ya existente.
+- Panel `PanelPerfiles` en Ajustes → Perfiles de Usuario: lista de perfiles con botones Crear, Editar, Activar y Eliminar. Crear y Editar abren un único formulario (`_DialogoPerfil` en `pestana_ajustes.py`) con los cinco campos del perfil a la vez — voz, velocidad, volumen, segundos de salto y pausa —, precargado con los valores de Lectura o del perfil seleccionado. Al pulsar «Guardar perfil» se crea/actualiza, se activa y se aplica en el acto, sin tener que configurar antes en Lectura y luego en Ajustes → Configuración General por separado.
+- Al aplicar un perfil, `PestanaLectura.aplicar_perfil_usuario()` no solo mueve los deslizadores de velocidad/volumen y selecciona la voz: también persiste `segundos_salto` y `pausa_entre_fragmentos_ms` en `ajustes.json` (mismo mecanismo que `_guardar_ajuste_slider`) y sincroniza los widgets de `PanelGeneral` si ya están construidos, para que Ajustes no se quede con datos obsoletos si se guarda desde ahí con Ctrl+S.
+
+---
+
 ## Reglas críticas de arquitectura
 
 ### Internacionalización (i18n): toda cadena nueva de interfaz va envuelta en `_()`
@@ -184,6 +195,7 @@ Desde la Fase 7, la interfaz soporta español e inglés mediante `gettext` (libr
 - **Nunca envuelvas** una cadena cuyo valor literal se compare, persista o use para lógica de programa: claves de `dict`/JSON, ids de proveedor, rutas de archivo, constantes técnicas, ni texto de menú/acelerador que la propia app lea de vuelta con `GetStringSelection()`/`GetItemText()` para decidir algo. Traducir esas rompería la lógica en cuanto el idioma activo no fuera español.
 - Cada cadena nueva se añade como `msgid` en `locale/epub_tts.pot`, con `msgstr` igual al `msgid` en `locale/es/LC_MESSAGES/epub_tts.po` (nunca vacío) y con su traducción real en `locale/en/LC_MESSAGES/epub_tts.po`.
 - Tras tocar cualquier `.po`, hay que recompilar los `.mo` con `python compilar_i18n.py` antes de dar el cambio por terminado — la app carga el `.mo` directamente, no el `.po`.
+- **Nunca uses `_` como variable de descarte** (`_, valor = tupla`, `for _, x in ...`) en ningún archivo que importe `_` como traductor. Python trata `_` como local a toda la función en cuanto se le asigna una vez, así que cualquier llamada anterior o posterior a `_("...")` en esa misma función revienta con `TypeError: 'str' object is not callable` o `UnboundLocalError` en tiempo de ejecución, no de compilación. Ya ha pasado dos veces en este proyecto (Fase 7, en un `for etiq, _ in ...`; Fase 8, en un `_, datos = obtener_perfil_activo()`). Usa siempre un nombre descriptivo (`_sin_usar`, `_cookie`, `nombre_activo`...).
 
 ### Rutas: siempre absolutas
 Nunca uses rutas relativas. Usa siempre `RAIZ` de `config_rutas.py` como base:
@@ -257,7 +269,9 @@ voz.hablar("Guardado.")
 
 Es perezoso y a prueba de fallos: si la librería no está instalada o no hay ningún lector de pantalla en ejecución, `hablar()` no hace nada (ni lanza excepción). Se usa en Ctrl+I (anunciar página), Ctrl+S en Ajustes, el chat del Asistente de Biblioteca y en general en cualquier punto donde antes se habría usado `_anunciador` o donde `SetLabel()` no activa el evento de accesibilidad.
 
-**Excepción — `pyttsx3` en secuencias rápidas:** cuando pueden llegar varios anuncios seguidos muy rápido (por ejemplo, el progreso de escanear una carpeta con cientos de libros), `accessible_output3` los encolaría todos y NVDA acabaría leyendo un progreso desfasado. Para esos casos concretos se mantiene `app/motor/anunciador_voz.py` (`AnunciadorVoz`, pyttsx3): descarta los anuncios intermedios y solo dice el más reciente. Se usa hoy en el progreso de escaneo de Biblioteca y en la ventana de gestión de Proyectos — no lo uses para anuncios puntuales, solo para bucles de progreso.
+**Excepción — `pyttsx3` en secuencias rápidas:** cuando pueden llegar varios anuncios seguidos muy rápido (por ejemplo, el progreso de escanear una carpeta con cientos de libros), `accessible_output3` los encolaría todos y NVDA acabaría leyendo un progreso desfasado. Para esos casos concretos se mantiene `app/motor/anunciador_voz.py` (`AnunciadorVoz`, pyttsx3): descarta los anuncios intermedios y solo dice el más reciente. Se usa en el progreso de escaneo y agrupamiento de etiquetas de Biblioteca, en el divisor de EPUB en capítulos, en Grabación de Fragmentos, en la Fase C del actualizador y en la ventana de gestión de Proyectos — no lo uses para anuncios puntuales, solo para bucles de progreso.
+
+**Ojo con `sys.executable` dentro de `AnunciadorVoz`:** cada anuncio se habla en un proceso nuevo (el driver SAPI5 deja de sonar a partir del segundo o tercer aviso si se reutiliza el mismo proceso). Ese proceso se lanza relanzando el propio punto de entrada de la app (`iniciar_epub_tts.py`) con el argumento oculto `--hablar-interno`, interceptado ahí mismo antes de levantar wx — nunca asumas que `sys.executable` es un intérprete de Python real: en el build congelado con PyInstaller es el propio `.exe`, y `sys.executable -c "código"` falla en silencio. Ya pasó una vez (todos los anuncios de `AnunciadorVoz` se quedaban mudos en el portable) y quedó corregido con este patrón.
 
 ---
 
@@ -318,14 +332,18 @@ Se descartó **Piper TTS** como candidato a motor local de alta calidad. SAPI5 (
 
 ---
 
-## Actualizador automático (Fase C, v3.0)
+## Actualizador automático (Fase C, v4.0)
 
 Sustituye el enfoque de la v2.0 de generar un `.bat` al vuelo (bloque `ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py`) por un ejecutable auxiliar fijo y compilado, `bin/actualizador.exe`, igual que ya se hace con `auxiliar_sapi32.exe`:
 
 - `actualizador_descarga.py` descarga y verifica la versión nueva en `temp/actualizacion/` sin tocar la instalación actual.
 - `auxiliar_actualizador.py` (compilado a `bin/actualizador.exe`, automáticamente desde `crear_portable.py`) hace el respaldo por copia verificada en `temp/backup_previo/`, reemplaza los archivos y revierte solo si algo falla.
 
-**Estado:** implementado y probado con simulaciones (instalación correcta, fallo a mitad de proceso, fallo de verificación del respaldo), pero pendiente de una validación completa de extremo a extremo en Windows real con NVDA antes de sustituir el bloque `ACTUALIZADOR_SCRIPT_CLON`, que sigue siendo el sistema activo en producción. No retirar ese bloque hasta confirmar esa validación.
+**Estado:** validado de extremo a extremo en Windows real (descarga, verificación, respaldo, reemplazo y reinicio automático), y ya conectado al botón de producción «Buscar actualizaciones ahora» y a la comprobación automática al arrancar (`_instalar_actualizacion_fase_c` en `pestana_ajustes.py`, sustituyendo a `_hilo_descargar_e_instalar`/`_escribir_y_lanzar_bat`). El bug real que impedía detectar bien las versiones era una ruta equivocada en `comprobador_actualizaciones.py` (`_RUTA_VERSION_LOCAL` sin el segmento `recursos/`), no un fallo del propio mecanismo de la Fase C — corregido. El bloque `ACTUALIZADOR_SCRIPT_CLON` se conserva sin usarse, como red de seguridad para un rollback rápido, hasta confirmar dos o tres actualizaciones reales seguidas sin sobresaltos; entonces se retira del todo.
+
+Todo el proceso (comprobar, descargar, verificar, instalar) anuncia su progreso por voz con `AnunciadorVoz`, no solo al principio y al final (ver la sección "Anuncios de interfaz" más arriba sobre el bug real que esto tenía en el build congelado).
+
+**`actualizar_automaticamente` viene desmarcada por defecto** en los tres sitios que la leen (ajustes de fábrica del portable en `crear_portable.py`, comprobación al arranque en `ventana_principal.py`, casilla en `pestana_ajustes.py`): la comprobación/instalación automática al arrancar es una decisión explícita del usuario, no un comportamiento de fábrica.
 
 ---
 
@@ -345,3 +363,5 @@ Sustituye el enfoque de la v2.0 de generar un `.bat` al vuelo (bloque `ANCLAJE_I
 - No uses `StaticText.SetLabel()` para mensajes que NVDA deba verbalizar sin foco — usa `accessible_output3` (`app.motor.anunciador_lector.hablar()`).
 - No dejes ninguna cadena nueva de interfaz sin envolver en `_()` (ver "Internacionalización" más arriba), ni uses f-strings dentro de `_(...)`.
 - No olvides recompilar los `.mo` (`python compilar_i18n.py`) después de tocar cualquier `.po`.
+- No dupliques el mismo atajo `Ctrl+X` en la `AcceleratorTable` propia de una pestaña **y también** en la del Frame (`ventana_principal.py`): sin una autoridad central única, la ambigüedad puede activar el manejador de la pestaña equivocada — ya pasó de verdad con `Ctrl+I` en el build congelado con PyInstaller, y latía sin manifestarse todavía con `Ctrl+O`. Un atajo contextual (que hace algo distinto según la pestaña activa) se despacha siempre desde el Frame, nunca por duplicado en cada panel — ver `_al_ctrl_o_contextual`/`_al_ctrl_i_contextual` en `ventana_principal.py`.
+- No asumas que `sys.executable` es siempre un intérprete de Python real al lanzar un subproceso — en el build congelado con PyInstaller es el propio `.exe` de la app, y pasarle `-c "código"` falla en silencio. Si necesitas relanzar algo ligero (ver `anunciador_voz.py`), intercepta un argumento oculto en el propio `iniciar_epub_tts.py` antes de levantar wx, en vez de invocar un intérprete que podría no existir como tal.

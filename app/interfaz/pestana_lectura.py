@@ -1173,25 +1173,86 @@ class PestanaLectura(wx.Panel):
             print(f"[Error] No se pudieron cargar los datos del libro '{nombre}': {e}")
             self.marcadores = {}
     # ANCLAJE_FIN: GESTION_DATOS_LIBRO
+
+    # ANCLAJE_INICIO: APLICAR_PERFIL_USUARIO
+    def aplicar_perfil_usuario(self, datos_perfil):
+        """
+        Aplica a los controles de Lectura el estado guardado en un perfil
+        de usuario: velocidad, volumen, voz activa, segundos de salto y
+        pausa entre fragmentos. Persiste también estos valores en
+        ajustes.json (igual que _guardar_ajuste_slider) para que sigan
+        activos aunque se cambie de pestaña o se reinicie la app, y
+        refresca las etiquetas de los botones Retroceder/Avanzar.
+        La memoria por libro sigue existiendo aparte: un perfil fija el
+        punto de partida, no sustituye lo que cada libro recuerda de su
+        propia sesión.
+        """
+        try:
+            vel = datos_perfil.get("velocidad")
+            if vel is not None:
+                self.deslizador_velocidad.SetValue(int(vel))
+                self.reproductor.fijar_velocidad(int(vel))
+                self._guardar_ajuste_slider("velocidad_lectura", int(vel))
+            vol = datos_perfil.get("volumen")
+            if vol is not None:
+                self.deslizador_volumen.SetValue(int(vol))
+                self.reproductor.fijar_volumen(int(vol))
+                self._guardar_ajuste_slider("volumen_lectura", int(vol))
+            nombre_voz = datos_perfil.get("voz_activa", {}).get("id_voz", "")
+            if nombre_voz:
+                idx = self.combo_voz.FindString(nombre_voz)
+                if idx != wx.NOT_FOUND:
+                    self.combo_voz.SetSelection(idx)
+                    self.al_cambiar_voz(None)
+            segundos_salto = datos_perfil.get("segundos_salto")
+            pausa_ms = datos_perfil.get("pausa_entre_fragmentos_ms")
+            if segundos_salto is not None or pausa_ms is not None:
+                if segundos_salto is not None:
+                    self.segundos_salto = int(segundos_salto)
+                    self._guardar_ajuste_slider("segundos_salto", self.segundos_salto)
+                    self.btn_atras.SetLabel(_("Retroceder {s}s").format(s=self.segundos_salto))
+                    self.btn_adelante.SetLabel(_("Avanzar {s}s").format(s=self.segundos_salto))
+                if pausa_ms is not None:
+                    self._pausa_entre_fragmentos_ms = int(pausa_ms)
+                    self._guardar_ajuste_slider("pausa_entre_fragmentos_ms", self._pausa_entre_fragmentos_ms)
+                ventana = wx.GetTopLevelParent(self)
+                pag_general = getattr(getattr(ventana, 'pestana_ajustes', None), 'pag_general', None)
+                if pag_general is not None:
+                    if segundos_salto is not None and hasattr(pag_general, 'txt_salto'):
+                        pag_general.txt_salto.SetValue(str(self.segundos_salto))
+                        pag_general.config["segundos_salto"] = self.segundos_salto
+                    if pausa_ms is not None and hasattr(pag_general, 'spin_pausa'):
+                        pag_general.spin_pausa.SetValue(self._pausa_entre_fragmentos_ms)
+                        pag_general.config["pausa_entre_fragmentos_ms"] = self._pausa_entre_fragmentos_ms
+        except Exception:
+            logger.exception("Error al aplicar el perfil de usuario en Lectura")
+    # ANCLAJE_FIN: APLICAR_PERFIL_USUARIO
         
     # ANCLAJE_INICIO: CONFIGURACION_ATAJOS_TECLADO
     def configurar_aceleradores(self):
-        ids = [wx.NewIdRef() for _ in range(7)]
+        # Ctrl+I y Ctrl+O se quitaron de aquí: se despachan de forma
+        # centralizada desde ventana_principal.py (_al_ctrl_i_contextual /
+        # _al_ctrl_o_contextual) — la duplicación de Ctrl+I (aquí y en
+        # pestana_biblioteca.py a la vez, sin autoridad central) causó un
+        # bug real y reproducible en el build congelado con PyInstaller
+        # (activaba el manejador de la otra pestaña con el foco claramente
+        # en Lectura). Ctrl+O tenía exactamente la misma duplicación
+        # latente — pestana_biblioteca.py ya documentaba no repetirlo "para
+        # no pisar el atajo global", pero aquí sí estaba repetido — se
+        # quita por el mismo motivo, como prevención, no porque se haya
+        # observado fallar todavía.
+        ids = [wx.NewIdRef() for _ in range(5)]
         self.Bind(wx.EVT_MENU, self.al_abrir_marcadores,                id=ids[0])
         self.Bind(wx.EVT_MENU, self.al_alternar_reproduccion,           id=ids[1])
         self.Bind(wx.EVT_MENU, self.al_detener,                         id=ids[2])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_busqueda(),       id=ids[3])
         self.Bind(wx.EVT_MENU, lambda e: self.iniciar_ir_a_pagina(),    id=ids[4])
-        self.Bind(wx.EVT_MENU, self.al_cargar_libro,                    id=ids[5])
-        self.Bind(wx.EVT_MENU, lambda e: self.anunciar_pagina_actual(), id=ids[6])
         self.SetAcceleratorTable(wx.AcceleratorTable([
             (wx.ACCEL_CTRL, ord('M'), ids[0]),
             (wx.ACCEL_CTRL, ord('P'), ids[1]),
             (wx.ACCEL_CTRL, ord('D'), ids[2]),
             (wx.ACCEL_CTRL, ord('F'), ids[3]),
             (wx.ACCEL_CTRL, ord('G'), ids[4]),
-            (wx.ACCEL_CTRL, ord('O'), ids[5]),
-            (wx.ACCEL_CTRL, ord('I'), ids[6]),
         ]))
 
     # ANCLAJE_INICIO: PAGINAS_VIRTUALES
@@ -1252,6 +1313,12 @@ class PestanaLectura(wx.Panel):
         mover el foco en ningún momento (antes usaba el patrón _anunciador,
         que le hacía anunciar a NVDA el rol del control oculto — "edición,
         solo lectura" — en cada pulsación, como si saltara un diálogo).
+
+        No toca lbl_progreso: esa etiqueta es el progreso real de
+        reproducción (líneas más abajo la actualizan durante la lectura) y
+        sobrescribirla aquí la dejaba mostrando el texto de la página para
+        siempre, hasta la siguiente reproducción — voz.hablar() ya es el
+        canal correcto para este anuncio puntual.
         """
         if not self.longitud_texto:
             return
@@ -1260,7 +1327,6 @@ class PestanaLectura(wx.Panel):
             "Página {pag_cap} de {total_cap} del capítulo. "
             "Página {pag_libro} de {total_libro} del libro."
         ).format(pag_cap=pag_cap, total_cap=total_cap, pag_libro=pag_libro, total_libro=total_libro)
-        self.lbl_progreso.SetLabel(texto)
         voz.hablar(texto)
     # ANCLAJE_FIN: PAGINAS_VIRTUALES
 

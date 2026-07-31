@@ -1,0 +1,19 @@
+respuesta 22
+
+Encontrado uno importante: `pestana_lectura.py` duplica `Ctrl+O` localmente (igual que tenía duplicado `Ctrl+I`, y que ya nos causó un bug real en el portable), pese a que el propio `pestana_biblioteca.py` documenta explícitamente que no hay que duplicarlo. Lo corrijo por prevención, con el mismo criterio ya aplicado a `Ctrl+I`.
+
+Bien, el Creador de Audiolibros ya tiene avisos de voz durante la exportación ("anuncios de hito"), así que ese no está en el mismo caso silencioso. Verifico y confirmo todo antes de cerrar esta ronda de búsqueda.
+
+## Resultado de la búsqueda de bugs
+
+Hice un barrido dirigido a las clases de problemas que ya nos han mordido esta sesión, no una revisión genérica al azar:
+
+1. **Encontrado y corregido (importante)**: `Ctrl+O` tenía la misma duplicación exacta que causó el bug real de `Ctrl+I` (registrado a la vez en `pestana_lectura.py` y en el Frame, sin autoridad central) — pese a que `pestana_biblioteca.py` ya documentaba no hacerlo. No se había manifestado (todavía), pero dado que el mismo patrón sí falló con Ctrl+I en el build congelado, lo quité por prevención en vez de esperar a que la sufrieras en mitad de una lectura.
+2. **Revisado, sin hallazgos**: el bug de `_` como variable de descarte (con un script propio que recorre el AST) — no queda ninguna otra función que asigne a `_` y llame a `_(...)` a la vez.
+3. **Revisado, sin hallazgos**: `except:` desnudo (peor que `except Exception:`) — no hay ninguno en todo `app/`.
+4. **Revisado, sin hallazgos**: otras llamadas cruzadas tipo `self.pestana_ajustes.<método>` que pudieran apuntar a la clase equivocada (como pasó con el bug del arranque que ya corregimos) — las demás sí apuntan bien.
+5. **Comprobado, ya está bien**: el Creador de Audiolibros ya tiene avisos de voz durante la exportación larga, no es un caso silencioso como el que arreglamos en Biblioteca/Fase C.
+
+No he encontrado nada más que considere grave en esta pasada. Los `except: pass`/`except Exception: pass` sin logging (los ~19 archivos que ya dejamos anotados para la fase de estabilización) siguen ahí, pero son un rediseño transversal más que "bugs" puntuales — sigo pensando que merece su propia sesión con más margen para probar en Windows, no meterlo de rondón aquí.
+
+Todo compilado, 106 tests en verde, subido a `claude/v4-perfiles-usuario`. Avísame con los resultados de las pruebas de actualización cuando las tengas.

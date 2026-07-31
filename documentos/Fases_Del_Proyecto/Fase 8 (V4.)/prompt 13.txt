@@ -1,0 +1,3 @@
+prompt 13
+
+vale. lo de la actualización lo pruebo después. tenías razón, ahora si que sale bien el portable... Pero,no se porqué pasa, si en la otra versión... ya sabes, cuando ejecuto la app desde mi repo, la que tiene la consola... Pues, allí, conado pulso ctrl mas i, para mostrar la página... funciona bien... Pero, en cambio, ahora en el portable cuando pulso esa misma combinación, pues me va a la pestaña biblioteca, a la parte de los géneros
