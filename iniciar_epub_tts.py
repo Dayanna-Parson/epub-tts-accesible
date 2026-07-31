@@ -247,6 +247,24 @@ class EpubTTSApp(wx.App):
 
 
 if __name__ == "__main__":
+    # ANCLAJE_INICIO: MODO_AUXILIAR_HABLAR_INTERNO
+    # AnunciadorVoz (app/motor/anunciador_voz.py) relanza este mismo punto de
+    # entrada como subproceso para verbalizar un texto puntual con pyttsx3,
+    # en vez de asumir que sys.executable es siempre un intérprete de Python
+    # real — esa suposición se rompe en el build congelado con PyInstaller,
+    # donde sys.executable es el propio epubtts.exe. Interceptarlo aquí,
+    # antes de levantar wx, funciona igual en desarrollo y en el portable.
+    if len(sys.argv) >= 3 and sys.argv[1] == "--hablar-interno":
+        try:
+            import pyttsx3
+            motor = pyttsx3.init()
+            motor.say(sys.argv[2])
+            motor.runAndWait()
+        except Exception:
+            pass
+        sys.exit(0)
+    # ANCLAJE_FIN: MODO_AUXILIAR_HABLAR_INTERNO
+
     try:
         app = EpubTTSApp(False)
         app.MainLoop()
