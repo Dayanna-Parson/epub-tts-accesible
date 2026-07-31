@@ -128,6 +128,7 @@ def _con_reintentos(funcion, *args):
             return funcion(*args)
         except Exception as exc:
             ultimo_error = exc
+            _log(f"Aviso: fallo transitorio en {funcion.__name__} ({args}): {exc}. Reintentando...")
             time.sleep(_ESPERA_ENTRE_REINTENTOS)
     raise ultimo_error
 

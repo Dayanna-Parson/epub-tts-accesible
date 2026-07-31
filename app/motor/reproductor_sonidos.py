@@ -111,7 +111,8 @@ def _leer_ajustes_json() -> dict:
         with open(ruta_config("ajustes.json"), "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
-        return {}  # instalación nueva: ajustes.json todavía no existe
+        logger.warning("[Sonidos] ajustes.json no encontrado (instalación nueva); se usan valores por defecto")
+        return {}
     except Exception:
         logger.exception("[Sonidos] Error al leer ajustes.json")
         return {}

@@ -430,6 +430,7 @@ class PestanaBiblioteca(wx.Panel):
         try:
             nodo = self.arbol_categorias.GetSelection()
         except RuntimeError:
+            logger.debug("Árbol de categorías ya destruido al obtener la categoría seleccionada", exc_info=True)
             return ("todas", None)
         if not nodo.IsOk():
             return ("todas", None)
@@ -473,6 +474,7 @@ class PestanaBiblioteca(wx.Panel):
             else:
                 evento.Skip()
         except RuntimeError:
+            logger.debug("Árbol de categorías ya destruido al procesar tecla", exc_info=True)
             pass
 
     def _mover_categoria_seleccionada(self, direccion):
@@ -1252,6 +1254,7 @@ class PestanaBiblioteca(wx.Panel):
             nodo = self.arbol_categorias.GetSelection()
             nombre = self.arbol_categorias.GetItemText(nodo).rsplit(" (", 1)[0]
         except RuntimeError:
+            logger.debug("Árbol de categorías ya destruido al obtener contexto para el Asistente", exc_info=True)
             return None
         libros = self.gestor.buscar_libros(id_categoria=id_categoria)
         return {

@@ -674,6 +674,7 @@ class PestanaGrabacion(wx.Panel):
                 if vp and vp.IsShown():
                     vp.actualizar_nombre_proyecto(self.proyecto_actual["id"], titulo)
             except Exception:
+                logger.exception("Error al notificar el renombrado del proyecto a la ventana de proyectos")
                 pass
 
     def _ofrecer_guardar_en_proyecto(self):
@@ -732,6 +733,7 @@ class PestanaGrabacion(wx.Panel):
             if hasattr(ventana, 'agregar_txt_a_recientes'):
                 ventana.agregar_txt_a_recientes(self.ruta_txt_actual)
         except Exception:
+            logger.exception("Error al agregar el TXT a la lista de recientes de la ventana principal")
             pass
 
     def cargar_txt_desde_ruta(self, ruta: str):
@@ -988,6 +990,7 @@ class PestanaGrabacion(wx.Panel):
             try:
                 GrabadorAudio().probar_voz(datos_voz)
             except Exception as e:
+                logger.exception("Error al probar la voz seleccionada")
                 wx.CallAfter(reproducir, SND_ERROR)
                 wx.CallAfter(
                     wx.MessageBox,
@@ -1160,6 +1163,7 @@ class PestanaGrabacion(wx.Panel):
                 self.deslizador_velocidad_grab.SetValue(vel)
                 self.deslizador_volumen_grab.SetValue(vol)
         except Exception:
+            logger.exception("Error al restaurar los deslizadores de velocidad/volumen de grabación")
             pass
 
     # ================================================================== #
@@ -1371,6 +1375,7 @@ class PestanaGrabacion(wx.Panel):
             )
             wx.CallAfter(self._al_terminar_grabacion, archivos, errores, carpeta)
         except Exception as e:
+            logger.exception("Error durante la grabación de fragmentos")
             wx.CallAfter(self._al_error_grabacion, str(e))
 
     def _al_terminar_grabacion(self, archivos, errores, carpeta):

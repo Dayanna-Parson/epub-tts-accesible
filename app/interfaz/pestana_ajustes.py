@@ -2781,6 +2781,7 @@ class PestanaAjustes(wx.Panel):
                 with open(ruta, "r", encoding="utf-8") as f:
                     datos = json.load(f)
             except Exception:
+                logger.exception("Error al leer ajustes.json existente antes de fusionar cambios globales")
                 datos = {}
             datos.update(self.config)
             ruta_tmp = ruta + ".tmp"
@@ -2927,6 +2928,7 @@ class PestanaAjustes(wx.Panel):
                     self.arbol_cat.SetFocus()
                     wx.CallAfter(self._desbloquear_anuncio)
                 except RuntimeError:
+                    logger.debug("Árbol de categorías ya destruido al intentar enfocarlo", exc_info=True)
                     self._bloqueo_anuncio = False
         evento.Skip()
 
@@ -2979,6 +2981,7 @@ class PestanaAjustes(wx.Panel):
             with open(self.ruta_config, "r", encoding='utf-8') as f:
                 return json.load(f)
         except FileNotFoundError:
+            logger.debug("ajustes.json no existe todavía; se usará configuración vacía")
             return {}
         except Exception:
             logger.exception("Error al leer ajustes.json")

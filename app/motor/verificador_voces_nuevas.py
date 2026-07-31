@@ -20,11 +20,14 @@ Primera ejecución (sin historial previo): guarda el snapshot sin notificar.
 
 import datetime
 import json
+import logging
 import os
 import threading
 
 from app.config_rutas import ruta_config
 from app.motor.cliente_nube_voces import GestorVoces
+
+logger = logging.getLogger(__name__)
 
 _RUTA_TIMESTAMP  = ruta_config("voces_ultima_comprobacion.json")
 _COOLDOWN_HORAS  = 24
@@ -60,7 +63,7 @@ class VerificadorVocesNuevas:
                 delta = datetime.datetime.now() - ultima
                 return delta.total_seconds() > _COOLDOWN_HORAS * 3600
         except Exception:
-            pass
+            logger.exception("Error leyendo el timestamp de última comprobación de voces nuevas")
         return True
 
     # ── Ejecución asíncrona ───────────────────────────────────────────────────
@@ -120,6 +123,7 @@ class VerificadorVocesNuevas:
             callback({"nuevas": nuevas, "error": None})
 
         except Exception as exc:
+            logger.exception("Error verificando voces nuevas en hilo de fondo")
             callback({"nuevas": {}, "error": str(exc)})
 
     def _leer_ids_locales(self) -> set:
@@ -139,7 +143,7 @@ class VerificadorVocesNuevas:
                     if v.get("id")
                 }
         except Exception:
-            pass
+            logger.exception("Error leyendo IDs locales desde voces_disponibles.json")
         return set()
 
     def _detectar_nuevas(self, voces_dict: dict, ids_conocidos: set) -> dict:
@@ -168,7 +172,7 @@ class VerificadorVocesNuevas:
                     ensure_ascii=False,
                 )
         except Exception:
-            pass
+            logger.exception("Error guardando el timestamp de última comprobación de voces nuevas")
 
     def _guardar_conocidas(self, voces_dict: dict):
         """
@@ -188,7 +192,7 @@ class VerificadorVocesNuevas:
             with open(ruta, "w", encoding="utf-8") as f:
                 json.dump(sorted(ids), f, ensure_ascii=False)
         except Exception:
-            pass
+            logger.exception("Error guardando el snapshot base de voces conocidas")
 
     def _guardar_conocidas_ids(self, ids: set):
         """
@@ -202,5 +206,5 @@ class VerificadorVocesNuevas:
             with open(ruta, "w", encoding="utf-8") as f:
                 json.dump(sorted(ids), f, ensure_ascii=False)
         except Exception:
-            pass
+            logger.exception("Error guardando los IDs de voces conocidas previos a la descarga")
 # ANCLAJE_FIN: VERIFICADOR_VOCES_NUEVAS

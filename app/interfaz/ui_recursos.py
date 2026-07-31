@@ -26,10 +26,13 @@ Uso:
     aplicar_icono_boton(self.btn_abrir, "carpeta", "Abrir carpeta de destino")
 """
 
+import logging
 import os
 import wx
 
 from app.config_rutas import RAIZ_RECURSOS
+
+logger = logging.getLogger(__name__)
 
 _RUTA_ICONOS = os.path.join(RAIZ_RECURSOS, "recursos", "iconos")
 
@@ -114,6 +117,7 @@ def _cargar_bmp_png(nombre: str, size: tuple):
             img = img.Scale(*size, wx.IMAGE_QUALITY_HIGH)
             return wx.Bitmap(img)
     except Exception:
+        logger.debug("No se pudo cargar el icono PNG '%s'", nombre, exc_info=True)
         pass
     return None
 
@@ -127,5 +131,6 @@ def _cargar_bmp_art(nombre: str, size: tuple):
         bmp = wx.ArtProvider.GetBitmap(art_id, wx.ART_BUTTON, size)
         return bmp if bmp.IsOk() else None
     except Exception:
+        logger.debug("No se pudo cargar el icono de ArtProvider '%s'", nombre, exc_info=True)
         return None
 # ANCLAJE_FIN: UI_RECURSOS

@@ -112,6 +112,7 @@ class ComprobadorActualizaciones:
                 datos = json.loads(resp.read().decode("utf-8"))
             return {"version": datos.get("version", "0.0.0"), "error": None}
         except Exception as exc:
+            logger.exception("Error obteniendo la versión remota desde %s", _URL_VERSION)
             return {"version": "0.0.0", "error": str(exc)}
 
     def obtener_novedades(self) -> dict:
@@ -124,6 +125,7 @@ class ComprobadorActualizaciones:
                 texto = resp.read().decode("utf-8")
             return {"texto": texto, "error": None}
         except Exception as exc:
+            logger.exception("Error obteniendo las novedades desde %s", _URL_NOVEDADES)
             return {"texto": "", "error": str(exc)}
 
     def hay_actualizacion(self, version_local: str, version_remota: str) -> bool:
@@ -136,6 +138,7 @@ class ComprobadorActualizaciones:
             remota  = tuple(int(x) for x in version_remota.split("."))
             return remota > local
         except Exception:
+            logger.exception("Error comparando versiones '%s' y '%s'", version_local, version_remota)
             return False
 
     def descargar_actualizacion(self, callback_progreso=None) -> dict:
@@ -242,6 +245,7 @@ class ComprobadorActualizaciones:
                 shutil.rmtree(dir_tmp, ignore_errors=True)
 
         except Exception as exc:
+            logger.exception("Error instalando la actualización descargada")
             return {"ok": False, "error": str(exc)}
 
     def descargar_en_hilo(self, callback_resultado, callback_progreso=None):

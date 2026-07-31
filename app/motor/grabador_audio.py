@@ -802,6 +802,7 @@ class GrabadorAudio:
                 audio = audio.set_frame_rate(44100).set_channels(1)
                 audio.export(ruta_salida, format='mp3', bitrate='320k')
             except Exception:
+                logger.warning("Ajuste rápido de velocidad/volumen con pydub falló; se usa recodificación de respaldo", exc_info=True)
                 self._recodificar_mp3_320k(ruta_tmp, ruta_salida)
         finally:
             if os.path.exists(ruta_tmp):

@@ -189,8 +189,10 @@ def _limpiar_temporales_huerfanos():
                 logging.getLogger(__name__).debug(
                     "Temporal huérfano eliminado (límite 50 MB): %s", ruta
                 )
-            except OSError:
-                pass
+            except OSError as _e:
+                logging.getLogger(__name__).warning(
+                    "No se pudo eliminar temporal huérfano %s: %s", ruta, _e
+                )
 
 try:
     _limpiar_temporales_huerfanos()
@@ -272,7 +274,10 @@ if __name__ == "__main__":
             motor.say(sys.argv[2])
             motor.runAndWait()
         except Exception:
-            pass
+            # El logging ya está configurado a nivel de módulo (basicConfig
+            # se ejecuta al importar, antes de llegar a este bloque), así
+            # que logger.exception es seguro aquí.
+            logger.exception("Fallo al verbalizar texto en modo --hablar-interno")
         sys.exit(0)
     # ANCLAJE_FIN: MODO_AUXILIAR_HABLAR_INTERNO
 

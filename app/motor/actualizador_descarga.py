@@ -23,6 +23,7 @@ Diseño (mismo patrón que comprobador_actualizaciones.py):
 """
 
 import io
+import logging
 import os
 import shutil
 import threading
@@ -30,6 +31,8 @@ import urllib.request
 import zipfile
 
 from app.config_rutas import RAIZ
+
+logger = logging.getLogger(__name__)
 
 _URL_ZIP = (
     "https://github.com/Dayanna-Parson/epub-tts-accesible"
@@ -166,6 +169,7 @@ class GestorDescargaActualizacion:
             return {"ok": True, "ruta_extraida": raiz_extraida, "error": None}
 
         except Exception as exc:
+            logger.exception("Error descargando o verificando la actualización")
             shutil.rmtree(_CARPETA_TEMP, ignore_errors=True)
             return {"ok": False, "ruta_extraida": None, "error": str(exc)}
 

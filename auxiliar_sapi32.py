@@ -43,14 +43,28 @@ _SPF_IS_NOT_XML       = 8
 _lock_stdout = threading.Lock()
 
 
+def _log_error(mensaje):
+    """
+    Este puente de 32 bits no tiene consola visible en producción (se lanza
+    con --noconsole) ni logger central propio como el de app/ — stderr es
+    el único rastro disponible para depuración manual ejecutando el .exe
+    a mano. Se usa en todos los bloques de limpieza/liberación silenciosos
+    que no pueden reportar por el canal normal de eventos (_enviar).
+    """
+    try:
+        print(f"[auxiliar_sapi32] {mensaje}", file=sys.stderr, flush=True)
+    except Exception:
+        pass
+
+
 def _enviar(datos):
     """Envía un diccionario como línea JSON a stdout de forma thread-safe."""
     try:
         with _lock_stdout:
             sys.stdout.write(json.dumps(datos, ensure_ascii=False) + "\n")
             sys.stdout.flush()
-    except Exception:
-        pass
+    except Exception as e:
+        _log_error(f"No se pudo enviar evento a stdout: {e}")
 
 
 def _seleccionar_voz(motor_obj, nombre_buscado, comtypes_client):
@@ -74,10 +88,10 @@ def _seleccionar_voz(motor_obj, nombre_buscado, comtypes_client):
                 if nombre_buscado in tok.GetDescription().lower():
                     motor_obj.Voice = tok
                     return True
-            except Exception:
-                pass
-    except Exception:
-        pass
+            except Exception as e:
+                _log_error(f"Token de voz ilegible al buscar «{nombre_buscado}»: {e}")
+    except Exception as e:
+        _log_error(f"No se pudo enumerar voces por categoría de registro: {e}")
     try:
         tokens = motor_obj.GetVoices()
         for i in range(tokens.Count):
@@ -86,10 +100,10 @@ def _seleccionar_voz(motor_obj, nombre_buscado, comtypes_client):
                 if nombre_buscado in tok.GetDescription().lower():
                     motor_obj.Voice = tok
                     return True
-            except Exception:
-                pass
-    except Exception:
-        pass
+            except Exception as e:
+                _log_error(f"Token de voz ilegible al buscar (fallback) «{nombre_buscado}»: {e}")
+    except Exception as e:
+        _log_error(f"No se pudo enumerar voces vía GetVoices() (fallback): {e}")
     return False
 
 
@@ -111,13 +125,13 @@ def _leer_categorias_sapi(motor, comtypes_client):
                     "nombre":      tok.GetDescription(),
                     "proveedor_id": "local_32",
                 })
-            except Exception:
-                pass
+            except Exception as e:
+                _log_error(f"Token de voz ilegible al listar categorías SAPI: {e}")
 
     try:
         _procesar_tokens(motor.GetVoices())
-    except Exception:
-        pass
+    except Exception as e:
+        _log_error(f"No se pudieron enumerar las voces del motor SAPI principal: {e}")
 
     for cat_id in (
         r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices",
@@ -127,8 +141,8 @@ def _leer_categorias_sapi(motor, comtypes_client):
             sp_cat = comtypes_client.CreateObject("SAPI.SpObjectTokenCategory")
             sp_cat.SetId(cat_id, False)
             _procesar_tokens(sp_cat.EnumTokens())
-        except Exception:
-            pass
+        except Exception as e:
+            _log_error(f"No se pudo enumerar la categoría de voces {cat_id}: {e}")
 
     return lista
 
@@ -210,7 +224,8 @@ def main():
 
         try:
             cmd = json.loads(linea_cruda)
-        except Exception:
+        except Exception as e:
+            _log_error(f"Línea de comando no es JSON válido, se ignora: {linea_cruda!r} ({e})")
             continue
 
         accion = cmd.get("cmd", "")
@@ -244,21 +259,21 @@ def main():
             estado["detener"] = True
             try:
                 motor.Speak("", _SPF_ASYNC | _SPF_PURGEBEFORESPEAK)
-            except Exception:
-                pass
+            except Exception as e:
+                _log_error(f"No se pudo purgar el habla en curso al detener: {e}")
 
         elif accion == "pausar":
             try:
                 motor.Pause()
-            except Exception:
-                pass
+            except Exception as e:
+                _log_error(f"No se pudo pausar el motor SAPI: {e}")
 
         elif accion == "reanudar":
             estado["detener"] = False
             try:
                 motor.Resume()
-            except Exception:
-                pass
+            except Exception as e:
+                _log_error(f"No se pudo reanudar el motor SAPI: {e}")
 
         elif accion == "fijar_velocidad":
             v = cmd.get("valor", 50)
@@ -266,16 +281,16 @@ def main():
                 tasa = max(-10, min(10, int((v / 5) - 10)))
                 motor.Rate = tasa
                 estado["rate"] = tasa
-            except Exception:
-                pass
+            except Exception as e:
+                _log_error(f"No se pudo fijar la velocidad ({v}): {e}")
 
         elif accion == "fijar_volumen":
             try:
                 vol = int(cmd.get("valor", 100))
                 motor.Volume = vol
                 estado["volume"] = vol
-            except Exception:
-                pass
+            except Exception as e:
+                _log_error(f"No se pudo fijar el volumen ({cmd.get('valor')}): {e}")
 
         elif accion == "exportar_archivo":
             # Exportación silenciosa a WAV para el Creador de Audiolibros.

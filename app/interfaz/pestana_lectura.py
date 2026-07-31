@@ -336,8 +336,8 @@ class PestanaLectura(wx.Panel):
                                 v["proveedor_id"] = prov
                                 nombre_mostrar = _nombre_combo_neuronal(v, prov)
                                 voces_para_combo.append((nombre_mostrar, v))
-            except Exception as e:
-                print(f"[Aviso] No se pudo leer voces_disponibles.json: {e}")
+            except Exception:
+                logger.exception("No se pudo leer voces_disponibles.json")
 
         if not voces_para_combo:
             self.combo_voz.Append(_("No hay voces disponibles"))
@@ -721,8 +721,8 @@ class PestanaLectura(wx.Panel):
             os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(ruta, 'w', encoding='utf-8') as f:
                 json.dump(datos, f, ensure_ascii=False, indent=4)
-        except Exception as e:
-            print(f"[Aviso] No se pudo guardar ajuste de slider '{clave}': {e}")
+        except Exception:
+            logger.exception("No se pudo guardar ajuste de slider '%s'", clave)
     
     def _al_tecla_arbol_indice(self, evento):
         """Sonido de navegación al moverse por el árbol de índice del libro."""
@@ -1083,6 +1083,7 @@ class PestanaLectura(wx.Panel):
                 if hasattr(ventana, 'agregar_a_recientes'):
                     ventana.agregar_a_recientes(ruta)
             except Exception:
+                logger.exception("Error al agregar el libro a la lista de recientes de la ventana principal")
                 pass
 
         except Exception as e:
@@ -1139,8 +1140,8 @@ class PestanaLectura(wx.Panel):
             os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(self.ruta_datos_lectura, 'w', encoding='utf-8') as f:
                 json.dump(datos, f, ensure_ascii=False)
-        except Exception as e:
-            print(f"[Error] No se pudieron guardar los datos del libro: {e}")
+        except Exception:
+            logger.exception("No se pudieron guardar los datos del libro")
 
     def cargar_datos_libro(self, nombre):
         try:
@@ -1169,8 +1170,8 @@ class PestanaLectura(wx.Panel):
                             if idx != wx.NOT_FOUND:
                                 self.combo_voz.SetSelection(idx)
                                 self.al_cambiar_voz(None)
-        except Exception as e:
-            print(f"[Error] No se pudieron cargar los datos del libro '{nombre}': {e}")
+        except Exception:
+            logger.exception("No se pudieron cargar los datos del libro '%s'", nombre)
             self.marcadores = {}
     # ANCLAJE_FIN: GESTION_DATOS_LIBRO
 
@@ -1343,6 +1344,7 @@ class PestanaLectura(wx.Panel):
             with open(ruta, "r", encoding="utf-8") as f:
                 escala = json.load(f).get("escala_velocidad", "porcentaje")
         except Exception:
+            logger.exception("Error al leer la escala de velocidad desde ajustes.json")
             pass
         if escala != "multiplicador":
             evento.Skip()
@@ -1448,6 +1450,7 @@ class PestanaLectura(wx.Panel):
                 try:
                     self.txt_contenido.SetStyle(inicio, fin, _attr(estilos))
                 except Exception:
+                    logger.exception("Error al aplicar estilo de texto en el rango %s-%s", inicio, fin)
                     pass
         finally:
             self.txt_contenido.Thaw()

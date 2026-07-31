@@ -1,6 +1,13 @@
 import os
 import sys
 import json
+import logging
+
+# config_rutas se importa muy pronto en el arranque (iniciar_epub_tts.py lo
+# importa justo después de configurar logging.basicConfig), así que ya puede
+# usar con seguridad un logger propio de módulo estándar en vez de quedarse
+# mudo en los bloques except.
+logger = logging.getLogger(__name__)
 
 # ── Detección de entorno PyInstaller ─────────────────────────────────────────
 # La app se empaqueta con --onedir. En ese modo:
@@ -79,7 +86,7 @@ def cargar_claves() -> dict:
             if contenido:
                 return json.loads(contenido)
     except Exception:
-        pass
+        logger.exception("No se pudo leer claves_api.json, se usarán claves vacías")
     return {k: dict(v) for k, v in _CLAVES_DEFAULT.items()}
 
 
@@ -122,7 +129,9 @@ def migrar_archivos_config():
             try:
                 os.rename(ruta_vieja, ruta_nueva)
             except Exception:
-                pass
+                logger.exception(
+                    "No se pudo migrar %s a %s", ruta_vieja, ruta_nueva
+                )
 
     # Eliminar ajustes_globales.json si está vacío o no existe
     ruta_global = ruta_config("ajustes_globales.json")
@@ -136,7 +145,9 @@ def migrar_archivos_config():
                 if not contenido or contenido in ("{}", "[]"):
                     os.remove(ruta_global)
         except Exception:
-            pass
+            logger.exception(
+                "No se pudo comprobar/eliminar ajustes_globales.json obsoleto"
+            )
 
     # Extraer txt_recientes de ajustes.json → historial_grabacion.json
     ruta_ajustes = ruta_config("ajustes.json")
@@ -151,7 +162,9 @@ def migrar_archivos_config():
                 with open(ruta_ajustes, "w", encoding="utf-8") as f:
                     json.dump(datos, f, ensure_ascii=False, indent=2)
         except Exception:
-            pass
+            logger.exception(
+                "No se pudo extraer txt_recientes de ajustes.json a historial_grabacion.json"
+            )
 
     # ── Migrar claves API de ajustes.json → claves_api.json ──────────────────
     # Si ajustes.json contenía azure/polly/elevenlabs y claves_api.json aún no
@@ -170,9 +183,11 @@ def migrar_archivos_config():
                 with open(ruta_ajustes, "w", encoding="utf-8") as f:
                     json.dump(datos_aj, f, ensure_ascii=False, indent=2)
             except Exception:
-                pass
+                logger.exception(
+                    "No se pudieron migrar las claves API desde ajustes.json"
+                )
         # Crear claves_api.json (vacío estructurado o con las claves migradas)
         try:
             guardar_claves(claves)
         except Exception:
-            pass
+            logger.exception("No se pudo crear claves_api.json durante la migración")
