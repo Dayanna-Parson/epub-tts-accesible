@@ -864,4 +864,6 @@ Deliberadamente sin tocar: `except queue.Empty: break/continue` (patrón normal 
 
 Con esta fase se da por cerrado el desarrollo activo de Epub TTS Accesible. La v4.1.0 es la versión final antes de pasar a distribución; el bloque `ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py` se deja tal cual, sin usarse, hasta confirmar dos o tres actualizaciones reales seguidas con el actualizador de la Fase C antes de retirarlo del todo.
 
+**Ajustes finales de empaquetado en `crear_portable.py`.** `novedades.txt` se copia directo a la raíz del portable, junto a `ayuda.html` y `epubtts.exe`, en vez de a una subcarpeta `documentos/` que no tenía sentido para un único archivo. `registros/` y `registros/errores/` se siembran de fábrica en el propio `.zip` (antes solo existían tras el primer arranque de la app), y el empaquetado avisa si faltan `bin/ffmpeg.exe` o `bin/auxiliar_sapi32.exe` en vez de generar un portable incompleto en silencio. Con esto, la subida oficial de versión con `subir_version.py minor` (4.0.0 → 4.1.0, reflejada en `recursos/version.json`) queda confirmada.
+
 ---

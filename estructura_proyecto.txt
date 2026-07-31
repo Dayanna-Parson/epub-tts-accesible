@@ -1,6 +1,6 @@
 Epub TTS Accesible — estructura del proyecto
 ==============================================
-Versión 4.0.0 · julio 2026
+Versión 4.1.0 · julio 2026
 
 Vista rápida de dónde vive cada cosa. Para el porqué de cada decisión,
 ver DEVELOPMENT.md (arquitectura técnica) y CLAUDE.md (reglas del

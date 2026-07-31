@@ -446,4 +446,6 @@ Con la v4.0 congelada, esta fase no añadió ni una sola función nueva: fue exc
 
 Con esto se cierra por completo el desarrollo de Epub TTS Accesible: la v4.1.0 queda como la versión final, y el proyecto pasa a distribución. Queda fuera a propósito, como red de seguridad, el bloque `ANCLAJE_INICIO: ACTUALIZADOR_SCRIPT_CLON` en `pestana_ajustes.py` — se retirará una vez confirmadas dos o tres actualizaciones reales seguidas sin sobresaltos con el actualizador de la Fase C.
 
+Antes de dar la fase por cerrada del todo repasé también `crear_portable.py` con ojo crítico, ya sin código nuevo que probar, solo puliendo el propio empaquetado: `novedades.txt` ya no va en una carpeta `documentos/` para un único archivo, se copia directo a la raíz del portable junto a `ayuda.html` y `epubtts.exe`; `registros/` y `registros/errores/` se crean de fábrica en el propio `.zip`, en vez de esperar al primer arranque real; y el script avisa si detecta que faltan `bin/ffmpeg.exe` o `bin/auxiliar_sapi32.exe`, para no generar nunca un portable incompleto sin darme cuenta. Con eso ya cerrado, subí la versión oficial con `subir_version.py minor`: 4.0.0 → 4.1.0, confirmada en `recursos/version.json`.
+
 — Dayanna Parson, julio de 2026

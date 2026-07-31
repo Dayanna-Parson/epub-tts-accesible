@@ -9,7 +9,7 @@ Léelo entero antes de tocar nada. Estas reglas no son sugerencias.
 **Epub TTS Accesible** es una aplicación de escritorio para Windows que convierte libros EPUB y PDF en audiolibros multivoz con voces neuronales de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) y SAPI5 local. Está diseñada por y para personas ciegas, con accesibilidad NVDA como requisito no negociable.
 
 - Desarrolladora: Dayanna Parson (TifloTutos · tiflotutos.com)
-- Versión actual: 4.0.0
+- Versión actual: 4.1.0
 - Python 3.12+ · wxPython 4.2+ · Windows como plataforma principal
 
 ---
