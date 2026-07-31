@@ -1,0 +1,14 @@
+respuesta 26
+Found it: `pestana_grabacion.py:1344-1354`. In the unified single-track mode (`not modo_dividido`), the code only plays a rhythmic tick sound and never calls `self._hablar()` — that's exactly what you're hearing (sound + progress bar, but silent voice until the end). I'll make it speak progress there too, same as the split mode.
+
+Now let's confirm `_callback_progreso` is actually invoked per-fragment in unified mode too (i.e., `grabador_audio.py` calls it even when building a single track).
+
+Good — line 304-305 confirms `callback_progreso` fires per fragment in the unified (non-split) path too, so the fix will get real per-fragment updates, not just a single call. Now update i18n compiled files and run the tests.
+
+That string already exists in all locale catalogs (it was already used in the split-mode branch), so no i18n changes needed — just reused now in both branches. Let's run the tests.
+
+All 126 tests still pass. Let me quickly add a note to `novedades.txt`/docs since this is a real fix, then commit and push.
+
+Now commit and push this fix to the PR branch.
+
+Ya está corregido y pusheado al PR #10. El bug era exactamente eso: en modo "un único archivo MP3 unificado", el callback de progreso solo hacía sonar el pitido rítmico (`PROGRESS`) y nunca llamaba a `self._hablar()` — por diseño original, porque se asumió que SAPI5 "no informa por voz" en ese modo, pero en realidad sí se puede anunciar el progreso igual que en modo "dividir por etiquetas". Confirmé que el callback de progreso sí se dispara por cada fragmento también en el modo unificado (`grabador_audio.py:304-305`), así que ahora la voz anuncia cada fragmento en ambos modos, y el pitido se mantiene como refuerzo sonoro extra en el modo unificado. Actualicé también `novedades.txt` y `ayuda.html` con esta corrección. Los 126 tests siguen en verde.
