@@ -707,6 +707,7 @@ class VentanaProyectos(wx.Frame):
                 self._gestor.obtener_proyecto(proyecto["id"])
             )
         except Exception:
+            logger.exception("Error al sincronizar el proyecto actual con la pestaña de Grabación")
             pass
 
     # ================================================================== #
@@ -1206,6 +1207,7 @@ class VentanaProyectos(wx.Frame):
             import pyttsx3
             engine = pyttsx3.init()
         except Exception:
+            logger.exception("Error al inicializar pyttsx3 para el hilo de voz de la ventana de proyectos")
             return
         while True:
             texto = self._cola_tts.get()
@@ -1215,6 +1217,7 @@ class VentanaProyectos(wx.Frame):
                 engine.say(texto)
                 engine.runAndWait()
             except Exception:
+                logger.exception("Error al hablar el texto de estado en la ventana de proyectos")
                 pass
 
     def _hablar(self, texto: str):
@@ -1241,6 +1244,7 @@ class VentanaProyectos(wx.Frame):
         try:
             self.arbol.Unbind(wx.EVT_TREE_SEL_CHANGED)
         except Exception:
+            logger.exception("Error al desconectar EVT_TREE_SEL_CHANGED del árbol de proyectos")
             pass
 
         if self._foco_previo:
@@ -1250,6 +1254,7 @@ class VentanaProyectos(wx.Frame):
                     evento.Skip()
                     return
             except Exception:
+                logger.exception("Error al procesar la tecla en la ventana de proyectos")
                 pass
         if self._frame_principal and self._frame_principal.IsShown():
             wx.CallAfter(self._frame_principal.SetFocus)
