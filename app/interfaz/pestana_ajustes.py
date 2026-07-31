@@ -1802,6 +1802,8 @@ class PanelDiccionario(wx.Panel):
                 gestor.actualizar_regla_diccionario(existente["id"], original, pronunciacion)
             else:
                 gestor.anadir_regla_diccionario(original, pronunciacion, alcance, id_referencia)
+            from app.motor.limpiador_lectura import recargar_reglas_biblioteca
+            recargar_reglas_biblioteca()
 
         self.txt_original.Clear()
         self.txt_pronunciacion.Clear()
@@ -1822,6 +1824,8 @@ class PanelDiccionario(wx.Panel):
             regla = self._reglas_mostradas[idx]
             from app.motor.gestor_biblioteca import GestorBiblioteca
             GestorBiblioteca().eliminar_regla_diccionario(regla["id"])
+            from app.motor.limpiador_lectura import recargar_reglas_biblioteca
+            recargar_reglas_biblioteca()
 
         self._rellenar_lista()
 

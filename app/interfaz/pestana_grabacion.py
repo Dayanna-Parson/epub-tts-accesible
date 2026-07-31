@@ -586,6 +586,13 @@ class PestanaGrabacion(wx.Panel):
         """Puebla check_voces con voces favoritas (columnas) y SAPI5 locales."""
         self.voces_disponibles = []
         self._mapa_indices     = {}
+        self.check_voces.Freeze()
+        try:
+            self._cargar_voces_disponibles_interno()
+        finally:
+            self.check_voces.Thaw()
+
+    def _cargar_voces_disponibles_interno(self):
         self.check_voces.DeleteAllItems()
 
         idx = 0

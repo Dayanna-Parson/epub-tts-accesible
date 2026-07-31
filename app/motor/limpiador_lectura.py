@@ -6,6 +6,12 @@ logger = logging.getLogger(__name__)
 # Singleton del diccionario de pronunciación — se crea la primera vez que se necesita
 _dic_pronunciacion = None
 
+# Caché de reglas de diccionario por libro/saga (biblioteca.db), indexada por
+# ruta_libro. Evita abrir una conexión SQLite nueva y repetir las mismas dos
+# consultas en cada página de un PDF o cada fragmento de un EPUB troceado,
+# que siempre comparten la misma ruta_libro dentro de una misma pasada.
+_cache_reglas_biblioteca = {}
+
 
 def _obtener_diccionario():
     global _dic_pronunciacion
@@ -21,6 +27,33 @@ def recargar_diccionario_pronunciacion():
     _dic_pronunciacion = None
 
 
+def recargar_reglas_biblioteca():
+    """Invalida la caché de reglas por libro/saga, para reflejar cambios recién guardados."""
+    _cache_reglas_biblioteca.clear()
+
+
+def _obtener_reglas_compiladas(ruta_libro: str):
+    if ruta_libro in _cache_reglas_biblioteca:
+        return _cache_reglas_biblioteca[ruta_libro]
+
+    reglas_compiladas = []
+    try:
+        from app.motor.gestor_biblioteca import GestorBiblioteca
+        gestor = GestorBiblioteca()
+        libro = gestor.obtener_libro_por_ruta(ruta_libro)
+        if libro is not None:
+            for regla in gestor.listar_reglas_diccionario_para_libro(libro["id"]):
+                if not regla["patron_origen"]:
+                    continue
+                patron = r"(?<!\w)" + re.escape(regla["patron_origen"]) + r"(?!\w)"
+                reglas_compiladas.append((re.compile(patron), regla["sustitucion"]))
+    except Exception:
+        logger.exception("[LimpiadorLectura] Error al aplicar reglas de diccionario de la Biblioteca")
+
+    _cache_reglas_biblioteca[ruta_libro] = reglas_compiladas
+    return reglas_compiladas
+
+
 def _aplicar_reglas_de_biblioteca(texto: str, ruta_libro: str) -> str:
     """
     Reglas de pronunciación con alcance "libro" o "saga" (biblioteca.db),
@@ -29,19 +62,8 @@ def _aplicar_reglas_de_biblioteca(texto: str, ruta_libro: str) -> str:
     pasar por Importar carpeta), no hay nada que aplicar y se ignora en
     silencio — no es un error, es un libro fuera de la Biblioteca.
     """
-    try:
-        from app.motor.gestor_biblioteca import GestorBiblioteca
-        gestor = GestorBiblioteca()
-        libro = gestor.obtener_libro_por_ruta(ruta_libro)
-        if libro is None:
-            return texto
-        for regla in gestor.listar_reglas_diccionario_para_libro(libro["id"]):
-            if not regla["patron_origen"]:
-                continue
-            patron = r"(?<!\w)" + re.escape(regla["patron_origen"]) + r"(?!\w)"
-            texto = re.sub(patron, regla["sustitucion"], texto)
-    except Exception:
-        logger.exception("[LimpiadorLectura] Error al aplicar reglas de diccionario de la Biblioteca")
+    for patron, sustitucion in _obtener_reglas_compiladas(ruta_libro):
+        texto = patron.sub(sustitucion, texto)
     return texto
 
 
