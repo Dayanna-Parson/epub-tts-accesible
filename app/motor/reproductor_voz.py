@@ -298,7 +298,8 @@ class ReproductorVoz:
                     # Leer este fragmento con voz local para no perder la lectura
                     if not self._detenido_intencionalmente:
                         try: self.cliente_local.hablar(texto)
-                        except Exception: pass
+                        except Exception:
+                            logger.exception("[ReproductorVoz] Error usando voz local tras cuota agotada de '%s'", proveedor)
                 else:
                     # Error de red/API real (voz inexistente, timeout, región
                     # sin esa voz nueva...): aviso accesible una sola vez por
@@ -313,7 +314,8 @@ class ReproductorVoz:
                         wx.CallAfter(self._activar_voz_local_automatica, error_msg, texto)
                     elif not self._detenido_intencionalmente:
                         try: self.cliente_local.hablar(texto)
-                        except Exception: pass
+                        except Exception:
+                            logger.exception("[ReproductorVoz] Error usando voz local tras fallo de red de '%s'", proveedor)
 
         # Solo actualizar el estado y encadenar el callback si:
         # 1. Esta generación sigue siendo la activa (no se inició otra síntesis)
@@ -368,7 +370,8 @@ class ReproductorVoz:
         )
         try:
             self.cliente_local.hablar(texto)
-        except: pass
+        except Exception:
+            logger.exception("[ReproductorVoz] Error activando la voz local automática tras fallo de '%s'", self.tipo_motor_actual)
     # ANCLAJE_FIN: ACTIVACION_VOZ_LOCAL_AUTOMATICA
 
     # ANCLAJE_INICIO: PRECARGA_SIGUIENTE_FRAGMENTO
@@ -400,7 +403,7 @@ class ReproductorVoz:
                         try:
                             motor.invalidar_cache(texto)
                         except Exception:
-                            pass
+                            logger.debug("[ReproductorVoz] No se pudo invalidar la caché de precarga; sin impacto, hay fallback a síntesis directa.")
             except Exception as e:
                 logger.warning("[ReproductorVoz] Error en precarga: %s", e)
 
@@ -418,15 +421,15 @@ class ReproductorVoz:
         self._detenido_intencionalmente = True
         self._callback_completado = None
         try: self.cliente_local.detener()
-        except: pass
+        except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor local (probablemente no estaba activo).")
         try: self.cliente_azure.detener()
-        except: pass
+        except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor de Azure (probablemente no estaba activo).")
         try: self.cliente_eleven.detener()
-        except: pass
+        except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor de ElevenLabs (probablemente no estaba activo).")
         try: self.cliente_polly.detener()
-        except: pass
+        except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor de Amazon Polly (probablemente no estaba activo).")
         try: self.cliente_deepgram.detener()
-        except: pass
+        except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor de Deepgram (probablemente no estaba activo).")
         self.estado = "detenido"
 
     def pausar(self): 

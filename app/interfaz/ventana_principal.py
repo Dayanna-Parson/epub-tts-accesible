@@ -81,6 +81,7 @@ class VentanaPrincipal(wx.Frame):
             if bmp.IsOk():
                 self.SetIcon(wx.Icon(bmp))
         except Exception:
+            logger.exception("Error al aplicar el icono de la ventana principal")
             pass
 
         # 1. Configurar Panel de Pestañas (Notebook)
@@ -290,6 +291,7 @@ class VentanaPrincipal(wx.Frame):
                     self._ventana_proyectos._navegar_a_archivo(ruta_txt)
                 return
             except Exception:
+                logger.exception("Error al navegar al archivo en la ventana de proyectos ya abierta")
                 pass
         self._ventana_proyectos = VentanaProyectos(
             parent=self,
@@ -382,6 +384,7 @@ class VentanaPrincipal(wx.Frame):
         try:
             self.pestana_biblioteca.arbol_categorias.Unbind(wx.EVT_TREE_SEL_CHANGED)
         except Exception:
+            logger.exception("Error al desconectar EVT_TREE_SEL_CHANGED del árbol de categorías al cerrar")
             pass
 
         self._guardar_sesion()
@@ -398,6 +401,7 @@ class VentanaPrincipal(wx.Frame):
                 if contenido:
                     return json.loads(contenido)
         except Exception:
+            logger.exception("Error al leer la configuración general de sesión")
             pass
         return {}
 
@@ -447,6 +451,7 @@ class VentanaPrincipal(wx.Frame):
                 with open(self._ruta_historial_grabacion, encoding="utf-8") as f:
                     self.txt_recientes = [r for r in json.load(f) if os.path.exists(r)]
         except Exception:
+            logger.exception("Error al leer el historial de TXT recientes")
             pass
         self.actualizar_menu_txt_recientes()
     # ANCLAJE_FIN: MEMORIA_SESION
@@ -467,6 +472,7 @@ class VentanaPrincipal(wx.Frame):
             with open(self._ruta_historial_grabacion, "w", encoding="utf-8") as f:
                 json.dump(self.txt_recientes, f, ensure_ascii=False)
         except Exception:
+            logger.exception("Error al guardar el historial de TXT recientes")
             pass
 
     def actualizar_menu_txt_recientes(self):
