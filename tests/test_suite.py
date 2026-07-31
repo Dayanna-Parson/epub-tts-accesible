@@ -922,6 +922,7 @@ class TestGestorAtajos(unittest.TestCase):
 # DICCIONARIO DE PRONUNCIACIÓN
 # ─────────────────────────────────────────────────────────────────────────────
 from app.motor.diccionario_pronunciacion import DiccionarioPronunciacion
+from app.motor.gestor_biblioteca import GestorBiblioteca
 
 
 class TestDiccionarioPronunciacion(unittest.TestCase):
