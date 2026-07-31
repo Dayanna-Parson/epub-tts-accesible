@@ -534,21 +534,81 @@ class PanelGeneral(wx.ScrolledWindow):
             wx.CallAfter(self.lbl_progreso.SetLabel, "")
             return
 
+        self.btn_buscar_updates.Disable()
+        self._instalar_actualizacion_fase_c(v_remota)
+
+    # ANCLAJE_INICIO: INSTALACION_VIA_FASE_C
+    def _instalar_actualizacion_fase_c(self, version_remota: str):
+        """
+        Descarga, verifica e instala la actualización con el mecanismo de
+        la Fase C (GestorDescargaActualizacion + bin/actualizador.exe:
+        respaldo por copia verificada y rollback automático si algo falla),
+        validado en Windows real. Sustituye al antiguo Script Clon
+        (_hilo_descargar_e_instalar/_escribir_y_lanzar_bat, que seguían
+        aquí sin usarse por si hiciera falta un rollback rápido) tanto
+        desde el botón "Buscar actualizaciones ahora" como desde la
+        comprobación automática al arrancar.
+        """
+        from app.motor.actualizador_descarga import GestorDescargaActualizacion
+
         wx.CallAfter(
             self.lbl_progreso.SetLabel,
-            _("Descargando el archivo de actualización en segundo plano, por favor espera..."),
+            _("Descargando actualización, por favor espera..."),
         )
-        self.btn_buscar_updates.Disable()
-        import threading
-        hilo = threading.Thread(
-            target=self._hilo_descargar_e_instalar,
-            args=(v_remota,),
-            daemon=True,
+        voz.hablar(_("Descargando actualización, por favor espera..."))
+
+        gestor = GestorDescargaActualizacion()
+        gestor.descargar_y_verificar_en_hilo(
+            callback_resultado=lambda r: wx.CallAfter(self._al_resultado_instalacion_fase_c, r),
+            callback_progreso=lambda msg, pct: wx.CallAfter(self._al_progreso_descarga_nueva, msg),
         )
-        hilo.start()
+
+    def _al_resultado_instalacion_fase_c(self, resultado: dict):
+        self.btn_buscar_updates.Enable()
+        wx.CallAfter(self.lbl_progreso.SetLabel, "")
+
+        if not resultado.get("ok"):
+            logger.warning(
+                "Descarga/verificación de actualización fallida: %s", resultado.get("error"),
+            )
+            reproducir(ERROR)
+            voz.hablar(_("No se pudo descargar la actualización."))
+            wx.MessageBox(
+                _("No se pudo descargar la actualización:\n{error}").format(
+                    error=resultado.get("error")
+                ),
+                _("Error de descarga"), wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        ruta_extraida = resultado.get("ruta_extraida")
+        from app.config_rutas import RAIZ
+        ruta_exe = os.path.join(RAIZ, "bin", "actualizador.exe")
+        if not os.path.isfile(ruta_exe):
+            reproducir(ERROR)
+            wx.MessageBox(
+                _("Descarga y verificación completadas correctamente en:\n"
+                  "«{ruta_extraida}».\n\n"
+                  "El instalador auxiliar no está disponible en:\n{ruta_exe}\n\n"
+                  "No se instalará nada.").format(ruta_extraida=ruta_extraida, ruta_exe=ruta_exe),
+                _("Instalador no disponible"), wx.OK | wx.ICON_WARNING,
+            )
+            from app.motor.actualizador_descarga import GestorDescargaActualizacion
+            GestorDescargaActualizacion().limpiar()
+            return
+
+        voz.hablar(_("Descarga completada. Instalando la actualización..."))
+        self._lanzar_actualizador_auxiliar(ruta_extraida)
+    # ANCLAJE_FIN: INSTALACION_VIA_FASE_C
 
     def _hilo_descargar_e_instalar_desde_arranque(self, version_remota: str):
-        """Lanza la descarga e instalación desde la comprobación automática al arrancar."""
+        """
+        Descarga e instala desde la comprobación automática al arrancar.
+        Ya no se llama desde ningún sitio del flujo en uso (ver
+        _instalar_actualizacion_fase_c, ahora también usado desde el
+        arranque vía ventana_principal.py) — se conserva el Script Clon
+        completo un ciclo más como red de seguridad ante un rollback.
+        """
         import threading
         hilo = threading.Thread(
             target=self._hilo_descargar_e_instalar,

@@ -1186,7 +1186,13 @@ class VentanaPrincipal(wx.Frame):
         respuesta = dlg.ShowModal()
         dlg.Destroy()
         if respuesta == wx.ID_OK:
-            self.pestana_ajustes._hilo_descargar_e_instalar_desde_arranque(v_remota)
+            # Bug preexistente: este método vive en PanelGeneral (pag_general),
+            # no en PestanaAjustes directamente — llamarlo sobre
+            # self.pestana_ajustes habría lanzado AttributeError la primera
+            # vez que alguien aceptara instalar desde la comprobación
+            # automática al arrancar. Aprovechado para migrar también este
+            # camino a _instalar_actualizacion_fase_c (ver pestana_ajustes.py).
+            self.pestana_ajustes.pag_general._instalar_actualizacion_fase_c(v_remota)
     # ANCLAJE_FIN: COMPROBACION_ACTUALIZACIONES_ARRANQUE
 
     def _iniciar_verificacion_voces(self):

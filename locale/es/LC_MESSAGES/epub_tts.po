@@ -3133,3 +3133,18 @@ msgstr "Aplicando etiquetas... {procesados} de {total} carpetas."
 
 msgid "Aplicando etiquetas... {procesadas} de {total} carpeta(s)."
 msgstr "Aplicando etiquetas... {procesadas} de {total} carpeta(s)."
+
+msgid "Descarga completada. Instalando la actualización..."
+msgstr "Descarga completada. Instalando la actualización..."
+
+msgid "Descarga y verificación completadas correctamente en:\n«{ruta_extraida}».\n\nEl instalador auxiliar no está disponible en:\n{ruta_exe}\n\nNo se instalará nada."
+msgstr "Descarga y verificación completadas correctamente en:\n«{ruta_extraida}».\n\nEl instalador auxiliar no está disponible en:\n{ruta_exe}\n\nNo se instalará nada."
+
+msgid "Descargando actualización, por favor espera..."
+msgstr "Descargando actualización, por favor espera..."
+
+msgid "No se pudo descargar la actualización."
+msgstr "No se pudo descargar la actualización."
+
+msgid "No se pudo descargar la actualización:\n{error}"
+msgstr "No se pudo descargar la actualización:\n{error}"
