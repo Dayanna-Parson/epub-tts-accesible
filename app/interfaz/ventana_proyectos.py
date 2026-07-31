@@ -457,6 +457,7 @@ class VentanaProyectos(wx.Frame):
                                 if etiqueta not in voces:
                                     voces[etiqueta] = datos_voz
             except Exception:
+                logger.exception("Error al recopilar las voces asignadas por etiqueta")
                 pass
 
         for etiqueta, datos_voz in voces.items():
@@ -596,6 +597,7 @@ class VentanaProyectos(wx.Frame):
         try:
             ruta_txt = self._frame_principal.pestana_grabacion.ruta_txt_actual
         except Exception:
+            logger.exception("Error al obtener la ruta del TXT actual desde Grabación")
             pass
 
         menu = wx.Menu()
@@ -1156,6 +1158,7 @@ class VentanaProyectos(wx.Frame):
                 os.makedirs(carpeta_libro, exist_ok=True)
                 carpeta = carpeta_libro
             except Exception as e:
+                logger.exception("Error al crear la carpeta del proyecto")
                 self._anunciar_estado(_("No se pudo crear la carpeta: {error}").format(error=e))
                 return
 
@@ -1167,6 +1170,7 @@ class VentanaProyectos(wx.Frame):
                 subprocess.Popen(["xdg-open", carpeta])
             self._anunciar_estado(_("Abriendo carpeta: {nombre}").format(nombre=nombre))
         except Exception as e:
+            logger.exception("Error al abrir la carpeta del proyecto")
             self._anunciar_estado(_("No se pudo abrir la carpeta: {error}").format(error=e))
 
     def actualizar_nombre_proyecto(self, proyecto_id: str, nuevo_nombre: str):
