@@ -1,26 +1,26 @@
 ## 📘 Epub TTS Accesible
 
-Aplicación de escritorio accesible para leer libros EPUB y PDF, y para producir audiolibros mediante síntesis de voz.
+Lee tus libros EPUB y PDF en voz alta, y conviértelos en audiolibros, todo desde el teclado.
+
+Epub TTS Accesible es una aplicación de escritorio para Windows, hecha por y para personas ciegas. Nació de una necesidad muy concreta: poder leer libros largos en el PC de forma cómoda, sin depender de apps pensadas para móvil ni de flujos que se rompen a mitad de camino, y después poder convertir esos mismos libros en audiolibros bien hechos, con voces naturales.
+
+Es de uso libre y gratuito para fines personales, educativos o de ayuda a la comunidad con discapacidad visual (no puede venderse ni usarse con fines comerciales — ver [Licencia](#licencia)).
+
+**¿Es para ti?**
+
+- Si eres una persona ciega o con baja visión y usas lector de pantalla, sí: cada pantalla, cada botón y cada aviso está pensado para navegarse solo con teclado.
+- Si quieres escuchar tus EPUB o PDF en Windows con voces de calidad, también.
+- Si te interesa producir audiolibros, ya sea de forma automática o a mano con varios personajes, esta app cubre todo el proceso.
+- Y si eres desarrollador y quieres explorar un proyecto real de accesibilidad en Python, más abajo tienes toda la documentación técnica.
 
 ---
 
-### ¿Qué es Epub TTS Accesible?
+### Requisitos del sistema y compatibilidad
 
-Epub TTS Accesible es una aplicación de escritorio para Windows, desarrollada en Python, pensada para que personas ciegas puedan leer y trabajar con libros EPUB y PDF de forma cómoda, controlada y accesible, utilizando distintos motores de síntesis de voz.
-
-La aplicación nace de una necesidad real: poder leer libros largos y complejos en el PC, y preparar posteriormente audiolibros, sin depender de flujos frágiles ni de herramientas pensadas principalmente para móvil.
-
----
-
-### ¿Para quién está pensada?
-
-Personas ciegas o con baja visión que usan lector de pantalla.
-
-Usuarios que quieran escuchar libros EPUB o PDF con TTS en Windows.
-
-Personas interesadas en la producción de audiolibros.
-
-Desarrolladores que quieran explorar un proyecto real de accesibilidad en Python.
+- **Sistema operativo:** Windows 10 u 11, de 64 bits.
+- **Lectores de pantalla:** probada a fondo con **NVDA**. También es compatible con **JAWS**, ya que usa controles nativos de Windows estándar, aunque no se ha probado tan exhaustivamente como con NVDA.
+- **Voces:** puedes usar voces locales SAPI5 (64 y 32 bits) sin necesidad de crear ninguna cuenta, o voces de nube de mucha más calidad: Microsoft Azure, Amazon Polly, Deepgram Aura-2 y ElevenLabs. Cada proveedor de nube requiere su propia clave de API (ver [Síntesis de voz](#síntesis-de-voz) más abajo).
+- **Python:** solo hace falta si vas a ejecutar la aplicación desde el código fuente. La versión portable no lo necesita.
 
 ---
 
@@ -119,6 +119,10 @@ La aplicación permite escuchar los libros utilizando distintos motores de voz:
 
 Si no hay conexión a internet o se alcanza un límite de uso, la app cambia automáticamente a voz local.
 
+**Sobre las claves de API:** para usar cualquier voz de nube (Azure, Amazon Polly, Deepgram, ElevenLabs) o el Asistente de Biblioteca (Gemini) necesitas tu propia clave de API de ese servicio. Todos ofrecen un nivel gratuito con un límite de caracteres al mes; superarlo implica pago por uso según las tarifas del proveedor. El manual de usuario (`ayuda.html`, se abre con `F1` desde la app) trae el paso a paso detallado para conseguir cada clave.
+
+Guardar tu clave a salvo y vigilar tu propio consumo es responsabilidad tuya: la aplicación es una herramienta que te da acceso directo a esos servicios, pero el uso que le des —y lo que eso cueste— corre por tu cuenta.
+
 ---
 
 ### Sistema de favoritos y filtros
@@ -185,7 +189,9 @@ Requiere Python 3.12+ en Windows. La versión portable (sin necesidad de instala
 
 ### Estado actual del proyecto
 
-Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 4.0.0.**
+Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 4.1.0.**
+
+Esta versión fue una revisión completa de estabilidad y rendimiento, sin funciones nuevas: pruebas a fondo de los flujos existentes y ajustes de rendimiento en toda la aplicación.
 
 - Biblioteca: organización de EPUB y PDF por géneros y sagas, importación de carpetas o de libros sueltos.
 - Modo lectura con voces de Azure, Amazon Polly, Deepgram, ElevenLabs y SAPI5 (64 y 32 bits), con soporte de EPUB y PDF.
