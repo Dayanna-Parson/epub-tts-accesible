@@ -2006,19 +2006,23 @@ class PanelAtajos(wx.Panel):
         self._defaults = cargar_defaults()
         self._claves = list(self._atajos.keys())
         self.lista.DeleteAllItems()
-        for i, clave in enumerate(self._claves):
-            entrada = self._atajos[clave]
-            entrada_def = self._defaults.get(clave, {})
-            desc = entrada.get("descripcion", clave)
-            tecla_def = texto_atajo(entrada_def)
-            tecla_actual = texto_atajo(entrada)
-            col_accion = f"{desc} ({tecla_def})"
-            col_tecla = (
-                tecla_actual if tecla_actual == tecla_def
-                else "{tecla}  {marca}".format(tecla=tecla_actual, marca=_("[personalizada]"))
-            )
-            self.lista.InsertItem(i, col_accion)
-            self.lista.SetItem(i, 1, col_tecla)
+        self.lista.Freeze()
+        try:
+            for i, clave in enumerate(self._claves):
+                entrada = self._atajos[clave]
+                entrada_def = self._defaults.get(clave, {})
+                desc = entrada.get("descripcion", clave)
+                tecla_def = texto_atajo(entrada_def)
+                tecla_actual = texto_atajo(entrada)
+                col_accion = f"{desc} ({tecla_def})"
+                col_tecla = (
+                    tecla_actual if tecla_actual == tecla_def
+                    else "{tecla}  {marca}".format(tecla=tecla_actual, marca=_("[personalizada]"))
+                )
+                self.lista.InsertItem(i, col_accion)
+                self.lista.SetItem(i, 1, col_tecla)
+        finally:
+            self.lista.Thaw()
         if self.lista.GetItemCount() > 0:
             self.lista.Select(0)
 
@@ -2532,9 +2536,13 @@ class PanelPerfiles(wx.Panel):
         self._nombres = list(datos["perfiles"].keys())
         activo = datos["perfil_activo"]
         self.lista.DeleteAllItems()
-        for i, nombre in enumerate(self._nombres):
-            self.lista.InsertItem(i, nombre)
-            self.lista.SetItem(i, 1, _("Activo") if nombre == activo else "")
+        self.lista.Freeze()
+        try:
+            for i, nombre in enumerate(self._nombres):
+                self.lista.InsertItem(i, nombre)
+                self.lista.SetItem(i, 1, _("Activo") if nombre == activo else "")
+        finally:
+            self.lista.Thaw()
         if self.lista.GetItemCount() > 0 and self.lista.GetFirstSelected() == -1:
             self.lista.Select(0)
 

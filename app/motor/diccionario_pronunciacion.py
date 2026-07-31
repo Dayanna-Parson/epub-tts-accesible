@@ -71,6 +71,8 @@ class DiccionarioPronunciacion:
         for original, sustitucion in self._tabla.items():
             if not original:
                 continue
+            if original not in texto:
+                continue
             patron = r"(?<!\w)" + re.escape(original) + r"(?!\w)"
             texto = re.sub(patron, sustitucion, texto)
         return texto

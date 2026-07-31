@@ -259,14 +259,18 @@ class DialogoTroceador(wx.Dialog):
             return
 
         self.lista_caps.DeleteAllItems()
-        for i, cap in enumerate(caps):
-            # Una sola columna: "01 Nombre del capítulo"
-            # El número coincide con el nombre del fichero TXT generado (idx+1)
-            etiqueta = f"{i + 1:02d}  {cap['display']}"
-            self.lista_caps.InsertItem(i, etiqueta)
-            # Hojas (sin subniveles) → marcadas por defecto
-            # Padres (secciones contenedoras) → desmarcados por defecto
-            self.lista_caps.CheckItem(i, not cap["es_padre"])
+        self.lista_caps.Freeze()
+        try:
+            for i, cap in enumerate(caps):
+                # Una sola columna: "01 Nombre del capítulo"
+                # El número coincide con el nombre del fichero TXT generado (idx+1)
+                etiqueta = f"{i + 1:02d}  {cap['display']}"
+                self.lista_caps.InsertItem(i, etiqueta)
+                # Hojas (sin subniveles) → marcadas por defecto
+                # Padres (secciones contenedoras) → desmarcados por defecto
+                self.lista_caps.CheckItem(i, not cap["es_padre"])
+        finally:
+            self.lista_caps.Thaw()
 
         n = len(caps)
         self._set_progreso(

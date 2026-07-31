@@ -314,22 +314,26 @@ class VentanaProyectos(wx.Frame):
 
     def _cargar_arbol(self, seleccionar_id=None):
         """Reconstruye el árbol completo. Si seleccionar_id, selecciona ese nodo."""
-        self.arbol.DeleteAllItems()
-        self._mapa_nodos.clear()
+        self.arbol.Freeze()
+        try:
+            self.arbol.DeleteAllItems()
+            self._mapa_nodos.clear()
 
-        raiz_oculta = self.arbol.AddRoot(_("Proyectos"))
-        for proyecto in self._gestor.listar_proyectos_raiz():
-            self._añadir_nodo_recursivo(raiz_oculta, proyecto)
-        self.arbol.ExpandAll()
+            raiz_oculta = self.arbol.AddRoot(_("Proyectos"))
+            for proyecto in self._gestor.listar_proyectos_raiz():
+                self._añadir_nodo_recursivo(raiz_oculta, proyecto)
+            self.arbol.ExpandAll()
 
-        if seleccionar_id:
-            for nodo, pid in self._mapa_nodos.items():
-                if pid == seleccionar_id:
-                    self.arbol.SelectItem(nodo)
-                    self.arbol.EnsureVisible(nodo)
-                    break
-        else:
-            self._limpiar_detalle()
+            if seleccionar_id:
+                for nodo, pid in self._mapa_nodos.items():
+                    if pid == seleccionar_id:
+                        self.arbol.SelectItem(nodo)
+                        self.arbol.EnsureVisible(nodo)
+                        break
+            else:
+                self._limpiar_detalle()
+        finally:
+            self.arbol.Thaw()
 
     def _añadir_nodo_recursivo(self, nodo_padre_wx, proyecto: dict, nivel: int = 1):
         etiqueta = self._etiqueta_nodo(proyecto, nivel)
