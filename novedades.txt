@@ -19,6 +19,40 @@ Nuevas funciones
   Ctrl+Shift+U alterna entre los perfiles ya creados desde cualquier
   pestaña de la aplicación.
 
+- Actualizaciones más fiables:
+  El botón «Buscar actualizaciones ahora» (y la comprobación automática
+  al arrancar, si la activas) ya instala con el mismo mecanismo de
+  respaldo verificado y reinicio automático que antes solo estaba en
+  pruebas. Todo el proceso —comprobar, descargar, verificar e
+  instalar— avisa por voz en cada paso, no solo al principio y al
+  final. La búsqueda automática de actualizaciones viene ahora
+  desmarcada por defecto: se activa quien quiera, no por defecto.
+
+Correcciones
+────────────
+
+- Un fallo de ruta hacía que la app comparase siempre contra la
+  versión «0.0.0», así que cualquier versión publicada le parecía
+  «nueva» una y otra vez, incluso justo después de instalar una
+  actualización real. Corregido de raíz.
+- El aviso de voz durante el escaneo de una carpeta grande en
+  Biblioteca, el aplicado de etiquetas por carpeta y el divisor de
+  EPUB en capítulos podían quedarse mudos en el instalador portable
+  (dependían de que `sys.executable` fuera un intérprete de Python de
+  verdad, algo que deja de ser cierto una vez empaquetada la app).
+  Corregido para que suenen igual en el portable que en desarrollo.
+- Grabación de Fragmentos: el anuncio de voz de cada fragmento en modo
+  «dividir por etiquetas» podía dejar de sonar a partir del segundo o
+  tercer fragmento en grabaciones largas, sin ningún aviso de que
+  había fallado. Corregido.
+- Ctrl+I (anunciar página en Lectura / info del libro en Biblioteca)
+  podía activar el aviso de la pestaña equivocada en el instalador
+  portable. Corregido.
+- El portable ya no puede quedarse mudo con NVDA por un problema de
+  empaquetado del lector de pantalla, y la construcción del portable
+  ya no falla si algún archivo de una compilación anterior queda
+  bloqueado momentáneamente en Windows.
+
 ───────────────────────────────────────────────────────────────────────────
 
 === v3.0.0 (17/07/2026) ===

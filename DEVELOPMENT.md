@@ -797,8 +797,44 @@ Ya documentado en la sección de i18n más arriba, pero merece la mención aquí
 
 `tests/test_suite.py` incorpora `TestGestorPerfiles`, con el mismo patrón que `TestGestorProyectos` (parchear la ruta del JSON a un directorio temporal con `unittest.mock.patch`, sin tocar nunca `configuraciones/` real): CRUD básico, alternancia circular (`siguiente_perfil()`), reasignación del perfil activo al eliminarlo, y persistencia atómica. Es un primer paso concreto, acotado a este módulo nuevo — no una cobertura general del proyecto.
 
-### Pendiente para la fase de estabilización (no en el alcance de esta fase)
+### El primer portable real de la Fase 8: cuatro bugs que solo aparecen congelados
 
-Al cerrar esta fase se identificaron `except: pass`/`except Exception: pass` sin logging en unos 19 archivos de `app/servicios/`, `app/motor/` y `app/interfaz/`, señalados también en una revisión externa del proyecto. Es una limpieza real, pero transversal a módulos que esta fase no tocó y que no se pueden validar aquí sin NVDA ni wxPython instalados en el entorno de desarrollo. Queda anotado explícitamente para la fase de estabilización posterior a la v4.0 (pulir y dar soporte, en vez de añadir funciones — ver `documentos/Fases_Del_Proyecto/Fase 8 (V4.)/Cosas para la v4.txt`), no para resolverse de rondón dentro de esta rama.
+Construir y probar el primer portable de verdad de esta fase (en vez de solo `python iniciar_epub_tts.py`) sacó a la luz una familia entera de bugs que el modo desarrollo no reproduce, porque todos comparten la misma raíz: **código que asume que `sys.executable` es siempre un intérprete de Python real**. En un build congelado con PyInstaller, `sys.executable` es el propio `.exe` de la app.
+
+**`AnunciadorVoz` mudo en el portable.** `app/motor/anunciador_voz.py` lanzaba cada anuncio como `subprocess.run([sys.executable, "-c", "<código pyttsx3>", texto])`. En desarrollo funciona porque `sys.executable` es `python.exe`. En el portable, ese mismo comando intenta pasarle `-c` al propio `epubtts.exe`, que no lo entiende — el subproceso falla, el `except Exception: logger.warning(...)` de `_worker()` lo captura, y no suena nada, sin ningún rastro salvo un WARNING en el log. La solución no fue parchear el subproceso: fue darle a `AnunciadorVoz` un modo auxiliar dentro del propio punto de entrada de la app.
+
+```python
+# iniciar_epub_tts.py — antes de crear wx.App
+if len(sys.argv) >= 3 and sys.argv[1] == "--hablar-interno":
+    import pyttsx3
+    motor = pyttsx3.init()
+    motor.say(sys.argv[2])
+    motor.runAndWait()
+    sys.exit(0)
+```
+
+`AnunciadorVoz` ahora relanza `[sys.executable, "--hablar-interno", texto]` si `sys.frozen`, o `[sys.executable, ruta_a_iniciar_epub_tts.py, "--hablar-interno", texto]` en desarrollo — el mismo patrón de "relanzar el propio entry point con un argumento oculto" que ya usa `multiprocessing.freeze_support()` internamente, pero explícito y sin esa dependencia.
+
+Este bug afectaba a **todo** lo que ya usaba `AnunciadorVoz`: el progreso de escaneo y agrupamiento en Biblioteca, y ahora también la Fase C del actualizador y el divisor de EPUB — de ahí que la autora describiera el síntoma como "va tan rápido que NVDA no llega a verbalizar nada": no era velocidad, era que casi ningún intento llegaba a sonar.
+
+**`Ctrl+I` activaba el manejador de la pestaña equivocada.** `pestana_lectura.py` y `pestana_biblioteca.py` registraban `Ctrl+I` cada uno en su propia `AcceleratorTable`, sin ninguna autoridad central — a diferencia de `Ctrl+O`, que `pestana_biblioteca.py` ya documentaba explícitamente no duplicar "para no pisar el atajo global". En el build congelado, con el foco claramente en el texto de Lectura, `Ctrl+I` activaba el anuncio de info de libro de Biblioteca de forma reproducible siempre, no de forma intermitente. Se centralizó en `ventana_principal.py` (`_al_ctrl_i_contextual`, mismo patrón que `_al_ctrl_o_contextual`) y se retiraron los dos registros locales — incluido el de `Ctrl+O`, que tenía la misma duplicación latente sin haberse manifestado todavía.
+
+**`comprobador_actualizaciones.py` comparaba siempre contra `0.0.0`.** El bug más simple de los cuatro y el que más confusión causó: `_RUTA_VERSION_LOCAL = os.path.join(RAIZ_RECURSOS, "version.json")` — sin el segmento `recursos/` que sí tienen todos los demás usos de esta misma ruta en el proyecto (`subir_version.py`, `crear_portable.py`, `ventana_principal.py`, `actualizador_descarga.py`). El archivo real nunca se encontraba, `leer_version_local()` capturaba la excepción y devolvía `"0.0.0"` — así que la app creía tener siempre la versión más antigua posible, y cualquier versión publicada le parecía "nueva", una y otra vez, incluso justo después de instalar una actualización real. Una sola línea de fix, pero explicaba de raíz los dos síntomas más confusos reportados en las pruebas manuales.
+
+**Empaquetado incompleto de `accessible_output3`.** A diferencia de `pyttsx3` o `sounddevice`, no hay un hook de PyInstaller dedicado a `accessible_output3` en `_pyinstaller_hooks_contrib`. Su detección automática del lector de pantalla activo (`accessible_output3.outputs.auto.Auto()`) usa imports/DLLs que el análisis estático de PyInstaller no traza por completo, así que el portable podía quedarse mudo con `accessible_output3` sin ninguna excepción visible. Se añadió `--collect-all=accessible_output3` a la invocación de PyInstaller en `crear_portable.py`, forzando la inclusión de todos sus submódulos y datos de paquete.
+
+**Corolario:** de los cuatro bugs, tres solo se manifestaban en el build congelado y ninguno de los tres estaba relacionado con Perfiles de Usuario en sí — todos salieron de probar el portable de verdad por primera vez en esta fase, no de una revisión de código. Confirma otra vez el patrón ya documentado en fases anteriores: "funciona en la teoría" y "funciona de verdad" son cosas distintas, y hace falta construir y ejecutar el artefacto real, no solo razonar sobre el código fuente.
+
+### `grabador_audio.py` no fue el único con el problema de pyttsx3 en el mismo proceso
+
+Al revisar el resto de la app buscando el mismo patrón que rompió `AnunciadorVoz`, apareció un bug independiente en `pestana_grabacion.py`: su propio `_hablar()` creaba una instancia de `pyttsx3` nueva **dentro del mismo proceso** en cada fragmento anunciado — exactamente el problema documentado en `anunciador_voz.py` ("el driver SAPI5 deja de sonar a partir de la segunda o tercera llamada, sin lanzar ninguna excepción"), envuelto además en un `except Exception: pass` que lo tragaba sin dejar ni rastro en el log. En una grabación larga en modo "dividir por etiquetas", buena parte de los anuncios de fragmento podían quedarse mudos sin que nadie se enterara. Sustituido por la propia `AnunciadorVoz` de la app, ya corregida.
+
+### Barrido de `except: pass` sin logging: alcance real
+
+Un recorrido con el propio AST de Python (no una búsqueda de texto) sobre `app/` completo encontró **65 apariciones** de `except: pass` / `except Exception: pass` sin ningún logging, repartidas en unos 20 archivos de `app/servicios/`, `app/motor/` y `app/interfaz/` — el número exacto de ocurrencias, más preciso que la estimación "unos 19 archivos" de la revisión externa de esta fase (que contaba archivos, no apariciones). Revisando una muestra, la mayoría son limpieza defensiva deliberada (p. ej. `reproductor_voz.py: detener()` intenta parar los cinco clientes de voz uno a uno, ignorando el fallo de cualquiera para no dejar de intentar con los demás) — no bugs escondidos como los cuatro de más arriba. Sigue sin encontrarse ningún caso, aparte de los cuatro ya corregidos, que explique un síntoma reportado. Se deja anotado para la fase de estabilización posterior a la v4.0: revisar los 65 uno a uno, sin poder probar cada cambio en Windows con NVDA en el momento, es más riesgo que beneficio hacerlo de rondón aquí.
+
+### Ampliación de tests: comprobador de versiones, atajos, pronunciación
+
+Junto con los fixes de esta ronda se añadieron 20 tests más a `tests/test_suite.py` (106 → 126), con el mismo patrón de fichero temporal ya establecido: `TestComprobadorActualizaciones` (incluyendo el caso real "1.0" frente a "3.0.0" con distinto número de segmentos, que fue precisamente el escenario de las pruebas manuales que expuso el bug de la ruta), `TestGestorAtajos` y `TestDiccionarioPronunciacion`.
 
 ---
