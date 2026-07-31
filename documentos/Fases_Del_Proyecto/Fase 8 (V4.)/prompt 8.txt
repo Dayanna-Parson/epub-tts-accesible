@@ -1,0 +1,42 @@
+prompt 8
+mira, primero, me dijo al poner en la coonsola de git bash, python..... crear portable...... que no encotraba el directorio... Y luego al cerrar todo, al ejecutar el .bat, me sigue diciendo esto... ---------------------------------------------------
+   CREANDO PORTABLE EPUB-TTS...
+---------------------------------------------------
+
+=== Construcción del portable Epub TTS Accesible v4.0.0 ===
+
+[1/8] Limpiando directorios de salida anteriores...
+      Acceso denegado al borrar C:\Users\Jacqueline\git_repos\epub-tts-accesible\dist\epub-tts-accesible (intento 1/5), reintentando...
+      Acceso denegado al borrar C:\Users\Jacqueline\git_repos\epub-tts-accesible\dist\epub-tts-accesible (intento 2/5), reintentando...
+      Acceso denegado al borrar C:\Users\Jacqueline\git_repos\epub-tts-accesible\dist\epub-tts-accesible (intento 3/5), reintentando...
+      Acceso denegado al borrar C:\Users\Jacqueline\git_repos\epub-tts-accesible\dist\epub-tts-accesible (intento 4/5), reintentando...
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\crear_portable.py", line 105, in _borrar_arbol_con_reintentos
+    shutil.rmtree(ruta)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 629, in _rmtree_unsafe
+    onexc(os.rmdir, fullname, err)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 627, in _rmtree_unsafe
+    os.rmdir(fullname)
+PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\Jacqueline\\git_repos\\epub-tts-accesible\\dist\\epub-tts-accesible\\recursos\\iconos'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\crear_portable.py", line 339, in <module>
+    limpiar_destino()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\crear_portable.py", line 126, in limpiar_destino
+    _borrar_arbol_con_reintentos(ruta)
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\crear_portable.py", line 112, in _borrar_arbol_con_reintentos
+    raise PermissionError(
+PermissionError: No se pudo borrar 'C:\Users\Jacqueline\git_repos\epub-tts-accesible\dist\epub-tts-accesible' tras 5 intentos.
+Causas probables: el epubtts.exe de una construcción anterior sigue abierto, el Explorador de Windows tiene esa carpeta abierta (cierra la ventana), o un antivirus la está escaneando en este momento.
+Cierra la aplicación y la carpeta en el Explorador, espera unos segundos y vuelve a ejecutar el script.
+
+---------------------------------------------------
+   PROCESO TERMINADO
+   (Si ves un error arriba, leelo ahora)
+---------------------------------------------------
+Presione una tecla para continuar . . . y no tengo nada abierto ni el explorador de archivos, ni epubtts... así que no se porqué da ese error...

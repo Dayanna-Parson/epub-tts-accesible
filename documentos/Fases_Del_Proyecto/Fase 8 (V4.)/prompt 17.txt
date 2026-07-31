@@ -1,0 +1,3 @@
+prompt 17
+
+eso, lo del archivo ese... vale. has subido algo a la rama? entonces, que me recomiendas para probar bien este sistema de actualizaciones? para ver si lo que necesitamos funciona...?

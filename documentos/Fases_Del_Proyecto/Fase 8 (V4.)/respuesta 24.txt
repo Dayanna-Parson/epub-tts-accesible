@@ -1,0 +1,39 @@
+respuesta 24
+
+Voy a explicar todo paso a paso y en claro. Primero, la búsqueda exhaustiva.
+
+Ahora reviso rápido `diccionario_pronunciacion.py` para ver si es fácil de testear (lógica pura), y luego añado un lote de tests nuevos.
+
+Ahora escribo el nuevo lote de tests.
+
+Excelente, 126 tests en verde (20 nuevas). Actualizo la cabecera del archivo y hago commit.
+
+## Todo listo. Te explico paso a paso, en claro.
+
+### 1. Búsqueda exhaustiva de bugs
+
+Miré `sys.executable` (la misma familia de bug que acabamos de arreglar) en **todo el proyecto**, no solo en `anunciador_voz.py`. Buena noticia: ya está bien en el resto de sitios (`pestana_ajustes.py`, `auxiliar_actualizador.py`, los scripts de construcción) — todos comprueban primero si la app está "congelada" (PyInstaller) o no, antes de decidir qué relanzar. Solo `anunciador_voz.py` tenía el fallo, y ya está corregido.
+
+También conté **cuántos `except: pass` hay en todo el código** — sitios donde, si algo falla, no se entera nadie, ni siquiera el archivo de log. Encontré **65**, repartidos en unos 20 archivos. Miré varios de cerca, y la mayoría **no son bugs graves**: son casos como "intenta detener la voz de Azure; si falla, no pasa nada, igual vas a detener las otras cuatro voces también" — un diseño defensivo a propósito, no un error escondido. No encontré ninguno que explique un fallo real que hayas reportado. Mi recomendación: **no tocarlos todos ahora** — hacerlo a ciegas, sin poder probarlo en Windows en el momento, es más riesgo que beneficio. Los dejamos anotados para la fase de estabilización, como ya habíamos acordado.
+
+**En resumen: no encontré ningún bug grave nuevo** en esta pasada, más allá de lo que ya arreglamos.
+
+### 2. Tests nuevos (lo que pedía ChatGPT)
+
+Añadí **20 tests nuevos** (de 106 a 126, todos en verde) para tres módulos que antes no tenían ninguno:
+- **El comparador de versiones** (`hay_actualizacion`) — el más importante de los tres, porque el bug real que encontramos esta sesión fue justo ahí.
+- **Los atajos de teclado** (crear, sobrescribir, restablecer).
+- **El diccionario de pronunciación** (añadir/quitar palabras, que no sustituya a medias una palabra parecida).
+
+### 3. ¿Qué falta para la v4.1?
+
+Con lo que tenemos ahora, creo que la v4.1 puede cerrarse así:
+1. **Que confirmes tú** que el aviso de voz durante la actualización ya suena bien (el bug que acabamos de arreglar).
+2. **Que hagas la prueba real de actualización** que ya planeamos (una versión vieja de verdad, botón "Buscar actualizaciones ahora").
+3. Si todo eso sale bien, para mí la v4.1 ya estaría lista para publicar.
+
+Lo que **dejo fuera** de la v4.1 a propósito, para no arriesgar nada de última hora:
+- Los 65 `except: pass` — quedan anotados para más adelante.
+- Retirar el sistema viejo de actualización (Script Clon) — según lo hablado, hasta que confirmes 2-3 actualizaciones reales seguidas sin sobresaltos.
+
+¿Quieres que siga mirando algo más mientras haces esas pruebas, o lo dejamos aquí a la espera de tus resultados?

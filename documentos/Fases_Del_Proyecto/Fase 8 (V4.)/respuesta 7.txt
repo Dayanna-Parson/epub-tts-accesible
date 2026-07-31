@@ -1,0 +1,28 @@
+respuesta 7
+
+Ya veo los dos problemas — ninguno es un bug de la Fase 8, son fallos preexistentes en las herramientas de construcción. Los arreglo ambos.
+
+**Problema 2 (el `.bat`) es el más fácil de explicar:** ninguno de los tres `.bat` (`CREAR_PORTABLE.bat`, `SUBIR_VERSION.bat`, `INICIAR_APP.bat`) fija su propio directorio de trabajo antes de llamar a `python`. Si lo lanzas con "Ejecutar como administrador" o desde un acceso directo cuyo "Iniciar en" no sea la carpeta del proyecto, Windows hereda `System32` como directorio actual, y `python crear_portable.py` busca el archivo ahí. Lo corrijo en los tres.
+
+**Problema 1 (el `PermissionError` al borrar `recursos/iconos`):** Windows bloquea ese archivo/carpeta casi siempre porque queda algo abierto sobre ella — el `epubtts.exe` del portable anterior sigue corriendo (si lo probaste y no lo cerraste), el Explorador tiene esa carpeta abierta generando miniaturas de los iconos, o un antivirus la está escaneando en ese instante. Hago que `limpiar_destino()` reintente con una pequeña espera antes de rendirse, y si aun así falla, dé un mensaje claro con las causas probables en vez de un traceback críptico.
+
+Añado el import de `time`.
+
+Verifico sintaxis y hago commit.
+
+Alguien (probablemente ella misma desde otro sitio) añadió un commit de documentación encima. Rebaseo mi commit sobre eso, sin perder nada.
+
+Rebase y push hechos sin conflictos. Rama sincronizada y limpia.
+
+## Resumen de los dos fallos
+
+**1. `.bat` desde System32** — `CREAR_PORTABLE.bat`, `SUBIR_VERSION.bat` e `INICIAR_APP.bat` no fijaban su propio directorio de trabajo. Si los lanzas con "Ejecutar como administrador" (o un acceso directo sin "Iniciar en" puesto), Windows los arranca con `System32` como carpeta actual, y `python crear_portable.py` no lo encuentra ahí. Añadí `cd /d "%~dp0"` justo después de `@echo off` en los tres — así siempre se posicionan en su propia carpeta antes de nada.
+
+**2. `PermissionError` al borrar `dist/epub-tts-accesible/recursos/iconos`** — casi seguro que algo tenía esa carpeta abierta: el `epubtts.exe` de una construcción anterior que probaste y no cerraste, el Explorador de Windows generando miniaturas de esos iconos, o un antivirus escaneándola. Añadí reintentos con una pequeña espera antes de fallar, y si aun así no puede borrar, ahora te da un mensaje con las causas probables en vez de un traceback.
+
+**Para probarlo ahora mismo en tu máquina:**
+1. Cierra cualquier `epubtts.exe` que tengas abierto y la ventana del Explorador si tienes `dist\` abierta.
+2. `git pull` en tu copia local de la rama.
+3. Vuelve a ejecutar `CREAR_PORTABLE.bat` (o `python crear_portable.py` directamente).
+
+Si el `PermissionError` insiste después de esto, dime exactamente qué proceso tienes abierto en ese momento (Administrador de tareas) y lo miramos con más detalle.

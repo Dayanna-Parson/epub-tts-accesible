@@ -1,0 +1,3 @@
+prompt 22
+
+vale. voy a probar esto bien y ya te cuento los resultados. pero mientras tanto, puedes buscar mas bugs que queden? y si son grabes o importantes, mejor los corregimos en esta versión... o si prefieres, pues en la siguiente...

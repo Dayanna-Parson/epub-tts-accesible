@@ -1,0 +1,16 @@
+respuesta 8
+
+Esto encaja con la causa más habitual de este error exacto en Windows/Python: no es que algo tenga el archivo abierto, sino que algunos archivos quedaron con el atributo de **solo lectura** (algo que aparece a veces al clonar/copiar repos en Windows, o si el propio Git dejó ese atributo en `recursos/iconos`), y `rmtree` no puede borrar un archivo de solo lectura sin quitarle antes ese atributo. Lo arreglo para que lo intente automáticamente, y si aun así falla, te diga exactamente qué archivo sigue bloqueado.
+
+Añado el import de `stat` que falta.
+
+Verifico sintaxis y hago commit + push.
+
+Push hecho. Ya puedes probar de nuevo:
+
+1. `git pull` en tu copia local.
+2. Ejecuta `CREAR_PORTABLE.bat` otra vez (ya no hace falta que cierres nada en concreto).
+
+**Si vuelve a fallar**, ahora el mensaje te listará los archivos exactos que siguen bloqueados dentro de `dist\epub-tts-accesible\` — copia y pégame esa lista, así sabremos si es un archivo concreto (y cuál) el que Windows sigue reteniendo, en vez de tener que adivinar entre "antivirus / Explorador / proceso zombi".
+
+Sobre lo primero que comentas — que en Git Bash `python crear_portable.py` "no encontraba el directorio": eso probablemente era simplemente no estar en la carpeta del proyecto en ese momento (Git Bash no hereda el mismo cwd que la consola de Windows). Prueba con `cd` explícito antes: `cd /c/Users/Jacqueline/git_repos/epub-tts-accesible` y luego `python crear_portable.py`. Si te vuelve a pasar dime el mensaje exacto y lo miro.

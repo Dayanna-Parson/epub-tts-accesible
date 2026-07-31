@@ -1,0 +1,210 @@
+prompt 9
+vale. ya e actualizado, y ahora, al ejecutar el .bat, si me ha dejado crear el portable... porqué ahora si... y antes no me dejaba, me daaba error? mira, te pongo la consola para que veas... ---------------------------------------------------
+   CREANDO PORTABLE EPUB-TTS...
+---------------------------------------------------
+
+=== Construcción del portable Epub TTS Accesible v4.0.0 ===
+
+[1/8] Limpiando directorios de salida anteriores...
+      Eliminado: C:\Users\Jacqueline\git_repos\epub-tts-accesible\dist\epub-tts-accesible
+[2/8] Compilando catálogos de idioma (locale/*.po → *.mo)...
+Compilado: locale\en\LC_MESSAGES\epub_tts.po -> locale\en\LC_MESSAGES\epub_tts.mo
+Compilado: locale\es\LC_MESSAGES\epub_tts.po -> locale\es\LC_MESSAGES\epub_tts.mo
+
+2 archivo(s) .mo generado(s) correctamente.
+[3/8] Ejecutando PyInstaller...
+616 INFO: PyInstaller: 6.19.0, contrib hooks: 2026.3
+617 INFO: Python: 3.12.10
+682 INFO: Platform: Windows-11-10.0.26200-SP0
+683 INFO: Python environment: C:\Program Files\Python312
+685 INFO: wrote C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\epubtts.spec
+703 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\Jacqueline\\git_repos\\epub-tts-accesible',
+ 'C:\\Program Files\\Python312\\python312.zip',
+ 'C:\\Program Files\\Python312\\DLLs',
+ 'C:\\Program Files\\Python312\\Lib',
+ 'C:\\Program Files\\Python312',
+ 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages\\win32',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages\\win32\\lib',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages\\Pythonwin',
+ 'C:\\Users\\Jacqueline\\git_repos\\epub-tts-accesible']
+2891 INFO: checking Analysis
+2892 INFO: Building Analysis because Analysis-00.toc is non existent
+2892 INFO: Looking for Python shared library...
+2892 INFO: Using Python shared library: C:\Program Files\Python312\python312.dll
+2892 INFO: Running Analysis Analysis-00.toc
+2892 INFO: Target bytecode optimization level: 0
+2892 INFO: Initializing module dependency graph...
+2895 INFO: Initializing module graph hook caches...
+2995 INFO: Analyzing modules for base_library.zip ...
+4356 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+4585 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+7684 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+13159 INFO: Caching module dependency graph...
+13204 INFO: Analyzing C:\Users\Jacqueline\git_repos\epub-tts-accesible\iniciar_epub_tts.py
+14110 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+14112 INFO: SetuptoolsInfo: initializing cached setuptools info...
+18262 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+18480 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+19183 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+20627 INFO: Processing standard module hook 'hook-sqlite3.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+21419 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+24554 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+25046 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+25108 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+29435 INFO: Processing standard module hook 'hook-lxml.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+30005 INFO: Processing standard module hook 'hook-lxml.etree.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+32394 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+32563 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+32987 INFO: Processing standard module hook 'hook-numpy.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+35589 INFO: Processing standard module hook 'hook-psutil.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+38651 INFO: Processing standard module hook 'hook-charset_normalizer.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+40042 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+41137 INFO: Processing pre-safe-import-module hook 'hook-platformdirs.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+41197 INFO: Processing standard module hook 'hook-platformdirs.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+41631 INFO: Processing standard module hook 'hook-pywintypes.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+41872 INFO: Processing pre-safe-import-module hook 'hook-win32com.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\pre_safe_import_module'
+42067 INFO: Processing standard module hook 'hook-win32com.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+42071 INFO: Processing standard module hook 'hook-pythoncom.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+43013 INFO: Processing standard module hook 'hook-urllib3.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+45543 INFO: Processing standard module hook 'hook-certifi.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+48034 INFO: Processing standard module hook 'hook-comtypes.client.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+49005 INFO: Processing standard module hook 'hook-sounddevice.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+49247 INFO: Processing standard module hook 'hook-soundfile.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+49591 INFO: Processing standard module hook 'hook-boto3.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+52517 INFO: Processing standard module hook 'hook-botocore.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+54852 INFO: Processing standard module hook 'hook-dateutil.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+54981 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+C:\Program Files\Python312\Lib\site-packages\pydub\utils.py:300: SyntaxWarning: invalid escape sequence '\('
+  m = re.match('([su]([0-9]{1,2})p?) \(([0-9]{1,2}) bit\)$', token)
+C:\Program Files\Python312\Lib\site-packages\pydub\utils.py:301: SyntaxWarning: invalid escape sequence '\('
+  m2 = re.match('([su]([0-9]{1,2})p?)( \(default\))?$', token)
+C:\Program Files\Python312\Lib\site-packages\pydub\utils.py:310: SyntaxWarning: invalid escape sequence '\('
+  elif re.match('(flt)p?( \(default\))?$', token):
+C:\Program Files\Python312\Lib\site-packages\pydub\utils.py:314: SyntaxWarning: invalid escape sequence '\('
+  elif re.match('(dbl)p?( \(default\))?$', token):
+59602 INFO: Processing standard module hook 'hook-pyttsx3.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+59955 INFO: Processing module hooks (post-graph stage)...
+60914 INFO: Processing standard module hook 'hook-lxml.isoschematron.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+62159 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+62390 INFO: Processing standard module hook 'hook-lxml.objectify.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+62428 INFO: Performing binary vs. data reclassification (1886 entries)
+78530 INFO: Looking for ctypes DLLs
+78631 INFO: Analyzing run-time hooks ...
+78635 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks\\rthooks'
+78672 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks\\rthooks'
+78709 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks\\rthooks'
+78743 INFO: Including run-time hook 'pyi_rth_pywintypes.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+78749 INFO: Including run-time hook 'pyi_rth_pythoncom.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+78827 INFO: Creating base_library.zip...
+78847 INFO: Looking for dynamic libraries
+82028 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\Program Files\\Python312\\Lib\\site-packages\\numpy.libs']
+82028 INFO: Extra DLL search directories (PATH): []
+84190 INFO: Warnings written to C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\epubtts\warn-epubtts.txt
+84288 INFO: Graph cross-reference written to C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\epubtts\xref-epubtts.html
+84446 INFO: checking PYZ
+84447 INFO: Building PYZ because PYZ-00.toc is non existent
+84447 INFO: Building PYZ (ZlibArchive) C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\epubtts\PYZ-00.pyz
+85833 INFO: Building PYZ (ZlibArchive) C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\epubtts\PYZ-00.pyz completed successfully.
+85857 INFO: checking PKG
+85857 INFO: Building PKG because PKG-00.toc is non existent
+85857 INFO: Building PKG (CArchive) epubtts.pkg
+85921 INFO: Building PKG (CArchive) epubtts.pkg completed successfully.
+85928 INFO: Bootloader C:\Users\Jacqueline\AppData\Roaming\Python\Python312\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+85929 INFO: checking EXE
+85929 INFO: Building EXE because EXE-00.toc is non existent
+85929 INFO: Building EXE from EXE-00.toc
+85930 INFO: Copying bootloader EXE to C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\epubtts\epubtts.exe
+85950 INFO: Copying icon to EXE
+86128 INFO: Copying 0 resources to EXE
+86128 INFO: Embedding manifest in EXE
+86264 INFO: Appending PKG archive to EXE
+86454 INFO: Fixing EXE headers
+88313 INFO: Building EXE from EXE-00.toc completed successfully.
+88339 INFO: checking COLLECT
+88339 INFO: Building COLLECT because COLLECT-00.toc is non existent
+88342 INFO: Building COLLECT COLLECT-00.toc
+91176 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+91239 INFO: Build complete! The results are available in: C:\Users\Jacqueline\git_repos\epub-tts-accesible\dist
+[4/8] Compilando actualizador.exe (auxiliar de actualizaciones)...
+149 INFO: PyInstaller: 6.19.0, contrib hooks: 2026.3
+149 INFO: Python: 3.12.10
+194 INFO: Platform: Windows-11-10.0.26200-SP0
+195 INFO: Python environment: C:\Program Files\Python312
+196 INFO: wrote C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\actualizador\actualizador.spec
+202 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\Jacqueline\\git_repos\\epub-tts-accesible',
+ 'C:\\Program Files\\Python312\\python312.zip',
+ 'C:\\Program Files\\Python312\\DLLs',
+ 'C:\\Program Files\\Python312\\Lib',
+ 'C:\\Program Files\\Python312',
+ 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages\\win32',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages\\win32\\lib',
+ 'C:\\Program Files\\Python312\\Lib\\site-packages\\Pythonwin',
+ 'C:\\Users\\Jacqueline\\git_repos\\epub-tts-accesible']
+666 INFO: checking Analysis
+666 INFO: Building Analysis because Analysis-00.toc is non existent
+666 INFO: Looking for Python shared library...
+666 INFO: Using Python shared library: C:\Program Files\Python312\python312.dll
+666 INFO: Running Analysis Analysis-00.toc
+667 INFO: Target bytecode optimization level: 0
+667 INFO: Initializing module dependency graph...
+668 INFO: Initializing module graph hook caches...
+683 INFO: Analyzing modules for base_library.zip ...
+1966 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+3455 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+4267 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+4631 INFO: Caching module dependency graph...
+4666 INFO: Analyzing C:\Users\Jacqueline\git_repos\epub-tts-accesible\auxiliar_actualizador.py
+4787 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks'
+4792 INFO: Processing module hooks (post-graph stage)...
+4797 INFO: Performing binary vs. data reclassification (1 entries)
+4798 INFO: Looking for ctypes DLLs
+4803 INFO: Analyzing run-time hooks ...
+4804 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\Jacqueline\\AppData\\Roaming\\Python\\Python312\\site-packages\\PyInstaller\\hooks\\rthooks'
+4809 INFO: Creating base_library.zip...
+4829 INFO: Looking for dynamic libraries
+4977 INFO: Extra DLL search directories (AddDllDirectory): []
+4977 INFO: Extra DLL search directories (PATH): []
+5081 INFO: Warnings written to C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\actualizador\actualizador\warn-actualizador.txt
+5097 INFO: Graph cross-reference written to C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\actualizador\actualizador\xref-actualizador.html
+5115 INFO: checking PYZ
+5116 INFO: Building PYZ because PYZ-00.toc is non existent
+5116 INFO: Building PYZ (ZlibArchive) C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\actualizador\actualizador\PYZ-00.pyz
+5266 INFO: Building PYZ (ZlibArchive) C:\Users\Jacqueline\git_repos\epub-tts-accesible\build\actualizador\actualizador\PYZ-00.pyz completed successfully.
+5274 INFO: checking PKG
+5274 INFO: Building PKG because PKG-00.toc is non existent
+5274 INFO: Building PKG (CArchive) actualizador.pkg
+7664 INFO: Building PKG (CArchive) actualizador.pkg completed successfully.
+7669 INFO: Bootloader C:\Users\Jacqueline\AppData\Roaming\Python\Python312\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+7671 INFO: checking EXE
+7671 INFO: Building EXE because EXE-00.toc is non existent
+7671 INFO: Building EXE from EXE-00.toc
+7672 INFO: Copying bootloader EXE to C:\Users\Jacqueline\git_repos\epub-tts-accesible\bin\actualizador.exe
+7696 INFO: Copying icon to EXE
+7845 INFO: Copying 0 resources to EXE
+7846 INFO: Embedding manifest in EXE
+7969 INFO: Appending PKG archive to EXE
+8135 INFO: Fixing EXE headers
+9512 INFO: Building EXE from EXE-00.toc completed successfully.
+9513 INFO: Build complete! The results are available in: C:\Users\Jacqueline\git_repos\epub-tts-accesible\bin
+      Generado: bin/actualizador.exe
+[5/8] Copiando recursos al portable...
+      Copiado: bin/
+      Copiado: recursos/
+      Copiado: locale/
+      Copiado: documentos/novedades.txt
+      Copiado: ayuda.html
+[6/8] Creando configuraciones/ de fábrica...
+      Creado: configuraciones/ajustes.json
+      Creado: configuraciones/proyectos.json (vacío)
+      Creado: configuraciones/pronunciacion.json (vacío)
+      Creado: Grabaciones_Epub-TTS/ (carpeta de salida de audio)
+      Creado: configuraciones/backups_proyectos/ (carpeta de respaldos)
+      Creado: configuraciones/backups_biblioteca/ (carpeta de respaldos)
+      Creado: configuraciones/asistente_biblioteca/plantillas/
+[7/8] Comprimiendo en epub-tts-accesible-v4.0.0.zip...

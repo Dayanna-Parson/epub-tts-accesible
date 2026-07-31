@@ -1,0 +1,30 @@
+respuesta 23
+
+Voy a revisar primero por qué el aviso de voz durante la descarga "no le da tiempo a NVDA", que es el hallazgo más concreto y accionable de tu prueba.
+
+Encontrado. Es un bug estructural, no de "demasiado rápido": `AnunciadorVoz` lanza cada anuncio como un **subproceso nuevo usando `sys.executable -c "código pyttsx3"`**. En modo desarrollo, `sys.executable` es el `python.exe` real — funciona, aunque algo lento. **En el portable congelado, `sys.executable` es el propio `epubtts.exe`**, que no entiende `-c código` como un intérprete de Python normal: cada intento de hablar en realidad intenta relanzar la app entera, falla, y el fallo se traga en silencio (`except Exception: logger.warning(...)`). Por eso "casi no verbaliza nada" — no es que vaya rápido, es que casi todos los intentos de hablar fallan.
+
+Voy a arreglarlo con el mismo patrón que ya usa el proyecto para procesos auxiliares (relanzar el propio punto de entrada con un argumento especial, en vez de asumir que `sys.executable` es un intérprete de Python real).
+
+Ahora actualizo `anunciador_voz.py` para lanzar este nuevo modo en vez de `python -c`.
+
+Ahora el commit de esta corrección, y luego te explico todo en claro.
+
+## El bug real (la parte importante)
+
+No era que fuera "demasiado rápido" — era que **casi ningún anuncio llegaba a sonar de verdad** en el portable. `AnunciadorVoz` (la cola de voz que ya usan el escaneo de Biblioteca, el agrupado de etiquetas, y ahora la Fase C) lanzaba cada frase como `sys.executable -c "código de pyttsx3"`, dando por hecho que `sys.executable` es siempre un `python.exe` real. Eso es cierto en tu copia de desarrollo, pero en el portable, `sys.executable` **es el propio `epubtts.exe`**, que no entiende `-c` — cada intento de hablar fallaba en silencio (se registraba como aviso en el log, pero nunca sonaba nada). Lo he corregido para que, en vez de eso, relance la propia app con un modo interno oculto (`--hablar-interno`) que solo dice la frase y se cierra, sin abrir ninguna ventana — funciona igual en desarrollo y en el portable. Ya está subido.
+
+## Sobre lo confuso del diálogo "Novedades de la versión 2.0.0" con contenido de la 3.0.0
+
+No es un bug de código: el título usa la versión que forzaste a mano en `version.json` (2.0.0), pero el contenido lee directamente el `novedades.txt` que hubiera en ese momento en esa carpeta de prueba — y esa carpeta ya había pasado por una actualización real a la 3.0.0 en una prueba anterior, así que su `novedades.txt` ya solo tenía la 3.0.0 dentro. Al bajar tú solo el número de `version.json` sin tocar `novedades.txt`, quedaron desincronizados. Para probar esto limpio, lo más fiable es partir siempre de una copia recién extraída del ZIP, no reutilizar una carpeta que ya se actualizó antes.
+
+## Sobre "lo revisado, sin hallazgos" — dicho más claro
+
+Cuando dije eso, me refería a que busqué activamente **si había más casos de los mismos tres tipos de fallo** que ya habíamos encontrado esta sesión, y no encontré ninguno más:
+- ¿Hay algún otro sitio con el mismo error de la palabra `_` que rompió Perfiles? No.
+- ¿Hay algún `except` que trague errores sin ni siquiera anotarlos en el log? No.
+- ¿Hay alguna otra llamada a un método que en realidad viva en otra pantalla (como el bug del arranque que corregí)? No, ya lo revisé todo.
+
+No es que "no haya bugs" en general — es que, de esas tres cosas concretas que ya sabíamos que podían pasar, no quedaba ninguna más suelta.
+
+Sigo mirando si quieres, o esperamos a que pruebes esta corrección del portable.

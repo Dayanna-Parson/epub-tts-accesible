@@ -1,0 +1,7 @@
+Con lo que tenemos ahora, creo que la v4.1 puede cerrarse así:
+1. Que confirmes tú que el aviso de voz durante la actualización ya suena bien (el bug que acabamos de arreglar).
+2. Que hagas la prueba real de actualización que ya planeamos (una versión vieja de verdad, botón "Buscar actualizaciones ahora").
+3. Si todo eso sale bien, para mí la v4.1 ya estaría lista para publicar.
+Lo que dejo fuera de la v4.1 a propósito, para no arriesgar nada de última hora:
+• Los 65 except: pass — quedan anotados para más adelante.
+• Retirar el sistema viejo de actualización (Script Clon) — según lo hablado, hasta que confirmes 2-3 actualizaciones reales seguidas sin sobresaltos.

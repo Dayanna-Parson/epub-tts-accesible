@@ -1,0 +1,21 @@
+respuesta 20
+
+Entendido sobre el archivo de versión (coincide con lo que pensaba) y anotado lo de la v4.1 como última por un buen tiempo. Vamos con el cableado.
+
+Ahora corrijo el bug real que encontré de paso en `ventana_principal.py`: llamaba a un método que en realidad vive en `pag_general`, no en `PestanaAjustes` directamente (habría fallado con `AttributeError` si alguien aceptaba la actualización automática al arrancar).
+
+Cinco cadenas nuevas de verdad. Las añado con traducción al inglés y recompilo.
+
+Error de escape — el `\n` se interpretó como salto de línea real en vez de la secuencia literal. Lo corrijo quitando las entradas mal escritas y añadiéndolas bien.
+
+Bien, ahora sí compila. Verificación final y commit.
+
+## Resumen
+
+- **"Buscar actualizaciones ahora"** ya usa el instalador de la Fase C (`actualizador.exe`, respaldo verificado + rollback) tanto si lo pulsas a mano como si salta solo al arrancar — con voz durante todo el proceso, igual que el botón de prueba.
+- **Bug de regalo encontrado y corregido**: la comprobación automática al arranque llamaba a un método que en realidad vive en otra clase (`PanelGeneral`, no `PestanaAjustes`) — habría reventado con `AttributeError` la primera vez que alguien aceptara instalar desde ahí. Nunca llegó a ejecutarse en tus pruebas porque siempre usaste el botón manual o el de Fase C.
+- El Script Clon viejo y el botón de prueba de Fase C **siguen ahí, sin usarse**, como red de seguridad — los quito del todo cuando confirmes que este camino nuevo funciona bien en un par de actualizaciones reales más.
+
+**Para probarlo:** repite el mismo test de antes (carpeta aparte, `version.json` a una versión antigua) y pulsa ahora **"Buscar actualizaciones ahora"** — debería preguntarte, descargar con voz en todo momento, e instalar usando `actualizador.exe` de verdad, en vez del `.bat` de antes.
+
+Anotado también lo de la v4.1 como probablemente la última versión por un buen tiempo, centrada en estabilizar en vez de añadir funciones — encaja justo con lo que ya quedó anotado en `BITACORA_DE_DESARROLLO.md` sobre la fase de estabilización.

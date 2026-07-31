@@ -1,0 +1,20 @@
+respuesta 17
+
+Sí, subido — `c206508` es el último commit en `claude/v4-perfiles-usuario` (la casilla desmarcada por defecto).
+
+Para probar el sistema de actualización de verdad, sin arriesgar tu repo ni depender de fusionar nada a `main`, te propongo esto:
+
+1. **Genera un portable limpio** desde esta rama con `CREAR_PORTABLE.bat` (ya sabemos que funciona).
+2. **Extrae el ZIP en una carpeta de prueba nueva y vacía**, totalmente fuera del repo (como ya hiciste antes) — esta carpeta va a hacer de "instalación antigua" que vamos a actualizar.
+3. **Edita a mano** `recursos\version.json` dentro de esa carpeta de prueba y pon una versión antigua de mentira, por ejemplo `"1.0.0"`. Así, cuando la app compare contra lo que hay publicado en GitHub `main` (que sigue en 3.0.0), detectará una actualización real y de verdad — no hace falta fusionar nada ni esperar a que subas la v4.0.0 a `main`.
+4. **Abre `epubtts.exe`** desde esa carpeta. Con la casilla ya desmarcada por defecto, no debería saltar nada solo — perfecto, así confirmamos que el arreglo de la casilla funciona.
+5. Ve a **Ajustes → Actualizaciones** y pulsa **"Buscar actualizaciones ahora"** a mano. Debería ofrecerte instalar la 3.0.0 real.
+6. Acepta, deja que descargue e instale, y comprueba que la app se cierra y se reabre sola.
+7. Al reabrirse: comprueba que **ya no vuelve a preguntar lo mismo** (el bug de la ruta de `version.json` que arreglamos), y que aparece el **diálogo de bienvenida nuevo** ("Se ha actualizado a la versión 3.0.0...").
+8. Vuelve a pulsar "Buscar actualizaciones ahora" una vez más: ahora debería decir "Ya tienes la versión más reciente (3.0.0)", no volver a ofrecer nada.
+
+Un par de avisos importantes:
+- Esa carpeta de prueba, tras actualizar, quedará con el código real de la v3.0.0 de GitHub (sin Perfiles de usuario ni nada de esta rama) — es solo para validar el **mecanismo**, no para quedarte usándola.
+- Si algo falla a mitad de camino, revisa `actualizacion\actualizador_log.txt` dentro de esa misma carpeta (se autoborra solo si todo sale bien, así que si queda ahí después de un fallo, cuéntame qué dice).
+
+¿Te preparo algo más de mi lado (revisar código, otro ajuste) antes de que hagas esta prueba, o te lanzas ya con estos pasos?

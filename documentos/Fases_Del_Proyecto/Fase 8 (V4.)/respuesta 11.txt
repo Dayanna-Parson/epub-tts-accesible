@@ -1,0 +1,66 @@
+respuesta 11
+
+¡Menos mal — tu repo está intacto, `git status` limpio, historial completo! Confirmado que lo probaste fuera del repo, así que no hay ningún riesgo real. Gracias por comprobarlo.
+
+Ahora sí, vamos con los fallos reales del actualizador. Ya tengo claro qué pasa en cada uno:
+
+## Diagnóstico de los 3 síntomas
+
+1. **"Instala la V3"** → no es un bug: `main` en GitHub sigue en v3.0.0 (tu v4 vive solo en esta rama, sin fusionar). El comprobador compara versiones numéricamente bien (`remota > local`); si te ofreció "actualizar", es porque la copia que probaste tenía una versión local por debajo de 3.0.0. Eso es correcto.
+
+2. **"Las novedades se muestran en el mismo diálogo, no después de reiniciar"** → tampoco es un bug, es que el diseño actual solo tiene **un** diálogo de novedades (`DialogoNovedades`), y se usa como confirmación **antes** de instalar ("¿quieres actualizar? esto es lo nuevo"), tanto si lo lanzas tú a mano como si salta solo al arrancar. No existe ningún diálogo de bienvenida posterior al reinicio — lo comprobé en `ventana_principal.py` y `pestana_ajustes.py`, ambos usan la misma clase.
+
+3. **"Vuelve a preguntar lo mismo tras instalar"** → este sí es un bug real, y lo encontré: el `.bat` que se genera espera solo **2 segundos** (`timeout /t 2`) antes de borrar y reemplazar archivos, y **todos los errores se silencian con `2>nul`/`>nul`**, incluso corriendo sin ninguna ventana visible (`CREATE_NO_WINDOW`). Si el proceso anterior tarda un poco más en soltar un archivo (el log, por ejemplo), el borrado o la copia de `recursos/version.json` puede fallar silenciosamente — la app se reinicia con la versión vieja todavía puesta, y por eso te vuelve a preguntar. Es la misma familia de problema que ya vimos con `crear_portable.py`, aplicada aquí sin ningún reintento ni registro.
+
+Arreglo el punto 3 ahora (reintentos + log para diagnosticar si vuelve a pasar), y para el punto 2 te pregunto qué prefieres.
+
+Espera, veo un bug que acabo de introducir yo mismo: borro la carpeta `actualizacion/` (que contiene el log) **antes** de escribir la línea final del log — eso fallaría porque la carpeta ya no existiría. Lo reordeno.
+
+Verifico sintaxis Python del archivo completo.
+
+Simulo la generación del `.bat` en aislado para revisar que el texto final sea coherente (sin depender de wx).
+
+La estructura del `.bat` generado es correcta (paréntesis balanceados, subrutina bien definida tras el `goto :eof`). Ejecuto la suite de tests por si acaso y hago commit.
+
+Ya está subido. Ahora sobre el punto de la carpeta del portable y el diálogo de novedades, necesito que decidas dos cosas:
+
+Empiezo por lo rápido: listar el contenido del ZIP en `crear_portable.py`.
+
+Ahora la parte más grande: el diálogo de bienvenida tras reiniciar. Reviso primero la clase completa.
+
+Ahora la fila de botones: en `modo_bienvenida` solo un botón "Aceptar".
+
+Ahora añado la lógica de disparo en `ventana_principal.py`.
+
+Añado el nuevo bloque justo antes de este, con su propio ANCLAJE.
+
+Encontrado — y es mucho más grave y concreto que la teoría de la condición de carrera. Miro todos los usos de `version.json` para confirmarlo del todo.
+
+Ahí está: **`comprobador_actualizaciones.py` es el único sitio de todo el proyecto que busca `version.json` en la raíz del proyecto en vez de en `recursos/version.json`.** Como ese archivo nunca existe ahí, `leer_version_local()` captura la excepción y siempre devuelve `"0.0.0"` — así que la app **siempre** cree que su versión local es 0.0.0, y por tanto **cualquier** versión publicada (v3.0.0, o la que sea) le parece "más reciente", una y otra vez, sin importar lo que realmente tengas instalado. Esto explica los dos síntomas de golpe: por qué "instaló la v3" y por qué te lo volvió a preguntar después.
+
+Aprovecho para que este tipo de fallo nunca vuelva a ser invisible: añado logging cuando `leer_version_local()` no puede leer el archivo.
+
+Ahora conecto el nuevo diálogo de bienvenida al arranque, y verifico todo.
+
+Verifico sintaxis de todo lo tocado y ejecuto los tests.
+
+Pruebo la extracción del bloque de versión con el `novedades.txt` real.
+
+Extrae exactamente el bloque de la versión actual, sin arrastrar todo el historial. Ahora añado las cadenas nuevas al i18n y recompilo.
+
+Confirmado, esas 5 son realmente nuevas. Las añado con traducción al inglés y recompilo.
+
+Verificación final y commit.
+
+## Resumen
+
+Encontré la causa raíz real del actualizador, y era mucho más simple y grave que una condición de carrera: **`comprobador_actualizaciones.py` buscaba `version.json` en la raíz del proyecto en vez de en `recursos/version.json`** (el único sitio de todo el código que lo hacía mal). Como ese archivo nunca existe ahí, la app siempre creía tener la versión `0.0.0`, así que **cualquier** versión publicada le parecía nueva, siempre, incluso recién "instalada". Eso explica los dos síntomas de golpe. Ya está corregido, con logging añadido para que un fallo así nunca vuelva a ser invisible.
+
+Además:
+- **Diálogo de bienvenida tras actualizar**: ahora, al reiniciar, si la versión instalada no coincide con la última que viste, aparece un resumen (solo el bloque de esa versión, no el historial completo) con un botón "Aceptar" — se marca como vista y no vuelve a salir para esa versión.
+- **`crear_portable.py`** ahora lista en consola el contenido de primer nivel del ZIP recién generado, para que puedas comprobar de un vistazo (sin depender del Explorador ni arriesgarte a confundir carpetas) que no lleva nada de más.
+- El `.bat` de actualización (arreglado en el mensaje anterior) ya tenía reintentos y log; con la ruta corregida, ahora sí debería reflejar correctamente la versión tras cada actualización real.
+
+Todo compilado, con los 106 tests pasando, subido a `claude/v4-perfiles-usuario`.
+
+**Para probarlo:** haz `git pull`, genera un portable nuevo con `CREAR_PORTABLE.bat` (verás la lista del ZIP al final, échale un ojo para descartar de una vez lo de los archivos de más) y pruébalo en una carpeta limpia. Como GitHub `main` sigue en v3.0.0, para probar el flujo de actualización de verdad necesitarías simular una versión antigua en el `version.json` de esa copia de prueba, o esperar a que fusiones esta rama a `main`. Dime cómo quieres proceder con eso.

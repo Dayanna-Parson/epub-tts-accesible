@@ -1,0 +1,56 @@
+Genial que haya funcionado. Vamos por partes. Empiezo quitando el botón de prueba de Fase C.
+
+Ahora quito `_al_resultado_descarga_nueva`, que ya no lo llama nadie.
+
+Ahora tengo el rango exacto. Elimino `_al_resultado_descarga_nueva` completo (líneas 780-834).
+
+Limpio del todo. Verifico sintaxis y tests.
+
+Ahora busco otros procesos de fondo silenciosos para replicar el mismo patrón, como pediste.
+
+Añado la misma cola de voz periódica. Primero el `AnunciadorVoz` + temporizador en el constructor.
+
+Ahora conecto el temporizador a `_al_dividir`/`_progreso`/`_al_division_completada`.
+
+Verifico sintaxis y añado la cadena nueva al i18n.
+
+Encontrado otro real: `pestana_grabacion.py` usa `pyttsx3` **directamente en el mismo proceso** para anunciar cada fragmento — exactamente el patrón que `AnunciadorVoz` se creó para evitar (el motor deja de sonar a partir del segundo o tercer aviso, sin ningún error visible, y aquí el fallo se traga con un `except: pass`). Lo sustituyo por `AnunciadorVoz`.
+
+Ahora sustituyo el método `_hablar` roto por el uso de `AnunciadorVoz`.
+
+Commit de este lote de mejoras de accesibilidad.
+
+Ahora la documentación. Voy a actualizar los mismos documentos que la vez anterior, esta vez con todo lo corregido en esta ronda de depuración.
+
+Ahora `ayuda.html`: actualizo la sección de novedades v4.0.0 en paralelo.
+
+Ahora `CLAUDE.md`.
+
+Actualizo este estado, que ya cambió de verdad — es importante que quede reflejado con precisión.
+
+Añado una regla general en "Lo que no hacer", para que este patrón de bug no se repita.
+
+Ahora `DEVELOPMENT.md`, ampliando la sección técnica de la Fase 8 ya existente.
+
+Now I'll add a narrative continuation covering the real-world testing round.
+
+Now the two lower-priority personal docs.
+
+Both look already complete for the Perfiles feature and don't need bug-fix detail (they're vision/idea docs, not technical logs). These are fine as-is. Now committing everything.
+
+Now let's run the test suite and consolidate onto the designated branch `claude/v4-perfiles-usuario-uas4fc`.
+
+All 126 tests pass (that traceback is an expected log from a test exercising the missing-file path). Now push everything to the designated branch.
+
+Now sync the designated branch `claude/v4-perfiles-usuario-uas4fc` to this content, since it's currently far behind (only has the shared ancestor commit).
+
+Confirmed remote hasn't moved beyond what I already knew. Force-with-lease again with fresh refs.
+
+Pushed successfully (force-safe since uas4fc's old tip was a strict ancestor of this branch — no work was lost). Let's confirm there's no open PR yet for this branch before creating one.
+
+No existing PR. Since the branch is complete, tested, and ready for main per the user's request, I'll create a draft PR.
+Draft PR #10 created and I'm now subscribed to it. Let me check current CI status.
+
+No CI checks configured for this repo (total_count: 0), so nothing to wait on there. I'll schedule a check-in in an hour to catch any late review comments or state changes.
+
+La rama `claude/v4-perfiles-usuario-uas4fc` ya tiene todo el trabajo de Perfiles de usuario y la ronda de correcciones del portable, con la documentación completa (13 documentos) y los 126 tests en verde. He creado el PR borrador #10 hacia `main` y me he suscrito a su actividad — no hay CI configurado en este repo, así que no hay nada pendiente ahí. Programé un chequeo silencioso dentro de una hora por si llega algún comentario de revisión o cambia el estado de fusión.
