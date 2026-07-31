@@ -1341,17 +1341,18 @@ class PestanaGrabacion(wx.Panel):
         wx.CallAfter(self._actualizar_progreso_ui, pct, msg)
 
         modo_dividido = self._modo_dividido
+        texto_voz = _("Fragmento {actual} de {total}. Etiqueta {etiqueta}.").format(
+            actual=actual, total=total, etiqueta=etiqueta
+        )
+        # self._hablar() ya encola en AnunciadorVoz (su propio hilo de
+        # fondo); envolverlo en otro hilo aquí era redundante.
+        self._hablar(texto_voz)
         if not modo_dividido:
-            # Modo audio único: SAPI no informa por voz → tick de progreso rítmico
+            # Modo audio único: el tick de progreso rítmico se mantiene como
+            # refuerzo sonoro, pero ya no es la única señal — antes era el
+            # único aviso mientras se grababa, y la voz se quedaba muda hasta
+            # el final (solo decía cuántos archivos se habían completado).
             wx.CallAfter(reproducir, PROGRESS)
-        else:
-            # Modo dividido: SAPI verbaliza cada fragmento → sin tick sonoro adicional
-            texto_voz = _("Fragmento {actual} de {total}. Etiqueta {etiqueta}.").format(
-                actual=actual, total=total, etiqueta=etiqueta
-            )
-            # self._hablar() ya encola en AnunciadorVoz (su propio hilo de
-            # fondo); envolverlo en otro hilo aquí era redundante.
-            self._hablar(texto_voz)
 
     def _actualizar_progreso_ui(self, pct, msg):
         self.gauge.SetValue(pct)

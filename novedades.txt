@@ -45,6 +45,11 @@ Correcciones
   «dividir por etiquetas» podía dejar de sonar a partir del segundo o
   tercer fragmento en grabaciones largas, sin ningún aviso de que
   había fallado. Corregido.
+- Grabación de Fragmentos: al grabar en modo «un único archivo MP3
+  unificado» la voz se quedaba muda durante todo el proceso — solo
+  sonaba el pitido de progreso y la barra, y la voz no decía nada
+  hasta el final («se completó»). Ahora también anuncia cada
+  fragmento por voz, igual que en modo «dividir por etiquetas».
 - Ctrl+I (anunciar página en Lectura / info del libro en Biblioteca)
   podía activar el aviso de la pestaña equivocada en el instalador
   portable. Corregido.
