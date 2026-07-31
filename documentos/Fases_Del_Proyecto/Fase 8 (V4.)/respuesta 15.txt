@@ -1,0 +1,35 @@
+respuesta 15
+
+Dos hallazgos distintos. Vamos por el primero, que es el más urgente: `Ctrl+I` ya no habla en el portable.
+
+Ahora reviso lo del `lbl_progreso` "pegado" que encontraste al tabular — quiero saber si esa etiqueta se usa para otra cosa normalmente.
+
+Aquí hay un bug real y sencillo: `anunciar_pagina_actual()` sobrescribe `lbl_progreso` (la etiqueta real de progreso de reproducción, "Progreso: X%") con el texto de la página, y nunca la restaura. Por eso al tabular encontrabas ese texto "pegado" ahí — no era un anuncio nuevo, era la etiqueta de progreso real, permanentemente descolocada. Lo quito, ya que `voz.hablar()` es el canal correcto para esto (así lo dice `CLAUDE.md`).
+
+Verifico y hago commit de ambos arreglos.
+
+Con eso quedan los dos hallazgos de `Ctrl+I` resueltos. Sobre lo último que comentas —sin barra de progreso al escanear una carpeta grande en Biblioteca, ni al aplicar el agrupado de etiquetas— ya lo marcas tú misma como algo que pasa en ambas versiones, así que no es una regresión de esta sesión ni del portable: es un hueco de UX que ya existía antes.
+
+Bien, el motor ya reporta progreso real (`al_progresar(procesados, total)`). Ahora reviso cómo lo consume `pestana_biblioteca.py` para ver qué falta en la interfaz.
+
+Confirmado: la fase de "aplicar etiquetas" (agrupar por carpeta) no tiene ningún seguimiento de progreso — solo un aviso al empezar y otro al terminar, nada en medio. La fase de escaneo, en cambio, **sí** tiene barra + aviso de voz periódico cada 2,5s ya implementado (`al_temporizador_progreso`). Extiendo ese mismo patrón ya probado a la fase de aplicar etiquetas.
+
+Ahora implemento el seguimiento de progreso para la fase de agrupamiento, reutilizando el mismo temporizador y la misma barra.
+
+Ahora añado la actualización de progreso dentro del bucle y detengo el temporizador/oculto la barra al terminar.
+
+Aseguro que el modo se resetea a "escaneo" al iniciar un nuevo escaneo (por si antes hubo un agrupamiento).
+
+Verifico sintaxis y añado las cadenas nuevas al i18n.
+
+Nuevas, las añado con traducción al inglés.
+
+Verificación final y commit.
+
+## Resumen de esta ronda
+
+1. **`Ctrl+I` mudo en el portable**: `accessible_output3` necesita `--collect-all` en PyInstaller (no tiene hook dedicado como sí lo tienen `pyttsx3`/`sounddevice`), así que en el build congelado nunca encontraba un backend de lector de pantalla funcional, sin lanzar ningún error. Corregido en `crear_portable.py`.
+2. **El texto "pegado"** que encontrabas al tabular era `lbl_progreso` — la etiqueta real de progreso de reproducción, sobrescrita por `Ctrl+I` y nunca restaurada. Ya no la toca; `voz.hablar()` es el canal correcto.
+3. **Falta de progreso al aplicar etiquetas**: confirmado en el código — el escaneo de carpetas ya tenía barra + aviso de voz cada 2,5s, pero "aplicar etiquetas" solo avisaba al empezar y al terminar. Añadido el mismo mecanismo (barra + aviso periódico "Aplicando etiquetas... X de Y carpetas") reutilizando el temporizador ya existente.
+
+Genera un portable nuevo para probar el punto 1 (los otros dos también aplican al modo desarrollo). Todo compilado, 106 tests en verde, subido a `claude/v4-perfiles-usuario`.Nprompt 16

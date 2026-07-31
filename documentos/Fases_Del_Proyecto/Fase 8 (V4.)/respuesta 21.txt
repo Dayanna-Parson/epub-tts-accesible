@@ -1,0 +1,12 @@
+respuesta 21
+
+No hace falta que publiques versiones nuevas de más — me refería a repetir el mismo tipo de prueba que ya hiciste, un par de veces más, para confirmar que el camino nuevo (Fase C enganchado al botón real) funciona de forma consistente y no fue solo un acierto puntual. Con lo que ya tienes te sobra para eso:
+
+- **Tus portables viejos reales** (v2.0, v3.0): ábrelos tal cual, sin tocar nada, y pulsa "Buscar actualizaciones ahora". Cada uno es un punto de partida genuino y distinto (código real de esa versión, no un número editado a mano), y los tres deberían acabar igual: detectar que hay algo más reciente en `main` (ahora mismo, la 3.0.0 publicada), descargar con voz, instalar con `actualizador.exe`, reiniciar solo, y no volver a preguntar lo mismo después.
+- Si quieres una repetición más parecida a la que ya hiciste, puedes volver a copiar el portable actual fuera del repo, editar `version.json` a otra versión antigua de mentira (por ejemplo "2.5.0"), y repetir — es la misma mecánica, solo cambia el número.
+
+No necesitas subir nada nuevo a GitHub para esto: mientras `main` siga en 3.0.0, cualquier copia con una versión anterior detectará esa misma actualización real y ejercitará el mismo camino.
+
+Sobre que la v4.1 sea la última en mucho tiempo: eso no cambia el plan, solo lo hace más fácil — no habrá más versiones "de prueba" que fabricar aparte, porque el día que publiques la v4.1 de verdad en `main`, **esa** será la validación final y real: cualquiera con una versión anterior instalada (incluida tu propia v3.0.0 real, si la tienes en algún sitio) actualizando de verdad a la v4.1 publicada. Si eso sale bien, ahí es cuando retiramos el Script Clon del todo con total tranquilidad.
+
+¿Quieres que mientras tanto sigamos mirando otros bugs, o prefieres hacer estas pruebas primero y volver con lo que salga?

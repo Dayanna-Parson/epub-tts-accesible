@@ -1,0 +1,13 @@
+respuesta 13
+
+Antes de tocar nada: `Ctrl+I` está documentado como **contextual a propósito** — anuncia la página en Lectura, o info del libro seleccionado en Biblioteca, según qué pestaña esté activa (`CLAUDE.md`, sección de atajos). Miré el código de `pestana_biblioteca.py`: su `Ctrl+I` (`al_anunciar_info_libro`) solo *habla* la info del libro (o dice "no hay ningún libro seleccionado"); no mueve el foco ni cambia de pestaña por sí mismo.
+
+Así que sospecho que no es un bug de código distinto entre el dev y el portable, sino que **en el portable arrancaste con la Biblioteca vacía** (primera ejecución, sin libros importados) y, como la app siempre arranca en la pestaña Biblioteca, seguías ahí (con el foco ya en el árbol de géneros) cuando pulsaste `Ctrl+I` — no es que "te lleve" a Biblioteca, es que nunca habías salido de ahí.
+
+Vale, entiendo que estabas en Lectura con el libro ya cargado — eso si es más raro y merece mirarlo como posible bug real, no solo contexto de pestaña.
+
+Antes de suponer nada más, dime un par de cosas para acotarlo:
+
+1. Justo antes de pulsar `Ctrl+I`, ¿dónde tenías el foco exactamente? (¿en el texto del libro, en el árbol de índice, en algún botón de Lectura...?)
+2. ¿Habías tocado algo más justo antes (por ejemplo, el menú contextual, u otro atajo) o fue lo primero que hiciste nada más cargar el libro?
+3. ¿Puedes probar a hacer clic directamente sobre el texto del libro para fijar el foco ahí, y volver a pulsar `Ctrl+I`? Quiero saber si el fallo depende de dónde esté el foco en ese instante o si pasa siempre, tengas el foco donde tengas.

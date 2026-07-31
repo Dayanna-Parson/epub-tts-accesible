@@ -1,0 +1,24 @@
+respuesta 18
+
+Antes de nada, lo importante: **¡el botón de Fase C (`actualizador.exe`) funcionó de verdad, de principio a fin!** Verificación correcta → instalación → reinicio automático → `recursos/version.json` quedó en 3.0.0 → el diálogo de bienvenida lo confirmó. Es la primera vez que se valida en Windows real (`CLAUDE.md` lo tenía marcado como "pendiente"), así que esto es una buena noticia real, no solo una prueba más.
+
+Sobre "por qué siempre muestra las novedades al abrir": no es un bug — el diálogo de bienvenida se dispara **una vez por cada valor de versión distinto** que veas. Como fuiste cambiando la versión real (de tu "1.0" falso, a la 3.0.0 instalada de verdad por Fase C), cada una era genuinamente nueva respecto a la última vista, así que le tocaba salir. Si abres la app otra vez ahora, sin cambiar nada, no debería volver a salir.
+
+Vamos con tu petición final, que es muy concreta y me parece la mejor inversión ahora mismo: que el proceso de descarga/instalación hable mientras trabaja, en vez de quedarse mudo hasta el sonido final. Reviso primero el código de la Fase C para ver qué callbacks de progreso ya existen.
+
+Ahora conecto `AnunciadorVoz` al progreso de la Fase C, igual que ya se hace en Biblioteca.
+
+Confirmado, todo esto vive en `PanelGeneral`. Añado la instancia de `AnunciadorVoz` cerca de `lbl_progreso`.
+
+Añado también un anuncio inmediato al pulsar el botón (antes de que arranque la descarga), para que no haya ni un segundo de silencio inicial.
+
+Verifico, actualizo i18n y ejecuto los tests.
+
+## Resumen
+
+- **Confirmado**: el portable se creó bien desde el principio (lo del log eran avisos normales de PyInstaller, no errores).
+- **"Buscar actualizaciones automáticamente" ya está desmarcada por defecto** en los tres sitios (portable, arranque, casilla), como pediste.
+- **Fase C (`actualizador.exe`) quedó validada de verdad en Windows real** por primera vez, gracias a tu prueba — funcionó de principio a fin. El sistema antiguo sigue activo por ahora (no lo he tocado), pero esto es un paso real hacia poder plantear retirarlo más adelante.
+- **Nueva voz durante el progreso de la Fase C**: pulsar el botón, la descarga, la descompresión y la verificación ahora hablan por accessible_output3/pyttsx3 en vez de quedarse mudas hasta el sonido final.
+
+Como decías, si esto funciona bien en la práctica, el siguiente paso natural es replicar el mismo patrón (cola de voz + progreso) en los demás procesos de fondo que hoy se quedan en silencio (por ejemplo, el flujo de descarga del sistema antiguo/Script Clon, u otros). Pruébalo primero y dime qué tal suena — así lo replicamos con la certeza de que el patrón es el correcto antes de tocar más sitios.

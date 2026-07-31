@@ -1,0 +1,3 @@
+prompt 20
+
+vale, si hazlo. aunque, el archivo de verssión que edité fue el de dentro de la carpeta, con la copia que estaba probando... ya sabes, fuera del repo, como me pediste. A, también pasa una cosa. como ya te dije, después de la v4.1, ya no voy a lanzar mas versiones. por lo menos, por un largo tiempo. Porque como ya dije, no tiene sentido meterle mas funciones...

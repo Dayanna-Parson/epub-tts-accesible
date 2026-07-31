@@ -1,0 +1,17 @@
+respuesta 16
+
+Primero, tranquila: el log del portable está perfecto — todo son líneas `INFO` normales de PyInstaller (incluida la que confirma que `accessible_output3.outputs.sapi4` ya se detecta como hidden import gracias al `--collect-all` que añadimos) y avisos inofensivos de `pydub` sobre regex, no errores. Terminó con "✓ Portable listo".
+
+Vamos con tus puntos. Antes de tocar nada, reviso dónde vive el valor por defecto de "actualizar automáticamente".
+
+Tres sitios con el valor por defecto `True`, cubren tanto el portable como el modo desarrollo. Los cambio los tres a `False`.
+
+Reviso si algún documento describe este checkbox como "activado por defecto", para no dejar la documentación desactualizada.
+
+Ya está desmarcada por defecto en los tres sitios (portable, arranque, casilla de Ajustes). Ahora sobre el botón de Fase C:
+
+**No, todavía no hemos comprobado que funcione** — y esto es importante aclararlo antes de tocar nada. Lo que arreglamos en esta sesión (la ruta de `version.json`, los reintentos del `.bat`, el diálogo de bienvenida) es todo del sistema **antiguo** ("Script Clon", el que genera un `.bat` y reemplaza archivos a mano). El botón/sistema de **Fase C** (`bin/actualizador.exe`, respaldo verificado + rollback automático) es un sistema **distinto y más robusto** que está construido pero, según el propio `CLAUDE.md`/`DEVELOPMENT.md`, sigue marcado como **"pendiente de validar el ciclo completo en Windows real"**. No lo hemos tocado ni probado en esta sesión. Así que no, todavía tiene sentido que el sistema antiguo siga activo — retirarlo ahora, sin haber validado el reemplazo, sería justo el tipo de riesgo que esa nota en `CLAUDE.md` avisa de no tomar.
+
+Si quieres, cuando retomemos lo de probar la actualización de verdad, podemos validar Fase C a propósito (con cuidado, en una copia de prueba) y, si sale bien, ahí sí tendría sentido plantear retirar el sistema antiguo.
+
+Por cierto, tu mensaje se cortó al final — pusiste "Y por último...:" y no llegó nada después. ¿Qué querías añadir?

@@ -1,0 +1,16 @@
+respuesta 19
+
+Buena pregunta, y tiene una explicación concreta en el código, no es casualidad:
+
+- **"Buscar actualizaciones ahora"** (el botón de producción) sí hace una comparación real de versiones: lee tu `version.json` local, lo compara con el de GitHub, y solo dice "hay algo nuevo" si la remota es mayor.
+- **"Probar descarga y verificación (Fase C)"** es literalmente un **botón de desarrollo sin ninguna comparación de versión**: descarga y verifica lo último de `main` siempre, sin mirar qué versión tienes instalada. Por diseño (mira el propio comentario en el código: "Botón temporal de desarrollo... se retira cuando el flujo completo... sustituya al bloque ACTUALIZADOR_SCRIPT_CLON").
+
+Eso explica que uno "funcionara siempre" y el otro dijera "ya tienes la más reciente" — son cosas distintas, no la misma comprobación con resultados distintos. Dicho esto, que te dijera "(1.0.)" en vez de detectar que 3.0.0 es mayor sí me descuadra un poco — no tengo del todo claro por qué, salvo que quizá en ese momento editaste el `version.json` de una copia distinta a la que tenías abierta. No es crítico ahora mismo porque el plan que propones lo hace irrelevante.
+
+**Sobre tu propuesta, estoy de acuerdo con el fondo, con un matiz de orden:**
+
+1. **Sí**, meter el mecanismo de instalación de Fase C (`actualizador.exe`, con respaldo y verificación) **detrás** del botón real "Buscar actualizaciones ahora" — pero conservando la comprobación de versión real que ya tiene ese botón (la que compara local vs. remoto y te pregunta con el diálogo de novedades). O sea: mismo botón, misma pregunta de siempre, pero cuando dices que sí, en vez de generar el `.bat` viejo, lanza `actualizador.exe` como ya hemos comprobado que funciona.
+2. **El botón de prueba de Fase C** lo dejaría un poco más — hasta que pruebes el flujo integrado una vez y me confirmes que sigue funcionando igual de bien ya wired al botón real. Entonces sí, lo quito.
+3. El bloque de código viejo (Script Clon) lo dejaría en el archivo, sin usarse, un ciclo más, por si hiciera falta un rollback rápido — y lo retiro del todo cuando ya tengas dos o tres actualizaciones reales hechas con el nuevo camino sin sobresaltos.
+
+¿Te parece bien que proceda así? Si confirmas, engancho ahora mismo el botón real con el mecanismo de Fase C.

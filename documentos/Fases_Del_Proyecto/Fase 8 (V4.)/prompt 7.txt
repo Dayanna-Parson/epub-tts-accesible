@@ -1,0 +1,32 @@
+Oye claude, necesito que me ayudes con el portable. Resulta que quiero crearlo, pero cuando ejecuto, el crear portable.py desde la consola me lanza este error: Microsoft Windows [Versión 10.0.26200.8973]
+(c) Microsoft Corporation. Todos los derechos reservados.
+
+C:\Users\Jacqueline\git_repos\epub-tts-accesible>python crear_portable.py
+
+=== Construcción del portable Epub TTS Accesible v4.0.0 ===
+
+[1/8] Limpiando directorios de salida anteriores...
+Traceback (most recent call last):
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\crear_portable.py", line 308, in <module>
+    limpiar_destino()
+  File "C:\Users\Jacqueline\git_repos\epub-tts-accesible\crear_portable.py", line 95, in limpiar_destino
+    shutil.rmtree(ruta)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 781, in rmtree
+    return _rmtree_unsafe(path, onexc)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\shutil.py", line 629, in _rmtree_unsafe
+    onexc(os.rmdir, fullname, err)
+  File "C:\Program Files\Python312\Lib\shutil.py", line 627, in _rmtree_unsafe
+    os.rmdir(fullname)
+PermissionError: [WinError 5] Acceso denegado: 'C:\\Users\\Jacqueline\\git_repos\\epub-tts-accesible\\dist\\epub-tts-accesible\\recursos\\iconos'
+
+C:\Users\Jacqueline\git_repos\epub-tts-accesible> y cuando ejecuto el .bat, me da este otro error: ---------------------------------------------------
+   CREANDO PORTABLE EPUB-TTS...
+---------------------------------------------------
+python: can't open file 'C:\\Windows\\System32\\crear_portable.py': [Errno 2] No such file or directory
+
+---------------------------------------------------
+   PROCESO TERMINADO
+   (Si ves un error arriba, leelo ahora)
+---------------------------------------------------
+Presione una tecla para continuar . . .

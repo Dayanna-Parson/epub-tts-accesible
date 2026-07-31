@@ -1,0 +1,25 @@
+respuesta 14
+
+Voy a centralizar `Ctrl+I` en el Frame, igual que ya está `Ctrl+O` (`_al_ctrl_o_contextual`), en vez de depender de que cada pestaña resuelva su propio atajo por separado — así elimino la ambigüedad de raíz, sea cual sea la causa exacta en el build congelado. Primero miro el código exacto a tocar.
+
+Ahora busco `_al_ctrl_o_contextual` para replicar exactamente el mismo patrón con `Ctrl+I`.
+
+Perfecto, ya tengo el patrón exacto. Añado `_al_ctrl_i_contextual` y lo registro en `_FIJOS_EXTRA`.
+
+Ahora quito los dos registros locales de `Ctrl+I` (uno en cada pestaña), ya redundantes y la fuente de la ambigüedad.
+
+Esto confirma exactamente mi diagnóstico — hay un comentario ya existente en el propio código que documenta esta misma cautela para Ctrl+O ("no se duplica aquí para no pisar el atajo global"). Aplico el mismo criterio a Ctrl+I.
+
+Compruebo que `al_anunciar_info_libro` siga usándose en otros sitios (menú contextual, etc.) antes de dar esto por cerrado.
+
+Bien, ya solo se llama desde el nuevo dispatcher central. Verifico sintaxis y ejecuto los tests.
+
+Todo compila y los tests pasan. Como el comportamiento documentado (`Ctrl+I` contextual) no cambia de cara al usuario, no hace falta tocar ningún documento — solo la implementación interna. Commit y push.
+
+## Resumen
+
+Encontrado y corregido: `Ctrl+I` estaba registrado **dos veces por separado** (una tabla de aceleradores propia en `pestana_lectura.py` y otra en `pestana_biblioteca.py`), sin ninguna autoridad central que decidiera cuál ganaba. El propio código ya tenía un comentario documentando exactamente esta cautela para `Ctrl+O` ("no se duplica aquí para no pisar el atajo global") — pero esa regla no se había aplicado a `Ctrl+I`. En el build congelado, esa duplicación hacía que ganara siempre el manejador de Biblioteca, incluso con el foco claramente en el texto de Lectura.
+
+Lo centralicé en `ventana_principal.py` con `_al_ctrl_i_contextual()`, exactamente el mismo patrón ya probado que usa `Ctrl+O`, y quité los dos registros locales redundantes. El comportamiento que ves (anunciar página en Lectura / info del libro en Biblioteca, según la pestaña) no cambia — solo la forma en que se resuelve internamente, eliminando la ambigüedad de raíz.
+
+Genera un portable nuevo (`git pull` primero) y prueba `Ctrl+I` otra vez en Lectura con un libro cargado — debería anunciar la página correctamente ahora. Avísame si sigue fallando o si quieres seguir con la prueba real de actualización.

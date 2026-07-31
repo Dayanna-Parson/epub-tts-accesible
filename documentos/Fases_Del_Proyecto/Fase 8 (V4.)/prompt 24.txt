@@ -1,0 +1,3 @@
+prompt 24
+
+sigue mirando, pero necesito que me aclares mas las cosas, cuando me las expliques a mi. entonces, haz una búsqueda esaustiba en todo el código, y en todos los módulos. y también añade los test que dijo gpt que necesitaba la app... Y dime si en la 4.1, tenemos que corregir algo mas, o que quieres hacer
