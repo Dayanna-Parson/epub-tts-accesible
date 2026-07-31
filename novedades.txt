@@ -1,3 +1,38 @@
+=== v4.1.0 (31/07/2026) ===
+
+Versión 4.1.0 — 2026-07-31
+
+Esta versión no añade funciones nuevas: es una puesta a punto completa
+para dejar la aplicación lista y estable de cara a su distribución
+pública.
+
+Mejoras
+───────
+
+- Aplicación más estable: se revisaron todos los puntos donde un fallo
+  interno podía pasar completamente desapercibido, y ahora quedan
+  registrados en el archivo de registro (registros/app.log) para poder
+  diagnosticarlos si algo falla.
+- Rendimiento en Lectura: al abrir un PDF largo con reglas de
+  pronunciación propias del libro, la carga es notablemente más rápida.
+- Menos parpadeo al abrir listas largas: la lista de voces en Grabación
+  de Fragmentos, el índice de capítulos al dividir un EPUB, la lista de
+  atajos y de perfiles en Ajustes, y el árbol de Proyectos, cargan ahora
+  de un tirón, sin repintarse fila a fila.
+- Se amplió de forma importante la batería de pruebas internas de la
+  aplicación, para detectar antes cualquier regresión en futuras
+  versiones.
+
+Empaquetado
+───────────
+
+- El portable ya no incluye una carpeta "documentos" para un solo
+  archivo: "novedades.txt" va ahora directo en la carpeta principal,
+  junto a "ayuda.html" y el ejecutable.
+- La carpeta "registros" (donde se guardan los archivos de registro si
+  algo falla) se incluye ahora de fábrica en el portable, igual que en
+  el entorno de desarrollo.
+
 === v4.0.0 (30/07/2026) ===
 
 Versión 4.0.0 — 2026-07-30
