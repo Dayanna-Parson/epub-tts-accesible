@@ -191,7 +191,7 @@ Requiere Python 3.12+ en Windows. La versión portable (sin necesidad de instala
 
 Epub TTS Accesible es una aplicación completa y estable. **Versión actual: 4.1.0.**
 
-Esta versión fue una revisión completa de estabilidad y rendimiento, sin funciones nuevas: pruebas a fondo de los flujos existentes y ajustes de rendimiento en toda la aplicación.
+Esta versión fue una revisión completa de estabilidad y rendimiento, sin funciones nuevas: pruebas a fondo de los flujos existentes, ajustes de rendimiento en toda la aplicación, y una lectura línea a línea de todo el código en busca de fallos que no se notan en el uso normal porque solo ocurren en momentos muy concretos (cerrar una ventana justo mientras trabaja en segundo plano, un corte justo al guardar un archivo). Se encontraron y corrigieron 23 casos así, entre ellos: guardado de proyectos y de claves de API a prueba de cortes a mitad de escritura, un cálculo de cuota que en la exportación por capítulos podía dejar pasar más gasto del configurado, un actualizador automático más seguro ante un fallo a mitad de proceso, y varios cierres inesperados de la aplicación al cerrar ciertas ventanas mientras seguían trabajando en segundo plano.
 
 - Biblioteca: organización de EPUB y PDF por géneros y sagas, importación de carpetas o de libros sueltos.
 - Modo lectura con voces de Azure, Amazon Polly, Deepgram, ElevenLabs y SAPI5 (64 y 32 bits), con soporte de EPUB y PDF.
