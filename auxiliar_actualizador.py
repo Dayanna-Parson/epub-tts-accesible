@@ -214,6 +214,12 @@ def _instalar(origen: str, destino: str) -> dict:
 
     completadas = []
     nombre_actual = None
+    # Entrada cuya verificación de respaldo falló *antes* de tocar el
+    # destino: su original sigue intacto, así que no debe entrar en la
+    # lista de reversión (revertirla borraría el original bueno para
+    # sustituirlo por el propio respaldo que se acaba de determinar que
+    # no es íntegro, dejando la instalación peor que al empezar).
+    nombre_no_tocado = None
     try:
         for nombre in entradas:
             nombre_actual = nombre
@@ -225,6 +231,7 @@ def _instalar(origen: str, destino: str) -> dict:
                 _log(f"Respaldando «{nombre}»...")
                 _con_reintentos(_copiar_entrada, ruta_destino, ruta_backup)
                 if not _verificar_copia_integra(ruta_destino, ruta_backup):
+                    nombre_no_tocado = nombre
                     raise RuntimeError(
                         f"El respaldo de «{nombre}» no se pudo verificar íntegro; "
                         "se aborta antes de tocar el destino."
@@ -246,7 +253,11 @@ def _instalar(origen: str, destino: str) -> dict:
     except Exception as exc:
         _log(f"ERROR durante la instalación: {exc}. Revirtiendo cambios...")
         pendientes_de_revertir = list(completadas)
-        if nombre_actual is not None and nombre_actual not in completadas:
+        if (
+            nombre_actual is not None
+            and nombre_actual not in completadas
+            and nombre_actual != nombre_no_tocado
+        ):
             pendientes_de_revertir.append(nombre_actual)
         for nombre in reversed(pendientes_de_revertir):
             _restaurar_entrada(nombre, destino, carpeta_backup)

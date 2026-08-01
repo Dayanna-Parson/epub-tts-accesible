@@ -90,6 +90,7 @@ class DialogoTroceador(wx.Dialog):
         )
         self._troceador      = TroceadorEpub()
         self._carpeta_salida = ""
+        self._cerrado        = False
         self._construir()
         self.CentreOnScreen()
         self.Bind(wx.EVT_CHAR_HOOK, self._al_tecla_global)
@@ -195,10 +196,10 @@ class DialogoTroceador(wx.Dialog):
 
         # ── Botón cerrar ──────────────────────────────────────────────────────
         sz.Add(wx.StaticLine(panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
-        btn_cerrar = wx.Button(panel, wx.ID_CLOSE, label=_("Cerrar (Escape)"))
-        btn_cerrar.SetHelpText(_("Cierra este diálogo. También puedes pulsar Escape."))
-        aplicar_icono_boton(btn_cerrar, "cerrar", _("Cerrar diálogo"))
-        sz.Add(btn_cerrar, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
+        self.btn_cerrar = wx.Button(panel, wx.ID_CLOSE, label=_("Cerrar (Escape)"))
+        self.btn_cerrar.SetHelpText(_("Cierra este diálogo. También puedes pulsar Escape."))
+        aplicar_icono_boton(self.btn_cerrar, "cerrar", _("Cerrar diálogo"))
+        sz.Add(self.btn_cerrar, 0, wx.ALIGN_RIGHT | wx.ALL, 8)
 
         panel.SetSizer(sz)
         outer = wx.BoxSizer(wx.VERTICAL)
@@ -212,7 +213,7 @@ class DialogoTroceador(wx.Dialog):
         self.btn_limpiar.Bind(    wx.EVT_BUTTON, self._al_limpiar)
         self.btn_dividir.Bind(    wx.EVT_BUTTON, self._al_dividir)
         self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON, self._al_abrir_carpeta)
-        btn_cerrar.Bind(          wx.EVT_BUTTON, lambda e: self.EndModal(wx.ID_CLOSE))
+        self.btn_cerrar.Bind(     wx.EVT_BUTTON, self._al_cerrar)
 
     # ── Selección y carga de archivo EPUB ────────────────────────────────────
 
@@ -235,6 +236,7 @@ class DialogoTroceador(wx.Dialog):
         self.lista_caps.DeleteAllItems()
         self.btn_dividir.Disable()
         self.btn_abrir_carpeta.Hide()
+        self.btn_cerrar.Disable()
         self._set_progreso(_("Cargando índice del EPUB…"))
         self.Layout()
 
@@ -249,6 +251,9 @@ class DialogoTroceador(wx.Dialog):
         threading.Thread(target=_tarea, daemon=True).start()
 
     def _al_epub_cargado(self, caps: list, error: str):
+        if self._cerrado:
+            return
+        self.btn_cerrar.Enable()
         if error:
             self._set_progreso(_("Error al cargar: {error}").format(error=error))
             wx.MessageBox(
@@ -316,6 +321,7 @@ class DialogoTroceador(wx.Dialog):
 
         self.btn_dividir.Disable()
         self.btn_examinar.Disable()
+        self.btn_cerrar.Disable()
         self.btn_abrir_carpeta.Hide()
         self._set_progreso(_("Dividiendo…"))
         self.barra_progreso.SetValue(0)
@@ -356,9 +362,12 @@ class DialogoTroceador(wx.Dialog):
             )
 
     def _al_division_completada(self, n_archivos: int, carpeta: str, error: str):
+        if self._cerrado:
+            return
         self._timer_progreso.Stop()
         self.btn_dividir.Enable()
         self.btn_examinar.Enable()
+        self.btn_cerrar.Enable()
         self.barra_progreso.Hide()
         self.Layout()
 

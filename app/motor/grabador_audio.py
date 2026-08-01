@@ -1334,8 +1334,16 @@ class GrabadorAudio:
         # ── Fase 1: qué capítulos caben en la cuota, en orden ────────────
         incluidos = []   # lista de (indice, titulo, texto)
         estado_capitulos = [None] * total
+        # Acumulador local de caracteres ya "reservados" por capítulos
+        # anteriores de este mismo lote: registrar_gasto() no se llama hasta
+        # la fase 2, así que sin este acumulador cada capítulo se comprobaría
+        # contra la cuota completa restante, dejando pasar lotes que en
+        # conjunto la superan con creces.
+        caracteres_reservados_este_lote = 0
         for i, (titulo_capitulo, texto_capitulo) in enumerate(capitulos):
-            if self._abortar or not control.tiene_cuota(texto_capitulo, proveedor):
+            if self._abortar or not control.tiene_cuota(
+                texto_capitulo, proveedor, ya_reservado=caracteres_reservados_este_lote
+            ):
                 estado_capitulos[i] = {
                     "indice": i, "titulo": titulo_capitulo,
                     "estado": "pendiente_sin_cuota", "ruta": None,
@@ -1350,6 +1358,7 @@ class GrabadorAudio:
                         "estado": "pendiente_sin_cuota", "ruta": None,
                     }
                 break
+            caracteres_reservados_este_lote += len(texto_capitulo)
             incluidos.append((i, titulo_capitulo, texto_capitulo))
         else:
             pass

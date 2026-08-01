@@ -36,13 +36,22 @@ RUTA_NOVEDADES = os.path.join(RAIZ, "novedades.txt")
 def leer_version() -> tuple[int, int, int]:
     try:
         with open(RUTA_VERSION, encoding="utf-8") as f:
-            v = json.load(f).get("version", "0.0.0")
+            contenido = json.load(f)
+        v = contenido.get("version", "")
         partes = [int(x) for x in v.split(".")]
         if len(partes) == 3:
             return tuple(partes)
-    except Exception:
-        pass
-    return (0, 0, 0)
+        print(
+            f"ERROR: no se pudo interpretar la versión en version.json: '{v}'. "
+            "Se esperaba el formato X.Y.Z."
+        )
+        sys.exit(1)
+    except Exception as exc:
+        print(
+            f"ERROR: no se pudo interpretar la versión en version.json: {exc}. "
+            "Se esperaba el formato X.Y.Z."
+        )
+        sys.exit(1)
 
 
 def escribir_version(mayor: int, menor: int, parche: int):

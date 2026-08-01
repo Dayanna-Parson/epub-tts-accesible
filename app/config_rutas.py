@@ -97,8 +97,10 @@ def guardar_claves(claves: dict) -> None:
     """
     os.makedirs(CONFIG_DIR, exist_ok=True)
     ruta = ruta_config("claves_api.json")
-    with open(ruta, "w", encoding="utf-8") as f:
+    ruta_tmp = ruta + ".tmp"
+    with open(ruta_tmp, "w", encoding="utf-8") as f:
         json.dump(claves, f, ensure_ascii=False, indent=2)
+    os.replace(ruta_tmp, ruta)
 
 
 def migrar_archivos_config():
@@ -157,10 +159,21 @@ def migrar_archivos_config():
             with open(ruta_ajustes, encoding="utf-8") as f:
                 datos = json.load(f)
             if "txt_recientes" in datos:
-                with open(ruta_hist_grab, "w", encoding="utf-8") as f:
-                    json.dump(datos.pop("txt_recientes"), f, ensure_ascii=False)
-                with open(ruta_ajustes, "w", encoding="utf-8") as f:
+                txt_recientes = datos["txt_recientes"]
+                # Primero se escribe y confirma en disco el historial nuevo;
+                # solo entonces se reescribe ajustes.json sin el campo. Así,
+                # si el proceso muere a mitad, el peor caso es un dato
+                # duplicado (recuperable) y nunca uno perdido.
+                ruta_hist_tmp = ruta_hist_grab + ".tmp"
+                with open(ruta_hist_tmp, "w", encoding="utf-8") as f:
+                    json.dump(txt_recientes, f, ensure_ascii=False)
+                os.replace(ruta_hist_tmp, ruta_hist_grab)
+
+                datos.pop("txt_recientes")
+                ruta_ajustes_tmp = ruta_ajustes + ".tmp"
+                with open(ruta_ajustes_tmp, "w", encoding="utf-8") as f:
                     json.dump(datos, f, ensure_ascii=False, indent=2)
+                os.replace(ruta_ajustes_tmp, ruta_ajustes)
         except Exception:
             logger.exception(
                 "No se pudo extraer txt_recientes de ajustes.json a historial_grabacion.json"

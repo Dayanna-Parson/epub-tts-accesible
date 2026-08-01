@@ -31,14 +31,27 @@ class ClienteAzure:
     def obtener_voces(self):
         return []
 
-    def _guardar_en_cache(self, texto, data, fs):
+    def _clave_cache(self, texto, datos_voz):
+        """
+        Construye la clave de caché incluyendo la voz activa: el mismo texto
+        con dos voces distintas (típico con etiquetas {{@voz}} o al cambiar
+        de voz en Lectura y retroceder) no debe devolver el audio cacheado
+        de la voz anterior.
+        """
+        if isinstance(datos_voz, dict):
+            id_voz = datos_voz.get("id")
+        else:
+            id_voz = datos_voz
+        return (id_voz, texto)
+
+    def _guardar_en_cache(self, clave, data, fs):
         """Guarda audio en caché con límite de _MAX_CACHE entradas (LRU simple)."""
-        if texto not in self._cache_frags:
+        if clave not in self._cache_frags:
             if len(self._cache_lru) >= _MAX_CACHE:
                 clave_antigua = self._cache_lru.pop(0)
                 self._cache_frags.pop(clave_antigua, None)
-            self._cache_lru.append(texto)
-        self._cache_frags[texto] = (data, fs)
+            self._cache_lru.append(clave)
+        self._cache_frags[clave] = (data, fs)
 
     def _limpiar_texto_xml(self, texto):
         import xml.sax.saxutils
@@ -58,10 +71,65 @@ class ClienteAzure:
         elif v < 90: return "loud"
         else:        return "x-loud"
 
+    # ── División de texto largo ────────────────────────────────────────────────
+
+    # ANCLAJE_INICIO: DIVISOR_TEXTO_AZURE
+    _LIMITE_API = 3000  # margen conservador: el SSML añade overhead de marcado alrededor del texto real
+
+    def _dividir_texto(self, texto):
+        """
+        Divide el texto en fragmentos que no superen _LIMITE_API caracteres.
+        Respeta los finales de frase para mantener la cohesión fonética.
+        """
+        if len(texto) <= self._LIMITE_API:
+            return [texto]
+        fragmentos = []
+        while texto:
+            if len(texto) <= self._LIMITE_API:
+                fragmentos.append(texto.strip())
+                break
+            corte = -1
+            for sep in ('. ', '! ', '? ', '; ', '\n'):
+                pos = texto.rfind(sep, 0, self._LIMITE_API)
+                if pos != -1:
+                    candidato = pos + len(sep)
+                    if candidato > corte:
+                        corte = candidato
+            if corte <= 0:
+                corte = self._LIMITE_API
+            fragmento = texto[:corte].strip()
+            if fragmento:
+                fragmentos.append(fragmento)
+            texto = texto[corte:].strip()
+        return fragmentos
+    # ANCLAJE_FIN: DIVISOR_TEXTO_AZURE
+
     def _llamar_api(self, texto, datos_voz):
         """
-        Realiza la llamada HTTP a la API de Azure TTS y devuelve (data, fs).
+        Punto de entrada para toda síntesis HTTP de Azure. Divide el texto si
+        supera el límite de la API, realiza las peticiones de forma
+        secuencial y concatena el audio antes de devolverlo.
+        """
+        fragmentos = self._dividir_texto(texto)
+        if len(fragmentos) == 1:
+            return self._peticion_http(fragmentos[0], datos_voz)
+        import numpy as np
+        partes = []
+        fs_comun = None
+        for frag in fragmentos:
+            if self._parado:
+                raise Exception("Síntesis cancelada.")
+            data, fs = self._peticion_http(frag, datos_voz)
+            if fs_comun is None:
+                fs_comun = fs
+            partes.append(data)
+        return np.concatenate(partes, axis=0), fs_comun
+
+    def _peticion_http(self, texto, datos_voz):
+        """
+        Realiza una única llamada HTTP a la API de Azure TTS y devuelve (data, fs).
         Implementa 1 reintento automático ante errores de conexión transitoria.
+        El texto siempre es <= _LIMITE_API chars.
         """
         self.config = self._cargar_config()
         az_conf = self.config.get("azure", {})
@@ -97,14 +165,20 @@ class ClienteAzure:
             id_voz = datos_voz
 
         texto_limpio = self._limpiar_texto_xml(texto)
+        # id_voz e idioma_destino se interpolan como atributos del SSML: id_voz
+        # viene del catálogo de voces, pero idioma_destino viene de ajustes.json,
+        # editable por el usuario — sin escapar, cualquier comilla o '<' rompería
+        # la petición (o inyectaría marcado SSML no deseado).
+        id_voz_limpio = self._limpiar_texto_xml(id_voz or "")
+        idioma_destino_limpio = self._limpiar_texto_xml(idioma_destino)
         tasa = self._velocidad_a_tasa()
         nivel_vol = self._volumen_a_nivel()
         logger.debug("[Azure] _llamar_api: self._velocidad=%s -> tasa SSML='%s'", self._velocidad, tasa)
 
         ssml = f"""
-        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{idioma_destino}'>
-            <voice name='{id_voz}'>
-                <lang xml:lang='{idioma_destino}'>
+        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{idioma_destino_limpio}'>
+            <voice name='{id_voz_limpio}'>
+                <lang xml:lang='{idioma_destino_limpio}'>
                     <prosody rate='{tasa}' volume='{nivel_vol}'>
                         {texto_limpio}
                     </prosody>
@@ -157,17 +231,18 @@ class ClienteAzure:
     def hablar(self, texto, datos_voz):
         """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
+        clave = self._clave_cache(texto, datos_voz)
 
-        if texto in self._cache_frags:
-            data, fs = self._cache_frags[texto]
-        elif self._audio_preparado is not None and self._texto_preparado == texto:
+        if clave in self._cache_frags:
+            data, fs = self._cache_frags[clave]
+        elif self._audio_preparado is not None and self._texto_preparado == clave:
             data, fs = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
         else:
             data, fs = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
 
         if not self._parado:
             sd.play(data, fs)
@@ -187,15 +262,16 @@ class ClienteAzure:
         El resultado se guarda siempre: detener() no debe invalidarlo porque el
         audio descargado es para el SIGUIENTE fragmento, no para el actual.
         """
-        if texto in self._cache_frags:
-            self._audio_preparado = self._cache_frags[texto]
-            self._texto_preparado = texto
+        clave = self._clave_cache(texto, datos_voz)
+        if clave in self._cache_frags:
+            self._audio_preparado = self._cache_frags[clave]
+            self._texto_preparado = clave
             return
         try:
             data, fs = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
             self._audio_preparado = (data, fs)
-            self._texto_preparado = texto
+            self._texto_preparado = clave
         except Exception:
             logger.exception("[Azure] Fallo al precargar audio en preparar()")
             self._audio_preparado = None

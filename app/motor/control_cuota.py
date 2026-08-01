@@ -151,10 +151,17 @@ class ControlCuota:
         self.datos["limites"][clave] = int(nuevo_limite)
         self.guardar_datos()
 
-    def tiene_cuota(self, texto, proveedor):
+    def tiene_cuota(self, texto, proveedor, ya_reservado=0):
         """
         Consulta silenciosa: retorna True si hay cuota disponible para el texto dado,
         sin mostrar diálogos ni registrar el gasto.
+
+        ya_reservado permite descontar caracteres que ya se han "apartado"
+        mentalmente dentro del mismo lote (por ejemplo, capítulos anteriores
+        de una misma exportación que todavía no han pasado por
+        registrar_gasto()), para que la comprobación no cuente cada capítulo
+        contra la cuota completa sin tener en cuenta lo que el propio lote
+        ya va a consumir.
         """
         self.reiniciar_contadores_si_mes_nuevo()
         prov_key = proveedor.lower()
@@ -171,7 +178,7 @@ class ControlCuota:
 
         gastado = self.datos["gastado"].get(clave, 0)
         limite = self.datos["limites"].get(clave, 0)
-        return gastado + len(texto) <= limite
+        return gastado + ya_reservado + len(texto) <= limite
 
     def registrar_gasto(self, texto, proveedor):
         """

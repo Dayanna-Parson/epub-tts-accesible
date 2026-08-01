@@ -76,6 +76,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         )
         self.contexto_libro = contexto_libro
         self.id_libro = contexto_libro["id_libro"] if contexto_libro else None
+        self._cerrado = False
         self._respuesta_pendiente = False
         self._ultimo_mensaje_usuario = ""
         self._ultimo_mensaje_asistente = ""
@@ -257,6 +258,8 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
             wx.CallAfter(self._al_fallar_respuesta, str(e))
 
     def _al_recibir_respuesta(self, respuesta):
+        if self._cerrado:
+            return
         detener_bucle()
         self._respuesta_pendiente = False
         self.btn_enviar.Enable()
@@ -267,6 +270,8 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         voz.hablar(_("Asistente: {respuesta}").format(respuesta=respuesta))
 
     def _al_fallar_respuesta(self, mensaje_error):
+        if self._cerrado:
+            return
         detener_bucle()
         self._respuesta_pendiente = False
         self.btn_enviar.Enable()
@@ -348,6 +353,7 @@ class DialogoAsistenteBiblioteca(wx.Dialog):
         # llegue después vía wx.CallAfter ya no tiene diálogo al que
         # actualizar, así que _al_recibir_respuesta/_al_fallar_respuesta
         # nunca se ejecutarían para pararlo.
+        self._cerrado = True
         detener_bucle()
         self.EndModal(wx.ID_CLOSE)
 

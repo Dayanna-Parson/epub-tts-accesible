@@ -117,8 +117,10 @@ class GestorProyectos:
         """Persiste el estado actual en proyectos.json y crea copia de seguridad."""
         try:
             os.makedirs(os.path.dirname(RUTA_PROYECTOS), exist_ok=True)
-            with open(RUTA_PROYECTOS, "w", encoding="utf-8") as f:
+            ruta_tmp = RUTA_PROYECTOS + ".tmp"
+            with open(ruta_tmp, "w", encoding="utf-8") as f:
                 json.dump(self._datos, f, ensure_ascii=False, indent=2)
+            os.replace(ruta_tmp, RUTA_PROYECTOS)
         except Exception as e:
             raise RuntimeError(f"No se pudo guardar proyectos.json: {e}")
 

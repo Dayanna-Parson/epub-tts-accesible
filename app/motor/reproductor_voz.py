@@ -263,27 +263,39 @@ class ReproductorVoz:
                 logger.warning("[ReproductorVoz] Error en voz local: %s", e)
                 self.estado = "detenido"
         else:
-            # Voces neuronales: se ejecutan en segundo plano para no bloquear la interfaz
+            # Voces neuronales: se ejecutan en segundo plano para no bloquear la interfaz.
+            # Se captura el motor activo AQUÍ, en el hilo principal, en el momento
+            # de lanzar el hilo — no dentro de _procesar_voz_neuronal leyendo
+            # self.motor_activo de nuevo. Si cargar_texto() reasigna
+            # self.motor_activo (p. ej. a cliente_local por agotamiento de cuota)
+            # mientras el hilo está en marcha, éste debe seguir usando el motor
+            # que estaba activo cuando se decidió lanzarlo, no uno reasignado a
+            # mitad de camino con una firma de hablar() distinta.
+            motor_capturado = self.motor_activo
             self._hilo_reproduccion = threading.Thread(
                 target=self._procesar_voz_neuronal,
-                args=(texto, generacion_actual),
+                args=(texto, generacion_actual, motor_capturado),
                 daemon=True
             )
             self._hilo_reproduccion.start()
     # ANCLAJE_FIN: FLUJO_PRINCIPAL_SINTESIS
 
     # ANCLAJE_INICIO: PROCESAMIENTO_VOCES_NEURONALES
-    def _procesar_voz_neuronal(self, texto, generacion):
+    def _procesar_voz_neuronal(self, texto, generacion, motor):
         """
         Gestiona la reproducción de las voces neuronales sin interrumpir el uso del programa.
-        Recibe la generación con la que fue creado el hilo. Si al recibir la respuesta
-        de la API la generación ya no coincide con la actual, el audio se descarta
-        sin reproducirlo para evitar colisiones entre peticiones rápidas.
+        Recibe la generación con la que fue creado el hilo, y el motor ya capturado
+        en el hilo principal en el momento de lanzarse (nunca se relee
+        self.motor_activo aquí dentro: podría haber cambiado mientras tanto,
+        p. ej. a la voz local por agotamiento de cuota, cuya firma hablar()
+        acepta un solo argumento). Si al recibir la respuesta de la API la
+        generación ya no coincide con la actual, el audio se descarta sin
+        reproducirlo para evitar colisiones entre peticiones rápidas.
         """
         try:
             if self.voz_actual:
                 # Petición bloqueante a la API del proveedor
-                self.motor_activo.hablar(texto, self.voz_actual)
+                motor.hablar(texto, self.voz_actual)
         except Exception as e:
             error_msg = str(e)
             logger.warning("[ReproductorVoz] Error en voz neuronal (%s): %s", self.tipo_motor_actual, error_msg)
@@ -445,7 +457,25 @@ class ReproductorVoz:
         if self.tipo_motor_actual == "local":
             self.cliente_local.reanudar()
             self.estado = "reproduciendo"
-        # Las voces neuronales requieren reenviar el texto desde la posición actual
+        else:
+            # Las voces neuronales no admiten pausa/reanudación nativa: pausar()
+            # ya llamó a detener() y no queda ningún audio en curso que retomar.
+            # Este objeto no guarda por sí mismo el texto/posición pendientes
+            # (eso vive en la capa de UI, que ya reinicia la lectura desde el
+            # cursor exacto tras pausar una voz neuronal — ver
+            # al_alternar_reproduccion en pestana_lectura.py). Sin ese texto
+            # aquí no hay nada real que reenviar, así que como mínimo se evita
+            # dejar la app colgada en "pausado" para siempre si algo llama a
+            # reanudar() directamente sobre una voz neuronal: se vuelve a
+            # "detenido" y se registra la limitación para que quien llame
+            # sepa que debe reiniciar la lectura desde la posición deseada.
+            logger.warning(
+                "[ReproductorVoz] reanudar() llamado con motor neuronal (%s): "
+                "no hay reanudación nativa, se vuelve a 'detenido'. Quien llame "
+                "debe reiniciar la lectura desde la posición deseada.",
+                self.tipo_motor_actual,
+            )
+            self.estado = "detenido"
     # ANCLAJE_FIN: COMANDOS_REPRODUCTOR
 
     def obtener_estado(self): return self.estado

@@ -68,11 +68,14 @@ def _parsear_po(ruta_po: str) -> dict:
     msgstr_actual = []
     en_msgid = False
     en_msgstr = False
+    nonlocal_duplicados = []
 
     def _volcar():
         msgid_texto = "".join(msgid_actual)
         msgstr_texto = "".join(msgstr_actual)
         if msgid_texto or msgstr_texto:
+            if msgid_texto in mensajes and mensajes[msgid_texto] != msgstr_texto:
+                nonlocal_duplicados.append((msgid_texto, mensajes[msgid_texto], msgstr_texto))
             mensajes[msgid_texto] = msgstr_texto
 
     # "utf-8-sig" exige UTF-8 estricto igual que "utf-8" (lanza
@@ -128,9 +131,16 @@ def _parsear_po(ruta_po: str) -> dict:
                 )
         _volcar()
 
+    for msgid_texto, valor_descartado, valor_conservado in nonlocal_duplicados:
+        print(
+            f"AVISO: msgid duplicado en {ruta_po}: '{msgid_texto[:60]}...' "
+            "— se conserva la última traducción encontrada "
+            f"('{valor_descartado[:60]}' descartado, se conserva '{valor_conservado[:60]}')."
+        )
+
     # La entrada de cabecera (msgid vacío) no se traduce como texto de
     # interfaz, pero sí debe ir en el .mo: gettext la usa para metadatos.
-    return mensajes
+    return mensajes, len(nonlocal_duplicados)
 
 
 def _extraer_cadena(fragmento: str) -> str:

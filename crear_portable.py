@@ -47,9 +47,17 @@ def _leer_version() -> str:
     ruta = os.path.join(RAIZ, "recursos", "version.json")
     try:
         with open(ruta, encoding="utf-8") as f:
-            return json.load(f).get("version", "0.0.0")
-    except Exception:
-        return "0.0.0"
+            contenido = json.load(f)
+        version = contenido.get("version")
+        if not version:
+            print(f"ERROR: recursos/version.json no contiene la clave 'version': {contenido}")
+            sys.exit(1)
+        return version
+    except SystemExit:
+        raise
+    except Exception as exc:
+        print(f"ERROR: no se pudo leer la versión desde recursos/version.json: {exc}")
+        sys.exit(1)
 
 VERSION = _leer_version()
 
