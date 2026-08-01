@@ -96,3 +96,6 @@ La pieza que le faltaba a esta idea original: el Creador de Audiolibros. Exporta
 
 **Versión 4.0.0 (julio 2026):**
 Perfiles de usuario: guardan de un tirón la voz, la velocidad, el volumen y las preferencias de pausa y segundos de salto de Lectura, con un atajo (`Ctrl+Shift+U`) para alternar entre ellos y un único formulario en Ajustes para crearlos o editarlos. Pensado para quien comparte el ordenador con otra persona, o quiere una configuración distinta según el tipo de lectura. El diseño cambió una vez ya probado: la primera versión repartía la configuración entre la pestaña Lectura y Ajustes → Configuración General; se simplificó a un solo formulario que lo aplica todo de inmediato al guardar.
+
+**Versión 4.1.0 (julio 2026):**
+La versión de cierre, sin funciones nuevas: estabilización, rendimiento y documentación final antes de la distribución pública. Se revisó todo el código en busca de fallos que podían pasar completamente desapercibidos, se amplió mucho la batería de pruebas automáticas, se corrigieron varios puntos lentos de la aplicación, y se reescribió a fondo el manual de usuario y el propio empaquetado del portable (incluido un `LEEME.txt` nuevo y la licencia, para que quien lo descomprima sepa desde el primer momento qué está abriendo y con qué condiciones de uso).

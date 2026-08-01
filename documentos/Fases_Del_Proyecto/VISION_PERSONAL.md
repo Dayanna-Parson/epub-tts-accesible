@@ -374,6 +374,10 @@ Probé la primera versión del panel y no me gustó cómo quedaba: tenía que ir
 
 El criterio ha sido el mismo a lo largo de todo el proceso: que funcione, que sea accesible, que el coste sea transparente.
 
+Versión 4.1.0:
+
+Sin ninguna función nueva, a propósito. Toda la energía de esta versión fue hacia dentro: revisar cada rincón donde un fallo podía quedar callado sin dejar rastro, ampliar las pruebas automáticas para no depender solo de probar a mano, medir y arreglar los sitios donde la aplicación se sentía más lenta de lo que debería, y por último, pulir de verdad la documentación de cara a quien la use por primera vez —el manual, el léeme, hasta el propio empaquetado del portable—, porque hasta ahora esa parte siempre se quedaba para "después". Con esta versión, "después" ya llegó: es la versión final antes de la distribución pública.
+
 ---
 
 ### 18. Cierre personal

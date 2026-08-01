@@ -1,0 +1,51 @@
+Epub TTS Accesible — léeme primero
+===================================
+
+Gracias por descargar Epub TTS Accesible.
+
+Cómo empezar
+------------
+1. Ejecuta "epubtts.exe" para abrir la aplicación. No hace falta instalar nada más.
+2. Una vez dentro, pulsa F1 en cualquier momento para abrir el manual de usuario
+   completo (el mismo archivo "ayuda.html" que tienes en esta misma carpeta).
+3. Si prefieres leer el manual antes de ejecutar la aplicación, abre
+   "ayuda.html" directamente con tu navegador — no necesitas tener la app
+   abierta para consultarlo.
+
+¿Qué necesito para empezar a usarla?
+-------------------------------------
+Nada obligatorio. La aplicación trae voces locales de Windows listas para
+usar sin crear ninguna cuenta ni clave de API. Si más adelante quieres voces
+de mucha más calidad (Azure, Amazon Polly, Deepgram, ElevenLabs) o el
+Asistente de Biblioteca con inteligencia artificial (Google Gemini),
+necesitarás tu propia clave de API de ese servicio — el manual (ayuda.html,
+apartado 10.1) trae el paso a paso completo para conseguir cada una.
+
+Sobre el aviso de tu antivirus
+-------------------------------
+Si Windows Defender u otro antivirus muestra un aviso al abrir "epubtts.exe"
+por primera vez, es un falso positivo habitual en aplicaciones pequeñas e
+independientes sin firma digital comercial (esa firma tiene un coste que no
+es viable para un proyecto de este tamaño). No hay nada malicioso: el código
+fuente completo es público en GitHub. Si tu antivirus lo bloquea, añade una
+excepción para la carpeta donde tengas la aplicación.
+
+Licencia
+--------
+Este programa es de uso libre y gratuito para fines personales, educativos o
+de ayuda a la comunidad con discapacidad visual. No puede venderse ni usarse
+con fines comerciales. Los términos completos están en el archivo "LICENSE"
+de esta misma carpeta.
+
+Dónde encontrar tus archivos
+------------------------------
+- Tus audiolibros y grabaciones se guardan en la carpeta "Grabaciones_Epub-TTS",
+  junto a este mismo archivo.
+- Si la aplicación falla alguna vez, el registro del problema queda en la
+  carpeta "registros" — es lo que necesitamos si nos escribes para pedir ayuda.
+
+Contacto y soporte
+-------------------
+contacto@tiflotutos.com — o visita tiflotutos.com para más recursos.
+
+— Dayanna Parson (TifloTutos)

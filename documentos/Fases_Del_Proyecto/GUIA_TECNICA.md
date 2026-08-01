@@ -392,7 +392,19 @@ Perfiles de usuario (`gestor_perfiles.py`): cada perfil guarda la voz activa, la
 
 Corregido durante las pruebas reales del primer portable de la Fase 8: ruta incorrecta de lectura de versión local en `comprobador_actualizaciones.py` (comparaba siempre contra `0.0.0` y ofrecía instalar versiones antiguas); `AnunciadorVoz` (pyttsx3) mudo dentro del `.exe` congelado por depender de `sys.executable -c`, que dentro de PyInstaller ya no es un intérprete real (se resolvió con un modo de re-ejecución `--hablar-interno`); `Ctrl+I` cayendo en la pestaña equivocada por aceleradores duplicados entre paneles y ventana principal; falta de `--collect-all=accessible_output3` en el empaquetado con PyInstaller. El mismo patrón de voz/progreso ya usado en el escaneo de Biblioteca se replicó en el divisor de capítulos de EPUB (`dialogo_troceador.py`) y se corrigió en Grabación de Fragmentos, que llamaba a `pyttsx3` dentro del propio proceso en vez de en uno auxiliar.
 
-Nada más pendiente en las funciones esenciales.
+Añadido en v4.1.0 (Fase 9 — Estabilización, sin funciones nuevas):
+
+Auditoría completa de excepciones silenciosas: un recorrido con AST (no solo texto) sobre `app/`, los dos ejecutables auxiliares e `iniciar_epub_tts.py` encontró 359 bloques `except` en total, de los cuales 174 en 31 archivos capturaban el error sin ningún rastro observable. Todos corregidos con `logger.exception`/`logger.debug`/`logger.warning` según la severidad real del caso, o por el canal propio de cada auxiliar (`_log()`/`_enviar()`/`_log_error()` a stderr) donde no hay logger central de `app/` disponible.
+
+Tests unitarios ampliados de 126 a 169 (`tests/test_suite.py`): `TestGestorBiblioteca` (CRUD de libros, categorías jerárquicas, etiquetas/sagas, exportaciones pendientes, regresión de migración de esquema `ALTER TABLE`) y `TestPersistenciaJsonAtomica` (escritura atómica, incluida una interrupción simulada a mitad de escritura).
+
+Rendimiento: `_aplicar_reglas_de_biblioteca()` en `limpiador_lectura.py` abría una conexión SQLite nueva por cada página de un PDF; ahora las reglas se cachean compiladas por `ruta_libro`. `Freeze`/`Thaw` añadido en cuatro listas/árboles que insertaban fila a fila sin él (Grabación, Troceador, Ajustes ×2, ventana de Proyectos). Prefiltrado con `in` antes del `re.sub` en `DiccionarioPronunciacion.aplicar()`.
+
+Empaquetado (`crear_portable.py`): `novedades.txt`, `LEEME.txt` y `LICENSE` van ahora directos a la raíz del portable junto a `ayuda.html` y `epubtts.exe`, sin la subcarpeta `documentos/` que antes solo contenía un archivo. `registros/` y `registros/errores/` se siembran de fábrica en el ZIP. Aviso explícito por consola si faltan `bin/ffmpeg.exe` o `bin/auxiliar_sapi32.exe` al empaquetar.
+
+Documentación de usuario reescrita a fondo (`ayuda.html`, `README.md`, `novedades.txt`, `LEEME.txt` nuevo): guías paso a paso para conseguir cada clave de API, tabla de contenidos, secciones que faltaban por completo (Ventana de Proyectos, sistema de voces favoritas y filtros, significado de cada sonido), y preguntas frecuentes.
+
+Nada más pendiente en las funciones esenciales. La v4.1.0 es la versión final antes de pasar a distribución pública.
 
 ---
 

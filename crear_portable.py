@@ -13,9 +13,9 @@ Pasos que ejecuta:
      arquitectura que la app, por eso se automatiza aquí — a diferencia de
      auxiliar_sapi32.exe, que necesita un intérprete de 32 bits aparte y
      sigue siendo un paso manual, ver bin/INSTRUCCIONES.txt).
-  5. Copia bin/, recursos/, locale/, ayuda.html y novedades.txt al portable
-     (novedades.txt directamente en la raíz, junto a ayuda.html y
-     epubtts.exe — no en una subcarpeta documentos/ para un único archivo).
+  5. Copia bin/, recursos/, locale/, ayuda.html, novedades.txt, LEEME.txt y
+     LICENSE al portable, todo directo en la raíz junto a epubtts.exe — sin
+     una subcarpeta documentos/ de por medio.
   6. Crea configuraciones/ vacía (ajustes.json de fábrica, carpetas de
      backups separadas y carpeta de plantillas del Asistente de Biblioteca)
      y registros/ vacía, para que un fallo en el portable escriba ahí
@@ -285,10 +285,14 @@ def copiar_recursos():
             print(f"      AVISO: bin/{nombre_exe} no está presente — "
                   f"revisa bin/INSTRUCCIONES.txt antes de distribuir este portable.")
 
-    # ayuda.html y novedades.txt van directos a la raíz del portable, junto a
-    # epubtts.exe (F1 busca ayuda.html ahí mismo) — sin carpeta documentos/
-    # de por medio, que solo llegó a contener este único archivo.
-    for nombre in ("ayuda.html", "novedades.txt"):
+    # ayuda.html, novedades.txt, LEEME.txt y LICENSE van directos a la raíz
+    # del portable, junto a epubtts.exe (F1 busca ayuda.html ahí mismo) — sin
+    # carpeta documentos/ de por medio, que solo llegó a contener un archivo.
+    # LEEME.txt es el primer contacto de quien acaba de descomprimir el ZIP,
+    # antes incluso de abrir la app; LICENSE va con el ejecutable distribuido
+    # porque los términos de uso deben viajar con el propio programa, no solo
+    # estar en el repositorio de origen.
+    for nombre in ("ayuda.html", "novedades.txt", "LEEME.txt", "LICENSE"):
         origen = os.path.join(RAIZ, nombre)
         if os.path.isfile(origen):
             shutil.copy2(origen, os.path.join(DIR_PORTABLE, nombre))
