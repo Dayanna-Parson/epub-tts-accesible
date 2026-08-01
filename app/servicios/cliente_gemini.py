@@ -244,7 +244,16 @@ def enviar_mensaje(historial, mensaje_usuario, contexto_libro=None,
     ultimo_error = None
     for indice, nombre_modelo in enumerate(candidatos_modelo):
         url = f"{_URL_BASE}/models/{nombre_modelo}:generateContent"
-        resp = requests.post(url, params={"key": api_key}, json=cuerpo, timeout=_TIMEOUT)
+        try:
+            resp = requests.post(url, params={"key": api_key}, json=cuerpo, timeout=_TIMEOUT)
+        except requests.exceptions.Timeout:
+            raise ValueError("Gemini tardó demasiado en responder (Timeout > 30s).")
+        except requests.exceptions.ConnectionError:
+            raise ValueError(
+                "No se pudo conectar con Gemini: sin conexión a internet o el servicio no responde."
+            )
+        except requests.exceptions.RequestException as e:
+            raise ValueError(f"Error de conexión con Gemini: {e}")
         es_ultimo = indice == len(candidatos_modelo) - 1
         if resp.status_code in _CODIGOS_REINTENTABLES and modo_automatico and not es_ultimo:
             logger.warning(
