@@ -42,6 +42,16 @@ import json
 import sys
 import threading
 
+# Sin esto, si el códec de stdout heredado del proceso padre no admite
+# UTF-8 (plausible en el .exe de 32 bits sin consola), sys.stdout.write()
+# con un evento que contenga tildes/ñ (nombres de voces como "Español")
+# lanza UnicodeEncodeError, _enviar() lo traga y el evento nunca llega al
+# lado de 64 bits, que se queda esperando la respuesta hasta el timeout.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 # Constantes SAPI5
 _SPF_ASYNC            = 1
 _SPF_PURGEBEFORESPEAK = 2
