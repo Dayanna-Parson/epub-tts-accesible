@@ -325,9 +325,9 @@ def main():
                 motor_export.AudioOutputStream = stream
                 motor_export.Speak(texto_exportar, 0)  # SPF_SYNC = 0
                 stream.Close()
-                _enviar({"evento": "exportado", "exito": True})
+                _enviar({"evento": "exportado", "exito": True, "id": cmd.get("id")})
             except Exception as e:
-                _enviar({"evento": "exportado", "exito": False, "msg": str(e)})
+                _enviar({"evento": "exportado", "exito": False, "msg": str(e), "id": cmd.get("id")})
 
 
 if __name__ == "__main__":

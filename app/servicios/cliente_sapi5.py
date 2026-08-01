@@ -1,5 +1,6 @@
 import logging
 import threading
+import comtypes
 import wx
 import comtypes.client
 
@@ -18,12 +19,13 @@ class ClienteSapi5:
         self._detener_flag = False
         self._generacion_sapi = 0
         self._volumen = 100   # último volumen elegido por el usuario (fijar_volumen)
+        self._velocidad_rate = 0  # último Rate SAPI calculado por fijar_velocidad()
         self._inicializar_motor()
 
     def _inicializar_motor(self):
         try:
             self.motor = comtypes.client.CreateObject("SAPI.SpVoice")
-            self.motor.Rate = 0
+            self.motor.Rate = self._velocidad_rate
             self.motor.Volume = self._volumen
             self.conectado = True
         except Exception as e:
@@ -139,30 +141,40 @@ class ClienteSapi5:
         WaitUntilDone(100) permite verificar _detener_flag cada 100 ms sin
         consumir CPU, y se comporta bien durante una pausa (motor.Pause() pausa
         el audio pero WaitUntilDone sigue esperando hasta motor.Resume()).
-        """
-        pos = pos_offset
-        for linea in texto.split('\n'):
-            # Comprobar cancelación antes de cada párrafo
-            if self._detener_flag or self._generacion_sapi != gen:
-                return
-            if linea.strip():
-                # Notificar posición al hilo principal (mueve cursor al párrafo)
-                wx.CallAfter(callback_progreso, pos)
-                try:
-                    self.motor.Volume = self._volumen
-                    self.motor.Speak(linea, SPF_ASYNC | SPF_IS_NOT_XML)
-                    # Esperar fin de párrafo en intervalos de 100 ms
-                    while not self._detener_flag and self._generacion_sapi == gen:
-                        if self.motor.WaitUntilDone(100):
-                            break  # párrafo completado
-                except Exception as e:
-                    logger.warning("[SAPI5] Error en párrafo: %s", e)
-                    if not self.conectado:
-                        return
-            pos += len(linea) + 1  # +1 por el \n eliminado al hacer split
 
-        if not self._detener_flag and self._generacion_sapi == gen:
-            wx.CallAfter(callback_completado)
+        El objeto COM SAPI.SpVoice (self.motor) se creó en el hilo principal
+        (apartment STA). Acceder a una interfaz COM STA desde un hilo distinto
+        sin inicializar COM en ese hilo no está garantizado — se inicializa un
+        apartment propio para este hilo durante toda su vida y se libera al
+        terminar.
+        """
+        comtypes.CoInitialize()
+        try:
+            pos = pos_offset
+            for linea in texto.split('\n'):
+                # Comprobar cancelación antes de cada párrafo
+                if self._detener_flag or self._generacion_sapi != gen:
+                    return
+                if linea.strip():
+                    # Notificar posición al hilo principal (mueve cursor al párrafo)
+                    wx.CallAfter(callback_progreso, pos)
+                    try:
+                        self.motor.Volume = self._volumen
+                        self.motor.Speak(linea, SPF_ASYNC | SPF_IS_NOT_XML)
+                        # Esperar fin de párrafo en intervalos de 100 ms
+                        while not self._detener_flag and self._generacion_sapi == gen:
+                            if self.motor.WaitUntilDone(100):
+                                break  # párrafo completado
+                    except Exception as e:
+                        logger.warning("[SAPI5] Error en párrafo: %s", e)
+                        if not self.conectado:
+                            return
+                pos += len(linea) + 1  # +1 por el \n eliminado al hacer split
+
+            if not self._detener_flag and self._generacion_sapi == gen:
+                wx.CallAfter(callback_completado)
+        finally:
+            comtypes.CoUninitialize()
 
     def _avisar_voz_incompatible(self, nombre_voz):
         """Muestra un aviso accesible cuando una voz SAPI5 de 32 bits no puede activarse."""
@@ -220,6 +232,7 @@ class ClienteSapi5:
                 tasa = int((v / 5) - 10)
                 tasa = max(-10, min(10, tasa))
                 self.motor.Rate = tasa
+                self._velocidad_rate = tasa
                 logger.debug("[SAPI5] fijar_velocidad(%s) -> Rate=%s", v, tasa)
             except Exception:
                 logger.exception("[SAPI5] Error al fijar la velocidad (valor recibido: %s)", v)

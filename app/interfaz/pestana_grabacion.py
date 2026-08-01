@@ -275,6 +275,12 @@ class PestanaGrabacion(wx.Panel):
         from app.motor.anunciador_voz import AnunciadorVoz
         self._voz_grabacion = AnunciadorVoz()
         self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz_grabacion.detener(), e.Skip()))
+        # Comparten el mismo recurso de audio (GrabadorAudio().probar_voz()
+        # reproduce de forma bloqueante en el hilo de fondo), así que ambos
+        # métodos de preescucha usan un único candado: pulsar "Probar voz" o
+        # "Preescucha general" dos veces seguidas antes de terminar producía
+        # audio superpuesto.
+        self._preescucha_en_curso = False
         self.proyecto_actual   = None          # dict del proyecto activo o None
         self.gestor_proyectos  = GestorProyectos()
         self._ofrecio_proyecto = False         # evita mostrar el diálogo dos veces por TXT
@@ -973,6 +979,14 @@ class PestanaGrabacion(wx.Panel):
 
     def al_probar_voz(self, evento):
         """Reproduce una muestra de la voz marcada (hilo de fondo)."""
+        if self._preescucha_en_curso:
+            reproducir(SND_ERROR)
+            wx.MessageBox(
+                _("Ya hay una preescucha en curso. Espera a que termine."),
+                _("Preescucha en curso"), wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
         datos_voz = None
         # Buscar la voz marcada (checked)
         for i in range(self.check_voces.GetItemCount()):
@@ -1004,7 +1018,10 @@ class PestanaGrabacion(wx.Panel):
                     _("Error al reproducir la muestra:\n{error}").format(error=e),
                     _("Error de previsualización"), wx.OK | wx.ICON_ERROR,
                 )
+            finally:
+                self._preescucha_en_curso = False
 
+        self._preescucha_en_curso = True
         threading.Thread(target=_probar, daemon=True).start()
 
     def al_preescucha_general(self, evento):
@@ -1012,6 +1029,14 @@ class PestanaGrabacion(wx.Panel):
         Reproduce una muestra de cada voz asignada en orden de aparición
         de etiquetas. Útil para verificar el casting completo antes de grabar.
         """
+        if self._preescucha_en_curso:
+            reproducir(SND_ERROR)
+            wx.MessageBox(
+                _("Ya hay una preescucha en curso. Espera a que termine."),
+                _("Preescucha en curso"), wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
         if not self.asignaciones:
             reproducir(SND_ERROR)
             wx.MessageBox(
@@ -1036,22 +1061,26 @@ class PestanaGrabacion(wx.Panel):
             return
 
         def _preescucha():
-            grabador = GrabadorAudio()
-            for etiq, datos_voz in voces_a_probar:
-                nombre_voz = datos_voz.get('nombre', _("voz"))
+            try:
+                grabador = GrabadorAudio()
+                for etiq, datos_voz in voces_a_probar:
+                    nombre_voz = datos_voz.get('nombre', _("voz"))
+                    wx.CallAfter(
+                        self.lbl_progreso.SetLabel,
+                        _("Pre-escucha: @{etiqueta} → {voz}").format(etiqueta=etiq, voz=nombre_voz),
+                    )
+                    try:
+                        grabador.probar_voz(datos_voz)
+                    except Exception as e:
+                        logger.warning(f"[Pre-escucha] Error con @{etiq}: {e}")
                 wx.CallAfter(
                     self.lbl_progreso.SetLabel,
-                    _("Pre-escucha: @{etiqueta} → {voz}").format(etiqueta=etiq, voz=nombre_voz),
+                    _("Pre-escucha completada. {n} voces verificadas.").format(n=len(voces_a_probar)),
                 )
-                try:
-                    grabador.probar_voz(datos_voz)
-                except Exception as e:
-                    logger.warning(f"[Pre-escucha] Error con @{etiq}: {e}")
-            wx.CallAfter(
-                self.lbl_progreso.SetLabel,
-                _("Pre-escucha completada. {n} voces verificadas.").format(n=len(voces_a_probar)),
-            )
+            finally:
+                self._preescucha_en_curso = False
 
+        self._preescucha_en_curso = True
         threading.Thread(target=_preescucha, daemon=True).start()
 
     # ================================================================== #

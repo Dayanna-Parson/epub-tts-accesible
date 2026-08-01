@@ -7,6 +7,7 @@ Requisito de distribución:
     /bin/auxiliar_sapi32.exe  — compilado con Python 32 bits + PyInstaller.
     Los usuarios finales no necesitan instalar nada.
 """
+import itertools
 import json
 import logging
 import os
@@ -35,13 +36,49 @@ class ClienteSapi32Bridge:
         self._lock_envio = threading.Lock()
         self._callback_progreso   = None
         self._callback_completado = None
-        # Eventos de sincronización para llamadas síncronas
-        self._evt_voces       = threading.Event()
-        self._voces_resultado = []
-        self._evt_voz_cambiada = threading.Event()
-        self._evt_exportado = threading.Event()
-        self._exportado_resultado = {}
+        # Peticiones síncronas pendientes de respuesta, indexadas por ID de
+        # correlación: {id_peticion: {"evento": threading.Event(), "resultado": dict}}
+        # Antes había un único Event global por tipo de operación (listar_voces,
+        # cambiar_voz, exportar_archivo): si dos hilos invocaban la misma
+        # operación casi a la vez, un .clear() podía borrar el .set() de una
+        # respuesta que ya había llegado para la otra petición, o un hilo
+        # podía leer el resultado de la petición del otro.
+        self._lock_pendientes = threading.Lock()
+        self._pendientes = {}
+        self._contador_ids = itertools.count(1)
         self._inicializar()
+
+    # ── Correlación de peticiones/respuestas ────────────────────────────────
+
+    def _nuevo_id_peticion(self):
+        with self._lock_pendientes:
+            return str(next(self._contador_ids))
+
+    def _registrar_pendiente(self, id_peticion):
+        """Crea y registra el Event de espera para una petición síncrona."""
+        entrada = {"evento": threading.Event(), "resultado": None}
+        with self._lock_pendientes:
+            self._pendientes[id_peticion] = entrada
+        return entrada
+
+    def _resolver_pendiente(self, id_peticion, resultado):
+        """Activa el Event de una petición pendiente con su resultado."""
+        with self._lock_pendientes:
+            entrada = self._pendientes.get(id_peticion)
+        if entrada is not None:
+            entrada["resultado"] = resultado
+            entrada["evento"].set()
+
+    def _esperar_pendiente(self, id_peticion, timeout):
+        """Espera la respuesta de una petición síncrona y libera su entrada."""
+        with self._lock_pendientes:
+            entrada = self._pendientes.get(id_peticion)
+        if entrada is None:
+            return None
+        obtenido = entrada["evento"].wait(timeout=timeout)
+        with self._lock_pendientes:
+            self._pendientes.pop(id_peticion, None)
+        return entrada["resultado"] if obtenido else None
 
     # ── Inicialización ────────────────────────────────────────────────────────
 
@@ -112,22 +149,31 @@ class ClienteSapi32Bridge:
                 if cb:
                     wx.CallAfter(cb)
 
-            elif evento == "voces":
-                self._voces_resultado = datos.get("lista", [])
-                self._evt_voces.set()
-
-            elif evento == "voz_cambiada":
-                self._evt_voz_cambiada.set()
-
-            elif evento == "exportado":
-                self._exportado_resultado = datos
-                self._evt_exportado.set()
+            elif evento in ("voces", "voz_cambiada", "exportado"):
+                id_peticion = datos.get("id")
+                if id_peticion is not None:
+                    self._resolver_pendiente(id_peticion, datos)
+                else:
+                    logger.debug(
+                        "[SAPI32] Evento '%s' sin id de correlación, se descarta.", evento
+                    )
 
             elif evento == "error":
                 logger.warning("[SAPI32] Error del auxiliar: %s", datos.get("msg"))
 
         logger.debug("[SAPI32] Proceso auxiliar terminado.")
         self.conectado = False
+        # El proceso murió (o el bucle terminó por otro motivo) con peticiones
+        # síncronas aún esperando su Event: sin esto se quedarían bloqueadas
+        # hasta agotar su timeout completo en vez de fallar de inmediato.
+        with self._lock_pendientes:
+            pendientes = list(self._pendientes.items())
+        for id_peticion, entrada in pendientes:
+            entrada["resultado"] = {
+                "error": True,
+                "msg": "El proceso auxiliar de 32 bits terminó inesperadamente.",
+            }
+            entrada["evento"].set()
 
     def _enviar(self, datos):
         """Envía un comando JSON al proceso auxiliar."""
@@ -146,10 +192,13 @@ class ClienteSapi32Bridge:
     def obtener_voces(self):
         if not self.conectado:
             return []
-        self._evt_voces.clear()
-        self._enviar({"cmd": "listar_voces"})
-        self._evt_voces.wait(timeout=10.0)
-        return list(self._voces_resultado)
+        id_peticion = self._nuevo_id_peticion()
+        self._registrar_pendiente(id_peticion)
+        self._enviar({"cmd": "listar_voces", "id": id_peticion})
+        resultado = self._esperar_pendiente(id_peticion, timeout=10.0)
+        if not resultado or resultado.get("error"):
+            return []
+        return list(resultado.get("lista", []))
 
     def hablar(self, texto):
         if self.conectado:
@@ -193,8 +242,8 @@ class ClienteSapi32Bridge:
         """
         if not self.conectado:
             return False, "El proceso auxiliar de 32 bits no está conectado."
-        self._evt_exportado.clear()
-        self._exportado_resultado = {}
+        id_peticion = self._nuevo_id_peticion()
+        self._registrar_pendiente(id_peticion)
         self._enviar({
             "cmd": "exportar_archivo",
             "texto": texto,
@@ -202,21 +251,25 @@ class ClienteSapi32Bridge:
             "voz_nombre": voz_nombre,
             "rate": rate,
             "volume": volume,
+            "id": id_peticion,
         })
         # Margen generoso: textos largos pueden tardar bastante en
         # sintetizarse por completo antes de que el auxiliar responda.
         espera = timeout if timeout is not None else max(30.0, len(texto) * 0.05)
-        if not self._evt_exportado.wait(timeout=espera):
+        resultado = self._esperar_pendiente(id_peticion, timeout=espera)
+        if resultado is None:
             return False, "El proceso auxiliar de 32 bits no respondió a tiempo."
-        resultado = self._exportado_resultado
+        if resultado.get("error"):
+            return False, resultado.get("msg", "El proceso auxiliar de 32 bits terminó inesperadamente.")
         return bool(resultado.get("exito")), resultado.get("msg", "")
 
     def cambiar_voz_por_nombre(self, nombre):
         if not self.conectado:
             return
-        self._evt_voz_cambiada.clear()
-        self._enviar({"cmd": "cambiar_voz", "nombre": nombre})
-        self._evt_voz_cambiada.wait(timeout=5.0)
+        id_peticion = self._nuevo_id_peticion()
+        self._registrar_pendiente(id_peticion)
+        self._enviar({"cmd": "cambiar_voz", "nombre": nombre, "id": id_peticion})
+        self._esperar_pendiente(id_peticion, timeout=5.0)
 
     def cerrar(self):
         if self._proceso:
