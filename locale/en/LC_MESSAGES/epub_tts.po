@@ -1733,7 +1733,7 @@ msgid "Descargando el archivo de actualización en segundo plano, por favor espe
 msgstr "Downloading the update file in the background, please wait..."
 
 msgid "No se pudo descargar la actualización:\n{error}"
-msgstr "The update could not be downloaded:\n{error}"
+msgstr "Could not download the update:\n{error}"
 
 msgid "Error de descarga"
 msgstr "Download error"
