@@ -103,6 +103,7 @@ class PestanaBiblioteca(wx.Panel):
 
         self.gestor = GestorBiblioteca()
         self.escaner = None
+        self._escaneo_en_curso = False
         self._libros_actuales = []
         self._ids_audiolibro_pendiente = set()
         self._id_categoria_activa = None
@@ -873,6 +874,14 @@ class PestanaBiblioteca(wx.Panel):
     # ── Importación de carpetas ──────────────────────────────────────────────
 
     def al_importar_carpeta(self, evento):
+        if self._escaneo_en_curso:
+            reproducir(ERROR)
+            wx.MessageBox(
+                _("Ya hay una importación en curso. Espera a que termine antes de iniciar otra."),
+                _("Importación en curso"), wx.OK | wx.ICON_INFORMATION,
+            )
+            return
+
         with wx.DirDialog(
             self, _("Seleccionar carpeta con libros para importar"),
             defaultPath=self._cargar_ultima_carpeta_importada(),
@@ -893,6 +902,9 @@ class PestanaBiblioteca(wx.Panel):
 
         voz.hablar(_("Escaneando carpeta, por favor espera..."))
         self._modo_progreso = "escaneo"
+        self._escaneo_en_curso = True
+        self.btn_importar.Disable()
+        self.btn_importar_archivo.Disable()
         self.barra_progreso.SetValue(0)
         self.barra_progreso.Show()
         self.Layout()
@@ -1119,6 +1131,9 @@ class PestanaBiblioteca(wx.Panel):
 
     def _al_terminar_escaneo(self, total_insertados):
         self._timer_progreso.Stop()
+        self._escaneo_en_curso = False
+        self.btn_importar.Enable()
+        self.btn_importar_archivo.Enable()
         reproducir(SUCCESS)
         self.barra_progreso.Hide()
         self.Layout()
@@ -1155,6 +1170,9 @@ class PestanaBiblioteca(wx.Panel):
 
     def _al_fallar_escaneo(self, error):
         self._timer_progreso.Stop()
+        self._escaneo_en_curso = False
+        self.btn_importar.Enable()
+        self.btn_importar_archivo.Enable()
         reproducir(ERROR)
         self.barra_progreso.Hide()
         self.Layout()

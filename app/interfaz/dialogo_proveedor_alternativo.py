@@ -241,6 +241,21 @@ class DialogoProveedorAlternativo(wx.Dialog):
         clave, _nombre, _saldo = self._proveedores_disponibles[idx]
 
         if self._panel_voces:
+            # Detener cualquier preescucha en curso antes de destruir el panel:
+            # si no se detiene aquí, la reproducción sigue de fondo tras
+            # cambiar de proveedor y su callback_completado (vía wx.CallAfter)
+            # puede llegar después de Destroy() y tocar self.btn_escuchar ya
+            # destruido. El flag _cerrado del panel es la protección real
+            # contra el crash; detener() además evita el sonido de fondo.
+            if hasattr(self._panel_voces, "_reproductor"):
+                try:
+                    if self._panel_voces._reproductor.obtener_estado() == "reproduciendo":
+                        self._panel_voces._reproductor.detener()
+                except Exception:
+                    logger.exception(
+                        "[DialogoProveedorAlternativo] Error al detener la preescucha antes de cambiar de proveedor"
+                    )
+            self._panel_voces._cerrado = True
             self.sizer_contenedor.Detach(self._panel_voces)
             self._panel_voces.Destroy()
             self._panel_voces = None

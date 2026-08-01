@@ -53,13 +53,25 @@ class ClienteDeepgram:
 
     # ── Caché LRU ─────────────────────────────────────────────────────────────
 
-    def _guardar_en_cache(self, texto: str, data, fs: int):
-        if texto not in self._cache_frags:
+    def _clave_cache(self, texto: str, datos_voz):
+        """
+        Clave de caché con la voz/modelo incluido: el mismo texto con dos
+        voces distintas (etiquetas {{@voz}}, o cambio de voz en Lectura y
+        retroceso) no debe devolver el audio cacheado de la voz anterior.
+        """
+        if isinstance(datos_voz, dict):
+            modelo = datos_voz.get("id") or _MODELO_DEFAULT
+        else:
+            modelo = datos_voz or _MODELO_DEFAULT
+        return (modelo, texto)
+
+    def _guardar_en_cache(self, clave, data, fs: int):
+        if clave not in self._cache_frags:
             if len(self._cache_lru) >= _MAX_CACHE:
                 clave_antigua = self._cache_lru.pop(0)
                 self._cache_frags.pop(clave_antigua, None)
-            self._cache_lru.append(texto)
-        self._cache_frags[texto] = (data, fs)
+            self._cache_lru.append(clave)
+        self._cache_frags[clave] = (data, fs)
 
     # ── División de texto largo ────────────────────────────────────────────────
 
@@ -177,17 +189,18 @@ class ClienteDeepgram:
     def hablar(self, texto: str, datos_voz):
         """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
+        clave = self._clave_cache(texto, datos_voz)
 
-        if texto in self._cache_frags:
-            data, fs = self._cache_frags[texto]
-        elif self._audio_preparado is not None and self._texto_preparado == texto:
+        if clave in self._cache_frags:
+            data, fs = self._cache_frags[clave]
+        elif self._audio_preparado is not None and self._texto_preparado == clave:
             data, fs = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
         else:
             data, fs = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
 
         if not self._parado:
             sd.play(data, fs)
@@ -201,15 +214,16 @@ class ClienteDeepgram:
 
     def preparar(self, texto: str, datos_voz):
         """Pre-descarga el audio del siguiente fragmento en segundo plano."""
-        if texto in self._cache_frags:
-            self._audio_preparado = self._cache_frags[texto]
-            self._texto_preparado = texto
+        clave = self._clave_cache(texto, datos_voz)
+        if clave in self._cache_frags:
+            self._audio_preparado = self._cache_frags[clave]
+            self._texto_preparado = clave
             return
         try:
             data, fs = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
             self._audio_preparado = (data, fs)
-            self._texto_preparado = texto
+            self._texto_preparado = clave
         except Exception:
             logger.exception("[Deepgram] Fallo al precargar audio en preparar()")
             self._audio_preparado = None

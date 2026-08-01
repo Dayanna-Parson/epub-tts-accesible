@@ -427,11 +427,17 @@ class DialogoTroceador(wx.Dialog):
     def _al_abrir_carpeta(self, evento=None):
         self._abrir_carpeta_capitulos()
 
+    # ── Cierre del diálogo ───────────────────────────────────────────────────
+
+    def _al_cerrar(self, evento=None):
+        self._cerrado = True
+        self.EndModal(wx.ID_CLOSE)
+
     # ── Teclado global ────────────────────────────────────────────────────────
 
     def _al_tecla_global(self, evento):
         if evento.GetKeyCode() == wx.WXK_ESCAPE:
-            self.EndModal(wx.ID_CLOSE)
+            self._al_cerrar()
             return
         evento.Skip()
 # ANCLAJE_FIN: DIALOGO_TROCEADOR

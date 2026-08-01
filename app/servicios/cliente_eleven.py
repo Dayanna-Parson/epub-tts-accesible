@@ -29,16 +29,82 @@ class ClienteEleven:
     def obtener_voces(self):
         return []
 
-    def _guardar_en_cache(self, texto, data, fs):
-        if texto not in self._cache_frags:
+    def _clave_cache(self, texto, datos_voz):
+        """
+        Clave de caché con la voz incluida: el mismo texto con dos voces
+        distintas (etiquetas {{@voz}}, o cambio de voz en Lectura y
+        retroceso) no debe devolver el audio cacheado de la voz anterior.
+        """
+        if isinstance(datos_voz, dict):
+            voice_id = datos_voz.get("id")
+        else:
+            voice_id = datos_voz
+        return (voice_id, texto)
+
+    def _guardar_en_cache(self, clave, data, fs):
+        if clave not in self._cache_frags:
             if len(self._cache_lru) >= _MAX_CACHE:
                 clave_antigua = self._cache_lru.pop(0)
                 self._cache_frags.pop(clave_antigua, None)
-            self._cache_lru.append(texto)
-        self._cache_frags[texto] = (data, fs)
+            self._cache_lru.append(clave)
+        self._cache_frags[clave] = (data, fs)
+
+    # ── División de texto largo ────────────────────────────────────────────────
+
+    # ANCLAJE_INICIO: DIVISOR_TEXTO_ELEVEN
+    _LIMITE_API = 5000  # valor conservador, seguro para todos los planes de ElevenLabs
+
+    def _dividir_texto(self, texto):
+        """
+        Divide el texto en fragmentos que no superen _LIMITE_API caracteres.
+        Respeta los finales de frase para mantener la cohesión fonética.
+        """
+        if len(texto) <= self._LIMITE_API:
+            return [texto]
+        fragmentos = []
+        while texto:
+            if len(texto) <= self._LIMITE_API:
+                fragmentos.append(texto.strip())
+                break
+            corte = -1
+            for sep in ('. ', '! ', '? ', '; ', '\n'):
+                pos = texto.rfind(sep, 0, self._LIMITE_API)
+                if pos != -1:
+                    candidato = pos + len(sep)
+                    if candidato > corte:
+                        corte = candidato
+            if corte <= 0:
+                corte = self._LIMITE_API
+            fragmento = texto[:corte].strip()
+            if fragmento:
+                fragmentos.append(fragmento)
+            texto = texto[corte:].strip()
+        return fragmentos
+    # ANCLAJE_FIN: DIVISOR_TEXTO_ELEVEN
 
     def _llamar_api(self, texto, datos_voz):
-        """Llama a la API de ElevenLabs y devuelve (data, fs_efectiva)."""
+        """
+        Punto de entrada para toda síntesis HTTP de ElevenLabs. Divide el
+        texto si supera el límite de la API, realiza las peticiones de
+        forma secuencial y concatena el audio antes de devolverlo.
+        """
+        fragmentos = self._dividir_texto(texto)
+        if len(fragmentos) == 1:
+            return self._peticion_http(fragmentos[0], datos_voz)
+        import numpy as np
+        partes = []
+        fs_comun = None
+        for frag in fragmentos:
+            if self._parado:
+                raise Exception("Síntesis cancelada.")
+            data, fs = self._peticion_http(frag, datos_voz)
+            if fs_comun is None:
+                fs_comun = fs
+            partes.append(data)
+        return np.concatenate(partes, axis=0), fs_comun
+
+    def _peticion_http(self, texto, datos_voz):
+        """Realiza una única petición POST a la API. El texto siempre es <= _LIMITE_API chars."""
         self.config = self._cargar_config()
         el_conf = self.config.get("elevenlabs", {})
         key = el_conf.get("api_key")
@@ -73,17 +139,18 @@ class ClienteEleven:
     def hablar(self, texto, datos_voz):
         """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
+        clave = self._clave_cache(texto, datos_voz)
 
-        if texto in self._cache_frags:
-            data, fs_efectiva = self._cache_frags[texto]
-        elif self._audio_preparado is not None and self._texto_preparado == texto:
+        if clave in self._cache_frags:
+            data, fs_efectiva = self._cache_frags[clave]
+        elif self._audio_preparado is not None and self._texto_preparado == clave:
             data, fs_efectiva = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
-            self._guardar_en_cache(texto, data, fs_efectiva)
+            self._guardar_en_cache(clave, data, fs_efectiva)
         else:
             data, fs_efectiva = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs_efectiva)
+            self._guardar_en_cache(clave, data, fs_efectiva)
 
         if not self._parado:
             sd.play(data, fs_efectiva)
@@ -99,15 +166,16 @@ class ClienteEleven:
         """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe.
         El resultado se guarda siempre: detener() no debe invalidarlo porque el
         audio descargado es para el SIGUIENTE fragmento, no para el actual."""
-        if texto in self._cache_frags:
-            self._audio_preparado = self._cache_frags[texto]
-            self._texto_preparado = texto
+        clave = self._clave_cache(texto, datos_voz)
+        if clave in self._cache_frags:
+            self._audio_preparado = self._cache_frags[clave]
+            self._texto_preparado = clave
             return
         try:
             data, fs_efectiva = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs_efectiva)
+            self._guardar_en_cache(clave, data, fs_efectiva)
             self._audio_preparado = (data, fs_efectiva)
-            self._texto_preparado = texto
+            self._texto_preparado = clave
         except Exception:
             logger.exception("[ElevenLabs] Fallo al precargar audio en preparar()")
             self._audio_preparado = None

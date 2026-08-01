@@ -10,25 +10,32 @@ Compilar con Python 32 bits + PyInstaller:
 Copiar el exe resultante a /bin/ del portable.
 
 Protocolo de comandos (stdin, una línea JSON por comando):
-    {"cmd": "listar_voces"}
-    {"cmd": "cambiar_voz", "nombre": "Eloquence"}
+    {"cmd": "listar_voces", "id": "a1b2c3d4"}
+    {"cmd": "cambiar_voz", "nombre": "Eloquence", "id": "a1b2c3d4"}
     {"cmd": "hablar",      "texto": "...", "pos_offset": 0}
     {"cmd": "detener"}
     {"cmd": "pausar"}
     {"cmd": "reanudar"}
     {"cmd": "fijar_velocidad", "valor": 50}
     {"cmd": "fijar_volumen",   "valor": 100}
-    {"cmd": "exportar_archivo", "texto": "...", "ruta_wav": "...", "voz_nombre": "...", "rate": 0, "volume": 100}
+    {"cmd": "exportar_archivo", "texto": "...", "ruta_wav": "...", "voz_nombre": "...", "rate": 0, "volume": 100, "id": "a1b2c3d4"}
     {"cmd": "salir"}
 
 Protocolo de eventos (stdout, una línea JSON por evento):
     {"evento": "listo"}
-    {"evento": "voces",        "lista": [...]}
-    {"evento": "voz_cambiada", "exito": true}
+    {"evento": "voces",        "lista": [...], "id": "a1b2c3d4"}
+    {"evento": "voz_cambiada", "exito": true,  "id": "a1b2c3d4"}
     {"evento": "progreso",     "pos": 123}
     {"evento": "completado"}
-    {"evento": "exportado",    "exito": true/false, "msg": "..."}
+    {"evento": "exportado",    "exito": true/false, "msg": "...", "id": "a1b2c3d4"}
     {"evento": "error",        "msg": "..."}
+
+El campo "id" es un identificador de correlación de petición/respuesta,
+generado por el llamador y devuelto tal cual en el evento de respuesta.
+Se usa en las operaciones síncronas (listar_voces, cambiar_voz,
+exportar_archivo) para que dos peticiones concurrentes del mismo tipo no
+se pisen entre sí en el lado de ClienteSapi32Bridge. Es opcional: si no
+se envía, el evento de respuesta simplemente no incluye "id".
 """
 
 import json
@@ -234,7 +241,11 @@ def main():
             break
 
         elif accion == "listar_voces":
-            _enviar({"evento": "voces", "lista": _leer_categorias_sapi(motor, comtypes.client)})
+            _enviar({
+                "evento": "voces",
+                "lista": _leer_categorias_sapi(motor, comtypes.client),
+                "id": cmd.get("id"),
+            })
 
         elif accion == "cambiar_voz":
             nombre_buscado = cmd.get("nombre", "")
@@ -242,7 +253,7 @@ def main():
             # Se recuerda el nombre para que cada hilo de habla nuevo pueda
             # reaplicarlo sobre su propia instancia local del motor.
             estado["voz_nombre"] = nombre_buscado if encontrada else estado["voz_nombre"]
-            _enviar({"evento": "voz_cambiada", "exito": encontrada})
+            _enviar({"evento": "voz_cambiada", "exito": encontrada, "id": cmd.get("id")})
 
         elif accion == "hablar":
             estado["detener"] = False

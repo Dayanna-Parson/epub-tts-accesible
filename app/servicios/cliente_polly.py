@@ -106,13 +106,25 @@ class ClientePolly:
     def obtener_voces(self):
         return []
 
-    def _guardar_en_cache(self, texto, data, fs):
-        if texto not in self._cache_frags:
+    def _clave_cache(self, texto, datos_voz):
+        """
+        Clave de caché con la voz incluida: el mismo texto con dos voces
+        distintas (etiquetas {{@voz}}, o cambio de voz en Lectura y
+        retroceso) no debe devolver el audio cacheado de la voz anterior.
+        """
+        if isinstance(datos_voz, dict):
+            voice_id = datos_voz.get("id", "Lucia")
+        else:
+            voice_id = str(datos_voz)
+        return (voice_id, texto)
+
+    def _guardar_en_cache(self, clave, data, fs):
+        if clave not in self._cache_frags:
             if len(self._cache_lru) >= _MAX_CACHE:
                 clave_antigua = self._cache_lru.pop(0)
                 self._cache_frags.pop(clave_antigua, None)
-            self._cache_lru.append(texto)
-        self._cache_frags[texto] = (data, fs)
+            self._cache_lru.append(clave)
+        self._cache_frags[clave] = (data, fs)
 
     def _elegir_motor(self, datos_voz):
         """
@@ -126,11 +138,65 @@ class ClientePolly:
                 return motor
         return "neural"
 
+    # ── División de texto largo ────────────────────────────────────────────────
+
+    # ANCLAJE_INICIO: DIVISOR_TEXTO_POLLY
+    _LIMITE_API = 3000  # límite real de la API síncrona de Polly (SSML incluido)
+
+    def _dividir_texto(self, texto):
+        """
+        Divide el texto en fragmentos que no superen _LIMITE_API caracteres.
+        Respeta los finales de frase para mantener la cohesión fonética.
+        """
+        if len(texto) <= self._LIMITE_API:
+            return [texto]
+        fragmentos = []
+        while texto:
+            if len(texto) <= self._LIMITE_API:
+                fragmentos.append(texto.strip())
+                break
+            corte = -1
+            for sep in ('. ', '! ', '? ', '; ', '\n'):
+                pos = texto.rfind(sep, 0, self._LIMITE_API)
+                if pos != -1:
+                    candidato = pos + len(sep)
+                    if candidato > corte:
+                        corte = candidato
+            if corte <= 0:
+                corte = self._LIMITE_API
+            fragmento = texto[:corte].strip()
+            if fragmento:
+                fragmentos.append(fragmento)
+            texto = texto[corte:].strip()
+        return fragmentos
+    # ANCLAJE_FIN: DIVISOR_TEXTO_POLLY
+
     def _llamar_api(self, texto, datos_voz):
         """
-        Llama a la API de Amazon Polly y devuelve (data, fs).
+        Punto de entrada para toda síntesis de Polly. Divide el texto si
+        supera el límite de la API síncrona, realiza las peticiones de forma
+        secuencial y concatena el audio antes de devolverlo.
+        """
+        fragmentos = self._dividir_texto(texto)
+        if len(fragmentos) == 1:
+            return self._peticion_http(fragmentos[0], datos_voz)
+        partes = []
+        fs_comun = None
+        for frag in fragmentos:
+            if self._parado:
+                raise Exception("Síntesis cancelada.")
+            data, fs = self._peticion_http(frag, datos_voz)
+            if fs_comun is None:
+                fs_comun = fs
+            partes.append(data)
+        return np.concatenate(partes, axis=0), fs_comun
+
+    def _peticion_http(self, texto, datos_voz):
+        """
+        Realiza una única llamada a la API de Amazon Polly y devuelve (data, fs).
         Implementa 1 reintento automático ante errores de conexión transitoria.
         No reproduce el audio — solo lo descarga y decodifica.
+        El texto siempre es <= _LIMITE_API chars.
         """
         if not _BOTO3_DISPONIBLE:
             raise Exception(
@@ -233,17 +299,18 @@ class ClientePolly:
     def hablar(self, texto, datos_voz):
         """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
+        clave = self._clave_cache(texto, datos_voz)
 
-        if texto in self._cache_frags:
-            data, fs = self._cache_frags[texto]
-        elif self._audio_preparado is not None and self._texto_preparado == texto:
+        if clave in self._cache_frags:
+            data, fs = self._cache_frags[clave]
+        elif self._audio_preparado is not None and self._texto_preparado == clave:
             data, fs = self._audio_preparado
             self._audio_preparado = None
             self._texto_preparado = None
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
         else:
             data, fs = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
 
         if not self._parado:
             sd.play(data, fs)
@@ -263,15 +330,16 @@ class ClientePolly:
         """Pre-descarga el audio en segundo plano. Reutiliza caché si ya existe.
         El resultado se guarda siempre: detener() no debe invalidarlo porque el
         audio descargado es para el SIGUIENTE fragmento, no para el actual."""
-        if texto in self._cache_frags:
-            self._audio_preparado = self._cache_frags[texto]
-            self._texto_preparado = texto
+        clave = self._clave_cache(texto, datos_voz)
+        if clave in self._cache_frags:
+            self._audio_preparado = self._cache_frags[clave]
+            self._texto_preparado = clave
             return
         try:
             data, fs = self._llamar_api(texto, datos_voz)
-            self._guardar_en_cache(texto, data, fs)
+            self._guardar_en_cache(clave, data, fs)
             self._audio_preparado = (data, fs)
-            self._texto_preparado = texto
+            self._texto_preparado = clave
         except Exception:
             logger.exception("[Polly] Fallo al precargar audio en preparar()")
             self._audio_preparado = None

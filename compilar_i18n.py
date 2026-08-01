@@ -210,30 +210,44 @@ def _generar_mo(mensajes: dict) -> bytes:
     return salida
 
 
-def compilar_archivo(ruta_po: str) -> str:
-    mensajes = _parsear_po(ruta_po)
+def compilar_archivo(ruta_po: str) -> tuple:
+    mensajes, cantidad_duplicados = _parsear_po(ruta_po)
     contenido_mo = _generar_mo(mensajes)
     ruta_mo = os.path.splitext(ruta_po)[0] + ".mo"
     with open(ruta_mo, "wb") as archivo:
         archivo.write(contenido_mo)
-    return ruta_mo
+    return ruta_mo, cantidad_duplicados
 
 
 def compilar_todos() -> list:
     rutas_po = sorted(glob.glob(os.path.join(CARPETA_LOCALE, "*", "LC_MESSAGES", "*.po")))
     rutas_mo = []
     hubo_error = False
+    archivos_con_duplicados = 0
     for ruta_po in rutas_po:
         try:
-            ruta_mo = compilar_archivo(ruta_po)
+            ruta_mo, cantidad_duplicados = compilar_archivo(ruta_po)
         except ErrorSintaxisPo as error:
             hubo_error = True
             print(f"ERROR de sintaxis: {error}")
             continue
         rutas_mo.append(ruta_mo)
-        print(f"Compilado: {os.path.relpath(ruta_po, RAIZ_PROYECTO)} -> {os.path.relpath(ruta_mo, RAIZ_PROYECTO)}")
+        if cantidad_duplicados:
+            archivos_con_duplicados += 1
+            print(
+                f"Compilado con avisos: {os.path.relpath(ruta_po, RAIZ_PROYECTO)} -> "
+                f"{os.path.relpath(ruta_mo, RAIZ_PROYECTO)} "
+                f"({cantidad_duplicados} msgid duplicado(s), ver avisos arriba)"
+            )
+        else:
+            print(f"Compilado: {os.path.relpath(ruta_po, RAIZ_PROYECTO)} -> {os.path.relpath(ruta_mo, RAIZ_PROYECTO)}")
     if hubo_error:
         raise SystemExit(1)
+    if archivos_con_duplicados:
+        print(
+            f"\nAVISO: {archivos_con_duplicados} archivo(s) .mo generado(s) con msgid "
+            "duplicados (ver avisos arriba)."
+        )
     return rutas_mo
 
 

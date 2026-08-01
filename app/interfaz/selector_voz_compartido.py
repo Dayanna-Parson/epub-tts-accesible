@@ -100,6 +100,13 @@ class PanelProveedorIA(wx.Panel):
         # sin corromper datos por sí solo, pero dejando la puerta abierta a
         # que cualquier CheckItem programático futuro sí lo haga.
         self._poblando_lista = False
+        # Se activa justo antes de Destroy() cuando quien contiene este
+        # panel lo reemplaza dinámicamente (p. ej. DialogoProveedorAlternativo
+        # al cambiar de proveedor en el combo). Sin esta guarda, una
+        # preescucha en curso terminaba después de la destrucción y su
+        # callback_completado (vía wx.CallAfter) reventaba contra
+        # self.btn_escuchar ya destruido.
+        self._cerrado = False
         self._construir_ui()
         wx.CallAfter(self.cargar_datos)
 
@@ -430,5 +437,7 @@ class PanelProveedorIA(wx.Panel):
             wx.MessageBox(_("Error: {error}").format(error=e), _("Error"))
 
     def _al_terminar_escucha(self):
+        if self._cerrado:
+            return
         wx.CallAfter(self.btn_escuchar.SetLabel, _("Escuchar muestra (Alt+P)"))
 # ANCLAJE_FIN: BASE_PANEL_PROVEEDOR_IA
