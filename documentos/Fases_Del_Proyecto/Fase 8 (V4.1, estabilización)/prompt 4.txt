@@ -1,0 +1,29 @@
+Claude, necesitamos hacer unos ajustes de empaquetado y pulir la documentación final del proyecto para la versión pública.
+
+LÉEME OBLIGATORIAMENTE antes de responder: `CLAUDE.md`, `README.md` y `ayuda.html`.
+
+TAREAS A REALIZAR:
+
+1. AJUSTE DEL PORTABLE (`crear_portable.py`):
+   - No crees la carpeta `documentos/` en la raíz del portable final si solo va a contener un archivo. En su lugar, copia `novedades.txt` directamente a la raíz de la carpeta del portable (junto a `ayuda.html` y `epubtts.exe`).
+   - Asegúrate de que el script de creación del portable cree explícitamente la carpeta `registros/` de fábrica en la salida, de modo que al ocurrir un fallo en la versión distribuida, los logs (`app.log` y `errores.log`) se escriban ahí tal como ocurre en el entorno de desarrollo.
+   - Revisa que el ejecutable portable contenga todo lo necesario para funcionar de forma autónoma sin exigir al usuario instalar nada adicional en su equipo.
+
+2. REESTRUCTURACIÓN DE `README.md` (PORTADA DE GITHUB Y WEB):
+   - Reorganiza la cabecera de `README.md` para que sea una presentación atractiva, clara y útil tanto para la comunidad como para publicar en la web tiflotutos.com.
+   - Incluye una sección clara de "Requisitos del sistema y Compatibilidad" (Windows 10/11 64-bits, lectores de pantalla probados: NVDA y JAWS... motores TTS soportados).
+Y y algo muy importante. que no lo e visto mucho ni en el manual de ayuda... ni en ningón otro lado.
+Es super importante, que si quieres usar tanto el asistente de biblioteca, como los motores TTS de azure, Amazon Polly, Eleven Labs y Deepgram. Pues es muy importante tener la api de lo que quieras utilizar.
+Y explicas paso a paso como se optiene cada una de las apis. Ya que en la mayoría, es vastante enrredado y tedioso...
+
+Aunque siempre tienes como alternativa las voces locales que tengas en tu sistema... A, y cave destacar, que estas apis son gratuitas hasta cierto nivel... En el manual de ayuda se explica en una tabla...
+Porque cuando pasas esos límites de caracteres del que estés usando, pues tienes que poner una tarjeta,, y automáticamente tu cuenta pasa ser pago por uso... en simples palabras, quiere decir, que pagas por un número de caracteres... Cuanto mas léas con estas veces de alta calidad, pues mas vas a tener que pagar a principios del mes siguiente.
+Y por último, Es responsabilidad de cada usuario,con que fines utiliza la app. No me hago responsable de lo que hagan, o si se filtran las apis... ese tipo de cosas.
+Yo solo doy herramientas y soluciones a un problema que tuve yo juntos con varias funciones y mejoras. Pero al final, cada usuario es responsable de como utiliza la app.
+
+3. ACTUALIZACIÓN DE DOCUMENTOS CON PERSPECTIVA DE USUARIO:
+   - Revisa y actualiza los documentos destinados al usuario final (`ayuda.html`, `novedades.txt`, `README.md`).
+   - Ponte en la piel de un usuario promedio (ciego o vidente) que busca usar la app de forma directa: elimina tecnicismos innecesarios o explicaciones internas de desarrollo en los manuales de usuario, enfocándote en la usabilidad, la navegación con teclado y el beneficio real.
+   - Te daré a continuación un ejemplo de estructura de manual para que veas el tono claro y directo que buscamos.
+   - Mantén actualizados los documentos técnicos internos (`CLAUDE.md`, `DEVELOPMENT.md`, `BITACORA_DE_DESARROLLO.md`, `GUIA_TECNICA.md`, `estructura_proyecto.txt`) reflejando la estructura final y los últimos cambios.
+

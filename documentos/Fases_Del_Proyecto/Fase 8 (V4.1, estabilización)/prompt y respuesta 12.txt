@@ -1,0 +1,21 @@
+prompt y respuesta 12
+
+
+Entonces ya está todo listo y actualizado?
+
+Respuesta:
+
+Sí, todo está listo y actualizado. Resumen final:
+
+- **Código**: auditoría de excepciones completa, tests 126→169, mejoras de rendimiento, y **23 bugs reales encontrados y corregidos** en la revisión final (incluidos dos de riesgo real de pérdida de datos, uno de sobregasto de cuota, y un patrón de crash repetido en varios diálogos).
+- **Empaquetado**: `crear_portable.py` con `LEEME.txt`, `LICENSE`, `registros/` de fábrica y avisos si faltan binarios necesarios.
+- **Documentación de usuario**: `ayuda.html` reescrito a fondo, `README.md` y `novedades.txt` actualizados, todos con la explicación sencilla de las 23 correcciones.
+- **Documentación técnica**: `CLAUDE.md`, `DEVELOPMENT.md`, `BITACORA_DE_DESARROLLO.md`, `GUIA_TECNICA.md`, `GUIA_SCRIPTS.md`, `estructura_proyecto.txt` — todos coherentes con la 4.1.0.
+- **Versión** subida formalmente a 4.1.0, PR #11 listo para revisión (no draft), 169/169 tests en verde.
+
+Lo único que queda fuera de mi alcance, porque necesita Windows real, es tuyo cuando quieras publicar:
+1. Probar la app a mano con NVDA en Windows.
+2. Ejecutar `crear_portable.py` en Windows (con `pyinstaller`, `bin/ffmpeg.exe` y `bin/auxiliar_sapi32.exe` colocados) para generar el `.zip` portable definitivo.
+3. Fusionar el PR #11 y publicar la Release en GitHub con ese `.zip`.
+
+Sigo vigilando el PR por si hay CI o comentarios, pero por el lado del código y la documentación no queda nada pendiente.

@@ -1,0 +1,695 @@
+Prompt 5
+
+Lo siento, se me pasó por completo pegártelo, ¡aquí lo tienes!
+
+Manual de ejemplo:
+
+Diario de Lectura. ¡Lleva un registro de lo que vas leyendo!
+
+Contenido
+• 1. Introducción
+• 2. Asistente de bienvenida
+• 3. Interfaz principal
+◦ 3.1. Libro que quiero leer (F1)
+◦ 3.2. Libro olvidado (F2)
+◦ 3.3. Libro en proceso (F3)
+◦ 3.4. Libro terminado (F4)
+◦ 3.5. Mejor libro de cada mes (F6)
+◦ 3.6. Sincronización en segundo plano
+■ 3.6.1. Notificaciones
+■ 3.6.2. Copias de seguridad
+• 4. La barra de menú
+• 5. Diálogos de edición
+• 6. Interfaz de la biblioteca
+• 7. Opciones
+◦ 7.1. Pestaña General
+◦ 7.2. Pestaña Biblioteca Viajeros de Papel
+◦ 7.3. Pestaña Carpeta de lecturas
+◦ 7.4. Pestaña Sonidos
+◦ 7.5. Pestaña Secciones
+◦ 7.6. Personalización de las secciones
+• 8. Estadísticas
+• 9. Atajos de teclado
+• 10. Conclusión y agradecimientos
+
+1. Introducción
+
+¡Te doy la bienvenida al Diario de Lectura!
+
+El Diario de Lectura es un programa hecho para que puedas registrar y descargar tus lecturas, ya sea libros u otros artículos, desde una interfaz intuitiva, accesible y funcional, con botones pero también con atajos de teclado, para visualizarlos en un diario dividido por secciones, formateado de manera que puedas navegar por él con toda ligereza.
+
+Vas a tener la oportunidad de registrar, ver y descargar los libros que quieres leer, los que estás leyendo, los que has abandonado y los que has terminado, incluso con la posibilidad de elegir los mejores libros de cada mes de los distintos años.
+
+Además, si eres fan de las estadísticas como yo, vas a poder ver estadísticas por año, por mes, y en otras modalidades del diario, vas a poder ver las de todos los libros que has leído en todos los años en que has registrado lecturas.
+
+En un principio este programa estaba totalmente enfocado a los libros, por lo que las secciones ya creadas por defecto están hechas para que registres este tipo de lecturas, pero desde la versión 3.0, puedes crear tus propias secciones para incluir otro tipo de textos como artículos científicos, ensayos, tesis o lo que te interese registrar.
+
+Una advertencia antes de continuar: dado a que este programa se conecta a internet y no posee una firma que verifique que es un archivo ejecutable profesional (ya que tiene un alto costo que no me conviene asumir), puede que algunos antivirus lo detecten como archivo sospechoso; Windows Defender por ejemplo me lo detecta como troyano, con múltiples variaciones, por lo que te aconssejo que busques la forma de hacerle una exclusión al directorio donde lo ejecutes. Te prometo que no tiene nada malicioso. Aquí tienes un análisis en Virustotal, donde solo 6 de 71 servicios lo detectan como amenaza, y cuatro de esos seis más que detectarlo directamente no lo pueden analizar. ¡No hay ningún peligro!
+
+2. Asistente de bienvenida
+
+Al abrir el programa por primera vez, la primera ventana que te encontrarás será la del asistente de bienvenida, que te explicará brevemente qué es el diario y te incitará a leer este manual.
+Lo primero que te preguntará es si es la primera vez que lo utilizas; asumiendo que respondes que sí, te llevará al primer paso, donde te dice que lo primero que hay que hacer es iniciar sesión en la Biblioteca Viajeros de Papel.
+Al presionar OK se te presentará el diálogo de inicio de sesión, donde también puedes crearte una cuenta en caso de que no tengas una, o restablecer tu contraseña si la olvidaste. Si te creas la cuenta desde el programa, una vez escribas la información requerida te llegará un correo con un enlace para verificar tu cuenta, que tienes que abrir para poder entrar. En caso de que ya hayas verificado tu cuenta antes solo basta con iniciar sesión de forma normal.
+
+No es necesario iniciar sesión en la biblioteca, pero es altamente recomendable. Si lo haces tendrás acceso a cientos de miles de libros que podrás descargar a tu computadora directamente desde el programa, e incluso desde la interfaz de la biblioteca podrás añadir los libros a las distintas secciones del diario, ver las novedades que voy añadiendo, los libros más descargados e incluso filtrar por género, así como tener tu diario de lectura totalmente en línea vinculado a la biblioteca. Todos los libros que agregues se marcarán como leídos en la biblioteca, se guardarán tus calificaciones, reseñas y cosas para que otros lectores como tú puedan verlas.
+
+Una vez inicies sesión el asistente continuará con el siguiente paso, que te llevará a editar tu perfil. Si prefieres usar el diario sin los servicios de la biblioteca este paso se omitirá.
+
+En el diálogo que se te abrirá tienes opciones para escribir tu nombre a mostrar (puede ser tu nombre completo, tu primer nombre o lo que decidas, que no es lo mismo que el nombre de usuario); un cuadro combinado para elegir tu género (útil para que el programa te presente distintos mensajes de acuerdo a tu género), país, fecha de nacimiento y presentación, y la posibilidad de ocultar estos datos a los demás.
+En la presentación puedes explayarte tanto como quieras, desde presentarte solo con tu nombre hasta escribir tus gustos literarios. ¡No hay reglas! Eso sí, esta información siempre será pública.
+
+El siguiente paso será escribir tu propósito de lectura. El asistente te dará un ejemplo de cómo puedes escribirlo.
+El propósito va orientado a los libros que quieras leer en el año actual; sin importar en qué época del año estés creando tu diario siempre podrás registrar los libros que hayas leído antes para que también cuenten. Puedes escribir un número, un texto o cualquier cosa que te propongas, enfocado en el ámbito de la lectura. Será lo primero que aparecerá en tu diario.
+Al presionar Tab en este diálogo verás un cuadro combinado para elegir la cantidad de libros que quieras leer. Si escribiste un número en el campo anterior el programa tratará de tomarlo de ahí, pero si por alguna razón no es correcto, desde ahí puedes ajustarlo, para que después en tu diario esté el porcentaje correcto de cuánto llevas cumplido de él.
+
+Después tienes dos botones, "Guardar" y "No quiero escribir un propósito de lectura". Al presionar cualquiera de los dos avanzarás al penúltimo paso, que te permitirá configurar tus directorios. El primero es para guardar los libros que añadas a la sección de tu diario, ya sea descargándolos desde la biblioteca o adjuntándolos desde otra ubicación; este directorio siempre estará en el mismo donde ejecutas tu programa. El siguiente es para que configures en dónde se van a guardar las descargas que hagas desde la interfaz de la biblioteca, solo te aparecerá si iniciaste sesión. En caso de que no, solo verás el de la carpeta de lecturas (para tu diario), que también puedes desactivar desde aquí.
+
+Finalmente, si ya habías bajado libros desde la biblioteca en la web o desde el programa te preguntará si quieres que se descarguen todos tus libros, y si ya tienes un diario creado, te preguntará si quieres también uqe se descarguen los libros vinculados a él. Estos diálogos solo saldrán si tienes descargas en la biblioteca o libros en tu diario, ya sea que te salgan los dos o solo uno, según lo que haya en tu cuenta. Si es totalmente nueva, el asistente simplemente te dirá que terminaste de configurar todo, te pedirá que compartas el diario (algo que te agradecería mucho que hagas si conoces a alguien a quien le pueda servir) y se cerrará, dando paso a la interfaz principal.
+Una vez en ella se abrirá la interfaz de la biblioteca en caso de que hayas respondido que sí quieres descargar libros e iniciará la respectiva descarga.
+
+3. Interfaz principal
+
+A partir de aquí la próxima vez que abras el diario, si hay actualizaciones, te preguntará si quieres descargarlas; y si no las hay, te mostrará la interfaz que te presento a continuación, que es lo más minimalista posible.
+Ni bien se abra, aterrizarás en un cuadro combinado etiquetado como "¿Qué quieres añadir?" con cinco valores por defecto. Dependiendo del libro que quieres añadir eliges el valor deseado y presionas el botón Agregar libro. O también puedes usar sus teclas rápidas, que abrirán el formulario para agregar el tipo de libro directamente. Aquí la lista de las opciones disponibles:
+
+3.1. Libro que quiero leer (F1)
+
+Como su nombre lo indica, desde este formulario puedes añadir un libro que quieras leer, accesible también con el atajo de teclado F1.
+Al abrir el formulario encontrarás los siguientes controles y elementos para rellenar:
+• Si iniciaste sesión en la biblioteca, el primer botón que verás es "Buscar en la biblioteca...": Al entrar a esta opción se te abrirá una interfaz que te mostrará los primeros 200 autores disponibles en la Biblioteca Viajeros de Papel. podrás cargar tantos autores como desees presionando el elemento "Más..." al final de la lista. Si presionas Tab teniendo un autor seleccionado, verás los libros del autor. Al presionar Enter se descargará el libro y por defecto se rellenará el título, el autor, los géneros y la sinopsis, extraídos de la biblioteca.
+Además tendrás un cuadro de búsqueda y un cuadro combinado para elegir qué buscar, entre Título, Autor, colección y Sinopsis. Esto te permitirá buscar un valor específico entre todos los libros de la biblioteca, si ya tienes contemplado el libro que quieres añadir.
+En caso de que hayas decidido no usar los servicios de la biblioteca en línea o no hayas iniciado sesión, el primer botón que verás es el siguiente:
+• Botón adjuntar libro..: Para que busques el libro en tus archivos, y se añada a la carpeta Lecturas del diario. Al añadirlo, por defecto se llenarán algunos campos, que podrás editar si así lo quieres.
+• Título: Título del libro.
+• Autor: Autor del libro.
+• Botón Buscar: Este botón sirve para buscar el libro que estás agregando ya sea en la sección de libros de Google, en el directorio de Open Library o en Goodreads, para que se te rellenen los datos automáticamente. Para poder buscar basta con que presiones el botón, elijas uno de los tres buscadores en el menú y escribas ya sea el título o el autor del libro, o ambos si quieres más precisión. Se te presentará una lista con resultados, solo elige el correcto y se rellenarán todos o la mayoría de los campos. O en el caso de Goodreads, se te abrirá el enlace en el navegador con la búsqueda para que según el resultado que elijas, tú rellenes la información.
+• La casilla "¿Pertenece a una colección? (Trilogía, saga, serie, etc)", para indicar si el libro forma parte de una colección. Al marcarla, se mostrarán los siguientes cuadros de edición:
+◦ Título de la colección: El nombre de la colección, como "Harry Potter", "Trilogía de Bill Hodges", etcétera.
+◦ Número en la colección: El número en la colección que le pertenece al libro. Si es el primero de Harry Potter, tendrías que escribir "1", por ejemplo.
+• Género: Clasificación del libro. Romántico, Erótico, Ciencia ficción, Drama...
+• Año de publicación: Año en que se publicó el libro. Puede ser el año de publicación original o el de la edición que estás añadiendo, como prefieras.
+• sinopsis: Sinopsis del libro, en un cuadro multilínea para que puedas separarla por párrafos o copiarla separada y así puedas visualizarla bien con los saltos de línea correspondientes.
+• Número de páginas: Número de páginas del libro. Si quieres que tus estadísticas sean exactas, deberías añadir el número de páginas de la edición que quieres leer.
+• ¿Es una recomendación? Para marcar si te recomendaron el libro o no.
+• Botón guardar borrador: Guarda el libro actual como borrador; no aparecerá en el diario generado hasta que lo edites y lo guardes normal.
+• Botones Guardar y Cancelar: Guarda o descarta los cambios.
+
+3.2. Libro olvidado (F2)
+
+Desde aquí puedes añadir libros que hayas abandonado con la razón por la que lo hiciste.
+El formulario cuenta con los siguientes elementos:
+• Cuadro combinado Selecciona una opción: Desde aquí puedes seleccionar un libro de los que tengas en la sección Libros Que Quiero Leer, por si te decidiste a leerlo y lo abandonaste. Al seleccionarlo ya no tendrás que rellenar el título, el autor, el género, etcétera; solo los valores del porcentaje y la razón del por qué lo dejaste. En caso de que no tengas libros en esta sección no te aparecerá el cuadro combinado. El valor por defecto siempre será Añadir nuevo, para que añadas un libro desde cero.
+• Si iniciaste sesión en la biblioteca, el siguiente botón que verás es "Buscar en la biblioteca...": Al entrar a esta opción se te abrirá una interfaz que te mostrará los primeros 200 autores disponibles en la Biblioteca Viajeros de Papel. podrás cargar tantos autores como desees presionando el elemento "Más..." al final de la lista. Si presionas Tab teniendo un autor seleccionado, verás los libros del autor. Al presionar Enter se descargará el libro y por defecto se rellenará el título, el autor, los géneros y la sinopsis, extraídos de la biblioteca.
+Además tendrás un cuadro de búsqueda y un cuadro combinado para elegir qué buscar, entre Título, Autor, colección y Sinopsis. Esto te permitirá buscar un valor específico entre todos los libros de la biblioteca, si ya tienes contemplado el libro que quieres añadir.
+En caso de que hayas decidido no usar los servicios de la biblioteca en línea o no hayas iniciado sesión, el primer botón que verás es el siguiente:
+• Botón adjuntar libro..: Para que busques el libro en tus archivos, y se añada a la carpeta Lecturas del diario. Al añadirlo, por defecto se llenarán algunos campos, que podrás editar si así lo quieres.
+• Título: Título del libro.
+• Autor: Autor del libro.
+• Botón Buscar: Este botón sirve para buscar el libro que estás agregando ya sea en la sección de libros de Google, en el directorio de Open Library o en Goodreads, para que se te rellenen los datos automáticamente. Para poder buscar basta con que presiones el botón, elijas uno de los tres buscadores en el menú y escribas ya sea el título o el autor del libro, o ambos si quieres más precisión. Se te presentará una lista con resultados, solo elige el correcto y se rellenarán todos o la mayoría de los campos. O en el caso de Goodreads, se te abrirá el enlace en el navegador con la búsqueda para que según el resultado que elijas, tú rellenes la información.
+• La casilla "¿Pertenece a una colección? (Trilogía, saga, serie, etc)", para indicar si el libro forma parte de una colección. Al marcarla, se mostrarán los siguientes cuadros de edición:
+◦ Título de la colección: El nombre de la colección, como "Harry Potter", "Trilogía de Bill Hodges", etcétera.
+◦ Número en la colección: El número en la colección que le pertenece al libro. Si es el primero de Harry Potter, tendrías que escribir "1", por ejemplo.
+• Género: Clasificación del libro. Romántico, Erótico, Ciencia ficción, Drama...
+• Año de publicación: Año en que se publicó el libro. Puede ser el año de publicación original o el de la edición que estás añadiendo, como prefieras.
+• sinopsis: Sinopsis del libro, en un cuadro multilínea para que puedas separarla por párrafos o copiarla separada y así puedas visualizarla bien con los saltos de línea correspondientes.
+• Número de páginas: Número de páginas del libro. Si quieres que tus estadísticas sean exactas, deberías añadir el número de páginas de la edición que quieres leer.
+• Porcentaje en que lo dejaste: Para que elijas en un deslizador de progreso el porcentaje exacto en que decidiste ya no continuar con el libro.
+• Razón por la que lo dejaste: Cuadro multilínea para explicar las razónes porque dejaste el libro y cualquier otra anotación.
+Estos dos campos por defecto se van a poner en el campo de la reseña si lo mueves a El Club de los Libros Terminados.
+• Botón guardar borrador: Guarda el libro actual como borrador; no aparecerá en el diario generado hasta que lo edites y lo guardes normal.
+• Botones Guardar y Cancelar: Guarda o descarta los cambios.
+
+3.3. Libro en proceso (F3)
+
+Este formulario te permite añadir libros que estás leyendo actualmente, ya sea moviéndolos desde Libros Que Quiero Leer o añadiéndolos de cero.
+• Cuadro combinado Selecciona una opción: Desde aquí puedes seleccionar un libro de los que tengas en las secciones Libros Que Quiero Leer y El Club de los Libros Olvidados. Al seleccionarlo ya no tendrás que rellenar el título, el autor, el género, etcétera; solo la fecha de inicio y opcionalmente el progreso de tu lectura, las frases que más te vayan gustando y las notas que quieras hacer sobre el libro. En caso de que no tengas libros en las secciones mencionadas no te aparecerá el cuadro combinado. El valor por defecto siempre será Añadir nuevo, para que añadas un libro desde cero.
+• Si iniciaste sesión en la biblioteca, el siguiente botón que verás es "Buscar en la biblioteca...": Al entrar a esta opción se te abrirá una interfaz que te mostrará los primeros 200 autores disponibles en la Biblioteca Viajeros de Papel. podrás cargar tantos autores como desees presionando el elemento "Más..." al final de la lista. Si presionas Tab teniendo un autor seleccionado, verás los libros del autor. Al presionar Enter se descargará el libro y por defecto se rellenará el título, el autor, los géneros y la sinopsis, extraídos de la biblioteca.
+Además tendrás un cuadro de búsqueda y un cuadro combinado para elegir qué buscar, entre Título, Autor y Sinopsis. Esto te permitirá buscar un valor específico entre todos los libros de la biblioteca, si ya tienes contemplado el libro que quieres añadir.
+En caso de que hayas decidido no usar los servicios de la biblioteca en línea o no hayas iniciado sesión, el primer botón que verás es el siguiente:
+• Botón adjuntar libro..: Para que busques el libro en tus archivos, y se añada a la carpeta Lecturas del diario. Al añadirlo, por defecto se llenarán algunos campos, que podrás editar si así lo quieres.
+• Título: Título del libro.
+• Autor: Autor del libro.
+• Botón Buscar: Este botón sirve para buscar el libro que estás agregando ya sea en la sección de libros de Google, en el directorio de Open Library o en Goodreads, para que se te rellenen los datos automáticamente. Para poder buscar basta con que presiones el botón, elijas uno de los tres buscadores en el menú y escribas ya sea el título o el autor del libro, o ambos si quieres más precisión. Se te presentará una lista con resultados, solo elige el correcto y se rellenarán todos o la mayoría de los campos. O en el caso de Goodreads, se te abrirá el enlace en el navegador con la búsqueda para que según el resultado que elijas, tú rellenes la información.
+• La casilla "¿Pertenece a una colección? (Trilogía, saga, serie, etc)", para indicar si el libro forma parte de una colección. Al marcarla, se mostrarán los siguientes cuadros de edición:
+◦ Título de la colección: El nombre de la colección, como "Harry Potter", "Trilogía de Bill Hodges", etcétera.
+◦ Número en la colección: El número en la colección que le pertenece al libro. Si es el primero de Harry Potter, tendrías que escribir "1", por ejemplo.
+• Género: Clasificación del libro. Romance, Erótico, Ciencia ficción, Drama...
+• Año de publicación: Año en que se publicó el libro. Puede ser el año de publicación original o el de la edición que estás añadiendo, como prefieras.
+• sinopsis: Sinopsis del libro, en un cuadro multilínea para que puedas separarla por párrafos o copiarla separada y así puedas visualizarla bien con los saltos de línea correspondientes.
+• Número de páginas: Número de páginas del libro. Si quieres que tus estadísticas sean exactas, deberías añadir el número de páginas de la edición que quieres leer.
+• Fecha de inicio: Para que escribas la fecha en que empezaste a leer el libro que estás agregando. Los formatos válidos son día de mes de año, como 11 de mayo de 2025, dd/mm/aaaa, como 11/05/2025, o solo el año.
+• Progreso de tu lectura (opcional): Un deslizador en el que puedes indicar el porcentaje del libro en el que vayas en el momento en que lo estés añadiendo.
+• Frases que más te van gustando (opcional): Para escribir frases que vayas rescatando del libro que estás añadiendo. Agrega una frase por línea.
+• Notas (opcional): por si quieres ir escribiendo cosas destacables, alguna opinión o algo que simplemente quieras enfatizar. Si luego lo mueves a El Club de los Libros Terminados, esas notas se irán al campo de reseña.
+• Botón guardar borrador: Guarda el libro actual como borrador; no aparecerá en el diario generado hasta que lo edites y lo guardes normal.
+• Botones Guardar y Cancelar: Guarda o descarta los cambios.
+
+3.4. Libro terminado (F4)
+
+Este formulario te permite añadir libros que hayas terminado, ya sea moviéndolos desde "Libros Que Quiero Leer", "El Club de los Libros Olvidados", "El Club de los Libros en Proceso" o añadiéndolos de cero.
+• Cuadro combinado Selecciona una opción: Desde aquí puedes seleccionar un libro de los que tengas en las secciones mencionadas arriba.
+Al elegir un libro se moverá desde cualquiera de las tres secciones, y solo tendrás que rellenar unos datos extra, como la fecha de inicio, fecha de fin, reseña, calificación y frases.
+Por defecto la opción seleccionada es "Añadir nuevo", para que agregues un libro desde cero.
+• Si iniciaste sesión en la biblioteca, el siguiente botón que verás es "Buscar en la biblioteca...": Al entrar a esta opción se te abrirá una interfaz que te mostrará los primeros 200 autores disponibles en la Biblioteca Viajeros de Papel. podrás cargar tantos autores como desees presionando el elemento "Más..." al final de la lista. Si presionas Tab teniendo un autor seleccionado, verás los libros del autor. Al presionar Enter se descargará el libro y por defecto se rellenará el título, el autor, los géneros y la sinopsis, extraídos de la biblioteca.
+Además tendrás un cuadro de búsqueda y un cuadro combinado para elegir qué buscar, entre Título, Autor y Sinopsis. Esto te permitirá buscar un valor específico entre todos los libros de la biblioteca, si ya tienes contemplado el libro que quieres añadir.
+En caso de que hayas decidido no usar los servicios de la biblioteca en línea o no hayas iniciado sesión, el primer botón que verás es el siguiente:
+• Botón adjuntar libro..: Para que busques el libro en tus archivos, y se añada a la carpeta Lecturas del diario. Al añadirlo, por defecto se llenarán algunos campos, que podrás editar si así lo quieres.
+• Título: Título del libro.
+• Autor: Autor del libro.
+• Botón Buscar: Este botón sirve para buscar el libro que estás agregando ya sea en la sección de libros de Google, en el directorio de Open Library o en Goodreads, para que se te rellenen los datos automáticamente. Para poder buscar basta con que presiones el botón, elijas uno de los tres buscadores en el menú y escribas ya sea el título o el autor del libro, o ambos si quieres más precisión. Se te presentará una lista con resultados, solo elige el correcto y se rellenarán todos o la mayoría de los campos. O en el caso de Goodreads, se te abrirá el enlace en el navegador con la búsqueda para que según el resultado que elijas, tú rellenes la información.
+• La casilla "¿Pertenece a una colección? (Trilogía, saga, serie, etc)", para indicar si el libro forma parte de una colección. Al marcarla, se mostrarán los siguientes cuadros de edición:
+◦ Título de la colección: El nombre de la colección, como "Harry Potter", "Trilogía de Bill Hodges", etcétera.
+◦ Número en la colección: El número en la colección que le pertenece al libro. Si es el primero de Harry Potter, tendrías que escribir "1", por ejemplo.
+• Género: Clasificación del libro. Romántico, Erótico, Ciencia ficción, Drama...
+• Año de publicación: Año en que se publicó el libro. Puede ser el año de publicación original o el de la edición que estás añadiendo, como prefieras.
+• sinopsis: Sinopsis del libro, en un cuadro multilínea para que puedas separarla por párrafos o copiarla separada y así puedas visualizarla bien con los saltos de línea correspondientes.
+• Número de páginas: Número de páginas del libro. Si quieres que tus estadísticas sean exactas, deberías añadir el número de páginas de la edición que quieres leer.
+• ¿Cuántas veces has leído este libro?: Este cuadro te permitirá registrar cuántas veces has leído el libro que estás añadiendo.
+• Fechas de inicio y de fin: Para que escribas las fechas en las que iniciaste y terminaste el libro que estás agregando. Se añadirán tantos cuadros de fechas como la cantidad de veces que hayas indicado que leíste el libro. Los formatos válidos son día de mes de año, como 11 de mayo de 2025, dd/mm/aaaa, como 11/05/2025, o solo el año.
+• Reseña: Un apunte que quieras añadir sobre el libro para tu diario. Qué te gustó, qué no te gustó, comentarios, contexto... las posibilidades son muchas.
+• Casilla "¿La reseña completa contiene spoilers?": Bastante útil por si quieres compartir tu diario o por si tú mismo no quieres revelar tramas de libros que piensas releer, marcando esta casilla puedes ocultar toda la reseña, para que se muestre cuando se presione el botón.
+Si solo quieres ocultar una parte, puedes escribir la palabra "spoiler", seguido de dos puntos y un espacio en el campo de la reseña, antes de lo que quieras ocultar. Y terminar con "Fin de spoiler" cuando quieras que lo demás sea visible. O presionar Control S y Control Shift S para añadir los textos automáticamente.
+• Frases que más te gustaron (campo opcional): Para escribir frases que hayas rescatado del libro que estás añadiendo. Agrega una frase por línea.
+• Cuadro combinado "¿Con cuántas estrellas lo calificas?": Con valores de 1 a 5 estrellas, para calificar la lectura que terminaste.
+• Etiquetas (una por línea) (opcional): Si quieres clasificar tu libro por etiquetas personales, puedes hacerlo en este campo. Algunos ejemplos podrían ser Favoritos, Libros que me hicieron reír, Libros que me hicieron llorar, etcétera.
+El mismo programa genera etiquetas por defecto dependiendo de los géneros que escribas, de la calificación que les des a los libros, de la fecha en que los terminas y de si los has releído.
+• Botón guardar borrador: Guarda el libro actual como borrador; no aparecerá en el diario generado hasta que lo edites y lo guardes normal.
+• Botones Guardar y Cancelar: Guarda o descarta los cambios.
+
+3.5. Mejor libro de cada mes (F6)
+
+En este formulario puedes elegir el mejor libro de cada mes del año actual.
+Este diálogo solo tiene un cuadro combinado para elegir el mes, el siguiente cuadro combinado es para escoger el libro que quieres elegir como el mejor del mes seleccionado (aparecerán los libros que tengan en la fecha de fin un día del mes seleccionado, en el año actual) y los botones Elegir libro y Cancelar.
+
+Al elegir el mejor libro de diciembre, tendrás la oportunidad de escribir una conclusión de lectura de fin de año. Se te presentará un botón para decidir si quieres escribirla o no. La conclusión puedes tomarla como el propósito, escribir si te faltaron libros por leer, si lo cumpliste, qué libro te gustó más, todo lo que quieras. Esta aparecerá al final del diario generado.
+
+3.6. Sincronización en segundo plano
+
+Si tienes la sesión iniciada en la biblioteca Viajeros de Papel, mientras agregas o editas libros, el programa trabajará en segundo plano sincronizándolo todo para que tu diario esté disponible en línea en la página de tu perfil de la biblioteca, y hará que los cambios se reflejen en tiempo real.
+
+También, dependiendo de las opciones que tengas activas, este se encargará de buscar actualizaciones, buscar novedades de los autores que sigas, tratar de vincular las entradas que vayas agregando a los libros exactos en la base de datos de la biblioteca y verificar si hay notificaciones para ti.
+
+Que se sincronicen las cosas es muy importante, porque además de que enriqueces la parte social de la biblioteca añadiendo los datos desde tu diario, si llegas a perder tu archivo de datos, se creará uno nuevo cuando vuelvas a iniciar sesión con tu cuenta, ya que el programa respaldará absolutamente todo lo que hagas incluyendo tu configuración. Incluso tú podrás hacer respaldos cuando quieras con la funcionalidad de las copias de seguridad, también por si no quieres vincular tu diario con la biblioteca.
+
+3.6.1. Notificaciones
+
+Ocasionalmente iré programando notificaciones, ya sean importantes o casuales, para que sepas que añadí características nuevas, para darte la bienvenida a actualizaciones o para comentarte cualquier cosa relevante. Además el servidor de vez en cuando también te mandará algunas, sobre todo si eliges seguir a autores desde la interfaz de la biblioteca.
+
+No tendrás que hacer nada para leerlas; una vez se abra el diario, si hay alguna notificación, se te será leída automáticamente.
+
+Si quieres ver las notificaciones que se te han enviado puedes entrar al historial desde el menú Biblioteca o presionando Control H en la ventana principal del programa. Verás una lista con las notificaciones reducidas. Para leerlas completas basta con presionar Enter sobre la que quieras y se abrirá un diálogo que te lo permitirá.
+
+3.6.2. Copias de seguridad
+
+En cualquier momento que lo desees, desde el menú Aplicación, puedes elegir hacer o restaurar una copia de seguridad.
+
+Sirven para que en caso de que pierdas datos accidentalmente (ya sea porque eliminaste o editaste libros sin querer, o porque el programa lo hizo por algún error) puedas recuperar tu archivo de datos según como estaba en un momento específico, ya sea porque tú hiciste la copia o porque el programa la creó.
+
+Al hacer una copia de seguridad escucharás el sonido del botón y tu lector de pantalla te dirá que se ha creado una copia de seguridad con éxito, y que se guardó con el nombre datos_fecha_hora.back, que es el formato en el que el programa las crea.
+
+Al elegir restaurar una copia se te presentará una lista con las copias de seguridad que hay en tu directorio, y cuando elijas una, tu archivo de datos se restaurará; tendrás que reiniciar el programa y al hacerlo el diario en línea sincronizará automáticamente tu archivo de datos que recuperaste.
+
+Finalmente, el programa crea una copia de seguridad si no hay una, y la llamará datos.back. Se actualizará automáticamente antes de que instale una nueva actualización para prevenir que una nueva versión te haga perder tu archivo de datos, te lo modifique o te lo dañe. No te preocupes que simplemente es una medida de seguridad; yo mismo pruebo las versiones antes de lanzarlas para procurar que no llegue a pasar nada de esto.
+
+4. La barra de menú
+
+Puedes acceder a la barra de menú con Alt. Esta tiene tres submenús, Aplicación, Biblioteca y Editar.
+
+Desde el menú aplicación podrás Editar el propósito de lectura si lo estableciste en el asistente de bienvenida, la conclusión de lectura (solo si elegiste un mejor libro para diciembre), descargar una copia desde el programa (ya sea el zip desde el navegador, el zip desde el programa o el zip desde el programa con extracción incluida, como si estuviéramos instalando una actualización) para en caso de que se dañe nuestra copia podamos bajarla sin errores; hacer o restaurar una copia de seguridad, ir a las opciones, buscar actualizaciones del programa, abrir este archivo y salir.
+
+Desde el menú biblioteca puedes editar tu perfil, copiar el enlace de tu perfil para compartírselo a quien quieras para que vea tu diario, ver el historial de notificaciones, navegar por la interfaz de la biblioteca, visitar la biblioteca en tu navegador y cerrar sesión.
+
+Y desde el menú Editar puedes elegir qué diálogo de edición abrir, para editar todos los libros de la sección que elijas.
+
+5. Diálogos de edición
+
+Al elegir editar cualquier sección se nos abrirá un diálogo con el título Editar y el nombre de esta. Tendremos un cuadro combinado para elegir el filtro (ver más abajo), solo si lo tenemos activado, y una lista para ver los libros y los botones Editar, Eliminar, Guardar cambios y Cancelar.
+
+En la lista irá cambiando la forma en cómo se muestran los libros según el filtro que tengamos elegido:
+• Si lo tenemos en Del último al primero o del primero al último por fecha de fin, en orden alfabético, en Del último al primero o Del primero al último que añadiste, en libros con reseña, en libros recomendados o filtrados por alguna etiqueta de calificación o personalizada, se mostrarán solamente los títulos.
+• Si lo tenemos en orden alfabético del autor, primero se mostrará el autor del libro y luego el título, ambos ordenados en orden alfabético.
+• Si elegimos Orden del autor por colección, primero se mostrará el nombre del autor, luego la colección a la que pertenece el libro, el número en la colección y el título, ordenados alfabéticamente. Después se mostrarán los títulos de los libros sueltos también en orden alfabético.
+• Si seleccionamos "Orden de colección", se nos mostrarán solo los libros que pertenezcan a una colección, ordenados por el nombre de esta en orden alfabético.
+• Si elegimos del más largo al más corto o del más corto al más largo, se nos mostrará el título y las páginas del libro.
+• Y finalmente, si elegimos Del más actual al más antiguo o del más antiguo al más actual, se nos mostrará el título y el año de publicación.
+
+si presionamos Enter sobre un libro, se nos abrirá una ficha de este con todos los datos que hayamos introducido, y desde ahí podremos abrir el libro en nuestro lector predeterminado.
+
+Al presionar el botón Editar se nos abrirá un diálogo similar al de agregar, solo que contendrá los datos previamente rellenados para ese libro, para que nosotros podamos modificarlos. Si presionamos Guardar todavía no se confirmarán los cambios,, sino que tendremos que presionar en el botón Guardar cambios del diálogo de edición, así que si damos cancelar en ese diálogo y editamos varios libros todos los cambios se descartarán.
+
+Lo mismo pasa si presionamos el botón eliminar seleccionando un libro previamente. No se eliminará de inmediato, sino que tendremos que guardar los cambios en el diálogo de edición, lo que confirmará y ahora sí eliminará los libros que hayamos marcado. Podremos también editar ciertos libros y eliminar otros, y al guardar los cambios en el diálogo de edición, se confirmarán todas nuestras modificaciones.
+
+Además, en El Club de los Libros en Proceso, poniendo el progreso de lectura al 100%, al guardar el libro se irá directamente a El Club de los Libros Terminados. Algunos campos cambiarán para reflejar el cambio y otros se añadirán.
+• Se creará el campo Fecha de fin.
+• El campo Notas se renombrará a Reseña, tomando el texto previamente puesto en el campo antes de renombrarse.
+• El campo Frases que más te van gustando se renombrará a Frases que más te gustaron, tomando las frases del campo anterior y copiándolas al nuevo.
+
+Finalmente, además de Enter, Alt+E y Alt+L que invocan la ficha del libro seleccionado y los diálogos para editar y eliminar libros respectivamente, tenemos otros atajos disponibles:
+• Control+1: Lee el título del libro enfocado.
+• Control+2: Lee el autor del libro enfocado.
+• Control+3: Lee el nombre de la colección del libro enfocado.
+• Control+4: Lee el número en la colección del libro enfocado.
+• Control+5: Lee la sinopsis del libro enfocado.
+• Control+6: Lee los géneros del libro enfocado.
+• Control+7: Lee el año de publicación del libro enfocado.
+• Control+8: Lee el número de páginas del libro enfocado.
+• Si además presionamos Shift junto con estos atajos, el dato se copiará al portapapeles.
+
+6. Interfaz de la biblioteca
+
+Si presionas Control Shift B en la interfaz principal, o Navegar por la biblioteca... en el menú biblioteca, abrirás la interfaz de la biblioteca, en la que podrás ver y descargar libros. Está dividida en varias vistas:
+• Biblioteca completa: Es la vista por defecto, en la que verás una lista con autores y según el autor seleccionado, la lista de sus libros.
+• Autores que sigues: Verás la lista con los autores que sigues, y según el autor que selecciones, la lista de sus libros.
+• Libros por género: Verás un cuadro combinado para elegir el género por el que quieras filtrar los libros, y al elegirlo, una lista con los libros que cumplan con ese género.
+• Libros por año: Podrás elegir un año para ver la lista de libros publicados ese año.
+• Libros más descargados: Verás un cuadro combinado para elegir el período del que quieras ver los libros que más descargas han tenido, y en la lista de ellos, verás el número de descargas que tienen.
+• Novedades: Te mostrará los últimos libros que he subido, y podrás aplicar un orden para mostrar, ya sea alfabético de título o de autor, del último al primero, del primero al último y más descargados.
+
+En la vista principal si presionas Aplicaciones o click derecho sobre un autor podrás descargar todos sus libros y seguirlo.
+
+Si sigues a un autor, cada que suba nuevos libros de él verás una notificación informándotelo (a menos que las desactives), y si lo elegiste en las opciones, en la pestaña Biblioteca Viajeros de Papel, se descargarán los libros automáticamente en segundo plano.
+
+Si presionas Aplicaciones sobre un libro podrás descargarlo a la carpeta de la biblioteca, editar su ficha, añadirlo directamente a una sesión del diario o ver más detalles sobre él: la calificación promedio que tiene, las personas que lo han leído, los géneros, la sinopsis...
+
+La opción de editar fichas de libros está hecha para que me ayudes a completar los datos faltantes de los libros, ya que hay muchos libros sin sinopsis, sin género, sin año de publicación y número de páginas. Cuando elijas esta opción verás un diálogo como los del diario en el que podrás escribir los datos y el botón de guardar, que los enviará a mi buzón de sugerencias.
+
+En todas las bistas tienes un cuadro de búsqueda para buscar en toda la biblioteca, ya sea por título, por autor o por sinopsis. Al hacerlo verás una lista con los resultados encontrados y podrás manipular los libros como en las demás vistas.
+
+Además tienes la pestaña Descargas en donde verás los libros que has descargado, su progreso o si ya se completaron. Solo verás las de tu sesión actual; cuando cierres la interfaz de la biblioteca y la vuelvas a abrir, habrán desaparecido hasta que descargues más libros.
+
+Aquí tienes algunos atajos de teclado que te permitirán hacer ciertas acciones más rápido:
+
+• Enter sobre un libro: Inicia su descarga.
+• Control+D: abre el diálogo con los detalles del libro enfocado.
+• Control+E: Abre el diálogo para editar el libro enfocado.
+• Control+B: En el diálogo de edición abre el servicio de búsqueda que hayas elegido en las opciones para buscar el libro que estás editando.
+• Control+1: Lee el título del libro enfocado.
+• Control+2: Lee el autor del libro enfocado.
+• Control+3: Lee el nombre de la colección del libro enfocado.
+• Control+4: Lee el número en la colección del libro enfocado.
+• Control+5: Lee la sinopsis del libro enfocado.
+• Control+6: Lee los géneros del libro enfocado.
+• Control+7: Lee el año de publicación del libro enfocado.
+• Control+8: Lee el número de páginas del libro enfocado.
+• Si además presionamos Shift junto con estos atajos, el dato se copiará al portapapeles.
+
+
+7. Opciones
+
+Desde el menú Aplicación del programa, o dando Control+O en cualquier interfaz, podemos invocar este diálogo, que nos permitirá personalizar gran parte de las funcionalidades del diario. Cuenta con algunas pestañas. ¡Vamos a verlas en profundidad!
+
+7.1. Pestaña General
+
+Aquí te digo qué hace cada opción de la pestaña:
+Nombre del archivo generado:
+Si no te gusta el nombre Diario de Lectura para tu archivo generado, tanto en el nombre como en el título de la página, desde aquí puedes personalizarlo. Según lo que pongas aquí es como se nombrará tu archivo, el título de la página y el encabezado de la parte superior del archivo generado.
+¿Planeas subir tu diario de lectura a una página web?
+Si marcamos esta casilla se nos creará un campo extra al añadir un libro, que nos pedirá el enlace. Puede ser un enlace directo a descarga, o para que lo compren en Amazon o lo que nosotros queramos. Al añadirlo, el encabezado o la celda de la tabla donde viene el título del libro será clickeable, y al hacer click sobre él se abrirá el enlace que añadimos.
+Crear enlaces siguiendo la estructura de la carpeta de lecturas
+Al tener marcada la opción anterior verás esta opción, que creará los enlaces usando la estructura de la carpeta de lecturas. Útil por si quieres añadir enlaces de descarga de los libros. Solo tendrías que subir la carpeta y el diario a tu servidor propio y al hacer click sobre los enlaces, los usuarios podrán descargar los libros directamente, sin que tú tengas que especificar los enlaces de forma manual.
+Si decides usar los servicios en línea de la biblioteca no tendrás que preocuparte por subir los libros a tu nube o servidor, ni por actualizar tu diario en tu página web. En tu perfil en la página puedes encontrar un botón para insertar tu diario a tu propia web; solo basta con copiar el código que se te presenta en el lugar donde quieras que se vea tu diario y se reflejará justo como lo vayas modificando en tiempo real. Si añades, editas o eliminas un libro, además de en tu perfil en la biblioteca, también se verá en tu página.
+Todos los enlaces de descarga de los libros de tu diario vendrán de la biblioteca y los usuarios los podrán descargar desde tu página sin tener que iniciar sesión en ella. Generalmente las descargas solo están permitidas para los usuarios registrados, pero al verse desde tu página, se le pasa un parámetro especial a los enlaces que permite evadir esta restricción.
+Por supuesto, también puedes subir el archivo HTML que genera el programa con tu diario y tus propios archivos, y seguirá funcionando como siempre.
+¿Comprobar actualizaciones al iniciar?
+Esta opción, activada por defecto, te avisará si se encuentra una actualización del programa al abrirlo.
+Al buscar libros:
+Por defecto al querer buscar un libro en el programa, en cualquiera de los diálogos, se nos abre un menú de contexto para elegir el servicio donde queramos buscarlo. Aquí podemos elegir que busque directamente en uno de ellos (o podemos dejar el menú, si así lo queremos). Los servicios disponibles son Google Books, Open Library y Goodreads. En los primeros dos va a buscar el libro desde el programa y si lo elegimos se nos van a llenar varios de los datos, dependiendo de cuántos tenga la ficha del libro; mientras que si buscamos en Goodreads se nos va a abrir nuestro navegador buscando directamente en el sitio con los datos que introdujimos en el diálogo: título y autor, solo título o solo autor. O si escribimos que el autor publicó el libro bajo un seudónimo, se reemplazará por el autor.
+El Diario de Lectura será...
+Aquí podemos elegir el modo del diario de lectura. Por defecto la opción seleccionada es Anual - Solo mostrar los libros leídos en el año actual, lo que hará que el diario que se nos genere solo tenga los libros en el año actual. Los otros dos modos son Completo - Mostrar todos los años en un único diario, donde se nos van a mostrar todos los libros que hayamos leído, y Separado - Crear un diario por cada año, donde al querer generar el diario se nos abrirá un menú preguntándonos de qué año queremos generarlo. Según la opción elegida, se creará el diario con los libros terminados en el año que elijamos.
+¿Mostrar los cuadros multilínea con ajuste de línea?
+Por defecto, los cuadros multilínea en los distintos diálogos se muestran con las líneas enteras, lo que hace que NVDA lea todo hasta que decidamos separar texto con Enter, saltando una línea. Si marcamos esta casilla las propias líneas se van a dividir visualmente, lo que hará que NVDA lea las líneas en pedazos, sin necesidad que haya un salto de línea real. Esto puede ser útil, por ejemplo, al editar notas o reseñas.
+
+7.2. Pestaña Biblioteca Viajeros de Papel
+
+Esta sección te permite controlar algunos aspectos relevantes para que la funcionalidad de la descarga de libros desde la biblioteca esté personalizada a tu gusto.
+¿Usar los servicios en línea de la biblioteca? (requiere iniciar sesión)
+Si no te interesa usar los servicios de la biblioteca (sincronización del diario en línea y descarga de libros) puedes desmarcar esta casilla y no tendrás que iniciar sesión o crearte una cuenta. Se desmarca por defecto si eliges usar el diario sin conexión en el asistente de bienvenida.
+¿Adjuntar información desde la biblioteca al agregar un libro?
+Esta casilla, marcada por defecto, le dirá al programa si queremos que la información de título, autor, colección, géneros, sinopsis, año de publicación y número de páginas (cuando esté disponible) se obtenga de la interfaz de la biblioteca para que se rellenen automáticamente los campos correspondientes.
+¿Usar una caché local para que los autores carguen más rápido?
+Por defecto, el programa irá descargando la información de los autores que se ven en las listas principales de la biblioteca, para que la próxima vez que lo abras no tarde en obtenerlos nuevamente. Con esta opción podrás elegir si quieres que lo haga o no.
+Modo de presentación de los libros:
+Esta opción controla cómo se van a presentar los libros en las listas de la biblioteca, tanto en la interfaz de la biblioteca como en el diálogo del buscador de la biblioteca al agregar o editar un libro. Por defecto está Título, de autor (es decir, el libro aparecería como Manolito Gafotas, de Elvira Lindo). Aquí cada una de las opciones disponibles y su ejemplo:
+Título, de autor
+It (eso), de Stephen King
+Título, por autor
+Un hombre llamado Ove, por Fredrik Backman
+Autor, título
+Louisa May Alcott, Mujercitas
+Autor (apellido, nombre), título
+Celis, Claudia, Donde habitan los ángeles
+Título, de autor (apellido, nombre)
+Inspector Miquel Mascarell 1. Cuatro días de enero, de Sierra i Fabra, Jordi
+Título, por autor (apellido, nombre)
+Mi planta de naranja lima, por Vasconcelos, José Mauro de
+Ruta de la carpeta para las descargas de la biblioteca:
+Aquí puedes elegir o escribir una ruta para decirle al programa dónde quieres que se guarden los libros que descargas desde la interfaz de la biblioteca. Es la misma configuración que verás en el asistente de bienvenida; desde aquí también la puedes cambiar.
+Al seguir autores:
+Si sigues a un autor en la interfaz de la biblioteca, desde aquí puedes elegir si solo quieres recibir las notificaciones con las novedades o también que se descarguen los libros nuevos automáticamente.
+¿Recibir notificaciones?
+Desde aquí puedes elegir si quieres recibir notificaciones (ver más arriba)
+Recibir...
+Aquí puedes elegir qué tipo de notificaciones quieres recibir.
+Forzar sincronización completa con el servidor
+Si presionas este botón, todo tu diario de lectura se re-sincronizará con el servidor desde tu archivo de datos local, en el improbable caso de que algo se desconfigure, que un libro no aparezca o que simplemente no se hayan cargado tus datos en la biblioteca.
+Re-descargar tus libros de la biblioteca
+Al presionar esta opción se descargarán absolutamente todos los libros que hayas bajado de la biblioteca, ya sea desde el programa o desde la web, en caso de que estés mudando el programa de computadora o de que simplemente hayas perdido los archivos. Se guardarán en la carpeta que elegiste cinco opciones atrás.
+
+7.3. Pestaña Carpeta de lecturas
+
+Desde la versión 3.5, el Diario de Lectura ya puede organizar tus libros por carpetas. La estructura que usa por defecto es Lecturas\Sección\Autor\Colección\Libro.
+Por ejemplo, si quieres añadir el primer libro de Harry Potter a la sección El Club de los Libros Terminados, al guardarlo, en la carpeta del diario verás la carpeta Lecturas.
+Dentro de ella verás la subcarpeta El club de los libros terminados.
+Si entras, verás la subcarpeta J. K. Rowling.
+Si marcaste que el libro pertenece a una colección y pusiste como nombre de colección Harry Potter, dentro de esa subcarpeta verás una subcarpeta con ese nombre.
+Y finalmente, dentro de esa subcarpeta verás "1. Harry Potter y la piedra filosofal - J. K. Rowling.epub". El 1 correspondiente al número en la colección.
+
+Esta pestaña en la interfaz de las opciones te permite controlar algunas configuraciones de la organización, como:
+¿Llevar una carpeta de lecturas en el directorio del diario?
+Esta casilla activa o desactiva la característica. Marcada por defecto.
+Nombre de la carpeta principal de lecturas.
+Para que personalices el nombre a tu gusto.
+Casilla ¿Crear carpetas para los autores?
+Siguiendo con el ejemplo de arriba, si desmarcas esta casilla, la estructura de la carpeta sería: Lecturas\El club de los libros terminados\Harry Potter\1. Harry Potter y la piedra filosofal - J. K. Rowling.epub. Desaparece la carpeta del autor y la subcarpeta de la colección se va directo a la subcarpeta de la sección.
+Casilla Tratar de obtener información de los libros para llenar los campos (solo al agregar)
+Al marcar esta casilla, al adjuntar un libro, el programa tratará de obtener algunos datos para llenar algunos de los campos desde la información disponible en los libros. Solo funcionará con los libros con extensión epub y docx. El diario te avisará qué campos se llenaron, y tú podrás corregir o modificar la información antes de guardar.
+Casilla ¿Crear carpetas para las colecciones?
+Continuando con el ejemplo, si desmarcas esta casilla marcada por defecto, la estructura cambiará, y ahora será: Lecturas\El club de los libros terminados\Harry Potter 1. Harry Potter y la piedra filosofal - J. K. Rowling.epub, eliminándose tanto la subcarpeta de autor (que ya desmmarcamos arriba) como ahora la de la colección.
+Sincronizar
+Si por alguna razón ves que al mover un libro de una sección a otra no se mueve como debería en las carpetas, o si en una versión antigua personalizaste el nombre de la carpeta base y ves que las rutas no se construyen como deberían, presionando este botón se resincronizarán los directorios para arreglar estos problemas.
+Descargar los libros de tu diario desde la biblioteca
+Al presionar esta opción se descargarán los libros que hayas agregado a tu diario de lectura que estén en la biblioteca, directamente a tu carpeta de lecturas.
+
+Los ajustes de las carpetas para autores y colecciones también se utilizarán para la carpeta de la biblioteca.
+
+Puedes configurar la estructura de la carpeta a tu gusto. A medida que vayas marcando o desmarcando las distintas subcarpetas, al guardar las opciones te advertirá que los libros se van a reorganizar según el modo que elegiste. ¡Útil para saber cuál te gusta más!
+
+En caso de tener la estructura de carpetas activada, verás en la interfaz principal del programa un botón para abrir la carpeta base directamente, o podrás presionar los atajos Alt+C o Shift+F5.
+
+7.4. Pestaña Sonidos
+
+Para hacerlo más interactivo, el programa cuenta con sonidos para todas las acciones, y en dos paquetes distintos. Aquí las opciones:
+Activar sonidos
+Esta opción te permite decidir si quieres los sonidos o no. Marcada por defecto.
+Tipo de sonidos:
+Hay dos paquetes entre los que puedes elegir. Teclado y Lápiz. La diferencia más marcada que escucharás es al momento de estar escribiendo en los diálogos. No necesito explicar cómo suena cada uno de los paquetes al hacerlo, pero sí te cuento que casi todas las acciones suenan diferente entre un paquete y el otro.
+Sonido al iniciar
+El sonido que suena al iniciar el programa. En ambos paquetes es el mismo.
+Sonido de botones
+Al presionar sobre el botón Agregar libro, al usar los distintos atajos de teclado para agregar y editar o al adjuntar un archivo al libro que estés agregando sonarán distintos sonidos, que desde esta opción puedes activar o desactivar.
+Sonidos al escribir
+Sonido al ver diario
+Cuando se presiona el botón para ver el diario, o el atajo F5. Diferente en cada paquete.
+Sonido al navegar
+Cuando nos movamos por los campos en los diálogos sonarán estos. Diferentes en cada paquete.
+Sonido al encontrar actualización
+Cuando el programa encuentra una actualización se abre un diálogo con este sonido, que podemos quitar o dejar a nuestro gusto.
+Sonido al ocurrir un error
+Si por alguna razón no se puede guardar un libro, además del mensaje que nos dé nuestro lector, nos reproducirá este sonido por defecto. También al navegar por las listas en la interfaz de la biblioteca, si escribimos una cadena de caracteres que el programa no puede encontrar.
+
+7.5. Pestaña Secciones
+
+Llegamos a la última pestaña de las opciones, y aquí te voy a explicar cómo está constituida:
+Secciones disponibles
+Aquí tenemos todas las secciones que hacen parte del programa, explicadas más arriba. Todas bajo su etiqueta (original), lo que indica que son originales, establecidas por defecto, o (personalizada), creadas por nosotros. También su atajo de teclado (para entrar al diálogo de agregar libros a esa sección).
+Crear sección...
+Si presionamos este botón se nos abrirá un diálogo de creación de secciones, donde podremos darles un nombre largo (el nombre que va a aparecer en el diario generado, en los títulos del diálogo al editar la sección y en el menú Editar), un nombre corto (que aparecerá en el cuadro combinado de la interfaz principal y en el diálogo al agregar una entrada en esa sección), podremos seleccionarle su atajo de teclado, de F1 a F12, excepto F5 (se seleccionará por defecto el primer atajo disponible), elegir si queremos que esa sección en particular esté encerrada en su propia capsulita, como lo están por defecto las secciones El Club de los Libros en Proceso y El Club de los Libros Terminados, y marcar los campos que queramos que aparezcan en el diálogo de agregar entrada a la sección. Incluso crear hasta tres campos personalizados.
+Editar sección...
+Esto hace lo mismo pero en la sección seleccionada de la lista, incluso si es una original. Podremos quitarle campos que no necesitemos, cambiarle el nombre largo y corto y hasta modificar su atajo de teclado.
+Eliminar sección
+Esto destruirá todo rastro y referencia de la sección seleccionada, ya sea original o personalizada. Al eliminar (y posteriormente guardar) se eliminarán todas las entradas asociadas a la sección, ¡así que cuidado! Asegurémonos de que es lo que queremos hacer realmente.
+Restaurar secciones originales
+Esto traerá a la vida las secciones originales que eliminamos, o restablecerá a sus valores por defecto aquellas que editamos. En caso de haberlas eliminado, no regresarán sus datos.
+Botones Guardar opciones y Cancelar
+Al igual que en los diálogos de edición de libros, los cambios de las opciones no se aplicarán hasta que presionemos el botón Guardar opciones. En caso de que cancelemos, todo se revertirá a como estaba antes de haberlo modificado.
+
+7.6. Personalización de las secciones
+
+A medida que voy actualizando el programa voy incorporando muchas personalizaciones al diario para que cada usuario lo deje totalmente a su gusto, por lo que la personalización de las secciones es más completa que nunca.
+Para no ir revisando sección por sección, voy a mencionar todos los controles y decir las secciones en las que aplican.
+Recuerda que estos controles los podrás ver al presionar Editar sección en el diálogo de las secciones, seleccionando una previamente, o presionando Control+D en cualquiera de los cuatro diálogos donde puedes agregar libros, y también al momento de crear una sección nueva.
+
+Nombre de la sección (como aparecerá en los menús, en el HTML generado y en los títulos de las opciones):*
+Este control es muy explicativo, Te permite personalizar el nombre largo de la sección. Lo verás en las cuatro secciones principales y al momento de crear una nueva.
+Nombre corto (como aparecerá en la interfaz principal y en los títulos de los diálogos):*
+Este también se explica solo. Es el valor que vas a ver de inmediato en el cuadro combinado de la interfaz principal. Disponible en las cuatro secciones principales, en las estadísticas y en las secciones personalizadas.
+Guardar en un contenedor desplegable
+Si marcas esta casilla, la sección se guardará en un contenedor, donde los usuarios tendrán que presionar Enter para mostrar los libros que estén dentro. Disponible en las cuatro secciones principales, en las estadísticas y en las personalizadas.
+Mostrar esta sección en el diario:
+Desde aquí podrás elegir si quieres que la sección se muestre en una tabla (como se muestran por defecto Libros Que Quiero Leer y El Club de los Libros Olvidados), o Con los libros separados por encabezados (como se muestran por defecto El Club de los Libros en Proceso y El Club de los Libros Terminados) en el diario generado. Disponible en las cuatro secciones principales y al crear una nueva.
+Dividir la sección por meses
+Solo verás este control si eliges que la sección se muestre Con los libros separados por encabezados. Al marcarla, la sección se separará por meses, de acuerdo a la fecha en que hayas terminado los libros. Control disponible en El Club de los Libros Terminados y en las personalizadas que tengan activado u opcional el control de Fechas de inicio y fin.
+Modo de presentación de los libros:
+Esta opción controla cómo se van a presentar los encabezados con el título y autor de los libros agregados en las secciones. Por defecto está Título, de autor (es decir, el libro aparecería como Manolito Gafotas, de Elvira Lindo). Aquí cada una de las opciones disponibles y su ejemplo:
+Título, de autor
+It (eso), de Stephen King
+Título, por autor
+Un hombre llamado Ove, por Fredrik Backman
+Autor, título
+Louisa May Alcott, Mujercitas
+Autor (apellido, nombre), título
+Celis, Claudia, Donde habitan los ángeles
+Título, de autor (apellido, nombre)
+Inspector Miquel Mascarell 1. Cuatro días de enero, de Sierra i Fabra, Jordi
+Título, por autor (apellido, nombre)
+Mi planta de naranja lima, por Vasconcelos, José Mauro de
+Control disponible en las cuatro secciones principales y al crear personalizadas, siempre y cuando la sección se muestre con los libros separados por encabezados.
+Orden en que se mostrarán los libros:
+Aquí podremos controlar cómo se van a ordenar los libros, según su fecha de fin. Las opciones son:
+Del último al primero
+Primero se mostrará el último libro que leímos y al final el primero.
+Del primero al último
+Los libros se mostrarán del que leímos primero hasta el más reciente.
+Orden personalizado (según el momento en el que los registraste)
+Aquí el orden que seguirán será según cuando los añadiste, sin importar las fechas en que los terminaste.
+Control disponible en El Club de los Libros Terminados y en aquellas personalizadas que tengan activado u opcional el control de Fecha de fin.
+¿Las lecturas de esta sección van a contar para las estadísticas?
+Opción solo disponible al crear una sección personalizada, al tener activado u opcional el campo de Fecha de fin. Al marcar esta opción los libros que añadamos a la sección contarán para las estadísticas en el diario generado, tal y como ya cuentan por defecto los libros añadidos a El Club de los Libros Terminados.
+¿Los libros de esta sección van a contar para el propósito de lectura?
+Opción solo disponible al crear una sección personalizada, al tener activado u opcional el campo de Fecha de fin. Esta opción hará que al agregar un libro se pueda contabilizar para el propósito de lectura del año actual.
+Requerir adjuntar libro:
+Con este cuadro combinado conntrolas si quieres que sea obligatorio adjuntar un archivo al agregar un libro. Disponible para todas las secciones principales y personalizadas, siempre y cuando la opción "¿Llevar una carpeta de lecturas en el directorio del diario?" esté activada.
+Atajo de teclado:
+Este cuadro combinado te permite elegir un atajo para que al presionarlo puedas agregar un libro a la sección, y si lo presionas junto con Shift, puedas editar los libros de esta. Las cuatro secciones principales ya tienen sus atajos por defecto así como la de Mejor libro de cada mes, mientras que las personalizadas usarán los atajos que queden libres, y también se seleccionarán por defecto. Solo podrás elegir los atajos que no estén ocupados, así que si quieres ocupar el atajo de una sección para otra, primero tendrás que cambiar el atajo de la sección de la que quieras usarlo.
+Título, Autor, Seudónimo, Botón de búsqueda, Colección, Género, Año de publicación, Sinopsis y Número de páginas:
+Todos estos son controles estándar de cada una de las secciones, y por defecto están ya sea activados o puestos como opcionales. Hay algunos que solo se pueden activar o desactivar (colección y botón de búsqueda), y el seudónimo solo se puede desactivar y poner como opcional.
+¿Es una recomendación?
+Control específico para la sección Libros Que Quiero Leer. Te pregunta si el libro que estás añadiendo te lo recomendaron o no.
+Etiquetas:
+Este es un campo disponible en todas las secciones, desactivado por defecto en algunas y opcional en otras. Te permite aplicar clasificaciones personalizadas a tus libros, principalmente para que en el diario generado puedas filtrar los libros por las etiquetas que añadas, y también las que se generan por defecto, así como al mover un libro de una sección a otra o al abrir el diálogo de edición de las distintas secciones.
+Puedes clasificar los libros como quieras, escribiendo tus etiquetas una por línea. Automáticamente se clasifican por género, siempre y cuando pongas uno o múltiples géneros para un libro; por calificación, por fecha de fin, por recomendación y por reseña, donde aplique.
+Algunos ejemplos de etiquetas que puedes poner son: Favoritos, Libros que me hicieron reír, Libros que me hicieron llorar, Libros que me dio flojera leer, Libros de mi club de lectura, Temática apocalipsis zombi... ¡todo lo que se te ocurra!
+Permitir mover libros a esta sección desde:
+Aquí puedes marcar las secciones desde donde quieres que aparezcan libros para mover a la que estés editando o creando. Disponible en todas las secciones principales, excepto en Libros Que Quiero Leer, y al crear personalizadas.
+Filtro avanzado al mover libros:
+Con esta opción puedes activar o desactivar un cuadro combinado especial que al tenerlo activo, te permite elegir cómo filtrar y ordenar los libros al moverlos desde una sección a otra.
+Podrás filtrar y ordenar los libros de muchas formas: por orden alfabético (título), por orden alfabético del autor, Orden según la colección, Del más largo al más corto y viceversa (de acuerdo a sus páginas), Del último al primero que añadiste y viceversa (según cuándo los agregaste), Del más actual al más antiguo y viceversa (según el año de publicación), Solo los de los distintos géneros, solo los de cada una de tus etiquetas personalizadas, Solo los que tienen reseña y Solo los calificados con una, dos, tres, cuatro y cinco estrellas, donde aplique.
+Y en el diálogo de edición, además de estos filtros, podrás ordenar del último al primer libro y del primero al último, según la fecha de fin, solo en las secciones que tengan este campo.
+Este control solo se verá si tienes al menos una sección seleccionada desde donde mover libros.
+Ocultar los campos llenados automáticamente al mover un libro
+Si marcamos esta opción, al mover un libro desde una sección a otra, no aparecerán los campos estándar (Título, Autor, Género...) que se rellenan automáticamente de acuerdo a la información que introdujimos la primera vez que agregamos el libro a mover. Si la desmarcamos sí se mostrarán ya llenados, lo que nos permitirá modificarlos.
+Añadir el día actual a la fecha de inicio (o de fin) al mover un libro desde otra sección
+Control disponible en El Club de los Libros en Proceso (fecha de inicio) y El Club de los Libros Terminados y personalizadas (fecha de fin). Al mover un libro desde una sección a estas, los campos se llenarán automáticamente con la fecha del día en que lo moviste. Solo se verá si tienes marcada al menos una sección para mover libros.
+Porcentaje en que lo dejaste:
+Este control es exclusivo para El Club de los Libros Olvidados. Activado por defecto. Podrás elegir en un deslizador de progreso en qué porcentaje decidiste abandonar el libro que estás agregando.
+Razón por la que lo dejaste:
+Control exclusivo únicamente para El Club de los Libros Olvidados. Activado por defecto, te permite explicar por qué abandonaste el libro que estás agregando.
+Progreso de tu lectura:
+Control disponible para El Club de los Libros en Proceso y las secciones personalizadas. Opcional por defecto, te permitirá ir indicando el porcentaje del libro que llevas leído, útil sobre todo al editar un libro.
+Incluso, si editas un libro en proceso y pones el progreso en 100%, te aparecerán algunos campos nuevos y otros renombrados:
+• Justo al poner un libro al 100% verás el nuevo campo Fecha de fin, ya rellenado con el día actual.
+• El campo Frases que más te van gustando se renombrará a Frases que más te gustaron.
+• El campo Notas se renombrará a Reseña.
+• Aparecerá el cuadro combinado para calificar el libro.
+• Aparecerá el campo de etiquetas, si lo tienes activado u opcional en El Club de los Libros Terminados y no en El Club de los Libros en Proceso. Si lo tienes activado en El Club de los Libros en Proceso lo seguirás viendo normal.
+Todos estos campos se llenarán con la información previamente introducida, y al guardar el libro se moverá automáticamente a El Club de los Libros Terminados.
+Frases que más te van gustando y Notas:
+Campos disponibles únicamente en El Club de los Libros en Proceso, opcionales por defecto. Para que añadas frases destacables del libro que estés leyendo y anotes cualquier apunte que te parezca importante.
+Reseña, Frases que más te gustaron y Calificación:
+Campos disponibles en El Club de los Libros Terminados y en secciones personalizadas. Para que escribas las frases más destacables del libro que leíste, en la reseña puedas explayarte sobre qué te pareció la lectura y puedas calificar los libros con un puntaje que va desde una hasta cinco estrellas.
+Además de la reseña, al activar el campo de reseña verás una casilla de spoilers.
+Rellenar reseña con porcentaje y razón desde El Club de los Libros Olvidados
+Opción disponible en El Club de los Libros Terminados y secciones personalizadas, solo si el campo de reseña está activo u opcional. Permite que el porcentaje en que habías dejado un libro olvidado, y la razón por la que lo habías dejado, se copie a la reseña al moverlo a la nueva sección.
+Copiar notas desde El Club de los Libros en Proceso a reseña
+Opción disponible en El Club de los Libros Terminados y secciones personalizadas, solo si el campo de reseña está activo u opcional. Permite que las notas que hagas sobre un libro que estés leyendo se copien a la reseña al moverlo a la nueva sección.
+
+8. Estadísticas
+
+La penúltima parte del diario generado, antes de la conclusión de lectura, cuando la hagamos, son las estadísticas.
+Estas nos van a decir de forma detallada la cantidad de libros que vamos leyendo, el promedio de páginas, el libro más largo y corto, el promedio de calificación, la cantidad de colecciones, el autor de quien más colecciones hemos leído, los géneros que más hemos leído, entre muchas otras, tanto en estadísticas totales (en caso de tener el modo completo del diario), anuales y mensuales.
+
+Si editamos la sección de las estadísticas podemos elegir cuáles de ellas queremos activar. Por defecto se van a mostrar todas. Además podemos cambiarle el nombre a la parte de estadísticas totales, a la de estadísticas mensuales, anuales y a la sección en sí, además de poder guardarla en un contenedor al igual que las demás.
+
+9. Atajos de teclado
+
+Aquí te dejo todos los atajos de teclado para que puedas manejar el diario. Ya mencioné la mayoría al explicar los diálogos, pero hay algunos que no dije, y además viene bien tener un resumen para cuando los quieras consultar rápidamente.
+
+Atajo
+Funcionalidad
+Se utiliza en:
+F1
+Abre el diálogo para agregar un libro en la sección Libros Que Quiero Leer
+Interfaz principal
+Shift+F1
+Abre el diálogo para editar los libros en la sección Libros Que Quiero Leer
+Interfaz principal
+Control+F1
+Abre este manual
+Interfaz principal
+F2
+Abre el diálogo para agregar un libro en la sección El Club de los Libros Olvidados
+Interfaz principal
+Shift+F2
+Abre el diálogo para editar los libros en la sección El Club de los Libros Olvidados
+Interfaz principal
+Control+F2
+Abre la biblioteca Viajeros de Papel en el navegador
+Interfaz principal
+F3
+Abre el diálogo para agregar un libro en la sección El Club de los Libros en Proceso
+Interfaz principal
+Shift+F3
+Abre el diálogo para editar los libros en la sección El Club de los Libros en Proceso
+Interfaz principal
+F4
+Abre el diálogo para agregar un libro en la sección El Club de los Libros Terminados
+Interfaz principal
+Shift+F4
+Abre el diálogo para editar los libros en la sección El Club de los Libros Terminados
+Interfaz principal
+F5 o Alt+V
+Abre tu diario de lectura en tu perfil de la biblioteca. En caso de que no la uses generará el archivo del diario. Si tienes seleccionado el modo separado, te presentará un menú para elegir el año en que lo quieras ver
+Interfaz principal
+Shift+F5 o Alt+C
+Abre tu carpeta de lecturas
+Interfaz principal
+Control+F5
+Si usas la biblioteca, copia el enlace a tu perfil; si no, genera el archivo del diario sin código de filtrado y te copia al portapapeles el código para poder ordenar y filtrar si estás subiendo el diario a una web, presentándote instrucciones detalladas. Si tienes seleccionado el modo separado, te presentará un menú para elegir el año en que lo quieras generar
+Interfaz principal
+Alt+F5
+Siempre genera el archivo del diario y lo abre. Si tienes seleccionado el modo separado, te presentará un menú para elegir el año en que lo quieras ver
+Interfaz principal
+Alt+Control+F5
+Siempre genera el archivo del diario sin código de filtrado y te copia al portapapeles el código para poder ordenar y filtrar si estás subiendo el diario a una web, presentándote instrucciones detalladas. Si tienes seleccionado el modo separado, te presentará un menú para elegir el año en que lo quieras generar
+Interfaz principal
+F6
+Abre un diálogo para que puedas elegir el mejor libro del mes del año actual
+Interfaz principal
+F7 a F12
+Atajos reservados para abrir los diálogos para agregar libros en las secciones personalizadas, o en las secciones originales a las que les asignes uno de estos
+Interfaz principal
+Shift+F7 a Shift+F12
+Atajos reservados para abrir los diálogos para editar los libros de las secciones personalizadas, o de las secciones originales a las que les asignes uno de estos
+Interfaz principal
+Alt+A
+Abre el menú aplicación
+Interfaz principal
+Alt+B
+Abre el menú biblioteca
+Interfaz principal
+Alt+E
+Abre el menú Editar
+Interfaz principal
+Control+B
+Activa el botón Buscar
+Diálogos de agregar libros y diálogo de editar libro en la interfaz de la biblioteca
+Control+E
+Abre el diálogo para editar la sección en la que estés agregando un libro
+Diálogos de agregar libros
+Control+D
+Abre el diálogo con los detalles del libro enfocado
+Interfaz de la biblioteca
+Control+O
+Abre el diálogo de opciones
+Interfaz principal y diálogos de agregar libros
+Control+S
+Añade una etiqueta de que el texto que viene es spoiler
+Campos de reseña y de notas en los diálogos de agregar libros
+Control+Shift+S
+Añade una etiqueta de fin de spoiler
+Campos de reseña y de notas en los diálogos de agregar libros
+Control+1
+Lee el título del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+1
+Copia al portapapeles el título del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+2
+Lee el autor del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+2
+Copia al portapapeles el autor del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+3
+Lee el nombre de la colección del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+3
+Copia al portapapeles el nombre de la colección del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+4
+Lee el número en la colección del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+4
+Copia al portapapeles el número en la colección del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+5
+Lee la sinopsis del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+5
+Copia al portapapeles la sinopsis del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+6
+Lee los géneros del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+6
+Copia al portapapeles los géneros del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+7
+Lee el año de publicación del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+7
+Copia al portapapeles el año de publicación del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+8
+Lee el número de páginas del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Control+Shift+8
+Copia al portapapeles el número de páginas del libro que tengas enfocado
+Interfaz de la biblioteca, buscador de la biblioteca y diálogos de edición
+Enter
+Descarga el libro que tengas enfocado
+Interfaz de la biblioteca
+Enter
+Descarga el libro que tengas enfocado y lo adjunta al diálogo en el que estés agregando un libro
+Buscador de la biblioteca
+Enter
+Abre la ficha del libro que tengas enfocado
+Diálogos de edición
+Enter
+Muestra un cuadro con la notificación que tengas enfocada
+Historial de notificaciones
+Escape
+Cancela los diálogos, descartando los cambios
+Atajo universal para todos los diálogos
+
+10. Conclusión y agradecimientos
+
+¡Y hasta aquí llegamos!
+Esto es lo que podrás encontrar en el Diario de Lectura hasta su versión 4.2.0, que es la actual. Si quieres enterarte de los cambios que voy implementando, revisa el archivo Historial de cambios. En cuanto haya cosas significativas modificaré este manual para incluirlas.
+
+Espero que este programa te sirva para llevar un registro de las cosas que vas leyendo, y si es así, compártelo para que más personas se puedan beneficiar de él.
+
+En caso de que tengas alguna duda, sugerencia o queja en cuanto al diario, o si quieres reportar un error del programa o enlace caído en la biblioteca, escríbeme a cristian@sonorizados.com.
+
+Antes de despedirme, me gustaría enviar un enorme agradecimiento y un caluroso abrazo a Duende, que sin su deseo por tener un diario de lectura este proyecto nunca habría visto la luz, y yo no habría aprendido a programar.
+Además de esto siempre es la que revisa las versiones cuando salen y me ayuda a darme cuenta de los errores, me da sugerencias para implementar y es la usuaria más fiel del programa. Si les gusta el diario visiten su página, vean sus recetas, sus tutoriales con ukelele, ¡y sobre todo su diario de lectura generado con este!
+
+También agradezco a los usuarios del grupo Viajeros de Papel, que han sido los que más han usado el diario y me han sugerido cosas y ayudado también a corregir otras. Sobre todo a Bianca, Julio y Bluma Blair. Gracias, chicos, ¡porque sin ustedes el diario no sería lo que es hoy!
+
+Y a ti, usuario que me lees, ¡muchas gracias por tu interés en el diario! Espero que las características que incluye te convenzan de usarlo.
+
+Nos estaremos viendo en otros proyectos, ¡y en nuevas actualizaciones!
+
+Se despide,
+Cristian.

@@ -1,0 +1,61 @@
+respuesta 5
+
+Buen ejemplo, capté el tono: segunda persona directa, sin tecnicismos, explicando cada control tal como lo ve el usuario. Voy a trabajar en paralelo: yo me encargo de `ayuda.html` (las guías de API son las que más me preocupa dejar bien), y delego `README.md` y los documentos técnicos internos.
+
+Ahora escribo el bloque de la v4.1.0 en `novedades.txt`, con lenguaje de usuario final (nada de "except" ni "logger").
+
+Reviso `subir_version.py` para subir formalmente la versión a 4.1.0 (coherente con `recursos/version.json`, `ayuda.html` y el footer).
+
+Versión subida a 4.1.0 y comprometida. Ahora actualizo `ayuda.html`: número de versión, sección de novedades v4.1.0, y las guías paso a paso para obtener cada API (Azure, Polly, ElevenLabs, más el aviso de responsabilidad que pediste).
+
+Ahora añado la sección de novedades v4.1.0 (nueva, arriba de la de 4.0.0) y el resto de mejoras de empaquetado.
+
+Ahora inserto la sección completa de "Claves de API" con el aviso de responsabilidad y las cuatro guías paso a paso, antes de la tabla.
+
+Ahora quito la sección duplicada "Cómo obtener una API Key de Deepgram" que quedó más abajo (ya está integrada arriba).
+
+I añado el paso a paso de Gemini junto a las demás guías, y añado Gemini a la tabla de límites gratuitos.
+
+Ahora simplifico la sección posterior de Gemini para no repetir la guía de API Key (ya está arriba), y verifico el HTML entero.
+
+That section is about model/temperature config, not the key itself — it's fine as-is, no duplication issue. Ahora añado Gemini a la tabla de límites gratuitos.
+
+Todo balanceado. Verifico visualmente la sección completa una vez más.
+
+Excelente, queda claro y ordenado. Commit de `ayuda.html` y `novedades.txt`, y sigo con `README.md` y los documentos técnicos internos.
+
+Ahora lanzo dos agentes en paralelo: uno para `README.md` y otro para los documentos técnicos internos.
+
+Lancé los dos agentes en paralelo (README.md y documentos técnicos internos). Mientras trabajan, resumen de lo que ya está hecho:
+
+- **`crear_portable.py`**: sin carpeta `documentos/` para un solo archivo, `registros/` de fábrica, aviso si faltan `ffmpeg.exe`/`auxiliar_sapi32.exe`.
+- **Versión subida a 4.1.0** con `subir_version.py minor`.
+- **`novedades.txt`** y **`ayuda.html`**: entrada de la v4.1.0 añadida, y guías paso a paso completas para conseguir la clave de API de Azure, Amazon Polly, Deepgram, ElevenLabs y Google Gemini, con el aviso de nivel gratuito / pago por uso / responsabilidad del usuario que pediste.
+
+En cuanto vuelvan los agentes reviso, hago commit y te aviso.
+
+Commit intermedio subido para satisfacer el hook. Sigo esperando a que ambos agentes (README.md y documentos técnicos) terminen su trabajo.
+
+README.md terminado. Reviso el resultado y hago commit.
+
+Buen resultado, tono claro y directo, sin perder la info técnica. Commit y push.
+
+El README ya estaba completo en el commit intermedio que hice — no hay diferencias nuevas que subir. Marco la tarea como hecha.
+
+README.md terminado y ya subido. Sigo esperando al agente que actualiza los documentos técnicos internos (CLAUDE.md, DEVELOPMENT.md, BITACORA, GUIA_TECNICA, estructura_proyecto.txt).
+
+El agente de documentos técnicos terminó. Reviso el diff completo y hago commit.
+
+Todo correcto y coherente. Commit y push final.
+
+Todo el trabajo de empaquetado y documentación está completo y subido. Verifico rápidamente que los tests siguen en verde y actualizo la descripción del PR #11.
+
+PR #11 actualizado con el resumen completo. Todo el trabajo de esta ronda está subido:
+
+**Empaquetado** (`crear_portable.py`): sin `documentos/` para un solo archivo, `registros/` de fábrica, aviso si faltan `ffmpeg.exe`/`auxiliar_sapi32.exe`.
+
+**Documentación de usuario**: `ayuda.html` con guías paso a paso para las 5 claves de API (Azure, Polly, Deepgram, ElevenLabs, Gemini) más el aviso de nivel gratuito/pago por uso/responsabilidad que pediste; `README.md` reestructurado en tono directo con la sección de requisitos y compatibilidad; `novedades.txt` con la entrada de la v4.1.0.
+
+**Versión** subida formalmente a 4.1.0 con `subir_version.py`, y documentos técnicos internos (`CLAUDE.md`, `DEVELOPMENT.md`, `BITACORA_DE_DESARROLLO.md`, `estructura_proyecto.txt`) actualizados en consecuencia.
+
+Tests siguen en 169/169 verde. Sigo vigilando el PR #11 con los check-ins programados.

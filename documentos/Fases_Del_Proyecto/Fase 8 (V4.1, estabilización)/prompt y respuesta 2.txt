@@ -1,0 +1,9 @@
+prompt y respuesta 2
+
+empieza por el paso 1, estoy de acuerdo con todo el plan
+
+Respuesta:
+
+Voy a hacer el barrido fino de excepciones silenciosas en todo `app/` para generar el inventario exacto.
+
+Lanzado el barrido en segundo plano. En cuanto termine te paso el inventario completo, organizado por archivo, para revisarlo antes de tocar código.

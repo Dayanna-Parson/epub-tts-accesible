@@ -1,0 +1,51 @@
+prompt y respuesta 9
+
+avísame cuando terminen los dos agentes que faltan
+Entendido, en cuanto terminen los agentes de servicios e interfaz te aviso.
+
+Todo compila. Commit checkpoint mientras sigo esperando a que terminen del todo interfaz y servicios.
+
+Checkpoint subido. Sigo esperando a que terminen los dos agentes restantes (servicios e interfaz).
+
+Los bugs de `app/interfaz/` ya están todos cerrados y subidos. Falta solo el agente de `app/servicios/` (chunking de texto, caché por voz) — sigo esperando.
+
+avísame cuando termine el último agente
+
+Entendido, en cuanto termine el agente de `app/servicios/` te aviso.
+
+El último agente terminó — los 4 ya están listos. Verifico el estado final y hago el commit de cierre.
+
+Confirmado: todas las correcciones de `app/servicios/` ya están en el commit `d8b96e7`, ya subido. Nada pendiente de commitear. Compruebo una última vez todo el repo entero.
+
+Todos los 4 agentes terminaron y todo el repo compila con los 169 tests en verde. Reviso el `msgid` duplicado real que se destapó en la traducción al inglés.
+
+El `msgid` está duplicado a nivel de fuente (el `.pot` extrae la misma cadena española de dos puntos distintos del código), pero en inglés terminó con dos traducciones distintas para el mismo texto. Las armonizo para que sean idénticas.
+
+Resuelto, ya no hay avisos de duplicados. Corro los tests completos y hago el commit final de cierre de toda la revisión de bugs.
+
+Añado la reconfiguración explícita de `stdout` a UTF-8 para evitar el `UnicodeEncodeError` silencioso.
+
+Ahora reporto el cierre de todos los hallazgos con su resultado.
+
+Ahora actualizo la descripción del PR con este segundo bloque de trabajo (revisión de bugs) y confirmo el estado final.
+
+## Revisión completa terminada
+
+Los 4 agentes de revisión + los 4 de corrección terminaron. Resultado: **23 bugs reales encontrados y corregidos**, con los 169 tests en verde y todo el repo compilando limpio. Los más importantes:
+
+**Pérdida de datos (los más graves):**
+- `gestor_proyectos.py` y `config_rutas.py` no guardaban de forma atómica — un cierre a mitad de escritura podía corromper tus proyectos de Grabación o borrar todas tus claves de API sin aviso.
+- La exportación por capítulos podía gastar muy por encima de tu límite de cuota configurado (no acumulaba la reserva dentro del mismo lote).
+- El actualizador automático tenía un bug de rollback que, en un caso concreto, podía borrar un archivo original intacto y sustituirlo por un respaldo que la propia verificación ya había marcado como corrupto.
+
+**Crashes:**
+- Patrón repetido en 3 diálogos (Asistente de Biblioteca, Troceador de EPUB, proveedor alternativo): cerrarlos mientras seguía trabajando un hilo de fondo podía hacer crashear la app.
+
+**Comportamiento incorrecto silencioso:**
+- Azure/ElevenLabs/Polly no troceaban texto largo (solo Deepgram lo hacía) — podía cortar la lectura a mitad de un párrafo largo.
+- La caché de audio se indexaba solo por texto, no por voz: al cambiar de voz podía sonar la voz anterior.
+- Condición de carrera en el reproductor que podía perder un fragmento de lectura en silencio.
+- `subir_version.py`/`crear_portable.py` podían generar una versión incorrecta sin ningún aviso.
+
+Todo corregido, testeado y subido al PR #11, con la descripción actualizada. Sigo vigilando el PR con los check-ins programados — no queda nada más pendiente en la fase v4.1.0.
+

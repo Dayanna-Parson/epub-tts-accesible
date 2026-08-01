@@ -1,0 +1,30 @@
+respuesta 7
+
+Reviso los documentos personales (`VISION_PERSONAL.md`, `idea_app_audiolibros.md`) y qué archivos lleva realmente el portable para el usuario final.
+
+Buena idea añadir `LICENSE` (licencia No Comercial) al portable, y un `LEEME.txt` breve de arranque rápido — ahora mismo el usuario final solo tiene el `.exe` y el manual completo, sin un primer contacto de "cómo empiezo" antes de abrir la app. Los creo y actualizo `crear_portable.py`.
+
+Ahora actualizo `crear_portable.py` para copiar `LICENSE` y `LEEME.txt` a la raíz del portable.
+
+Actualizo también el docstring del script para reflejar el cambio.
+
+Verifico sintaxis y compruebo si hay más archivos que podrían ser útiles al usuario final que aún no lleve el portable.
+
+Ahora actualizo los dos documentos personales con el cierre de la v4.1.0, en el mismo tono narrativo en primera persona que ya tienen.
+
+Y en `GUIA_TECNICA.md`, el changelog técnico también se quedó en la v4.0.0 sin cerrar la Fase 9. Lo completo.
+
+Ahora corro los tests de nuevo y compruebo el estado completo antes del commit.
+
+Todo en orden. Commit y push.
+
+Subido. Resumen de esta ronda:
+
+**Portable más completo para el usuario final:** añadí `LEEME.txt` (primer contacto antes de abrir la app: cómo empezar, aviso de antivirus, dónde quedan tus grabaciones y registros, contacto) y `LICENSE` a la raíz del portable — antes solo llevaba el ejecutable y el manual completo, sin ningún puntero rápido ni los términos de uso viajando con el propio programa distribuido.
+
+**Documentos personales cerrados con la v4.1.0**, en el mismo tono narrativo que ya tenían:
+- `VISION_PERSONAL.md` — nueva entrada de versión 4.1.0.
+- `idea_app_audiolibros.md` — nueva entrada en la nota histórica.
+- `GUIA_TECNICA.md` — el changelog técnico se había quedado cerrado en la v4.0.0/Fase 8; añadí el resumen de la Fase 9 (auditoría de excepciones, tests, rendimiento, empaquetado, documentación).
+
+Tests siguen 169/169 en verde. Todo subido al PR #11.

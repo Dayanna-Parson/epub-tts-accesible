@@ -1,0 +1,25 @@
+prompt y respuesta 10
+
+Quítalo de *draft* y márcalo como listo para revisión. ¡Genial que hayas encontrado esos 23 errores! ¿Cómo es que no nos dimos cuenta antes? Bueno, confírmame que no queda nada más pendiente, ya que la versión está bastante estable y lista para que cualquiera se la pueda descargar y utilizar sin problemas. También actualiza todos los archivos que lo requieran y las novedades. Si lo vas a actualizar, explica especialmente los 23 errores que has corregido, pero de una forma sencilla y no técnica, que todo el mundo pueda entender.
+Respuesta:
+Primero, tu pregunta: por qué no se detectaron antes. Es sencillo — hasta ahora, cada fase se centró en construir funciones nuevas y corregir lo que fallaba de forma visible al probar la app a mano. Estos 23 fallos eran casi todos de los que **no se notan usando la app con normalidad**: pasan solo en momentos muy concretos (cerrar una ventana justo mientras trabaja en segundo plano, que el PC se apague justo mientras guarda un archivo, cambiar de voz en el instante exacto). Por eso esta fase final se dedicó específicamente a leer el código entero buscando ese tipo de casos, en vez de solo probar la app como lo haría un usuario. Confirmo que no queda nada pendiente del plan; la 4.1.0 está lista para distribución.
+
+Actualizo `novedades.txt` y `ayuda.html` con una explicación sencilla de las 23 correcciones, y cierro los documentos técnicos.
+
+Ahora la misma sección en `ayuda.html`, con el mismo tono.
+
+Balanceado. Ahora cierro los documentos técnicos con la ronda de revisión de bugs.
+
+Verifico que todo compila y los tests siguen en verde, y hago el commit final.
+
+## Confirmado, todo está listo
+
+**PR #11**: ya estaba marcado como listo para revisión (no draft) desde antes — confirmado, no era necesario volver a tocarlo.
+
+**No queda nada pendiente.** Todo el plan de la v4.1.0 está cerrado: auditoría de excepciones, tests, rendimiento, empaquetado, documentación de usuario, y la revisión final de bugs con sus 23 correcciones. Los 169 tests siguen en verde y todo compila limpio.
+
+**Documentos actualizados con la explicación sencilla que pediste:**
+- `novedades.txt` y `ayuda.html` — nueva sección "Correcciones importantes" dentro de la propia entrada de la v4.1.0, sin tecnicismos: qué se arregló y por qué le importa a quien usa la app (que no se te corrompan tus proyectos o tus claves guardadas, que no se te pase de tu límite de gasto configurado, que la app no se cierre sola al cerrar ciertas ventanas, que no suene la voz equivocada al cambiar de voz, que los textos largos no fallen a mitad).
+- `BITACORA_DE_DESARROLLO.md`, `DEVELOPMENT.md` y `GUIA_TECNICA.md` — la misma ronda contada en detalle técnico, cerrando del todo la fase.
+
+La versión 4.1.0 está estable y lista para que cualquier persona se la descargue y la use sin problemas — con la salvedad honesta que ya figura en el PR: falta la prueba manual en Windows real con NVDA (no disponible en este entorno) y generar el portable de verdad con PyInstaller, que son los dos últimos pasos que solo se pueden hacer en tu máquina antes de publicar la Release.

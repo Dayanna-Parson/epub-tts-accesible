@@ -1,0 +1,48 @@
+Voy a revisar el estado del repo y los documentos mencionados antes de confirmar el plan.
+
+Ya estamos en la rama correcta (`claude/v4.1-estabilizacion-3k1gnm`, basada en main, working tree limpio). Voy a revisar la sección final de la Fase 8 en ambos documentos y el archivo "Cosas para la V4.txt", además de hacer el barrido de `except: pass`.
+
+## Confirmación de alcance — v4.1.0 (Estabilización)
+
+Ya estoy en `claude/v4.1-estabilizacion-3k1gnm` (creada desde `main`, working tree limpio), así que ese paso está cubierto. Leí `CLAUDE.md`, el cierre de Fase 8 en `BITACORA_DE_DESARROLLO.md`/`DEVELOPMENT.md` y `Cosas para la v4.txt`. Confirmo el encargo:
+
+- **Sin funciones nuevas.** Solo estabilización, rendimiento, pruebas y limpieza.
+- **Auditoría de `except`/captura silenciosa** en todo `app/` (barrido inicial: 44 archivos con algún `except` sospechoso, hay que filtrar cuáles son realmente `pass`/silenciosos vs. ya logueados correctamente).
+- **Ampliar `tests/test_suite.py`** (106 tests a fecha Fase 8) cubriendo biblioteca, proyectos, perfiles, atajos, cuota y persistencia JSON.
+- **Optimización/limpieza**: cuellos de botella, `requisitos.txt` alineado con dependencias reales, inconsistencias menores.
+- **Fuera de alcance a propósito**: no tocar el sistema viejo `ACTUALIZADOR_SCRIPT_CLON` (se retira en una fase futura, tras 2-3 actualizaciones reales sin sobresaltos).
+- Al terminar, la app queda **congelada para distribución final**.
+
+## Plan paso a paso
+
+1. **Inventario exacto de `except` silenciosos**
+   Grep fino para distinguir `except: pass`, `except Exception: pass`, y capturas que solo hacen `return`/`continue`/nada sin `logger.exception()`. Genero lista archivo por archivo con línea y contexto (bloque ANCLAJE si aplica) antes de tocar nada.
+
+2. **Corrección quirúrgica por archivo**
+   Por cada bloque encontrado, decidir caso a caso:
+   - Si es un error real que debería registrarse → `logger.exception("contexto")`.
+   - Si es un caso esperado (ej. archivo opcional que puede no existir) → capturar la excepción específica y loguear a nivel `debug`/`info` con mensaje explícito, no un `pass` mudo.
+   Trabajo módulo por módulo (motor → interfaz → servicios), respetando ANCLAJEs existentes o creando uno nuevo si el bloque no tenía. Commits agrupados por área (p. ej. "motor", "servicios", "interfaz") para poder revisar con cabeza.
+
+3. **Pruebas automatizadas nuevas**
+   Ampliar `tests/test_suite.py` (o módulos separados si crece demasiado) con casos para:
+   - `gestor_biblioteca.py` (CRUD libros/categorías/etiquetas)
+   - `gestor_proyectos.py` (si falta cobertura adicional tras Fase 8)
+   - `gestor_perfiles.py` (ya tiene algo — ampliar bordes: perfil inexistente, ciclo `siguiente_perfil`, escritura atómica)
+   - `gestor_atajos.py` (colisiones, persistencia)
+   - `control_cuota.py` (autoreset mensual, límites)
+   - Persistencia JSON atómica genérica (simular fallo a medio escribir)
+   Todo con `unittest`, sin wx ni hardware de audio, igual que la suite actual.
+
+4. **Revisión de rendimiento**
+   Buscar patrones costosos evitables: recomputación innecesaria en hilos de UI, I/O síncrono bloqueante fuera de hilo secundario, listas sin `Freeze/Thaw`, llamadas repetidas a disco que podrían cachear. Solo corrijo si es una mejora real y de bajo riesgo — nada especulativo.
+
+5. **`requisitos.txt`**
+   Comparar contra los imports reales del código (`wx`, `requests`, `httpx`, `ebooklib`, `beautifulsoup4`, `fitz`/PyMuPDF, `pyttsx3`, `accessible_output3`, etc.) y corregir versiones/paquetes faltantes o sobrantes.
+
+6. **Verificación final**
+   Ejecutar `python compilar_i18n.py` si tocué algo de `_()` (no debería, ya que no hay UI nueva), correr la suite completa de `unittest`, y revisar checklist de accesibilidad NVDA solo si algún cambio tocó interfaz (debería ser mínimo, ya que esto es principalmente motor/servicios).
+
+7. **Commit(s) y push** a `claude/v4.1-estabilizacion-3k1gnm`, con mensajes descriptivos por área tocada, y actualización breve de `BITACORA_DE_DESARROLLO.md`/`DEVELOPMENT.md` cerrando la Fase 9 (Estabilización v4.1).
+
+¿Empiezo por el paso 1 (inventario fino de `except` silenciosos) para que revises la lista antes de que empiece a corregir, o prefieres que avance directo con las correcciones y te muestro el resultado agrupado por commits?

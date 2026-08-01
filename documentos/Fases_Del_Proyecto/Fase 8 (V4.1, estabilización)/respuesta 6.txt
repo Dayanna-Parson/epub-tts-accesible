@@ -1,0 +1,33 @@
+respuesta 6
+
+Entiendo perfectamente. Voy a revisar `ayuda.html` de arriba a abajo poniéndome en el lugar de alguien ciego que usa NVDA/JAWS a diario pero nunca vio la app, y luego en el de alguien vidente. Primero identifico qué documentos son esos "13" y reviso el `.gitignore`, y en paralelo hago la revisión profunda del manual.
+
+Encontré una inconsistencia real: `GUIA_SCRIPTS.md` dice que el actualizador de la Fase C sigue "pendiente de validar" y que el botón de prueba "no se debe retirar", pero según `BITACORA_DE_DESARROLLO.md`/`CLAUDE.md` eso ya se validó y el botón ya se retiró en la Fase 8. Reviso el documento completo.
+
+Confirmado: ese botón ya no existe en el código. Corrijo `GUIA_SCRIPTS.md` para que refleje el estado real (Fase C ya validada, botón ya retirado, `documentos/` ya no es lo que copia el portable).
+
+Confirmado el mapa de atajos globales. Ahora escribo la reestructuración completa de `ayuda.html`: añado tabla de contenidos, una sección de primeros pasos, cubro Ventana de Proyectos, favoritos/filtros de voces, sonidos y una sección de preguntas frecuentes, y reorganizo Ajustes en subsecciones numeradas.
+
+Verifico que el HTML quede bien formado y que los IDs del índice coincidan con los de las secciones.
+
+Todo correcto: 5 guías de API (una por proveedor), 8 subsecciones de Ajustes bien enlazadas, sin duplicados. Corro los tests para asegurarme de que nada más se rompió y hago commit.
+
+Ahora reviso el resto de la lista de "13 documentos" para verificar consistencia total.
+
+Todo consistente — esas coincidencias de "4.0.0" son contexto histórico/ilustrativo legítimo, no versión desactualizada. El `.gitignore` ya cubre correctamente `registros/`, `bin/*.exe` y `dist/`, sin necesidad de cambios. Hago el commit final.
+
+Todo subido. Resumen de esta ronda:
+
+**`ayuda.html` reescrito de arriba abajo:**
+- Tabla de contenidos con anclas al principio, para no perderse en una app "grande y compleja".
+- Sección nueva **"Antes de empezar"**: qué ves al abrir la app por primera vez, tu primera decisión (voz local vs. nube), tu primer libro, y un aviso sobre falsos positivos de antivirus con el `.exe` portable.
+- Nota explícita al inicio poniéndose en la piel de ambos perfiles: persona ciega que usa NVDA/JAWS a diario (pensada para ella) y persona vidente (puede usarla igual, con matices).
+- Cubrí partes que faltaban por completo: **Ventana de Gestión de Proyectos** (Ctrl+Shift+P, jerarquía, herencia de voces, papelera), **sistema de voces favoritas y filtros**, y una tabla con **el significado de los 13 sonidos** de la app.
+- Reorganicé "Ajustes" en subsecciones numeradas (10.1 a 10.8) en vez de una lista plana de encabezados sueltos.
+- Sección nueva de **preguntas frecuentes** con las dudas típicas de alguien nuevo (sin sonido al reproducir, uso sin internet, uso sin ninguna clave de API, antivirus, JAWS, uso por videntes).
+
+**Corregí una inconsistencia real** en `GUIA_SCRIPTS.md`: decía que el actualizador seguía "pendiente de validación" y advertía de no quitar un botón que ya se retiró en la Fase 8 — desactualizado frente al resto de la documentación.
+
+**Verifiqué los 13 documentos** (BITACORA, CLAUDE.md, DEVELOPMENT, GUIA_SCRIPTS, README, TRADUCCION, ayuda.html, bin/INSTRUCCIONES, estructura_proyecto, novedades.txt, requisitos.txt, winget/LEEME, GUIA_TECNICA): todos coherentes con la 4.1.0, sin más versiones desactualizadas. El `.gitignore` ya cubría correctamente `registros/`, los `.exe` de `bin/` y `dist/`, no hizo falta tocarlo.
+
+Tests siguen 169/169 en verde. Todo en el PR #11.

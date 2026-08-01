@@ -1,0 +1,11 @@
+prompt y respuesta 11
+
+actualiza también el README con esto
+
+Respuesta:
+
+Añado la misma explicación sencilla en la sección "Estado actual del proyecto" del README.
+
+Commit y push.
+
+README actualizado y subido, con el mismo tono sencillo que `novedades.txt` y `ayuda.html`. Todo consistente en el PR #11.

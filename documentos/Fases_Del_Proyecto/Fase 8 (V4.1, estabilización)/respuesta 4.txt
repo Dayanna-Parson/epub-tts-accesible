@@ -1,0 +1,17 @@
+respuesta 4
+
+Voy a leer primero `CLAUDE.md`, `README.md` y `ayuda.html` como pediste antes de tocar nada.
+
+Ahora edito `crear_portable.py`: quito la carpeta `documentos/` (solo contenía `novedades.txt`) y añado la creación de `registros/` de fábrica.
+
+Ahora añado la creación de `registros/` de fábrica en `crear_configuraciones_fabrica()`.
+
+Añado una verificación explícita al empaquetar: que avise si faltan `ffmpeg.exe` o `auxiliar_sapi32.exe` en `bin/` antes de dar el portable por completo (para no distribuir un build silenciosamente incompleto).
+
+Verifico que el script sigue compilando y sin errores de sintaxis.
+
+Antes de seguir con la reestructuración de `README.md` y `ayuda.html`, noto que mencionas que ibas a darme un ejemplo de estructura de manual para el tono, pero no llegó a aparecer en tu mensaje.
+
+Perfecto, espero tu ejemplo de estructura de manual antes de tocar `README.md` y `ayuda.html`. Mientras tanto, ya dejé lista la parte 1 (ajustes de `crear_portable.py`): quité la carpeta `documentos/` que solo contenía `novedades.txt` (ahora se copia directo a la raíz junto a `ayuda.html` y `epubtts.exe`), añadí la creación de `registros/` y `registros/errores/` de fábrica, y un aviso explícito si falta `ffmpeg.exe` o `auxiliar_sapi32.exe` en `bin/` antes de empaquetar. Pégame el ejemplo cuando lo tengas y sigo con el resto.
+
+Subido. Sigo esperando el ejemplo de estructura de manual para continuar con `README.md` y `ayuda.html`.

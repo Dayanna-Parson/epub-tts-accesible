@@ -1,0 +1,14 @@
+Claude, entramos en la fase final absoluta del desarrollo de la aplicación: la versión v4.1.0 (Estabilización, rendimiento y pruebas automatizadas).
+Para esta fase, crea y muévete a una nueva rama llamada claude/v4.1-estabilizacion basada en main.
+Recuerda leer CLAUDE.md y "Cosas para la V4.txt", y también lee esto:
+En BITACORA_DE_DESARROLLO.md (Fase 8, sección final) y en DEVELOPMENT.md (final de la sección Fase 8) queda anotado explícitamente que los except: pass sin logging (65 apariciones en unos 20 archivos, según el barrido más reciente) quedan pendientes para la fase de estabilización posterior a la v4.0 — no se tocaron ahí.
+REGLAS Y OBJETIVOS DE LA FASE v4.1.0:
+1. Rama exclusiva: trabaja ÚNICAMENTE en la rama claude/v4.1-estabilizacion.
+2. Prohibido añadir nuevas funciones: esta versión es EXCLUSIVAMENTE para pulir, estabilizar, optimizar el rendimiento y asegurar la calidad del código existente.
+3. Auditoría de excepciones (except: pass): localizar y corregir todos los bloques except: pass o captura silenciosa de excepciones en todos los módulos del proyecto, reemplazándolos por logging adecuado con logger.exception() o tratamiento explícito, según establece CLAUDE.md.
+4. Pruebas automatizadas: ampliar la suite de pruebas unitarias/de integración (unittest) para cubrir los motores principales que aún no tengan cobertura suficiente — biblioteca, proyectos, perfiles, atajos, cuota y persistencia JSON — y así reducir el riesgo de regresiones.
+5. Optimización y limpieza: revisar posibles cuellos de botella de rendimiento, asegurar que requisitos.txt esté totalmente alineado con las dependencias reales, y pulir cualquier inconsistencia de código.
+Lo que dejo fuera de la v4.1 a propósito, para no arriesgar nada de última hora:
+• Retirar el sistema viejo de actualización (Script Clon) — según lo hablado, hasta que confirmes 2-3 actualizaciones reales seguidas sin sobresaltos.
+Una vez que esta rama esté completada, optimizada y validada, habremos terminado POR COMPLETO todo el desarrollo de la aplicación, y el proyecto quedará congelado para distribución final.
+Confirma que entiendes el alcance y dame el plan paso a paso para la v4.1.0.
