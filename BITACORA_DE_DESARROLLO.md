@@ -448,4 +448,16 @@ Con esto se cierra por completo el desarrollo de Epub TTS Accesible: la v4.1.0 q
 
 Antes de dar la fase por cerrada del todo repasé también `crear_portable.py` con ojo crítico, ya sin código nuevo que probar, solo puliendo el propio empaquetado: `novedades.txt` ya no va en una carpeta `documentos/` para un único archivo, se copia directo a la raíz del portable junto a `ayuda.html` y `epubtts.exe`; `registros/` y `registros/errores/` se crean de fábrica en el propio `.zip`, en vez de esperar al primer arranque real; y el script avisa si detecta que faltan `bin/ffmpeg.exe` o `bin/auxiliar_sapi32.exe`, para no generar nunca un portable incompleto sin darme cuenta. Con eso ya cerrado, subí la versión oficial con `subir_version.py minor`: 4.0.0 → 4.1.0, confirmada en `recursos/version.json`.
 
+### Última pasada: leer todo el código de nuevo, buscando lo que no se ve al usar la app
+
+Con todo lo demás ya cerrado, hice una última ronda antes de dar la v4.1.0 por terminada del todo: releer el proyecto entero, módulo a módulo, buscando fallos que ninguna prueba manual iba a encontrar nunca — porque solo pasan en una ventana de tiempo muy concreta (la app cerrándose justo mientras guarda algo, dos acciones casi simultáneas, un hilo de fondo que sigue vivo después de cerrar la ventana que lo lanzó). Encontré 23 casos reales, y los corregí todos.
+
+Los que más me preocuparon: `gestor_proyectos.py` y la parte de `config_rutas.py` que guarda las claves de API no escribían de forma atómica (a diferencia de `gestor_perfiles.py`, que sí seguía el patrón desde el principio) — un corte justo a mitad de guardado podía dejar el archivo corrupto y perder toda la jerarquía de proyectos, o todas las claves guardadas, sin ningún aviso. Corregido con el mismo patrón tmp+`os.replace()` que ya usaba el resto del proyecto. Y en la exportación por capítulos del Creador de Audiolibros, la comprobación de cuota de la Fase 1 no tenía en cuenta lo que los capítulos anteriores del mismo lote ya iban a gastar — varios capítulos que individualmente cabían en el límite, juntos podían superarlo con creces, justo lo que el "Escudo de Presupuesto" estaba pensado para impedir.
+
+También encontré el mismo patrón de crash repetido en tres sitios distintos (el Asistente de Biblioteca, el divisor de EPUB, el diálogo de proveedor alternativo): cerrar la ventana mientras un hilo de fondo seguía trabajando hacía que, al terminar ese hilo, intentara tocar controles ya destruidos. Los tres se corrigieron con el mismo patrón (una bandera `_cerrado` comprobada al principio de cada callback diferido) en vez de arreglar cada uno por separado con una solución distinta.
+
+Del lado de las voces de nube: Azure, Polly y ElevenLabs no troceaban el texto largo antes de enviarlo a la API (Deepgram sí lo hacía desde hace tiempo), así que un párrafo largo podía hacer fallar la síntesis a mitad de la lectura. Y la caché de audio de los cuatro clientes de nube se indexaba solo por texto, no por voz — al cambiar de voz y repetir un texto ya cacheado, sonaba la voz vieja en vez de la nueva. Los cuatro clientes quedaron con el mismo comportamiento consistente.
+
+Con esto sí, la v4.1.0 queda cerrada del todo.
+
 — Dayanna Parson, julio de 2026

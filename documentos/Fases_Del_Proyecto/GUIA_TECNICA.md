@@ -406,6 +406,8 @@ Documentación de usuario reescrita a fondo (`ayuda.html`, `README.md`, `novedad
 
 Nada más pendiente en las funciones esenciales. La v4.1.0 es la versión final antes de pasar a distribución pública.
 
+Última ronda antes del cierre: una revisión dedicada solo a bugs funcionales (no de estilo) en todo el código, buscando específicamente lo que las pruebas manuales no detectan porque solo ocurre en una ventana de tiempo concreta. 23 confirmados y corregidos — el detalle completo está en `DEVELOPMENT.md`, sección de cierre de la Fase 9. Los de mayor impacto: escritura no atómica de `proyectos.json` y `claves_api.json` (riesgo real de pérdida de datos), sobregasto de cuota en exportaciones por capítulos, un bug de rollback en el actualizador automático que en un caso concreto podía dejar la instalación peor que antes de actualizar, y un patrón de crash repetido en tres diálogos por hilos de fondo que seguían vivos tras cerrar la ventana.
+
 ---
 
 ### 16. Si vas a tocar el código

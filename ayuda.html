@@ -75,6 +75,18 @@
             <li><strong>Empaquetado más limpio:</strong> el portable ya no lleva una carpeta separada solo para <code>novedades.txt</code> — va directo en la carpeta principal, junto a este manual y el ejecutable.</li>
             <li><strong>Este manual se revisó de arriba abajo</strong> para cubrir partes de la aplicación que antes no explicaba (la Ventana de Proyectos, el sistema de voces favoritas, el significado de cada sonido) y para que sea más fácil de seguir si es la primera vez que usas la app.</li>
         </ul>
+        <strong>Correcciones importantes:</strong>
+        <p>Antes de esta versión se hizo una revisión a fondo de toda la aplicación, línea por línea, buscando fallos que no se notan en el uso normal porque solo ocurren en momentos muy concretos. Se encontraron y corrigieron 23 casos. Estos son los que más pueden notarse:</p>
+        <ul>
+            <li>Se corrigió un fallo que, en circunstancias muy puntuales (por ejemplo, que la aplicación se cerrara justo en el instante de guardar algo), podía corromper el archivo de tus proyectos de Grabación de Fragmentos o el de tus claves de API guardadas. Ahora el guardado es a prueba de estos cortes: o se guarda entero, o no se toca nada de lo que ya había.</li>
+            <li>Se corrigió un cálculo del control de gasto: al exportar varios capítulos seguidos en el Creador de Audiolibros, en algunos casos podía generarse más audio del que tu límite de caracteres configurado debería permitir.</li>
+            <li>El actualizador automático es ahora más seguro ante un fallo a mitad de proceso: ya no existe ningún caso en el que pueda dejar la instalación peor de lo que estaba antes de intentar actualizar.</li>
+            <li>Se corrigieron varios casos en los que cerrar una ventana (el Asistente de Biblioteca, el divisor de EPUB, el diálogo de cambio de proveedor de voz) justo mientras seguía trabajando en segundo plano podía cerrar la aplicación entera de golpe.</li>
+            <li>Al cambiar de voz durante la lectura o la grabación, ya no puede sonar por error un fragmento con la voz anterior en vez de la nueva que elegiste.</li>
+            <li>Los textos muy largos ya no fallan a mitad de la síntesis con Azure, Amazon Polly o ElevenLabs (Deepgram ya lo tenía resuelto); ahora se dividen automáticamente igual que ya se hacía con Deepgram.</li>
+            <li>Pulsar dos veces seguidas «Importar carpeta» en Biblioteca, o «Probar voz»/«Preescucha» en Grabación, ya no duplica libros ni superpone dos audios a la vez.</li>
+            <li>Varios ajustes menores de fiabilidad en las voces SAPI5 locales y en el puente de voces de 32 bits (Eloquence, RealSpeak).</li>
+        </ul>
     </div>
 </section>
 
