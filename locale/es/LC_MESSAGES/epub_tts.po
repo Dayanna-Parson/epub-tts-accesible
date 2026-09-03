@@ -18,8 +18,95 @@ msgstr "Índice del libro cargado. Usa las flechas Arriba y Abajo para navegar p
 msgid "Libro"
 msgstr "Libro"
 
-msgid "Área de texto de solo lectura con el contenido del capítulo activo. Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
-msgstr "Área de texto de solo lectura con el contenido del capítulo activo. Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor."
+msgid "Área de texto de solo lectura con el contenido del capítulo activo. Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor. Pulsa H para saltar al siguiente encabezado, o un número del 1 al 6 para saltar al siguiente encabezado de ese nivel. G salta a la siguiente imagen, K al siguiente enlace y T a la siguiente tabla. Con Mayús, el salto va hacia atrás."
+msgstr "Área de texto de solo lectura con el contenido del capítulo activo. Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor. Pulsa H para saltar al siguiente encabezado, o un número del 1 al 6 para saltar al siguiente encabezado de ese nivel. G salta a la siguiente imagen, K al siguiente enlace y T a la siguiente tabla. Con Mayús, el salto va hacia atrás."
+
+msgid "Este documento no tiene encabezados."
+msgstr "Este documento no tiene encabezados."
+
+msgid "Este documento no tiene imágenes."
+msgstr "Este documento no tiene imágenes."
+
+msgid "Este documento no tiene enlaces."
+msgstr "Este documento no tiene enlaces."
+
+msgid "Este documento no tiene tablas."
+msgstr "Este documento no tiene tablas."
+
+msgid "No hay encabezados de nivel {nivel}."
+msgstr "No hay encabezados de nivel {nivel}."
+
+msgid "No hay más encabezados."
+msgstr "No hay más encabezados."
+
+msgid "No hay más imágenes."
+msgstr "No hay más imágenes."
+
+msgid "No hay más enlaces."
+msgstr "No hay más enlaces."
+
+msgid "No hay más tablas."
+msgstr "No hay más tablas."
+
+msgid "Encabezado nivel {nivel}: {texto}"
+msgstr "Encabezado nivel {nivel}: {texto}"
+
+msgid "Imagen: {texto}"
+msgstr "Imagen: {texto}"
+
+msgid "Imagen sin descripción."
+msgstr "Imagen sin descripción."
+
+msgid "Enlace: {texto}"
+msgstr "Enlace: {texto}"
+
+msgid "Tabla: {texto}"
+msgstr "Tabla: {texto}"
+
+msgid "Reconociendo texto de la página {actual} de {total}..."
+msgstr "Reconociendo texto de la página {actual} de {total}..."
+
+msgid "Reconocimiento de texto (OCR) en PDF escaneados:"
+msgstr "Reconocimiento de texto (OCR) en PDF escaneados:"
+
+msgid "Reconocer el texto de las páginas de PDF que no tengan texto propio"
+msgstr "Reconocer el texto de las páginas de PDF que no tengan texto propio"
+
+msgid "Cuando una página de PDF no trae texto seleccionable (habitual en libros escaneados), se reconoce con el motor elegido abajo y ese texto reconocido pasa a leerse igual que el resto del libro."
+msgstr "Cuando una página de PDF no trae texto seleccionable (habitual en libros escaneados), se reconoce con el motor elegido abajo y ese texto reconocido pasa a leerse igual que el resto del libro."
+
+msgid "Motor de reconocimiento:"
+msgstr "Motor de reconocimiento:"
+
+msgid "Ninguno"
+msgstr "Ninguno"
+
+msgid "OCR de Windows"
+msgstr "OCR de Windows"
+
+msgid " (no disponible en este equipo)"
+msgstr " (no disponible en este equipo)"
+
+msgid "Motor con el que se reconoce el texto de las páginas escaneadas. «(no disponible en este equipo)» significa que falta la librería o el paquete de idioma necesarios para ese motor."
+msgstr "Motor con el que se reconoce el texto de las páginas escaneadas. «(no disponible en este equipo)» significa que falta la librería o el paquete de idioma necesarios para ese motor."
+
+msgid "Idioma del texto a reconocer:"
+msgstr "Idioma del texto a reconocer:"
+
+msgid "Idioma del texto de las páginas escaneadas. Debe coincidir con el paquete de idioma de reconocimiento instalado en Windows."
+msgstr "Idioma del texto de las páginas escaneadas. Debe coincidir con el paquete de idioma de reconocimiento instalado en Windows."
+
+msgid "Tope de páginas a reconocer por libro:"
+msgstr "Tope de páginas a reconocer por libro:"
+
+msgid "Tope de páginas a reconocer por libro"
+msgstr "Tope de páginas a reconocer por libro"
+
+msgid "Número máximo de páginas que se reconocen por OCR al abrir un libro. Reconocer muchas páginas tarda; este límite evita que abrir un libro escaneado muy largo se quede bloqueado reconociendo cientos de páginas."
+msgstr "Número máximo de páginas que se reconocen por OCR al abrir un libro. Reconocer muchas páginas tarda; este límite evita que abrir un libro escaneado muy largo se quede bloqueado reconociendo cientos de páginas."
+
+msgid "Reconocimiento de Texto (OCR)"
+msgstr "Reconocimiento de Texto (OCR)"
 
 msgid "¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta calidad en la nube (Azure, Amazon Polly, Deepgram y ElevenLabs) y voces locales SAPI5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1 a Ctrl + 5 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!"
 msgstr "¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta calidad en la nube (Azure, Amazon Polly, Deepgram y ElevenLabs) y voces locales SAPI5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1 a Ctrl + 5 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!"

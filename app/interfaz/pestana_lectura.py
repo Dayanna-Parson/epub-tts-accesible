@@ -6,6 +6,7 @@ import time
 import logging
 import threading
 from app.motor import anunciador_lector as voz
+from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.gestor_pdf import extraer_datos_pdf
 from app.motor.reproductor_voz import ReproductorVoz
@@ -61,6 +62,54 @@ def _nombre_combo_neuronal(voz, prov_id):
     return f"{nombre_completo}; {genero}; {idioma}; {proveedor}"
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ANCLAJE_INICIO: CAMPO_LECTURA_SALTO_ELEMENTO
+# Teclas de salto de elemento, sin Ctrl ni Alt: H salta al siguiente/anterior
+# encabezado de cualquier nivel, 1-6 restringe el salto a ese nivel de
+# encabezado, G salta entre imágenes, K entre enlaces y T entre tablas.
+# Con Mayús, el salto va hacia atrás.
+_TECLAS_SALTO_ELEMENTO = {
+    ord('H'): ('encabezado', None),
+    ord('1'): ('encabezado', 1), ord('2'): ('encabezado', 2), ord('3'): ('encabezado', 3),
+    ord('4'): ('encabezado', 4), ord('5'): ('encabezado', 5), ord('6'): ('encabezado', 6),
+    ord('G'): ('imagen', None),
+    ord('K'): ('enlace', None),
+    ord('T'): ('tabla', None),
+}
+
+
+class CampoLecturaAccesible(wx.TextCtrl):
+    """
+    TextCtrl de solo lectura que añade salto de elemento con una sola
+    tecla, sin usar Ctrl ni Alt.
+
+    En Windows, wx.TextCtrl con TE_RICH2 usa por debajo el control nativo
+    RichEdit de Win32, que consume la pulsación de tecla antes de que un
+    Bind(wx.EVT_CHAR_HOOK, ...) normal llegue a procesarla: la letra suelta
+    no hacía nada porque nunca llegaba a nuestro manejador. Sobrescribir
+    TryBefore() se ejecuta antes de que el control nativo vea el evento,
+    así que aquí sí se puede interceptar la tecla y evitar que RichEdit
+    la trague.
+    """
+
+    def __init__(self, *args, al_saltar_elemento=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._al_saltar_elemento = al_saltar_elemento
+
+    def TryBefore(self, evento):
+        if (
+            evento.GetEventType() == wx.EVT_CHAR_HOOK.typeId
+            and self._al_saltar_elemento is not None
+            and not evento.ControlDown()
+            and not evento.AltDown()
+        ):
+            codigo = evento.GetKeyCode()
+            if codigo in _TECLAS_SALTO_ELEMENTO:
+                tipo, nivel = _TECLAS_SALTO_ELEMENTO[codigo]
+                self._al_saltar_elemento(tipo, nivel, adelante=not evento.ShiftDown())
+                return True
+        return super().TryBefore(evento)
+# ANCLAJE_FIN: CAMPO_LECTURA_SALTO_ELEMENTO
+
 # ANCLAJE_INICIO: DEFINICION_PESTANA_LECTURA
 class PestanaLectura(wx.Panel):
     """
@@ -75,10 +124,18 @@ class PestanaLectura(wx.Panel):
         self.padre_notebook = padre
         
         self.reproductor = ReproductorVoz()
-        
+        # Cola de voz para el progreso de OCR de páginas de PDF escaneadas:
+        # puede llegar una ráfaga rápida de anuncios "página X de Y", igual
+        # que el progreso de escaneo de Biblioteca.
+        self._voz_ocr = AnunciadorVoz()
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz_ocr.detener(), e.Skip()))
+
         self.posiciones_capitulos = {}
         self.posiciones_encabezados = []  # [{nivel, texto, pos}] para negrita de h1-h6 en _aplicar_estilos_ricos
         self.spans_estilo = []            # [{texto, estilos, cerca_de}] para rich-text
+        self.posiciones_imagenes = []     # [{texto, pos}] para salto de elemento con tecla G
+        self.posiciones_enlaces = []      # [{texto, pos}] para salto de elemento con tecla K
+        self.posiciones_tablas = []       # [{texto, pos}] para salto de elemento con tecla T
         self.marcadores = {}
         self.longitud_texto = 0
         self._pausa_entre_fragmentos_ms = 0  # ms de pausa entre fragmentos TTS
@@ -119,11 +176,18 @@ class PestanaLectura(wx.Panel):
         self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
         self.arbol_indice.Bind(wx.EVT_TREE_KEY_DOWN, self._al_tecla_arbol_indice)
 
-        self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
+        self.txt_contenido = CampoLecturaAccesible(
+            self.divisor,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL,
+            al_saltar_elemento=self._al_saltar_elemento,
+        )
         self.txt_contenido.SetName("Contenido del libro")
         self.txt_contenido.SetHelpText(
             _("Área de texto de solo lectura con el contenido del capítulo activo. "
-              "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor.")
+              "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor. "
+              "Pulsa H para saltar al siguiente encabezado, o un número del 1 al 6 para saltar "
+              "al siguiente encabezado de ese nivel. G salta a la siguiente imagen, K al "
+              "siguiente enlace y T a la siguiente tabla. Con Mayús, el salto va hacia atrás.")
         )
         self.txt_contenido.SetValue(_(
             "¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta "
@@ -1016,6 +1080,77 @@ class PestanaLectura(wx.Panel):
         e.Skip()
     # ANCLAJE_FIN: NAVEGACION_TEXTO_Y_SALTOS
 
+    # ANCLAJE_INICIO: SALTO_ELEMENTO_TECLA_UNICA
+    def _al_saltar_elemento(self, tipo, nivel, adelante):
+        """
+        Callback de CampoLecturaAccesible para las teclas H / 1-6 / G / K / T.
+        nivel solo se usa para 'encabezado' (None = cualquier nivel).
+        adelante=False busca hacia atrás.
+        """
+        listas_por_tipo = {
+            'encabezado': self.posiciones_encabezados,
+            'imagen': self.posiciones_imagenes,
+            'enlace': self.posiciones_enlaces,
+            'tabla': self.posiciones_tablas,
+        }
+        mensajes_sin_elementos = {
+            'encabezado': _("Este documento no tiene encabezados."),
+            'imagen': _("Este documento no tiene imágenes."),
+            'enlace': _("Este documento no tiene enlaces."),
+            'tabla': _("Este documento no tiene tablas."),
+        }
+        mensajes_sin_mas = {
+            'encabezado': _("No hay más encabezados."),
+            'imagen': _("No hay más imágenes."),
+            'enlace': _("No hay más enlaces."),
+            'tabla': _("No hay más tablas."),
+        }
+
+        lista = listas_por_tipo[tipo]
+        if not lista:
+            reproducir(ERROR)
+            voz.hablar(mensajes_sin_elementos[tipo])
+            return
+
+        if tipo == 'encabezado':
+            candidatos = [enc for enc in lista if nivel is None or enc["nivel"] == nivel]
+            if not candidatos:
+                reproducir(ERROR)
+                voz.hablar(_("No hay encabezados de nivel {nivel}.").format(nivel=nivel))
+                return
+        else:
+            candidatos = lista
+
+        pos_actual = self.txt_contenido.GetInsertionPoint()
+        if adelante:
+            destino = next((elem for elem in candidatos if elem["pos"] > pos_actual), None)
+        else:
+            destino = next((elem for elem in reversed(candidatos) if elem["pos"] < pos_actual), None)
+
+        if destino is None:
+            reproducir(ERROR)
+            voz.hablar(mensajes_sin_mas[tipo])
+            return
+
+        self.txt_contenido.SetInsertionPoint(destino["pos"])
+        self.txt_contenido.ShowPosition(destino["pos"])
+        reproducir(LIST_NAV)
+
+        if tipo == 'encabezado':
+            voz.hablar(_("Encabezado nivel {nivel}: {texto}").format(
+                nivel=destino["nivel"], texto=destino["texto"]
+            ))
+        elif tipo == 'imagen':
+            if destino["texto"]:
+                voz.hablar(_("Imagen: {texto}").format(texto=destino["texto"]))
+            else:
+                voz.hablar(_("Imagen sin descripción."))
+        elif tipo == 'enlace':
+            voz.hablar(_("Enlace: {texto}").format(texto=destino["texto"]))
+        elif tipo == 'tabla':
+            voz.hablar(_("Tabla: {texto}").format(texto=destino["texto"]))
+    # ANCLAJE_FIN: SALTO_ELEMENTO_TECLA_UNICA
+
     # ANCLAJE_INICIO: SONIDO_CAMBIO_PAGINA_VIRTUAL
     def _comprobar_cambio_pagina_virtual(self, pos):
         """
@@ -1054,11 +1189,48 @@ class PestanaLectura(wx.Panel):
         como PDF — el formato se decide por la extensión del archivo y se
         delega en el extractor correspondiente (extraer_datos_epub /
         extraer_datos_pdf), que devuelven la misma forma de datos.
+
+        La extracción en sí ocurre en un hilo de fondo (_hilo_cargar_libro):
+        con el OCR de páginas escaneadas activado, reconocer una sola
+        página puede tardar varios segundos, y haciéndolo en el hilo
+        principal se congelaba toda la ventana — y con ella NVDA — hasta
+        que terminaba. El texto ya extraído nunca se toca desde este hilo;
+        solo se lee al final, ya en el hilo principal vía wx.CallAfter.
         """
         self.guardar_datos_libro()
+        hilo = threading.Thread(target=self._hilo_cargar_libro, args=(ruta,), daemon=True)
+        hilo.start()
+
+    def _hilo_cargar_libro(self, ruta):
         try:
-            extractor = extraer_datos_pdf if ruta.lower().endswith('.pdf') else extraer_datos_epub
-            texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados, self.spans_estilo = extractor(ruta)
+            if ruta.lower().endswith('.pdf'):
+                resultado = extraer_datos_pdf(ruta, callback_progreso_ocr=self._al_progreso_ocr)
+            else:
+                resultado = extraer_datos_epub(ruta)
+        except Exception as e:
+            logger.exception("Error al extraer los datos del libro: %s", ruta)
+            wx.CallAfter(self._al_terminar_carga_libro, ruta, None, e)
+            return
+        wx.CallAfter(self._al_terminar_carga_libro, ruta, resultado, None)
+
+    def _al_terminar_carga_libro(self, ruta, resultado, error):
+        """Vuelve al hilo principal (wx.CallAfter) para todo lo que toque la interfaz."""
+        if error is not None:
+            reproducir(ERROR)
+            wx.MessageBox(
+                _("Se ha producido un error técnico al intentar procesar el libro.\n\nDetalle: {error}").format(
+                    error=error
+                ),
+                _("Error al cargar el libro"),
+            )
+            return
+
+        try:
+            (
+                texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados,
+                self.spans_estilo, self.posiciones_imagenes, self.posiciones_enlaces,
+                self.posiciones_tablas,
+            ) = resultado
 
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
@@ -1094,6 +1266,19 @@ class PestanaLectura(wx.Panel):
                 ),
                 _("Error al cargar el libro"),
             )
+
+    def _al_progreso_ocr(self, pagina_actual, total_paginas):
+        """
+        Callback de extraer_datos_pdf mientras reconoce por OCR páginas
+        escaneadas sin texto propio. Se llama en el mismo hilo que la carga
+        del libro (todavía síncrona), pero AnunciadorVoz tiene su propia
+        cola en segundo plano, así que no bloquea nada aquí.
+        """
+        self._voz_ocr.hablar(
+            _("Reconociendo texto de la página {actual} de {total}...").format(
+                actual=pagina_actual, total=total_paginas
+            )
+        )
 
     def _construir_arbol_indice(self, padre, nodos):
         for n in nodos:
