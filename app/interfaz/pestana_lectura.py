@@ -61,6 +61,50 @@ def _nombre_combo_neuronal(voz, prov_id):
     return f"{nombre_completo}; {genero}; {idioma}; {proveedor}"
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ANCLAJE_INICIO: CAMPO_LECTURA_SALTO_ENCABEZADO
+# Teclas de salto de encabezado: H salta al siguiente/anterior encabezado de
+# cualquier nivel; 1-6 restringe el salto a ese nivel concreto. Con Mayús,
+# el salto va hacia atrás.
+_TECLAS_SALTO_ENCABEZADO = {
+    ord('H'): None,
+    ord('1'): 1, ord('2'): 2, ord('3'): 3,
+    ord('4'): 4, ord('5'): 5, ord('6'): 6,
+}
+
+
+class CampoLecturaAccesible(wx.TextCtrl):
+    """
+    TextCtrl de solo lectura que añade salto de encabezado con una sola
+    tecla, sin usar Ctrl ni Alt.
+
+    En Windows, wx.TextCtrl con TE_RICH2 usa por debajo el control nativo
+    RichEdit de Win32, que consume la pulsación de tecla antes de que un
+    Bind(wx.EVT_CHAR_HOOK, ...) normal llegue a procesarla: la letra suelta
+    no hacía nada porque nunca llegaba a nuestro manejador. Sobrescribir
+    TryBefore() se ejecuta antes de que el control nativo vea el evento,
+    así que aquí sí se puede interceptar la tecla y evitar que RichEdit
+    la trague.
+    """
+
+    def __init__(self, *args, al_saltar_encabezado=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._al_saltar_encabezado = al_saltar_encabezado
+
+    def TryBefore(self, evento):
+        if (
+            evento.GetEventType() == wx.EVT_CHAR_HOOK.typeId
+            and self._al_saltar_encabezado is not None
+            and not evento.ControlDown()
+            and not evento.AltDown()
+        ):
+            codigo = evento.GetKeyCode()
+            if codigo in _TECLAS_SALTO_ENCABEZADO:
+                nivel = _TECLAS_SALTO_ENCABEZADO[codigo]
+                self._al_saltar_encabezado(nivel, adelante=not evento.ShiftDown())
+                return True
+        return super().TryBefore(evento)
+# ANCLAJE_FIN: CAMPO_LECTURA_SALTO_ENCABEZADO
+
 # ANCLAJE_INICIO: DEFINICION_PESTANA_LECTURA
 class PestanaLectura(wx.Panel):
     """
@@ -119,11 +163,17 @@ class PestanaLectura(wx.Panel):
         self.arbol_indice.Bind(wx.EVT_TREE_ITEM_ACTIVATED, self.al_activar_capitulo)
         self.arbol_indice.Bind(wx.EVT_TREE_KEY_DOWN, self._al_tecla_arbol_indice)
 
-        self.txt_contenido = wx.TextCtrl(self.divisor, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL)
+        self.txt_contenido = CampoLecturaAccesible(
+            self.divisor,
+            style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_NOHIDESEL,
+            al_saltar_encabezado=self._al_saltar_encabezado,
+        )
         self.txt_contenido.SetName("Contenido del libro")
         self.txt_contenido.SetHelpText(
             _("Área de texto de solo lectura con el contenido del capítulo activo. "
-              "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor.")
+              "Puedes seleccionar texto y copiarlo. La voz TTS lee desde la posición del cursor. "
+              "Pulsa H para saltar al siguiente encabezado, o un número del 1 al 6 para saltar "
+              "al siguiente encabezado de ese nivel. Con Mayús, el salto va hacia atrás.")
         )
         self.txt_contenido.SetValue(_(
             "¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta "
@@ -1015,6 +1065,45 @@ class PestanaLectura(wx.Panel):
         self._comprobar_cambio_pagina_virtual(self.txt_contenido.GetInsertionPoint())
         e.Skip()
     # ANCLAJE_FIN: NAVEGACION_TEXTO_Y_SALTOS
+
+    # ANCLAJE_INICIO: SALTO_ENCABEZADO_TECLA_UNICA
+    def _al_saltar_encabezado(self, nivel, adelante):
+        """
+        Callback de CampoLecturaAccesible para las teclas H / 1-6.
+        nivel=None busca cualquier encabezado; adelante=False busca hacia atrás.
+        """
+        if not self.posiciones_encabezados:
+            reproducir(ERROR)
+            voz.hablar(_("Este documento no tiene encabezados."))
+            return
+
+        candidatos = [
+            enc for enc in self.posiciones_encabezados
+            if nivel is None or enc["nivel"] == nivel
+        ]
+        if not candidatos:
+            reproducir(ERROR)
+            voz.hablar(_("No hay encabezados de nivel {nivel}.").format(nivel=nivel))
+            return
+
+        pos_actual = self.txt_contenido.GetInsertionPoint()
+        if adelante:
+            destino = next((enc for enc in candidatos if enc["pos"] > pos_actual), None)
+        else:
+            destino = next((enc for enc in reversed(candidatos) if enc["pos"] < pos_actual), None)
+
+        if destino is None:
+            reproducir(ERROR)
+            voz.hablar(_("No hay más encabezados."))
+            return
+
+        self.txt_contenido.SetInsertionPoint(destino["pos"])
+        self.txt_contenido.ShowPosition(destino["pos"])
+        reproducir(LIST_NAV)
+        voz.hablar(_("Encabezado nivel {nivel}: {texto}").format(
+            nivel=destino["nivel"], texto=destino["texto"]
+        ))
+    # ANCLAJE_FIN: SALTO_ENCABEZADO_TECLA_UNICA
 
     # ANCLAJE_INICIO: SONIDO_CAMBIO_PAGINA_VIRTUAL
     def _comprobar_cambio_pagina_virtual(self, pos):
