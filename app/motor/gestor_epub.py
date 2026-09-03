@@ -55,6 +55,16 @@ def _extraer_texto_bloque(elemento) -> str:
             if nombre == 'br':
                 if partes and not partes[-1].endswith('\n'):
                     partes.append('\n')
+            elif nombre == 'img':
+                # Las imágenes no dejan ningún rastro en el texto por sí
+                # solas: sin este marcador, no habría nada a lo que saltar
+                # con la tecla G ni nada que la voz pudiera anunciar.
+                alt = (nodo.get('alt') or '').strip()
+                marcador = f"[Imagen: {alt}]" if alt else "[Imagen]"
+                if (partes and not partes[-1].endswith(' ')
+                        and not partes[-1].endswith('\n')):
+                    partes.append(' ')
+                partes.append(marcador)
             elif nombre in _BLOQUES:
                 subtexto = _extraer_texto_bloque(nodo).strip()
                 if subtexto:
@@ -134,6 +144,10 @@ def extraer_datos_epub(ruta_epub):
         - datos_indice (list): Estructura jerárquica para el árbol de navegación.
         - posiciones_capitulos (dict): Diccionario {titulo_capitulo: posicion_caracter}.
         - posiciones_encabezados (list): [{nivel, texto, pos}] para aplicar negrita a h1-h6 en Lectura.
+        - spans_estilo (list): [{texto, estilos, cerca_de}] para rich-text en Lectura.
+        - posiciones_imagenes (list): [{texto, pos}] — texto es el alt (o "" si no tiene).
+        - posiciones_enlaces (list): [{texto, pos}] — texto es el texto visible del enlace.
+        - posiciones_tablas (list): [{texto, pos}] — texto es el contenido de la primera celda.
     """
     if not os.path.exists(ruta_epub):
         raise FileNotFoundError(f"No se encontró el archivo: {ruta_epub}")
@@ -153,6 +167,10 @@ def extraer_datos_epub(ruta_epub):
     posiciones_encabezados = []
     # Lista de spans con estilo [{texto, estilos, cerca_de}] para rich-text en TextCtrl
     spans_estilo = []
+    # Listas para navegación semántica de imágenes, enlaces y tablas [{texto, pos}]
+    posiciones_imagenes = []
+    posiciones_enlaces = []
+    posiciones_tablas = []
 
     # --- 1. PROCESAR LA COLUMNA VERTEBRAL (Orden de lectura lineal) ---
     for id_item in libro.spine:
@@ -200,6 +218,41 @@ def extraer_datos_epub(ruta_epub):
                             posiciones_encabezados.append({
                                 'nivel': nivel,
                                 'texto': texto_h,
+                                'pos': offset_archivo + pos_en_frag,
+                            })
+
+                # Registrar posiciones de imágenes, por el marcador [Imagen: ...]
+                # ya insertado en el fragmento por _extraer_texto_bloque
+                for img in cuerpo.find_all('img'):
+                    alt = (img.get('alt') or '').strip()
+                    aguja = f"[Imagen: {alt}]" if alt else "[Imagen]"
+                    pos_en_frag = fragmento.find(aguja)
+                    if pos_en_frag >= 0:
+                        posiciones_imagenes.append({
+                            'texto': alt,
+                            'pos': offset_archivo + pos_en_frag,
+                        })
+
+                # Registrar posiciones de enlaces con texto visible
+                for a in cuerpo.find_all('a', href=True):
+                    texto_a = a.get_text(separator=' ', strip=True)
+                    if texto_a:
+                        pos_en_frag = fragmento.find(texto_a[:50])
+                        if pos_en_frag >= 0:
+                            posiciones_enlaces.append({
+                                'texto': texto_a,
+                                'pos': offset_archivo + pos_en_frag,
+                            })
+
+                # Registrar posiciones de tablas, por el texto de su primera celda
+                for tabla in cuerpo.find_all('table'):
+                    celda = tabla.find(['td', 'th'])
+                    texto_tabla = celda.get_text(separator=' ', strip=True) if celda else ""
+                    if texto_tabla:
+                        pos_en_frag = fragmento.find(texto_tabla[:50])
+                        if pos_en_frag >= 0:
+                            posiciones_tablas.append({
+                                'texto': texto_tabla,
                                 'pos': offset_archivo + pos_en_frag,
                             })
 
@@ -261,22 +314,30 @@ def extraer_datos_epub(ruta_epub):
     # Limpieza final: eliminar artefactos de formato y líneas vacías para NVDA
     texto_completo = limpiar_para_lectura(texto_completo, ruta_libro=ruta_epub)
 
-    # Recalcular posiciones de encabezados en el texto ya limpiado.
-    # limpiar_para_lectura colapsa \n\n → \n, desplazando todas las posiciones
-    # que se calcularon sobre el texto en bruto; hay que buscarlos de nuevo.
-    if posiciones_encabezados:
+    # Recalcular posiciones de encabezados/imágenes/enlaces/tablas en el texto
+    # ya limpiado. limpiar_para_lectura colapsa \n\n → \n, desplazando todas
+    # las posiciones calculadas sobre el texto en bruto; hay que buscarlas de
+    # nuevo, cada lista con su propio puntero de búsqueda secuencial.
+    def _reubicar(lista, aguja_de):
         pos_busqueda = 0
-        nuevos_encabezados = []
-        for enc in posiciones_encabezados:
-            aguja = enc['texto'][:50]
+        reubicados = []
+        for elem in lista:
+            aguja = aguja_de(elem)
             pos = texto_completo.find(aguja, pos_busqueda)
             if pos >= 0:
-                nuevos_encabezados.append({
-                    'nivel': enc['nivel'],
-                    'texto': enc['texto'],
-                    'pos': pos,
-                })
+                reubicados.append({**elem, 'pos': pos})
                 pos_busqueda = pos + 1
-        posiciones_encabezados = nuevos_encabezados
+        return reubicados
 
-    return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados, spans_estilo
+    posiciones_encabezados = _reubicar(posiciones_encabezados, lambda e: e['texto'][:50])
+    posiciones_imagenes = _reubicar(
+        posiciones_imagenes,
+        lambda e: f"[Imagen: {e['texto']}]" if e['texto'] else "[Imagen]",
+    )
+    posiciones_enlaces = _reubicar(posiciones_enlaces, lambda e: e['texto'][:50])
+    posiciones_tablas = _reubicar(posiciones_tablas, lambda e: e['texto'][:50])
+
+    return (
+        texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados,
+        spans_estilo, posiciones_imagenes, posiciones_enlaces, posiciones_tablas,
+    )

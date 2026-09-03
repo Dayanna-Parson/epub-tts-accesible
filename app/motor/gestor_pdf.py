@@ -19,11 +19,14 @@ No hay texto con negrita/cursiva/subrayado embebido de forma fiable en
 PDF como en el HTML de un EPUB, así que spans_estilo se devuelve vacío.
 """
 
+import logging
 import os
 
 import fitz
 
 from app.motor.limpiador_lectura import limpiar_para_lectura
+
+logger = logging.getLogger(__name__)
 
 
 def extraer_datos_pdf(ruta_pdf):
@@ -36,6 +39,13 @@ def extraer_datos_pdf(ruta_pdf):
         - posiciones_capitulos (dict)   {titulo: posicion_caracter}
         - posiciones_encabezados (list) [{'nivel', 'texto', 'pos'}, ...]
         - spans_estilo (list)     siempre vacío para PDF
+        - posiciones_imagenes (list) [{'texto': '', 'pos'}, ...] — un PDF no
+          trae texto alternativo, así que el marcador es genérico "[Imagen]".
+        - posiciones_enlaces (list)  [{'texto', 'pos'}, ...] — texto visible
+          dentro del rectángulo del enlace.
+        - posiciones_tablas (list)   [{'texto', 'pos'}, ...] — texto de la
+          primera celda no vacía. Vacío si la versión de PyMuPDF instalada
+          no trae find_tables().
     """
     if not os.path.exists(ruta_pdf):
         raise FileNotFoundError(f"No se encontró el archivo: {ruta_pdf}")
@@ -56,9 +66,21 @@ def extraer_datos_pdf(ruta_pdf):
     # posición registrada ya es la definitiva, sin necesidad de reubicar nada.
     texto_completo = ""
     posiciones_inicio_pagina = []  # índice = página 0-based, valor = offset en texto_completo (ya limpio)
+    posiciones_imagenes = []
+    posiciones_enlaces = []
+    posiciones_tablas = []
 
     for num in range(documento.page_count):
-        texto_pagina = documento[num].get_text("text")
+        pagina = documento[num]
+        texto_pagina = pagina.get_text("text")
+
+        # Un PDF no trae alt: se usa un marcador genérico, uno por imagen
+        # incrustada en la página, insertado al final del texto de la
+        # página (no se conoce su posición real dentro del flujo de texto).
+        num_imagenes_pagina = len(pagina.get_images(full=True))
+        if num_imagenes_pagina:
+            texto_pagina += "\n" + "\n".join(["[Imagen]"] * num_imagenes_pagina)
+
         texto_limpio_pagina = (
             limpiar_para_lectura(texto_pagina, ruta_libro=ruta_pdf).strip()
             if texto_pagina and texto_pagina.strip() else ""
@@ -66,8 +88,49 @@ def extraer_datos_pdf(ruta_pdf):
         if texto_limpio_pagina:
             if texto_completo:
                 texto_completo += "\n\n"
-            posiciones_inicio_pagina.append(len(texto_completo))
+            offset_pagina = len(texto_completo)
+            posiciones_inicio_pagina.append(offset_pagina)
             texto_completo += texto_limpio_pagina
+
+            pos_busqueda = offset_pagina
+            for _ in range(num_imagenes_pagina):
+                pos = texto_completo.find("[Imagen]", pos_busqueda)
+                if pos >= 0:
+                    posiciones_imagenes.append({'texto': '', 'pos': pos})
+                    pos_busqueda = pos + 1
+
+            for enlace in pagina.get_links():
+                rect_enlace = enlace.get("from")
+                if not rect_enlace:
+                    continue
+                texto_enlace = pagina.get_textbox(fitz.Rect(rect_enlace)).strip()
+                if texto_enlace:
+                    pos = texto_completo.find(texto_enlace[:50], offset_pagina)
+                    if pos >= 0:
+                        posiciones_enlaces.append({'texto': texto_enlace, 'pos': pos})
+
+            # find_tables() solo existe en versiones recientes de PyMuPDF;
+            # si no está disponible, se omiten las tablas sin romper el
+            # resto de la extracción.
+            if hasattr(pagina, "find_tables"):
+                try:
+                    for tabla in pagina.find_tables().tables:
+                        texto_celda = ""
+                        for fila in tabla.extract():
+                            for celda in fila:
+                                if celda and celda.strip():
+                                    texto_celda = celda.strip()
+                                    break
+                            if texto_celda:
+                                break
+                        if texto_celda:
+                            pos = texto_completo.find(texto_celda[:50], offset_pagina)
+                            if pos >= 0:
+                                posiciones_tablas.append({'texto': texto_celda, 'pos': pos})
+                except Exception:
+                    logger.exception(
+                        "fallo al detectar tablas en la página %s de %s", num + 1, ruta_pdf
+                    )
         else:
             # Página sin texto (portada, imagen escaneada...): su "inicio"
             # coincide con la posición actual, no aporta contenido propio.
@@ -125,5 +188,8 @@ def extraer_datos_pdf(ruta_pdf):
     # que las posiciones registradas en posiciones_capitulos/posiciones_encabezados
     # son exactas sobre texto_completo — a diferencia de antes, no hace
     # falta ningún paso de limpieza global ni de reubicación posterior.
-    return texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados, []
+    return (
+        texto_completo, datos_indice, posiciones_capitulos, posiciones_encabezados,
+        [], posiciones_imagenes, posiciones_enlaces, posiciones_tablas,
+    )
 # ANCLAJE_FIN: GESTOR_PDF
