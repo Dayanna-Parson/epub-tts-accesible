@@ -120,6 +120,15 @@ def extraer_datos_pdf(ruta_pdf, callback_progreso_ocr=None):
                     "Fallo al renderizar/reconocer con OCR la página %s de %s", num + 1, ruta_pdf
                 )
                 texto_pagina = ""
+            # A WARNING, no a DEBUG/INFO: el archivo de log solo registra
+            # desde WARNING hacia arriba, y un OCR que reconoce texto vacío
+            # sin lanzar ninguna excepción no dejaría ningún rastro en el
+            # log si esto se quedara en un nivel inferior — imposible saber
+            # después si el motor llegó a ejecutarse o no reconoció nada.
+            logger.warning(
+                "[OCR] Página %s de %s: motor=%s, idioma=%s, caracteres reconocidos=%s",
+                num + 1, documento.page_count, motor_ocr, config_ocr["ocr_idioma"], len(texto_pagina),
+            )
 
         # Un PDF no trae alt: se usa un marcador genérico, uno por imagen
         # incrustada en la página, insertado al final del texto de la

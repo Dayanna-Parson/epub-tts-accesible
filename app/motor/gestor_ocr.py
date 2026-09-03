@@ -151,9 +151,18 @@ def _reconocer_pagina_windows(datos_png: bytes, idioma: str) -> str:
         mapa_bits = await decodificador.get_software_bitmap_async()
 
         idioma_ocr = ws_globalizacion.Language(idioma)
-        if ws_ocr.OcrEngine.is_language_supported(idioma_ocr):
+        idioma_soportado = ws_ocr.OcrEngine.is_language_supported(idioma_ocr)
+        if idioma_soportado:
             motor_ocr = ws_ocr.OcrEngine.try_create_from_language(idioma_ocr)
         else:
+            # Windows no tiene el paquete de idioma «idioma» instalado: se
+            # recae en el idioma del perfil de usuario en vez de fallar,
+            # pero queda registrado para poder distinguir después «reconoció
+            # con otro idioma» de «no reconoció nada».
+            logger.warning(
+                "El paquete de idioma de OCR de Windows para «%s» no está instalado; "
+                "se usa el idioma del perfil de usuario en su lugar", idioma
+            )
             motor_ocr = ws_ocr.OcrEngine.try_create_from_user_profile_languages()
         if motor_ocr is None:
             logger.warning(
