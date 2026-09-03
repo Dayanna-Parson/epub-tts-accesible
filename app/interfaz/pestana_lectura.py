@@ -1189,21 +1189,48 @@ class PestanaLectura(wx.Panel):
         como PDF — el formato se decide por la extensión del archivo y se
         delega en el extractor correspondiente (extraer_datos_epub /
         extraer_datos_pdf), que devuelven la misma forma de datos.
+
+        La extracción en sí ocurre en un hilo de fondo (_hilo_cargar_libro):
+        con el OCR de páginas escaneadas activado, reconocer una sola
+        página puede tardar varios segundos, y haciéndolo en el hilo
+        principal se congelaba toda la ventana — y con ella NVDA — hasta
+        que terminaba. El texto ya extraído nunca se toca desde este hilo;
+        solo se lee al final, ya en el hilo principal vía wx.CallAfter.
         """
         self.guardar_datos_libro()
+        hilo = threading.Thread(target=self._hilo_cargar_libro, args=(ruta,), daemon=True)
+        hilo.start()
+
+    def _hilo_cargar_libro(self, ruta):
         try:
             if ruta.lower().endswith('.pdf'):
-                (
-                    texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados,
-                    self.spans_estilo, self.posiciones_imagenes, self.posiciones_enlaces,
-                    self.posiciones_tablas,
-                ) = extraer_datos_pdf(ruta, callback_progreso_ocr=self._al_progreso_ocr)
+                resultado = extraer_datos_pdf(ruta, callback_progreso_ocr=self._al_progreso_ocr)
             else:
-                (
-                    texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados,
-                    self.spans_estilo, self.posiciones_imagenes, self.posiciones_enlaces,
-                    self.posiciones_tablas,
-                ) = extraer_datos_epub(ruta)
+                resultado = extraer_datos_epub(ruta)
+        except Exception as e:
+            logger.exception("Error al extraer los datos del libro: %s", ruta)
+            wx.CallAfter(self._al_terminar_carga_libro, ruta, None, e)
+            return
+        wx.CallAfter(self._al_terminar_carga_libro, ruta, resultado, None)
+
+    def _al_terminar_carga_libro(self, ruta, resultado, error):
+        """Vuelve al hilo principal (wx.CallAfter) para todo lo que toque la interfaz."""
+        if error is not None:
+            reproducir(ERROR)
+            wx.MessageBox(
+                _("Se ha producido un error técnico al intentar procesar el libro.\n\nDetalle: {error}").format(
+                    error=error
+                ),
+                _("Error al cargar el libro"),
+            )
+            return
+
+        try:
+            (
+                texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados,
+                self.spans_estilo, self.posiciones_imagenes, self.posiciones_enlaces,
+                self.posiciones_tablas,
+            ) = resultado
 
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
