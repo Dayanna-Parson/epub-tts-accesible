@@ -100,9 +100,11 @@ def extraer_datos_pdf(ruta_pdf, callback_progreso_ocr=None):
     for num in range(documento.page_count):
         pagina = documento[num]
         texto_pagina = pagina.get_text("text")
+        pagina_reconocida_por_ocr = False
 
         if ocr_activo and not texto_pagina.strip() and contador_ocr < tope_ocr:
             contador_ocr += 1
+            pagina_reconocida_por_ocr = True
             if callback_progreso_ocr is not None:
                 try:
                     callback_progreso_ocr(contador_ocr, total_paginas_ocr)
@@ -122,7 +124,10 @@ def extraer_datos_pdf(ruta_pdf, callback_progreso_ocr=None):
         # Un PDF no trae alt: se usa un marcador genérico, uno por imagen
         # incrustada en la página, insertado al final del texto de la
         # página (no se conoce su posición real dentro del flujo de texto).
-        num_imagenes_pagina = len(pagina.get_images(full=True))
+        # Si la página se acaba de reconocer por OCR, la imagen incrustada
+        # ES el propio escaneado de la página — marcarla aparte solo
+        # repetiría como "[Imagen]" un texto que ya se acaba de leer entero.
+        num_imagenes_pagina = 0 if pagina_reconocida_por_ocr else len(pagina.get_images(full=True))
         if num_imagenes_pagina:
             texto_pagina += "\n" + "\n".join(["[Imagen]"] * num_imagenes_pagina)
 
