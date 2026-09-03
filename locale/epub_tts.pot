@@ -61,6 +61,51 @@ msgstr ""
 msgid "Tabla: {texto}"
 msgstr ""
 
+msgid "Reconociendo texto de la página {actual} de {total}..."
+msgstr ""
+
+msgid "Reconocimiento de texto (OCR) en PDF escaneados:"
+msgstr ""
+
+msgid "Reconocer el texto de las páginas de PDF que no tengan texto propio"
+msgstr ""
+
+msgid "Cuando una página de PDF no trae texto seleccionable (habitual en libros escaneados), se reconoce con el motor elegido abajo y ese texto reconocido pasa a leerse igual que el resto del libro."
+msgstr ""
+
+msgid "Motor de reconocimiento:"
+msgstr ""
+
+msgid "Ninguno"
+msgstr ""
+
+msgid "OCR de Windows"
+msgstr ""
+
+msgid " (no disponible en este equipo)"
+msgstr ""
+
+msgid "Motor con el que se reconoce el texto de las páginas escaneadas. «(no disponible en este equipo)» significa que falta la librería o el paquete de idioma necesarios para ese motor."
+msgstr ""
+
+msgid "Idioma del texto a reconocer:"
+msgstr ""
+
+msgid "Idioma del texto de las páginas escaneadas. Debe coincidir con el paquete de idioma de reconocimiento instalado en Windows."
+msgstr ""
+
+msgid "Tope de páginas a reconocer por libro:"
+msgstr ""
+
+msgid "Tope de páginas a reconocer por libro"
+msgstr ""
+
+msgid "Número máximo de páginas que se reconocen por OCR al abrir un libro. Reconocer muchas páginas tarda; este límite evita que abrir un libro escaneado muy largo se quede bloqueado reconociendo cientos de páginas."
+msgstr ""
+
+msgid "Reconocimiento de Texto (OCR)"
+msgstr ""
+
 msgid "¡Bienvenido a Epub TTS! Tu lector de EPUB y PDF con soporte para voces de alta calidad en la nube (Azure, Amazon Polly, Deepgram y ElevenLabs) y voces locales SAPI5. Pulsa Ctrl + O para abrir un libro, o usa Ctrl + 1 a Ctrl + 5 para moverte entre las pestañas. Recuerda marcar tus voces favoritas en Ajustes para empezar a leer. ¡Disfruta de la lectura!"
 msgstr ""
 

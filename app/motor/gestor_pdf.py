@@ -24,14 +24,20 @@ import os
 
 import fitz
 
+from app.motor import gestor_ocr
 from app.motor.limpiador_lectura import limpiar_para_lectura
 
 logger = logging.getLogger(__name__)
 
 
-def extraer_datos_pdf(ruta_pdf):
+def extraer_datos_pdf(ruta_pdf, callback_progreso_ocr=None):
     """
     Extrae el texto completo y la estructura de índice de un PDF.
+
+    callback_progreso_ocr(pagina_actual, total_paginas_ocr): si se indica,
+    se llama antes de reconocer cada página con OCR — pensado para que
+    pestana_lectura.py anuncie el progreso con AnunciadorVoz. No se llama
+    en absoluto si el OCR está desactivado o no hace falta.
 
     Retorna la misma forma que extraer_datos_epub():
         - texto_completo (str)
@@ -70,9 +76,48 @@ def extraer_datos_pdf(ruta_pdf):
     posiciones_enlaces = []
     posiciones_tablas = []
 
+    # OCR de páginas sin texto propio (escaneadas). El recuento de páginas
+    # candidatas se hace en una pasada previa barata (solo get_text, sin
+    # reconocer nada todavía) para poder anunciar "página X de Y" con
+    # sentido, y respetar el tope configurado sin reconocer de más.
+    config_ocr = gestor_ocr.obtener_config_ocr()
+    motor_ocr = config_ocr["ocr_motor"]
+    ocr_activo = (
+        config_ocr["ocr_activado"]
+        and motor_ocr != gestor_ocr.MOTOR_NINGUNO
+        and gestor_ocr.motor_disponible(motor_ocr)
+    )
+    tope_ocr = config_ocr["ocr_tope_paginas"]
+    total_paginas_ocr = 0
+    if ocr_activo:
+        for num in range(documento.page_count):
+            if not (documento[num].get_text("text") or "").strip():
+                total_paginas_ocr += 1
+                if total_paginas_ocr >= tope_ocr:
+                    break
+    contador_ocr = 0
+
     for num in range(documento.page_count):
         pagina = documento[num]
         texto_pagina = pagina.get_text("text")
+
+        if ocr_activo and not texto_pagina.strip() and contador_ocr < tope_ocr:
+            contador_ocr += 1
+            if callback_progreso_ocr is not None:
+                try:
+                    callback_progreso_ocr(contador_ocr, total_paginas_ocr)
+                except Exception:
+                    logger.exception("Fallo en callback_progreso_ocr")
+            try:
+                datos_png = pagina.get_pixmap(dpi=200).tobytes("png")
+                texto_pagina = gestor_ocr.reconocer_pagina(
+                    datos_png, motor_ocr, config_ocr["ocr_idioma"]
+                )
+            except Exception:
+                logger.exception(
+                    "Fallo al renderizar/reconocer con OCR la página %s de %s", num + 1, ruta_pdf
+                )
+                texto_pagina = ""
 
         # Un PDF no trae alt: se usa un marcador genérico, uno por imagen
         # incrustada en la página, insertado al final del texto de la

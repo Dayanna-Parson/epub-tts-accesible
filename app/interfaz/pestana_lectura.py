@@ -6,6 +6,7 @@ import time
 import logging
 import threading
 from app.motor import anunciador_lector as voz
+from app.motor.anunciador_voz import AnunciadorVoz
 from app.motor.gestor_epub import extraer_datos_epub
 from app.motor.gestor_pdf import extraer_datos_pdf
 from app.motor.reproductor_voz import ReproductorVoz
@@ -123,7 +124,12 @@ class PestanaLectura(wx.Panel):
         self.padre_notebook = padre
         
         self.reproductor = ReproductorVoz()
-        
+        # Cola de voz para el progreso de OCR de páginas de PDF escaneadas:
+        # puede llegar una ráfaga rápida de anuncios "página X de Y", igual
+        # que el progreso de escaneo de Biblioteca.
+        self._voz_ocr = AnunciadorVoz()
+        self.Bind(wx.EVT_WINDOW_DESTROY, lambda e: (self._voz_ocr.detener(), e.Skip()))
+
         self.posiciones_capitulos = {}
         self.posiciones_encabezados = []  # [{nivel, texto, pos}] para negrita de h1-h6 en _aplicar_estilos_ricos
         self.spans_estilo = []            # [{texto, estilos, cerca_de}] para rich-text
@@ -1186,12 +1192,18 @@ class PestanaLectura(wx.Panel):
         """
         self.guardar_datos_libro()
         try:
-            extractor = extraer_datos_pdf if ruta.lower().endswith('.pdf') else extraer_datos_epub
-            (
-                texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados,
-                self.spans_estilo, self.posiciones_imagenes, self.posiciones_enlaces,
-                self.posiciones_tablas,
-            ) = extractor(ruta)
+            if ruta.lower().endswith('.pdf'):
+                (
+                    texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados,
+                    self.spans_estilo, self.posiciones_imagenes, self.posiciones_enlaces,
+                    self.posiciones_tablas,
+                ) = extraer_datos_pdf(ruta, callback_progreso_ocr=self._al_progreso_ocr)
+            else:
+                (
+                    texto, datos_arbol, self.posiciones_capitulos, self.posiciones_encabezados,
+                    self.spans_estilo, self.posiciones_imagenes, self.posiciones_enlaces,
+                    self.posiciones_tablas,
+                ) = extraer_datos_epub(ruta)
 
             if hasattr(self.reproductor, 'detener'):
                 self.reproductor.detener()
@@ -1227,6 +1239,19 @@ class PestanaLectura(wx.Panel):
                 ),
                 _("Error al cargar el libro"),
             )
+
+    def _al_progreso_ocr(self, pagina_actual, total_paginas):
+        """
+        Callback de extraer_datos_pdf mientras reconoce por OCR páginas
+        escaneadas sin texto propio. Se llama en el mismo hilo que la carga
+        del libro (todavía síncrona), pero AnunciadorVoz tiene su propia
+        cola en segundo plano, así que no bloquea nada aquí.
+        """
+        self._voz_ocr.hablar(
+            _("Reconociendo texto de la página {actual} de {total}...").format(
+                actual=pagina_actual, total=total_paginas
+            )
+        )
 
     def _construir_arbol_indice(self, padre, nodos):
         for n in nodos:

@@ -9,6 +9,7 @@ import webbrowser
 from app.config_rutas import ruta_config, CONFIG_DIR, cargar_claves, guardar_claves
 from app.motor import anunciador_lector as voz
 from app.motor.anunciador_voz import AnunciadorVoz
+from app.motor import gestor_ocr
 from app.motor import gestor_prompts_asistente as prompts
 from app.motor.reproductor_sonidos import (
     reproducir, LIST_NAV, SUCCESS, ERROR, OPEN_FOLDER,
@@ -2188,6 +2189,122 @@ class PanelSonidos(wx.Panel):
 # ANCLAJE_FIN: PANEL_SONIDOS
 
 
+# ANCLAJE_INICIO: PANEL_RECONOCIMIENTO
+_MOTORES_OCR_COMBO = [
+    (gestor_ocr.MOTOR_NINGUNO, None),
+    (gestor_ocr.MOTOR_WINDOWS, None),
+]
+_IDIOMAS_OCR_COMBO = ["es", "en", "fr", "de", "it", "pt"]
+
+
+class PanelReconocimiento(wx.Panel):
+    """
+    OCR de páginas de PDF escaneadas (sin texto propio). Por ahora solo el
+    motor de Windows está implementado; Tesseract y Gemini se añadirán en
+    una fase posterior sin tener que rehacer este panel — motor_disponible()
+    en gestor_ocr.py decide en tiempo de ejecución qué mostrar como usable.
+    """
+
+    def __init__(self, padre):
+        super().__init__(padre)
+        config = gestor_ocr.obtener_config_ocr()
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(
+            wx.StaticText(self, label=_("Reconocimiento de texto (OCR) en PDF escaneados:")),
+            0, wx.LEFT | wx.TOP, 8,
+        )
+
+        self.chk_activado = wx.CheckBox(
+            self, label=_("Reconocer el texto de las páginas de PDF que no tengan texto propio")
+        )
+        self.chk_activado.SetValue(config["ocr_activado"])
+        self.chk_activado.SetHelpText(
+            _("Cuando una página de PDF no trae texto seleccionable (habitual en libros "
+              "escaneados), se reconoce con el motor elegido abajo y ese texto reconocido "
+              "pasa a leerse igual que el resto del libro.")
+        )
+        self.chk_activado.Bind(wx.EVT_CHECKBOX, self.al_cambiar_activado)
+        sizer.Add(self.chk_activado, 0, wx.ALL, 8)
+
+        sizer.Add(wx.StaticText(self, label=_("Motor de reconocimiento:")), 0, wx.LEFT, 8)
+        self.combo_motor = wx.ComboBox(self, style=wx.CB_READONLY)
+        self._motores_ids = []
+        for motor_id, _sin_usar in _MOTORES_OCR_COMBO:
+            self._motores_ids.append(motor_id)
+            self.combo_motor.Append(self._etiqueta_motor(motor_id))
+        motor_actual = config["ocr_motor"]
+        if motor_actual not in self._motores_ids:
+            motor_actual = gestor_ocr.MOTOR_NINGUNO
+        self.combo_motor.SetSelection(self._motores_ids.index(motor_actual))
+        self.combo_motor.SetHelpText(
+            _("Motor con el que se reconoce el texto de las páginas escaneadas. «(no disponible "
+              "en este equipo)» significa que falta la librería o el paquete de idioma "
+              "necesarios para ese motor.")
+        )
+        self.combo_motor.Bind(wx.EVT_COMBOBOX, self.al_cambiar_motor)
+        sizer.Add(self.combo_motor, 0, wx.EXPAND | wx.ALL, 8)
+
+        sizer.Add(wx.StaticText(self, label=_("Idioma del texto a reconocer:")), 0, wx.LEFT, 8)
+        self.combo_idioma = wx.ComboBox(self, style=wx.CB_READONLY)
+        self.combo_idioma.Set(_IDIOMAS_OCR_COMBO)
+        idioma_actual = config["ocr_idioma"]
+        if idioma_actual not in _IDIOMAS_OCR_COMBO:
+            idioma_actual = "es"
+        self.combo_idioma.SetSelection(_IDIOMAS_OCR_COMBO.index(idioma_actual))
+        self.combo_idioma.SetHelpText(
+            _("Idioma del texto de las páginas escaneadas. Debe coincidir con el paquete de "
+              "idioma de reconocimiento instalado en Windows.")
+        )
+        self.combo_idioma.Bind(wx.EVT_COMBOBOX, self.al_cambiar_idioma)
+        sizer.Add(self.combo_idioma, 0, wx.EXPAND | wx.ALL, 8)
+
+        sizer.Add(wx.StaticText(self, label=_("Tope de páginas a reconocer por libro:")), 0, wx.LEFT, 8)
+        self.spin_tope = wx.SpinCtrl(self, min=1, max=2000, initial=config["ocr_tope_paginas"])
+        self.spin_tope.SetName(_("Tope de páginas a reconocer por libro"))
+        self.spin_tope.SetHelpText(
+            _("Número máximo de páginas que se reconocen por OCR al abrir un libro. Reconocer "
+              "muchas páginas tarda; este límite evita que abrir un libro escaneado muy largo "
+              "se quede bloqueado reconociendo cientos de páginas.")
+        )
+        self.spin_tope.Bind(wx.EVT_SPINCTRL, self.al_cambiar_tope)
+        sizer.Add(self.spin_tope, 0, wx.ALL, 8)
+
+        self.SetSizer(sizer)
+        self.primer_control = self.chk_activado
+        self.ultimo_control = self.spin_tope
+
+    def _etiqueta_motor(self, motor_id):
+        if motor_id == gestor_ocr.MOTOR_NINGUNO:
+            etiqueta = _("Ninguno")
+        elif motor_id == gestor_ocr.MOTOR_WINDOWS:
+            etiqueta = _("OCR de Windows")
+        else:
+            etiqueta = motor_id
+        if motor_id != gestor_ocr.MOTOR_NINGUNO and not gestor_ocr.motor_disponible(motor_id):
+            etiqueta += _(" (no disponible en este equipo)")
+        return etiqueta
+
+    def al_cambiar_activado(self, evento):
+        gestor_ocr.fijar_config_ocr(ocr_activado=self.chk_activado.GetValue())
+
+    def al_cambiar_motor(self, evento):
+        idx = self.combo_motor.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return
+        gestor_ocr.fijar_config_ocr(ocr_motor=self._motores_ids[idx])
+
+    def al_cambiar_idioma(self, evento):
+        idx = self.combo_idioma.GetSelection()
+        if idx == wx.NOT_FOUND:
+            return
+        gestor_ocr.fijar_config_ocr(ocr_idioma=_IDIOMAS_OCR_COMBO[idx])
+
+    def al_cambiar_tope(self, evento):
+        gestor_ocr.fijar_config_ocr(ocr_tope_paginas=self.spin_tope.GetValue())
+# ANCLAJE_FIN: PANEL_RECONOCIMIENTO
+
+
 # ANCLAJE_INICIO: PANEL_ASISTENTE_BIBLIOTECA
 class PanelAsistenteBiblioteca(wx.Panel):
     """
@@ -2708,6 +2825,7 @@ class PestanaAjustes(wx.Panel):
     _PAG_SONIDOS    = 9
     _PAG_ASISTENTE  = 10
     _PAG_PERFILES   = 11
+    _PAG_RECONOCIMIENTO = 12
 
     def __init__(self, padre):
         super().__init__(padre)
@@ -2748,6 +2866,7 @@ class PestanaAjustes(wx.Panel):
         self.pag_sonidos     = PanelSonidos(self.panel_derecho)
         self.pag_asistente   = PanelAsistenteBiblioteca(self.panel_derecho)
         self.pag_perfiles    = PanelPerfiles(self.panel_derecho)
+        self.pag_reconocimiento = PanelReconocimiento(self.panel_derecho)
 
         self.panel_derecho.AddPage(self.pag_general,     _("Configuración General"))
         self.panel_derecho.AddPage(self.pag_claves,      _("Credenciales y API Keys"))
@@ -2761,6 +2880,7 @@ class PestanaAjustes(wx.Panel):
         self.panel_derecho.AddPage(self.pag_sonidos,     _("Efectos de Sonido"))
         self.panel_derecho.AddPage(self.pag_asistente,   _("Asistente de Biblioteca"))
         self.panel_derecho.AddPage(self.pag_perfiles,    _("Perfiles de Usuario"))
+        self.panel_derecho.AddPage(self.pag_reconocimiento, _("Reconocimiento de Texto (OCR)"))
 
         self.splitter.SetMinimumPaneSize(180)
         self.splitter.SplitVertically(self.arbol_cat, self.panel_derecho, 220)
@@ -2857,6 +2977,9 @@ class PestanaAjustes(wx.Panel):
 
         nodo_perfiles = self.arbol_cat.AppendItem(raiz, _("Perfiles de Usuario"))
         self._nodos[nodo_perfiles] = self._PAG_PERFILES
+
+        nodo_reconocimiento = self.arbol_cat.AppendItem(raiz, _("Reconocimiento de Texto (OCR)"))
+        self._nodos[nodo_reconocimiento] = self._PAG_RECONOCIMIENTO
 
         # Expandir todas las ramas para que el usuario ciego conozca la estructura
         # completa desde el primer momento que el árbol recibe el foco.
