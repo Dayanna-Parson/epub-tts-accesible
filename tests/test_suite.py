@@ -1568,7 +1568,7 @@ class TestGrabadorLoteCarpeta(unittest.TestCase):
         archivos, errores, carpeta = self.grabador.grabar_lote(lote, {"narrador": voz}, "Mi lote")
         self.assertEqual([os.path.basename(a) for a in archivos], ["H06 Uno.mp3", "H07 Dos.mp3"])
         self.assertEqual(errores, [])
-        self.assertEqual(carpeta, os.path.join(self.carpeta, "grabaciones", "Audios_por_archivo"))
+        self.assertEqual(carpeta, self.carpeta)
         self.assertEqual([aviso[:3] for aviso in self.avisos], [(1, 2, "H06 Uno"), (2, 2, "H07 Dos")])
         self.assertEqual(self.avisos[0][3], "Lucía")
         # Sin avisos por fragmento: el lote ya avisa una vez por archivo.
@@ -1599,7 +1599,7 @@ class TestGrabadorLoteCarpeta(unittest.TestCase):
         lote = [("zeta", [("narrador", "a")]), ("alfa", [("narrador", "b")])]
         archivos, errores, carpeta = self.grabador.grabar_lote(lote, {}, "Mi colección", unir=True)
         self.assertEqual(errores, [])
-        self.assertEqual(carpeta, os.path.join(self.carpeta, "grabaciones", "Audio_Completo_Mi colección"))
+        self.assertEqual(carpeta, self.carpeta)
         self.assertEqual(archivos, [os.path.join(carpeta, "Mi colección.mp3")])
         # Se unen en el orden del lote, no por nombre, con la pausa entre textos.
         self.assertEqual(uniones, [(["0001.mp3", "0002.mp3"], self.grabador.PAUSA_ENTRE_ARCHIVOS_MS)])
@@ -1639,6 +1639,19 @@ class TestGrabadorLoteCarpeta(unittest.TestCase):
         archivos, _errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote", unir=True)
         self.assertEqual(archivos, [])
         self.assertEqual(uniones, [])
+
+    def test_el_diccionario_de_pronunciacion_se_aplica_al_grabar(self):
+        textos_grabados = []
+
+        def simulado(fragmentos, asignaciones, subcarpeta, nombre, total, avisar_progreso=True):
+            textos_grabados.extend(texto for _etiqueta, texto in fragmentos)
+            return [], []
+        self.grabador._grabar_modo_unico = simulado
+        diccionario = MagicMock()
+        diccionario.aplicar.side_effect = lambda texto: texto.replace("wifi", "güifi")
+        with patch("app.motor.limpiador_lectura._obtener_diccionario", return_value=diccionario):
+            self.grabador.grabar_lote([("a", [("narrador", "Conecta el wifi.")])], {}, "Lote")
+        self.assertEqual(textos_grabados, ["Conecta el güifi."])
 
     def test_abortar_para_antes_del_siguiente_archivo(self):
         simulado, llamadas = self._modo_unico_simulado()

@@ -21,6 +21,16 @@ def _obtener_diccionario():
     return _dic_pronunciacion
 
 
+def aplicar_diccionario_pronunciacion(texto: str) -> str:
+    """
+    Solo las sustituciones del diccionario de pronunciación global, sin el
+    resto de la limpieza de limpiar_para_lectura() (que reordena saltos de
+    línea pensando en texto extraído de un EPUB). Para textos que llegan ya
+    escritos a mano, como los TXT de Grabación de Fragmentos.
+    """
+    return _obtener_diccionario().aplicar(texto)
+
+
 def recargar_diccionario_pronunciacion():
     """Invalida la caché del diccionario para que el siguiente texto use el JSON actualizado."""
     global _dic_pronunciacion

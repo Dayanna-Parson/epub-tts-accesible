@@ -847,8 +847,10 @@ class PestanaGrabacion(wx.Panel):
         self.proyecto_actual   = None
         self._ofrecio_proyecto = True
         self.txt_ruta.SetValue(carpeta)
-        if not self.txt_titulo.GetValue().strip():
-            self.txt_titulo.SetValue(nombre_carpeta)
+        # Siempre el nombre de la carpeta, aunque el campo ya tuviera el
+        # título de un TXT cargado antes: si no, los audios acababan en la
+        # carpeta de ese otro texto. Se puede cambiar después de cargar.
+        self.txt_titulo.SetValue(nombre_carpeta)
 
         for i in range(self.check_voces.GetItemCount()):
             self.check_voces.CheckItem(i, False)

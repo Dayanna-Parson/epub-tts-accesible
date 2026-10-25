@@ -221,6 +221,7 @@ class GrabadorAudio:
         self._velocidad = max(0, min(100, int(velocidad)))
         self._volumen = max(0, min(100, int(volumen)))
         self._cargar_config()
+        fragmentos = self._aplicar_diccionario(fragmentos)
 
         carpeta_libro   = self.obtener_carpeta_libro(titulo_libro)
         nombre_cap_limpio = limpiar_nombre_archivo(nombre_capitulo)
@@ -250,6 +251,25 @@ class GrabadorAudio:
         self.cerrar()
         return archivos, errores, subcarpeta
 
+    # ANCLAJE_INICIO: DICCIONARIO_EN_GRABACION
+    def _aplicar_diccionario(self, fragmentos: list) -> list:
+        """
+        Aplica el diccionario de pronunciación global al texto de cada
+        fragmento. Los TXT de Grabación de Fragmentos no pasan por
+        limpiar_para_lectura() (eso solo ocurre al abrir un EPUB o PDF), así
+        que sin esto las reglas de Ajustes → Reglas del diccionario, las que
+        corrigen palabras que una voz pronuncia mal o en otro idioma, no se
+        aplicaban al grabar. Las etiquetas ya están separadas del texto en
+        este punto, así que una regla nunca puede tocarlas.
+        """
+        try:
+            from app.motor.limpiador_lectura import aplicar_diccionario_pronunciacion
+            return [(etiqueta, aplicar_diccionario_pronunciacion(texto)) for etiqueta, texto in fragmentos]
+        except Exception:
+            logger.exception("[GrabadorAudio] No se pudo aplicar el diccionario de pronunciación; se graba sin él")
+            return fragmentos
+    # ANCLAJE_FIN: DICCIONARIO_EN_GRABACION
+
     # ANCLAJE_INICIO: GRABACION_LOTE_CARPETA
     # Silencio entre un TXT y el siguiente al unir una carpeta en un solo
     # MP3: son textos independientes, y sin él el siguiente empezaría
@@ -271,11 +291,10 @@ class GrabadorAudio:
         unificado (si lleva varias etiquetas, sus fragmentos se unen en
         orden), así que "Dividir por etiquetas" no aplica aquí.
 
-        unir=False: un MP3 por archivo, llamado igual que el TXT, en
-                    grabaciones/Audios_por_archivo/.
+        Destino: Grabaciones_Epub-TTS/<título>/, sin subcarpetas.
+        unir=False: un MP3 por archivo, llamado igual que el TXT.
         unir=True:  un único MP3 con todos los archivos en orden, separados
-                    por PAUSA_ENTRE_ARCHIVOS_MS, llamado como el título, en
-                    grabaciones/Audio_Completo_<título>/.
+                    por PAUSA_ENTRE_ARCHIVOS_MS, llamado como el título.
 
         lote: [(nombre_base, fragmentos), ...] (ver preparar_lote_carpeta()).
         callback_progreso recibe (archivo_actual, total_archivos,
@@ -292,17 +311,18 @@ class GrabadorAudio:
         self._velocidad = max(0, min(100, int(velocidad)))
         self._volumen = max(0, min(100, int(volumen)))
         self._cargar_config()
+        lote = [(nombre, self._aplicar_diccionario(frags)) for nombre, frags in lote]
 
-        carpeta_libro = self.obtener_carpeta_libro(titulo_libro)
+        # Los audios van directamente en Grabaciones_Epub-TTS/<Título>/ (el
+        # título es el nombre de la carpeta de origen salvo que se cambie),
+        # para que el destino refleje la carpeta de TXT tal cual.
+        subcarpeta = self.obtener_carpeta_libro(titulo_libro)
         titulo_limpio = limpiar_nombre_archivo(titulo_libro) or "Sin_Titulo"
         if unir:
-            subcarpeta = os.path.join(carpeta_libro, "grabaciones", f"Audio_Completo_{titulo_limpio}")
             # Cada TXT se graba primero aquí y luego se une en el MP3 final.
             carpeta_trabajo = tempfile.mkdtemp(prefix="tfh_lote_")
         else:
-            subcarpeta = os.path.join(carpeta_libro, "grabaciones", "Audios_por_archivo")
             carpeta_trabajo = subcarpeta
-        os.makedirs(subcarpeta, exist_ok=True)
         self._ultima_carpeta = subcarpeta
 
         archivos_generados, errores = [], []
