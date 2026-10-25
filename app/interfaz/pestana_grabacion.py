@@ -441,7 +441,7 @@ class PestanaGrabacion(wx.Panel):
         # Botones del panel de casting
         sz_btn_cast = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_probar = wx.Button(
-            self, label=_("Probar voz — Escucha una muestra de la voz marcada")
+            self, label=_("Probar voz (Alt+P) — Escucha una muestra de la voz marcada")
         )
         self.btn_preescucha = wx.Button(
             self, label=_("Pre-escucha General — Oye todas las voces asignadas en secuencia")
@@ -565,6 +565,16 @@ class PestanaGrabacion(wx.Panel):
         self.btn_abrir_carpeta.Bind(wx.EVT_BUTTON,  self.al_abrir_carpeta)
         self.check_voces.Bind(wx.EVT_LIST_ITEM_CHECKED,   self.al_marcar_voz)
         self.check_voces.Bind(wx.EVT_LIST_ITEM_UNCHECKED, self.al_desmarcar_voz)
+
+        # ANCLAJE_INICIO: ATAJO_PROBAR_VOZ_GRABACION
+        # Alt+P: mismo atajo que «Escuchar muestra» en las listas de voces de
+        # Ajustes, para probar la voz sin tener que tabular hasta el botón.
+        # Va en la tabla de la propia pestaña (como en Ajustes) porque solo
+        # tiene sentido aquí; la ventana principal no usa Alt+P.
+        id_probar_voz = wx.NewIdRef()
+        self.Bind(wx.EVT_MENU, self.al_probar_voz, id=id_probar_voz)
+        self.SetAcceleratorTable(wx.AcceleratorTable([(wx.ACCEL_ALT, ord('P'), id_probar_voz)]))
+        # ANCLAJE_FIN: ATAJO_PROBAR_VOZ_GRABACION
 
     # ================================================================== #
     # JSON helpers — seguros ante archivo vacío o corrupto

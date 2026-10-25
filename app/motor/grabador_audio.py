@@ -1569,13 +1569,21 @@ class GrabadorAudio:
     # Previsualización de voz (con altavoces)
     # ------------------------------------------------------------------ #
 
+    # ANCLAJE_INICIO: PROBAR_VOZ_ALTAVOCES
     def probar_voz(self, datos_voz: dict):
-        """Reproduce una muestra de la voz por los altavoces (previsualización)."""
+        """
+        Reproduce una muestra de la voz por los altavoces (previsualización).
+
+        Se llama desde un hilo secundario y no vuelve hasta que la muestra
+        termina de sonar, para que quien llama sepa cuándo puede lanzar la
+        siguiente (la preescucha general las encadena una tras otra).
+        """
         texto_prueba = "Hola. Esta es una prueba de voz para Epub-TTS."
         proveedor = (
             datos_voz.get('proveedor_id', 'local').lower()
             if isinstance(datos_voz, dict) else 'local'
         )
+        nombre = datos_voz.get('nombre', '') if isinstance(datos_voz, dict) else ''
 
         try:
             if 'azure' in proveedor:
@@ -1590,14 +1598,58 @@ class GrabadorAudio:
                 from app.servicios.cliente_polly import ClientePolly
                 ClientePolly().hablar(texto_prueba, datos_voz)
 
+            elif 'deepgram' in proveedor:
+                from app.servicios.cliente_deepgram import ClienteDeepgram
+                ClienteDeepgram().hablar(texto_prueba, datos_voz)
+
+            elif proveedor == 'local_32':
+                self._probar_voz_sapi5_32(texto_prueba, nombre)
+
             else:
-                from app.servicios.cliente_sapi5 import ClienteSapi5
-                cliente = ClienteSapi5()
-                if isinstance(datos_voz, dict):
-                    nombre = datos_voz.get('nombre', '')
-                    if nombre:
-                        cliente.cambiar_voz_por_nombre(nombre)
-                cliente.hablar(texto_prueba)
+                self._probar_voz_sapi5(texto_prueba, nombre)
 
         except Exception as e:
             raise Exception(f"Error al probar voz ({proveedor}): {e}")
+
+    def _probar_voz_sapi5(self, texto: str, nombre: str):
+        """
+        SAPI5 de 64 bits desde un hilo secundario. Antes se creaba el objeto
+        COM en este hilo sin inicializar COM (fallaba y la muestra no sonaba,
+        sin ningún aviso) y se hablaba en modo asíncrono, así que aunque
+        llegara a crearse se destruía al salir del método y cortaba la voz.
+        """
+        import comtypes
+        from app.servicios.cliente_sapi5 import ClienteSapi5, SPF_IS_NOT_XML
+        comtypes.CoInitialize()
+        try:
+            cliente = ClienteSapi5()
+            if not cliente.conectado:
+                raise Exception("no se pudo iniciar el motor SAPI5")
+            if nombre:
+                cliente.cambiar_voz_por_nombre(nombre)
+            # Sin SPF_ASYNC: Speak() no vuelve hasta terminar de hablar.
+            cliente.motor.Speak(texto, SPF_IS_NOT_XML)
+            del cliente
+        finally:
+            comtypes.CoUninitialize()
+
+    def _probar_voz_sapi5_32(self, texto: str, nombre: str):
+        """
+        SAPI5 de 32 bits (Eloquence, RealSpeak...): solo suenan a través del
+        proceso puente. Antes se intentaban con el motor de 64 bits, que no
+        las encuentra, y la muestra no sonaba.
+        """
+        from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
+        puente = ClienteSapi32Bridge()
+        try:
+            if not puente.conectado:
+                raise Exception("auxiliar_sapi32.exe no disponible")
+            if nombre:
+                puente.cambiar_voz_por_nombre(nombre)
+            terminado = threading.Event()
+            puente.hablar_con_callback(texto, 0, lambda pos: None, terminado.set)
+            if not terminado.wait(timeout=30.0):
+                logger.warning("[GrabadorAudio] La muestra de voz de 32 bits no terminó a tiempo")
+        finally:
+            puente.cerrar()
+    # ANCLAJE_FIN: PROBAR_VOZ_ALTAVOCES

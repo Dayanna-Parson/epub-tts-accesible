@@ -1096,8 +1096,8 @@ msgstr "Provider"
 msgid "Lista de voces favoritas. Pulsa Espacio sobre una voz para asignarla a la etiqueta activa. Solo puede haber una voz marcada a la vez."
 msgstr "List of favorite voices. Press Space on a voice to assign it to the active tag. Only one voice can be checked at a time."
 
-msgid "Probar voz — Escucha una muestra de la voz marcada"
-msgstr "Test voice — Listen to a sample of the checked voice"
+msgid "Probar voz (Alt+P) — Escucha una muestra de la voz marcada"
+msgstr "Test voice (Alt+P) — Listen to a sample of the checked voice"
 
 msgid "Pre-escucha General — Oye todas las voces asignadas en secuencia"
 msgstr "General preview — Hear all assigned voices in sequence"

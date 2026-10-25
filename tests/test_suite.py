@@ -1654,6 +1654,66 @@ class TestGrabadorLoteCarpeta(unittest.TestCase):
         self.assertEqual(len(llamadas), 1)
 
 
+class TestProbarVozGrabador(unittest.TestCase):
+    """probar_voz(): cada proveedor por su camino, y sin volver hasta que suena."""
+
+    def setUp(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+        self.mock_comtypes = MagicMock()
+        self.mock_sapi5 = MagicMock()
+        self.mock_sapi5.SPF_IS_NOT_XML = 8
+        self.mock_puente = MagicMock()
+        self.mock_deepgram = MagicMock()
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "app.motor.control_cuota": MagicMock(),
+            "comtypes": self.mock_comtypes,
+            "app.servicios.cliente_sapi5": self.mock_sapi5,
+            "app.servicios.cliente_sapi32_bridge": self.mock_puente,
+            "app.servicios.cliente_deepgram": self.mock_deepgram,
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        self.grabador = importlib.import_module("app.motor.grabador_audio").GrabadorAudio()
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+
+    def test_deepgram_tiene_su_propio_camino(self):
+        voz = {"nombre": "Aura", "proveedor_id": "deepgram"}
+        self.grabador.probar_voz(voz)
+        self.mock_deepgram.ClienteDeepgram.return_value.hablar.assert_called_once()
+        self.mock_sapi5.ClienteSapi5.assert_not_called()
+
+    def test_sapi5_inicializa_com_y_habla_sin_modo_asincrono(self):
+        cliente = self.mock_sapi5.ClienteSapi5.return_value
+        cliente.conectado = True
+        self.grabador.probar_voz({"nombre": "Helena", "proveedor_id": "local"})
+        self.mock_comtypes.CoInitialize.assert_called_once()
+        self.mock_comtypes.CoUninitialize.assert_called_once()
+        cliente.cambiar_voz_por_nombre.assert_called_once_with("Helena")
+        texto, banderas = cliente.motor.Speak.call_args.args
+        self.assertEqual(banderas & 1, 0)  # sin SPF_ASYNC
+
+    def test_sapi5_32_bits_usa_el_puente_y_espera_al_final(self):
+        import threading
+        puente = self.mock_puente.ClienteSapi32Bridge.return_value
+        puente.conectado = True
+        orden = []
+
+        def hablar(texto, pos, al_progreso, al_terminar):
+            orden.append("hablar")
+            threading.Timer(0.05, lambda: (orden.append("terminado"), al_terminar())).start()
+        puente.hablar_con_callback.side_effect = hablar
+        puente.cerrar.side_effect = lambda: orden.append("cerrar")
+
+        self.grabador.probar_voz({"nombre": "Eloquence", "proveedor_id": "local_32"})
+        puente.cambiar_voz_por_nombre.assert_called_once_with("Eloquence")
+        self.assertEqual(orden, ["hablar", "terminado", "cerrar"])
+        self.mock_sapi5.ClienteSapi5.assert_not_called()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)

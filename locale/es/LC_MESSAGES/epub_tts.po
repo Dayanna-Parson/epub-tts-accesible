@@ -1101,8 +1101,8 @@ msgstr "Proveedor"
 msgid "Lista de voces favoritas. Pulsa Espacio sobre una voz para asignarla a la etiqueta activa. Solo puede haber una voz marcada a la vez."
 msgstr "Lista de voces favoritas. Pulsa Espacio sobre una voz para asignarla a la etiqueta activa. Solo puede haber una voz marcada a la vez."
 
-msgid "Probar voz — Escucha una muestra de la voz marcada"
-msgstr "Probar voz — Escucha una muestra de la voz marcada"
+msgid "Probar voz (Alt+P) — Escucha una muestra de la voz marcada"
+msgstr "Probar voz (Alt+P) — Escucha una muestra de la voz marcada"
 
 msgid "Pre-escucha General — Oye todas las voces asignadas en secuencia"
 msgstr "Pre-escucha General — Oye todas las voces asignadas en secuencia"
