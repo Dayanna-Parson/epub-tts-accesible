@@ -30,7 +30,9 @@ class ReproductorVoz:
         
         # Inicialización de motores de síntesis
         self.cliente_local    = ClienteSapi5()
-        self.cliente_local_32 = ClienteSapi32Bridge()
+        # El puente de 32 bits se crea bajo demanda (ver la propiedad
+        # cliente_local_32 más abajo), no aquí.
+        self._cliente_local_32 = None
         self.cliente_azure   = ClienteAzure()
         self.cliente_eleven  = ClienteEleven()
         self.cliente_polly   = ClientePolly()
@@ -73,6 +75,25 @@ class ReproductorVoz:
         # otro y dar la sensación de que la app se había colgado). Se limpia
         # al cambiar de voz manualmente, igual que las suspensiones de cuota.
         self._proveedores_con_aviso_red = set()
+
+    # ANCLAJE_INICIO: PUENTE_32_BITS_BAJO_DEMANDA
+    @property
+    def cliente_local_32(self):
+        """
+        Puente SAPI5 de 32 bits, creado la primera vez que se necesita.
+
+        Cada ClienteSapi32Bridge lanza su propio auxiliar_sapi32.exe (un
+        ejecutable --onefile que tiene que descomprimirse entero antes de
+        responder) y espera de forma síncrona a que diga "listo". La app
+        crea un ReproductorVoz por cada pestaña o panel con botón de
+        escucha, así que lanzarlo en el constructor multiplicaba esa
+        espera al arrancar y dejaba varios procesos auxiliares abiertos
+        durante toda la sesión, aunque nunca se usara una voz de 32 bits.
+        """
+        if self._cliente_local_32 is None:
+            self._cliente_local_32 = ClienteSapi32Bridge()
+        return self._cliente_local_32
+    # ANCLAJE_FIN: PUENTE_32_BITS_BAJO_DEMANDA
 
     def _cargar_config(self):
         """Carga la configuración de voces desde el archivo JSON global."""
@@ -434,6 +455,10 @@ class ReproductorVoz:
         self._callback_completado = None
         try: self.cliente_local.detener()
         except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor local (probablemente no estaba activo).")
+        # Solo si el puente ya existe: detener no debe lanzar el auxiliar.
+        if self._cliente_local_32 is not None:
+            try: self._cliente_local_32.detener()
+            except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor local de 32 bits (probablemente no estaba activo).")
         try: self.cliente_azure.detener()
         except Exception: logger.debug("[ReproductorVoz] No se pudo detener el motor de Azure (probablemente no estaba activo).")
         try: self.cliente_eleven.detener()

@@ -25,6 +25,7 @@ import os
 import re
 import json
 import logging
+import shutil
 import tempfile
 import threading
 import requests
@@ -220,6 +221,7 @@ class GrabadorAudio:
         self._velocidad = max(0, min(100, int(velocidad)))
         self._volumen = max(0, min(100, int(volumen)))
         self._cargar_config()
+        fragmentos = self._aplicar_diccionario(fragmentos)
 
         carpeta_libro   = self.obtener_carpeta_libro(titulo_libro)
         nombre_cap_limpio = limpiar_nombre_archivo(nombre_capitulo)
@@ -248,6 +250,132 @@ class GrabadorAudio:
 
         self.cerrar()
         return archivos, errores, subcarpeta
+
+    # ANCLAJE_INICIO: DICCIONARIO_EN_GRABACION
+    def _aplicar_diccionario(self, fragmentos: list) -> list:
+        """
+        Aplica el diccionario de pronunciación global al texto de cada
+        fragmento. Los TXT de Grabación de Fragmentos no pasan por
+        limpiar_para_lectura() (eso solo ocurre al abrir un EPUB o PDF), así
+        que sin esto las reglas de Ajustes → Reglas del diccionario, las que
+        corrigen palabras que una voz pronuncia mal o en otro idioma, no se
+        aplicaban al grabar. Las etiquetas ya están separadas del texto en
+        este punto, así que una regla nunca puede tocarlas.
+        """
+        try:
+            from app.motor.limpiador_lectura import aplicar_diccionario_pronunciacion
+            return [(etiqueta, aplicar_diccionario_pronunciacion(texto)) for etiqueta, texto in fragmentos]
+        except Exception:
+            logger.exception("[GrabadorAudio] No se pudo aplicar el diccionario de pronunciación; se graba sin él")
+            return fragmentos
+    # ANCLAJE_FIN: DICCIONARIO_EN_GRABACION
+
+    # ANCLAJE_INICIO: GRABACION_LOTE_CARPETA
+    # Silencio entre un TXT y el siguiente al unir una carpeta en un solo
+    # MP3: son textos independientes, y sin él el siguiente empezaría
+    # pegado al final del anterior (cada audio llega sin silencio en los
+    # extremos).
+    PAUSA_ENTRE_ARCHIVOS_MS = 1500
+
+    def grabar_lote(
+        self,
+        lote: list,
+        asignaciones_voz: dict,
+        titulo_libro: str,
+        velocidad: int = 50,
+        volumen: int = 100,
+        unir: bool = False,
+    ) -> tuple:
+        """
+        Graba una carpeta entera de TXT. Cada archivo se graba como audio
+        unificado (si lleva varias etiquetas, sus fragmentos se unen en
+        orden), así que "Dividir por etiquetas" no aplica aquí.
+
+        Destino: Grabaciones_Epub-TTS/<título>/, sin subcarpetas.
+        unir=False: un MP3 por archivo, llamado igual que el TXT.
+        unir=True:  un único MP3 con todos los archivos en orden, separados
+                    por PAUSA_ENTRE_ARCHIVOS_MS, llamado como el título.
+
+        lote: [(nombre_base, fragmentos), ...] (ver preparar_lote_carpeta()).
+        callback_progreso recibe (archivo_actual, total_archivos,
+        nombre_base, nombres_de_voz) una vez por archivo.
+
+        Un archivo que falla no detiene el resto: su error queda en la lista
+        de errores y se pasa al siguiente (al unir, ese texto falta en el
+        MP3 final, y el error lo dice).
+
+        Returns:
+            (archivos_generados, errores, carpeta_destino)
+        """
+        self._abortar = False
+        self._velocidad = max(0, min(100, int(velocidad)))
+        self._volumen = max(0, min(100, int(volumen)))
+        self._cargar_config()
+        lote = [(nombre, self._aplicar_diccionario(frags)) for nombre, frags in lote]
+
+        # Los audios van directamente en Grabaciones_Epub-TTS/<Título>/ (el
+        # título es el nombre de la carpeta de origen salvo que se cambie),
+        # para que el destino refleje la carpeta de TXT tal cual.
+        subcarpeta = self.obtener_carpeta_libro(titulo_libro)
+        titulo_limpio = limpiar_nombre_archivo(titulo_libro) or "Sin_Titulo"
+        if unir:
+            # Cada TXT se graba primero aquí y luego se une en el MP3 final.
+            carpeta_trabajo = tempfile.mkdtemp(prefix="tfh_lote_")
+        else:
+            carpeta_trabajo = subcarpeta
+        self._ultima_carpeta = subcarpeta
+
+        archivos_generados, errores = [], []
+        total = len(lote)
+        try:
+            for i, (nombre_base, fragmentos) in enumerate(lote):
+                if self._abortar:
+                    logger.info("[GrabadorAudio] Grabación de carpeta abortada.")
+                    break
+
+                if self.callback_progreso:
+                    voces = []
+                    for etiqueta, _texto_sin_usar in fragmentos:
+                        datos_voz = asignaciones_voz.get(etiqueta)
+                        nombre_voz = datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz'
+                        if nombre_voz not in voces:
+                            voces.append(nombre_voz)
+                    self.callback_progreso(i + 1, total, nombre_base, ", ".join(voces))
+
+                if unir:
+                    # Numerado para que el orden de unión no dependa del nombre.
+                    nombre_salida = f"{i + 1:04d}"
+                else:
+                    nombre_salida = limpiar_nombre_archivo(nombre_base) or f"{i + 1}"
+                try:
+                    generados, errores_archivo = self._grabar_modo_unico(
+                        fragmentos, asignaciones_voz, carpeta_trabajo, nombre_salida,
+                        len(fragmentos), avisar_progreso=False,
+                    )
+                except Exception as e:
+                    logger.exception("[GrabadorAudio] Fallo al grabar '%s' del lote", nombre_base)
+                    generados, errores_archivo = [], [str(e)]
+                archivos_generados.extend(generados)
+                errores.extend(f"{nombre_base}: {error}" for error in errores_archivo)
+
+            if unir:
+                partes = [a for a in archivos_generados if os.path.exists(a) and os.path.getsize(a) > 0]
+                archivos_generados = []
+                # Abortar descarta el MP3 unido, igual que en grabar_fragmentos():
+                # un audio con solo parte de los textos parecería completo.
+                if partes and not self._abortar:
+                    ruta_final = os.path.join(subcarpeta, f"{titulo_limpio}.mp3")
+                    self._concatenar_audios(partes, ruta_final, pausa_ms=self.PAUSA_ENTRE_ARCHIVOS_MS)
+                    archivos_generados.append(ruta_final)
+        finally:
+            self.cerrar()
+            if unir:
+                try:
+                    shutil.rmtree(carpeta_trabajo)
+                except OSError:
+                    logger.exception("[GrabadorAudio] No se pudo borrar la carpeta temporal '%s'", carpeta_trabajo)
+        return archivos_generados, errores, subcarpeta
+    # ANCLAJE_FIN: GRABACION_LOTE_CARPETA
 
     # ------------------------------------------------------------------ #
     # Modos de grabación
@@ -287,8 +415,11 @@ class GrabadorAudio:
         return archivos_generados, errores
 
     def _grabar_modo_unico(
-        self, fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total
+        self, fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total,
+        avisar_progreso=True,
     ):
+        # avisar_progreso=False: grabar_lote() ya avisa una vez por archivo,
+        # no por cada fragmento de dentro.
         archivos_generados, errores = [], []
         archivos_temp = []
 
@@ -301,7 +432,7 @@ class GrabadorAudio:
                 datos_voz  = asignaciones_voz.get(etiqueta)
                 nombre_voz = datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz'
 
-                if self.callback_progreso:
+                if self.callback_progreso and avisar_progreso:
                     self.callback_progreso(i + 1, total, etiqueta, nombre_voz)
 
                 fd, ruta_temp = tempfile.mkstemp(suffix='.mp3', prefix=f'tfh_{i:03d}_')
@@ -599,13 +730,18 @@ class GrabadorAudio:
             logger.debug("[GrabadorAudio] No se pudo recortar silencio de un trozo; se usa sin recortar.")
         return segmento
 
-    def _concatenar_audios(self, archivos: list, ruta_salida: str, proveedor=None):
+    def _concatenar_audios(self, archivos: list, ruta_salida: str, proveedor=None, pausa_ms=0):
         """
         Une varios MP3 en uno solo.
         Intenta pydub+ffmpeg (320k, preserva sample rate).
         Si ffmpeg no está disponible, concatena bytes crudos como fallback.
         Los archivos MP3 son secuencias de frames: la concatenación directa
         de bytes produce un archivo válido y reproducible.
+
+        pausa_ms: silencio que se intercala entre archivo y archivo (solo
+        con pydub; el respaldo de bytes crudos los une sin pausa). Cada
+        trozo llega con el silencio de sus extremos recortado, así que sin
+        él dos textos independientes quedarían pegados uno al otro.
         """
         archivos_validos = [
             a for a in archivos
@@ -641,7 +777,18 @@ class GrabadorAudio:
 
             if segmentos:
                 combined = segmentos[0]
+                # Mismo formato que el audio (44 100 Hz mono y misma
+                # profundidad de bits), por el mismo motivo que la
+                # normalización de cada trozo más arriba.
+                silencio = (
+                    AudioSegment.silent(duration=pausa_ms, frame_rate=44100)
+                    .set_channels(1)
+                    .set_sample_width(combined.sample_width)
+                    if pausa_ms > 0 else None
+                )
                 for seg in segmentos[1:]:
+                    if silencio is not None:
+                        combined += silencio
                     combined += seg
                 combined.export(ruta_salida, format='mp3', bitrate='320k')
                 logger.info(
@@ -718,7 +865,13 @@ class GrabadorAudio:
         if not key or not region:
             raise Exception("Credenciales de Azure no configuradas.")
 
+        from app.servicios.cliente_azure import resolver_idioma_ssml
+        # Mismo criterio que la lectura en voz alta ("Detectar auto" → el
+        # idioma de la propia voz), escapado igual que el texto porque llega
+        # de ajustes.json y va dentro de un atributo del SSML.
+        idioma = self._limpiar_xml(resolver_idioma_ssml(idioma, datos_voz))
         id_voz = datos_voz.get('id') if isinstance(datos_voz, dict) else str(datos_voz)
+        id_voz = self._limpiar_xml(id_voz or "")
         texto_limpio = self._limpiar_xml(texto)
         tasa      = self._velocidad_a_tasa_ssml(self._velocidad)
         nivel_vol = self._volumen_a_nivel_ssml(self._volumen)
@@ -1442,13 +1595,21 @@ class GrabadorAudio:
     # Previsualización de voz (con altavoces)
     # ------------------------------------------------------------------ #
 
+    # ANCLAJE_INICIO: PROBAR_VOZ_ALTAVOCES
     def probar_voz(self, datos_voz: dict):
-        """Reproduce una muestra de la voz por los altavoces (previsualización)."""
+        """
+        Reproduce una muestra de la voz por los altavoces (previsualización).
+
+        Se llama desde un hilo secundario y no vuelve hasta que la muestra
+        termina de sonar, para que quien llama sepa cuándo puede lanzar la
+        siguiente (la preescucha general las encadena una tras otra).
+        """
         texto_prueba = "Hola. Esta es una prueba de voz para Epub-TTS."
         proveedor = (
             datos_voz.get('proveedor_id', 'local').lower()
             if isinstance(datos_voz, dict) else 'local'
         )
+        nombre = datos_voz.get('nombre', '') if isinstance(datos_voz, dict) else ''
 
         try:
             if 'azure' in proveedor:
@@ -1463,14 +1624,58 @@ class GrabadorAudio:
                 from app.servicios.cliente_polly import ClientePolly
                 ClientePolly().hablar(texto_prueba, datos_voz)
 
+            elif 'deepgram' in proveedor:
+                from app.servicios.cliente_deepgram import ClienteDeepgram
+                ClienteDeepgram().hablar(texto_prueba, datos_voz)
+
+            elif proveedor == 'local_32':
+                self._probar_voz_sapi5_32(texto_prueba, nombre)
+
             else:
-                from app.servicios.cliente_sapi5 import ClienteSapi5
-                cliente = ClienteSapi5()
-                if isinstance(datos_voz, dict):
-                    nombre = datos_voz.get('nombre', '')
-                    if nombre:
-                        cliente.cambiar_voz_por_nombre(nombre)
-                cliente.hablar(texto_prueba)
+                self._probar_voz_sapi5(texto_prueba, nombre)
 
         except Exception as e:
             raise Exception(f"Error al probar voz ({proveedor}): {e}")
+
+    def _probar_voz_sapi5(self, texto: str, nombre: str):
+        """
+        SAPI5 de 64 bits desde un hilo secundario. Antes se creaba el objeto
+        COM en este hilo sin inicializar COM (fallaba y la muestra no sonaba,
+        sin ningún aviso) y se hablaba en modo asíncrono, así que aunque
+        llegara a crearse se destruía al salir del método y cortaba la voz.
+        """
+        import comtypes
+        from app.servicios.cliente_sapi5 import ClienteSapi5, SPF_IS_NOT_XML
+        comtypes.CoInitialize()
+        try:
+            cliente = ClienteSapi5()
+            if not cliente.conectado:
+                raise Exception("no se pudo iniciar el motor SAPI5")
+            if nombre:
+                cliente.cambiar_voz_por_nombre(nombre)
+            # Sin SPF_ASYNC: Speak() no vuelve hasta terminar de hablar.
+            cliente.motor.Speak(texto, SPF_IS_NOT_XML)
+            del cliente
+        finally:
+            comtypes.CoUninitialize()
+
+    def _probar_voz_sapi5_32(self, texto: str, nombre: str):
+        """
+        SAPI5 de 32 bits (Eloquence, RealSpeak...): solo suenan a través del
+        proceso puente. Antes se intentaban con el motor de 64 bits, que no
+        las encuentra, y la muestra no sonaba.
+        """
+        from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
+        puente = ClienteSapi32Bridge()
+        try:
+            if not puente.conectado:
+                raise Exception("auxiliar_sapi32.exe no disponible")
+            if nombre:
+                puente.cambiar_voz_por_nombre(nombre)
+            terminado = threading.Event()
+            puente.hablar_con_callback(texto, 0, lambda pos: None, terminado.set)
+            if not terminado.wait(timeout=30.0):
+                logger.warning("[GrabadorAudio] La muestra de voz de 32 bits no terminó a tiempo")
+        finally:
+            puente.cerrar()
+    # ANCLAJE_FIN: PROBAR_VOZ_ALTAVOCES

@@ -1282,6 +1282,500 @@ class TestPersistenciaJsonAtomica(unittest.TestCase):
         self.assertTrue(os.path.exists(self.ruta_perfiles + ".tmp"))
 
 
+class TestReproductorVozPuente32Bits(unittest.TestCase):
+    """
+    El puente de 32 bits lanza un proceso auxiliar y espera a que responda:
+    crear un ReproductorVoz (uno por pestaña o panel con botón de escucha)
+    no debe lanzarlo, solo usarlo de verdad.
+    """
+
+    _MODULOS_MOCKEADOS = (
+        "wx",
+        "app.servicios.cliente_sapi5",
+        "app.servicios.cliente_sapi32_bridge",
+        "app.servicios.cliente_azure",
+        "app.servicios.cliente_eleven",
+        "app.servicios.cliente_polly",
+        "app.servicios.cliente_deepgram",
+        "app.motor.control_cuota",
+        "app.motor.reproductor_sonidos",
+    )
+
+    def setUp(self):
+        sys.modules.pop("app.motor.reproductor_voz", None)
+        self.mocks = {nombre: MagicMock() for nombre in self._MODULOS_MOCKEADOS}
+        patcher_mods = patch.dict("sys.modules", self.mocks)
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        from app.motor.reproductor_voz import ReproductorVoz
+        self.ReproductorVoz = ReproductorVoz
+        self.clase_puente = self.mocks["app.servicios.cliente_sapi32_bridge"].ClienteSapi32Bridge
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.reproductor_voz", None)
+
+    def test_crear_reproductor_no_lanza_el_puente(self):
+        self.ReproductorVoz()
+        self.ReproductorVoz()
+        self.clase_puente.assert_not_called()
+
+    def test_detener_no_lanza_el_puente(self):
+        reproductor = self.ReproductorVoz()
+        reproductor.detener()
+        self.clase_puente.assert_not_called()
+
+    def test_puente_se_crea_una_sola_vez_al_usarlo(self):
+        reproductor = self.ReproductorVoz()
+        primero = reproductor.cliente_local_32
+        segundo = reproductor.cliente_local_32
+        self.assertIs(primero, segundo)
+        self.clase_puente.assert_called_once()
+
+    def test_detener_tambien_para_la_voz_de_32_bits(self):
+        reproductor = self.ReproductorVoz()
+        puente = reproductor.cliente_local_32
+        reproductor.detener()
+        puente.detener.assert_called_once()
+
+
+class TestCatalogoVocesLocales(unittest.TestCase):
+    """Las voces locales se enumeran una sola vez por sesión y se reparten como copias."""
+
+    def setUp(self):
+        sys.modules.pop("app.motor.catalogo_voces_locales", None)
+        self.mock_sapi5 = MagicMock()
+        self.mock_puente = MagicMock()
+        self.mock_sapi5.ClienteSapi5.return_value.obtener_voces.return_value = [
+            {"id": "voz64", "nombre": "Helena", "proveedor_id": "local"},
+        ]
+        puente = self.mock_puente.ClienteSapi32Bridge.return_value
+        puente.conectado = True
+        puente.obtener_voces.return_value = [
+            {"id": "voz32", "nombre": "Eloquence", "proveedor_id": "local_32"},
+        ]
+        patcher_mods = patch.dict("sys.modules", {
+            "app.servicios.cliente_sapi5": self.mock_sapi5,
+            "app.servicios.cliente_sapi32_bridge": self.mock_puente,
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        self.catalogo = importlib.import_module("app.motor.catalogo_voces_locales")
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.catalogo_voces_locales", None)
+
+    def test_enumera_una_sola_vez(self):
+        for _sin_usar in range(3):
+            self.catalogo.obtener_voces_sapi5_64()
+            self.catalogo.obtener_voces_sapi5_32()
+        self.mock_sapi5.ClienteSapi5.assert_called_once()
+        self.mock_puente.ClienteSapi32Bridge.assert_called_once()
+
+    def test_el_puente_se_cierra_tras_listar(self):
+        self.catalogo.obtener_voces_sapi5_32()
+        self.mock_puente.ClienteSapi32Bridge.return_value.cerrar.assert_called_once()
+
+    def test_devuelve_copias_que_no_ensucian_el_catalogo(self):
+        voces = self.catalogo.obtener_voces_sapi5_64()
+        voces[0]["es_nueva"] = True
+        voces.append({"id": "otra"})
+        otra_vez = self.catalogo.obtener_voces_sapi5_64()
+        self.assertEqual(len(otra_vez), 1)
+        self.assertNotIn("es_nueva", otra_vez[0])
+
+    def test_sin_puente_devuelve_lista_vacia(self):
+        self.mock_puente.ClienteSapi32Bridge.return_value.conectado = False
+        self.assertEqual(self.catalogo.obtener_voces_sapi5_32(), [])
+
+    def test_invalidar_vuelve_a_enumerar(self):
+        self.catalogo.obtener_voces_sapi5_64()
+        self.catalogo.invalidar_catalogo()
+        self.catalogo.obtener_voces_sapi5_64()
+        self.assertEqual(self.mock_sapi5.ClienteSapi5.call_count, 2)
+
+
+class TestTurnoReproduccionNube(unittest.TestCase):
+    """
+    Una muestra detenida cuya respuesta de la API llega tarde no debe sonar
+    encima de la muestra siguiente del mismo cliente.
+    """
+
+    def setUp(self):
+        sys.modules.pop("app.servicios.cliente_azure", None)
+        self.mock_sd = MagicMock()
+        patcher_mods = patch.dict("sys.modules", {
+            "sounddevice": self.mock_sd,
+            "soundfile": MagicMock(),
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        from app.servicios.cliente_azure import ClienteAzure
+        self.cliente = ClienteAzure()
+
+    def tearDown(self):
+        sys.modules.pop("app.servicios.cliente_azure", None)
+
+    def test_respuesta_tardia_no_se_reproduce(self):
+        import threading
+        liberar_primera = threading.Event()
+        primera_en_api = threading.Event()
+
+        def api_simulada(texto, datos_voz):
+            if texto == "primera":
+                primera_en_api.set()
+                liberar_primera.wait(timeout=5)
+            return ("audio_" + texto, 24000)
+
+        with patch.object(self.cliente, "_llamar_api", side_effect=api_simulada):
+            hilo = threading.Thread(target=self.cliente.hablar, args=("primera", {"id": "a"}))
+            hilo.start()
+            self.assertTrue(primera_en_api.wait(timeout=5))
+            self.cliente.detener()
+            self.cliente.hablar("segunda", {"id": "b"})
+            liberar_primera.set()
+            hilo.join(timeout=5)
+
+        reproducidos = [llamada.args[0] for llamada in self.mock_sd.play.call_args_list]
+        self.assertEqual(reproducidos, ["audio_segunda"])
+
+
+class TestEsperaHiloSapi5(unittest.TestCase):
+    """detener() espera a que el hilo de párrafos salga antes de devolver el control."""
+
+    def setUp(self):
+        sys.modules.pop("app.servicios.cliente_sapi5", None)
+        self.mock_comtypes = MagicMock()
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "comtypes": self.mock_comtypes,
+            "comtypes.client": self.mock_comtypes.client,
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        from app.servicios.cliente_sapi5 import ClienteSapi5
+        self.cliente = ClienteSapi5()
+
+    def tearDown(self):
+        sys.modules.pop("app.servicios.cliente_sapi5", None)
+
+    def test_detener_espera_al_hilo_de_parrafos(self):
+        import time
+        # WaitUntilDone nunca termina el párrafo: solo la cancelación saca al hilo.
+        self.cliente.motor.WaitUntilDone.side_effect = lambda ms: time.sleep(ms / 1000) or False
+        self.cliente.hablar_con_callback("párrafo", 0, lambda pos: None, lambda: None)
+        time.sleep(0.15)
+        hilo = self.cliente._hilo_parrafos_activo
+        self.assertTrue(hilo.is_alive())
+        self.cliente.detener()
+        self.assertFalse(hilo.is_alive())
+
+
+class TestLoteCarpetaTxt(unittest.TestCase):
+    """Preparación de una carpeta de TXT para grabar un MP3 por archivo."""
+
+    def setUp(self):
+        from app.motor import procesador_etiquetas
+        self.pe = procesador_etiquetas
+        self.carpeta = tempfile.mkdtemp()
+
+    def _escribir(self, nombre, contenido: bytes):
+        with open(os.path.join(self.carpeta, nombre), "wb") as f:
+            f.write(contenido)
+
+    def test_orden_natural_y_solo_txt(self):
+        self._escribir("H10 diez.txt", "diez".encode("utf-8"))
+        self._escribir("H2 dos.txt", "dos".encode("utf-8"))
+        self._escribir("h06 seis.TXT", "seis".encode("utf-8"))
+        self._escribir("notas.md", "no".encode("utf-8"))
+        os.mkdir(os.path.join(self.carpeta, "sub.txt"))
+        lote, omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual([nombre for nombre, _f in lote], ["H2 dos", "h06 seis", "H10 diez"])
+        self.assertEqual(omitidos, [])
+
+    def test_sin_etiquetas_todo_el_texto_va_al_narrador(self):
+        self._escribir("uno.txt", "Primera línea,\n\nsegunda línea.".encode("utf-8"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(lote[0][1], [("narrador", "Primera línea,\n\nsegunda línea.")])
+
+    def test_bom_del_bloc_de_notas_no_llega_a_la_voz(self):
+        self._escribir("bom.txt", "\ufeffHola".encode("utf-8"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(lote[0][1], [("narrador", "Hola")])
+
+    def test_ansi_de_windows_se_lee_bien(self):
+        self._escribir("ansi.txt", "Canción".encode("cp1252"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(lote[0][1], [("narrador", "Canción")])
+
+    def test_vacios_se_omiten_con_su_motivo(self):
+        self._escribir("vacio.txt", b"  \n ")
+        self._escribir("lleno.txt", "texto".encode("utf-8"))
+        lote, omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual([nombre for nombre, _f in lote], ["lleno"])
+        self.assertEqual(omitidos, [("vacio.txt", self.pe.MOTIVO_VACIO)])
+
+    def test_etiquetas_del_lote_sin_repetir_y_en_orden(self):
+        self._escribir("1.txt", "sin etiquetas".encode("utf-8"))
+        self._escribir("2.txt", "{{@narrador}}a{{@rey}}b".encode("utf-8"))
+        self._escribir("3.txt", "{{@Reina}}c{{@rey}}d".encode("utf-8"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(self.pe.etiquetas_de_lote(lote), ["narrador", "rey", "reina"])
+
+
+class TestGrabadorLoteCarpeta(unittest.TestCase):
+    """grabar_lote(): un MP3 por archivo, un fallo no detiene el resto."""
+
+    def setUp(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "app.motor.control_cuota": MagicMock(),
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        modulo = importlib.import_module("app.motor.grabador_audio")
+        self.carpeta = tempfile.mkdtemp()
+        self.avisos = []
+        self.grabador = modulo.GrabadorAudio(
+            callback_progreso=lambda *args: self.avisos.append(args)
+        )
+        self.grabador._cargar_config = lambda: None
+        self.grabador.obtener_carpeta_libro = lambda titulo: self.carpeta
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+
+    def _modo_unico_simulado(self, fallar_en=()):
+        llamadas = []
+
+        def simulado(fragmentos, asignaciones, subcarpeta, nombre, total, avisar_progreso=True):
+            llamadas.append((nombre, avisar_progreso))
+            if nombre in fallar_en:
+                raise RuntimeError("fallo simulado")
+            ruta = os.path.join(subcarpeta, nombre + ".mp3")
+            with open(ruta, "wb") as f:
+                f.write(b"mp3")
+            return [ruta], []
+        return simulado, llamadas
+
+    def test_un_mp3_por_archivo_con_su_nombre(self):
+        simulado, llamadas = self._modo_unico_simulado()
+        self.grabador._grabar_modo_unico = simulado
+        lote = [("H06 Uno", [("narrador", "a")]), ("H07 Dos", [("narrador", "b")])]
+        voz = {"nombre": "Lucía", "proveedor_id": "polly"}
+        archivos, errores, carpeta = self.grabador.grabar_lote(lote, {"narrador": voz}, "Mi lote")
+        self.assertEqual([os.path.basename(a) for a in archivos], ["H06 Uno.mp3", "H07 Dos.mp3"])
+        self.assertEqual(errores, [])
+        self.assertEqual(carpeta, self.carpeta)
+        self.assertEqual([aviso[:3] for aviso in self.avisos], [(1, 2, "H06 Uno"), (2, 2, "H07 Dos")])
+        self.assertEqual(self.avisos[0][3], "Lucía")
+        # Sin avisos por fragmento: el lote ya avisa una vez por archivo.
+        self.assertTrue(all(not avisar for _n, avisar in llamadas))
+
+    def test_un_archivo_que_falla_no_detiene_los_demas(self):
+        simulado, _llamadas = self._modo_unico_simulado(fallar_en=("B",))
+        self.grabador._grabar_modo_unico = simulado
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")]), ("C", [("narrador", "c")])]
+        archivos, errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote")
+        self.assertEqual([os.path.basename(a) for a in archivos], ["A.mp3", "C.mp3"])
+        self.assertEqual(errores, ["B: fallo simulado"])
+
+    def _unir_simulado(self):
+        uniones = []
+
+        def concatenar(partes, ruta_salida, proveedor=None, pausa_ms=0):
+            uniones.append(([os.path.basename(p) for p in partes], pausa_ms))
+            with open(ruta_salida, "wb") as f:
+                f.write(b"unido")
+        self.grabador._concatenar_audios = concatenar
+        return uniones
+
+    def test_unir_crea_un_solo_mp3_con_el_titulo(self):
+        simulado, _llamadas = self._modo_unico_simulado()
+        self.grabador._grabar_modo_unico = simulado
+        uniones = self._unir_simulado()
+        lote = [("zeta", [("narrador", "a")]), ("alfa", [("narrador", "b")])]
+        archivos, errores, carpeta = self.grabador.grabar_lote(lote, {}, "Mi colección", unir=True)
+        self.assertEqual(errores, [])
+        self.assertEqual(carpeta, self.carpeta)
+        self.assertEqual(archivos, [os.path.join(carpeta, "Mi colección.mp3")])
+        # Se unen en el orden del lote, no por nombre, con la pausa entre textos.
+        self.assertEqual(uniones, [(["0001.mp3", "0002.mp3"], self.grabador.PAUSA_ENTRE_ARCHIVOS_MS)])
+
+    def test_unir_borra_los_audios_intermedios(self):
+        carpetas_trabajo = []
+        simulado, _llamadas = self._modo_unico_simulado()
+
+        def simulado_anotando(fragmentos, asignaciones, subcarpeta, *args, **kwargs):
+            carpetas_trabajo.append(subcarpeta)
+            return simulado(fragmentos, asignaciones, subcarpeta, *args, **kwargs)
+        self.grabador._grabar_modo_unico = simulado_anotando
+        self._unir_simulado()
+        self.grabador.grabar_lote([("a", [("narrador", "a")])], {}, "Lote", unir=True)
+        self.assertFalse(os.path.exists(carpetas_trabajo[0]))
+
+    def test_unir_sin_el_archivo_que_falla_y_con_su_error(self):
+        simulado, _llamadas = self._modo_unico_simulado(fallar_en=("0002",))
+        self.grabador._grabar_modo_unico = simulado
+        uniones = self._unir_simulado()
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")]), ("C", [("narrador", "c")])]
+        archivos, errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote", unir=True)
+        self.assertEqual(len(archivos), 1)
+        self.assertEqual(uniones[0][0], ["0001.mp3", "0003.mp3"])
+        self.assertEqual(errores, ["B: fallo simulado"])
+
+    def test_unir_y_abortar_no_deja_un_mp3_a_medias(self):
+        simulado, _llamadas = self._modo_unico_simulado()
+
+        def simulado_y_abortar(*args, **kwargs):
+            resultado = simulado(*args, **kwargs)
+            self.grabador.abortar()
+            return resultado
+        self.grabador._grabar_modo_unico = simulado_y_abortar
+        uniones = self._unir_simulado()
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")])]
+        archivos, _errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote", unir=True)
+        self.assertEqual(archivos, [])
+        self.assertEqual(uniones, [])
+
+    def test_el_diccionario_de_pronunciacion_se_aplica_al_grabar(self):
+        textos_grabados = []
+
+        def simulado(fragmentos, asignaciones, subcarpeta, nombre, total, avisar_progreso=True):
+            textos_grabados.extend(texto for _etiqueta, texto in fragmentos)
+            return [], []
+        self.grabador._grabar_modo_unico = simulado
+        diccionario = MagicMock()
+        diccionario.aplicar.side_effect = lambda texto: texto.replace("wifi", "güifi")
+        with patch("app.motor.limpiador_lectura._obtener_diccionario", return_value=diccionario):
+            self.grabador.grabar_lote([("a", [("narrador", "Conecta el wifi.")])], {}, "Lote")
+        self.assertEqual(textos_grabados, ["Conecta el güifi."])
+
+    def test_abortar_para_antes_del_siguiente_archivo(self):
+        simulado, llamadas = self._modo_unico_simulado()
+
+        def simulado_y_abortar(*args, **kwargs):
+            resultado = simulado(*args, **kwargs)
+            self.grabador.abortar()
+            return resultado
+        self.grabador._grabar_modo_unico = simulado_y_abortar
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")])]
+        archivos, _errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote")
+        self.assertEqual([os.path.basename(a) for a in archivos], ["A.mp3"])
+        self.assertEqual(len(llamadas), 1)
+
+
+class TestProbarVozGrabador(unittest.TestCase):
+    """probar_voz(): cada proveedor por su camino, y sin volver hasta que suena."""
+
+    def setUp(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+        self.mock_comtypes = MagicMock()
+        self.mock_sapi5 = MagicMock()
+        self.mock_sapi5.SPF_IS_NOT_XML = 8
+        self.mock_puente = MagicMock()
+        self.mock_deepgram = MagicMock()
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "app.motor.control_cuota": MagicMock(),
+            "comtypes": self.mock_comtypes,
+            "app.servicios.cliente_sapi5": self.mock_sapi5,
+            "app.servicios.cliente_sapi32_bridge": self.mock_puente,
+            "app.servicios.cliente_deepgram": self.mock_deepgram,
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        self.grabador = importlib.import_module("app.motor.grabador_audio").GrabadorAudio()
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+
+    def test_deepgram_tiene_su_propio_camino(self):
+        voz = {"nombre": "Aura", "proveedor_id": "deepgram"}
+        self.grabador.probar_voz(voz)
+        self.mock_deepgram.ClienteDeepgram.return_value.hablar.assert_called_once()
+        self.mock_sapi5.ClienteSapi5.assert_not_called()
+
+    def test_sapi5_inicializa_com_y_habla_sin_modo_asincrono(self):
+        cliente = self.mock_sapi5.ClienteSapi5.return_value
+        cliente.conectado = True
+        self.grabador.probar_voz({"nombre": "Helena", "proveedor_id": "local"})
+        self.mock_comtypes.CoInitialize.assert_called_once()
+        self.mock_comtypes.CoUninitialize.assert_called_once()
+        cliente.cambiar_voz_por_nombre.assert_called_once_with("Helena")
+        texto, banderas = cliente.motor.Speak.call_args.args
+        self.assertEqual(banderas & 1, 0)  # sin SPF_ASYNC
+
+    def test_sapi5_32_bits_usa_el_puente_y_espera_al_final(self):
+        import threading
+        puente = self.mock_puente.ClienteSapi32Bridge.return_value
+        puente.conectado = True
+        orden = []
+
+        def hablar(texto, pos, al_progreso, al_terminar):
+            orden.append("hablar")
+            threading.Timer(0.05, lambda: (orden.append("terminado"), al_terminar())).start()
+        puente.hablar_con_callback.side_effect = hablar
+        puente.cerrar.side_effect = lambda: orden.append("cerrar")
+
+        self.grabador.probar_voz({"nombre": "Eloquence", "proveedor_id": "local_32"})
+        puente.cambiar_voz_por_nombre.assert_called_once_with("Eloquence")
+        self.assertEqual(orden, ["hablar", "terminado", "cerrar"])
+        self.mock_sapi5.ClienteSapi5.assert_not_called()
+
+
+class TestIdiomaSsmlAzure(unittest.TestCase):
+    """xml:lang de Azure: "Detectar auto" no debe llegar tal cual a la voz."""
+
+    def setUp(self):
+        for nombre in ("app.servicios.cliente_azure", "app.motor.grabador_audio"):
+            sys.modules.pop(nombre, None)
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "sounddevice": MagicMock(),
+            "soundfile": MagicMock(),
+            "app.motor.control_cuota": MagicMock(),
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        self.azure = importlib.import_module("app.servicios.cliente_azure")
+        self.grabador_mod = importlib.import_module("app.motor.grabador_audio")
+        self.voz = {"id": "es-ES-VozDePruebaMultilingualNeural", "idioma": "es-ES"}
+
+    def tearDown(self):
+        for nombre in ("app.servicios.cliente_azure", "app.motor.grabador_audio"):
+            sys.modules.pop(nombre, None)
+
+    def test_idiomas_validos_se_respetan(self):
+        for codigo in ("es-ES", "es-MX", "en-US", "es-419"):
+            self.assertEqual(self.azure.resolver_idioma_ssml(codigo, self.voz), codigo)
+
+    def test_detectar_auto_usa_el_idioma_de_la_voz(self):
+        self.assertEqual(self.azure.resolver_idioma_ssml("auto", self.voz), "es-ES")
+        voz_mx = {"id": "es-MX-OtraVozNeural"}
+        self.assertEqual(self.azure.resolver_idioma_ssml("auto", voz_mx), "es-MX")
+
+    def test_sin_idioma_en_el_id_usa_el_campo_idioma_o_espanol(self):
+        self.assertEqual(self.azure.resolver_idioma_ssml("", {"id": "x", "idioma": "en-GB"}), "en-GB")
+        self.assertEqual(self.azure.resolver_idioma_ssml(None, {"id": "x"}), "es-ES")
+
+    def test_la_grabacion_no_envia_auto_a_azure(self):
+        grabador = self.grabador_mod.GrabadorAudio()
+        grabador.config = {"azure": {"key": "k", "region": "westeurope"}, "idioma_libro_codigo": "auto"}
+        grabador._recodificar_mp3_320k = lambda origen, destino: None
+        respuesta = MagicMock(status_code=200, content=b"mp3")
+        with patch.object(self.grabador_mod.requests, "post", return_value=respuesta) as post:
+            grabador._grabar_azure("Hola.", self.voz, os.path.join(tempfile.mkdtemp(), "x.mp3"))
+        ssml = post.call_args.kwargs["data"].decode("utf-8")
+        self.assertNotIn("'auto'", ssml)
+        self.assertIn("xml:lang='es-ES'", ssml)
+        self.assertIn("<lang xml:lang='es-ES'>", ssml)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)

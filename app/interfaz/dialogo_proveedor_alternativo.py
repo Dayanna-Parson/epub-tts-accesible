@@ -387,23 +387,12 @@ class DialogoProveedorAlternativo(wx.Dialog):
         Audiolibros, aquí interesa poder elegir cualquier voz local
         disponible en el sistema en el momento en que falta cuota.
         """
-        voces = []
-        try:
-            from app.servicios.cliente_sapi5 import ClienteSapi5
-            voces.extend(ClienteSapi5().obtener_voces())
-        except Exception:
-            logger.exception("[DialogoProveedorAlternativo] Error al cargar voces SAPI5 de 64 bits")
-        try:
-            from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
-            bridge = ClienteSapi32Bridge()
-            if bridge.conectado:
-                ids_existentes = {v.get("id") for v in voces}
-                for v in bridge.obtener_voces():
-                    if v.get("id") not in ids_existentes:
-                        voces.append(v)
-                bridge.cerrar()
-        except Exception:
-            logger.exception("[DialogoProveedorAlternativo] Error al cargar voces SAPI5 de 32 bits")
+        from app.motor.catalogo_voces_locales import obtener_voces_sapi5_64, obtener_voces_sapi5_32
+        voces = obtener_voces_sapi5_64()
+        ids_existentes = {v.get("id") for v in voces}
+        for v in obtener_voces_sapi5_32():
+            if v.get("id") not in ids_existentes:
+                voces.append(v)
 
         self._voces_locales = voces
         if voces:

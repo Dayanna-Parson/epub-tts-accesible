@@ -4,7 +4,6 @@ import sys
 import os
 import traceback
 import threading
-import wx
 
 # ── Directorio raíz del proyecto ─────────────────────────────────────────────
 _RAIZ = os.path.dirname(os.path.abspath(__file__))
@@ -102,6 +101,32 @@ logging.basicConfig(
 # comtypes genera líneas INFO muy ruidosas sobre su caché interna — silenciar en archivo
 logging.getLogger("comtypes").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
+
+# ANCLAJE_INICIO: MODO_AUXILIAR_HABLAR_INTERNO
+# AnunciadorVoz (app/motor/anunciador_voz.py) relanza este mismo punto de
+# entrada como subproceso para verbalizar un texto puntual con pyttsx3,
+# en vez de asumir que sys.executable es siempre un intérprete de Python
+# real — esa suposición se rompe en el build congelado con PyInstaller,
+# donde sys.executable es el propio epubtts.exe. Interceptarlo aquí,
+# antes de levantar wx, funciona igual en desarrollo y en el portable.
+# Va justo después de configurar el logging y antes de todo lo demás
+# (migración de configuración, limpieza de temporales, importar wx y la
+# ventana principal con todas sus pestañas): cada anuncio de progreso
+# lanza un proceso nuevo, y repetir ese arranque completo en cada uno
+# retrasaba la voz varios segundos y competía por los mismos archivos de
+# configuración que la app principal.
+if __name__ == "__main__" and len(sys.argv) >= 3 and sys.argv[1] == "--hablar-interno":
+    try:
+        import pyttsx3
+        motor = pyttsx3.init()
+        motor.say(sys.argv[2])
+        motor.runAndWait()
+    except Exception:
+        # El logging ya está configurado justo encima (basicConfig), así
+        # que logger.exception es seguro aquí.
+        logger.exception("Fallo al verbalizar texto en modo --hablar-interno")
+    sys.exit(0)
+# ANCLAJE_FIN: MODO_AUXILIAR_HABLAR_INTERNO
 
 # ── Migración de archivos de configuración ────────────────────────────────────
 try:
@@ -230,6 +255,8 @@ sys.excepthook        = _manejador_excepcion_global
 threading.excepthook  = _manejador_excepcion_hilo
 
 # ── Importación de la ventana principal ───────────────────────────────────────
+import wx
+
 try:
     from app.interfaz.ventana_principal import VentanaPrincipal
 except ImportError as e:
@@ -260,27 +287,6 @@ class EpubTTSApp(wx.App):
 
 
 if __name__ == "__main__":
-    # ANCLAJE_INICIO: MODO_AUXILIAR_HABLAR_INTERNO
-    # AnunciadorVoz (app/motor/anunciador_voz.py) relanza este mismo punto de
-    # entrada como subproceso para verbalizar un texto puntual con pyttsx3,
-    # en vez de asumir que sys.executable es siempre un intérprete de Python
-    # real — esa suposición se rompe en el build congelado con PyInstaller,
-    # donde sys.executable es el propio epubtts.exe. Interceptarlo aquí,
-    # antes de levantar wx, funciona igual en desarrollo y en el portable.
-    if len(sys.argv) >= 3 and sys.argv[1] == "--hablar-interno":
-        try:
-            import pyttsx3
-            motor = pyttsx3.init()
-            motor.say(sys.argv[2])
-            motor.runAndWait()
-        except Exception:
-            # El logging ya está configurado a nivel de módulo (basicConfig
-            # se ejecuta al importar, antes de llegar a este bloque), así
-            # que logger.exception es seguro aquí.
-            logger.exception("Fallo al verbalizar texto en modo --hablar-interno")
-        sys.exit(0)
-    # ANCLAJE_FIN: MODO_AUXILIAR_HABLAR_INTERNO
-
     try:
         app = EpubTTSApp(False)
         app.MainLoop()

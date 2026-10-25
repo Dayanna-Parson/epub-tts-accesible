@@ -878,26 +878,17 @@ class PestanaCreadorAudiolibros(wx.Panel):
                     entrada["proveedor_id"] = proveedor_id
                     resultado.append(entrada)
 
-        try:
-            from app.servicios.cliente_sapi5 import ClienteSapi5
-            for voz in ClienteSapi5().obtener_voces():
-                if voz.get("id") in favoritos:
-                    resultado.append(dict(voz))
-        except Exception:
-            logger.exception("[PestanaCreadorAudiolibros] Error al cargar voces locales SAPI5")
+        # Catálogo compartido: no lanza otra vez auxiliar_sapi32.exe ni
+        # vuelve a recorrer el registro cada vez que cambian las favoritas.
+        from app.motor.catalogo_voces_locales import obtener_voces_sapi5_64, obtener_voces_sapi5_32
+        for voz in obtener_voces_sapi5_64():
+            if voz.get("id") in favoritos:
+                resultado.append(voz)
 
-        try:
-            from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
-            bridge = ClienteSapi32Bridge()
-            if bridge.conectado:
-                for voz in bridge.obtener_voces():
-                    if voz.get("id") in favoritos:
-                        entrada = dict(voz)
-                        entrada.setdefault("proveedor_id", "local_32")
-                        resultado.append(entrada)
-                bridge.cerrar()
-        except Exception:
-            logger.exception("[PestanaCreadorAudiolibros] Error al cargar voces locales SAPI5 de 32 bits")
+        for voz in obtener_voces_sapi5_32():
+            if voz.get("id") in favoritos:
+                voz.setdefault("proveedor_id", "local_32")
+                resultado.append(voz)
 
         return resultado
 

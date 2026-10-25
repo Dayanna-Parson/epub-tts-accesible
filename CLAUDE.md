@@ -69,7 +69,7 @@ app/
 │   ├── pestana_biblioteca.py     # Biblioteca: importar EPUB/PDF, géneros, sagas, buscador
 │   ├── pestana_lectura.py        # Modo Lectura: EPUB/PDF + TTS + marcadores
 │   ├── pestana_creador_audiolibros.py  # Creador de Audiolibros: exportación completa/por capítulos
-│   ├── pestana_grabacion.py      # Grabación de Fragmentos: etiquetas multivoz + exportación
+│   ├── pestana_grabacion.py      # Grabación de Fragmentos: etiquetas multivoz + exportación (un TXT o una carpeta entera)
 │   ├── pestana_ajustes.py        # Ajustes: claves API, voces, atajos, cuota
 │   ├── ventana_proyectos.py      # Gestor de proyectos de Grabación (ventana independiente, no modal)
 │   ├── selector_voz_compartido.py  # ListaVocesCheck + PanelProveedorIA: catálogo de voces reutilizable
@@ -99,6 +99,7 @@ app/
 │   ├── reproductor_voz.py        # Cola TTS asíncrona interactiva. Orquesta todos los motores.
 │   ├── reproductor_sonidos.py    # 14 efectos contextuales (incluye bucle). Caché en RAM.
 │   ├── cliente_nube_voces.py     # Descarga listas de voces desde cada API
+│   ├── catalogo_voces_locales.py # Voces SAPI5 de 64/32 bits enumeradas una vez por sesión y compartidas por todas las pestañas
 │   ├── verificador_voces_nuevas.py  # Detecta voces nuevas con cooldown de 24h
 │   ├── comprobador_actualizaciones.py  # Versioning semver contra GitHub
 │   ├── actualizador_descarga.py  # Fase C: descarga y verifica la versión nueva en temp/actualizacion/
@@ -144,6 +145,7 @@ Archivos de configuración (en `/configuraciones/`):
 | `perfiles.json` | Perfiles de usuario: voz activa, voces favoritas por proveedor, velocidad, volumen, segundos de salto y pausa | Sí |
 | `pronunciacion.json` | Reglas del diccionario de pronunciación | No |
 | `voces_conocidas.json` | IDs de voces ya vistas (historial para filtro «solo nuevas») | No |
+| `requisitos_instalados.txt` | Copia del `requisitos.txt` ya instalado por `INICIAR_APP.bat`; si difiere, el .bat vuelve a ejecutar pip | Sí |
 | `backups_proyectos/` | Copias rotativas (últimas 5) de `proyectos.json` | Sí |
 | `backups_biblioteca/` | Copias rotativas (últimas 5) de `biblioteca.db` | Sí |
 | `asistente_biblioteca/plantillas/*.txt` | Plantillas de prompt del Asistente, una por archivo | Sí |
@@ -321,6 +323,8 @@ Todos los MP3 generados se normalizan a **44 100 Hz mono, 320 kbps**. Es el est�
 Las etiquetas de personaje siguen el formato `{{@nombre}}`. El texto tras cada etiqueta se envía a la voz asignada. Ejemplo: `{{@nar}}Había una vez...{{@james}}¡Buenos días!`
 
 En modo "Dividir por etiquetas", los archivos se nombran `1. Narr.mp3`, `2. James.mp3` (no `001_narr.mp3`).
+
+Con «Cargar carpeta…» (Grabación de Fragmentos) se graba una carpeta entera de TXT. Las etiquetas de todos los archivos comparten un único casting, y los TXT sin etiquetas van enteros a `@narrador` (`preparar_lote_carpeta()` en `procesador_etiquetas.py`, `grabar_lote()` en `grabador_audio.py`). El título se rellena siempre con el nombre de la carpeta de origen, y los audios van directamente en `Grabaciones_Epub-TTS/<Título>/`. En este modo la casilla «Dividir» pasa a ser «Dividir por archivos»: marcada, un MP3 por TXT, llamado igual que el TXT; desmarcada, un único `<Título>.mp3` con todos los TXT en orden, separados por `PAUSA_ENTRE_ARCHIVOS_MS` (1,5 s). Grabación de Fragmentos (un TXT o una carpeta) aplica el diccionario de pronunciación global a cada fragmento al grabar (`_aplicar_diccionario()` en `grabador_audio.py`), porque los TXT no pasan por `limpiar_para_lectura()`. La pausa solo se inserta con pydub; en Python 3.13+ pydub necesita además `audioop-lts`, que `requisitos.txt` instala solo en esas versiones.
 
 Los audiolibros generados desde el Creador de Audiolibros van en `Grabaciones_Epub-TTS/Audiolibros/<Título>/` (o `Audiolibros/<Saga>/<Título>/` si el libro tiene alguna etiqueta en Biblioteca), separados de las carpetas de Grabación de Fragmentos. En modo "Libro completo" el archivo es `<Título>.mp3`; en "Por capítulos", `1. Capítulo uno.mp3`, `2. ...`. Si una exportación se corta por cuota o corte de conexión, la continuación se numera como parte: `<Título> (parte 2).mp3` (o `... (parte 2 - pendiente).mp3` si vuelve a cortarse).
 

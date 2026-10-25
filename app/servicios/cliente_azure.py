@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 import requests
 import sounddevice as sd
@@ -11,6 +12,37 @@ logger = logging.getLogger(__name__)
 _MAX_CACHE = 5  # Máximo de fragmentos de audio en caché por cliente
 
 
+# ANCLAJE_INICIO: IDIOMA_SSML_AZURE
+# Un código de idioma válido para xml:lang (es-ES, es-MX, en-US, es-419...).
+_PATRON_IDIOMA_SSML = re.compile(r'^[a-z]{2,3}-[A-Za-z0-9]{2,4}$')
+# Los ids de voz de Azure empiezan por su idioma: es-ES-ArabellaMultilingualNeural.
+_PATRON_IDIOMA_EN_ID_VOZ = re.compile(r'^([a-z]{2,3}-[A-Z]{2})-')
+
+
+def resolver_idioma_ssml(idioma_configurado, datos_voz) -> str:
+    """
+    Idioma que se envía a Azure en xml:lang (en <speak> y en <lang>), tanto
+    al leer como al grabar.
+
+    idioma_libro_codigo (Ajustes → Idioma del libro) puede valer "auto"
+    ("Detectar auto"), que no es un idioma: enviarlo tal cual dejaba a las
+    voces multilingües decidir solas el idioma de cada frase, y se colaban
+    palabras pronunciadas en otro idioma. En ese caso, o con cualquier valor
+    que no sea un código válido, se usa el idioma de la propia voz.
+    """
+    idioma = str(idioma_configurado or "").strip()
+    if _PATRON_IDIOMA_SSML.match(idioma):
+        return idioma
+    id_voz = datos_voz.get("id") if isinstance(datos_voz, dict) else datos_voz
+    coincidencia = _PATRON_IDIOMA_EN_ID_VOZ.match(str(id_voz or ""))
+    if coincidencia:
+        return coincidencia.group(1)
+    if isinstance(datos_voz, dict) and _PATRON_IDIOMA_SSML.match(str(datos_voz.get("idioma", ""))):
+        return datos_voz["idioma"]
+    return "es-ES"
+# ANCLAJE_FIN: IDIOMA_SSML_AZURE
+
+
 class ClienteAzure:
     def __init__(self):
         self.config = {}
@@ -18,6 +50,9 @@ class ClienteAzure:
         self._volumen = 100
         self._sesion = requests.Session()
         self._parado = False
+        # Se incrementa en cada hablar(): una llamada anterior cuya respuesta
+        # HTTP llega tarde no debe sonar encima de la actual.
+        self._turno_reproduccion = 0
         # Buffer proactivo para el siguiente fragmento
         self._audio_preparado = None
         self._texto_preparado = None
@@ -164,6 +199,7 @@ class ClienteAzure:
         else:
             id_voz = datos_voz
 
+        idioma_destino = resolver_idioma_ssml(idioma_destino, datos_voz)
         texto_limpio = self._limpiar_texto_xml(texto)
         # id_voz e idioma_destino se interpolan como atributos del SSML: id_voz
         # viene del catálogo de voces, pero idioma_destino viene de ajustes.json,
@@ -231,6 +267,8 @@ class ClienteAzure:
     def hablar(self, texto, datos_voz):
         """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
+        self._turno_reproduccion += 1
+        turno = self._turno_reproduccion
         clave = self._clave_cache(texto, datos_voz)
 
         if clave in self._cache_frags:
@@ -244,7 +282,11 @@ class ClienteAzure:
             data, fs = self._llamar_api(texto, datos_voz)
             self._guardar_en_cache(clave, data, fs)
 
-        if not self._parado:
+        # Sin la comprobación del turno, al probar varias muestras seguidas
+        # la anterior (detenida, pero aún esperando a la API) recuperaba
+        # _parado = False de la nueva llamada y sonaba solapada con ella,
+        # con dos hilos abriendo a la vez el mismo flujo de sounddevice.
+        if not self._parado and turno == self._turno_reproduccion:
             sd.play(data, fs)
             sd.wait()
             # sd.wait() puede volver antes de que el hardware de audio termine

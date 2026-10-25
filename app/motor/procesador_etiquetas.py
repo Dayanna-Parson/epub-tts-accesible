@@ -9,6 +9,7 @@ presente en el texto (nar, narrador, narradora, narrator…).
 Si el texto no contiene ninguna variante de narrador se usa 'narrador'.
 """
 
+import os
 import re
 
 # Patrón de detección de etiquetas {{@nombre}} — insensible a mayúsculas
@@ -127,3 +128,83 @@ def fragmentar_texto(texto: str) -> list:
         i += 2
 
     return fragmentos
+
+
+# ANCLAJE_INICIO: LOTE_CARPETA_TXT
+# Constante técnica (se compara, no se muestra): la interfaz la traduce.
+MOTIVO_VACIO = "vacio"
+
+
+def _clave_orden_natural(nombre: str) -> list:
+    """
+    Clave de ordenación "natural": los números del nombre se comparan como
+    números ("2. ..." antes que "10. ..."), y el resto, sin distinguir
+    mayúsculas, que es como los ordena el Explorador de Windows.
+    """
+    return [
+        (0, int(trozo), "") if trozo.isdigit() else (1, 0, trozo.lower())
+        for trozo in re.split(r'(\d+)', nombre)
+        if trozo
+    ]
+
+
+def leer_txt_tolerante(ruta: str) -> str:
+    """
+    Lee un TXT probando UTF-8 (con o sin BOM, el del Bloc de notas) y, si
+    no lo es, la codificación ANSI de Windows en español (cp1252). Sin
+    quitar el BOM, la voz leería un carácter invisible al principio.
+    """
+    with open(ruta, 'rb') as f:
+        crudo = f.read()
+    try:
+        return crudo.decode('utf-8-sig')
+    except UnicodeDecodeError:
+        return crudo.decode('cp1252', errors='replace')
+
+
+def preparar_lote_carpeta(carpeta: str) -> tuple:
+    """
+    Prepara la grabación de una carpeta entera de TXT: un audio por archivo.
+
+    Cada TXT se fragmenta igual que un archivo suelto, así que los que no
+    llevan ninguna etiqueta quedan enteros con la etiqueta de narrador y
+    comparten la misma voz sin tener que escribir {{@narrador}} en cada uno.
+    Solo se leen los .txt de la propia carpeta (no las subcarpetas), en
+    orden natural de nombre.
+
+    Returns:
+        (lote, omitidos)
+        lote:     [(nombre_base_sin_extension, fragmentos), ...]
+        omitidos: [(nombre_archivo, motivo), ...] — motivo es MOTIVO_VACIO o
+                  el texto del error de lectura
+    """
+    nombres = sorted(
+        (n for n in os.listdir(carpeta)
+         if n.lower().endswith('.txt') and os.path.isfile(os.path.join(carpeta, n))),
+        key=_clave_orden_natural,
+    )
+    lote, omitidos = [], []
+    for nombre in nombres:
+        try:
+            texto = leer_txt_tolerante(os.path.join(carpeta, nombre))
+        except OSError as e:
+            omitidos.append((nombre, str(e)))
+            continue
+        fragmentos = fragmentar_texto(texto)
+        if not fragmentos:
+            omitidos.append((nombre, MOTIVO_VACIO))
+            continue
+        lote.append((os.path.splitext(nombre)[0], fragmentos))
+    return lote, omitidos
+
+
+def etiquetas_de_lote(lote: list) -> list:
+    """Etiquetas únicas de todo el lote, en orden de primera aparición."""
+    vistas, etiquetas = set(), []
+    for _nombre_sin_usar, fragmentos in lote:
+        for etiqueta, _texto_sin_usar in fragmentos:
+            if etiqueta not in vistas:
+                vistas.add(etiqueta)
+                etiquetas.append(etiqueta)
+    return etiquetas
+# ANCLAJE_FIN: LOTE_CARPETA_TXT
