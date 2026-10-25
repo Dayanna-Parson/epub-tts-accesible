@@ -14,7 +14,7 @@ Flujo de uso (diseñado para NVDA + teclado):
   Alternativa para muchos textos cortos: "Cargar carpeta…" junta las
   etiquetas de todos los TXT de una carpeta en el mismo combo (los que no
   tienen etiquetas comparten @narrador) y graba un MP3 por archivo, con el
-  mismo nombre que el TXT.
+  mismo nombre que el TXT, o uno solo con todos (casilla "Dividir").
 
 Accesibilidad NVDA:
   - SetHelpText() en controles de entrada: NVDA lo verbaliza al recibir foco.
@@ -358,12 +358,13 @@ class PestanaGrabacion(wx.Panel):
             self, label=_("Examinar… — Selecciona un TXT con etiquetas de personaje")
         )
         self.btn_cargar_carpeta = wx.Button(
-            self, label=_("Cargar carpeta… — Graba cada TXT de una carpeta en su propio MP3")
+            self, label=_("Cargar carpeta… — Graba todos los TXT de una carpeta")
         )
         self.btn_cargar_carpeta.SetHelpText(
-            _("Elige una carpeta con varios archivos TXT. Cada archivo se graba en su "
-              "propio MP3, con el mismo nombre que el TXT. Los archivos sin etiquetas "
-              "se leen enteros con la voz que asignes a @narrador.")
+            _("Elige una carpeta con varios archivos TXT. Según la casilla «Dividir por "
+              "archivos», cada TXT se graba en su propio MP3 con el mismo nombre, o todos "
+              "juntos en un único MP3, en orden. Los archivos sin etiquetas se leen "
+              "enteros con la voz que asignes a @narrador.")
         )
         self.btn_limpiar = wx.Button(
             self, label=_("Limpiar — Restablece la pestaña para cargar otro fragmento")
@@ -859,9 +860,11 @@ class PestanaGrabacion(wx.Panel):
         )
         self.btn_iniciar.Enable(True)
 
+        self._actualizar_etiqueta_division()
         mensaje = _(
             "Carpeta cargada.\nArchivos TXT: {total}\nEtiquetas: {etiquetas}\n\n"
-            "Se grabará un MP3 por cada archivo, con el mismo nombre que el TXT."
+            "Con la casilla «Dividir por archivos» marcada se graba un MP3 por cada TXT, "
+            "con el mismo nombre; desmarcada, un único MP3 con todos los TXT, en orden."
         ).format(total=total, etiquetas=etiq_str)
         if omitidos:
             lineas = [
@@ -887,6 +890,7 @@ class PestanaGrabacion(wx.Panel):
         if self._lote is not None:
             self._lote = None
             self._ofrecio_proyecto = False
+            self._actualizar_etiqueta_division()
 
         try:
             with open(self.ruta_txt_actual, 'r', encoding='utf-8') as f:
@@ -1003,6 +1007,7 @@ class PestanaGrabacion(wx.Panel):
         self.gauge.SetValue(0)
         self.btn_iniciar.Enable(False)
         self.btn_abortar.Enable(False)
+        self._actualizar_etiqueta_division()
 
         self.btn_examinar.SetFocus()
 
@@ -1332,7 +1337,21 @@ class PestanaGrabacion(wx.Panel):
         por lo que el nuevo texto queda inmediatamente accesible.
         """
         reproducir(CLICK)
-        if self.chk_dividir.IsChecked():
+        self._actualizar_etiqueta_division()
+
+    def _actualizar_etiqueta_division(self):
+        # Con una carpeta cargada, la misma casilla elige entre un MP3 por
+        # TXT o uno solo con todos: dividir por etiquetas no aplica ahí.
+        if self._lote:
+            if self.chk_dividir.IsChecked():
+                self.chk_dividir.SetLabel(
+                    _("Dividir por archivos: un MP3 por cada TXT, con el mismo nombre")
+                )
+            else:
+                self.chk_dividir.SetLabel(
+                    _("Dividir por archivos: un único MP3 con todos los TXT, en orden")
+                )
+        elif self.chk_dividir.IsChecked():
             self.chk_dividir.SetLabel(
                 _("Dividir por etiquetas: archivos numerados (1. Nar.mp3, 2. Pj1.mp3…)")
             )
@@ -1491,7 +1510,7 @@ class PestanaGrabacion(wx.Panel):
         if self._grabando_lote:
             self._hilo_grabacion = threading.Thread(
                 target=self._ejecutar_grabacion_lote,
-                args=(titulo, list(self._lote), velocidad_grab, volumen_grab),
+                args=(titulo, list(self._lote), velocidad_grab, volumen_grab, not modo_dividido),
                 daemon=True,
             )
         else:
@@ -1503,7 +1522,7 @@ class PestanaGrabacion(wx.Panel):
         self._hilo_grabacion.start()
 
     # ANCLAJE_INICIO: GRABACION_LOTE_PESTANA
-    def _ejecutar_grabacion_lote(self, titulo, lote, velocidad=50, volumen=100):
+    def _ejecutar_grabacion_lote(self, titulo, lote, velocidad=50, volumen=100, unir=False):
         try:
             archivos, errores, carpeta = self.grabador.grabar_lote(
                 lote=lote,
@@ -1511,6 +1530,7 @@ class PestanaGrabacion(wx.Panel):
                 titulo_libro=titulo,
                 velocidad=velocidad,
                 volumen=volumen,
+                unir=unir,
             )
             wx.CallAfter(self._al_terminar_grabacion, archivos, errores, carpeta)
         except Exception as e:

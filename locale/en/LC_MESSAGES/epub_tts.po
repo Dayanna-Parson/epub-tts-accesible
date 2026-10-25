@@ -3159,11 +3159,11 @@ msgstr "A preview is already playing. Wait for it to finish."
 msgid "Preescucha en curso"
 msgstr "Preview in progress"
 
-msgid "Cargar carpeta… — Graba cada TXT de una carpeta en su propio MP3"
-msgstr "Load folder… — Records each TXT in a folder to its own MP3"
+msgid "Cargar carpeta… — Graba todos los TXT de una carpeta"
+msgstr "Load folder… — Records all the TXT files in a folder"
 
-msgid "Elige una carpeta con varios archivos TXT. Cada archivo se graba en su propio MP3, con el mismo nombre que el TXT. Los archivos sin etiquetas se leen enteros con la voz que asignes a @narrador."
-msgstr "Choose a folder with several TXT files. Each file is recorded to its own MP3, with the same name as the TXT. Files without tags are read in full with the voice you assign to @narrador."
+msgid "Elige una carpeta con varios archivos TXT. Según la casilla «Dividir por archivos», cada TXT se graba en su propio MP3 con el mismo nombre, o todos juntos en un único MP3, en orden. Los archivos sin etiquetas se leen enteros con la voz que asignes a @narrador."
+msgstr "Choose a folder with several TXT files. Depending on the «Split by files» checkbox, each TXT is recorded to its own MP3 with the same name, or all of them together in a single MP3, in order. Files without tags are read in full with the voice you assign to @narrador."
 
 msgid "Seleccionar carpeta con archivos TXT"
 msgstr "Select a folder with TXT files"
@@ -3180,8 +3180,8 @@ msgstr "No files"
 msgid "Carpeta cargada: {total} archivos, etiquetas: {etiquetas}. Marca una voz en la lista para asignarla."
 msgstr "Folder loaded: {total} files, tags: {etiquetas}. Check a voice in the list to assign it."
 
-msgid "Carpeta cargada.\nArchivos TXT: {total}\nEtiquetas: {etiquetas}\n\nSe grabará un MP3 por cada archivo, con el mismo nombre que el TXT."
-msgstr "Folder loaded.\nTXT files: {total}\nTags: {etiquetas}\n\nOne MP3 will be recorded for each file, with the same name as the TXT."
+msgid "Carpeta cargada.\nArchivos TXT: {total}\nEtiquetas: {etiquetas}\n\nCon la casilla «Dividir por archivos» marcada se graba un MP3 por cada TXT, con el mismo nombre; desmarcada, un único MP3 con todos los TXT, en orden."
+msgstr "Folder loaded.\nTXT files: {total}\nTags: {etiquetas}\n\nWith the «Split by files» checkbox checked, one MP3 is recorded for each TXT, with the same name; unchecked, a single MP3 with all the TXT files, in order."
 
 msgid "vacío"
 msgstr "empty"
@@ -3200,3 +3200,9 @@ msgstr "Recording file {actual} of {total}: {archivo}  —  Voice: {voz}"
 
 msgid "Archivo {actual} de {total}. {archivo}."
 msgstr "File {actual} of {total}. {archivo}."
+
+msgid "Dividir por archivos: un MP3 por cada TXT, con el mismo nombre"
+msgstr "Split by files: one MP3 for each TXT, with the same name"
+
+msgid "Dividir por archivos: un único MP3 con todos los TXT, en orden"
+msgstr "Split by files: a single MP3 with all the TXT files, in order"

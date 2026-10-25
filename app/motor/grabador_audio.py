@@ -25,6 +25,7 @@ import os
 import re
 import json
 import logging
+import shutil
 import tempfile
 import threading
 import requests
@@ -250,6 +251,12 @@ class GrabadorAudio:
         return archivos, errores, subcarpeta
 
     # ANCLAJE_INICIO: GRABACION_LOTE_CARPETA
+    # Silencio entre un TXT y el siguiente al unir una carpeta en un solo
+    # MP3: son textos independientes, y sin él el siguiente empezaría
+    # pegado al final del anterior (cada audio llega sin silencio en los
+    # extremos).
+    PAUSA_ENTRE_ARCHIVOS_MS = 1500
+
     def grabar_lote(
         self,
         lote: list,
@@ -257,19 +264,26 @@ class GrabadorAudio:
         titulo_libro: str,
         velocidad: int = 50,
         volumen: int = 100,
+        unir: bool = False,
     ) -> tuple:
         """
-        Graba una carpeta entera de TXT: un MP3 por archivo, llamado igual
-        que el TXT, todos en la misma subcarpeta. Cada archivo se graba como
-        audio unificado (si lleva varias etiquetas, sus fragmentos se unen
-        en orden), así que "Dividir por etiquetas" no aplica aquí.
+        Graba una carpeta entera de TXT. Cada archivo se graba como audio
+        unificado (si lleva varias etiquetas, sus fragmentos se unen en
+        orden), así que "Dividir por etiquetas" no aplica aquí.
+
+        unir=False: un MP3 por archivo, llamado igual que el TXT, en
+                    grabaciones/Audios_por_archivo/.
+        unir=True:  un único MP3 con todos los archivos en orden, separados
+                    por PAUSA_ENTRE_ARCHIVOS_MS, llamado como el título, en
+                    grabaciones/Audio_Completo_<título>/.
 
         lote: [(nombre_base, fragmentos), ...] (ver preparar_lote_carpeta()).
         callback_progreso recibe (archivo_actual, total_archivos,
         nombre_base, nombres_de_voz) una vez por archivo.
 
         Un archivo que falla no detiene el resto: su error queda en la lista
-        de errores y se pasa al siguiente.
+        de errores y se pasa al siguiente (al unir, ese texto falta en el
+        MP3 final, y el error lo dice).
 
         Returns:
             (archivos_generados, errores, carpeta_destino)
@@ -280,7 +294,14 @@ class GrabadorAudio:
         self._cargar_config()
 
         carpeta_libro = self.obtener_carpeta_libro(titulo_libro)
-        subcarpeta = os.path.join(carpeta_libro, "grabaciones", "Audios_por_archivo")
+        titulo_limpio = limpiar_nombre_archivo(titulo_libro) or "Sin_Titulo"
+        if unir:
+            subcarpeta = os.path.join(carpeta_libro, "grabaciones", f"Audio_Completo_{titulo_limpio}")
+            # Cada TXT se graba primero aquí y luego se une en el MP3 final.
+            carpeta_trabajo = tempfile.mkdtemp(prefix="tfh_lote_")
+        else:
+            subcarpeta = os.path.join(carpeta_libro, "grabaciones", "Audios_por_archivo")
+            carpeta_trabajo = subcarpeta
         os.makedirs(subcarpeta, exist_ok=True)
         self._ultima_carpeta = subcarpeta
 
@@ -301,10 +322,14 @@ class GrabadorAudio:
                             voces.append(nombre_voz)
                     self.callback_progreso(i + 1, total, nombre_base, ", ".join(voces))
 
-                nombre_limpio = limpiar_nombre_archivo(nombre_base) or f"{i + 1}"
+                if unir:
+                    # Numerado para que el orden de unión no dependa del nombre.
+                    nombre_salida = f"{i + 1:04d}"
+                else:
+                    nombre_salida = limpiar_nombre_archivo(nombre_base) or f"{i + 1}"
                 try:
                     generados, errores_archivo = self._grabar_modo_unico(
-                        fragmentos, asignaciones_voz, subcarpeta, nombre_limpio,
+                        fragmentos, asignaciones_voz, carpeta_trabajo, nombre_salida,
                         len(fragmentos), avisar_progreso=False,
                     )
                 except Exception as e:
@@ -312,8 +337,23 @@ class GrabadorAudio:
                     generados, errores_archivo = [], [str(e)]
                 archivos_generados.extend(generados)
                 errores.extend(f"{nombre_base}: {error}" for error in errores_archivo)
+
+            if unir:
+                partes = [a for a in archivos_generados if os.path.exists(a) and os.path.getsize(a) > 0]
+                archivos_generados = []
+                # Abortar descarta el MP3 unido, igual que en grabar_fragmentos():
+                # un audio con solo parte de los textos parecería completo.
+                if partes and not self._abortar:
+                    ruta_final = os.path.join(subcarpeta, f"{titulo_limpio}.mp3")
+                    self._concatenar_audios(partes, ruta_final, pausa_ms=self.PAUSA_ENTRE_ARCHIVOS_MS)
+                    archivos_generados.append(ruta_final)
         finally:
             self.cerrar()
+            if unir:
+                try:
+                    shutil.rmtree(carpeta_trabajo)
+                except OSError:
+                    logger.exception("[GrabadorAudio] No se pudo borrar la carpeta temporal '%s'", carpeta_trabajo)
         return archivos_generados, errores, subcarpeta
     # ANCLAJE_FIN: GRABACION_LOTE_CARPETA
 
@@ -670,13 +710,18 @@ class GrabadorAudio:
             logger.debug("[GrabadorAudio] No se pudo recortar silencio de un trozo; se usa sin recortar.")
         return segmento
 
-    def _concatenar_audios(self, archivos: list, ruta_salida: str, proveedor=None):
+    def _concatenar_audios(self, archivos: list, ruta_salida: str, proveedor=None, pausa_ms=0):
         """
         Une varios MP3 en uno solo.
         Intenta pydub+ffmpeg (320k, preserva sample rate).
         Si ffmpeg no está disponible, concatena bytes crudos como fallback.
         Los archivos MP3 son secuencias de frames: la concatenación directa
         de bytes produce un archivo válido y reproducible.
+
+        pausa_ms: silencio que se intercala entre archivo y archivo (solo
+        con pydub; el respaldo de bytes crudos los une sin pausa). Cada
+        trozo llega con el silencio de sus extremos recortado, así que sin
+        él dos textos independientes quedarían pegados uno al otro.
         """
         archivos_validos = [
             a for a in archivos
@@ -712,7 +757,18 @@ class GrabadorAudio:
 
             if segmentos:
                 combined = segmentos[0]
+                # Mismo formato que el audio (44 100 Hz mono y misma
+                # profundidad de bits), por el mismo motivo que la
+                # normalización de cada trozo más arriba.
+                silencio = (
+                    AudioSegment.silent(duration=pausa_ms, frame_rate=44100)
+                    .set_channels(1)
+                    .set_sample_width(combined.sample_width)
+                    if pausa_ms > 0 else None
+                )
                 for seg in segmentos[1:]:
+                    if silencio is not None:
+                        combined += silencio
                     combined += seg
                 combined.export(ruta_salida, format='mp3', bitrate='320k')
                 logger.info(

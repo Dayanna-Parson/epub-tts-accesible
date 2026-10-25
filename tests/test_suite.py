@@ -1582,6 +1582,64 @@ class TestGrabadorLoteCarpeta(unittest.TestCase):
         self.assertEqual([os.path.basename(a) for a in archivos], ["A.mp3", "C.mp3"])
         self.assertEqual(errores, ["B: fallo simulado"])
 
+    def _unir_simulado(self):
+        uniones = []
+
+        def concatenar(partes, ruta_salida, proveedor=None, pausa_ms=0):
+            uniones.append(([os.path.basename(p) for p in partes], pausa_ms))
+            with open(ruta_salida, "wb") as f:
+                f.write(b"unido")
+        self.grabador._concatenar_audios = concatenar
+        return uniones
+
+    def test_unir_crea_un_solo_mp3_con_el_titulo(self):
+        simulado, _llamadas = self._modo_unico_simulado()
+        self.grabador._grabar_modo_unico = simulado
+        uniones = self._unir_simulado()
+        lote = [("zeta", [("narrador", "a")]), ("alfa", [("narrador", "b")])]
+        archivos, errores, carpeta = self.grabador.grabar_lote(lote, {}, "Mi colección", unir=True)
+        self.assertEqual(errores, [])
+        self.assertEqual(carpeta, os.path.join(self.carpeta, "grabaciones", "Audio_Completo_Mi colección"))
+        self.assertEqual(archivos, [os.path.join(carpeta, "Mi colección.mp3")])
+        # Se unen en el orden del lote, no por nombre, con la pausa entre textos.
+        self.assertEqual(uniones, [(["0001.mp3", "0002.mp3"], self.grabador.PAUSA_ENTRE_ARCHIVOS_MS)])
+
+    def test_unir_borra_los_audios_intermedios(self):
+        carpetas_trabajo = []
+        simulado, _llamadas = self._modo_unico_simulado()
+
+        def simulado_anotando(fragmentos, asignaciones, subcarpeta, *args, **kwargs):
+            carpetas_trabajo.append(subcarpeta)
+            return simulado(fragmentos, asignaciones, subcarpeta, *args, **kwargs)
+        self.grabador._grabar_modo_unico = simulado_anotando
+        self._unir_simulado()
+        self.grabador.grabar_lote([("a", [("narrador", "a")])], {}, "Lote", unir=True)
+        self.assertFalse(os.path.exists(carpetas_trabajo[0]))
+
+    def test_unir_sin_el_archivo_que_falla_y_con_su_error(self):
+        simulado, _llamadas = self._modo_unico_simulado(fallar_en=("0002",))
+        self.grabador._grabar_modo_unico = simulado
+        uniones = self._unir_simulado()
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")]), ("C", [("narrador", "c")])]
+        archivos, errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote", unir=True)
+        self.assertEqual(len(archivos), 1)
+        self.assertEqual(uniones[0][0], ["0001.mp3", "0003.mp3"])
+        self.assertEqual(errores, ["B: fallo simulado"])
+
+    def test_unir_y_abortar_no_deja_un_mp3_a_medias(self):
+        simulado, _llamadas = self._modo_unico_simulado()
+
+        def simulado_y_abortar(*args, **kwargs):
+            resultado = simulado(*args, **kwargs)
+            self.grabador.abortar()
+            return resultado
+        self.grabador._grabar_modo_unico = simulado_y_abortar
+        uniones = self._unir_simulado()
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")])]
+        archivos, _errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote", unir=True)
+        self.assertEqual(archivos, [])
+        self.assertEqual(uniones, [])
+
     def test_abortar_para_antes_del_siguiente_archivo(self):
         simulado, llamadas = self._modo_unico_simulado()
 

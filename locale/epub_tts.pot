@@ -3162,10 +3162,10 @@ msgstr ""
 msgid "Preescucha en curso"
 msgstr ""
 
-msgid "Cargar carpeta… — Graba cada TXT de una carpeta en su propio MP3"
+msgid "Cargar carpeta… — Graba todos los TXT de una carpeta"
 msgstr ""
 
-msgid "Elige una carpeta con varios archivos TXT. Cada archivo se graba en su propio MP3, con el mismo nombre que el TXT. Los archivos sin etiquetas se leen enteros con la voz que asignes a @narrador."
+msgid "Elige una carpeta con varios archivos TXT. Según la casilla «Dividir por archivos», cada TXT se graba en su propio MP3 con el mismo nombre, o todos juntos en un único MP3, en orden. Los archivos sin etiquetas se leen enteros con la voz que asignes a @narrador."
 msgstr ""
 
 msgid "Seleccionar carpeta con archivos TXT"
@@ -3183,7 +3183,7 @@ msgstr ""
 msgid "Carpeta cargada: {total} archivos, etiquetas: {etiquetas}. Marca una voz en la lista para asignarla."
 msgstr ""
 
-msgid "Carpeta cargada.\nArchivos TXT: {total}\nEtiquetas: {etiquetas}\n\nSe grabará un MP3 por cada archivo, con el mismo nombre que el TXT."
+msgid "Carpeta cargada.\nArchivos TXT: {total}\nEtiquetas: {etiquetas}\n\nCon la casilla «Dividir por archivos» marcada se graba un MP3 por cada TXT, con el mismo nombre; desmarcada, un único MP3 con todos los TXT, en orden."
 msgstr ""
 
 msgid "vacío"
@@ -3202,4 +3202,10 @@ msgid "Grabando archivo {actual} de {total}: {archivo}  —  Voz: {voz}"
 msgstr ""
 
 msgid "Archivo {actual} de {total}. {archivo}."
+msgstr ""
+
+msgid "Dividir por archivos: un MP3 por cada TXT, con el mismo nombre"
+msgstr ""
+
+msgid "Dividir por archivos: un único MP3 con todos los TXT, en orden"
 msgstr ""
