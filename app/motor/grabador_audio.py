@@ -865,7 +865,13 @@ class GrabadorAudio:
         if not key or not region:
             raise Exception("Credenciales de Azure no configuradas.")
 
+        from app.servicios.cliente_azure import resolver_idioma_ssml
+        # Mismo criterio que la lectura en voz alta ("Detectar auto" → el
+        # idioma de la propia voz), escapado igual que el texto porque llega
+        # de ajustes.json y va dentro de un atributo del SSML.
+        idioma = self._limpiar_xml(resolver_idioma_ssml(idioma, datos_voz))
         id_voz = datos_voz.get('id') if isinstance(datos_voz, dict) else str(datos_voz)
+        id_voz = self._limpiar_xml(id_voz or "")
         texto_limpio = self._limpiar_xml(texto)
         tasa      = self._velocidad_a_tasa_ssml(self._velocidad)
         nivel_vol = self._volumen_a_nivel_ssml(self._volumen)

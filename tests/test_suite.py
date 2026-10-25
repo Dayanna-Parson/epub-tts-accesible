@@ -1727,6 +1727,55 @@ class TestProbarVozGrabador(unittest.TestCase):
         self.mock_sapi5.ClienteSapi5.assert_not_called()
 
 
+class TestIdiomaSsmlAzure(unittest.TestCase):
+    """xml:lang de Azure: "Detectar auto" no debe llegar tal cual a la voz."""
+
+    def setUp(self):
+        for nombre in ("app.servicios.cliente_azure", "app.motor.grabador_audio"):
+            sys.modules.pop(nombre, None)
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "sounddevice": MagicMock(),
+            "soundfile": MagicMock(),
+            "app.motor.control_cuota": MagicMock(),
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        self.azure = importlib.import_module("app.servicios.cliente_azure")
+        self.grabador_mod = importlib.import_module("app.motor.grabador_audio")
+        self.voz = {"id": "es-ES-VozDePruebaMultilingualNeural", "idioma": "es-ES"}
+
+    def tearDown(self):
+        for nombre in ("app.servicios.cliente_azure", "app.motor.grabador_audio"):
+            sys.modules.pop(nombre, None)
+
+    def test_idiomas_validos_se_respetan(self):
+        for codigo in ("es-ES", "es-MX", "en-US", "es-419"):
+            self.assertEqual(self.azure.resolver_idioma_ssml(codigo, self.voz), codigo)
+
+    def test_detectar_auto_usa_el_idioma_de_la_voz(self):
+        self.assertEqual(self.azure.resolver_idioma_ssml("auto", self.voz), "es-ES")
+        voz_mx = {"id": "es-MX-OtraVozNeural"}
+        self.assertEqual(self.azure.resolver_idioma_ssml("auto", voz_mx), "es-MX")
+
+    def test_sin_idioma_en_el_id_usa_el_campo_idioma_o_espanol(self):
+        self.assertEqual(self.azure.resolver_idioma_ssml("", {"id": "x", "idioma": "en-GB"}), "en-GB")
+        self.assertEqual(self.azure.resolver_idioma_ssml(None, {"id": "x"}), "es-ES")
+
+    def test_la_grabacion_no_envia_auto_a_azure(self):
+        grabador = self.grabador_mod.GrabadorAudio()
+        grabador.config = {"azure": {"key": "k", "region": "westeurope"}, "idioma_libro_codigo": "auto"}
+        grabador._recodificar_mp3_320k = lambda origen, destino: None
+        respuesta = MagicMock(status_code=200, content=b"mp3")
+        with patch.object(self.grabador_mod.requests, "post", return_value=respuesta) as post:
+            grabador._grabar_azure("Hola.", self.voz, os.path.join(tempfile.mkdtemp(), "x.mp3"))
+        ssml = post.call_args.kwargs["data"].decode("utf-8")
+        self.assertNotIn("'auto'", ssml)
+        self.assertIn("xml:lang='es-ES'", ssml)
+        self.assertIn("<lang xml:lang='es-ES'>", ssml)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)
