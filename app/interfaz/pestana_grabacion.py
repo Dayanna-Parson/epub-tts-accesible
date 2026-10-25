@@ -641,8 +641,8 @@ class PestanaGrabacion(wx.Panel):
 
         # ── Voces SAPI5 locales ───────────────────────────────────────────
         try:
-            from app.servicios.cliente_sapi5 import ClienteSapi5
-            for datos in ClienteSapi5().obtener_voces():
+            from app.motor.catalogo_voces_locales import obtener_voces_sapi5_64
+            for datos in obtener_voces_sapi5_64():
                 desc = datos["nombre"]
                 pos = self.check_voces.InsertItem(idx, desc)
                 self.check_voces.SetItem(pos, 1, "")

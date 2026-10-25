@@ -1441,27 +1441,20 @@ class PanelSapi5(wx.Panel):
         return self.btn_escuchar
 
     def cargar_datos(self):
+        # Catálogo compartido con Lectura, Creador y Grabación: la primera
+        # consulta enumera las voces (y lanza auxiliar_sapi32.exe una vez),
+        # las siguientes son inmediatas.
+        from app.motor.catalogo_voces_locales import obtener_voces_sapi5_64, obtener_voces_sapi5_32
         self.voces_todas = []
-        try:
-            from app.servicios.cliente_sapi5 import ClienteSapi5
-            for v in ClienteSapi5().obtener_voces():
+        for v in obtener_voces_sapi5_64():
+            v["es_nueva"] = False
+            self.voces_todas.append(v)
+        # Añadir voces de 32 bits si el proceso auxiliar está disponible
+        ids_existentes = {v.get("id") for v in self.voces_todas}
+        for v in obtener_voces_sapi5_32():
+            if v.get("id") not in ids_existentes:
                 v["es_nueva"] = False
                 self.voces_todas.append(v)
-        except Exception:
-            logger.exception("Error al cargar voces SAPI5 locales")
-        # Añadir voces de 32 bits si el proceso auxiliar está disponible
-        try:
-            from app.servicios.cliente_sapi32_bridge import ClienteSapi32Bridge
-            bridge = ClienteSapi32Bridge()
-            if bridge.conectado:
-                ids_existentes = {v.get("id") for v in self.voces_todas}
-                for v in bridge.obtener_voces():
-                    if v.get("id") not in ids_existentes:
-                        v["es_nueva"] = False
-                        self.voces_todas.append(v)
-                bridge.cerrar()
-        except Exception:
-            logger.exception("Error al cargar voces SAPI5 de 32 bits")
         self._filtrar_y_mostrar()
 
     def _al_filtrar(self, evento):

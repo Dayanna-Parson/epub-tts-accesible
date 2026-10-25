@@ -1338,6 +1338,139 @@ class TestReproductorVozPuente32Bits(unittest.TestCase):
         puente.detener.assert_called_once()
 
 
+class TestCatalogoVocesLocales(unittest.TestCase):
+    """Las voces locales se enumeran una sola vez por sesión y se reparten como copias."""
+
+    def setUp(self):
+        sys.modules.pop("app.motor.catalogo_voces_locales", None)
+        self.mock_sapi5 = MagicMock()
+        self.mock_puente = MagicMock()
+        self.mock_sapi5.ClienteSapi5.return_value.obtener_voces.return_value = [
+            {"id": "voz64", "nombre": "Helena", "proveedor_id": "local"},
+        ]
+        puente = self.mock_puente.ClienteSapi32Bridge.return_value
+        puente.conectado = True
+        puente.obtener_voces.return_value = [
+            {"id": "voz32", "nombre": "Eloquence", "proveedor_id": "local_32"},
+        ]
+        patcher_mods = patch.dict("sys.modules", {
+            "app.servicios.cliente_sapi5": self.mock_sapi5,
+            "app.servicios.cliente_sapi32_bridge": self.mock_puente,
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        self.catalogo = importlib.import_module("app.motor.catalogo_voces_locales")
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.catalogo_voces_locales", None)
+
+    def test_enumera_una_sola_vez(self):
+        for _sin_usar in range(3):
+            self.catalogo.obtener_voces_sapi5_64()
+            self.catalogo.obtener_voces_sapi5_32()
+        self.mock_sapi5.ClienteSapi5.assert_called_once()
+        self.mock_puente.ClienteSapi32Bridge.assert_called_once()
+
+    def test_el_puente_se_cierra_tras_listar(self):
+        self.catalogo.obtener_voces_sapi5_32()
+        self.mock_puente.ClienteSapi32Bridge.return_value.cerrar.assert_called_once()
+
+    def test_devuelve_copias_que_no_ensucian_el_catalogo(self):
+        voces = self.catalogo.obtener_voces_sapi5_64()
+        voces[0]["es_nueva"] = True
+        voces.append({"id": "otra"})
+        otra_vez = self.catalogo.obtener_voces_sapi5_64()
+        self.assertEqual(len(otra_vez), 1)
+        self.assertNotIn("es_nueva", otra_vez[0])
+
+    def test_sin_puente_devuelve_lista_vacia(self):
+        self.mock_puente.ClienteSapi32Bridge.return_value.conectado = False
+        self.assertEqual(self.catalogo.obtener_voces_sapi5_32(), [])
+
+    def test_invalidar_vuelve_a_enumerar(self):
+        self.catalogo.obtener_voces_sapi5_64()
+        self.catalogo.invalidar_catalogo()
+        self.catalogo.obtener_voces_sapi5_64()
+        self.assertEqual(self.mock_sapi5.ClienteSapi5.call_count, 2)
+
+
+class TestTurnoReproduccionNube(unittest.TestCase):
+    """
+    Una muestra detenida cuya respuesta de la API llega tarde no debe sonar
+    encima de la muestra siguiente del mismo cliente.
+    """
+
+    def setUp(self):
+        sys.modules.pop("app.servicios.cliente_azure", None)
+        self.mock_sd = MagicMock()
+        patcher_mods = patch.dict("sys.modules", {
+            "sounddevice": self.mock_sd,
+            "soundfile": MagicMock(),
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        from app.servicios.cliente_azure import ClienteAzure
+        self.cliente = ClienteAzure()
+
+    def tearDown(self):
+        sys.modules.pop("app.servicios.cliente_azure", None)
+
+    def test_respuesta_tardia_no_se_reproduce(self):
+        import threading
+        liberar_primera = threading.Event()
+        primera_en_api = threading.Event()
+
+        def api_simulada(texto, datos_voz):
+            if texto == "primera":
+                primera_en_api.set()
+                liberar_primera.wait(timeout=5)
+            return ("audio_" + texto, 24000)
+
+        with patch.object(self.cliente, "_llamar_api", side_effect=api_simulada):
+            hilo = threading.Thread(target=self.cliente.hablar, args=("primera", {"id": "a"}))
+            hilo.start()
+            self.assertTrue(primera_en_api.wait(timeout=5))
+            self.cliente.detener()
+            self.cliente.hablar("segunda", {"id": "b"})
+            liberar_primera.set()
+            hilo.join(timeout=5)
+
+        reproducidos = [llamada.args[0] for llamada in self.mock_sd.play.call_args_list]
+        self.assertEqual(reproducidos, ["audio_segunda"])
+
+
+class TestEsperaHiloSapi5(unittest.TestCase):
+    """detener() espera a que el hilo de párrafos salga antes de devolver el control."""
+
+    def setUp(self):
+        sys.modules.pop("app.servicios.cliente_sapi5", None)
+        self.mock_comtypes = MagicMock()
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "comtypes": self.mock_comtypes,
+            "comtypes.client": self.mock_comtypes.client,
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        from app.servicios.cliente_sapi5 import ClienteSapi5
+        self.cliente = ClienteSapi5()
+
+    def tearDown(self):
+        sys.modules.pop("app.servicios.cliente_sapi5", None)
+
+    def test_detener_espera_al_hilo_de_parrafos(self):
+        import time
+        # WaitUntilDone nunca termina el párrafo: solo la cancelación saca al hilo.
+        self.cliente.motor.WaitUntilDone.side_effect = lambda ms: time.sleep(ms / 1000) or False
+        self.cliente.hablar_con_callback("párrafo", 0, lambda pos: None, lambda: None)
+        time.sleep(0.15)
+        hilo = self.cliente._hilo_parrafos_activo
+        self.assertTrue(hilo.is_alive())
+        self.cliente.detener()
+        self.assertFalse(hilo.is_alive())
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)

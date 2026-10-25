@@ -99,6 +99,7 @@ app/
 │   ├── reproductor_voz.py        # Cola TTS asíncrona interactiva. Orquesta todos los motores.
 │   ├── reproductor_sonidos.py    # 14 efectos contextuales (incluye bucle). Caché en RAM.
 │   ├── cliente_nube_voces.py     # Descarga listas de voces desde cada API
+│   ├── catalogo_voces_locales.py # Voces SAPI5 de 64/32 bits enumeradas una vez por sesión y compartidas por todas las pestañas
 │   ├── verificador_voces_nuevas.py  # Detecta voces nuevas con cooldown de 24h
 │   ├── comprobador_actualizaciones.py  # Versioning semver contra GitHub
 │   ├── actualizador_descarga.py  # Fase C: descarga y verifica la versión nueva en temp/actualizacion/

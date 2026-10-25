@@ -288,21 +288,13 @@ class PestanaLectura(wx.Panel):
             except Exception as e:
                 logger.warning("[PestanaLectura] No se pudo leer voces_favoritas.json: %s", e)
 
-        # Carga de voces SAPI5 de 64 bits
-        voces_locales_64 = []
-        try:
-            if hasattr(self.reproductor, "cliente_local"):
-                voces_locales_64 = self.reproductor.cliente_local.obtener_voces()
-        except Exception as e:
-            logger.warning("[PestanaLectura] No se pudieron cargar voces SAPI5: %s", e)
-
-        # Carga de voces SAPI5 de 32 bits (bridge Eloquence/CodeFactory)
-        voces_locales_32 = []
-        try:
-            if hasattr(self.reproductor, "cliente_local_32") and self.reproductor.cliente_local_32.conectado:
-                voces_locales_32 = self.reproductor.cliente_local_32.obtener_voces()
-        except Exception as e:
-            logger.warning("[PestanaLectura] No se pudieron cargar voces SAPI5 32-bits: %s", e)
+        # Voces SAPI5 de 64 y 32 bits (bridge Eloquence/CodeFactory) desde el
+        # catálogo compartido: listar las de 32 bits con el puente propio del
+        # reproductor lo lanzaba al arrancar aunque no se usara ninguna, y
+        # repetir la enumeración en cada cambio de favoritas congelaba la app.
+        from app.motor.catalogo_voces_locales import obtener_voces_sapi5_64, obtener_voces_sapi5_32
+        voces_locales_64 = obtener_voces_sapi5_64()
+        voces_locales_32 = obtener_voces_sapi5_32()
 
         # Deduplicar: si una voz aparece tanto en 64 como en 32 bits (mismo nombre),
         # conservar solo la entrada de 64 bits (que es la que realmente funciona).

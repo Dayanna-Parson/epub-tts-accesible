@@ -18,6 +18,9 @@ class ClienteAzure:
         self._volumen = 100
         self._sesion = requests.Session()
         self._parado = False
+        # Se incrementa en cada hablar(): una llamada anterior cuya respuesta
+        # HTTP llega tarde no debe sonar encima de la actual.
+        self._turno_reproduccion = 0
         # Buffer proactivo para el siguiente fragmento
         self._audio_preparado = None
         self._texto_preparado = None
@@ -231,6 +234,8 @@ class ClienteAzure:
     def hablar(self, texto, datos_voz):
         """Sintetiza y reproduce el texto. Prioridad: caché → buffer proactivo → API."""
         self._parado = False
+        self._turno_reproduccion += 1
+        turno = self._turno_reproduccion
         clave = self._clave_cache(texto, datos_voz)
 
         if clave in self._cache_frags:
@@ -244,7 +249,11 @@ class ClienteAzure:
             data, fs = self._llamar_api(texto, datos_voz)
             self._guardar_en_cache(clave, data, fs)
 
-        if not self._parado:
+        # Sin la comprobación del turno, al probar varias muestras seguidas
+        # la anterior (detenida, pero aún esperando a la API) recuperaba
+        # _parado = False de la nueva llamada y sonaba solapada con ella,
+        # con dos hilos abriendo a la vez el mismo flujo de sounddevice.
+        if not self._parado and turno == self._turno_reproduccion:
             sd.play(data, fs)
             sd.wait()
             # sd.wait() puede volver antes de que el hardware de audio termine

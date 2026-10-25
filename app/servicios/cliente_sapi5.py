@@ -18,6 +18,7 @@ class ClienteSapi5:
         # Control de hilo de lectura párrafo a párrafo
         self._detener_flag = False
         self._generacion_sapi = 0
+        self._hilo_parrafos_activo = None
         self._volumen = 100   # último volumen elegido por el usuario (fijar_volumen)
         self._velocidad_rate = 0  # último Rate SAPI calculado por fijar_velocidad()
         self._inicializar_motor()
@@ -129,11 +130,36 @@ class ClienteSapi5:
         self._detener_flag = False
         self._generacion_sapi += 1
         gen = self._generacion_sapi
-        threading.Thread(
+        self._esperar_hilo_anterior()
+        hilo = threading.Thread(
             target=self._hilo_parrafos,
             args=(texto, pos_offset, callback_progreso, callback_completado, gen),
             daemon=True,
-        ).start()
+        )
+        self._hilo_parrafos_activo = hilo
+        hilo.start()
+
+    # ANCLAJE_INICIO: ESPERA_HILO_PARRAFOS_ANTERIOR
+    def _esperar_hilo_anterior(self, tiempo_max=0.5):
+        """
+        Espera a que el hilo de párrafos anterior salga antes de volver a
+        tocar self.motor desde otro sitio. Ese hilo usa el mismo objeto
+        SpVoice que el hilo principal (Speak, Voice, Rate...), y al probar
+        varias muestras seguidas el hilo viejo seguía dentro de
+        WaitUntilDone() mientras el nuevo empezaba a hablar y el principal
+        cambiaba de voz: dos hilos sobre el mismo objeto COM a la vez, que
+        podía colgar la voz o cerrar la app sin dejar rastro en el log.
+        El hilo comprueba la cancelación cada 100 ms, así que la espera
+        real es muy corta; el límite evita bloquear la interfaz si SAPI no
+        responde.
+        """
+        hilo = self._hilo_parrafos_activo
+        if hilo is None or hilo is threading.current_thread() or not hilo.is_alive():
+            return
+        hilo.join(timeout=tiempo_max)
+        if hilo.is_alive():
+            logger.warning("[SAPI5] El hilo de lectura anterior no terminó a tiempo")
+    # ANCLAJE_FIN: ESPERA_HILO_PARRAFOS_ANTERIOR
 
     def _hilo_parrafos(self, texto, pos_offset, callback_progreso, callback_completado, gen):
         """
@@ -211,6 +237,7 @@ class ClienteSapi5:
                 self.motor.Speak("", SPF_ASYNC | SPF_PURGEBEFORESPEAK)
             except Exception:
                 logger.exception("[SAPI5] Error al detener la reproducción")
+            self._esperar_hilo_anterior()
 
     def pausar(self):
         if self.conectado:
