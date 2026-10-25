@@ -167,6 +167,8 @@ pip install -r requisitos.txt
 python iniciar_epub_tts.py
 ```
 
+En Windows también puedes abrirla con `INICIAR_APP.bat`: la primera vez instala solo las librerías de `requisitos.txt` (y otra vez cuando ese archivo cambie), así que no hace falta el `pip install`.
+
 Requiere Python 3.12+ en Windows. La versión portable (sin necesidad de instalar Python) se genera con `crear_portable.py` y se publica en la sección de [Releases](https://github.com/Dayanna-Parson/epub-tts-accesible/releases).
 
 **Winget (pendiente):** hay un manifiesto de Winget preparado en [`winget/`](winget/), pero todavía no se ha enviado a `microsoft/winget-pkgs` — falta decidir el nombre comercial definitivo y publicar la primera Release con el instalador. No es, por ahora, un método de instalación disponible.

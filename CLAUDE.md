@@ -145,6 +145,7 @@ Archivos de configuración (en `/configuraciones/`):
 | `perfiles.json` | Perfiles de usuario: voz activa, voces favoritas por proveedor, velocidad, volumen, segundos de salto y pausa | Sí |
 | `pronunciacion.json` | Reglas del diccionario de pronunciación | No |
 | `voces_conocidas.json` | IDs de voces ya vistas (historial para filtro «solo nuevas») | No |
+| `requisitos_instalados.txt` | Copia del `requisitos.txt` ya instalado por `INICIAR_APP.bat`; si difiere, el .bat vuelve a ejecutar pip | Sí |
 | `backups_proyectos/` | Copias rotativas (últimas 5) de `proyectos.json` | Sí |
 | `backups_biblioteca/` | Copias rotativas (últimas 5) de `biblioteca.db` | Sí |
 | `asistente_biblioteca/plantillas/*.txt` | Plantillas de prompt del Asistente, una por archivo | Sí |
@@ -323,7 +324,7 @@ Las etiquetas de personaje siguen el formato `{{@nombre}}`. El texto tras cada e
 
 En modo "Dividir por etiquetas", los archivos se nombran `1. Narr.mp3`, `2. James.mp3` (no `001_narr.mp3`).
 
-Con «Cargar carpeta…» (Grabación de Fragmentos) se graba una carpeta entera de TXT. Las etiquetas de todos los archivos comparten un único casting, y los TXT sin etiquetas van enteros a `@narrador` (`preparar_lote_carpeta()` en `procesador_etiquetas.py`, `grabar_lote()` en `grabador_audio.py`). En este modo la casilla «Dividir» pasa a ser «Dividir por archivos»: marcada, un MP3 por TXT, llamado igual que el TXT, en `Grabaciones_Epub-TTS/<Título>/grabaciones/Audios_por_archivo/`; desmarcada, un único `<Título>.mp3` con todos los TXT en orden, separados por `PAUSA_ENTRE_ARCHIVOS_MS` (1,5 s), en `grabaciones/Audio_Completo_<Título>/`. La pausa solo se inserta con pydub; en Python 3.13+ pydub necesita además el paquete `audioop-lts`.
+Con «Cargar carpeta…» (Grabación de Fragmentos) se graba una carpeta entera de TXT. Las etiquetas de todos los archivos comparten un único casting, y los TXT sin etiquetas van enteros a `@narrador` (`preparar_lote_carpeta()` en `procesador_etiquetas.py`, `grabar_lote()` en `grabador_audio.py`). En este modo la casilla «Dividir» pasa a ser «Dividir por archivos»: marcada, un MP3 por TXT, llamado igual que el TXT, en `Grabaciones_Epub-TTS/<Título>/grabaciones/Audios_por_archivo/`; desmarcada, un único `<Título>.mp3` con todos los TXT en orden, separados por `PAUSA_ENTRE_ARCHIVOS_MS` (1,5 s), en `grabaciones/Audio_Completo_<Título>/`. La pausa solo se inserta con pydub; en Python 3.13+ pydub necesita además `audioop-lts`, que `requisitos.txt` instala solo en esas versiones.
 
 Los audiolibros generados desde el Creador de Audiolibros van en `Grabaciones_Epub-TTS/Audiolibros/<Título>/` (o `Audiolibros/<Saga>/<Título>/` si el libro tiene alguna etiqueta en Biblioteca), separados de las carpetas de Grabación de Fragmentos. En modo "Libro completo" el archivo es `<Título>.mp3`; en "Por capítulos", `1. Capítulo uno.mp3`, `2. ...`. Si una exportación se corta por cuota o corte de conexión, la continuación se numera como parte: `<Título> (parte 2).mp3` (o `... (parte 2 - pendiente).mp3` si vuelve a cortarse).
 
