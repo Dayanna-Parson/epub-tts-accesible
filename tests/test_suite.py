@@ -1282,6 +1282,62 @@ class TestPersistenciaJsonAtomica(unittest.TestCase):
         self.assertTrue(os.path.exists(self.ruta_perfiles + ".tmp"))
 
 
+class TestReproductorVozPuente32Bits(unittest.TestCase):
+    """
+    El puente de 32 bits lanza un proceso auxiliar y espera a que responda:
+    crear un ReproductorVoz (uno por pestaña o panel con botón de escucha)
+    no debe lanzarlo, solo usarlo de verdad.
+    """
+
+    _MODULOS_MOCKEADOS = (
+        "wx",
+        "app.servicios.cliente_sapi5",
+        "app.servicios.cliente_sapi32_bridge",
+        "app.servicios.cliente_azure",
+        "app.servicios.cliente_eleven",
+        "app.servicios.cliente_polly",
+        "app.servicios.cliente_deepgram",
+        "app.motor.control_cuota",
+        "app.motor.reproductor_sonidos",
+    )
+
+    def setUp(self):
+        sys.modules.pop("app.motor.reproductor_voz", None)
+        self.mocks = {nombre: MagicMock() for nombre in self._MODULOS_MOCKEADOS}
+        patcher_mods = patch.dict("sys.modules", self.mocks)
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        from app.motor.reproductor_voz import ReproductorVoz
+        self.ReproductorVoz = ReproductorVoz
+        self.clase_puente = self.mocks["app.servicios.cliente_sapi32_bridge"].ClienteSapi32Bridge
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.reproductor_voz", None)
+
+    def test_crear_reproductor_no_lanza_el_puente(self):
+        self.ReproductorVoz()
+        self.ReproductorVoz()
+        self.clase_puente.assert_not_called()
+
+    def test_detener_no_lanza_el_puente(self):
+        reproductor = self.ReproductorVoz()
+        reproductor.detener()
+        self.clase_puente.assert_not_called()
+
+    def test_puente_se_crea_una_sola_vez_al_usarlo(self):
+        reproductor = self.ReproductorVoz()
+        primero = reproductor.cliente_local_32
+        segundo = reproductor.cliente_local_32
+        self.assertIs(primero, segundo)
+        self.clase_puente.assert_called_once()
+
+    def test_detener_tambien_para_la_voz_de_32_bits(self):
+        reproductor = self.ReproductorVoz()
+        puente = reproductor.cliente_local_32
+        reproductor.detener()
+        puente.detener.assert_called_once()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)
