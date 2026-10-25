@@ -3146,3 +3146,57 @@ msgstr "Could not download the update:\n{error}"
 
 msgid "Dividiendo... {actual} de {total} capítulos."
 msgstr "Splitting... {actual} of {total} chapters."
+
+msgid "Ya hay una importación en curso. Espera a que termine antes de iniciar otra."
+msgstr "An import is already in progress. Wait for it to finish before starting another one."
+
+msgid "Importación en curso"
+msgstr "Import in progress"
+
+msgid "Ya hay una preescucha en curso. Espera a que termine."
+msgstr "A preview is already playing. Wait for it to finish."
+
+msgid "Preescucha en curso"
+msgstr "Preview in progress"
+
+msgid "Cargar carpeta… — Graba cada TXT de una carpeta en su propio MP3"
+msgstr "Load folder… — Records each TXT in a folder to its own MP3"
+
+msgid "Elige una carpeta con varios archivos TXT. Cada archivo se graba en su propio MP3, con el mismo nombre que el TXT. Los archivos sin etiquetas se leen enteros con la voz que asignes a @narrador."
+msgstr "Choose a folder with several TXT files. Each file is recorded to its own MP3, with the same name as the TXT. Files without tags are read in full with the voice you assign to @narrador."
+
+msgid "Seleccionar carpeta con archivos TXT"
+msgstr "Select a folder with TXT files"
+
+msgid "No se pudo leer la carpeta:\n{error}"
+msgstr "Could not read the folder:\n{error}"
+
+msgid "La carpeta no contiene ningún archivo TXT con texto."
+msgstr "The folder does not contain any TXT file with text."
+
+msgid "Sin archivos"
+msgstr "No files"
+
+msgid "Carpeta cargada: {total} archivos, etiquetas: {etiquetas}. Marca una voz en la lista para asignarla."
+msgstr "Folder loaded: {total} files, tags: {etiquetas}. Check a voice in the list to assign it."
+
+msgid "Carpeta cargada.\nArchivos TXT: {total}\nEtiquetas: {etiquetas}\n\nSe grabará un MP3 por cada archivo, con el mismo nombre que el TXT."
+msgstr "Folder loaded.\nTXT files: {total}\nTags: {etiquetas}\n\nOne MP3 will be recorded for each file, with the same name as the TXT."
+
+msgid "vacío"
+msgstr "empty"
+
+msgid "… y {n} más."
+msgstr "… and {n} more."
+
+msgid "Archivos omitidos: {n}\n{lista}"
+msgstr "Skipped files: {n}\n{lista}"
+
+msgid "Carpeta cargada"
+msgstr "Folder loaded"
+
+msgid "Grabando archivo {actual} de {total}: {archivo}  —  Voz: {voz}"
+msgstr "Recording file {actual} of {total}: {archivo}  —  Voice: {voz}"
+
+msgid "Archivo {actual} de {total}. {archivo}."
+msgstr "File {actual} of {total}. {archivo}."

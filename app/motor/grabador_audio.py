@@ -249,6 +249,74 @@ class GrabadorAudio:
         self.cerrar()
         return archivos, errores, subcarpeta
 
+    # ANCLAJE_INICIO: GRABACION_LOTE_CARPETA
+    def grabar_lote(
+        self,
+        lote: list,
+        asignaciones_voz: dict,
+        titulo_libro: str,
+        velocidad: int = 50,
+        volumen: int = 100,
+    ) -> tuple:
+        """
+        Graba una carpeta entera de TXT: un MP3 por archivo, llamado igual
+        que el TXT, todos en la misma subcarpeta. Cada archivo se graba como
+        audio unificado (si lleva varias etiquetas, sus fragmentos se unen
+        en orden), así que "Dividir por etiquetas" no aplica aquí.
+
+        lote: [(nombre_base, fragmentos), ...] (ver preparar_lote_carpeta()).
+        callback_progreso recibe (archivo_actual, total_archivos,
+        nombre_base, nombres_de_voz) una vez por archivo.
+
+        Un archivo que falla no detiene el resto: su error queda en la lista
+        de errores y se pasa al siguiente.
+
+        Returns:
+            (archivos_generados, errores, carpeta_destino)
+        """
+        self._abortar = False
+        self._velocidad = max(0, min(100, int(velocidad)))
+        self._volumen = max(0, min(100, int(volumen)))
+        self._cargar_config()
+
+        carpeta_libro = self.obtener_carpeta_libro(titulo_libro)
+        subcarpeta = os.path.join(carpeta_libro, "grabaciones", "Audios_por_archivo")
+        os.makedirs(subcarpeta, exist_ok=True)
+        self._ultima_carpeta = subcarpeta
+
+        archivos_generados, errores = [], []
+        total = len(lote)
+        try:
+            for i, (nombre_base, fragmentos) in enumerate(lote):
+                if self._abortar:
+                    logger.info("[GrabadorAudio] Grabación de carpeta abortada.")
+                    break
+
+                if self.callback_progreso:
+                    voces = []
+                    for etiqueta, _texto_sin_usar in fragmentos:
+                        datos_voz = asignaciones_voz.get(etiqueta)
+                        nombre_voz = datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz'
+                        if nombre_voz not in voces:
+                            voces.append(nombre_voz)
+                    self.callback_progreso(i + 1, total, nombre_base, ", ".join(voces))
+
+                nombre_limpio = limpiar_nombre_archivo(nombre_base) or f"{i + 1}"
+                try:
+                    generados, errores_archivo = self._grabar_modo_unico(
+                        fragmentos, asignaciones_voz, subcarpeta, nombre_limpio,
+                        len(fragmentos), avisar_progreso=False,
+                    )
+                except Exception as e:
+                    logger.exception("[GrabadorAudio] Fallo al grabar '%s' del lote", nombre_base)
+                    generados, errores_archivo = [], [str(e)]
+                archivos_generados.extend(generados)
+                errores.extend(f"{nombre_base}: {error}" for error in errores_archivo)
+        finally:
+            self.cerrar()
+        return archivos_generados, errores, subcarpeta
+    # ANCLAJE_FIN: GRABACION_LOTE_CARPETA
+
     # ------------------------------------------------------------------ #
     # Modos de grabación
     # ------------------------------------------------------------------ #
@@ -287,8 +355,11 @@ class GrabadorAudio:
         return archivos_generados, errores
 
     def _grabar_modo_unico(
-        self, fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total
+        self, fragmentos, asignaciones_voz, subcarpeta, nombre_cap_limpio, total,
+        avisar_progreso=True,
     ):
+        # avisar_progreso=False: grabar_lote() ya avisa una vez por archivo,
+        # no por cada fragmento de dentro.
         archivos_generados, errores = [], []
         archivos_temp = []
 
@@ -301,7 +372,7 @@ class GrabadorAudio:
                 datos_voz  = asignaciones_voz.get(etiqueta)
                 nombre_voz = datos_voz.get('nombre', 'sin nombre') if datos_voz else 'sin voz'
 
-                if self.callback_progreso:
+                if self.callback_progreso and avisar_progreso:
                     self.callback_progreso(i + 1, total, etiqueta, nombre_voz)
 
                 fd, ruta_temp = tempfile.mkstemp(suffix='.mp3', prefix=f'tfh_{i:03d}_')

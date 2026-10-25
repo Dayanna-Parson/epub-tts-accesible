@@ -11,6 +11,11 @@ Flujo de uso (diseñado para NVDA + teclado):
   5. Pulsa "Iniciar Grabación".
   6. "Limpiar" restablece la pestaña para cargar otro fragmento sin reiniciar.
 
+  Alternativa para muchos textos cortos: "Cargar carpeta…" junta las
+  etiquetas de todos los TXT de una carpeta en el mismo combo (los que no
+  tienen etiquetas comparten @narrador) y graba un MP3 por archivo, con el
+  mismo nombre que el TXT.
+
 Accesibilidad NVDA:
   - SetHelpText() en controles de entrada: NVDA lo verbaliza al recibir foco.
   - Etiquetas descriptivas en botones: NVDA las lee directamente.
@@ -35,6 +40,9 @@ from app.motor.procesador_etiquetas import (
     fragmentar_texto,
     normalizar_etiqueta,
     limpiar_nombre_archivo,
+    preparar_lote_carpeta,
+    etiquetas_de_lote,
+    MOTIVO_VACIO,
 )
 from app.motor.grabador_audio import GrabadorAudio, CARPETA_RAIZ_GRABACIONES
 from app.motor.reproductor_sonidos import (
@@ -288,6 +296,8 @@ class PestanaGrabacion(wx.Panel):
         self.nombre_base_txt      = ""
         self.texto_cargado        = ""
         self.fragmentos           = []     # [(etiqueta, contenido), ...]
+        self._lote                = None   # [(nombre_base, fragmentos), ...] al cargar una carpeta
+        self._grabando_lote       = False  # modo de la grabación en curso (ver al_iniciar_grabacion)
         self.etiquetas_detectadas = []     # [etiqueta_normalizada, ...]
         self.asignaciones         = {}     # {etiqueta: datos_voz}
         self.voces_disponibles    = []     # [(texto_col0, datos_voz), ...]
@@ -347,15 +357,24 @@ class PestanaGrabacion(wx.Panel):
         self.btn_examinar = wx.Button(
             self, label=_("Examinar… — Selecciona un TXT con etiquetas de personaje")
         )
+        self.btn_cargar_carpeta = wx.Button(
+            self, label=_("Cargar carpeta… — Graba cada TXT de una carpeta en su propio MP3")
+        )
+        self.btn_cargar_carpeta.SetHelpText(
+            _("Elige una carpeta con varios archivos TXT. Cada archivo se graba en su "
+              "propio MP3, con el mismo nombre que el TXT. Los archivos sin etiquetas "
+              "se leen enteros con la voz que asignes a @narrador.")
+        )
         self.btn_limpiar = wx.Button(
             self, label=_("Limpiar — Restablece la pestaña para cargar otro fragmento")
         )
 
-        sz_ruta.Add(lbl_ruta,              0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
-        sz_ruta.Add(self.txt_ruta,         1, wx.EXPAND)
-        sz_ruta.Add(self.btn_dividir_epub, 0, wx.LEFT, 5)
-        sz_ruta.Add(self.btn_examinar,     0, wx.LEFT, 5)
-        sz_ruta.Add(self.btn_limpiar,      0, wx.LEFT, 5)
+        sz_ruta.Add(lbl_ruta,                0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 5)
+        sz_ruta.Add(self.txt_ruta,           1, wx.EXPAND)
+        sz_ruta.Add(self.btn_dividir_epub,   0, wx.LEFT, 5)
+        sz_ruta.Add(self.btn_examinar,       0, wx.LEFT, 5)
+        sz_ruta.Add(self.btn_cargar_carpeta, 0, wx.LEFT, 5)
+        sz_ruta.Add(self.btn_limpiar,        0, wx.LEFT, 5)
 
         sz_titulo = wx.BoxSizer(wx.HORIZONTAL)
         lbl_titulo = wx.StaticText(self, label=_("Título (opcional):"))
@@ -533,6 +552,7 @@ class PestanaGrabacion(wx.Panel):
 
         # ── Eventos ───────────────────────────────────────────────────────
         self.btn_examinar.Bind(wx.EVT_BUTTON,        self.al_examinar)
+        self.btn_cargar_carpeta.Bind(wx.EVT_BUTTON,  self.al_cargar_carpeta)
         self.btn_limpiar.Bind(wx.EVT_BUTTON,         self.al_limpiar)
         self.btn_dividir_epub.Bind(wx.EVT_BUTTON,    self._al_dividir_epub)
         self.txt_titulo.Bind(wx.EVT_KILL_FOCUS,     self._al_perder_foco_titulo)
@@ -766,9 +786,107 @@ class PestanaGrabacion(wx.Panel):
         self.proyecto_actual = self.gestor_proyectos.proyecto_de_archivo(ruta)
         self._cargar_y_escanear()
 
+    # ANCLAJE_INICIO: CARGA_CARPETA_TXT
+    def al_cargar_carpeta(self, evento):
+        with wx.DirDialog(
+            self,
+            _("Seleccionar carpeta con archivos TXT"),
+            style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST,
+        ) as dlg:
+            if dlg.ShowModal() != wx.ID_OK:
+                return
+            carpeta = dlg.GetPath()
+        self._cargar_lote(carpeta)
+
+    def _cargar_lote(self, carpeta: str):
+        """
+        Prepara la grabación de una carpeta entera: un MP3 por TXT. Las
+        etiquetas de todos los archivos se juntan en el mismo combo, así que
+        la voz se asigna una sola vez para todos (los TXT sin etiquetas
+        comparten @narrador). Reutiliza el mismo casting que un TXT suelto.
+        """
+        try:
+            lote, omitidos = preparar_lote_carpeta(carpeta)
+        except OSError as e:
+            logger.exception("Error al leer la carpeta de TXT '%s'", carpeta)
+            reproducir(SND_ERROR)
+            wx.MessageBox(
+                _("No se pudo leer la carpeta:\n{error}").format(error=e),
+                _("Error de lectura"), wx.OK | wx.ICON_ERROR,
+            )
+            return
+
+        if not lote:
+            reproducir(SND_ERROR)
+            wx.MessageBox(
+                _("La carpeta no contiene ningún archivo TXT con texto."),
+                _("Sin archivos"), wx.OK | wx.ICON_WARNING,
+            )
+            return
+
+        nombre_carpeta = os.path.basename(os.path.normpath(carpeta))
+        self._lote               = lote
+        self.ruta_txt_actual     = None
+        self.nombre_base_txt     = nombre_carpeta
+        self.texto_cargado       = ""
+        self.fragmentos          = [frag for _nombre_sin_usar, frags in lote for frag in frags]
+        self.etiquetas_detectadas = etiquetas_de_lote(lote)
+        # Los proyectos agrupan un TXT suelto; una carpeta no se ofrece
+        # como proyecto al completar el casting.
+        self.proyecto_actual   = None
+        self._ofrecio_proyecto = True
+        self.txt_ruta.SetValue(carpeta)
+        if not self.txt_titulo.GetValue().strip():
+            self.txt_titulo.SetValue(nombre_carpeta)
+
+        for i in range(self.check_voces.GetItemCount()):
+            self.check_voces.CheckItem(i, False)
+
+        titulo = self._resolver_titulo()
+        self.titulo_libro = titulo
+        self.asignaciones = {}
+        self._cargar_mapeo(titulo)
+        self._actualizar_resumen_asignaciones()
+        self._actualizar_combo_etiquetas(
+            preservar_etiqueta=self.etiquetas_detectadas[0] if self.etiquetas_detectadas else None
+        )
+
+        total    = len(lote)
+        etiq_str = ', '.join('@' + e for e in self.etiquetas_detectadas)
+        self.lbl_progreso.SetLabel(
+            _("Carpeta cargada: {total} archivos, etiquetas: {etiquetas}. "
+              "Marca una voz en la lista para asignarla.").format(total=total, etiquetas=etiq_str)
+        )
+        self.btn_iniciar.Enable(True)
+
+        mensaje = _(
+            "Carpeta cargada.\nArchivos TXT: {total}\nEtiquetas: {etiquetas}\n\n"
+            "Se grabará un MP3 por cada archivo, con el mismo nombre que el TXT."
+        ).format(total=total, etiquetas=etiq_str)
+        if omitidos:
+            lineas = [
+                "{nombre} ({motivo})".format(
+                    nombre=nombre, motivo=_("vacío") if motivo == MOTIVO_VACIO else motivo
+                )
+                for nombre, motivo in omitidos[:10]
+            ]
+            if len(omitidos) > 10:
+                lineas.append(_("… y {n} más.").format(n=len(omitidos) - 10))
+            mensaje += "\n\n" + _("Archivos omitidos: {n}\n{lista}").format(
+                n=len(omitidos), lista="\n".join(lineas)
+            )
+        reproducir(SUCCESS)
+        wx.MessageBox(mensaje, _("Carpeta cargada"), wx.OK | wx.ICON_INFORMATION)
+    # ANCLAJE_FIN: CARGA_CARPETA_TXT
+
     def _cargar_y_escanear(self):
         if not self.ruta_txt_actual:
             return
+        # Cargar un TXT suelto sustituye a la carpeta que hubiera cargada
+        # (que desactivaba el ofrecimiento de guardar en proyecto).
+        if self._lote is not None:
+            self._lote = None
+            self._ofrecio_proyecto = False
 
         try:
             with open(self.ruta_txt_actual, 'r', encoding='utf-8') as f:
@@ -861,6 +979,7 @@ class PestanaGrabacion(wx.Panel):
         self.nombre_base_txt      = ""
         self.texto_cargado        = ""
         self.fragmentos           = []
+        self._lote                = None
         self.etiquetas_detectadas = []
         self.asignaciones         = {}
         self.titulo_libro         = ""
@@ -1366,14 +1485,53 @@ class PestanaGrabacion(wx.Panel):
         self._ultima_carpeta = None
         self.grabador = GrabadorAudio(callback_progreso=self._callback_progreso)
 
-        self._hilo_grabacion = threading.Thread(
-            target=self._ejecutar_grabacion,
-            args=(titulo, capitulo, modo_dividido, velocidad_grab, volumen_grab),
-            daemon=True,
-        )
+        # Se fija al empezar: el hilo de grabación lo consulta en cada aviso
+        # de progreso, y Limpiar podría vaciar self._lote mientras tanto.
+        self._grabando_lote = bool(self._lote)
+        if self._grabando_lote:
+            self._hilo_grabacion = threading.Thread(
+                target=self._ejecutar_grabacion_lote,
+                args=(titulo, list(self._lote), velocidad_grab, volumen_grab),
+                daemon=True,
+            )
+        else:
+            self._hilo_grabacion = threading.Thread(
+                target=self._ejecutar_grabacion,
+                args=(titulo, capitulo, modo_dividido, velocidad_grab, volumen_grab),
+                daemon=True,
+            )
         self._hilo_grabacion.start()
 
+    # ANCLAJE_INICIO: GRABACION_LOTE_PESTANA
+    def _ejecutar_grabacion_lote(self, titulo, lote, velocidad=50, volumen=100):
+        try:
+            archivos, errores, carpeta = self.grabador.grabar_lote(
+                lote=lote,
+                asignaciones_voz=self.asignaciones,
+                titulo_libro=titulo,
+                velocidad=velocidad,
+                volumen=volumen,
+            )
+            wx.CallAfter(self._al_terminar_grabacion, archivos, errores, carpeta)
+        except Exception as e:
+            logger.exception("Error durante la grabación de una carpeta de TXT")
+            wx.CallAfter(self._al_error_grabacion, str(e))
+
+    def _callback_progreso_lote(self, actual, total, nombre_archivo, nombres_voz):
+        pct = int(((actual - 1) / total) * 100) if total > 0 else 0
+        msg = _("Grabando archivo {actual} de {total}: {archivo}  —  Voz: {voz}").format(
+            actual=actual, total=total, archivo=nombre_archivo, voz=nombres_voz
+        )
+        wx.CallAfter(self._actualizar_progreso_ui, pct, msg)
+        self._hablar(_("Archivo {actual} de {total}. {archivo}.").format(
+            actual=actual, total=total, archivo=nombre_archivo
+        ))
+    # ANCLAJE_FIN: GRABACION_LOTE_PESTANA
+
     def _callback_progreso(self, actual, total, etiqueta, nombre_voz):
+        if self._grabando_lote:
+            self._callback_progreso_lote(actual, total, etiqueta, nombre_voz)
+            return
         pct = int((actual / total) * 100) if total > 0 else 0
         msg = _("Grabando fragmento {actual} de {total}  (Etiqueta: @{etiqueta}  —  Voz: {voz})").format(
             actual=actual, total=total, etiqueta=etiqueta, voz=nombre_voz

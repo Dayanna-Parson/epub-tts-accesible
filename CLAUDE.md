@@ -69,7 +69,7 @@ app/
 │   ├── pestana_biblioteca.py     # Biblioteca: importar EPUB/PDF, géneros, sagas, buscador
 │   ├── pestana_lectura.py        # Modo Lectura: EPUB/PDF + TTS + marcadores
 │   ├── pestana_creador_audiolibros.py  # Creador de Audiolibros: exportación completa/por capítulos
-│   ├── pestana_grabacion.py      # Grabación de Fragmentos: etiquetas multivoz + exportación
+│   ├── pestana_grabacion.py      # Grabación de Fragmentos: etiquetas multivoz + exportación (un TXT o una carpeta entera)
 │   ├── pestana_ajustes.py        # Ajustes: claves API, voces, atajos, cuota
 │   ├── ventana_proyectos.py      # Gestor de proyectos de Grabación (ventana independiente, no modal)
 │   ├── selector_voz_compartido.py  # ListaVocesCheck + PanelProveedorIA: catálogo de voces reutilizable
@@ -322,6 +322,8 @@ Todos los MP3 generados se normalizan a **44 100 Hz mono, 320 kbps**. Es el est�
 Las etiquetas de personaje siguen el formato `{{@nombre}}`. El texto tras cada etiqueta se envía a la voz asignada. Ejemplo: `{{@nar}}Había una vez...{{@james}}¡Buenos días!`
 
 En modo "Dividir por etiquetas", los archivos se nombran `1. Narr.mp3`, `2. James.mp3` (no `001_narr.mp3`).
+
+Con «Cargar carpeta…» (Grabación de Fragmentos) se graba una carpeta entera de TXT: un MP3 unificado por archivo, llamado igual que el TXT, en `Grabaciones_Epub-TTS/<Título>/grabaciones/Audios_por_archivo/`. Las etiquetas de todos los archivos comparten un único casting, y los TXT sin etiquetas van enteros a `@narrador` (`preparar_lote_carpeta()` en `procesador_etiquetas.py`, `grabar_lote()` en `grabador_audio.py`). "Dividir por etiquetas" no se aplica en este modo.
 
 Los audiolibros generados desde el Creador de Audiolibros van en `Grabaciones_Epub-TTS/Audiolibros/<Título>/` (o `Audiolibros/<Saga>/<Título>/` si el libro tiene alguna etiqueta en Biblioteca), separados de las carpetas de Grabación de Fragmentos. En modo "Libro completo" el archivo es `<Título>.mp3`; en "Por capítulos", `1. Capítulo uno.mp3`, `2. ...`. Si una exportación se corta por cuota o corte de conexión, la continuación se numera como parte: `<Título> (parte 2).mp3` (o `... (parte 2 - pendiente).mp3` si vuelve a cortarse).
 

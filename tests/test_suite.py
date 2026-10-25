@@ -1471,6 +1471,131 @@ class TestEsperaHiloSapi5(unittest.TestCase):
         self.assertFalse(hilo.is_alive())
 
 
+class TestLoteCarpetaTxt(unittest.TestCase):
+    """Preparación de una carpeta de TXT para grabar un MP3 por archivo."""
+
+    def setUp(self):
+        from app.motor import procesador_etiquetas
+        self.pe = procesador_etiquetas
+        self.carpeta = tempfile.mkdtemp()
+
+    def _escribir(self, nombre, contenido: bytes):
+        with open(os.path.join(self.carpeta, nombre), "wb") as f:
+            f.write(contenido)
+
+    def test_orden_natural_y_solo_txt(self):
+        self._escribir("H10 diez.txt", "diez".encode("utf-8"))
+        self._escribir("H2 dos.txt", "dos".encode("utf-8"))
+        self._escribir("h06 seis.TXT", "seis".encode("utf-8"))
+        self._escribir("notas.md", "no".encode("utf-8"))
+        os.mkdir(os.path.join(self.carpeta, "sub.txt"))
+        lote, omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual([nombre for nombre, _f in lote], ["H2 dos", "h06 seis", "H10 diez"])
+        self.assertEqual(omitidos, [])
+
+    def test_sin_etiquetas_todo_el_texto_va_al_narrador(self):
+        self._escribir("uno.txt", "Primera línea,\n\nsegunda línea.".encode("utf-8"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(lote[0][1], [("narrador", "Primera línea,\n\nsegunda línea.")])
+
+    def test_bom_del_bloc_de_notas_no_llega_a_la_voz(self):
+        self._escribir("bom.txt", "\ufeffHola".encode("utf-8"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(lote[0][1], [("narrador", "Hola")])
+
+    def test_ansi_de_windows_se_lee_bien(self):
+        self._escribir("ansi.txt", "Canción".encode("cp1252"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(lote[0][1], [("narrador", "Canción")])
+
+    def test_vacios_se_omiten_con_su_motivo(self):
+        self._escribir("vacio.txt", b"  \n ")
+        self._escribir("lleno.txt", "texto".encode("utf-8"))
+        lote, omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual([nombre for nombre, _f in lote], ["lleno"])
+        self.assertEqual(omitidos, [("vacio.txt", self.pe.MOTIVO_VACIO)])
+
+    def test_etiquetas_del_lote_sin_repetir_y_en_orden(self):
+        self._escribir("1.txt", "sin etiquetas".encode("utf-8"))
+        self._escribir("2.txt", "{{@narrador}}a{{@rey}}b".encode("utf-8"))
+        self._escribir("3.txt", "{{@Reina}}c{{@rey}}d".encode("utf-8"))
+        lote, _omitidos = self.pe.preparar_lote_carpeta(self.carpeta)
+        self.assertEqual(self.pe.etiquetas_de_lote(lote), ["narrador", "rey", "reina"])
+
+
+class TestGrabadorLoteCarpeta(unittest.TestCase):
+    """grabar_lote(): un MP3 por archivo, un fallo no detiene el resto."""
+
+    def setUp(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+        patcher_mods = patch.dict("sys.modules", {
+            "wx": MagicMock(),
+            "app.motor.control_cuota": MagicMock(),
+        })
+        patcher_mods.start()
+        self.addCleanup(patcher_mods.stop)
+        import importlib
+        modulo = importlib.import_module("app.motor.grabador_audio")
+        self.carpeta = tempfile.mkdtemp()
+        self.avisos = []
+        self.grabador = modulo.GrabadorAudio(
+            callback_progreso=lambda *args: self.avisos.append(args)
+        )
+        self.grabador._cargar_config = lambda: None
+        self.grabador.obtener_carpeta_libro = lambda titulo: self.carpeta
+
+    def tearDown(self):
+        sys.modules.pop("app.motor.grabador_audio", None)
+
+    def _modo_unico_simulado(self, fallar_en=()):
+        llamadas = []
+
+        def simulado(fragmentos, asignaciones, subcarpeta, nombre, total, avisar_progreso=True):
+            llamadas.append((nombre, avisar_progreso))
+            if nombre in fallar_en:
+                raise RuntimeError("fallo simulado")
+            ruta = os.path.join(subcarpeta, nombre + ".mp3")
+            with open(ruta, "wb") as f:
+                f.write(b"mp3")
+            return [ruta], []
+        return simulado, llamadas
+
+    def test_un_mp3_por_archivo_con_su_nombre(self):
+        simulado, llamadas = self._modo_unico_simulado()
+        self.grabador._grabar_modo_unico = simulado
+        lote = [("H06 Uno", [("narrador", "a")]), ("H07 Dos", [("narrador", "b")])]
+        voz = {"nombre": "Lucía", "proveedor_id": "polly"}
+        archivos, errores, carpeta = self.grabador.grabar_lote(lote, {"narrador": voz}, "Mi lote")
+        self.assertEqual([os.path.basename(a) for a in archivos], ["H06 Uno.mp3", "H07 Dos.mp3"])
+        self.assertEqual(errores, [])
+        self.assertEqual(carpeta, os.path.join(self.carpeta, "grabaciones", "Audios_por_archivo"))
+        self.assertEqual([aviso[:3] for aviso in self.avisos], [(1, 2, "H06 Uno"), (2, 2, "H07 Dos")])
+        self.assertEqual(self.avisos[0][3], "Lucía")
+        # Sin avisos por fragmento: el lote ya avisa una vez por archivo.
+        self.assertTrue(all(not avisar for _n, avisar in llamadas))
+
+    def test_un_archivo_que_falla_no_detiene_los_demas(self):
+        simulado, _llamadas = self._modo_unico_simulado(fallar_en=("B",))
+        self.grabador._grabar_modo_unico = simulado
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")]), ("C", [("narrador", "c")])]
+        archivos, errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote")
+        self.assertEqual([os.path.basename(a) for a in archivos], ["A.mp3", "C.mp3"])
+        self.assertEqual(errores, ["B: fallo simulado"])
+
+    def test_abortar_para_antes_del_siguiente_archivo(self):
+        simulado, llamadas = self._modo_unico_simulado()
+
+        def simulado_y_abortar(*args, **kwargs):
+            resultado = simulado(*args, **kwargs)
+            self.grabador.abortar()
+            return resultado
+        self.grabador._grabar_modo_unico = simulado_y_abortar
+        lote = [("A", [("narrador", "a")]), ("B", [("narrador", "b")])]
+        archivos, _errores, _carpeta = self.grabador.grabar_lote(lote, {}, "Lote")
+        self.assertEqual([os.path.basename(a) for a in archivos], ["A.mp3"])
+        self.assertEqual(len(llamadas), 1)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     unittest.main(verbosity=2)
